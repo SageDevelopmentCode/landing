@@ -65,17 +65,6 @@ export default function WelcomeSection() {
               Welcome to Sage Field!
             </motion.h2>
 
-            {/* Subtitle */}
-            <motion.p
-              className="text-2xl md:text-3xl font-semibold text-primary font-heading mb-8"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-            >
-              Wisdom &gt; Knowledge
-            </motion.p>
-
             {/* Introduction Paragraph */}
             <motion.p
               className="text-base md:text-lg text-text-gray mb-16 leading-relaxed font-body"

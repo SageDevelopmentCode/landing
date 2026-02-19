@@ -46,7 +46,7 @@ export default function MeetTheTeamSection() {
             <motion.div
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.3 }}
-              className="relative h-[60vh] sm:h-[70vh] rounded-2xl overflow-hidden shadow-lg"
+              className="relative h-[50vh] sm:h-[55vh] rounded-2xl overflow-hidden shadow-lg"
             >
               <Image
                 src="/assets/Headshot.jpeg"
@@ -68,12 +68,15 @@ export default function MeetTheTeamSection() {
             className="w-full lg:w-1/2 space-y-8"
           >
             {/* Lead Tutor */}
-            <div className="space-y-2">
+            <div className="space-y-4">
               <h3 className="text-2xl md:text-3xl font-semibold text-primary font-heading">
                 Lead Tutor & Director
               </h3>
               <p className="text-xl md:text-2xl font-semibold text-text-gray font-heading">
                 Sabrina Grace Obnamia
+              </p>
+              <p className="text-base md:text-lg text-text-gray leading-relaxed font-body">
+                Ms. Sabrina brings a wealth of experience to SageField. She holds a Bachelor&apos;s degree in Elementary Education with a concentration in Early Childhood Development from Biola University and a Teaching Credential. Her background includes working with children in a wide range of roles both in the U.S. and internationally—spanning special education, preschool, homeschooling, tutoring, coaching, traditional schooling, nature school guide, and more. She values movement, outdoor learning, and most importantly, the joy of slowing down to be present, intentional, and thankful.
               </p>
             </div>
 

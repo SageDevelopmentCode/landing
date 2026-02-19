@@ -24,8 +24,8 @@ export default function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
           >
-            <h1 className="text-4xl md:text-4xl lg:text-5xl font-semibold text-white drop-shadow-lg max-w-lg font-heading leading-tight">
-              Where Curiosity Becomes Wisdom, Not Just Knowledge
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold text-white drop-shadow-lg max-w-sm font-heading leading-tight">
+              Welcome to Sage Field!
             </h1>
           </motion.div>
 

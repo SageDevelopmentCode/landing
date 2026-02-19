@@ -85,7 +85,7 @@ const DonationsSection = () => {
                 <li className="flex items-start">
                   <span className="text-primary mr-2 text-xl">•</span>
                   <span className="text-base text-text-gray font-body">
-                    <span className="font-semibold text-black">Minimum Donation:</span> TBD
+                    <span className="font-semibold text-black">Minimum Donation:</span> Approx. $850/month (TBD based on number of students)
                   </span>
                 </li>
                 <li className="flex items-start">
