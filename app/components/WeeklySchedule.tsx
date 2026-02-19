@@ -1,0 +1,75 @@
+export default function WeeklySchedule() {
+  const days = [
+    { name: "Monday", day: "Mon" },
+    { name: "Tuesday", day: "Tue" },
+    { name: "Wednesday", day: "Wed" },
+    { name: "Thursday", day: "Thu" },
+  ];
+
+  const timeBlocks = [
+    {
+      time: "Before Care",
+      label: "Optional",
+      bgColor: "bg-gray-50",
+      textColor: "text-gray-600",
+    },
+    {
+      time: "Morning",
+      label: "Core learning & foundational subjects",
+      bgColor: "bg-primary/10",
+      textColor: "text-primary",
+    },
+    {
+      time: "Afternoon",
+      label: "Enrichment block (STEAM, art, nature studies, movement)",
+      bgColor: "bg-primary/20",
+      textColor: "text-primary",
+    },
+    {
+      time: "After Care",
+      label: "Optional",
+      bgColor: "bg-gray-50",
+      textColor: "text-gray-600",
+    },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {days.map((day, dayIndex) => (
+        <div key={dayIndex} className="bg-white rounded-lg shadow-md p-6">
+          {/* Day Header */}
+          <div className="mb-4">
+            <h4 className="text-xl font-bold text-black font-heading">
+              {day.name}
+            </h4>
+          </div>
+
+          {/* Timeline */}
+          <div className="space-y-3">
+            {timeBlocks.map((block, blockIndex) => (
+              <div
+                key={blockIndex}
+                className={`${block.bgColor} rounded-lg p-4 border-l-4 border-primary`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="min-w-[100px]">
+                    <span
+                      className={`text-sm font-semibold ${block.textColor} font-body`}
+                    >
+                      {block.time}
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-text-gray font-body">
+                      {block.label}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}

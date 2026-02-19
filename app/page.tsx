@@ -1,6 +1,7 @@
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import WelcomeSection from './components/WelcomeSection';
+import WhatWeOfferSection from './components/WhatWeOfferSection';
 
 export default function Home() {
   return (
@@ -8,6 +9,7 @@ export default function Home() {
       <Navbar />
       <Hero />
       <WelcomeSection />
+      <WhatWeOfferSection />
     </div>
   );
 }
