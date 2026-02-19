@@ -7,6 +7,8 @@ import ContinuitySection from './components/ContinuitySection';
 import ImageGridShowcase from './components/ImageGridShowcase';
 import CoCreationSection from './components/CoCreationSection';
 import DonationsSection from './components/DonationsSection';
+import MeetTheTeamSection from './components/MeetTheTeamSection';
+import ContactUsSection from './components/ContactUsSection';
 
 export default function Home() {
   return (
@@ -32,6 +34,8 @@ export default function Home() {
       />
       <CoCreationSection />
       <DonationsSection />
+      <MeetTheTeamSection />
+      <ContactUsSection />
     </div>
   );
 }
