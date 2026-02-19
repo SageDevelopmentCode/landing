@@ -15,7 +15,7 @@
   --color-welcome-bg: #F3EFEC;
   --color-badge-bg: #EAE6E0;
   --color-text-gray: #333333;
-  --font-heading: var(--font-inter);
+  --font-heading: var(--font-merriweather);
   --font-body: var(--font-open-sans);
   --font-sans: var(--font-open-sans);
 }

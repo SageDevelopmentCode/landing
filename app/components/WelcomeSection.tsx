@@ -42,75 +42,73 @@ export default function WelcomeSection() {
       {/* Centered Content Container */}
       <div className="flex items-center w-full">
         {/* Two Column Layout */}
-        <div className="flex flex-col lg:flex-row lg:justify-between items-center gap-16 w-full">
+        <div className="flex flex-col lg:flex-row lg:justify-between items-center gap-64 w-full">
           {/* Left Column: Text Content */}
-          <div className="text-left max-w-7xl">
-              {/* Title */}
-              <h2 className="text-4xl md:text-5xl font-bold text-black font-heading mb-6">
-                Welcome to Sage Field!
-              </h2>
+          <div className="text-left max-w-2xl">
+            {/* Title */}
+            <h2 className="text-4xl md:text-5xl font-bold text-black font-heading mb-6">
+              Welcome to Sage Field!
+            </h2>
 
-              {/* Subtitle */}
-              <p className="text-2xl md:text-3xl font-semibold text-primary font-heading mb-8">
-                Wisdom &gt; Knowledge
-              </p>
+            {/* Subtitle */}
+            <p className="text-2xl md:text-3xl font-semibold text-primary font-heading mb-8">
+              Wisdom &gt; Knowledge
+            </p>
 
-              {/* Introduction Paragraph */}
-              <p className="text-base md:text-lg text-text-gray mb-8 leading-relaxed font-body">
-                Sage Field is a small-group learning community for children ages
-                6–10, designed especially for homeschool families seeking a{" "}
-                <span className="text-primary font-semibold">nature-based</span>{" "}
-                enrichment experience. Rooted in the idea of{" "}
+            {/* Introduction Paragraph */}
+            <p className="text-base md:text-lg text-text-gray mb-16 leading-relaxed font-body">
+              Sage Field is a small-group learning community for children ages
+              6–10, designed especially for homeschool families seeking a{" "}
+              <span className="text-primary font-semibold">nature-based</span>{" "}
+              enrichment experience. Rooted in the idea of{" "}
+              <span className="text-primary font-semibold">co-creation</span>,
+              we work alongside families to nurture{" "}
+              <span className="text-primary font-semibold">curiosity</span>,{" "}
+              <span className="text-primary font-semibold">confidence</span>,
+              and <span className="text-primary font-semibold">wisdom</span>{" "}
+              through{" "}
+              <span className="text-primary font-semibold">personalized</span>,{" "}
+              <span className="text-primary font-semibold">hands-on</span>{" "}
+              learning.
+            </p>
+
+            {/* Wisdom vs. Knowledge Section */}
+            <div className="mb-8">
+              <h3 className="text-2xl md:text-3xl font-bold text-black font-heading mb-6">
+                Wisdom vs. Knowledge
+              </h3>
+              <p className="text-base md:text-lg text-text-gray leading-relaxed font-body">
+                At Sage Field, we see children as seeds of endless possibility.
+                We believe{" "}
+                <span className="text-primary font-semibold">wisdom</span> is
+                what transforms learning into living, helping children connect
+                ideas to real experiences and make thoughtful choices. Through
+                our approach of{" "}
                 <span className="text-primary font-semibold">co-creation</span>,
-                we work alongside families to nurture{" "}
-                <span className="text-primary font-semibold">curiosity</span>,{" "}
-                <span className="text-primary font-semibold">confidence</span>,
-                and <span className="text-primary font-semibold">wisdom</span>{" "}
-                through{" "}
-                <span className="text-primary font-semibold">personalized</span>
-                , <span className="text-primary font-semibold">hands-on</span>{" "}
-                learning.
+                families and mentors work together to nurture{" "}
+                <span className="text-primary font-semibold">curiosity</span>{" "}
+                and reflection both in and beyond the lesson.
               </p>
-
-              {/* Wisdom vs. Knowledge Section */}
-              <div className="mb-8">
-                <h3 className="text-2xl md:text-3xl font-bold text-black font-heading mb-6">
-                  Wisdom vs. Knowledge
-                </h3>
-                <p className="text-base md:text-lg text-text-gray leading-relaxed font-body">
-                  At Sage Field, we see children as seeds of endless
-                  possibility. We believe{" "}
-                  <span className="text-primary font-semibold">wisdom</span> is
-                  what transforms learning into living, helping children connect
-                  ideas to real experiences and make thoughtful choices. Through
-                  our approach of{" "}
-                  <span className="text-primary font-semibold">
-                    co-creation
-                  </span>
-                  , families and mentors work together to nurture{" "}
-                  <span className="text-primary font-semibold">curiosity</span>{" "}
-                  and reflection both in and beyond the lesson.
-                </p>
-              </div>
-
-              {/* Call to Action Button */}
-              <button className="px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body">
-                Learn More About Our Program
-              </button>
             </div>
 
-            {/* Right Column: 2x2 Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {cards.map((card, index) => (
-                <Card
-                  key={index}
-                  title={card.title}
-                  description={card.description}
-                  iconPlaceholder={card.icon}
-                />
-              ))}
-            </div>
+            {/* Call to Action Button */}
+            <button className="px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body">
+              Learn More About Our Program
+            </button>
           </div>
+
+          {/* Right Column: 2x2 Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {cards.map((card, index) => (
+              <Card
+                key={index}
+                title={card.title}
+                description={card.description}
+                iconPlaceholder={card.icon}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );
