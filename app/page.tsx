@@ -5,6 +5,7 @@ import WhatWeOfferSection from './components/WhatWeOfferSection';
 import EducationalPhilosophySection from './components/EducationalPhilosophySection';
 import ContinuitySection from './components/ContinuitySection';
 import ImageGridShowcase from './components/ImageGridShowcase';
+import CoCreationSection from './components/CoCreationSection';
 
 export default function Home() {
   return (
@@ -28,6 +29,7 @@ export default function Home() {
           { src: '/assets/ImageFive.jpg', alt: 'School community' },
         ]}
       />
+      <CoCreationSection />
     </div>
   );
 }

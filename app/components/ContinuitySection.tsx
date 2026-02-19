@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 
 export default function ContinuitySection() {
   const [hoveredRoot, setHoveredRoot] = useState<string | null>(null);
@@ -67,11 +68,17 @@ export default function ContinuitySection() {
     <section className="bg-welcome-bg min-h-[80vh] py-16 px-8 sm:px-12 lg:px-16 flex flex-col">
       <div className="max-w-7xl w-full">
         {/* Badge */}
-        <div className="flex justify-start mb-8">
+        <motion.div
+          className="flex justify-start mb-8"
+          initial={{ opacity: 0, y: -10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        >
           <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
             Community Continuity
           </span>
-        </div>
+        </motion.div>
       </div>
 
       {/* Main Content Container */}
@@ -82,9 +89,15 @@ export default function ContinuitySection() {
           <div className="w-full lg:w-1/2 flex flex-col items-center">
             {/* Growth Outcomes (Top) */}
             <div className="mb-12 w-full">
-              <div className="grid grid-cols-2 gap-4 mb-8">
-                {outcomes.map((outcome) => (
-                  <div
+              <motion.div
+                className="grid grid-cols-2 gap-4 mb-8"
+                initial={{ opacity: 0, y: -20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+              >
+                {outcomes.map((outcome, index) => (
+                  <motion.div
                     key={outcome.id}
                     className={`px-4 py-3 rounded-lg text-center text-sm font-bold text-black transition-all duration-300 ${
                       hoveredRoot &&
@@ -93,11 +106,15 @@ export default function ContinuitySection() {
                         ? outcome.hoverColor + " scale-105 shadow-md"
                         : outcome.color
                     }`}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: 0.2 + index * 0.1, ease: "easeOut" }}
                   >
                     {outcome.label}
-                  </div>
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
 
               {/* Visual Stems/Connections */}
               <div className="relative h-16 mb-4">
@@ -134,14 +151,18 @@ export default function ContinuitySection() {
             {/* Root Cards (Bottom) */}
             <div className="w-full">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {roots.map((root) => (
-                  <div
+                {roots.map((root, index) => (
+                  <motion.div
                     key={root.id}
                     onMouseEnter={() => setHoveredRoot(root.id)}
                     onMouseLeave={() => setHoveredRoot(null)}
                     className={`bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105 cursor-pointer group ${
                       hoveredRoot === root.id ? "ring-2 ring-primary" : ""
                     }`}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: 0.4 + index * 0.1, ease: "easeOut" }}
                   >
                     {/* Icon Container */}
                     <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mb-4 group-hover:bg-primary/30 transition-colors duration-200">
@@ -157,7 +178,7 @@ export default function ContinuitySection() {
                     <p className="text-sm text-gray-700 font-body font-medium">
                       {root.description}
                     </p>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </div>
@@ -166,17 +187,35 @@ export default function ContinuitySection() {
           {/* Right Column: Text Content */}
           <div className="w-full lg:w-1/2 text-left">
             {/* Title */}
-            <h2 className="text-4xl md:text-5xl font-bold text-black font-heading mb-6">
+            <motion.h2
+              className="text-4xl md:text-5xl font-bold text-black font-heading mb-6"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            >
               Keeping Our Community Together
-            </h2>
+            </motion.h2>
 
             {/* Subtitle */}
-            <p className="text-2xl md:text-3xl font-semibold text-primary font-heading mb-8">
+            <motion.p
+              className="text-2xl md:text-3xl font-semibold text-primary font-heading mb-8"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            >
               Maintaining Continuity and Stability
-            </p>
+            </motion.p>
 
             {/* Description Paragraphs */}
-            <p className="text-base md:text-lg text-text-gray mb-6 leading-relaxed font-body">
+            <motion.p
+              className="text-base md:text-lg text-text-gray mb-6 leading-relaxed font-body"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            >
               Sage Field was created to maintain the{" "}
               <span className="text-primary font-semibold">friendships</span>,{" "}
               <span className="text-primary font-semibold">routines</span>, and{" "}
@@ -185,10 +224,16 @@ export default function ContinuitySection() {
               rhythm and structure as their previous school, students experience
               lower stress, smoother transitions, and greater emotional
               security.
-            </p>
+            </motion.p>
 
             {/* Why It Matters Callout */}
-            <div className="mt-8 p-4 bg-primary/10 rounded-lg border-l-4 border-primary">
+            <motion.div
+              className="mt-8 p-4 bg-primary/10 rounded-lg border-l-4 border-primary"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+            >
               <h3 className="text-lg font-semibold text-black mb-3 font-heading">
                 Why It Matters
               </h3>
@@ -221,7 +266,7 @@ export default function ContinuitySection() {
                   </span>
                 </li>
               </ul>
-            </div>
+            </motion.div>
           </div>
         </div>
       </div>

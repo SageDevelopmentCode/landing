@@ -1,4 +1,7 @@
+"use client";
+
 import Card from "./Card";
+import { motion } from "framer-motion";
 
 export default function WelcomeSection() {
   const cards = [
@@ -32,11 +35,17 @@ export default function WelcomeSection() {
     <section className="bg-welcome-bg min-h-[80vh] py-16 px-8 sm:px-12 lg:px-16 flex flex-col">
       <div className="max-w-7xl w-full">
         {/* Welcome Badge */}
-        <div className="flex justify-start mb-8">
+        <motion.div
+          className="flex justify-start mb-8"
+          initial={{ opacity: 0, y: -10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        >
           <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
             Welcome
           </span>
-        </div>
+        </motion.div>
       </div>
 
       {/* Centered Content Container */}
@@ -46,17 +55,35 @@ export default function WelcomeSection() {
           {/* Left Column: Text Content */}
           <div className="text-left max-w-2xl">
             {/* Title */}
-            <h2 className="text-4xl md:text-5xl font-bold text-black font-heading mb-6">
+            <motion.h2
+              className="text-4xl md:text-5xl font-bold text-black font-heading mb-6"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            >
               Welcome to Sage Field!
-            </h2>
+            </motion.h2>
 
             {/* Subtitle */}
-            <p className="text-2xl md:text-3xl font-semibold text-primary font-heading mb-8">
+            <motion.p
+              className="text-2xl md:text-3xl font-semibold text-primary font-heading mb-8"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            >
               Wisdom &gt; Knowledge
-            </p>
+            </motion.p>
 
             {/* Introduction Paragraph */}
-            <p className="text-base md:text-lg text-text-gray mb-16 leading-relaxed font-body">
+            <motion.p
+              className="text-base md:text-lg text-text-gray mb-16 leading-relaxed font-body"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            >
               Sage Field is a small-group learning community for children ages
               6–10, designed especially for homeschool families seeking a{" "}
               <span className="text-primary font-semibold">nature-based</span>{" "}
@@ -70,10 +97,16 @@ export default function WelcomeSection() {
               <span className="text-primary font-semibold">personalized</span>,{" "}
               <span className="text-primary font-semibold">hands-on</span>{" "}
               learning.
-            </p>
+            </motion.p>
 
             {/* Wisdom vs. Knowledge Section */}
-            <div className="mb-8">
+            <motion.div
+              className="mb-8"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+            >
               <h3 className="text-2xl md:text-3xl font-bold text-black font-heading mb-6">
                 Wisdom vs. Knowledge
               </h3>
@@ -89,25 +122,44 @@ export default function WelcomeSection() {
                 <span className="text-primary font-semibold">curiosity</span>{" "}
                 and reflection both in and beyond the lesson.
               </p>
-            </div>
+            </motion.div>
 
             {/* Call to Action Button */}
-            <button className="px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body">
+            <motion.button
+              className="px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
+            >
               Learn More About Our Program
-            </button>
+            </motion.button>
           </div>
 
           {/* Right Column: 2x2 Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <motion.div
+            className="grid grid-cols-1 sm:grid-cols-2 gap-6"
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+          >
             {cards.map((card, index) => (
-              <Card
+              <motion.div
                 key={index}
-                title={card.title}
-                description={card.description}
-                iconPlaceholder={card.icon}
-              />
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.3 + index * 0.1, ease: "easeOut" }}
+              >
+                <Card
+                  title={card.title}
+                  description={card.description}
+                  iconPlaceholder={card.icon}
+                />
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

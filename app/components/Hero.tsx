@@ -1,3 +1,7 @@
+"use client";
+
+import { motion } from "framer-motion";
+
 export default function Hero() {
   return (
     <section className="relative h-screen w-full overflow-hidden">
@@ -14,30 +18,45 @@ export default function Hero() {
       <div className="relative h-full w-full mx-auto px-8 sm:px-12 lg:px-12 flex items-end pb-12 md:pb-16 lg:pb-16">
         <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
           {/* Left: Large Slogan */}
-          <div className="text-center md:text-left">
+          <motion.div
+            className="text-center md:text-left"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+          >
             <h1 className="text-4xl md:text-4xl lg:text-5xl font-semibold text-white drop-shadow-lg max-w-lg font-heading leading-tight">
               Where Curiosity Becomes Wisdom, Not Just Knowledge
             </h1>
-          </div>
+          </motion.div>
 
           {/* Right: Description and Buttons */}
           <div className="text-center md:text-right space-y-6 max-w-2xl md:ml-auto">
-            <p className="text-base md:text-lg text-white font-semibold drop-shadow-md max-w-2xl font-body">
+            <motion.p
+              className="text-base md:text-lg text-white font-semibold drop-shadow-md max-w-2xl font-body"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
+            >
               A small-group learning community for ages 6–10, offering
               nature-based enrichment through co-creation with homeschool
               families. Personalized, hands-on learning that nurtures curiosity,
               confidence, and wisdom.
-            </p>
+            </motion.p>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-end">
+            <motion.div
+              className="flex flex-col sm:flex-row gap-4 justify-center md:justify-end"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.7, ease: "easeOut" }}
+            >
               <button className="px-6 py-3 border-2 border-white bg-primary/20 backdrop-blur-md text-white font-semibold rounded-lg hover:bg-primary/30 transition-all duration-200 font-body">
                 View Curriculum
               </button>
               <button className="px-6 py-3 border-2 border-white bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-all duration-200 font-body">
                 Register Now
               </button>
-            </div>
+            </motion.div>
           </div>
         </div>
       </div>
