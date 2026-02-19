@@ -8,7 +8,7 @@ export default function Navbar() {
   const menuItems = ["What We Offer", "Educational Philosophy", "About Us"];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50">
+    <nav className="absolute top-0 left-0 right-0 z-50">
       <div className="px-12 mx-auto">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}

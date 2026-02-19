@@ -8,11 +8,16 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-primary: #FF5722;
-  --color-primary-hover: #FF7043;
-  --color-primary-active: #F4511E;
+  --color-primary: #F29A8F;
+  --color-primary-hover: #E88A7F;
+  --color-primary-active: #D97A6F;
   --color-secondary: #F29A8F;
-  --font-sans: var(--font-poppins);
+  --color-welcome-bg: #F3EFEC;
+  --color-badge-bg: #EAE6E0;
+  --color-text-gray: #333333;
+  --font-heading: var(--font-inter);
+  --font-body: var(--font-open-sans);
+  --font-sans: var(--font-open-sans);
 }
 
 @media (prefers-color-scheme: dark) {
