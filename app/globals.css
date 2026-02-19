@@ -8,8 +8,11 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: #FF5722;
+  --color-primary-hover: #FF7043;
+  --color-primary-active: #F4511E;
+  --color-secondary: #F29A8F;
+  --font-sans: var(--font-poppins);
 }
 
 @media (prefers-color-scheme: dark) {
