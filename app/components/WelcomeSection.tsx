@@ -12,9 +12,9 @@ export default function WelcomeSection() {
       icon: "🤝",
     },
     {
-      title: "Nature-Based Learning",
+      title: "Hands-on Learning",
       description:
-        "Hands-on outdoor experiences that connect children to the natural world and foster real-world wisdom.",
+        "Hands-on outdoor and movement-based experiences that connect children to the world around them and foster real-world wisdom.",
       icon: "🌿",
     },
     {
@@ -111,16 +111,31 @@ export default function WelcomeSection() {
                 Wisdom vs. Knowledge
               </h3>
               <p className="text-base md:text-lg text-text-gray leading-relaxed font-body">
+                The name Sage Field carries two meanings.{" "}
+                <span className="text-primary font-semibold">
+                  Sage represents wisdom — the kind of understanding that comes
+                  from curiosity, reflection, and experiences. Field reminds us
+                  of the open ground where growth happens — a place to plant,
+                  tend, and eventually harvest the rich potential within every
+                  child.
+                </span>{" "}
                 At Sage Field, we see children as seeds of endless possibility.
-                We believe{" "}
-                <span className="text-primary font-semibold">wisdom</span> is
-                what transforms learning into living, helping children connect
-                ideas to real experiences and make thoughtful choices. Through
-                our approach of{" "}
-                <span className="text-primary font-semibold">co-creation</span>,
-                families and mentors work together to nurture{" "}
-                <span className="text-primary font-semibold">curiosity</span>{" "}
-                and reflection both in and beyond the lesson.
+                They each hold knowledge waiting to sprout, but it takes care,
+                patience, and connection to turn that knowledge into true
+                wisdom.
+              </p>
+              <br />
+              <p className="text-base md:text-lg text-text-gray leading-relaxed font-body">
+                In many traditional settings, education becomes a race to
+                memorize and repeat — a rhythm of tests and routines that fill
+                the mind but rarely touch the heart. We believe wisdom is what
+                transforms learning into living — it helps children connect
+                ideas to real experiences, build empathy, and make thoughtful
+                choices. Through our approach of co-creation, families, mentors,
+                and students work together to nurture curiosity and reflection
+                both in and beyond the lesson. In this shared garden of growth,
+                knowledge takes root, and every child has the chance to blossom
+                into their fullest, wisest self.
               </p>
             </motion.div>
 
@@ -150,7 +165,11 @@ export default function WelcomeSection() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.3 + index * 0.1, ease: "easeOut" }}
+                transition={{
+                  duration: 0.5,
+                  delay: 0.3 + index * 0.1,
+                  ease: "easeOut",
+                }}
               >
                 <Card
                   title={card.title}
