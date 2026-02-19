@@ -26,10 +26,6 @@ export default function ImageGridShowcase({ images }: ImageGridShowcaseProps) {
     visible: {
       opacity: 1,
       y: 0,
-      transition: {
-        duration: 0.6,
-        ease: [0, 0, 0.58, 1],
-      },
     },
   };
 
@@ -51,7 +47,7 @@ export default function ImageGridShowcase({ images }: ImageGridShowcaseProps) {
             key={index}
             variants={itemVariants}
             whileHover={{ scale: 1.05 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
             className="relative h-[50vh] sm:h-[60vh] rounded-2xl overflow-hidden shadow-lg"
           >
             <Image
