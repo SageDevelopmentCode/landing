@@ -21,16 +21,16 @@ const merriweather = Merriweather({
 });
 
 export const metadata: Metadata = {
-  title: "Sage Field",
+  title: "Sage Field: A small-group learning community for ages 6–10",
   description:
-    "Sage Field is a school that provides a unique educational experience for children.",
+    "A small-group learning community for ages 6–10, offering nature-based enrichment through co-creation with homeschool families. Personalized, hands-on learning that nurtures curiosity, confidence, and wisdom.",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
       <body

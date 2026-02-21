@@ -24,7 +24,7 @@ export default function Navbar() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
           >
-            <span className="text-2xl font-bold text-white">SageField</span>
+            <img src="/assets/Logo.png" alt="SageField logo" className="h-12" />
           </motion.div>
 
           {/* Desktop Menu Items - Center */}
