@@ -272,7 +272,7 @@ export default function CoCreationSection() {
               </p>
               <p className="text-base text-text-gray leading-relaxed font-body">
                 We know there are only so many hours in the day, and learning
-                doesn&apos;t stop when tutoring ends. We invite parents to take
+                doesn&apos;t stop when tutoring ends. We require parents to take
                 ownership in their child&apos;s journey — extending curiosity,
                 practice, and mindfulness into the home. Together, we co-create
                 an educational rhythm that works for each family&apos;s unique

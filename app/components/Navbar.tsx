@@ -2,11 +2,20 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const isFAQPage = pathname === "/faq";
 
-  const menuItems = ["What We Offer", "Educational Philosophy", "About Us"];
+  const menuItems = [
+    { label: "What We Offer", href: "#what-we-offer" },
+    { label: "Educational Philosophy", href: "#educational-philosophy" },
+    { label: "About Us", href: "#about-us" },
+    { label: "FAQ", href: "/faq" },
+  ];
 
   return (
     <motion.nav
@@ -24,21 +33,27 @@ export default function Navbar() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
           >
-            <img src="/assets/Logo.png" alt="SageField logo" className="h-12" />
+            <Link href="/">
+              <img src="/assets/Logo.png" alt="SageField logo" className="h-12 cursor-pointer" />
+            </Link>
           </motion.div>
 
           {/* Desktop Menu Items - Center */}
           <div className="hidden lg:flex items-center space-x-8 flex-1 justify-center">
             {menuItems.map((item, index) => (
               <motion.a
-                key={item}
-                href={`#${item.toLowerCase().replace(/\s+/g, "-")}`}
-                className="text-white/90 hover:text-white font-semibold transition-colors duration-200"
+                key={item.label}
+                href={item.href}
+                className={`${
+                  isFAQPage
+                    ? "text-gray-800/90 hover:text-gray-800"
+                    : "text-white/90 hover:text-white"
+                } font-semibold transition-colors duration-200`}
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 + index * 0.1, ease: "easeOut" }}
               >
-                {item}
+                {item.label}
               </motion.a>
             ))}
           </div>
@@ -59,7 +74,9 @@ export default function Navbar() {
           <div className="lg:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="text-white focus:outline-none"
+              className={`${
+                isFAQPage ? "text-gray-800" : "text-white"
+              } focus:outline-none`}
               aria-label="Toggle menu"
             >
               <svg
@@ -86,7 +103,9 @@ export default function Navbar() {
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
-            className="lg:hidden bg-black/80 backdrop-blur-md"
+            className={`lg:hidden ${
+              isFAQPage ? "bg-white/95" : "bg-black/80"
+            } backdrop-blur-md`}
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
@@ -101,16 +120,20 @@ export default function Navbar() {
             >
               {menuItems.map((item, index) => (
                 <motion.a
-                  key={item}
-                  href={`#${item.toLowerCase().replace(/\s+/g, "-")}`}
-                  className="block text-white/90 hover:text-white font-semibold py-2 transition-colors duration-200"
+                  key={item.label}
+                  href={item.href}
+                  className={`block ${
+                    isFAQPage
+                      ? "text-gray-800/90 hover:text-gray-800"
+                      : "text-white/90 hover:text-white"
+                  } font-semibold py-2 transition-colors duration-200`}
                   onClick={() => setMobileMenuOpen(false)}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.3, delay: index * 0.1 }}
                 >
-                  {item}
+                  {item.label}
                 </motion.a>
               ))}
               <motion.button
