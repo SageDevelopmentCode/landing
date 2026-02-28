@@ -50,7 +50,7 @@ export default function FAQAccordion({ items, searchQuery = "" }: FAQAccordionPr
         >
           <button
             onClick={() => toggleAccordion(index)}
-            className="w-full flex items-center justify-between p-6 text-left focus:outline-none group"
+            className="w-full flex items-center justify-between p-6 text-left focus:outline-none group cursor-pointer"
             aria-expanded={openIndex === index}
           >
             <h3 className="text-lg md:text-xl font-semibold text-gray-800 font-heading pr-4">

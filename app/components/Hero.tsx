@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
+import WaitlistDialog from "./WaitlistDialog";
 
 export default function Hero() {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   return (
     <section className="relative h-screen w-full overflow-hidden">
       {/* Background Image with scale */}
@@ -53,13 +56,19 @@ export default function Hero() {
               {/* <button className="px-6 py-3 border-2 border-white bg-primary/20 backdrop-blur-md text-white font-semibold rounded-lg hover:bg-primary/30 transition-all duration-200 font-body">
                 View Curriculum
               </button> */}
-              <button className="px-6 py-3 border-2 border-white bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-all duration-200 font-body">
+              <button
+                onClick={() => setIsDialogOpen(true)}
+                className="px-6 py-3 border-2 border-white bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-all duration-200 font-body cursor-pointer"
+              >
                 Join the Waitlist
               </button>
             </motion.div>
           </div>
         </div>
       </div>
+
+      {/* Waitlist Dialog */}
+      <WaitlistDialog isOpen={isDialogOpen} onClose={() => setIsDialogOpen(false)} />
     </section>
   );
 }

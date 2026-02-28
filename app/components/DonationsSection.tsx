@@ -123,7 +123,7 @@ const DonationsSection = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.5, ease: 'easeOut' }}
             >
-              <button className="px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body">
+              <button className="px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer">
                 Support Sage Field
               </button>
             </motion.div>

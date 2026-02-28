@@ -214,7 +214,7 @@ export default function FAQPage() {
           <p className="text-lg text-gray-600 mb-8 font-body">
             We&apos;re here to help! Reach out to us and we&apos;ll get back to you as soon as possible.
           </p>
-          <button className="px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body">
+          <button className="px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer">
             Contact Us
           </button>
         </motion.div>

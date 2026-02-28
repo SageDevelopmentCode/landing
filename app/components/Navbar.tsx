@@ -65,7 +65,7 @@ export default function Navbar() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
           >
-            <button className="bg-primary hover:bg-primary-hover text-white font-semibold px-6 py-2 rounded-lg transition-all duration-250">
+            <button className="bg-primary hover:bg-primary-hover text-white font-semibold px-6 py-2 rounded-lg transition-all duration-250 cursor-pointer">
               Contact Us
             </button>
           </motion.div>
@@ -76,7 +76,7 @@ export default function Navbar() {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className={`${
                 isFAQPage ? "text-gray-800" : "text-white"
-              } focus:outline-none`}
+              } focus:outline-none cursor-pointer`}
               aria-label="Toggle menu"
             >
               <svg
@@ -137,7 +137,7 @@ export default function Navbar() {
                 </motion.a>
               ))}
               <motion.button
-                className="w-full bg-primary hover:bg-primary-hover text-white font-semibold px-6 py-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-250"
+                className="w-full bg-primary hover:bg-primary-hover text-white font-semibold px-6 py-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-250 cursor-pointer"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
