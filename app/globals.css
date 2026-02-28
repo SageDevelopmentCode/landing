@@ -8,13 +8,18 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-primary: #F29A8F;
-  --color-primary-hover: #E88A7F;
-  --color-primary-active: #D97A6F;
-  --color-secondary: #F29A8F;
-  --color-welcome-bg: #F3EFEC;
-  --color-badge-bg: #EAE6E0;
+  --color-primary: #FFDAB9;
+  --color-primary-hover: #FFCCA6;
+  --color-primary-active: #FFBD93;
+  --color-secondary: #FFDAB9;
+  --color-welcome-bg: #FFF9F5;
+  --color-badge-bg: #FFF4EC;
   --color-text-gray: #333333;
+  --color-blush-pink: #FFB3BA;
+  --color-butter-yellow: #FFFFBA;
+  --color-lavender: #E0BBE4;
+  --color-sky-blue: #BAE1FF;
+  --color-mint-cream: #BAFFC9;
   --font-heading: var(--font-merriweather);
   --font-body: var(--font-open-sans);
   --font-sans: var(--font-open-sans);

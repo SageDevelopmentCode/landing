@@ -47,20 +47,20 @@ export default function ContinuitySection() {
     {
       id: "social-bonds",
       label: "Healthy Social Bonds",
-      color: "bg-green-200",
-      hoverColor: "bg-green-300",
+      color: "bg-mint-cream/80",
+      hoverColor: "bg-mint-cream",
     },
     {
       id: "emotional-safety",
       label: "Emotional Safety",
-      color: "bg-blue-200",
-      hoverColor: "bg-blue-300",
+      color: "bg-sky-blue/80",
+      hoverColor: "bg-sky-blue",
     },
     {
       id: "confidence",
       label: "Greater Confidence",
-      color: "bg-purple-200",
-      hoverColor: "bg-purple-300",
+      color: "bg-lavender/80",
+      hoverColor: "bg-lavender",
     },
   ];
 
@@ -138,7 +138,7 @@ export default function ContinuitySection() {
                         y1={y1}
                         x2={x2}
                         y2={y2}
-                        stroke={isHovered ? "#F29A8F" : "#E88A7F50"}
+                        stroke={isHovered ? "#FFDAB9" : "#FFDAB980"}
                         strokeWidth={isHovered ? "3" : "2"}
                         className="transition-all duration-300"
                       />

@@ -65,7 +65,7 @@ export default function Navbar() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
           >
-            <button className="bg-[#F29A8F] hover:bg-[#E88A7F] text-white font-semibold px-6 py-2 rounded-lg transition-all duration-250">
+            <button className="bg-primary hover:bg-primary-hover text-white font-semibold px-6 py-2 rounded-lg transition-all duration-250">
               Contact Us
             </button>
           </motion.div>
@@ -137,7 +137,7 @@ export default function Navbar() {
                 </motion.a>
               ))}
               <motion.button
-                className="w-full bg-[#F29A8F] hover:bg-[#E88A7F] text-white font-semibold px-6 py-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-250"
+                className="w-full bg-primary hover:bg-primary-hover text-white font-semibold px-6 py-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-250"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
