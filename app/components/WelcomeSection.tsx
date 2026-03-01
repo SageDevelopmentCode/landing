@@ -132,6 +132,9 @@ export default function WelcomeSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
+              onClick={() => {
+                document.getElementById('educational-philosophy')?.scrollIntoView({ behavior: 'smooth' });
+              }}
             >
               Learn More About Our Program
             </motion.button>
