@@ -1,87 +1,99 @@
-'use server'
+"use server";
 
-import { z } from 'zod'
-import { createServerSupabaseClient } from '@/app/lib/supabase-server'
+import { z } from "zod";
+import { createServerSupabaseClient } from "@/app/lib/supabase-server";
 
 // Validation schema for waitlist form
 const waitlistSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  childName: z.string().min(1, 'Child name is required').max(100, 'Name is too long'),
-  childAge: z.number().int().min(1, 'Age must be at least 1').max(18, 'Age must be 18 or less'),
-  specialInterests: z.string().max(500, 'Special interests text is too long').optional(),
-})
+  email: z.string().email("Please enter a valid email address"),
+  childName: z
+    .string()
+    .min(1, "Child name is required")
+    .max(100, "Name is too long"),
+  childAge: z
+    .number()
+    .int()
+    .min(1, "Age must be at least 1")
+    .max(18, "Age must be 18 or less"),
+  specialInterests: z
+    .string()
+    .max(500, "Special interests text is too long")
+    .optional(),
+});
 
-export type WaitlistFormData = z.infer<typeof waitlistSchema>
+export type WaitlistFormData = z.infer<typeof waitlistSchema>;
 
 // Response type for the action
 export type WaitlistResponse = {
-  success: boolean
-  message: string
-  error?: string
-}
+  success: boolean;
+  message: string;
+  error?: string;
+};
 
 /**
  * Server Action to submit waitlist form
  * This runs on the server and inserts data into Supabase
  */
-export async function submitWaitlist(data: WaitlistFormData): Promise<WaitlistResponse> {
+export async function submitWaitlist(
+  data: WaitlistFormData,
+): Promise<WaitlistResponse> {
   try {
     // Validate the input data
-    const validated = waitlistSchema.parse(data)
+    const validated = waitlistSchema.parse(data);
 
     // Create Supabase client
-    const supabase = createServerSupabaseClient()
+    const supabase = createServerSupabaseClient();
 
     // Insert into waitlist.submissions table
     const { error } = await supabase
-      .schema('waitlist')
-      .from('submissions')
+      .schema("waitlist")
+      .from("submissions")
       .insert({
         email: validated.email,
         child_name: validated.childName,
         child_age: validated.childAge,
         special_interests: validated.specialInterests || null,
-      })
+      });
 
     if (error) {
-      console.error('Supabase error:', error)
+      console.error("Supabase error:", error);
 
       // Check for duplicate email (if we add a unique constraint later)
-      if (error.code === '23505') {
+      if (error.code === "23505") {
         return {
           success: false,
-          message: 'This email has already been registered on the waitlist.',
+          message: "This email has already been registered on the waitlist.",
           error: error.message,
-        }
+        };
       }
 
       return {
         success: false,
-        message: 'Failed to submit to waitlist. Please try again.',
+        message: "Failed to submit to waitlist. Please try again.",
         error: error.message,
-      }
+      };
     }
 
     return {
       success: true,
-      message: 'Successfully added to waitlist! We\'ll be in touch soon.',
-    }
+      message: "Successfully added to waitlist! We'll be in touch soon.",
+    };
   } catch (error) {
-    console.error('Waitlist submission error:', error)
+    console.error("Waitlist submission error:", error);
 
     // Handle validation errors
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        message: error.errors[0].message,
-        error: 'Validation error',
-      }
+        message: error.message,
+        error: "Validation error",
+      };
     }
 
     return {
       success: false,
-      message: 'An unexpected error occurred. Please try again.',
-      error: error instanceof Error ? error.message : 'Unknown error',
-    }
+      message: "An unexpected error occurred. Please try again.",
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 }

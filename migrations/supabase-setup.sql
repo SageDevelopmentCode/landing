@@ -9,6 +9,7 @@
 -- ============================================
 -- Separate logical schemas for different parts of the application
 CREATE SCHEMA IF NOT EXISTS waitlist;
+CREATE SCHEMA IF NOT EXISTS contact;
 CREATE SCHEMA IF NOT EXISTS admin;
 CREATE SCHEMA IF NOT EXISTS parent_app;
 
@@ -100,19 +101,106 @@ GRANT INSERT ON waitlist.submissions TO anon;
 GRANT ALL ON waitlist.submissions TO authenticated;
 
 -- ============================================
--- 8. VERIFICATION QUERIES (Optional - for testing)
+-- 8. CREATE CONTACT SUBMISSIONS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS contact.submissions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone TEXT,
+  subject TEXT NOT NULL,
+  message TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+-- ============================================
+-- 9. CREATE CONTACT INDEXES
+-- ============================================
+-- Index for looking up submissions by email
+CREATE INDEX IF NOT EXISTS idx_contact_submissions_email
+  ON contact.submissions(email);
+
+-- Index for sorting by creation date (most recent first)
+CREATE INDEX IF NOT EXISTS idx_contact_submissions_created_at
+  ON contact.submissions(created_at DESC);
+
+-- ============================================
+-- 10. CREATE TRIGGER FOR CONTACT AUTO-UPDATE TIMESTAMP
+-- ============================================
+-- Function to automatically update updated_at timestamp
+CREATE OR REPLACE FUNCTION contact.update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger that calls the function before any update
+CREATE TRIGGER update_contact_submissions_updated_at
+  BEFORE UPDATE ON contact.submissions
+  FOR EACH ROW
+  EXECUTE FUNCTION contact.update_updated_at_column();
+
+-- ============================================
+-- 11. ENABLE ROW LEVEL SECURITY FOR CONTACT
+-- ============================================
+ALTER TABLE contact.submissions ENABLE ROW LEVEL SECURITY;
+
+-- ============================================
+-- 12. CREATE CONTACT RLS POLICIES
+-- ============================================
+
+-- Policy: Allow anyone (anonymous users) to INSERT into contact
+-- This allows the public form to submit data
+CREATE POLICY "Allow public insert to contact"
+  ON contact.submissions
+  FOR INSERT
+  TO anon
+  WITH CHECK (true);
+
+-- Policy: Prevent anonymous users from reading contact data
+-- Only authenticated admin users will be able to read (setup later)
+CREATE POLICY "Prevent public read of contact"
+  ON contact.submissions
+  FOR SELECT
+  TO anon
+  USING (false);
+
+-- ============================================
+-- 13. GRANT CONTACT PERMISSIONS
+-- ============================================
+-- Grant usage on schema to anon and authenticated roles
+GRANT USAGE ON SCHEMA contact TO anon, authenticated;
+
+-- Grant insert permission to anonymous users (for form submissions)
+GRANT INSERT ON contact.submissions TO anon;
+
+-- Grant all permissions to authenticated users (for future admin portal)
+GRANT ALL ON contact.submissions TO authenticated;
+
+-- ============================================
+-- 14. VERIFICATION QUERIES (Optional - for testing)
 -- ============================================
 -- Run these after setup to verify everything works:
 
--- Check that the table was created
+-- Check that the waitlist table was created
 -- SELECT * FROM waitlist.submissions LIMIT 1;
+
+-- Check that the contact table was created
+-- SELECT * FROM contact.submissions LIMIT 1;
 
 -- Check RLS policies
 -- SELECT * FROM pg_policies WHERE tablename = 'submissions';
 
--- Test insert (simulate form submission)
+-- Test waitlist insert (simulate form submission)
 -- INSERT INTO waitlist.submissions (email, child_name, child_age, special_interests)
 -- VALUES ('test@example.com', 'Test Child', 7, 'Loves nature and science');
+
+-- Test contact insert (simulate form submission)
+-- INSERT INTO contact.submissions (name, email, phone, subject, message)
+-- VALUES ('John Doe', 'john@example.com', '123-456-7890', 'Test Subject', 'Test message');
 
 -- ============================================
 -- SETUP COMPLETE!

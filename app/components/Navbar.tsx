@@ -4,9 +4,11 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import ContactDialog from "./ContactDialog";
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const pathname = usePathname();
   const isFAQPage = pathname === "/faq";
 
@@ -65,7 +67,10 @@ export default function Navbar() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
           >
-            <button className="bg-primary hover:bg-primary-hover text-white font-semibold px-6 py-2 rounded-lg transition-all duration-250 cursor-pointer">
+            <button
+              onClick={() => setContactDialogOpen(true)}
+              className="border-2 border-white bg-primary hover:bg-primary-hover text-white font-semibold px-6 py-2 rounded-lg transition-all duration-250 cursor-pointer"
+            >
               Contact Us
             </button>
           </motion.div>
@@ -137,7 +142,8 @@ export default function Navbar() {
                 </motion.a>
               ))}
               <motion.button
-                className="w-full bg-primary hover:bg-primary-hover text-white font-semibold px-6 py-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-250 cursor-pointer"
+                onClick={() => setContactDialogOpen(true)}
+                className="w-full border-2 border-white bg-primary hover:bg-primary-hover text-white font-semibold px-6 py-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-250 cursor-pointer"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
@@ -149,6 +155,9 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Contact Dialog */}
+      <ContactDialog isOpen={contactDialogOpen} onClose={() => setContactDialogOpen(false)} />
     </motion.nav>
   );
 }

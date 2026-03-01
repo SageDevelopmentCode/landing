@@ -2,23 +2,24 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, Loader2, CheckCircle, AlertCircle } from "lucide-react";
-import { submitWaitlist } from "@/app/actions/waitlist";
+import { X, Mail, Phone, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { submitContact } from "@/app/actions/contact";
 
-interface WaitlistDialogProps {
+interface ContactDialogProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export default function WaitlistDialog({
+export default function ContactDialog({
   isOpen,
   onClose,
-}: WaitlistDialogProps) {
+}: ContactDialogProps) {
   const [formData, setFormData] = useState({
+    name: "",
     email: "",
-    childName: "",
-    childAge: "",
-    specialInterests: "",
+    phone: "",
+    subject: "",
+    message: "",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,27 +28,38 @@ export default function WaitlistDialog({
     message: string;
   }>({ type: null, message: "" });
 
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitStatus({ type: null, message: "" });
 
     try {
-      const result = await submitWaitlist({
+      const result = await submitContact({
+        name: formData.name,
         email: formData.email,
-        childName: formData.childName,
-        childAge: parseInt(formData.childAge),
-        specialInterests: formData.specialInterests || undefined,
+        phone: formData.phone || undefined,
+        subject: formData.subject,
+        message: formData.message,
       });
 
       if (result.success) {
         setSubmitStatus({ type: "success", message: result.message });
         // Clear form
         setFormData({
+          name: "",
           email: "",
-          childName: "",
-          childAge: "",
-          specialInterests: "",
+          phone: "",
+          subject: "",
+          message: "",
         });
         // Auto-close after 2 seconds
         setTimeout(() => {
@@ -67,14 +79,6 @@ export default function WaitlistDialog({
     }
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
   return (
     <AnimatePresence>
       {isOpen && (
@@ -115,11 +119,11 @@ export default function WaitlistDialog({
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h2 className="text-2xl md:text-3xl font-heading font-semibold text-text-gray">
-                    Join Our Waitlist
+                    Contact Us
                   </h2>
                   <p className="text-sm md:text-base text-gray-600 mt-2 font-body">
-                    We&apos;d love to learn more about your child and how Sage
-                    Field can support their learning journey.
+                    We&apos;d love to hear from you! Send us a message and
+                    we&apos;ll get back to you soon.
                   </p>
                 </div>
                 <button
@@ -129,6 +133,29 @@ export default function WaitlistDialog({
                 >
                   <X className="w-5 h-5 text-gray-500" />
                 </button>
+              </div>
+
+              {/* Direct Contact Information */}
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <p className="text-sm font-semibold text-text-gray mb-3 font-body">
+                  You can also reach us directly:
+                </p>
+                <div className="space-y-2">
+                  <a
+                    href="mailto:sobnamia2@gmail.com"
+                    className="flex items-center gap-2 text-sm text-primary hover:text-primary-hover transition-colors font-body"
+                  >
+                    <Mail className="w-4 h-4 flex-shrink-0" />
+                    <span>sobnamia2@gmail.com</span>
+                  </a>
+                  <a
+                    href="tel:714-450-2969"
+                    className="flex items-center gap-2 text-sm text-primary hover:text-primary-hover transition-colors font-body"
+                  >
+                    <Phone className="w-4 h-4 flex-shrink-0" />
+                    <span>714-450-2969</span>
+                  </a>
+                </div>
               </div>
 
               {/* Form */}
@@ -153,11 +180,30 @@ export default function WaitlistDialog({
                   </motion.div>
                 )}
 
+                {/* Name */}
+                <div>
+                  <label className="block text-sm font-semibold text-text-gray mb-2 font-body">
+                    Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                    disabled={isSubmitting}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg
+                             focus:border-primary focus:outline-none transition-colors
+                             font-body text-gray-900 placeholder:text-gray-500
+                             disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    placeholder="Your full name"
+                  />
+                </div>
+
                 {/* Email */}
                 <div>
                   <label className="block text-sm font-semibold text-text-gray mb-2 font-body">
-                    Parent/Guardian Email{" "}
-                    <span className="text-red-500">*</span>
+                    Email <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="email"
@@ -174,84 +220,67 @@ export default function WaitlistDialog({
                   />
                 </div>
 
-                {/* Child's Name */}
+                {/* Phone */}
                 <div>
                   <label className="block text-sm font-semibold text-text-gray mb-2 font-body">
-                    Child&apos;s Name <span className="text-red-500">*</span>
+                    Phone (Optional)
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg
+                             focus:border-primary focus:outline-none transition-colors
+                             font-body text-gray-900 placeholder:text-gray-500"
+                    placeholder="(123) 456-7890"
+                  />
+                </div>
+
+                {/* Subject */}
+                <div>
+                  <label className="block text-sm font-semibold text-text-gray mb-2 font-body">
+                    Subject <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    name="childName"
-                    value={formData.childName}
+                    name="subject"
+                    value={formData.subject}
                     onChange={handleChange}
                     required
-                    disabled={isSubmitting}
                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg
                              focus:border-primary focus:outline-none transition-colors
-                             font-body text-gray-900 placeholder:text-gray-500
-                             disabled:bg-gray-100 disabled:cursor-not-allowed"
-                    placeholder="First and last name"
+                             font-body text-gray-900 placeholder:text-gray-500"
+                    placeholder="What would you like to discuss?"
                   />
                 </div>
 
-                {/* Age */}
+                {/* Message */}
                 <div>
                   <label className="block text-sm font-semibold text-text-gray mb-2 font-body">
-                    Child&apos;s Age <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    name="childAge"
-                    value={formData.childAge}
-                    onChange={handleChange}
-                    min="1"
-                    max="18"
-                    required
-                    disabled={isSubmitting}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg
-                             focus:border-primary focus:outline-none transition-colors
-                             font-body text-gray-900 placeholder:text-gray-500
-                             disabled:bg-gray-100 disabled:cursor-not-allowed"
-                    placeholder="e.g., 7"
-                  />
-                </div>
-
-                {/* Special Interests & Learning Needs */}
-                <div>
-                  <label className="block text-sm font-semibold text-text-gray mb-2 font-body">
-                    Special Interests & Learning Needs
+                    Message <span className="text-red-500">*</span>
                   </label>
                   <textarea
-                    name="specialInterests"
-                    value={formData.specialInterests}
+                    name="message"
+                    value={formData.message}
                     onChange={handleChange}
-                    rows={4}
-                    disabled={isSubmitting}
+                    rows={5}
+                    required
                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg
                              focus:border-primary focus:outline-none transition-colors
-                             font-body resize-none text-gray-900 placeholder:text-gray-500
-                             disabled:bg-gray-100 disabled:cursor-not-allowed"
-                    placeholder="Tell us about your child's interests, learning style, or any special considerations..."
+                             font-body resize-none text-gray-900 placeholder:text-gray-500"
+                    placeholder="Tell us how we can help you..."
                   />
                 </div>
 
                 {/* Submit Button */}
                 <button
                   type="submit"
-                  disabled={isSubmitting}
                   className="w-full px-6 py-3 bg-primary text-white font-semibold
                            rounded-lg hover:bg-primary-hover transition-all duration-200
-                           font-body cursor-pointer disabled:bg-gray-400 disabled:cursor-not-allowed
-                           flex items-center justify-center gap-2"
+                           font-body cursor-pointer flex items-center justify-center gap-2"
                 >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    "Join Waitlist"
-                  )}
+                  Send Message
                 </button>
               </form>
             </div>
