@@ -29,7 +29,7 @@ const DonationsSection = () => {
 
   return (
     <section className="relative bg-welcome-bg py-16 px-8 sm:px-12 lg:px-16 min-h-[80vh] flex items-center justify-center overflow-hidden">
-      <div className="max-w-7xl w-full">
+      <div className="max-w-7xl mx-auto w-full">
         {/* Badge */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}

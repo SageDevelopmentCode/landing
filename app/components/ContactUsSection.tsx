@@ -74,7 +74,7 @@ export default function ContactUsSection() {
             <div className="bg-white rounded-2xl p-8 shadow-lg space-y-6">
               {/* Email */}
               <motion.a
-                href="mailto:sobnamia2@gmail.com"
+                href="mailto:sabrina@sagefield.co"
                 onMouseEnter={() => setHoveredItem("email")}
                 onMouseLeave={() => setHoveredItem(null)}
                 whileHover={{ x: 5 }}
@@ -95,7 +95,7 @@ export default function ContactUsSection() {
                     Email
                   </h4>
                   <p className="text-base text-text-gray font-body break-all">
-                    sobnamia2@gmail.com
+                    sabrina@sagefield.co
                   </p>
                 </div>
               </motion.a>

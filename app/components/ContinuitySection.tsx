@@ -65,8 +65,8 @@ export default function ContinuitySection() {
   ];
 
   return (
-    <section className="bg-welcome-bg min-h-[80vh] py-16 px-8 sm:px-12 lg:px-16 flex flex-col">
-      <div className="max-w-7xl w-full">
+    <section className="bg-welcome-bg min-h-[80vh] py-16 px-8 sm:px-12 lg:px-16 flex items-center justify-center">
+      <div className="max-w-7xl mx-auto w-full">
         {/* Badge */}
         <motion.div
           className="flex justify-start mb-8"
@@ -79,10 +79,7 @@ export default function ContinuitySection() {
             Community Continuity
           </span>
         </motion.div>
-      </div>
 
-      {/* Main Content Container */}
-      <div className="flex items-center w-full">
         {/* Two Column Layout - Tree LEFT, Text RIGHT */}
         <div className="flex flex-col lg:flex-row lg:justify-between items-start gap-16 w-full">
           {/* Left Column: Interactive Tree Diagram */}

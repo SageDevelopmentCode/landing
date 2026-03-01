@@ -5,8 +5,8 @@ import { motion } from "framer-motion";
 
 export default function WhatWeOfferSection() {
   return (
-    <section id="what-we-offer" className="bg-welcome-bg min-h-[80vh] py-16 px-8 sm:px-12 lg:px-16 flex flex-col">
-      <div className="max-w-7xl w-full">
+    <section id="what-we-offer" className="bg-welcome-bg min-h-[80vh] py-16 px-8 sm:px-12 lg:px-16 flex items-center justify-center">
+      <div className="max-w-7xl mx-auto w-full">
         {/* What We Offer Badge */}
         <motion.div
           className="flex justify-start mb-8"
@@ -19,10 +19,7 @@ export default function WhatWeOfferSection() {
             What We Offer
           </span>
         </motion.div>
-      </div>
 
-      {/* Centered Content Container */}
-      <div className="flex items-center w-full">
         {/* Two Column Layout - Reversed from WelcomeSection */}
         <div className="flex flex-col lg:flex-row lg:justify-between items-start gap-16 w-full">
           {/* Left Column: Weekly Schedule */}

@@ -2,7 +2,14 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, Mail, Phone, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import {
+  X,
+  Mail,
+  Phone,
+  Loader2,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
 import { submitContact } from "@/app/actions/contact";
 
 interface ContactDialogProps {
@@ -10,10 +17,7 @@ interface ContactDialogProps {
   onClose: () => void;
 }
 
-export default function ContactDialog({
-  isOpen,
-  onClose,
-}: ContactDialogProps) {
+export default function ContactDialog({ isOpen, onClose }: ContactDialogProps) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -166,11 +170,11 @@ export default function ContactDialog({
                 </p>
                 <div className="space-y-2">
                   <a
-                    href="mailto:sobnamia2@gmail.com"
+                    href="mailto:sabrina@sagefield.co"
                     className="flex items-center gap-2 text-sm text-primary hover:text-primary-hover transition-colors font-body"
                   >
                     <Mail className="w-4 h-4 flex-shrink-0" />
-                    <span>sobnamia2@gmail.com</span>
+                    <span>sabrina@sagefield.co</span>
                   </a>
                   <a
                     href="tel:714-450-2969"
