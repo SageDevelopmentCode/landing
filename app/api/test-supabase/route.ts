@@ -1,13 +1,15 @@
 import { NextResponse } from 'next/server'
-import { supabaseServer } from '@/app/lib/supabase-server'
+import { createServerSupabaseClient } from '@/app/lib/supabase-server'
 
 // Test endpoint to verify Supabase connection
 // Visit: http://localhost:3000/api/test-supabase
 
 export async function GET() {
   try {
+    const supabase = createServerSupabaseClient()
+
     // Test the connection by checking the project URL
-    const { data, error } = await supabaseServer
+    const { data, error } = await supabase
       .from('_dummy_table_')
       .select('*')
       .limit(1)

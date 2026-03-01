@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X } from "lucide-react";
+import { X, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { submitWaitlist } from "@/app/actions/waitlist";
 
 interface WaitlistDialogProps {
   isOpen: boolean;
@@ -9,6 +11,67 @@ interface WaitlistDialogProps {
 }
 
 export default function WaitlistDialog({ isOpen, onClose }: WaitlistDialogProps) {
+  const [formData, setFormData] = useState({
+    email: "",
+    childName: "",
+    childAge: "",
+    specialInterests: "",
+  });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<{
+    type: "success" | "error" | null;
+    message: string;
+  }>({ type: null, message: "" });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitStatus({ type: null, message: "" });
+
+    try {
+      const result = await submitWaitlist({
+        email: formData.email,
+        childName: formData.childName,
+        childAge: parseInt(formData.childAge),
+        specialInterests: formData.specialInterests || undefined,
+      });
+
+      if (result.success) {
+        setSubmitStatus({ type: "success", message: result.message });
+        // Clear form
+        setFormData({
+          email: "",
+          childName: "",
+          childAge: "",
+          specialInterests: "",
+        });
+        // Auto-close after 2 seconds
+        setTimeout(() => {
+          onClose();
+          setSubmitStatus({ type: null, message: "" });
+        }, 2000);
+      } else {
+        setSubmitStatus({ type: "error", message: result.message });
+      }
+    } catch (error) {
+      setSubmitStatus({
+        type: "error",
+        message: "An unexpected error occurred. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
   return (
     <AnimatePresence>
       {isOpen && (
@@ -65,7 +128,27 @@ export default function WaitlistDialog({ isOpen, onClose }: WaitlistDialogProps)
               </div>
 
               {/* Form */}
-              <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+              <form className="space-y-5" onSubmit={handleSubmit}>
+                {/* Status Messages */}
+                {submitStatus.type && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`flex items-center gap-2 p-4 rounded-lg ${
+                      submitStatus.type === "success"
+                        ? "bg-green-50 text-green-800 border border-green-200"
+                        : "bg-red-50 text-red-800 border border-red-200"
+                    }`}
+                  >
+                    {submitStatus.type === "success" ? (
+                      <CheckCircle className="w-5 h-5 flex-shrink-0" />
+                    ) : (
+                      <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                    )}
+                    <p className="text-sm font-body">{submitStatus.message}</p>
+                  </motion.div>
+                )}
+
                 {/* Email */}
                 <div>
                   <label className="block text-sm font-semibold text-text-gray mb-2 font-body">
@@ -73,10 +156,15 @@ export default function WaitlistDialog({ isOpen, onClose }: WaitlistDialogProps)
                   </label>
                   <input
                     type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
                     required
+                    disabled={isSubmitting}
                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg
                              focus:border-primary focus:outline-none transition-colors
-                             font-body text-gray-900 placeholder:text-gray-500"
+                             font-body text-gray-900 placeholder:text-gray-500
+                             disabled:bg-gray-100 disabled:cursor-not-allowed"
                     placeholder="your@email.com"
                   />
                 </div>
@@ -88,10 +176,15 @@ export default function WaitlistDialog({ isOpen, onClose }: WaitlistDialogProps)
                   </label>
                   <input
                     type="text"
+                    name="childName"
+                    value={formData.childName}
+                    onChange={handleChange}
                     required
+                    disabled={isSubmitting}
                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg
                              focus:border-primary focus:outline-none transition-colors
-                             font-body text-gray-900 placeholder:text-gray-500"
+                             font-body text-gray-900 placeholder:text-gray-500
+                             disabled:bg-gray-100 disabled:cursor-not-allowed"
                     placeholder="First and last name"
                   />
                 </div>
@@ -103,12 +196,17 @@ export default function WaitlistDialog({ isOpen, onClose }: WaitlistDialogProps)
                   </label>
                   <input
                     type="number"
+                    name="childAge"
+                    value={formData.childAge}
+                    onChange={handleChange}
                     min="1"
                     max="18"
                     required
+                    disabled={isSubmitting}
                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg
                              focus:border-primary focus:outline-none transition-colors
-                             font-body text-gray-900 placeholder:text-gray-500"
+                             font-body text-gray-900 placeholder:text-gray-500
+                             disabled:bg-gray-100 disabled:cursor-not-allowed"
                     placeholder="e.g., 7"
                   />
                 </div>
@@ -119,10 +217,15 @@ export default function WaitlistDialog({ isOpen, onClose }: WaitlistDialogProps)
                     Special Interests & Learning Needs
                   </label>
                   <textarea
+                    name="specialInterests"
+                    value={formData.specialInterests}
+                    onChange={handleChange}
                     rows={4}
+                    disabled={isSubmitting}
                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg
                              focus:border-primary focus:outline-none transition-colors
-                             font-body resize-none text-gray-900 placeholder:text-gray-500"
+                             font-body resize-none text-gray-900 placeholder:text-gray-500
+                             disabled:bg-gray-100 disabled:cursor-not-allowed"
                     placeholder="Tell us about your child's interests, learning style, or any special considerations..."
                   />
                 </div>
@@ -130,11 +233,20 @@ export default function WaitlistDialog({ isOpen, onClose }: WaitlistDialogProps)
                 {/* Submit Button */}
                 <button
                   type="submit"
+                  disabled={isSubmitting}
                   className="w-full px-6 py-3 bg-primary text-white font-semibold
                            rounded-lg hover:bg-primary-hover transition-all duration-200
-                           font-body cursor-pointer"
+                           font-body cursor-pointer disabled:bg-gray-400 disabled:cursor-not-allowed
+                           flex items-center justify-center gap-2"
                 >
-                  Join Waitlist
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    "Join Waitlist"
+                  )}
                 </button>
               </form>
             </div>
