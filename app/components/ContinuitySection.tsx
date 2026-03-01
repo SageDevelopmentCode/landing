@@ -138,7 +138,7 @@ export default function ContinuitySection() {
                         y1={y1}
                         x2={x2}
                         y2={y2}
-                        stroke={isHovered ? "#FFDAB9" : "#FFDAB980"}
+                        stroke={isHovered ? "#f29a8f" : "#f29a8f80"}
                         strokeWidth={isHovered ? "3" : "2"}
                         className="transition-all duration-300"
                       />

@@ -8,10 +8,10 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-primary: #FFDAB9;
-  --color-primary-hover: #FFCCA6;
-  --color-primary-active: #FFBD93;
-  --color-secondary: #FFDAB9;
+  --color-primary: #f29a8f;
+  --color-primary-hover: #e88d82;
+  --color-primary-active: #d47f75;
+  --color-secondary: #f29a8f;
   --color-welcome-bg: #FFF9F5;
   --color-badge-bg: #FFF4EC;
   --color-text-gray: #333333;

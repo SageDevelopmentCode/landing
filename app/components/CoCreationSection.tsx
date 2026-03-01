@@ -76,15 +76,15 @@ export default function CoCreationSection() {
                 >
                   <stop
                     offset="0%"
-                    style={{ stopColor: "#FFDAB9", stopOpacity: 0.3 }}
+                    style={{ stopColor: "#f29a8f", stopOpacity: 0.3 }}
                   />
                   <stop
                     offset="50%"
-                    style={{ stopColor: "#FFDAB9", stopOpacity: 0.8 }}
+                    style={{ stopColor: "#f29a8f", stopOpacity: 0.8 }}
                   />
                   <stop
                     offset="100%"
-                    style={{ stopColor: "#FFDAB9", stopOpacity: 0.3 }}
+                    style={{ stopColor: "#f29a8f", stopOpacity: 0.3 }}
                   />
                 </linearGradient>
               </defs>
