@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 
 export default function WhatWeOfferSection() {
   return (
-    <section className="bg-welcome-bg min-h-[80vh] py-16 px-8 sm:px-12 lg:px-16 flex flex-col">
+    <section id="what-we-offer" className="bg-welcome-bg min-h-[80vh] py-16 px-8 sm:px-12 lg:px-16 flex flex-col">
       <div className="max-w-7xl w-full">
         {/* What We Offer Badge */}
         <motion.div

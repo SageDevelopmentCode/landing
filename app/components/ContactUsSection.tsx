@@ -2,9 +2,11 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
+import ContactDialog from "./ContactDialog";
 
 export default function ContactUsSection() {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [contactDialogOpen, setContactDialogOpen] = useState(false);
 
   return (
     <section className="bg-welcome-bg py-16 px-8 sm:px-12 lg:px-16 min-h-[80vh] flex items-center">
@@ -50,15 +52,15 @@ export default function ContactUsSection() {
               anytime — we&apos;d love to connect with you and your family.
             </p>
 
-            <motion.a
-              href="mailto:sobnamia2@gmail.com"
+            <motion.button
+              onClick={() => setContactDialogOpen(true)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className="inline-block px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body"
+              className="px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
             >
               Contact Us
-            </motion.a>
+            </motion.button>
           </motion.div>
 
           {/* Right: Contact Information Card */}
@@ -154,6 +156,12 @@ export default function ContactUsSection() {
           </motion.div>
         </div>
       </div>
+
+      {/* Contact Dialog */}
+      <ContactDialog
+        isOpen={contactDialogOpen}
+        onClose={() => setContactDialogOpen(false)}
+      />
     </section>
   );
 }

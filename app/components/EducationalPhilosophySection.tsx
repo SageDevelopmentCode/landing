@@ -27,7 +27,7 @@ export default function EducationalPhilosophySection() {
   ];
 
   return (
-    <section className="bg-welcome-bg min-h-[80vh] py-16 px-8 sm:px-12 lg:px-16 flex flex-col">
+    <section id="educational-philosophy" className="bg-welcome-bg min-h-[80vh] py-16 px-8 sm:px-12 lg:px-16 flex flex-col">
       <div className="max-w-7xl w-full">
         {/* How We Learn Badge */}
         <motion.div

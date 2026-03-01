@@ -15,9 +15,31 @@ export default function Navbar() {
   const menuItems = [
     { label: "What We Offer", href: "#what-we-offer" },
     { label: "Educational Philosophy", href: "#educational-philosophy" },
-    { label: "About Us", href: "#about-us" },
+    { label: "About Us", href: "/about" },
     { label: "FAQ", href: "/faq" },
   ];
+
+  const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    // Only handle anchor links (starting with #) on the home page
+    if (href.startsWith("#") && pathname === "/") {
+      e.preventDefault();
+      const targetId = href.substring(1);
+      const targetElement = document.getElementById(targetId);
+
+      if (targetElement) {
+        const navbarHeight = 80; // Height of the navbar in pixels
+        const targetPosition = targetElement.offsetTop - navbarHeight;
+
+        window.scrollTo({
+          top: targetPosition,
+          behavior: "smooth"
+        });
+
+        // Close mobile menu if open
+        setMobileMenuOpen(false);
+      }
+    }
+  };
 
   return (
     <motion.nav
@@ -46,6 +68,7 @@ export default function Navbar() {
               <motion.a
                 key={item.label}
                 href={item.href}
+                onClick={(e) => handleSmoothScroll(e, item.href)}
                 className={`${
                   isFAQPage
                     ? "text-gray-800/90 hover:text-gray-800"
@@ -132,7 +155,7 @@ export default function Navbar() {
                       ? "text-gray-800/90 hover:text-gray-800"
                       : "text-white/90 hover:text-white"
                   } font-semibold py-2 transition-colors duration-200`}
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={(e) => handleSmoothScroll(e, item.href)}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}

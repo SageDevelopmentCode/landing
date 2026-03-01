@@ -32,8 +32,8 @@ export default function WelcomeSection() {
   ];
 
   return (
-    <section className="bg-welcome-bg min-h-[80vh] py-16 px-8 sm:px-12 lg:px-16 flex flex-col">
-      <div className="max-w-7xl w-full">
+    <section className="bg-welcome-bg min-h-[80vh] py-16 px-8 sm:px-12 lg:px-16 flex items-center justify-center">
+      <div className="max-w-7xl mx-auto w-full">
         {/* Welcome Badge */}
         <motion.div
           className="flex justify-start mb-8"
@@ -46,12 +46,9 @@ export default function WelcomeSection() {
             Welcome
           </span>
         </motion.div>
-      </div>
 
-      {/* Centered Content Container */}
-      <div className="flex items-center w-full">
         {/* Two Column Layout */}
-        <div className="flex flex-col lg:flex-row lg:justify-between items-center gap-64 w-full">
+        <div className="flex flex-col lg:flex-row lg:justify-between items-center gap-16 w-full">
           {/* Left Column: Text Content */}
           <div className="text-left max-w-2xl">
             {/* Title */}
@@ -62,7 +59,7 @@ export default function WelcomeSection() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
             >
-              Welcome to Sage Field!
+              What is Sage Field?
             </motion.h2>
 
             {/* Introduction Paragraph */}

@@ -39,7 +39,7 @@ const DonationsSection = () => {
           className="mb-8"
         >
           <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
-            SECTION 6: DONATIONS & COMMITMENT
+            TUITION & COMMITMENT
           </span>
         </motion.div>
 
@@ -64,10 +64,9 @@ const DonationsSection = () => {
               transition={{ duration: 0.6, delay: 0.2, ease: 'easeOut' }}
               className="text-base md:text-lg text-text-gray leading-relaxed mb-6 font-body"
             >
-              Participation at Sage Field is based on a{' '}
-              <span className="text-primary font-semibold">minimum donation</span>, not official
-              tuition. Families commit to a one-semester contract to ensure consistency and support
-              for our program.
+              We are currently gathering information on the number of families interested in joining our community. Once we have a clear understanding of{' '}
+              <span className="text-primary font-semibold">enrollment</span>, tuition will be finalized. Families commit to a{' '}
+              <span className="text-primary font-semibold">one-semester contract</span> to ensure consistency and support for the program.
             </motion.p>
 
             {/* Callout Box */}
@@ -85,21 +84,19 @@ const DonationsSection = () => {
                 <li className="flex items-start">
                   <span className="text-primary mr-2 text-xl">•</span>
                   <span className="text-base text-text-gray font-body">
-                    <span className="font-semibold text-black">Minimum Donation:</span> Approx. $850/month (TBD based on number of students)
+                    <span className="font-semibold text-black">Tuition (Four-Day Membership):</span> Expected to range $900–$1,300/month, finalized based on total enrollment
                   </span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-primary mr-2 text-xl">•</span>
                   <span className="text-base text-text-gray font-body">
-                    <span className="font-semibold text-black">Payment Options:</span> Semester or
-                    monthly installments
+                    <span className="font-semibold text-black">Payment Options:</span> Semester or monthly installments
                   </span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-primary mr-2 text-xl">•</span>
                   <span className="text-base text-text-gray font-body">
-                    <span className="font-semibold text-black">Commitment:</span> One-semester
-                    contract for program consistency
+                    <span className="font-semibold text-black">Commitment:</span> One-semester contract for program consistency
                   </span>
                 </li>
               </ul>
@@ -110,10 +107,19 @@ const DonationsSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.4, ease: 'easeOut' }}
-              className="text-base md:text-lg text-text-gray leading-relaxed mt-6 mb-8 font-body"
+              className="text-base md:text-lg text-text-gray leading-relaxed mt-6 mb-4 font-body"
             >
-              Your contributions make this community possible — supporting continued growth and
-              enrichment for every child.
+              Your enrollment makes this community possible — supporting continued growth and enrichment for every child.
+            </motion.p>
+
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.45, ease: 'easeOut' }}
+              className="text-sm md:text-base text-text-gray leading-relaxed mb-8 font-body italic"
+            >
+              Want to help us grow? Optional contributions beyond tuition help support Sage Field's development in these early stages.
             </motion.p>
 
             {/* CTA Button */}
