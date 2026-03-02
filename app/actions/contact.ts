@@ -6,6 +6,10 @@ import {
   sendDiscordNotification,
   createContactEmbed,
 } from "@/app/lib/discord";
+import {
+  createTrelloCard,
+  createContactCard,
+} from "@/app/lib/trello";
 
 // Validation schema for contact form
 const contactSchema = z.object({
@@ -86,6 +90,21 @@ export async function submitContact(
     } catch (discordError) {
       // Log but don't fail the submission if Discord notification fails
       console.error("Failed to send Discord notification:", discordError);
+    }
+
+    // Create Trello card (non-blocking)
+    try {
+      const card = await createContactCard({
+        name: validated.name,
+        email: validated.email,
+        phone: validated.phone,
+        subject: validated.subject,
+        message: validated.message,
+      });
+      await createTrelloCard(card);
+    } catch (trelloError) {
+      // Log but don't fail the submission if Trello card creation fails
+      console.error("Failed to create Trello card:", trelloError);
     }
 
     return {

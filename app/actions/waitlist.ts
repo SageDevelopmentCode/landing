@@ -6,6 +6,10 @@ import {
   sendDiscordNotification,
   createWaitlistEmbed,
 } from "@/app/lib/discord";
+import {
+  createTrelloCard,
+  createWaitlistCard,
+} from "@/app/lib/trello";
 
 // Validation schema for waitlist form
 const waitlistSchema = z.object({
@@ -101,6 +105,22 @@ export async function submitWaitlist(
     } catch (discordError) {
       // Log but don't fail the submission if Discord notification fails
       console.error("Failed to send Discord notification:", discordError);
+    }
+
+    // Create Trello card (non-blocking)
+    try {
+      const card = await createWaitlistCard({
+        parentName: validated.parentName,
+        email: validated.email,
+        childName: validated.childName,
+        childAge: validated.childAge,
+        programInterest: validated.programInterest,
+        specialInterests: validated.specialInterests,
+      });
+      await createTrelloCard(card);
+    } catch (trelloError) {
+      // Log but don't fail the submission if Trello card creation fails
+      console.error("Failed to create Trello card:", trelloError);
     }
 
     return {
