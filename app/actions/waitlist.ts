@@ -20,7 +20,7 @@ const waitlistSchema = z.object({
     .min(1, "Age must be at least 1")
     .max(18, "Age must be 18 or less"),
   programInterest: z.enum(["summer-2026", "school-year-2026", "both"], {
-    errorMap: () => ({ message: "Please select a program" }),
+    message: "Please select a program",
   }),
   specialInterests: z
     .string()
