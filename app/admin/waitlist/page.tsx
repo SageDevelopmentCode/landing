@@ -3,22 +3,6 @@ import { Table, TableRow, TableCell } from '../components/Table'
 import { StatusBadge } from '../components/StatusBadge'
 import { colors, radius, shadows } from '../design-system'
 
-async function updateSubmissionStatus(formData: FormData) {
-  'use server'
-
-  const id = formData.get('id') as string
-  const status = formData.get('status') as string
-  const notes = formData.get('notes') as string
-
-  const supabase = await createServerSupabaseClient()
-
-  await supabase
-    .schema('waitlist')
-    .from('submissions')
-    .update({ status, notes })
-    .eq('id', id)
-}
-
 export default async function WaitlistPage() {
   const supabase = await createServerSupabaseClient()
 
