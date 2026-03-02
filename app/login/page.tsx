@@ -1,109 +1,179 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { signInWithEmail, signInWithMagicLink, signInWithGoogle } from '@/app/actions/auth'
-import Link from 'next/link'
+import { useState } from "react";
+import {
+  signInWithEmail,
+  signInWithMagicLink,
+  signInWithGoogle,
+} from "@/app/actions/auth";
+import Link from "next/link";
+import { motion } from "framer-motion";
 
 export default function LoginPage() {
-  const [authMode, setAuthMode] = useState<'password' | 'magic-link'>('password')
-  const [error, setError] = useState<string | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [authMode, setAuthMode] = useState<"password" | "magic-link">(
+    "password",
+  );
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   async function handleEmailPasswordSubmit(formData: FormData) {
-    setLoading(true)
-    setError(null)
-    setMessage(null)
+    setLoading(true);
+    setError(null);
+    setMessage(null);
 
-    const result = await signInWithEmail(formData)
+    const result = await signInWithEmail(formData);
 
     if (result?.error) {
-      setError(result.error)
-      setLoading(false)
+      setError(result.error);
+      setLoading(false);
     }
   }
 
   async function handleMagicLinkSubmit(formData: FormData) {
-    setLoading(true)
-    setError(null)
-    setMessage(null)
+    setLoading(true);
+    setError(null);
+    setMessage(null);
 
-    const result = await signInWithMagicLink(formData)
+    const result = await signInWithMagicLink(formData);
 
     if (result?.error) {
-      setError(result.error)
-      setLoading(false)
+      setError(result.error);
+      setLoading(false);
     } else if (result?.message) {
-      setMessage(result.message)
-      setLoading(false)
+      setMessage(result.message);
+      setLoading(false);
     }
   }
 
   async function handleGoogleSignIn() {
-    setLoading(true)
-    setError(null)
-    setMessage(null)
+    setLoading(true);
+    setError(null);
+    setMessage(null);
 
-    const result = await signInWithGoogle()
+    const result = await signInWithGoogle();
 
     if (result?.error) {
-      setError(result.error)
-      setLoading(false)
+      setError(result.error);
+      setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-12">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-xl">
+    <div
+      className="min-h-screen flex items-center justify-center px-4 py-12"
+      style={{
+        background: `linear-gradient(135deg, #FBFAF7 0%, #F6F1E8 50%, #E8DFD0 100%)`,
+      }}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="max-w-md w-full space-y-8 bg-white p-8"
+        style={{
+          borderRadius: "16px",
+          boxShadow: "0 8px 24px rgba(94, 124, 104, 0.15)",
+          border: "1px solid #E8E4DF",
+        }}
+      >
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900">Sign In</h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <h2 className="text-3xl font-bold" style={{ color: "#5E7C68" }}>
+            Sign In
+          </h2>
+          <p className="mt-2 text-sm" style={{ color: "#6B6B6B" }}>
             Access your Sagefield School account
           </p>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="px-4 py-3"
+            style={{
+              backgroundColor: "#F2C6C6",
+              border: "1px solid #E6B7B2",
+              color: "#A55858",
+              borderRadius: "12px",
+            }}
+          >
             {error}
-          </div>
+          </motion.div>
         )}
 
         {message && (
-          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="px-4 py-3"
+            style={{
+              backgroundColor: "#CDE8D0",
+              border: "1px solid #BFD8C0",
+              color: "#4A7C59",
+              borderRadius: "12px",
+            }}
+          >
             {message}
-          </div>
+          </motion.div>
         )}
 
-        <div className="flex gap-2 p-1 bg-gray-100 rounded-lg">
-          <button
+        <div
+          className="flex gap-2 p-1.5"
+          style={{
+            backgroundColor: "#F6F1E8",
+            borderRadius: "12px",
+          }}
+        >
+          <motion.button
             type="button"
-            onClick={() => setAuthMode('password')}
-            className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
-              authMode === 'password'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
+            onClick={() => setAuthMode("password")}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="flex-1 py-2.5 px-4 font-medium transition-all duration-200"
+            style={{
+              backgroundColor:
+                authMode === "password" ? "white" : "transparent",
+              color: authMode === "password" ? "#5E7C68" : "#6B6B6B",
+              borderRadius: "10px",
+              boxShadow:
+                authMode === "password"
+                  ? "0 2px 8px rgba(94, 124, 104, 0.08)"
+                  : "none",
+            }}
           >
             Password
-          </button>
-          <button
+          </motion.button>
+          <motion.button
             type="button"
-            onClick={() => setAuthMode('magic-link')}
-            className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
-              authMode === 'magic-link'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
+            onClick={() => setAuthMode("magic-link")}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="flex-1 py-2.5 px-4 font-medium transition-all duration-200"
+            style={{
+              backgroundColor:
+                authMode === "magic-link" ? "white" : "transparent",
+              color: authMode === "magic-link" ? "#5E7C68" : "#6B6B6B",
+              borderRadius: "10px",
+              boxShadow:
+                authMode === "magic-link"
+                  ? "0 2px 8px rgba(94, 124, 104, 0.08)"
+                  : "none",
+            }}
           >
             Magic Link
-          </button>
+          </motion.button>
         </div>
 
-        {authMode === 'password' ? (
+        {authMode === "password" ? (
           <form action={handleEmailPasswordSubmit} className="mt-8 space-y-6">
             <div className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium mb-2"
+                  style={{ color: "#3D3D3D" }}
+                >
                   Email address
                 </label>
                 <input
@@ -112,12 +182,23 @@ export default function LoginPage() {
                   type="email"
                   autoComplete="email"
                   required
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="block w-full px-4 py-3 shadow-sm focus:outline-none transition-all duration-200"
+                  style={{
+                    border: "1px solid #E8E4DF",
+                    borderRadius: "12px",
+                    color: "#3D3D3D",
+                  }}
                   placeholder="you@example.com"
+                  onFocus={(e) => (e.target.style.border = "1px solid #BFD8C0")}
+                  onBlur={(e) => (e.target.style.border = "1px solid #E8E4DF")}
                 />
               </div>
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium mb-2"
+                  style={{ color: "#3D3D3D" }}
+                >
                   Password
                 </label>
                 <input
@@ -126,24 +207,43 @@ export default function LoginPage() {
                   type="password"
                   autoComplete="current-password"
                   required
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="block w-full px-4 py-3 shadow-sm focus:outline-none transition-all duration-200"
+                  style={{
+                    border: "1px solid #E8E4DF",
+                    borderRadius: "12px",
+                    color: "#3D3D3D",
+                  }}
                   placeholder="Enter your password"
+                  onFocus={(e) => (e.target.style.border = "1px solid #BFD8C0")}
+                  onBlur={(e) => (e.target.style.border = "1px solid #E8E4DF")}
                 />
               </div>
             </div>
 
-            <button
+            <motion.button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              whileHover={{ scale: loading ? 1 : 1.02 }}
+              whileTap={{ scale: loading ? 1 : 0.98 }}
+              className="w-full flex justify-center py-3 px-4 text-sm font-medium text-white focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              style={{
+                backgroundColor: "#5E7C68",
+                borderRadius: "12px",
+                boxShadow: "0 2px 8px rgba(94, 124, 104, 0.15)",
+                border: "none",
+              }}
             >
-              {loading ? 'Signing in...' : 'Sign in with Email'}
-            </button>
+              {loading ? "Signing in..." : "Sign in with Email"}
+            </motion.button>
           </form>
         ) : (
           <form action={handleMagicLinkSubmit} className="mt-8 space-y-6">
             <div>
-              <label htmlFor="email-magic" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email-magic"
+                className="block text-sm font-medium mb-2"
+                style={{ color: "#3D3D3D" }}
+              >
                 Email address
               </label>
               <input
@@ -152,40 +252,68 @@ export default function LoginPage() {
                 type="email"
                 autoComplete="email"
                 required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="block w-full px-4 py-3 shadow-sm focus:outline-none transition-all duration-200"
+                style={{
+                  border: "1px solid #E8E4DF",
+                  borderRadius: "12px",
+                  color: "#3D3D3D",
+                }}
                 placeholder="you@example.com"
+                onFocus={(e) => (e.target.style.border = "1px solid #BFD8C0")}
+                onBlur={(e) => (e.target.style.border = "1px solid #E8E4DF")}
               />
-              <p className="mt-2 text-xs text-gray-500">
-                We'll send you a magic link to sign in without a password
+              <p className="mt-2 text-xs" style={{ color: "#9B9B9B" }}>
+                We&apos;ll send you a magic link to sign in without a password
               </p>
             </div>
 
-            <button
+            <motion.button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              whileHover={{ scale: loading ? 1 : 1.02 }}
+              whileTap={{ scale: loading ? 1 : 0.98 }}
+              className="w-full flex justify-center py-3 px-4 text-sm font-medium text-white focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              style={{
+                backgroundColor: "#5E7C68",
+                borderRadius: "12px",
+                boxShadow: "0 2px 8px rgba(94, 124, 104, 0.15)",
+                border: "none",
+              }}
             >
-              {loading ? 'Sending...' : 'Send Magic Link'}
-            </button>
+              {loading ? "Sending..." : "Send Magic Link"}
+            </motion.button>
           </form>
         )}
 
         <div className="mt-6">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
+              <div
+                className="w-full"
+                style={{ borderTop: `1px solid #E8E4DF` }}
+              />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with</span>
+              <span className="px-2 bg-white" style={{ color: "#9B9B9B" }}>
+                Or continue with
+              </span>
             </div>
           </div>
 
           <div className="mt-6">
-            <button
+            <motion.button
               type="button"
               onClick={handleGoogleSignIn}
               disabled={loading}
-              className="w-full flex items-center justify-center gap-3 py-2.5 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              whileHover={{ scale: loading ? 1 : 1.02 }}
+              whileTap={{ scale: loading ? 1 : 0.98 }}
+              className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white text-sm font-medium focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              style={{
+                border: "1px solid #E8E4DF",
+                borderRadius: "12px",
+                color: "#3D3D3D",
+                boxShadow: "0 2px 8px rgba(94, 124, 104, 0.08)",
+              }}
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
@@ -209,17 +337,23 @@ export default function LoginPage() {
                   className="text-red-500"
                 />
               </svg>
-              {loading ? 'Connecting...' : 'Sign in with Google'}
-            </button>
+              {loading ? "Connecting..." : "Sign in with Google"}
+            </motion.button>
           </div>
         </div>
 
         <div className="text-center mt-4">
-          <Link href="/" className="text-sm text-blue-600 hover:text-blue-800">
+          <Link
+            href="/"
+            className="text-sm font-medium transition-colors duration-200"
+            style={{ color: "#5E7C68" }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#4A6654")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "#5E7C68")}
+          >
             Back to home
           </Link>
         </div>
-      </div>
+      </motion.div>
     </div>
-  )
+  );
 }

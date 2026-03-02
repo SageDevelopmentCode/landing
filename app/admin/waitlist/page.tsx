@@ -1,4 +1,7 @@
 import { createServerSupabaseClient } from '@/app/lib/supabase-server'
+import { Table, TableRow, TableCell } from '../components/Table'
+import { StatusBadge } from '../components/StatusBadge'
+import { colors, radius, shadows } from '../design-system'
 
 async function updateSubmissionStatus(formData: FormData) {
   'use server'
@@ -27,16 +30,24 @@ export default async function WaitlistPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Waitlist Submissions</h1>
-          <p className="mt-2 text-gray-600">
+          <h1 className="text-3xl font-bold" style={{ color: colors.mistyForest }}>
+            Waitlist Submissions
+          </h1>
+          <p className="mt-2" style={{ color: colors.textSecondary }}>
             {submissions?.length || 0} total submissions
           </p>
         </div>
         <a
           href="/api/admin/export-waitlist"
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="inline-flex items-center justify-center px-4 py-3 text-sm font-medium text-white transition-all duration-200 hover:scale-105 active:scale-95"
+          style={{
+            backgroundColor: colors.mistyForest,
+            borderRadius: radius.md,
+            boxShadow: shadows.soft,
+            border: 'none',
+          }}
         >
           <svg
             className="-ml-1 mr-2 h-5 w-5"
@@ -55,84 +66,65 @@ export default async function WaitlistPage() {
         </a>
       </div>
 
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Parent Info
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Contact
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Child Info
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Start Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Submitted
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {submissions && submissions.length > 0 ? (
-                submissions.map((submission) => (
-                  <tr key={submission.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {submission.parent_name}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">{submission.email}</div>
-                      <div className="text-sm text-gray-500">{submission.phone}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">{submission.child_name}</div>
-                      <div className="text-sm text-gray-500">
-                        Age: {submission.child_age || 'N/A'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {submission.preferred_start_date || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          submission.status === 'enrolled'
-                            ? 'bg-green-100 text-green-800'
-                            : submission.status === 'contacted'
-                            ? 'bg-blue-100 text-blue-800'
-                            : submission.status === 'rejected'
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}
-                      >
-                        {submission.status || 'pending'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(submission.created_at).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                    No submissions yet
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+      {submissions && submissions.length > 0 ? (
+        <Table
+          headers={[
+            'Parent Info',
+            'Contact',
+            'Child Info',
+            'Start Date',
+            'Status',
+            'Submitted',
+          ]}
+        >
+          {submissions.map((submission, index) => (
+            <TableRow key={submission.id} index={index}>
+              <TableCell>
+                <div className="font-medium">{submission.parent_name}</div>
+              </TableCell>
+              <TableCell>
+                <div>{submission.email}</div>
+                <div className="text-sm" style={{ color: colors.textSecondary }}>
+                  {submission.phone}
+                </div>
+              </TableCell>
+              <TableCell>
+                <div>{submission.child_name}</div>
+                <div className="text-sm" style={{ color: colors.textSecondary }}>
+                  Age: {submission.child_age || 'N/A'}
+                </div>
+              </TableCell>
+              <TableCell>
+                <div style={{ color: colors.textSecondary }}>
+                  {submission.preferred_start_date || 'N/A'}
+                </div>
+              </TableCell>
+              <TableCell>
+                <StatusBadge
+                  status={(submission.status || 'pending') as any}
+                  type="waitlist"
+                />
+              </TableCell>
+              <TableCell>
+                <div style={{ color: colors.textSecondary }}>
+                  {new Date(submission.created_at).toLocaleDateString()}
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </Table>
+      ) : (
+        <div
+          className="bg-white p-12 text-center"
+          style={{
+            borderRadius: radius.lg,
+            boxShadow: shadows.soft,
+            border: `1px solid ${colors.border}`,
+          }}
+        >
+          <p style={{ color: colors.textSecondary }}>No submissions yet</p>
         </div>
-      </div>
+      )}
     </div>
   )
 }

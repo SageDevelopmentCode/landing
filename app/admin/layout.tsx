@@ -1,7 +1,9 @@
 import { createServerSupabaseClient } from '@/app/lib/supabase-server'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
 import { signOut } from '@/app/actions/auth'
+import { Sidebar } from './components/Sidebar'
+import { TopBar } from './components/TopBar'
+import { colors, radius, shadows } from './design-system'
 
 export default async function AdminLayout({
   children,
@@ -28,16 +30,37 @@ export default async function AdminLayout({
 
   if (!adminUser) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h1>
-          <p className="text-gray-600 mb-4">
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: colors.softCloud }}
+      >
+        <div
+          className="bg-white p-8 max-w-md w-full text-center"
+          style={{
+            borderRadius: radius.lg,
+            boxShadow: shadows.medium,
+            border: `1px solid ${colors.border}`,
+          }}
+        >
+          <h1
+            className="text-2xl font-bold mb-4"
+            style={{ color: colors.errorText }}
+          >
+            Access Denied
+          </h1>
+          <p className="mb-6" style={{ color: colors.textSecondary }}>
             You do not have permission to access the admin area.
           </p>
           <form action={signOut}>
             <button
               type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+              className="px-6 py-3 text-white text-sm font-medium transition-all duration-200 hover:opacity-90"
+              style={{
+                backgroundColor: colors.mistyForest,
+                borderRadius: radius.md,
+                boxShadow: shadows.soft,
+                border: 'none',
+              }}
             >
               Sign Out
             </button>
@@ -47,55 +70,23 @@ export default async function AdminLayout({
     )
   }
 
+  async function handleSignOut() {
+    'use server'
+    await signOut()
+  }
+
   return (
-    <div className="min-h-screen bg-gray-100">
-      <nav className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
-                <Link href="/admin" className="text-xl font-bold text-blue-600">
-                  Sagefield Admin
-                </Link>
-              </div>
-              <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                <Link
-                  href="/admin"
-                  className="border-transparent text-gray-900 hover:border-blue-500 hover:text-blue-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  href="/admin/waitlist"
-                  className="border-transparent text-gray-900 hover:border-blue-500 hover:text-blue-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                >
-                  Waitlist
-                </Link>
-                <Link
-                  href="/admin/contact"
-                  className="border-transparent text-gray-900 hover:border-blue-500 hover:text-blue-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                >
-                  Contact
-                </Link>
-              </div>
-            </div>
-            <div className="flex items-center">
-              <span className="text-sm text-gray-700 mr-4">{user.email}</span>
-              <form action={signOut}>
-                <button
-                  type="submit"
-                  className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 text-sm font-medium"
-                >
-                  Sign Out
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </nav>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {children}
-      </main>
+    <div
+      className="min-h-screen flex"
+      style={{ backgroundColor: colors.softCloud }}
+    >
+      <Sidebar />
+      <div className="flex-1 flex flex-col min-w-0">
+        <TopBar userEmail={user.email} onSignOut={handleSignOut} />
+        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8 max-w-7xl w-full mx-auto">
+          {children}
+        </main>
+      </div>
     </div>
   )
 }
