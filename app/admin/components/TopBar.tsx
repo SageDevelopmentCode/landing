@@ -4,10 +4,10 @@ import { colors, radius, shadows, spacing } from '../design-system'
 
 interface TopBarProps {
   userEmail?: string
-  onSignOut?: () => void
+  signOutAction?: (formData: FormData) => Promise<void>
 }
 
-export function TopBar({ userEmail, onSignOut }: TopBarProps) {
+export function TopBar({ userEmail, signOutAction }: TopBarProps) {
   return (
     <div
       className="sticky top-0 z-30 flex items-center justify-between px-6 py-4 lg:px-8"
@@ -109,18 +109,20 @@ export function TopBar({ userEmail, onSignOut }: TopBarProps) {
                   {userEmail}
                 </p>
               </div>
-              {onSignOut && (
-                <button
-                  onClick={onSignOut}
-                  className="px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 hover:scale-105 active:scale-95"
-                  style={{
-                    color: colors.mistyForest,
-                    backgroundColor: colors.warmLinen,
-                    border: `1px solid ${colors.border}`,
-                  }}
-                >
-                  Sign out
-                </button>
+              {signOutAction && (
+                <form action={signOutAction}>
+                  <button
+                    type="submit"
+                    className="px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 hover:scale-105 active:scale-95"
+                    style={{
+                      color: colors.mistyForest,
+                      backgroundColor: colors.warmLinen,
+                      border: `1px solid ${colors.border}`,
+                    }}
+                  >
+                    Sign out
+                  </button>
+                </form>
               )}
             </div>
           )}

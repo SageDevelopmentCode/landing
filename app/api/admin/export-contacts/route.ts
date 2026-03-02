@@ -1,9 +1,26 @@
-import { createServerSupabaseClient } from '@/app/lib/supabase-server'
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient()
+    // Create Supabase client with request cookies for API routes
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll()
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              request.cookies.set(name, value)
+            )
+          },
+        },
+      }
+    )
 
     const { data: submissions, error } = await supabase
       .schema('contact')

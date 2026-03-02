@@ -70,11 +70,6 @@ export default async function AdminLayout({
     )
   }
 
-  async function handleSignOut() {
-    'use server'
-    await signOut()
-  }
-
   return (
     <div
       className="min-h-screen flex"
@@ -82,7 +77,7 @@ export default async function AdminLayout({
     >
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
-        <TopBar userEmail={user.email} onSignOut={handleSignOut} />
+        <TopBar userEmail={user.email} signOutAction={signOut} />
         <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8 max-w-7xl w-full mx-auto">
           {children}
         </main>
