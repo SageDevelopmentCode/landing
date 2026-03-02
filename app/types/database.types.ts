@@ -1,6 +1,6 @@
 // Database type definitions for Supabase tables
-// You can auto-generate these types from your Supabase schema using:
-// npx supabase gen types typescript --project-id YOUR_PROJECT_ID > app/types/database.types.ts
+// To auto-generate types from your Supabase schema, run:
+// npx supabase gen types typescript --project-id vonuwpzepwrbdlectspd > app/types/database.types.ts
 
 export type Json =
   | string
@@ -11,42 +11,154 @@ export type Json =
   | Json[]
 
 export interface Database {
-  public: {
+  waitlist: {
     Tables: {
-      // Add your table types here as you create them in Supabase
-      // Example:
-      // contacts: {
-      //   Row: {
-      //     id: string
-      //     email: string
-      //     name: string
-      //     message: string
-      //     created_at: string
-      //   }
-      //   Insert: {
-      //     id?: string
-      //     email: string
-      //     name: string
-      //     message: string
-      //     created_at?: string
-      //   }
-      //   Update: {
-      //     id?: string
-      //     email?: string
-      //     name?: string
-      //     message?: string
-      //     created_at?: string
-      //   }
-      // }
+      submissions: {
+        Row: {
+          id: string
+          parent_name: string
+          email: string
+          phone: string | null
+          child_name: string
+          child_age: number | null
+          program_interest: string
+          special_interests: string | null
+          preferred_start_date: string | null
+          status: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          parent_name: string
+          email: string
+          phone?: string | null
+          child_name: string
+          child_age?: number | null
+          program_interest: string
+          special_interests?: string | null
+          preferred_start_date?: string | null
+          status?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          parent_name?: string
+          email?: string
+          phone?: string | null
+          child_name?: string
+          child_age?: number | null
+          program_interest?: string
+          special_interests?: string | null
+          preferred_start_date?: string | null
+          status?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string | null
+        }
+      }
     }
-    Views: {
-      [_ in never]: never
+  }
+  contact: {
+    Tables: {
+      submissions: {
+        Row: {
+          id: string
+          name: string
+          email: string
+          phone: string | null
+          subject: string
+          message: string
+          status: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          email: string
+          phone?: string | null
+          subject: string
+          message: string
+          status?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          email?: string
+          phone?: string | null
+          subject?: string
+          message?: string
+          status?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string | null
+        }
+      }
     }
-    Functions: {
-      [_ in never]: never
+  }
+  admin: {
+    Tables: {
+      users: {
+        Row: {
+          id: string
+          email: string
+          role: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          email: string
+          role?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          role?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
-    Enums: {
-      [_ in never]: never
+  }
+  parent_app: {
+    Tables: {
+      users: {
+        Row: {
+          id: string
+          email: string
+          full_name: string | null
+          phone: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          email: string
+          full_name?: string | null
+          phone?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          full_name?: string | null
+          phone?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }

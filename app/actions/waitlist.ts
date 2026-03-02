@@ -53,7 +53,7 @@ export async function submitWaitlist(
     const validated = waitlistSchema.parse(data);
 
     // Create Supabase client
-    const supabase = createServerSupabaseClient();
+    const supabase = await createServerSupabaseClient();
 
     // Insert into waitlist.submissions table
     const { error } = await supabase

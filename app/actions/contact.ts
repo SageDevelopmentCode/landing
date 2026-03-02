@@ -49,7 +49,7 @@ export async function submitContact(
     const validated = contactSchema.parse(data);
 
     // Create Supabase client
-    const supabase = createServerSupabaseClient();
+    const supabase = await createServerSupabaseClient();
 
     // Insert into contact.submissions table
     const { error } = await supabase
