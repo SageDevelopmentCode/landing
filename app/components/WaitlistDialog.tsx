@@ -15,9 +15,11 @@ export default function WaitlistDialog({
   onClose,
 }: WaitlistDialogProps) {
   const [formData, setFormData] = useState({
+    parentName: "",
     email: "",
     childName: "",
     childAge: "",
+    programInterest: "",
     specialInterests: "",
   });
 
@@ -34,9 +36,11 @@ export default function WaitlistDialog({
 
     try {
       const result = await submitWaitlist({
+        parentName: formData.parentName,
         email: formData.email,
         childName: formData.childName,
         childAge: parseInt(formData.childAge),
+        programInterest: formData.programInterest,
         specialInterests: formData.specialInterests || undefined,
       });
 
@@ -44,9 +48,11 @@ export default function WaitlistDialog({
         setSubmitStatus({ type: "success", message: result.message });
         // Clear form
         setFormData({
+          parentName: "",
           email: "",
           childName: "",
           childAge: "",
+          programInterest: "",
           specialInterests: "",
         });
         // Auto-close after 2 seconds
@@ -68,7 +74,7 @@ export default function WaitlistDialog({
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -115,11 +121,12 @@ export default function WaitlistDialog({
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h2 className="text-2xl md:text-3xl font-heading font-semibold text-text-gray">
-                    Interested in joining?
+                    Enroll Your Child
                   </h2>
                   <p className="text-sm md:text-base text-gray-600 mt-2 font-body">
-                    We&apos;d love to learn more about your child and how Sage
-                    Field can support their learning journey.
+                    We&apos;re excited to begin this learning journey with your
+                    family. Please fill out the form below and we will get back
+                    to you soon.
                   </p>
                 </div>
                 <button
@@ -153,11 +160,30 @@ export default function WaitlistDialog({
                   </motion.div>
                 )}
 
+                {/* Parent/Guardian Name */}
+                <div>
+                  <label className="block text-sm font-semibold text-text-gray mb-2 font-body">
+                    Parent/Guardian Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="parentName"
+                    value={formData.parentName}
+                    onChange={handleChange}
+                    required
+                    disabled={isSubmitting}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg
+                             focus:border-primary focus:outline-none transition-colors
+                             font-body text-gray-900 placeholder:text-gray-500
+                             disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    placeholder="Your full name"
+                  />
+                </div>
+
                 {/* Email */}
                 <div>
                   <label className="block text-sm font-semibold text-text-gray mb-2 font-body">
-                    Parent/Guardian Email{" "}
-                    <span className="text-red-500">*</span>
+                    Email <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="email"
@@ -216,6 +242,29 @@ export default function WaitlistDialog({
                   />
                 </div>
 
+                {/* Program Interest */}
+                <div>
+                  <label className="block text-sm font-semibold text-text-gray mb-2 font-body">
+                    Program Interest <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="programInterest"
+                    value={formData.programInterest}
+                    onChange={handleChange}
+                    required
+                    disabled={isSubmitting}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg
+                             focus:border-primary focus:outline-none transition-colors
+                             font-body text-gray-900
+                             disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  >
+                    <option value="">Select a program...</option>
+                    <option value="summer-2026">Summer 2026</option>
+                    <option value="school-year-2026">School Year 2026-2027</option>
+                    <option value="both">Both Programs</option>
+                  </select>
+                </div>
+
                 {/* Special Interests & Learning Needs */}
                 <div>
                   <label className="block text-sm font-semibold text-text-gray mb-2 font-body">
@@ -250,7 +299,7 @@ export default function WaitlistDialog({
                       Submitting...
                     </>
                   ) : (
-                    "Join Waitlist"
+                    "Submit Interest Form"
                   )}
                 </button>
               </form>

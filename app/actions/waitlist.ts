@@ -5,6 +5,10 @@ import { createServerSupabaseClient } from "@/app/lib/supabase-server";
 
 // Validation schema for waitlist form
 const waitlistSchema = z.object({
+  parentName: z
+    .string()
+    .min(1, "Parent/Guardian name is required")
+    .max(100, "Name is too long"),
   email: z.string().email("Please enter a valid email address"),
   childName: z
     .string()
@@ -15,6 +19,9 @@ const waitlistSchema = z.object({
     .int()
     .min(1, "Age must be at least 1")
     .max(18, "Age must be 18 or less"),
+  programInterest: z.enum(["summer-2026", "school-year-2026", "both"], {
+    errorMap: () => ({ message: "Please select a program" }),
+  }),
   specialInterests: z
     .string()
     .max(500, "Special interests text is too long")
@@ -49,9 +56,11 @@ export async function submitWaitlist(
       .schema("waitlist")
       .from("submissions")
       .insert({
+        parent_name: validated.parentName,
         email: validated.email,
         child_name: validated.childName,
         child_age: validated.childAge,
+        program_interest: validated.programInterest,
         special_interests: validated.specialInterests || null,
       });
 

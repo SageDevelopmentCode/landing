@@ -5,10 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import ContactDialog from "./ContactDialog";
+import WaitlistDialog from "./WaitlistDialog";
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
+  const [waitlistDialogOpen, setWaitlistDialogOpen] = useState(false);
   const pathname = usePathname();
   const isFAQPage = pathname === "/faq";
 
@@ -83,18 +85,27 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* Contact Us Button */}
+          {/* Action Buttons */}
           <motion.div
-            className="hidden lg:block"
+            className="hidden lg:flex items-center gap-3"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
           >
+            {/* Contact Us Button - Secondary */}
             <button
               onClick={() => setContactDialogOpen(true)}
-              className="border-2 border-white bg-primary hover:bg-primary-hover text-white font-semibold px-6 py-2 rounded-lg transition-all duration-250 cursor-pointer"
+              className="border-2 border-white bg-transparent hover:bg-white/10 text-white font-semibold px-6 py-2 rounded-lg transition-all duration-250 cursor-pointer"
             >
               Contact Us
+            </button>
+
+            {/* Enrollment Button - Primary */}
+            <button
+              onClick={() => setWaitlistDialogOpen(true)}
+              className="border-2 border-white bg-primary hover:bg-primary-hover text-white font-semibold px-6 py-2 rounded-lg transition-all duration-250 cursor-pointer shadow-lg"
+            >
+              Now Open for Enrollment
             </button>
           </motion.div>
 
@@ -164,13 +175,33 @@ export default function Navbar() {
                   {item.label}
                 </motion.a>
               ))}
+
+              {/* Mobile Enrollment Button - Primary */}
               <motion.button
-                onClick={() => setContactDialogOpen(true)}
+                onClick={() => {
+                  setWaitlistDialogOpen(true);
+                  setMobileMenuOpen(false);
+                }}
                 className="w-full border-2 border-white bg-primary hover:bg-primary-hover text-white font-semibold px-6 py-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-250 cursor-pointer"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
                 transition={{ duration: 0.3, delay: 0.3 }}
+              >
+                Now Open for Enrollment
+              </motion.button>
+
+              {/* Mobile Contact Button - Secondary */}
+              <motion.button
+                onClick={() => {
+                  setContactDialogOpen(true);
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full border-2 border-white bg-transparent hover:bg-white/10 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-250 cursor-pointer"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                transition={{ duration: 0.3, delay: 0.4 }}
               >
                 Contact Us
               </motion.button>
@@ -181,6 +212,9 @@ export default function Navbar() {
 
       {/* Contact Dialog */}
       <ContactDialog isOpen={contactDialogOpen} onClose={() => setContactDialogOpen(false)} />
+
+      {/* Waitlist Dialog */}
+      <WaitlistDialog isOpen={waitlistDialogOpen} onClose={() => setWaitlistDialogOpen(false)} />
     </motion.nav>
   );
 }
