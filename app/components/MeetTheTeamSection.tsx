@@ -50,7 +50,7 @@ export default function MeetTheTeamSection() {
             >
               <Image
                 src="/assets/Headshot.jpeg"
-                alt="Sabrina Grace Obnamia - Lead Tutor & Director"
+                alt="Sabrina Grace Obnamia - Lead Teacher & Director"
                 fill
                 className="object-cover"
                 sizes="(max-width: 1024px) 100vw, 50vw"
@@ -70,20 +70,29 @@ export default function MeetTheTeamSection() {
             {/* Lead Tutor */}
             <div className="space-y-4">
               <h3 className="text-2xl md:text-3xl font-semibold text-primary font-heading">
-                Lead Tutor & Director
+                Lead Teacher & Director
               </h3>
               <p className="text-xl md:text-2xl font-semibold text-text-gray font-heading">
                 Sabrina Grace Obnamia
               </p>
               <p className="text-base md:text-lg text-text-gray leading-relaxed font-body">
-                Ms. Sabrina brings a wealth of experience to SageField. She holds a Bachelor&apos;s degree in Elementary Education with a concentration in Early Childhood Development from Biola University and a Teaching Credential. Her background includes working with children in a wide range of roles both in the U.S. and internationally—spanning special education, preschool, homeschooling, tutoring, coaching, traditional schooling, nature school guide, and more. She values movement, outdoor learning, and most importantly, the joy of slowing down to be present, intentional, and thankful.
+                Ms. Sabrina brings a wealth of experience to SageField. She
+                holds a Bachelor&apos;s degree in Elementary Education with a
+                concentration in Early Childhood Development from Biola
+                University and a Teaching Credential. Her background includes
+                working with children in a wide range of roles both in the U.S.
+                and internationally—spanning special education, preschool,
+                homeschooling, tutoring, coaching, traditional schooling, nature
+                school guide, and more. She values movement, outdoor learning,
+                and most importantly, the joy of slowing down to be present,
+                intentional, and thankful.
               </p>
             </div>
 
             {/* Assistant Tutor */}
             <div className="space-y-2">
               <h3 className="text-2xl md:text-3xl font-semibold text-primary font-heading">
-                Assistant Tutor/Aide
+                Assistant Teacher/Aide
               </h3>
               <p className="text-xl md:text-2xl font-semibold text-text-gray font-heading">
                 TBD
@@ -100,8 +109,9 @@ export default function MeetTheTeamSection() {
             >
               <p className="text-base md:text-lg text-text-gray leading-relaxed font-body">
                 Together, we bring warmth, creativity, and experience to every
-                student&apos;s learning experience. We are committed to continuing
-                the supportive atmosphere families have come to trust.
+                student&apos;s learning experience. We are committed to
+                continuing the supportive atmosphere families have come to
+                trust.
               </p>
             </motion.div>
           </motion.div>

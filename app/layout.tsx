@@ -21,9 +21,10 @@ const merriweather = Merriweather({
 });
 
 export const metadata: Metadata = {
-  title: "Sage Field: A small-group learning community for ages 6–10",
+  title:
+    "Sage Field: A homeschool learning community and enrichment program for lower‑elementary aged children",
   description:
-    "A small-group learning community for ages 6–10, offering nature-based enrichment through co-creation with homeschool families. Personalized, hands-on learning that nurtures curiosity, confidence, and wisdom.",
+    "A homeschool learning community and enrichment program for lower‑elementary aged children offering intentional outdoor and movement first enrichment through co-creation with homeschool families. Personalised, hands-on learning that fosters curiosity, confidence, and wisdom.",
 };
 
 export default function RootLayout({

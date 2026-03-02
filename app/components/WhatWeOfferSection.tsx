@@ -5,7 +5,10 @@ import { motion } from "framer-motion";
 
 export default function WhatWeOfferSection() {
   return (
-    <section id="what-we-offer" className="bg-welcome-bg min-h-[80vh] py-16 px-8 sm:px-12 lg:px-16 flex items-center justify-center">
+    <section
+      id="what-we-offer"
+      className="bg-welcome-bg min-h-[80vh] py-16 px-8 sm:px-12 lg:px-16 flex items-center justify-center"
+    >
       <div className="max-w-7xl mx-auto w-full">
         {/* What We Offer Badge */}
         <motion.div
@@ -65,8 +68,8 @@ export default function WhatWeOfferSection() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
             >
-              Sage Field operates as a tutoring and enrichment program, not a
-              traditional school. We focus on{" "}
+              Sage Field operates as a learning community using intentional
+              enrichment. We focus on{" "}
               <span className="text-primary font-semibold">
                 whole-child growth
               </span>

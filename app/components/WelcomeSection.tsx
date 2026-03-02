@@ -20,7 +20,7 @@ export default function WelcomeSection() {
     {
       title: "Small Groups",
       description:
-        "Personalized attention for children ages 6-10 in intimate learning environments designed for growth.",
+        "Personalized attention for lower elementary aged children in intimate learning environments designed for learning and growth.",
       icon: "👥",
     },
     {
@@ -71,17 +71,10 @@ export default function WelcomeSection() {
               transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
             >
               Sage Field is a small-group learning community for children ages
-              6–10, designed especially for homeschool families seeking a{" "}
-              <span className="text-primary font-semibold">nature-based</span>{" "}
-              enrichment experience. Rooted in the idea of{" "}
-              <span className="text-primary font-semibold">co-creation</span>,
-              we work alongside families to nurture{" "}
-              <span className="text-primary font-semibold">curiosity</span>,{" "}
-              <span className="text-primary font-semibold">confidence</span>,
-              and <span className="text-primary font-semibold">wisdom</span>{" "}
-              through{" "}
-              <span className="text-primary font-semibold">personalized</span>,{" "}
-              <span className="text-primary font-semibold">hands-on</span>{" "}
+              6–10, designed especially for homeschool families seeking a
+              intentional outdoor and movement first enrichment. Rooted in the
+              idea of co-creation, we work alongside families to foster
+              curiosity, confidence, and wisdom through personalised, hands-on
               learning.
             </motion.p>
 
@@ -133,7 +126,9 @@ export default function WelcomeSection() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
               onClick={() => {
-                document.getElementById('educational-philosophy')?.scrollIntoView({ behavior: 'smooth' });
+                document
+                  .getElementById("educational-philosophy")
+                  ?.scrollIntoView({ behavior: "smooth" });
               }}
             >
               Learn More About Our Program

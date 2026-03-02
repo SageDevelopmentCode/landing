@@ -115,7 +115,7 @@ export default function WaitlistDialog({
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h2 className="text-2xl md:text-3xl font-heading font-semibold text-text-gray">
-                    Join Our Waitlist
+                    Interested in joining?
                   </h2>
                   <p className="text-sm md:text-base text-gray-600 mt-2 font-body">
                     We&apos;d love to learn more about your child and how Sage

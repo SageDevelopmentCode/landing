@@ -1,12 +1,6 @@
 export default function WeeklySchedule() {
   const timeBlocks = [
     {
-      time: "Before Care",
-      label: "Optional",
-      bgColor: "bg-gray-50",
-      textColor: "text-gray-600",
-    },
-    {
       time: "Morning",
       label: "Core learning & foundational subjects",
       bgColor: "bg-primary/10",

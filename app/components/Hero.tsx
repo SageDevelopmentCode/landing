@@ -40,9 +40,10 @@ export default function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
             >
-              A small-group learning community for ages 6–10, offering
-              nature-based enrichment through co-creation with homeschool
-              families. Personalized, hands-on learning that nurtures curiosity,
+              A homeschool learning community and enrichment program for
+              lower‑elementary aged children offering intentional outdoor and
+              movement first enrichment through co-creation with homeschool
+              families. Personalised, hands-on learning that fosters curiosity,
               confidence, and wisdom.
             </motion.p>
 
@@ -60,7 +61,7 @@ export default function Hero() {
                 onClick={() => setIsDialogOpen(true)}
                 className="px-6 py-3 border-2 border-white bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-all duration-200 font-body cursor-pointer"
               >
-                Join the Waitlist
+                Interested in joining?
               </button>
             </motion.div>
           </div>
@@ -68,7 +69,10 @@ export default function Hero() {
       </div>
 
       {/* Waitlist Dialog */}
-      <WaitlistDialog isOpen={isDialogOpen} onClose={() => setIsDialogOpen(false)} />
+      <WaitlistDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+      />
     </section>
   );
 }
