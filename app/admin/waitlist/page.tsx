@@ -19,18 +19,11 @@ async function updateSubmissionStatus(formData: FormData) {
 export default async function WaitlistPage() {
   const supabase = await createServerSupabaseClient()
 
-  console.log('=== WAITLIST PAGE DEBUG ===')
-
   const { data: submissions, error: submissionsError } = await supabase
     .schema('waitlist')
     .from('submissions')
     .select('*')
     .order('created_at', { ascending: false })
-
-  console.log('Waitlist submissions query:')
-  console.log('  - data count:', submissions?.length || 0)
-  console.log('  - error:', submissionsError)
-  console.log('===========================')
 
   return (
     <div className="space-y-6">

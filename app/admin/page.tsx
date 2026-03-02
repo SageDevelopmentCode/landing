@@ -4,27 +4,17 @@ import Link from 'next/link'
 export default async function AdminDashboard() {
   const supabase = await createServerSupabaseClient()
 
-  console.log('=== ADMIN DASHBOARD DEBUG ===')
-
   // Get waitlist count
   const { count: waitlistCount, error: waitlistCountError } = await supabase
     .schema('waitlist')
     .from('submissions')
     .select('*', { count: 'exact', head: true })
 
-  console.log('Waitlist count query:')
-  console.log('  - count:', waitlistCount)
-  console.log('  - error:', waitlistCountError)
-
   // Get contact count
   const { count: contactCount, error: contactCountError } = await supabase
     .schema('contact')
     .from('submissions')
     .select('*', { count: 'exact', head: true })
-
-  console.log('Contact count query:')
-  console.log('  - count:', contactCount)
-  console.log('  - error:', contactCountError)
 
   // Get recent waitlist submissions
   const { data: recentWaitlist, error: recentWaitlistError } = await supabase
@@ -34,10 +24,6 @@ export default async function AdminDashboard() {
     .order('created_at', { ascending: false })
     .limit(5)
 
-  console.log('Recent waitlist query:')
-  console.log('  - data:', recentWaitlist)
-  console.log('  - error:', recentWaitlistError)
-
   // Get recent contact submissions
   const { data: recentContact, error: recentContactError } = await supabase
     .schema('contact')
@@ -45,11 +31,6 @@ export default async function AdminDashboard() {
     .select('*')
     .order('created_at', { ascending: false })
     .limit(5)
-
-  console.log('Recent contact query:')
-  console.log('  - data:', recentContact)
-  console.log('  - error:', recentContactError)
-  console.log('==============================')
 
   return (
     <div className="space-y-8">
