@@ -1,44 +1,5 @@
 import { createServerSupabaseClient } from '@/app/lib/supabase-server'
 
-async function exportToCSV(data: any[]) {
-  'use server'
-
-  const headers = [
-    'ID',
-    'Parent Name',
-    'Email',
-    'Phone',
-    'Child Name',
-    'Child Age',
-    'Preferred Start',
-    'Status',
-    'Notes',
-    'Created At',
-  ]
-
-  const rows = data.map((item) => [
-    item.id,
-    item.parent_name,
-    item.email,
-    item.phone || '',
-    item.child_name,
-    item.child_age || '',
-    item.preferred_start_date || '',
-    item.status || 'pending',
-    item.notes || '',
-    new Date(item.created_at).toISOString(),
-  ])
-
-  const csv = [
-    headers.join(','),
-    ...rows.map((row) =>
-      row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')
-    ),
-  ].join('\n')
-
-  return csv
-}
-
 async function updateSubmissionStatus(formData: FormData) {
   'use server'
 
@@ -71,8 +32,6 @@ export default async function WaitlistPage() {
   console.log('  - error:', submissionsError)
   console.log('===========================')
 
-  const csvData = submissions ? await exportToCSV(submissions) : ''
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -82,37 +41,25 @@ export default async function WaitlistPage() {
             {submissions?.length || 0} total submissions
           </p>
         </div>
-        <form
-          action={async () => {
-            'use server'
-            return new Response(csvData, {
-              headers: {
-                'Content-Type': 'text/csv',
-                'Content-Disposition': `attachment; filename="waitlist-${new Date().toISOString()}.csv"`,
-              },
-            })
-          }}
+        <a
+          href="/api/admin/export-waitlist"
+          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
-          <button
-            type="submit"
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          <svg
+            className="-ml-1 mr-2 h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
-            <svg
-              className="-ml-1 mr-2 h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-              />
-            </svg>
-            Export to CSV
-          </button>
-        </form>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+            />
+          </svg>
+          Export to CSV
+        </a>
       </div>
 
       <div className="bg-white shadow overflow-hidden sm:rounded-lg">
