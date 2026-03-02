@@ -40,7 +40,7 @@ export default function WaitlistDialog({
         email: formData.email,
         childName: formData.childName,
         childAge: parseInt(formData.childAge),
-        programInterest: formData.programInterest,
+        programInterest: formData.programInterest as "summer-2026" | "school-year-2026" | "both",
         specialInterests: formData.specialInterests || undefined,
       });
 
