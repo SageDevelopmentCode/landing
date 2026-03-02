@@ -2,6 +2,10 @@
 
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/app/lib/supabase-server";
+import {
+  sendDiscordNotification,
+  createContactEmbed,
+} from "@/app/lib/discord";
 
 // Validation schema for contact form
 const contactSchema = z.object({
@@ -67,6 +71,21 @@ export async function submitContact(
         message: "Failed to submit your message. Please try again.",
         error: error.message,
       };
+    }
+
+    // Send Discord notification (non-blocking)
+    try {
+      const embed = createContactEmbed({
+        name: validated.name,
+        email: validated.email,
+        phone: validated.phone,
+        subject: validated.subject,
+        message: validated.message,
+      });
+      await sendDiscordNotification(embed);
+    } catch (discordError) {
+      // Log but don't fail the submission if Discord notification fails
+      console.error("Failed to send Discord notification:", discordError);
     }
 
     return {

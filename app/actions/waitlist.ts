@@ -2,6 +2,10 @@
 
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/app/lib/supabase-server";
+import {
+  sendDiscordNotification,
+  createWaitlistEmbed,
+} from "@/app/lib/discord";
 
 // Validation schema for waitlist form
 const waitlistSchema = z.object({
@@ -81,6 +85,22 @@ export async function submitWaitlist(
         message: "Failed to submit to waitlist. Please try again.",
         error: error.message,
       };
+    }
+
+    // Send Discord notification (non-blocking)
+    try {
+      const embed = createWaitlistEmbed({
+        parentName: validated.parentName,
+        email: validated.email,
+        childName: validated.childName,
+        childAge: validated.childAge,
+        programInterest: validated.programInterest,
+        specialInterests: validated.specialInterests,
+      });
+      await sendDiscordNotification(embed);
+    } catch (discordError) {
+      // Log but don't fail the submission if Discord notification fails
+      console.error("Failed to send Discord notification:", discordError);
     }
 
     return {
