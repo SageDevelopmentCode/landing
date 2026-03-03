@@ -1,32 +1,10 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import { Heart, Sparkles, BookOpen, Users } from 'lucide-react';
+import { motion } from "framer-motion";
+import { Calendar, Clock, PartyPopper } from "lucide-react";
+import Image from "next/image";
 
 const DonationsSection = () => {
-  const impactAreas = [
-    {
-      icon: <Sparkles className="w-8 h-8 text-primary" />,
-      title: 'Program Enrichment',
-      description: 'Supporting diverse learning experiences and special activities',
-    },
-    {
-      icon: <Users className="w-8 h-8 text-primary" />,
-      title: 'Community Growth',
-      description: 'Building a thriving, supportive educational community',
-    },
-    {
-      icon: <BookOpen className="w-8 h-8 text-primary" />,
-      title: 'Educational Materials',
-      description: 'Providing quality resources and learning tools',
-    },
-    {
-      icon: <Heart className="w-8 h-8 text-primary" />,
-      title: 'Facility Support',
-      description: 'Maintaining a nurturing and inspiring environment',
-    },
-  ];
-
   return (
     <section className="relative bg-welcome-bg py-16 px-8 sm:px-12 lg:px-16 min-h-[80vh] flex items-center justify-center overflow-hidden">
       <div className="max-w-7xl mx-auto w-full">
@@ -43,147 +21,232 @@ const DonationsSection = () => {
           </span>
         </motion.div>
 
-        {/* Main Content Grid */}
-        <div className="flex flex-col lg:flex-row lg:justify-between items-start gap-16 w-full">
-          {/* Left Column - Text Content */}
-          <div className="w-full lg:w-1/2 text-left">
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
-              className="text-4xl md:text-5xl font-bold text-black mb-6 font-heading"
-            >
-              Contribution Model
-            </motion.h2>
+        {/* Main Content */}
+        <div className="w-full">
+          {/* Heading */}
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            className="text-4xl md:text-5xl font-bold text-black mb-4 font-heading text-center"
+          >
+            Tuition & Membership
+          </motion.h2>
 
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2, ease: 'easeOut' }}
-              className="text-base md:text-lg text-text-gray leading-relaxed mb-6 font-body"
-            >
-              We are currently gathering information on the number of families interested in joining our community. Once we have a clear understanding of{' '}
-              <span className="text-primary font-semibold">enrollment</span>, tuition will be finalized. Families commit to a{' '}
-              <span className="text-primary font-semibold">one-semester contract</span> to ensure consistency and support for the program.
-            </motion.p>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            className="text-base md:text-lg text-text-gray leading-relaxed mb-12 font-body text-center max-w-3xl mx-auto"
+          >
+            We offer flexible membership options designed to support your
+            family&apos;s needs and schedule.
+          </motion.p>
 
-            {/* Callout Box */}
+          {/* Featured Core Membership */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            className="mb-12 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl border-2 border-primary shadow-lg overflow-hidden"
+          >
+            {/* Image */}
+            <div className="relative h-[40vh] md:h-[50vh]">
+              <Image
+                src="/assets/ImageSix.jpg"
+                alt="All Access Membership"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 1200px"
+              />
+            </div>
+
+            {/* Content */}
+            <div className="p-8 md:p-10">
+              <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+                {/* Icon */}
+                <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                  <Calendar className="w-10 h-10 text-white" />
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 text-center md:text-left">
+                  <h3 className="text-2xl md:text-3xl font-bold text-black mb-3 font-heading">
+                    All Access Membership
+                  </h3>
+                  <p className="text-lg md:text-xl text-text-gray mb-4 font-body">
+                    Monday - Thursday, 9:00am - 3:00pm
+                  </p>
+                  <div className="inline-block px-6 py-3 bg-white rounded-lg shadow-md">
+                    <p className="text-3xl md:text-4xl font-bold text-primary font-heading">
+                      $1,095
+                      <span className="text-xl text-text-gray font-normal">
+                        /month
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Package Cards Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* After Care Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
-              className="mt-8 p-6 bg-primary/10 rounded-lg border-l-4 border-primary"
+              transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+              whileHover={{ scale: 1.02 }}
+              className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-200 overflow-hidden"
             >
-              <h3 className="text-lg font-semibold text-black mb-4 font-heading">
-                Key Details
-              </h3>
-              <ul className="space-y-3">
-                <li className="flex items-start">
-                  <span className="text-primary mr-2 text-xl">•</span>
-                  <span className="text-base text-text-gray font-body">
-                    <span className="font-semibold text-black">Tuition (Four-Day Membership):</span> Expected to range $900–$1,300/month, finalized based on total enrollment
-                  </span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-primary mr-2 text-xl">•</span>
-                  <span className="text-base text-text-gray font-body">
-                    <span className="font-semibold text-black">Payment Options:</span> Semester or monthly installments
-                  </span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-primary mr-2 text-xl">•</span>
-                  <span className="text-base text-text-gray font-body">
-                    <span className="font-semibold text-black">Commitment:</span> One-semester contract for program consistency
-                  </span>
-                </li>
-              </ul>
-            </motion.div>
+              {/* Image */}
+              <div className="relative h-[30vh] md:h-[35vh]">
+                <Image
+                  src="/assets/ImageSeven.jpg"
+                  alt="After Care Program"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
+              </div>
 
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.4, ease: 'easeOut' }}
-              className="text-base md:text-lg text-text-gray leading-relaxed mt-6 mb-4 font-body"
-            >
-              Your enrollment makes this community possible — supporting continued growth and enrichment for every child.
-            </motion.p>
+              {/* Content */}
+              <div className="p-8">
+                {/* Icon */}
+                <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mb-6">
+                  <Clock className="w-8 h-8 text-primary" />
+                </div>
 
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.45, ease: 'easeOut' }}
-              className="text-sm md:text-base text-text-gray leading-relaxed mb-8 font-body italic"
-            >
-              Want to help us grow? Optional contributions beyond tuition help support Sage Field's development in these early stages.
-            </motion.p>
+                {/* Title */}
+                <h3 className="text-2xl font-bold text-black mb-2 font-heading">
+                  After Care
+                </h3>
+                <p className="text-base text-text-gray mb-6 font-body">
+                  3:00pm - 6:00pm
+                </p>
 
-            {/* CTA Button */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.5, ease: 'easeOut' }}
-            >
-              <button className="px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer">
-                Support Sage Field
-              </button>
-            </motion.div>
-          </div>
-
-          {/* Right Column - Interactive Impact Cards */}
-          <div className="w-full lg:w-1/2">
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="grid grid-cols-1 sm:grid-cols-2 gap-6"
-            >
-              {impactAreas.map((area, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{
-                    duration: 0.5,
-                    delay: 0.2 + index * 0.1,
-                    ease: 'easeOut',
-                  }}
-                  whileHover={{ scale: 1.05 }}
-                  className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer group"
-                >
-                  {/* Icon Container */}
-                  <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mb-4 group-hover:bg-primary/30 transition-colors duration-200">
-                    {area.icon}
+                {/* Pricing Options */}
+                <div className="space-y-4">
+                  {/* Drop-in */}
+                  <div className="p-4 bg-welcome-bg rounded-lg border-l-4 border-primary">
+                    <p className="text-sm font-semibold text-black mb-1 font-heading">
+                      Drop-In
+                    </p>
+                    <p className="text-2xl font-bold text-primary font-heading">
+                      $35
+                      <span className="text-base text-text-gray font-normal">
+                        /daily
+                      </span>
+                    </p>
                   </div>
 
-                  {/* Card Content */}
-                  <h3 className="text-lg font-semibold text-black mb-2 font-heading">
-                    {area.title}
-                  </h3>
-                  <p className="text-sm text-text-gray font-body">{area.description}</p>
-                </motion.div>
-              ))}
+                  {/* Member Monthly */}
+                  <div className="p-4 bg-welcome-bg rounded-lg border-l-4 border-primary">
+                    <p className="text-sm font-semibold text-black mb-1 font-heading">
+                      Monthly (Member)
+                    </p>
+                    <p className="text-2xl font-bold text-primary font-heading">
+                      $375
+                      <span className="text-base text-text-gray font-normal">
+                        /month
+                      </span>
+                    </p>
+                    <p className="text-xs text-text-gray mt-1 font-body">
+                      $23 per day per student
+                    </p>
+                  </div>
+
+                  {/* Non-Member Monthly */}
+                  <div className="p-4 bg-welcome-bg rounded-lg border-l-4 border-primary">
+                    <p className="text-sm font-semibold text-black mb-1 font-heading">
+                      Monthly (Non-Member)
+                    </p>
+                    <p className="text-2xl font-bold text-primary font-heading">
+                      $475
+                      <span className="text-base text-text-gray font-normal">
+                        /month
+                      </span>
+                    </p>
+                    <p className="text-xs text-text-gray mt-1 font-body">
+                      $10/hour - Cheaper than a babysitter!
+                    </p>
+                  </div>
+                </div>
+              </div>
             </motion.div>
 
-            {/* Supporting Text */}
+            {/* Fun Friday Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.6 }}
-              className="mt-8 p-6 bg-white rounded-lg shadow-sm border border-primary/10"
+              transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
+              whileHover={{ scale: 1.02 }}
+              className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-200 overflow-hidden"
             >
-              <p className="text-base text-text-gray leading-relaxed font-body text-center">
-                <span className="text-primary font-semibold">Every contribution</span> helps us
-                create a nurturing environment where children can thrive and grow together.
-              </p>
+              {/* Image */}
+              <div className="relative h-[30vh] md:h-[35vh]">
+                <Image
+                  src="/assets/ImageEight.jpg"
+                  alt="Fun Friday Activities"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
+              </div>
+
+              {/* Content */}
+              <div className="p-8">
+                {/* Icon */}
+                <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mb-6">
+                  <PartyPopper className="w-8 h-8 text-primary" />
+                </div>
+
+                {/* Title */}
+                <h3 className="text-2xl font-bold text-black mb-2 font-heading">
+                  Fun Friday
+                </h3>
+                <p className="text-base text-text-gray mb-6 font-body">
+                  9:00am - 1:00pm
+                </p>
+
+                {/* Pricing Options */}
+                <div className="space-y-4">
+                  {/* Package of 4 */}
+                  <div className="p-4 bg-welcome-bg rounded-lg border-l-4 border-primary">
+                    <p className="text-sm font-semibold text-black mb-1 font-heading">
+                      Package of 4
+                    </p>
+                    <p className="text-2xl font-bold text-primary font-heading">
+                      $200
+                      <span className="text-base text-text-gray font-normal">
+                        /month
+                      </span>
+                    </p>
+                    <p className="text-xs text-text-gray mt-1 font-body">
+                      $50 per session • Expires monthly
+                    </p>
+                  </div>
+
+                  {/* Drop-in */}
+                  <div className="p-4 bg-welcome-bg rounded-lg border-l-4 border-primary">
+                    <p className="text-sm font-semibold text-black mb-1 font-heading">
+                      Drop-In
+                    </p>
+                    <p className="text-2xl font-bold text-primary font-heading">
+                      $60
+                      <span className="text-base text-text-gray font-normal">
+                        /session
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </div>
             </motion.div>
           </div>
         </div>

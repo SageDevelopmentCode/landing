@@ -117,6 +117,13 @@ export default function Home() {
       />
       <CoCreationSection />
       <DonationsSection />
+      <ImageGridShowcase
+        images={[
+          { src: '/assets/ImageNine.jpg', alt: 'Sage Field community' },
+          { src: '/assets/ImageTen.jpg', alt: 'Learning environment' },
+          { src: '/assets/ImageEleven.jpg', alt: 'Student activities' },
+        ]}
+      />
       <MeetTheTeamSection />
       <ContactUsSection />
 
