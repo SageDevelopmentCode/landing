@@ -6,7 +6,7 @@ import { ChevronDown } from "lucide-react";
 
 interface FAQItem {
   question: string;
-  answer: string;
+  answer: string | React.ReactNode;
 }
 
 interface FAQAccordionProps {
@@ -20,7 +20,7 @@ export default function FAQAccordion({ items, searchQuery = "" }: FAQAccordionPr
   const filteredItems = items.filter(
     (item) =>
       item.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.answer.toLowerCase().includes(searchQuery.toLowerCase())
+      (typeof item.answer === 'string' && item.answer.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const toggleAccordion = (index: number) => {

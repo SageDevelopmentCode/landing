@@ -14,12 +14,15 @@ import CoCreationSection from './components/CoCreationSection';
 import DonationsSection from './components/DonationsSection';
 import MeetTheTeamSection from './components/MeetTheTeamSection';
 import EnrollmentCTASection from './components/EnrollmentCTASection';
+import SocialMediaSection from './components/SocialMediaSection';
 import ContactUsSection from './components/ContactUsSection';
 import FAQAccordion from './components/FAQAccordion';
 import Footer from './components/Footer';
+import WaitlistDialog from './components/WaitlistDialog';
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [isWaitlistDialogOpen, setIsWaitlistDialogOpen] = useState(false);
 
   const aboutSageFieldFAQs = [
     {
@@ -93,7 +96,19 @@ export default function Home() {
     },
     {
       question: "How do we enroll?",
-      answer: "TBD",
+      answer: (
+        <div>
+          <p className="mb-4">
+            Enrollment for Summer 2026 and School Year 2026-2027 is now open. Complete our interest form to begin the enrollment process.
+          </p>
+          <button
+            onClick={() => setIsWaitlistDialogOpen(true)}
+            className="px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
+          >
+            Enroll Now
+          </button>
+        </div>
+      ),
     },
   ];
   return (
@@ -128,6 +143,7 @@ export default function Home() {
       />
       <MeetTheTeamSection />
       <EnrollmentCTASection />
+      <SocialMediaSection />
       <ContactUsSection />
 
       {/* FAQ Section */}
@@ -242,6 +258,10 @@ export default function Home() {
         </div>
       </section>
       <Footer />
+      <WaitlistDialog
+        isOpen={isWaitlistDialogOpen}
+        onClose={() => setIsWaitlistDialogOpen(false)}
+      />
     </div>
   );
 }

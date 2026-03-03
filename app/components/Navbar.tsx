@@ -54,7 +54,7 @@ export default function Navbar() {
       transition={{ duration: 0.6, ease: "easeOut" }}
     >
       <div className="px-12 mx-auto">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-20 relative">
           {/* Logo */}
           <motion.div
             className="flex-shrink-0"
@@ -72,7 +72,7 @@ export default function Navbar() {
           </motion.div>
 
           {/* Desktop Menu Items - Center */}
-          <div className="hidden lg:flex items-center space-x-8 flex-1 justify-center">
+          <div className="hidden lg:flex items-center space-x-8 absolute left-1/2 -translate-x-1/2">
             {menuItems.map((item, index) => (
               <motion.a
                 key={item.label}

@@ -7,10 +7,12 @@ import FAQAccordion from "../components/FAQAccordion";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import ContactDialog from "../components/ContactDialog";
+import WaitlistDialog from "../components/WaitlistDialog";
 
 export default function FAQPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
+  const [isWaitlistDialogOpen, setIsWaitlistDialogOpen] = useState(false);
 
   const aboutSageFieldFAQs = [
     {
@@ -84,7 +86,19 @@ export default function FAQPage() {
     },
     {
       question: "How do we enroll?",
-      answer: "TBD",
+      answer: (
+        <div>
+          <p className="mb-4">
+            Enrollment for Summer 2026 and School Year 2026-2027 is now open. Complete our interest form to begin the enrollment process.
+          </p>
+          <button
+            onClick={() => setIsWaitlistDialogOpen(true)}
+            className="px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
+          >
+            Enroll Now
+          </button>
+        </div>
+      ),
     },
   ];
 
@@ -229,6 +243,10 @@ export default function FAQPage() {
       <ContactDialog
         isOpen={isContactDialogOpen}
         onClose={() => setIsContactDialogOpen(false)}
+      />
+      <WaitlistDialog
+        isOpen={isWaitlistDialogOpen}
+        onClose={() => setIsWaitlistDialogOpen(false)}
       />
     </div>
   );

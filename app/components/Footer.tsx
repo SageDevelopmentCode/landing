@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Mail, MapPin } from "lucide-react";
+import { Mail, MapPin, Instagram, Facebook } from "lucide-react";
 import ContactDialog from "./ContactDialog";
 import WaitlistDialog from "./WaitlistDialog";
 
@@ -153,11 +153,34 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-gray-800">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-gray-400 text-sm font-body">
+          <div className="flex flex-col md:grid md:grid-cols-3 items-center gap-4">
+            <p className="text-gray-400 text-sm font-body text-center md:text-left">
               © 2026 Sage Field. All rights reserved.
             </p>
-            <p className="text-gray-400 text-sm font-body">Georgetown, TX</p>
+
+            {/* Social Media Links */}
+            <div className="flex items-center justify-center gap-4">
+              <a
+                href="https://www.instagram.com/sagefield.co"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-white transition-colors duration-200"
+                aria-label="Follow us on Instagram"
+              >
+                <Instagram className="w-5 h-5" />
+              </a>
+              <a
+                href="https://www.facebook.com/sagefield.co"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-white transition-colors duration-200"
+                aria-label="Follow us on Facebook"
+              >
+                <Facebook className="w-5 h-5" />
+              </a>
+            </div>
+
+            <p className="text-gray-400 text-sm font-body text-center md:text-right">Georgetown, TX</p>
           </div>
         </div>
       </div>

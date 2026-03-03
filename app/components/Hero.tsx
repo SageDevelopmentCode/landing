@@ -18,7 +18,7 @@ export default function Hero() {
       <div className="absolute inset-0 bg-black/20" />
 
       {/* Content Container */}
-      <div className="relative h-full w-full mx-auto px-8 sm:px-12 lg:px-12 flex items-end pb-12 md:pb-16 lg:pb-16">
+      <div className="relative h-full w-full mx-auto px-8 sm:px-12 lg:px-12 flex items-center md:items-end pb-12 md:pb-16 lg:pb-16">
         <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
           {/* Left: Large Slogan */}
           <motion.div
