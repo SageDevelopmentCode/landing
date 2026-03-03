@@ -56,7 +56,7 @@ const DonationsSection = () => {
             {/* Image */}
             <div className="relative h-[40vh] md:h-[50vh]">
               <Image
-                src="/assets/ImageSix.jpg"
+                src="/assets/ImageTen.jpg"
                 alt="All Access Membership"
                 fill
                 className="object-cover"
@@ -88,6 +88,16 @@ const DonationsSection = () => {
                       </span>
                     </p>
                   </div>
+                  <p className="text-xs text-text-gray mt-4 italic font-body">
+                    For 1-3 day drop-in options instead of the full 4-day
+                    membership, please email us at{" "}
+                    <a
+                      href="mailto:sabrina@sagefield.co"
+                      className="text-primary hover:underline"
+                    >
+                      sabrina@sagefield.co
+                    </a>
+                  </p>
                 </div>
               </div>
             </div>
