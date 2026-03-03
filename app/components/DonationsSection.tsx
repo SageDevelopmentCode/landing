@@ -89,8 +89,8 @@ const DonationsSection = () => {
                     </p>
                   </div>
                   <p className="text-xs text-text-gray mt-4 italic font-body">
-                    For 1-3 day drop-in options instead of the full 4-day
-                    membership, please email us at{" "}
+                    For drop-in options instead of the full 4-day membership,
+                    please email us at{" "}
                     <a
                       href="mailto:sabrina@sagefield.co"
                       className="text-primary hover:underline"

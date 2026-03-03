@@ -12,7 +12,7 @@ export default function Navbar() {
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [waitlistDialogOpen, setWaitlistDialogOpen] = useState(false);
   const pathname = usePathname();
-  const isFAQPage = pathname === "/faq";
+  const useDarkStyle = pathname === "/faq" || pathname === "/about";
 
   const menuItems = [
     { label: "What We Offer", href: "#what-we-offer" },
@@ -79,7 +79,7 @@ export default function Navbar() {
                 href={item.href}
                 onClick={(e) => handleSmoothScroll(e, item.href)}
                 className={`${
-                  isFAQPage
+                  useDarkStyle
                     ? "text-gray-800/90 hover:text-gray-800"
                     : "text-white/90 hover:text-white"
                 } font-semibold transition-colors duration-200`}
@@ -106,7 +106,11 @@ export default function Navbar() {
             {/* Contact Us Button - Secondary */}
             <button
               onClick={() => setContactDialogOpen(true)}
-              className="border-2 border-white bg-transparent hover:bg-white/10 text-white font-semibold px-6 py-2 rounded-lg transition-all duration-250 cursor-pointer"
+              className={`border-2 ${
+                useDarkStyle
+                  ? "border-gray-800 text-gray-800 hover:bg-gray-100"
+                  : "border-white text-white hover:bg-white/10"
+              } bg-transparent font-semibold px-6 py-2 rounded-lg transition-all duration-250 cursor-pointer`}
             >
               Contact Us
             </button>
@@ -125,7 +129,7 @@ export default function Navbar() {
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className={`${
-                isFAQPage ? "text-gray-800" : "text-white"
+                useDarkStyle ? "text-gray-800" : "text-white"
               } focus:outline-none cursor-pointer`}
               aria-label="Toggle menu"
             >
@@ -154,7 +158,7 @@ export default function Navbar() {
         {mobileMenuOpen && (
           <motion.div
             className={`lg:hidden ${
-              isFAQPage ? "bg-white/95" : "bg-black/80"
+              useDarkStyle ? "bg-white/95" : "bg-black/80"
             } backdrop-blur-md`}
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
@@ -173,7 +177,7 @@ export default function Navbar() {
                   key={item.label}
                   href={item.href}
                   className={`block ${
-                    isFAQPage
+                    useDarkStyle
                       ? "text-gray-800/90 hover:text-gray-800"
                       : "text-white/90 hover:text-white"
                   } font-semibold py-2 transition-colors duration-200`}
@@ -208,7 +212,11 @@ export default function Navbar() {
                   setContactDialogOpen(true);
                   setMobileMenuOpen(false);
                 }}
-                className="w-full border-2 border-white bg-transparent hover:bg-white/10 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-250 cursor-pointer"
+                className={`w-full border-2 ${
+                  useDarkStyle
+                    ? "border-gray-800 text-gray-800 hover:bg-gray-100"
+                    : "border-white text-white hover:bg-white/10"
+                } bg-transparent font-semibold px-6 py-3 rounded-lg transition-all duration-250 cursor-pointer`}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}

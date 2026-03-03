@@ -5,9 +5,12 @@ import { motion } from "framer-motion";
 import { Search } from "lucide-react";
 import FAQAccordion from "../components/FAQAccordion";
 import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+import ContactDialog from "../components/ContactDialog";
 
 export default function FAQPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
 
   const aboutSageFieldFAQs = [
     {
@@ -214,11 +217,19 @@ export default function FAQPage() {
           <p className="text-lg text-gray-600 mb-8 font-body">
             We&apos;re here to help! Reach out to us and we&apos;ll get back to you as soon as possible.
           </p>
-          <button className="px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer">
+          <button
+            onClick={() => setIsContactDialogOpen(true)}
+            className="px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
+          >
             Contact Us
           </button>
         </motion.div>
       </section>
+      <Footer />
+      <ContactDialog
+        isOpen={isContactDialogOpen}
+        onClose={() => setIsContactDialogOpen(false)}
+      />
     </div>
   );
 }

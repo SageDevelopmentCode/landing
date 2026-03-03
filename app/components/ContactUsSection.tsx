@@ -122,7 +122,16 @@ export default function ContactUsSection() {
                     Location
                   </h4>
                   <p className="text-base text-text-gray font-body">
-                    Georgetown, TX
+                    TBD - Round Rock / Georgetown, TX
+                  </p>
+                  <p className="text-xs text-text-gray mt-1 italic font-body">
+                    For more information, please email us at{" "}
+                    <a
+                      href="mailto:sabrina@sagefield.co"
+                      className="text-primary hover:underline"
+                    >
+                      sabrina@sagefield.co
+                    </a>
                   </p>
                 </div>
               </motion.div>

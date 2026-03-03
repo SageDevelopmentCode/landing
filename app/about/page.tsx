@@ -6,6 +6,7 @@ import WelcomeSection from "../components/WelcomeSection";
 import DonationsSection from "../components/DonationsSection";
 import MeetTheTeamSection from "../components/MeetTheTeamSection";
 import ContactUsSection from "../components/ContactUsSection";
+import Footer from "../components/Footer";
 
 export default function AboutPage() {
   return (
@@ -51,6 +52,7 @@ export default function AboutPage() {
       <DonationsSection />
       <MeetTheTeamSection />
       <ContactUsSection />
+      <Footer />
     </div>
   );
 }

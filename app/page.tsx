@@ -13,8 +13,10 @@ import ImageGridShowcase from './components/ImageGridShowcase';
 import CoCreationSection from './components/CoCreationSection';
 import DonationsSection from './components/DonationsSection';
 import MeetTheTeamSection from './components/MeetTheTeamSection';
+import EnrollmentCTASection from './components/EnrollmentCTASection';
 import ContactUsSection from './components/ContactUsSection';
 import FAQAccordion from './components/FAQAccordion';
+import Footer from './components/Footer';
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -125,6 +127,7 @@ export default function Home() {
         ]}
       />
       <MeetTheTeamSection />
+      <EnrollmentCTASection />
       <ContactUsSection />
 
       {/* FAQ Section */}
@@ -238,6 +241,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      <Footer />
     </div>
   );
 }
