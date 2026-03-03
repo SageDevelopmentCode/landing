@@ -2,9 +2,16 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { colors, radius, shadows, spacing } from '../design-system'
+import { Merriweather } from 'next/font/google'
+
+const merriweather = Merriweather({
+  weight: ['300', '400', '700', '900'],
+  subsets: ['latin'],
+})
 
 interface NavItem {
   name: string
@@ -121,14 +128,18 @@ export function Sidebar() {
           borderRight: `1px solid ${colors.border}`,
         }}
       >
-        <div className="mb-10">
-          <h1
-            className="text-2xl font-semibold"
-            style={{ color: colors.mistyForest }}
+        <div className="mb-10 flex flex-col items-center">
+          <Image
+            src="/assets/Logo.png"
+            alt="Sagefield School Logo"
+            width={48}
+            height={48}
+            priority
+          />
+          <p
+            className={`text-sm mt-3 ${merriweather.className}`}
+            style={{ color: colors.textSecondary }}
           >
-            Sagefield
-          </h1>
-          <p className="text-sm mt-1" style={{ color: colors.textSecondary }}>
             Admin Portal
           </p>
         </div>
@@ -140,11 +151,12 @@ export function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200"
+                className="flex items-center gap-3 px-4 py-3 transition-all duration-200"
                 style={{
                   backgroundColor: active ? colors.pastelSage : 'transparent',
                   color: active ? colors.mistyForest : colors.textSecondary,
                   fontWeight: active ? 600 : 500,
+                  borderRadius: '12px',
                 }}
               >
                 {item.icon}
@@ -170,14 +182,18 @@ export function Sidebar() {
               boxShadow: shadows.large,
             }}
           >
-            <div className="mb-10 mt-16">
-              <h1
-                className="text-2xl font-semibold"
-                style={{ color: colors.mistyForest }}
+            <div className="mb-10 mt-16 flex flex-col items-center">
+              <Image
+                src="/assets/Logo.png"
+                alt="Sagefield School Logo"
+                width={48}
+                height={48}
+                priority
+              />
+              <p
+                className={`text-sm mt-3 ${merriweather.className}`}
+                style={{ color: colors.textSecondary }}
               >
-                Sagefield
-              </h1>
-              <p className="text-sm mt-1" style={{ color: colors.textSecondary }}>
                 Admin Portal
               </p>
             </div>
@@ -190,11 +206,12 @@ export function Sidebar() {
                     key={item.href}
                     href={item.href}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200"
+                    className="flex items-center gap-3 px-4 py-3 transition-all duration-200"
                     style={{
                       backgroundColor: active ? colors.pastelSage : 'transparent',
                       color: active ? colors.mistyForest : colors.textSecondary,
                       fontWeight: active ? 600 : 500,
+                      borderRadius: '12px',
                     }}
                   >
                     {item.icon}

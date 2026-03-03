@@ -2,6 +2,12 @@ import { createServerSupabaseClient } from '@/app/lib/supabase-server'
 import Link from 'next/link'
 import { StatCard } from './components/StatCard'
 import { colors, radius, shadows } from './design-system'
+import { Merriweather } from 'next/font/google'
+
+const merriweather = Merriweather({
+  weight: ['300', '400', '700', '900'],
+  subsets: ['latin'],
+})
 
 export default async function AdminDashboard() {
   const supabase = await createServerSupabaseClient()
@@ -37,7 +43,10 @@ export default async function AdminDashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold" style={{ color: colors.mistyForest }}>
+        <h1
+          className={`text-3xl font-bold ${merriweather.className}`}
+          style={{ color: colors.mistyForest }}
+        >
           Dashboard
         </h1>
         <p className="mt-2" style={{ color: colors.textSecondary }}>
@@ -114,7 +123,7 @@ export default async function AdminDashboard() {
             }}
           >
             <h3
-              className="text-lg font-semibold"
+              className={`text-lg font-semibold ${merriweather.className}`}
               style={{ color: colors.mistyForest }}
             >
               Recent Waitlist Submissions
@@ -184,7 +193,7 @@ export default async function AdminDashboard() {
             }}
           >
             <h3
-              className="text-lg font-semibold"
+              className={`text-lg font-semibold ${merriweather.className}`}
               style={{ color: colors.mistyForest }}
             >
               Recent Contact Submissions

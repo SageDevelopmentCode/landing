@@ -1,0 +1,187 @@
+'use client'
+
+import { DetailSidebar } from './DetailSidebar'
+import { StatusBadge } from './StatusBadge'
+import { colors, radius, shadows } from '../design-system'
+import { Merriweather } from 'next/font/google'
+
+const merriweather = Merriweather({
+  weight: ['300', '400', '700', '900'],
+  subsets: ['latin'],
+})
+
+interface ContactSubmission {
+  id: string
+  name: string
+  email: string
+  phone: string
+  message: string
+  status: string
+  created_at: string
+}
+
+interface ContactDetailSidebarProps {
+  submission: ContactSubmission | null
+  onClose: () => void
+}
+
+export function ContactDetailSidebar({
+  submission,
+  onClose,
+}: ContactDetailSidebarProps) {
+  if (!submission) return null
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  }
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    })
+  }
+
+  return (
+    <DetailSidebar
+      isOpen={!!submission}
+      onClose={onClose}
+      title="Contact Submission"
+    >
+      <div className="space-y-8">
+        {/* Status Section */}
+        <div>
+          <h3
+            className={`text-sm font-semibold mb-3 uppercase tracking-wide ${merriweather.className}`}
+            style={{ color: colors.textSecondary }}
+          >
+            Current Status
+          </h3>
+          <StatusBadge
+            status={(submission.status || 'pending') as any}
+            type="contact"
+          />
+        </div>
+
+        {/* Contact Information */}
+        <div>
+          <h3
+            className={`text-lg font-bold mb-4 ${merriweather.className}`}
+            style={{ color: colors.mistyForest }}
+          >
+            Contact Information
+          </h3>
+          <div
+            className="p-5 rounded-xl space-y-4"
+            style={{
+              backgroundColor: colors.softCloud,
+              border: `1px solid ${colors.border}`,
+            }}
+          >
+            <div>
+              <label
+                className="block text-xs font-semibold uppercase tracking-wide mb-1"
+                style={{ color: colors.textSecondary }}
+              >
+                Full Name
+              </label>
+              <p
+                className="text-lg font-medium"
+                style={{ color: colors.textPrimary }}
+              >
+                {submission.name}
+              </p>
+            </div>
+            <div className="pt-3" style={{ borderTop: `1px solid ${colors.divider}` }}>
+              <label
+                className="block text-xs font-semibold uppercase tracking-wide mb-1"
+                style={{ color: colors.textSecondary }}
+              >
+                Email Address
+              </label>
+              <p className="text-base" style={{ color: colors.textPrimary }}>
+                <a
+                  href={`mailto:${submission.email}`}
+                  className="hover:underline"
+                  style={{ color: colors.mistyForest }}
+                >
+                  {submission.email}
+                </a>
+              </p>
+            </div>
+            <div className="pt-3" style={{ borderTop: `1px solid ${colors.divider}` }}>
+              <label
+                className="block text-xs font-semibold uppercase tracking-wide mb-1"
+                style={{ color: colors.textSecondary }}
+              >
+                Phone Number
+              </label>
+              <p className="text-base" style={{ color: colors.textPrimary }}>
+                <a
+                  href={`tel:${submission.phone}`}
+                  className="hover:underline"
+                  style={{ color: colors.mistyForest }}
+                >
+                  {submission.phone}
+                </a>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Message */}
+        <div>
+          <h3
+            className={`text-lg font-bold mb-4 ${merriweather.className}`}
+            style={{ color: colors.mistyForest }}
+          >
+            Message
+          </h3>
+          <div
+            className="p-5 rounded-xl"
+            style={{
+              backgroundColor: colors.softCloud,
+              border: `1px solid ${colors.border}`,
+            }}
+          >
+            <p
+              className="text-base leading-relaxed whitespace-pre-wrap"
+              style={{ color: colors.textPrimary }}
+            >
+              {submission.message}
+            </p>
+          </div>
+        </div>
+
+        {/* Submission Date */}
+        <div
+          className="pt-6"
+          style={{ borderTop: `2px solid ${colors.divider}` }}
+        >
+          <h3
+            className={`text-sm font-semibold mb-3 uppercase tracking-wide ${merriweather.className}`}
+            style={{ color: colors.textSecondary }}
+          >
+            Submission Details
+          </h3>
+          <div className="space-y-2">
+            <p className="text-base" style={{ color: colors.textPrimary }}>
+              <span className="font-medium">Date:</span> {formatDate(submission.created_at)}
+            </p>
+            <p className="text-base" style={{ color: colors.textPrimary }}>
+              <span className="font-medium">Time:</span> {formatTime(submission.created_at)}
+            </p>
+          </div>
+        </div>
+      </div>
+    </DetailSidebar>
+  )
+}

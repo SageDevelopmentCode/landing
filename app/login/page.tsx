@@ -7,7 +7,14 @@ import {
   signInWithGoogle,
 } from "@/app/actions/auth";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
+import { Merriweather } from "next/font/google";
+
+const merriweather = Merriweather({
+  weight: ["300", "400", "700", "900"],
+  subsets: ["latin"],
+});
 
 export default function LoginPage() {
   const [authMode, setAuthMode] = useState<"password" | "magic-link">(
@@ -78,7 +85,19 @@ export default function LoginPage() {
         }}
       >
         <div className="text-center">
-          <h2 className="text-3xl font-bold" style={{ color: "#5E7C68" }}>
+          <div className="flex justify-center mb-6">
+            <Image
+              src="/assets/Logo.png"
+              alt="Sagefield School Logo"
+              width={64}
+              height={64}
+              priority
+            />
+          </div>
+          <h2
+            className={`text-3xl font-bold ${merriweather.className}`}
+            style={{ color: "#5E7C68" }}
+          >
             Sign In
           </h2>
           <p className="mt-2 text-sm" style={{ color: "#6B6B6B" }}>
@@ -130,12 +149,12 @@ export default function LoginPage() {
             onClick={() => setAuthMode("password")}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="flex-1 py-2.5 px-4 font-medium transition-all duration-200"
+            className="flex-1 py-3 px-4 font-medium transition-all duration-200"
             style={{
               backgroundColor:
                 authMode === "password" ? "white" : "transparent",
               color: authMode === "password" ? "#5E7C68" : "#6B6B6B",
-              borderRadius: "10px",
+              borderRadius: "12px",
               boxShadow:
                 authMode === "password"
                   ? "0 2px 8px rgba(94, 124, 104, 0.08)"
@@ -149,12 +168,12 @@ export default function LoginPage() {
             onClick={() => setAuthMode("magic-link")}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="flex-1 py-2.5 px-4 font-medium transition-all duration-200"
+            className="flex-1 py-3 px-4 font-medium transition-all duration-200"
             style={{
               backgroundColor:
                 authMode === "magic-link" ? "white" : "transparent",
               color: authMode === "magic-link" ? "#5E7C68" : "#6B6B6B",
-              borderRadius: "10px",
+              borderRadius: "12px",
               boxShadow:
                 authMode === "magic-link"
                   ? "0 2px 8px rgba(94, 124, 104, 0.08)"
@@ -225,10 +244,10 @@ export default function LoginPage() {
               disabled={loading}
               whileHover={{ scale: loading ? 1 : 1.02 }}
               whileTap={{ scale: loading ? 1 : 0.98 }}
-              className="w-full flex justify-center py-3 px-4 text-sm font-medium text-white focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              className="w-full flex justify-center py-4 px-4 text-base font-medium text-white focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               style={{
                 backgroundColor: "#5E7C68",
-                borderRadius: "12px",
+                borderRadius: "16px",
                 boxShadow: "0 2px 8px rgba(94, 124, 104, 0.15)",
                 border: "none",
               }}
@@ -272,10 +291,10 @@ export default function LoginPage() {
               disabled={loading}
               whileHover={{ scale: loading ? 1 : 1.02 }}
               whileTap={{ scale: loading ? 1 : 0.98 }}
-              className="w-full flex justify-center py-3 px-4 text-sm font-medium text-white focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              className="w-full flex justify-center py-4 px-4 text-base font-medium text-white focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               style={{
                 backgroundColor: "#5E7C68",
-                borderRadius: "12px",
+                borderRadius: "16px",
                 boxShadow: "0 2px 8px rgba(94, 124, 104, 0.15)",
                 border: "none",
               }}
@@ -307,10 +326,10 @@ export default function LoginPage() {
               disabled={loading}
               whileHover={{ scale: loading ? 1 : 1.02 }}
               whileTap={{ scale: loading ? 1 : 0.98 }}
-              className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white text-sm font-medium focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              className="w-full flex items-center justify-center gap-3 py-4 px-4 bg-white text-base font-medium focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               style={{
                 border: "1px solid #E8E4DF",
-                borderRadius: "12px",
+                borderRadius: "16px",
                 color: "#3D3D3D",
                 boxShadow: "0 2px 8px rgba(94, 124, 104, 0.08)",
               }}

@@ -1,22 +1,73 @@
-import { createServerSupabaseClient } from '@/app/lib/supabase-server'
+'use client'
+
+import { useState, useEffect } from 'react'
+import { createBrowserClient } from '@supabase/ssr'
 import { Table, TableRow, TableCell } from '../components/Table'
 import { StatusBadge } from '../components/StatusBadge'
+import { ContactDetailSidebar } from '../components/ContactDetailSidebar'
 import { colors, radius, shadows } from '../design-system'
+import { Merriweather } from 'next/font/google'
 
-export default async function ContactPage() {
-  const supabase = await createServerSupabaseClient()
+const merriweather = Merriweather({
+  weight: ['300', '400', '700', '900'],
+  subsets: ['latin'],
+})
 
-  const { data: submissions, error: submissionsError } = await supabase
-    .schema('contact')
-    .from('submissions')
-    .select('*')
-    .order('created_at', { ascending: false })
+interface ContactSubmission {
+  id: string
+  name: string
+  email: string
+  phone: string
+  message: string
+  status: string
+  created_at: string
+}
+
+export default function ContactPage() {
+  const [submissions, setSubmissions] = useState<ContactSubmission[]>([])
+  const [selectedSubmission, setSelectedSubmission] = useState<ContactSubmission | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+
+    async function fetchSubmissions() {
+      const { data, error } = await supabase
+        .schema('contact')
+        .from('submissions')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (data) {
+        setSubmissions(data)
+      }
+      setIsLoading(false)
+    }
+
+    fetchSubmissions()
+  }, [])
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-center items-center p-12">
+          <p style={{ color: colors.textSecondary }}>Loading...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold" style={{ color: colors.mistyForest }}>
+          <h1
+            className={`text-3xl font-bold ${merriweather.className}`}
+            style={{ color: colors.mistyForest }}
+          >
             Contact Submissions
           </h1>
           <p className="mt-2" style={{ color: colors.textSecondary }}>
@@ -25,10 +76,10 @@ export default async function ContactPage() {
         </div>
         <a
           href="/api/admin/export-contacts"
-          className="inline-flex items-center justify-center px-4 py-3 text-sm font-medium text-white transition-all duration-200 hover:scale-105 active:scale-95"
+          className="inline-flex items-center justify-center px-5 py-4 text-base font-medium text-white transition-all duration-200 hover:scale-105 active:scale-95"
           style={{
             backgroundColor: colors.mistyForest,
-            borderRadius: radius.md,
+            borderRadius: '16px',
             boxShadow: shadows.soft,
             border: 'none',
           }}
@@ -53,7 +104,11 @@ export default async function ContactPage() {
       {submissions && submissions.length > 0 ? (
         <Table headers={['Name', 'Contact', 'Message', 'Status', 'Submitted']}>
           {submissions.map((submission, index) => (
-            <TableRow key={submission.id} index={index}>
+            <TableRow
+              key={submission.id}
+              index={index}
+              onClick={() => setSelectedSubmission(submission)}
+            >
               <TableCell>
                 <div className="font-medium">{submission.name}</div>
               </TableCell>
@@ -94,6 +149,11 @@ export default async function ContactPage() {
           <p style={{ color: colors.textSecondary }}>No submissions yet</p>
         </div>
       )}
+
+      <ContactDetailSidebar
+        submission={selectedSubmission}
+        onClose={() => setSelectedSubmission(null)}
+      />
     </div>
   )
 }

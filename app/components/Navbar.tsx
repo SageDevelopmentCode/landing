@@ -19,10 +19,12 @@ export default function Navbar() {
     { label: "Educational Philosophy", href: "#educational-philosophy" },
     { label: "About Us", href: "/about" },
     { label: "FAQ", href: "/faq" },
-    { label: "Admin", href: "/admin" },
   ];
 
-  const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+  const handleSmoothScroll = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    href: string,
+  ) => {
     // Only handle anchor links (starting with #) on the home page
     if (href.startsWith("#") && pathname === "/") {
       e.preventDefault();
@@ -35,7 +37,7 @@ export default function Navbar() {
 
         window.scrollTo({
           top: targetPosition,
-          behavior: "smooth"
+          behavior: "smooth",
         });
 
         // Close mobile menu if open
@@ -61,7 +63,11 @@ export default function Navbar() {
             transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
           >
             <Link href="/">
-              <img src="/assets/Logo.png" alt="SageField logo" className="h-12 cursor-pointer" />
+              <img
+                src="/assets/Logo.png"
+                alt="SageField logo"
+                className="h-12 cursor-pointer"
+              />
             </Link>
           </motion.div>
 
@@ -79,7 +85,11 @@ export default function Navbar() {
                 } font-semibold transition-colors duration-200`}
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 + index * 0.1, ease: "easeOut" }}
+                transition={{
+                  duration: 0.5,
+                  delay: 0.2 + index * 0.1,
+                  ease: "easeOut",
+                }}
               >
                 {item.label}
               </motion.a>
@@ -212,10 +222,16 @@ export default function Navbar() {
       </AnimatePresence>
 
       {/* Contact Dialog */}
-      <ContactDialog isOpen={contactDialogOpen} onClose={() => setContactDialogOpen(false)} />
+      <ContactDialog
+        isOpen={contactDialogOpen}
+        onClose={() => setContactDialogOpen(false)}
+      />
 
       {/* Waitlist Dialog */}
-      <WaitlistDialog isOpen={waitlistDialogOpen} onClose={() => setWaitlistDialogOpen(false)} />
+      <WaitlistDialog
+        isOpen={waitlistDialogOpen}
+        onClose={() => setWaitlistDialogOpen(false)}
+      />
     </motion.nav>
   );
 }

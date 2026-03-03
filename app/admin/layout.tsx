@@ -54,10 +54,10 @@ export default async function AdminLayout({
           <form action={signOut}>
             <button
               type="submit"
-              className="px-6 py-3 text-white text-sm font-medium transition-all duration-200 hover:opacity-90"
+              className="px-6 py-4 text-white text-base font-medium transition-all duration-200 hover:opacity-90"
               style={{
                 backgroundColor: colors.mistyForest,
-                borderRadius: radius.md,
+                borderRadius: '16px',
                 boxShadow: shadows.soft,
                 border: 'none',
               }}

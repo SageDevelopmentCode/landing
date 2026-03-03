@@ -34,7 +34,7 @@ export function StatCard({
       className="p-6 cursor-pointer"
       style={{
         backgroundColor: 'white',
-        borderRadius: radius.lg,
+        borderRadius: '16px',
         boxShadow: shadows.soft,
         border: `1px solid ${colors.border}`,
       }}
@@ -55,10 +55,11 @@ export function StatCard({
           </p>
         </div>
         <div
-          className="p-3 rounded-lg"
+          className="p-3"
           style={{
             backgroundColor: iconBgColor,
             color: iconColor,
+            borderRadius: '12px',
           }}
         >
           {icon}

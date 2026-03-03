@@ -113,11 +113,12 @@ export function TopBar({ userEmail, signOutAction }: TopBarProps) {
                 <form action={signOutAction}>
                   <button
                     type="submit"
-                    className="px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 hover:scale-105 active:scale-95"
+                    className="px-4 py-2 text-sm font-medium transition-all duration-200 hover:scale-105 active:scale-95"
                     style={{
                       color: colors.mistyForest,
                       backgroundColor: colors.warmLinen,
                       border: `1px solid ${colors.border}`,
+                      borderRadius: '12px',
                     }}
                   >
                     Sign out
