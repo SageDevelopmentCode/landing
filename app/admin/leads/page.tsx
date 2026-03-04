@@ -23,11 +23,9 @@ type WaitlistLead = {
   phone: string
   child_name: string
   child_age: number | null
-  preferred_start_date: string | null
   status: LeadStatus
   created_at: string
-  message?: string | null
-  additional_info?: string | null
+  notes?: string | null
 }
 
 type ContactLead = {
@@ -100,6 +98,11 @@ export default function LeadsPage() {
         lead.id === leadId ? { ...lead, status: newStatus } : lead
       )
     )
+  }
+
+  const handleLeadFieldsUpdate = (updatedLead: Lead) => {
+    setLeads((prev) => prev.map((l) => (l.id === updatedLead.id ? updatedLead : l)))
+    setSelectedLead(updatedLead)
   }
 
   const handleLeadAdded = (newLead: WaitlistLead) => {
@@ -295,6 +298,7 @@ export default function LeadsPage() {
         submission={selectedLead}
         onClose={() => setSelectedLead(null)}
         onLeadUpdate={handleLeadUpdate}
+        onLeadFieldsUpdate={handleLeadFieldsUpdate}
       />
 
       <AddLeadSidebar

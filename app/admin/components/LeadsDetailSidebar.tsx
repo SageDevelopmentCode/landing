@@ -7,7 +7,8 @@ import { EmailThread } from './EmailThread'
 import { colors, radius } from '../design-system'
 import { LeadStatus } from '../../types/lead-status'
 import { updateWaitlistStatus, updateContactStatus } from '../../actions/updateLeadStatus'
-import { useState } from 'react'
+import { updateWaitlistLead, updateContactLead } from '../../actions/updateLeadFields'
+import { useState, useEffect } from 'react'
 
 type WaitlistLead = {
   id: string
@@ -17,11 +18,9 @@ type WaitlistLead = {
   phone: string
   child_name: string
   child_age: number | null
-  preferred_start_date: string | null
   status: LeadStatus
   created_at: string
-  message?: string | null
-  additional_info?: string | null
+  notes?: string | null
 }
 
 type ContactLead = {
@@ -41,19 +40,73 @@ interface LeadsDetailSidebarProps {
   submission: Lead | null
   onClose: () => void
   onLeadUpdate?: (leadId: string, newStatus: LeadStatus) => void
+  onLeadFieldsUpdate?: (updatedLead: Lead) => void
+}
+
+const inputStyle = {
+  backgroundColor: 'white',
+  border: `1px solid ${colors.border}`,
+  borderRadius: radius.md,
+  color: colors.textPrimary,
+  width: '100%',
+  padding: '8px 10px',
+  fontSize: '14px',
+  outline: 'none',
+}
+
+const labelStyle = {
+  display: 'block' as const,
+  fontSize: '12px',
+  fontWeight: 500,
+  marginBottom: '4px',
+  color: colors.textSecondary,
+}
+
+function buildDraft(sub: Lead): Record<string, string> {
+  if (sub.type === 'waitlist') {
+    return {
+      parent_name: sub.parent_name ?? '',
+      email: sub.email ?? '',
+      phone: sub.phone ?? '',
+      child_name: sub.child_name ?? '',
+      child_age: sub.child_age != null ? String(sub.child_age) : '',
+      notes: sub.notes ?? '',
+    }
+  } else {
+    return {
+      name: sub.name ?? '',
+      email: sub.email ?? '',
+      phone: sub.phone ?? '',
+      message: sub.message ?? '',
+    }
+  }
 }
 
 export function LeadsDetailSidebar({
   submission,
   onClose,
   onLeadUpdate,
+  onLeadFieldsUpdate,
 }: LeadsDetailSidebarProps) {
   const [currentSubmission, setCurrentSubmission] = useState<Lead | null>(submission)
+  const [draft, setDraft] = useState<Record<string, string>>(() =>
+    submission ? buildDraft(submission) : {}
+  )
+  const [isDirty, setIsDirty] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [saveSuccess, setSaveSuccess] = useState(false)
 
-  // Update local state when submission prop changes
-  if (submission?.id !== currentSubmission?.id) {
-    setCurrentSubmission(submission)
-  }
+  // Reset draft when a different lead is selected
+  useEffect(() => {
+    if (submission?.id !== currentSubmission?.id) {
+      setCurrentSubmission(submission)
+      setDraft(submission ? buildDraft(submission) : {})
+      setIsDirty(false)
+      setSaveError(null)
+      setSaveSuccess(false)
+    }
+  }, [submission?.id])
 
   if (!currentSubmission) return null
 
@@ -72,19 +125,113 @@ export function LeadsDetailSidebar({
   const isContact = currentSubmission.type === 'contact'
 
   const handleStatusUpdate = (newStatus: LeadStatus) => {
-    // Update local state for immediate sidebar feedback
     setCurrentSubmission({ ...currentSubmission, status: newStatus })
-    // Notify parent component to update the leads table
     if (onLeadUpdate) {
       onLeadUpdate(currentSubmission.id, newStatus)
     }
   }
+
+  const updateDraft = (key: string, value: string) => {
+    const newDraft = { ...draft, [key]: value }
+    setDraft(newDraft)
+
+    // Compare against current saved state
+    const baseline = buildDraft(currentSubmission)
+    const dirty = Object.keys(baseline).some(
+      (k) => newDraft[k] !== (baseline as Record<string, string>)[k]
+    )
+    setIsDirty(dirty)
+    setSaveError(null)
+    setSaveSuccess(false)
+  }
+
+  const handleSave = async () => {
+    if (!isDirty || isSaving) return
+    setIsSaving(true)
+    setSaveError(null)
+
+    let result
+    let updatedLead: Lead
+
+    if (isWaitlist && currentSubmission.type === 'waitlist') {
+      result = await updateWaitlistLead(currentSubmission.id, {
+        parent_name: draft.parent_name,
+        email: draft.email,
+        phone: draft.phone,
+        child_name: draft.child_name,
+        child_age: draft.child_age !== '' ? Number(draft.child_age) : null,
+        notes: draft.notes || null,
+      })
+      updatedLead = {
+        ...currentSubmission,
+        parent_name: draft.parent_name,
+        email: draft.email,
+        phone: draft.phone,
+        child_name: draft.child_name,
+        child_age: draft.child_age !== '' ? Number(draft.child_age) : null,
+        notes: draft.notes || null,
+      }
+    } else if (isContact && currentSubmission.type === 'contact') {
+      result = await updateContactLead(currentSubmission.id, {
+        name: draft.name,
+        email: draft.email,
+        phone: draft.phone,
+        message: draft.message,
+      })
+      updatedLead = {
+        ...currentSubmission,
+        name: draft.name,
+        email: draft.email,
+        phone: draft.phone,
+        message: draft.message,
+      }
+    } else {
+      setIsSaving(false)
+      return
+    }
+
+    setIsSaving(false)
+
+    if (result.success) {
+      setCurrentSubmission(updatedLead)
+      setIsDirty(false)
+      setSaveSuccess(true)
+      setTimeout(() => setSaveSuccess(false), 2000)
+      if (onLeadFieldsUpdate) onLeadFieldsUpdate(updatedLead)
+    } else {
+      setSaveError(result.error ?? 'Failed to save changes')
+    }
+  }
+
+  const footer = (
+    <div className="flex items-center gap-3">
+      <div className="flex-1 text-sm">
+        {saveError && <span style={{ color: '#dc2626' }}>{saveError}</span>}
+        {saveSuccess && <span style={{ color: colors.mistyForest }}>Changes saved</span>}
+      </div>
+      <button
+        disabled={!isDirty || isSaving}
+        onClick={handleSave}
+        className="px-4 py-2 text-sm font-medium text-white rounded-lg transition-all duration-200"
+        style={{
+          backgroundColor: colors.mistyForest,
+          borderRadius: radius.md,
+          opacity: !isDirty || isSaving ? 0.4 : 1,
+          cursor: !isDirty || isSaving ? 'not-allowed' : 'pointer',
+          border: 'none',
+        }}
+      >
+        {isSaving ? 'Saving...' : 'Save Changes'}
+      </button>
+    </div>
+  )
 
   return (
     <DetailSidebar
       isOpen={true}
       onClose={onClose}
       title={isWaitlist ? 'Waitlist Submission Details' : 'Contact Submission Details'}
+      footer={footer}
     >
       <div className="space-y-5">
         {/* Status */}
@@ -123,36 +270,32 @@ export function LeadsDetailSidebar({
           </h3>
           <div className="space-y-3">
             <div>
-              <p className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>
-                Name
-              </p>
-              <p className="font-medium" style={{ color: colors.textPrimary }}>
-                {isWaitlist ? currentSubmission.parent_name : currentSubmission.name}
-              </p>
+              <label style={labelStyle}>Name</label>
+              <input
+                style={inputStyle}
+                value={isWaitlist ? draft.parent_name : draft.name}
+                onChange={(e) =>
+                  updateDraft(isWaitlist ? 'parent_name' : 'name', e.target.value)
+                }
+              />
             </div>
             <div>
-              <p className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>
-                Email
-              </p>
-              <a
-                href={`mailto:${currentSubmission.email}`}
-                className="font-medium hover:underline break-all"
-                style={{ color: colors.mistyForest }}
-              >
-                {currentSubmission.email}
-              </a>
+              <label style={labelStyle}>Email</label>
+              <input
+                type="email"
+                style={inputStyle}
+                value={draft.email}
+                onChange={(e) => updateDraft('email', e.target.value)}
+              />
             </div>
             <div>
-              <p className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>
-                Phone
-              </p>
-              <a
-                href={`tel:${currentSubmission.phone}`}
-                className="font-medium hover:underline"
-                style={{ color: colors.mistyForest }}
-              >
-                {currentSubmission.phone}
-              </a>
+              <label style={labelStyle}>Phone</label>
+              <input
+                type="tel"
+                style={inputStyle}
+                value={draft.phone}
+                onChange={(e) => updateDraft('phone', e.target.value)}
+              />
             </div>
           </div>
         </div>
@@ -175,37 +318,21 @@ export function LeadsDetailSidebar({
             </h3>
             <div className="space-y-3">
               <div>
-                <p className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>
-                  Child Name
-                </p>
-                <p
-                  className="font-medium"
-                  style={{ color: colors.textPrimary }}
-                >
-                  {currentSubmission.child_name}
-                </p>
+                <label style={labelStyle}>Child Name</label>
+                <input
+                  style={inputStyle}
+                  value={draft.child_name}
+                  onChange={(e) => updateDraft('child_name', e.target.value)}
+                />
               </div>
               <div>
-                <p className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>
-                  Age
-                </p>
-                <p
-                  className="font-medium"
-                  style={{ color: colors.textPrimary }}
-                >
-                  {currentSubmission.child_age || 'Not specified'}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>
-                  Preferred Start Date
-                </p>
-                <p
-                  className="font-medium"
-                  style={{ color: colors.textPrimary }}
-                >
-                  {currentSubmission.preferred_start_date || 'Not specified'}
-                </p>
+                <label style={labelStyle}>Age</label>
+                <input
+                  type="number"
+                  style={inputStyle}
+                  value={draft.child_age}
+                  onChange={(e) => updateDraft('child_age', e.target.value)}
+                />
               </div>
             </div>
           </div>
@@ -227,37 +354,11 @@ export function LeadsDetailSidebar({
             >
               Message
             </h3>
-            <p
-              className="whitespace-pre-wrap text-sm leading-relaxed"
-              style={{ color: colors.textPrimary }}
-            >
-              {currentSubmission.message}
-            </p>
-          </div>
-        )}
-
-        {/* Waitlist-specific: Additional Information - Card Style */}
-        {isWaitlist && (currentSubmission.message || currentSubmission.additional_info) && (
-          <div
-            className="p-4"
-            style={{
-              backgroundColor: colors.softCloud,
-              borderRadius: radius.md,
-              border: `1px solid ${colors.divider}`,
-            }}
-          >
-            <h3
-              className="text-sm font-semibold mb-3"
-              style={{ color: colors.mistyForest }}
-            >
-              Additional Information
-            </h3>
-            <p
-              className="whitespace-pre-wrap text-sm leading-relaxed"
-              style={{ color: colors.textPrimary }}
-            >
-              {currentSubmission.message || currentSubmission.additional_info}
-            </p>
+            <textarea
+              style={{ ...inputStyle, resize: 'vertical', minHeight: '80px' }}
+              value={draft.message}
+              onChange={(e) => updateDraft('message', e.target.value)}
+            />
           </div>
         )}
 

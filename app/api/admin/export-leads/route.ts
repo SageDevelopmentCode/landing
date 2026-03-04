@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
       item.child_name,
       item.child_age || '',
       item.preferred_start_date || '',
-      item.message || item.additional_info || '', // any additional notes
+      item.notes || '', // any additional notes
       item.status || 'new_inquiry',
       new Date(item.created_at).toISOString(),
     ])

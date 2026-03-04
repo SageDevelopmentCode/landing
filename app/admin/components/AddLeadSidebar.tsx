@@ -17,8 +17,7 @@ type WaitlistLead = {
   preferred_start_date: string | null
   status: LeadStatus
   created_at: string
-  message?: string | null
-  additional_info?: string | null
+  notes?: string | null
 }
 
 interface AddLeadSidebarProps {
@@ -122,7 +121,7 @@ export function AddLeadSidebar({ isOpen, onClose, onLeadAdded }: AddLeadSidebarP
         preferred_start_date: null,
         status: form.status,
         created_at: new Date().toISOString(),
-        message: form.specialInterests || null,
+        notes: form.specialInterests || null,
       }
 
       onLeadAdded(newLead)

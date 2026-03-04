@@ -24,8 +24,7 @@ interface WaitlistSubmission {
   preferred_start_date: string | null
   status: LeadStatus
   created_at: string
-  message?: string | null
-  additional_info?: string | null
+  notes?: string | null
 }
 
 interface WaitlistDetailSidebarProps {
@@ -219,7 +218,7 @@ export function WaitlistDetailSidebar({
         </div>
 
         {/* Message/Additional Info */}
-        {(currentSubmission.message || currentSubmission.additional_info) && (
+        {currentSubmission.notes && (
           <div>
             <h3
               className={`text-lg font-bold mb-4 ${merriweather.className}`}
@@ -238,7 +237,7 @@ export function WaitlistDetailSidebar({
                 className="text-base leading-relaxed whitespace-pre-wrap"
                 style={{ color: colors.textPrimary }}
               >
-                {currentSubmission.message || currentSubmission.additional_info}
+                {currentSubmission.notes}
               </p>
             </div>
           </div>
