@@ -5,6 +5,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { Table, TableRow, TableCell } from '../components/Table'
 import { InlineStatusEditor } from '../components/InlineStatusEditor'
 import { LeadsDetailSidebar } from '../components/LeadsDetailSidebar'
+import { AddLeadSidebar } from '../components/AddLeadSidebar'
 import { colors, radius, shadows } from '../design-system'
 import { Merriweather } from 'next/font/google'
 import { LeadStatus } from '../../types/lead-status'
@@ -46,6 +47,7 @@ export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([])
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isAddLeadOpen, setIsAddLeadOpen] = useState(false)
 
   useEffect(() => {
     const supabase = createBrowserClient(
@@ -100,6 +102,11 @@ export default function LeadsPage() {
     )
   }
 
+  const handleLeadAdded = (newLead: WaitlistLead) => {
+    setLeads((prevLeads) => [newLead, ...prevLeads])
+    setIsAddLeadOpen(false)
+  }
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -124,31 +131,59 @@ export default function LeadsPage() {
             {leads.length} total submissions
           </p>
         </div>
-        <a
-          href="/api/admin/export-leads"
-          className="inline-flex items-center justify-center px-5 py-4 text-base font-medium text-white transition-all duration-200 hover:scale-105 active:scale-95"
-          style={{
-            backgroundColor: colors.mistyForest,
-            borderRadius: '16px',
-            boxShadow: shadows.soft,
-            border: 'none',
-          }}
-        >
-          <svg
-            className="-ml-1 mr-2 h-5 w-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        <div className="flex gap-3">
+          <button
+            onClick={() => setIsAddLeadOpen(true)}
+            className="inline-flex items-center justify-center px-5 py-4 text-base font-medium text-white transition-all duration-200 hover:scale-105 active:scale-95"
+            style={{
+              backgroundColor: colors.mistyForest,
+              borderRadius: '16px',
+              boxShadow: shadows.soft,
+              border: 'none',
+              cursor: 'pointer',
+            }}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-            />
-          </svg>
-          Export to CSV
-        </a>
+            <svg
+              className="-ml-1 mr-2 h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Add Lead
+          </button>
+          <a
+            href="/api/admin/export-leads"
+            className="inline-flex items-center justify-center px-5 py-4 text-base font-medium text-white transition-all duration-200 hover:scale-105 active:scale-95"
+            style={{
+              backgroundColor: colors.mistyForest,
+              borderRadius: '16px',
+              boxShadow: shadows.soft,
+              border: 'none',
+            }}
+          >
+            <svg
+              className="-ml-1 mr-2 h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+              />
+            </svg>
+            Export to CSV
+          </a>
+        </div>
       </div>
 
       {leads && leads.length > 0 ? (
@@ -260,6 +295,12 @@ export default function LeadsPage() {
         submission={selectedLead}
         onClose={() => setSelectedLead(null)}
         onLeadUpdate={handleLeadUpdate}
+      />
+
+      <AddLeadSidebar
+        isOpen={isAddLeadOpen}
+        onClose={() => setIsAddLeadOpen(false)}
+        onLeadAdded={handleLeadAdded}
       />
     </div>
   )

@@ -66,10 +66,8 @@ export function Table({ headers, children }: TableProps) {
 export function TableRow({ children, index = 0, onClick }: TableRowProps) {
   return (
     <motion.tr
-      variants={{
-        hidden: { opacity: 0, y: 10 },
-        visible: { opacity: 1, y: 0 },
-      }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
       onClick={onClick}
       className={`transition-colors duration-150 ${onClick ? 'cursor-pointer' : ''}`}
