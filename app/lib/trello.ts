@@ -29,6 +29,7 @@ export interface ContactCardInput {
 export interface WaitlistCardInput {
   parentName: string;
   email: string;
+  phone?: string;
   childName: string;
   childAge: number;
   programInterest: string;
@@ -158,6 +159,7 @@ export async function createWaitlistCard(
 
 👤 **Parent/Guardian:** ${data.parentName}
 📧 **Email:** ${data.email}
+${data.phone ? `📞 **Phone:** ${data.phone}` : ""}
 
 👶 **Child Name:** ${data.childName}
 🎂 **Child Age:** ${data.childAge}

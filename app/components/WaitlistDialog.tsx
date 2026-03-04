@@ -17,6 +17,7 @@ export default function WaitlistDialog({
   const [formData, setFormData] = useState({
     parentName: "",
     email: "",
+    phone: "",
     childName: "",
     childAge: "",
     programInterest: "",
@@ -29,6 +30,19 @@ export default function WaitlistDialog({
     message: string;
   }>({ type: null, message: "" });
 
+  // Format phone number as user types: (123) 456-7890
+  const formatPhoneNumber = (value: string) => {
+    // Remove all non-numeric characters
+    const phoneNumber = value.replace(/\D/g, "");
+
+    // Format based on length
+    if (phoneNumber.length === 0) return "";
+    if (phoneNumber.length <= 3) return `(${phoneNumber}`;
+    if (phoneNumber.length <= 6)
+      return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`;
+    return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -38,6 +52,7 @@ export default function WaitlistDialog({
       const result = await submitWaitlist({
         parentName: formData.parentName,
         email: formData.email,
+        phone: formData.phone || undefined,
         childName: formData.childName,
         childAge: parseInt(formData.childAge),
         programInterest: formData.programInterest as "summer-2026" | "school-year-2026" | "both",
@@ -50,6 +65,7 @@ export default function WaitlistDialog({
         setFormData({
           parentName: "",
           email: "",
+          phone: "",
           childName: "",
           childAge: "",
           programInterest: "",
@@ -76,10 +92,21 @@ export default function WaitlistDialog({
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+    const { name, value } = e.target;
+
+    // Apply phone formatting if it's the phone field
+    if (name === "phone") {
+      const formatted = formatPhoneNumber(value);
+      setFormData((prev) => ({
+        ...prev,
+        phone: formatted,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
   return (
     <AnimatePresence>
@@ -197,6 +224,25 @@ export default function WaitlistDialog({
                              font-body text-gray-900 placeholder:text-gray-500
                              disabled:bg-gray-100 disabled:cursor-not-allowed"
                     placeholder="your@email.com"
+                  />
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label className="block text-sm font-semibold text-text-gray mb-2 font-body">
+                    Phone (Optional)
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    disabled={isSubmitting}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg
+                             focus:border-primary focus:outline-none transition-colors
+                             font-body text-gray-900 placeholder:text-gray-500
+                             disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    placeholder="(123) 456-7890"
                   />
                 </div>
 

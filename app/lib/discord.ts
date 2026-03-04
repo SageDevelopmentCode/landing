@@ -71,6 +71,7 @@ export async function sendDiscordNotification(
 export function createWaitlistEmbed(data: {
   parentName: string;
   email: string;
+  phone?: string;
   childName: string;
   childAge: number;
   programInterest: string;
@@ -92,6 +93,11 @@ export function createWaitlistEmbed(data: {
     {
       name: "Email",
       value: data.email,
+      inline: true,
+    },
+    {
+      name: "Phone",
+      value: data.phone || "Not provided",
       inline: true,
     },
     {

@@ -18,6 +18,10 @@ const waitlistSchema = z.object({
     .min(1, "Parent/Guardian name is required")
     .max(100, "Name is too long"),
   email: z.string().email("Please enter a valid email address"),
+  phone: z
+    .string()
+    .max(20, "Phone number is too long")
+    .optional(),
   childName: z
     .string()
     .min(1, "Child name is required")
@@ -66,6 +70,7 @@ export async function submitWaitlist(
       .insert({
         parent_name: validated.parentName,
         email: validated.email,
+        phone: validated.phone || null,
         child_name: validated.childName,
         child_age: validated.childAge,
         program_interest: validated.programInterest,
@@ -96,6 +101,7 @@ export async function submitWaitlist(
       const embed = createWaitlistEmbed({
         parentName: validated.parentName,
         email: validated.email,
+        phone: validated.phone,
         childName: validated.childName,
         childAge: validated.childAge,
         programInterest: validated.programInterest,
@@ -112,6 +118,7 @@ export async function submitWaitlist(
       const card = await createWaitlistCard({
         parentName: validated.parentName,
         email: validated.email,
+        phone: validated.phone,
         childName: validated.childName,
         childAge: validated.childAge,
         programInterest: validated.programInterest,
