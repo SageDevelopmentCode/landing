@@ -8,7 +8,7 @@ interface StatusDropdownProps {
   currentStatus: LeadStatus
   submissionId: string
   onStatusChange: (submissionId: string, newStatus: LeadStatus) => Promise<{ success: boolean; error?: string }>
-  onUpdate?: () => void
+  onUpdate?: (newStatus: LeadStatus) => void
 }
 
 export function StatusDropdown({
@@ -33,7 +33,7 @@ export function StatusDropdown({
         setSelectedStatus(newStatus)
         // Call the optional onUpdate callback to refresh the UI
         if (onUpdate) {
-          onUpdate()
+          onUpdate(newStatus)
         }
       } else {
         setError(result.error || 'Failed to update status')

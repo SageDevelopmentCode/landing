@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@radix-ui/react-dropdown-menu": "^2.1.16",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.98.0",
     "framer-motion": "^12.34.2",

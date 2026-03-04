@@ -39,11 +39,13 @@ type Lead = WaitlistLead | ContactLead
 interface LeadsDetailSidebarProps {
   submission: Lead | null
   onClose: () => void
+  onLeadUpdate?: (leadId: string, newStatus: LeadStatus) => void
 }
 
 export function LeadsDetailSidebar({
   submission,
   onClose,
+  onLeadUpdate,
 }: LeadsDetailSidebarProps) {
   const [currentSubmission, setCurrentSubmission] = useState<Lead | null>(submission)
 
@@ -68,9 +70,13 @@ export function LeadsDetailSidebar({
   const isWaitlist = currentSubmission.type === 'waitlist'
   const isContact = currentSubmission.type === 'contact'
 
-  const handleStatusUpdate = () => {
-    // Force re-render by updating state
-    setCurrentSubmission({ ...currentSubmission })
+  const handleStatusUpdate = (newStatus: LeadStatus) => {
+    // Update local state for immediate sidebar feedback
+    setCurrentSubmission({ ...currentSubmission, status: newStatus })
+    // Notify parent component to update the leads table
+    if (onLeadUpdate) {
+      onLeadUpdate(currentSubmission.id, newStatus)
+    }
   }
 
   return (

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { Table, TableRow, TableCell } from '../components/Table'
-import { StatusBadge } from '../components/StatusBadge'
+import { InlineStatusEditor } from '../components/InlineStatusEditor'
 import { LeadsDetailSidebar } from '../components/LeadsDetailSidebar'
 import { colors, radius, shadows } from '../design-system'
 import { Merriweather } from 'next/font/google'
@@ -91,6 +91,14 @@ export default function LeadsPage() {
 
     fetchLeads()
   }, [])
+
+  const handleLeadUpdate = (leadId: string, newStatus: LeadStatus) => {
+    setLeads((prevLeads) =>
+      prevLeads.map((lead) =>
+        lead.id === leadId ? { ...lead, status: newStatus } : lead
+      )
+    )
+  }
 
   if (isLoading) {
     return (
@@ -219,7 +227,12 @@ export default function LeadsPage() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <StatusBadge status={lead.status} />
+                  <InlineStatusEditor
+                    status={lead.status}
+                    leadId={lead.id}
+                    leadType={lead.type}
+                    onStatusChange={handleLeadUpdate}
+                  />
                 </TableCell>
                 <TableCell>
                   <div style={{ color: colors.textSecondary }}>
@@ -246,6 +259,7 @@ export default function LeadsPage() {
       <LeadsDetailSidebar
         submission={selectedLead}
         onClose={() => setSelectedLead(null)}
+        onLeadUpdate={handleLeadUpdate}
       />
     </div>
   )

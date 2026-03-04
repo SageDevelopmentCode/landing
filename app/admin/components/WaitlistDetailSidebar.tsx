@@ -46,9 +46,9 @@ export function WaitlistDetailSidebar({
 
   if (!currentSubmission) return null
 
-  const handleStatusUpdate = () => {
-    // Force re-render by updating state
-    setCurrentSubmission({ ...currentSubmission })
+  const handleStatusUpdate = (newStatus: LeadStatus) => {
+    // Update local state for immediate sidebar feedback
+    setCurrentSubmission({ ...currentSubmission, status: newStatus })
   }
 
   const formatDate = (dateString: string) => {
