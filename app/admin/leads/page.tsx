@@ -7,6 +7,7 @@ import { StatusBadge } from '../components/StatusBadge'
 import { LeadsDetailSidebar } from '../components/LeadsDetailSidebar'
 import { colors, radius, shadows } from '../design-system'
 import { Merriweather } from 'next/font/google'
+import { LeadStatus } from '../../types/lead-status'
 
 const merriweather = Merriweather({
   weight: ['300', '400', '700', '900'],
@@ -22,7 +23,7 @@ type WaitlistLead = {
   child_name: string
   child_age: number | null
   preferred_start_date: string | null
-  status: string
+  status: LeadStatus
   created_at: string
   message?: string | null
   additional_info?: string | null
@@ -35,7 +36,7 @@ type ContactLead = {
   email: string
   phone: string
   message: string
-  status: string
+  status: LeadStatus
   created_at: string
 }
 
@@ -218,10 +219,7 @@ export default function LeadsPage() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <StatusBadge
-                    status={(lead.status || 'pending') as any}
-                    type={lead.type}
-                  />
+                  <StatusBadge status={lead.status} />
                 </TableCell>
                 <TableCell>
                   <div style={{ color: colors.textSecondary }}>

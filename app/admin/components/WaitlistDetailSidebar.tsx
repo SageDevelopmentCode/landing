@@ -2,8 +2,12 @@
 
 import { DetailSidebar } from './DetailSidebar'
 import { StatusBadge } from './StatusBadge'
+import { StatusDropdown } from './StatusDropdown'
 import { colors, radius, shadows, spacing } from '../design-system'
 import { Merriweather } from 'next/font/google'
+import { LeadStatus } from '../../types/lead-status'
+import { updateWaitlistStatus } from '../../actions/updateLeadStatus'
+import { useState } from 'react'
 
 const merriweather = Merriweather({
   weight: ['300', '400', '700', '900'],
@@ -18,7 +22,7 @@ interface WaitlistSubmission {
   child_name: string
   child_age: number | null
   preferred_start_date: string | null
-  status: string
+  status: LeadStatus
   created_at: string
   message?: string | null
   additional_info?: string | null
@@ -33,7 +37,19 @@ export function WaitlistDetailSidebar({
   submission,
   onClose,
 }: WaitlistDetailSidebarProps) {
-  if (!submission) return null
+  const [currentSubmission, setCurrentSubmission] = useState<WaitlistSubmission | null>(submission)
+
+  // Update local state when submission prop changes
+  if (submission?.id !== currentSubmission?.id) {
+    setCurrentSubmission(submission)
+  }
+
+  if (!currentSubmission) return null
+
+  const handleStatusUpdate = () => {
+    // Force re-render by updating state
+    setCurrentSubmission({ ...currentSubmission })
+  }
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -56,7 +72,7 @@ export function WaitlistDetailSidebar({
 
   return (
     <DetailSidebar
-      isOpen={!!submission}
+      isOpen={!!currentSubmission}
       onClose={onClose}
       title="Waitlist Submission"
     >
@@ -69,9 +85,14 @@ export function WaitlistDetailSidebar({
           >
             Current Status
           </h3>
-          <StatusBadge
-            status={(submission.status || 'pending') as any}
-            type="waitlist"
+          <div className="mb-3">
+            <StatusBadge status={currentSubmission.status} />
+          </div>
+          <StatusDropdown
+            currentStatus={currentSubmission.status}
+            submissionId={currentSubmission.id}
+            onStatusChange={updateWaitlistStatus}
+            onUpdate={handleStatusUpdate}
           />
         </div>
 
@@ -101,7 +122,7 @@ export function WaitlistDetailSidebar({
                 className="text-lg font-medium"
                 style={{ color: colors.textPrimary }}
               >
-                {submission.parent_name}
+                {currentSubmission.parent_name}
               </p>
             </div>
             <div className="pt-3" style={{ borderTop: `1px solid ${colors.divider}` }}>
@@ -113,11 +134,11 @@ export function WaitlistDetailSidebar({
               </label>
               <p className="text-base" style={{ color: colors.textPrimary }}>
                 <a
-                  href={`mailto:${submission.email}`}
+                  href={`mailto:${currentSubmission.email}`}
                   className="hover:underline"
                   style={{ color: colors.mistyForest }}
                 >
-                  {submission.email}
+                  {currentSubmission.email}
                 </a>
               </p>
             </div>
@@ -130,11 +151,11 @@ export function WaitlistDetailSidebar({
               </label>
               <p className="text-base" style={{ color: colors.textPrimary }}>
                 <a
-                  href={`tel:${submission.phone}`}
+                  href={`tel:${currentSubmission.phone}`}
                   className="hover:underline"
                   style={{ color: colors.mistyForest }}
                 >
-                  {submission.phone}
+                  {currentSubmission.phone}
                 </a>
               </p>
             </div>
@@ -167,7 +188,7 @@ export function WaitlistDetailSidebar({
                 className="text-lg font-medium"
                 style={{ color: colors.textPrimary }}
               >
-                {submission.child_name}
+                {currentSubmission.child_name}
               </p>
             </div>
             <div className="pt-3" style={{ borderTop: `1px solid ${colors.divider}` }}>
@@ -178,10 +199,10 @@ export function WaitlistDetailSidebar({
                 Age
               </label>
               <p className="text-base" style={{ color: colors.textPrimary }}>
-                {submission.child_age ? `${submission.child_age} years old` : 'Not specified'}
+                {currentSubmission.child_age ? `${currentSubmission.child_age} years old` : 'Not specified'}
               </p>
             </div>
-            {submission.preferred_start_date && (
+            {currentSubmission.preferred_start_date && (
               <div className="pt-3" style={{ borderTop: `1px solid ${colors.divider}` }}>
                 <label
                   className="block text-xs font-semibold uppercase tracking-wide mb-1"
@@ -190,7 +211,7 @@ export function WaitlistDetailSidebar({
                   Preferred Start Date
                 </label>
                 <p className="text-base" style={{ color: colors.textPrimary }}>
-                  {submission.preferred_start_date}
+                  {currentSubmission.preferred_start_date}
                 </p>
               </div>
             )}
@@ -198,7 +219,7 @@ export function WaitlistDetailSidebar({
         </div>
 
         {/* Message/Additional Info */}
-        {(submission.message || submission.additional_info) && (
+        {(currentSubmission.message || currentSubmission.additional_info) && (
           <div>
             <h3
               className={`text-lg font-bold mb-4 ${merriweather.className}`}
@@ -217,7 +238,7 @@ export function WaitlistDetailSidebar({
                 className="text-base leading-relaxed whitespace-pre-wrap"
                 style={{ color: colors.textPrimary }}
               >
-                {submission.message || submission.additional_info}
+                {currentSubmission.message || currentSubmission.additional_info}
               </p>
             </div>
           </div>
@@ -236,10 +257,10 @@ export function WaitlistDetailSidebar({
           </h3>
           <div className="space-y-2">
             <p className="text-base" style={{ color: colors.textPrimary }}>
-              <span className="font-medium">Date:</span> {formatDate(submission.created_at)}
+              <span className="font-medium">Date:</span> {formatDate(currentSubmission.created_at)}
             </p>
             <p className="text-base" style={{ color: colors.textPrimary }}>
-              <span className="font-medium">Time:</span> {formatTime(submission.created_at)}
+              <span className="font-medium">Time:</span> {formatTime(currentSubmission.created_at)}
             </p>
           </div>
         </div>

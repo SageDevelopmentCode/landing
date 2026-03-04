@@ -2,8 +2,12 @@
 
 import { DetailSidebar } from './DetailSidebar'
 import { StatusBadge } from './StatusBadge'
+import { StatusDropdown } from './StatusDropdown'
 import { colors, radius, shadows } from '../design-system'
 import { Merriweather } from 'next/font/google'
+import { LeadStatus } from '../../types/lead-status'
+import { updateContactStatus } from '../../actions/updateLeadStatus'
+import { useState } from 'react'
 
 const merriweather = Merriweather({
   weight: ['300', '400', '700', '900'],
@@ -16,7 +20,7 @@ interface ContactSubmission {
   email: string
   phone: string
   message: string
-  status: string
+  status: LeadStatus
   created_at: string
 }
 
@@ -29,7 +33,19 @@ export function ContactDetailSidebar({
   submission,
   onClose,
 }: ContactDetailSidebarProps) {
-  if (!submission) return null
+  const [currentSubmission, setCurrentSubmission] = useState<ContactSubmission | null>(submission)
+
+  // Update local state when submission prop changes
+  if (submission?.id !== currentSubmission?.id) {
+    setCurrentSubmission(submission)
+  }
+
+  if (!currentSubmission) return null
+
+  const handleStatusUpdate = () => {
+    // Force re-render by updating state
+    setCurrentSubmission({ ...currentSubmission })
+  }
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -52,7 +68,7 @@ export function ContactDetailSidebar({
 
   return (
     <DetailSidebar
-      isOpen={!!submission}
+      isOpen={!!currentSubmission}
       onClose={onClose}
       title="Contact Submission"
     >
@@ -65,9 +81,14 @@ export function ContactDetailSidebar({
           >
             Current Status
           </h3>
-          <StatusBadge
-            status={(submission.status || 'pending') as any}
-            type="contact"
+          <div className="mb-3">
+            <StatusBadge status={currentSubmission.status} />
+          </div>
+          <StatusDropdown
+            currentStatus={currentSubmission.status}
+            submissionId={currentSubmission.id}
+            onStatusChange={updateContactStatus}
+            onUpdate={handleStatusUpdate}
           />
         </div>
 
@@ -97,7 +118,7 @@ export function ContactDetailSidebar({
                 className="text-lg font-medium"
                 style={{ color: colors.textPrimary }}
               >
-                {submission.name}
+                {currentSubmission.name}
               </p>
             </div>
             <div className="pt-3" style={{ borderTop: `1px solid ${colors.divider}` }}>
@@ -109,11 +130,11 @@ export function ContactDetailSidebar({
               </label>
               <p className="text-base" style={{ color: colors.textPrimary }}>
                 <a
-                  href={`mailto:${submission.email}`}
+                  href={`mailto:${currentSubmission.email}`}
                   className="hover:underline"
                   style={{ color: colors.mistyForest }}
                 >
-                  {submission.email}
+                  {currentSubmission.email}
                 </a>
               </p>
             </div>
@@ -126,11 +147,11 @@ export function ContactDetailSidebar({
               </label>
               <p className="text-base" style={{ color: colors.textPrimary }}>
                 <a
-                  href={`tel:${submission.phone}`}
+                  href={`tel:${currentSubmission.phone}`}
                   className="hover:underline"
                   style={{ color: colors.mistyForest }}
                 >
-                  {submission.phone}
+                  {currentSubmission.phone}
                 </a>
               </p>
             </div>
@@ -156,7 +177,7 @@ export function ContactDetailSidebar({
               className="text-base leading-relaxed whitespace-pre-wrap"
               style={{ color: colors.textPrimary }}
             >
-              {submission.message}
+              {currentSubmission.message}
             </p>
           </div>
         </div>
@@ -174,10 +195,10 @@ export function ContactDetailSidebar({
           </h3>
           <div className="space-y-2">
             <p className="text-base" style={{ color: colors.textPrimary }}>
-              <span className="font-medium">Date:</span> {formatDate(submission.created_at)}
+              <span className="font-medium">Date:</span> {formatDate(currentSubmission.created_at)}
             </p>
             <p className="text-base" style={{ color: colors.textPrimary }}>
-              <span className="font-medium">Time:</span> {formatTime(submission.created_at)}
+              <span className="font-medium">Time:</span> {formatTime(currentSubmission.created_at)}
             </p>
           </div>
         </div>

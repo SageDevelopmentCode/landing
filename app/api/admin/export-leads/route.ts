@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
       item.child_age || '',
       item.preferred_start_date || '',
       item.message || item.additional_info || '', // any additional notes
-      item.status || 'pending',
+      item.status || 'new_inquiry',
       new Date(item.created_at).toISOString(),
     ])
 
@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
       '', // child_age (waitlist only)
       '', // preferred_start_date (waitlist only)
       item.message || '',
-      item.status || 'pending',
+      item.status || 'new_inquiry',
       new Date(item.created_at).toISOString(),
     ])
 
