@@ -117,7 +117,7 @@ export default async function AdminDashboard() {
         }}
       >
         <div
-          className="px-6 py-5 flex items-center justify-between"
+          className="px-5 py-3.5 flex items-center justify-between"
           style={{
             backgroundColor: colors.warmLinen,
             borderBottom: `1px solid ${colors.border}`,
@@ -139,7 +139,7 @@ export default async function AdminDashboard() {
             View all →
           </Link>
         </div>
-        <div className="px-6 py-5">
+        <div className="px-5 py-4">
           {recentLeads && recentLeads.length > 0 ? (
             <ul style={{ borderTop: `1px solid ${colors.divider}` }}>
               {recentLeads.map((lead, index) => {
@@ -152,7 +152,7 @@ export default async function AdminDashboard() {
                 return (
                   <li
                     key={lead.id}
-                    className="py-4"
+                    className="py-2.5"
                     style={{
                       borderBottom:
                         index < recentLeads.length - 1

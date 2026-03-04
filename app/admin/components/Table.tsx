@@ -33,7 +33,7 @@ export function Table({ headers, children }: TableProps) {
               {headers.map((header, index) => (
                 <th
                   key={index}
-                  className="px-6 py-4 text-left text-sm font-semibold"
+                  className="px-4 py-2.5 text-left text-sm font-semibold"
                   style={{
                     color: colors.mistyForest,
                     borderBottom: `1px solid ${colors.border}`,
@@ -91,7 +91,7 @@ interface TableCellProps {
 export function TableCell({ children, className = '' }: TableCellProps) {
   return (
     <td
-      className={`px-6 py-5 text-sm ${className}`}
+      className={`px-4 py-2.5 text-sm ${className}`}
       style={{ color: colors.textPrimary }}
     >
       {children}

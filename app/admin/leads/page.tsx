@@ -122,7 +122,7 @@ export default function LeadsPage() {
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h1
-            className={`text-3xl font-bold ${merriweather.className}`}
+            className={`text-2xl font-bold ${merriweather.className}`}
             style={{ color: colors.mistyForest }}
           >
             Leads
@@ -134,17 +134,17 @@ export default function LeadsPage() {
         <div className="flex gap-3">
           <button
             onClick={() => setIsAddLeadOpen(true)}
-            className="inline-flex items-center justify-center px-5 py-4 text-base font-medium text-white transition-all duration-200 hover:scale-105 active:scale-95"
+            className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:scale-105 active:scale-95"
             style={{
               backgroundColor: colors.mistyForest,
-              borderRadius: '16px',
+              borderRadius: radius.md,
               boxShadow: shadows.soft,
               border: 'none',
               cursor: 'pointer',
             }}
           >
             <svg
-              className="-ml-1 mr-2 h-5 w-5"
+              className="-ml-1 mr-1.5 h-4 w-4"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -160,16 +160,16 @@ export default function LeadsPage() {
           </button>
           <a
             href="/api/admin/export-leads"
-            className="inline-flex items-center justify-center px-5 py-4 text-base font-medium text-white transition-all duration-200 hover:scale-105 active:scale-95"
+            className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:scale-105 active:scale-95"
             style={{
               backgroundColor: colors.mistyForest,
-              borderRadius: '16px',
+              borderRadius: radius.md,
               boxShadow: shadows.soft,
               border: 'none',
             }}
           >
             <svg
-              className="-ml-1 mr-2 h-5 w-5"
+              className="-ml-1 mr-1.5 h-4 w-4"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -211,7 +211,7 @@ export default function LeadsPage() {
               >
                 <TableCell>
                   <span
-                    className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full"
+                    className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full"
                     style={{
                       backgroundColor: isWaitlist
                         ? colors.paleMarigold
