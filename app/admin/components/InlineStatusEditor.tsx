@@ -63,7 +63,6 @@ export function InlineStatusEditor({
               color: styles.text,
               borderRadius: radius.full,
               border: 'none',
-              focusRingColor: colors.mistyForest,
             }}
             disabled={isPending}
           >
