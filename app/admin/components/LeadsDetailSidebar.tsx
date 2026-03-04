@@ -2,7 +2,7 @@
 
 import { DetailSidebar } from './DetailSidebar'
 import { StatusBadge } from './StatusBadge'
-import { colors } from '../design-system'
+import { colors, radius } from '../design-system'
 
 type WaitlistLead = {
   id: string
@@ -63,7 +63,7 @@ export function LeadsDetailSidebar({
       onClose={onClose}
       title={isWaitlist ? 'Waitlist Submission Details' : 'Contact Submission Details'}
     >
-      <div className="space-y-6">
+      <div className="space-y-5">
         {/* Status */}
         <div>
           <h3
@@ -78,17 +78,24 @@ export function LeadsDetailSidebar({
           />
         </div>
 
-        {/* Contact/Parent Information */}
-        <div>
+        {/* Contact/Parent Information - Card Style */}
+        <div
+          className="p-4"
+          style={{
+            backgroundColor: colors.softCloud,
+            borderRadius: radius.md,
+            border: `1px solid ${colors.divider}`,
+          }}
+        >
           <h3
-            className="text-sm font-medium mb-3"
-            style={{ color: colors.textSecondary }}
+            className="text-sm font-semibold mb-3"
+            style={{ color: colors.mistyForest }}
           >
             {isWaitlist ? 'Parent Information' : 'Contact Information'}
           </h3>
           <div className="space-y-3">
             <div>
-              <p className="text-sm" style={{ color: colors.textSecondary }}>
+              <p className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>
                 Name
               </p>
               <p className="font-medium" style={{ color: colors.textPrimary }}>
@@ -96,19 +103,19 @@ export function LeadsDetailSidebar({
               </p>
             </div>
             <div>
-              <p className="text-sm" style={{ color: colors.textSecondary }}>
+              <p className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>
                 Email
               </p>
               <a
                 href={`mailto:${submission.email}`}
-                className="font-medium hover:underline"
+                className="font-medium hover:underline break-all"
                 style={{ color: colors.mistyForest }}
               >
                 {submission.email}
               </a>
             </div>
             <div>
-              <p className="text-sm" style={{ color: colors.textSecondary }}>
+              <p className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>
                 Phone
               </p>
               <a
@@ -122,18 +129,25 @@ export function LeadsDetailSidebar({
           </div>
         </div>
 
-        {/* Waitlist-specific: Child Information */}
+        {/* Waitlist-specific: Child Information - Card Style */}
         {isWaitlist && (
-          <div>
+          <div
+            className="p-4"
+            style={{
+              backgroundColor: colors.softCloud,
+              borderRadius: radius.md,
+              border: `1px solid ${colors.divider}`,
+            }}
+          >
             <h3
-              className="text-sm font-medium mb-3"
-              style={{ color: colors.textSecondary }}
+              className="text-sm font-semibold mb-3"
+              style={{ color: colors.mistyForest }}
             >
               Child Information
             </h3>
             <div className="space-y-3">
               <div>
-                <p className="text-sm" style={{ color: colors.textSecondary }}>
+                <p className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>
                   Child Name
                 </p>
                 <p
@@ -144,7 +158,7 @@ export function LeadsDetailSidebar({
                 </p>
               </div>
               <div>
-                <p className="text-sm" style={{ color: colors.textSecondary }}>
+                <p className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>
                   Age
                 </p>
                 <p
@@ -155,7 +169,7 @@ export function LeadsDetailSidebar({
                 </p>
               </div>
               <div>
-                <p className="text-sm" style={{ color: colors.textSecondary }}>
+                <p className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>
                   Preferred Start Date
                 </p>
                 <p
@@ -169,17 +183,24 @@ export function LeadsDetailSidebar({
           </div>
         )}
 
-        {/* Contact-specific: Message */}
+        {/* Contact-specific: Message - Card Style */}
         {isContact && (
-          <div>
+          <div
+            className="p-4"
+            style={{
+              backgroundColor: colors.softCloud,
+              borderRadius: radius.md,
+              border: `1px solid ${colors.divider}`,
+            }}
+          >
             <h3
-              className="text-sm font-medium mb-3"
-              style={{ color: colors.textSecondary }}
+              className="text-sm font-semibold mb-3"
+              style={{ color: colors.mistyForest }}
             >
               Message
             </h3>
             <p
-              className="whitespace-pre-wrap"
+              className="whitespace-pre-wrap text-sm leading-relaxed"
               style={{ color: colors.textPrimary }}
             >
               {submission.message}
@@ -187,17 +208,24 @@ export function LeadsDetailSidebar({
           </div>
         )}
 
-        {/* Waitlist-specific: Additional Information */}
+        {/* Waitlist-specific: Additional Information - Card Style */}
         {isWaitlist && (submission.message || submission.additional_info) && (
-          <div>
+          <div
+            className="p-4"
+            style={{
+              backgroundColor: colors.softCloud,
+              borderRadius: radius.md,
+              border: `1px solid ${colors.divider}`,
+            }}
+          >
             <h3
-              className="text-sm font-medium mb-3"
-              style={{ color: colors.textSecondary }}
+              className="text-sm font-semibold mb-3"
+              style={{ color: colors.mistyForest }}
             >
               Additional Information
             </h3>
             <p
-              className="whitespace-pre-wrap"
+              className="whitespace-pre-wrap text-sm leading-relaxed"
               style={{ color: colors.textPrimary }}
             >
               {submission.message || submission.additional_info}
@@ -205,35 +233,11 @@ export function LeadsDetailSidebar({
           </div>
         )}
 
-        {/* Submission Details */}
-        <div>
-          <h3
-            className="text-sm font-medium mb-3"
-            style={{ color: colors.textSecondary }}
-          >
-            Submission Details
-          </h3>
-          <div className="space-y-2">
-            <div>
-              <p className="text-sm" style={{ color: colors.textSecondary }}>
-                Submitted on
-              </p>
-              <p
-                className="font-medium"
-                style={{ color: colors.textPrimary }}
-              >
-                {formatDate(submission.created_at)}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm" style={{ color: colors.textSecondary }}>
-                Submission ID
-              </p>
-              <p className="font-mono text-sm" style={{ color: colors.textPrimary }}>
-                {submission.id}
-              </p>
-            </div>
-          </div>
+        {/* Submission Date - Simple, No Card */}
+        <div className="pt-2" style={{ borderTop: `1px solid ${colors.divider}` }}>
+          <p className="text-xs" style={{ color: colors.textSecondary }}>
+            Submitted on {formatDate(submission.created_at)}
+          </p>
         </div>
       </div>
     </DetailSidebar>

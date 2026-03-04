@@ -148,7 +148,8 @@ export default function LeadsPage() {
             'Type',
             'Name/Parent',
             'Contact',
-            'Child/Message',
+            'Child Info',
+            'Message',
             'Start Date',
             'Status',
             'Submitted',
@@ -197,9 +198,16 @@ export default function LeadsPage() {
                       </div>
                     </>
                   ) : (
+                    <div style={{ color: colors.textSecondary }}>—</div>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {isContact ? (
                     <div className="max-w-xs truncate" title={lead.message}>
                       {lead.message}
                     </div>
+                  ) : (
+                    <div style={{ color: colors.textSecondary }}>—</div>
                   )}
                 </TableCell>
                 <TableCell>
