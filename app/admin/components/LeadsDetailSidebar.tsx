@@ -3,6 +3,7 @@
 import { DetailSidebar } from './DetailSidebar'
 import { StatusBadge } from './StatusBadge'
 import { StatusDropdown } from './StatusDropdown'
+import { EmailThread } from './EmailThread'
 import { colors, radius } from '../design-system'
 import { LeadStatus } from '../../types/lead-status'
 import { updateWaitlistStatus, updateContactStatus } from '../../actions/updateLeadStatus'
@@ -259,6 +260,17 @@ export function LeadsDetailSidebar({
             </p>
           </div>
         )}
+
+        {/* Email Thread Section */}
+        <div>
+          <h3
+            className="text-sm font-semibold mb-3"
+            style={{ color: colors.mistyForest }}
+          >
+            Email History
+          </h3>
+          <EmailThread emailAddress={currentSubmission.email} />
+        </div>
 
         {/* Submission Date - Simple, No Card */}
         <div className="pt-2" style={{ borderTop: `1px solid ${colors.divider}` }}>

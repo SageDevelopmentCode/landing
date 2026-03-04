@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { StatCard } from './components/StatCard'
 import { colors, radius, shadows } from './design-system'
 import { Merriweather } from 'next/font/google'
+import { fetchSentEmails, isZohoConfigured } from '@/app/lib/zoho'
 
 const merriweather = Merriweather({
   weight: ['300', '400', '700', '900'],
@@ -11,6 +12,22 @@ const merriweather = Merriweather({
 
 export default async function AdminDashboard() {
   const supabase = await createServerSupabaseClient()
+
+  // Fetch Zoho sent emails if configured
+  let zohoEmails = []
+  if (await isZohoConfigured()) {
+    try {
+      zohoEmails = await fetchSentEmails(20)
+      console.log('=== ZOHO SENT EMAILS ===')
+      console.log(`Total emails fetched: ${zohoEmails.length}`)
+      console.log(JSON.stringify(zohoEmails, null, 2))
+      console.log('========================')
+    } catch (error) {
+      console.error('Error fetching Zoho emails:', error)
+    }
+  } else {
+    console.log('Zoho Mail API is not configured. Skipping email fetch.')
+  }
 
   // Get waitlist count
   const { count: waitlistCount } = await supabase
