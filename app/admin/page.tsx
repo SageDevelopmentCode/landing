@@ -13,32 +13,43 @@ export default async function AdminDashboard() {
   const supabase = await createServerSupabaseClient()
 
   // Get waitlist count
-  const { count: waitlistCount, error: waitlistCountError } = await supabase
+  const { count: waitlistCount } = await supabase
     .schema('waitlist')
     .from('submissions')
     .select('*', { count: 'exact', head: true })
 
   // Get contact count
-  const { count: contactCount, error: contactCountError } = await supabase
+  const { count: contactCount } = await supabase
     .schema('contact')
     .from('submissions')
     .select('*', { count: 'exact', head: true })
 
+  // Calculate total leads
+  const totalLeads = (waitlistCount || 0) + (contactCount || 0)
+
   // Get recent waitlist submissions
-  const { data: recentWaitlist, error: recentWaitlistError } = await supabase
+  const { data: recentWaitlist } = await supabase
     .schema('waitlist')
     .from('submissions')
     .select('*')
     .order('created_at', { ascending: false })
-    .limit(5)
+    .limit(10)
 
   // Get recent contact submissions
-  const { data: recentContact, error: recentContactError } = await supabase
+  const { data: recentContact } = await supabase
     .schema('contact')
     .from('submissions')
     .select('*')
     .order('created_at', { ascending: false })
-    .limit(5)
+    .limit(10)
+
+  // Combine and sort recent submissions
+  const recentLeads = [
+    ...(recentWaitlist || []).map((item) => ({ ...item, type: 'waitlist' as const })),
+    ...(recentContact || []).map((item) => ({ ...item, type: 'contact' as const })),
+  ]
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 8)
 
   return (
     <div className="space-y-8">
@@ -54,10 +65,10 @@ export default async function AdminDashboard() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-1 lg:grid-cols-1 max-w-md">
         <StatCard
-          title="Waitlist Submissions"
-          value={waitlistCount || 0}
+          title="Total Leads"
+          value={totalLeads}
           icon={
             <svg
               className="h-6 w-6"
@@ -75,174 +86,99 @@ export default async function AdminDashboard() {
           }
           iconColor={colors.mistyForest}
           iconBgColor={colors.pastelSage}
-          href="/admin/waitlist"
+          href="/admin/leads"
           delay={0}
-        />
-
-        <StatCard
-          title="Contact Submissions"
-          value={contactCount || 0}
-          icon={
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-              />
-            </svg>
-          }
-          iconColor={colors.mistyForest}
-          iconBgColor={colors.dustyRose}
-          href="/admin/contact"
-          delay={0.1}
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div
+        className="bg-white"
+        style={{
+          borderRadius: radius.lg,
+          boxShadow: shadows.soft,
+          border: `1px solid ${colors.border}`,
+        }}
+      >
         <div
-          className="bg-white"
+          className="px-6 py-5 flex items-center justify-between"
           style={{
-            borderRadius: radius.lg,
-            boxShadow: shadows.soft,
-            border: `1px solid ${colors.border}`,
+            backgroundColor: colors.warmLinen,
+            borderBottom: `1px solid ${colors.border}`,
+            borderTopLeftRadius: radius.lg,
+            borderTopRightRadius: radius.lg,
           }}
         >
-          <div
-            className="px-6 py-5 flex items-center justify-between"
-            style={{
-              backgroundColor: colors.warmLinen,
-              borderBottom: `1px solid ${colors.border}`,
-              borderTopLeftRadius: radius.lg,
-              borderTopRightRadius: radius.lg,
-            }}
+          <h3
+            className={`text-lg font-semibold ${merriweather.className}`}
+            style={{ color: colors.mistyForest }}
           >
-            <h3
-              className={`text-lg font-semibold ${merriweather.className}`}
-              style={{ color: colors.mistyForest }}
-            >
-              Recent Waitlist Submissions
-            </h3>
-            <Link
-              href="/admin/waitlist"
-              className="text-sm font-medium transition-colors duration-200"
-              style={{ color: colors.mistyForest }}
-            >
-              View all →
-            </Link>
-          </div>
-          <div className="px-6 py-5">
-            {recentWaitlist && recentWaitlist.length > 0 ? (
-              <ul style={{ borderTop: `1px solid ${colors.divider}` }}>
-                {recentWaitlist.map((submission, index) => (
-                  <li
-                    key={submission.id}
-                    className="py-4"
-                    style={{
-                      borderBottom:
-                        index < recentWaitlist.length - 1
-                          ? `1px solid ${colors.divider}`
-                          : 'none',
-                    }}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p
-                          className="text-sm font-medium mb-1"
-                          style={{ color: colors.textPrimary }}
-                        >
-                          {submission.parent_name}
-                        </p>
-                        <p className="text-sm" style={{ color: colors.textSecondary }}>
-                          {submission.email}
-                        </p>
-                      </div>
-                      <div className="text-sm" style={{ color: colors.textTertiary }}>
-                        {new Date(submission.created_at).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p style={{ color: colors.textSecondary }}>No submissions yet</p>
-            )}
-          </div>
+            Recent Leads
+          </h3>
+          <Link
+            href="/admin/leads"
+            className="text-sm font-medium transition-colors duration-200"
+            style={{ color: colors.mistyForest }}
+          >
+            View all →
+          </Link>
         </div>
+        <div className="px-6 py-5">
+          {recentLeads && recentLeads.length > 0 ? (
+            <ul style={{ borderTop: `1px solid ${colors.divider}` }}>
+              {recentLeads.map((lead, index) => {
+                const isWaitlist = lead.type === 'waitlist'
+                const name = isWaitlist
+                  ? (lead as any).parent_name
+                  : (lead as any).name
+                const email = lead.email
 
-        <div
-          className="bg-white"
-          style={{
-            borderRadius: radius.lg,
-            boxShadow: shadows.soft,
-            border: `1px solid ${colors.border}`,
-          }}
-        >
-          <div
-            className="px-6 py-5 flex items-center justify-between"
-            style={{
-              backgroundColor: colors.warmLinen,
-              borderBottom: `1px solid ${colors.border}`,
-              borderTopLeftRadius: radius.lg,
-              borderTopRightRadius: radius.lg,
-            }}
-          >
-            <h3
-              className={`text-lg font-semibold ${merriweather.className}`}
-              style={{ color: colors.mistyForest }}
-            >
-              Recent Contact Submissions
-            </h3>
-            <Link
-              href="/admin/contact"
-              className="text-sm font-medium transition-colors duration-200"
-              style={{ color: colors.mistyForest }}
-            >
-              View all →
-            </Link>
-          </div>
-          <div className="px-6 py-5">
-            {recentContact && recentContact.length > 0 ? (
-              <ul style={{ borderTop: `1px solid ${colors.divider}` }}>
-                {recentContact.map((submission, index) => (
+                return (
                   <li
-                    key={submission.id}
+                    key={lead.id}
                     className="py-4"
                     style={{
                       borderBottom:
-                        index < recentContact.length - 1
+                        index < recentLeads.length - 1
                           ? `1px solid ${colors.divider}`
                           : 'none',
                     }}
                   >
                     <div className="flex justify-between items-start">
-                      <div>
-                        <p
-                          className="text-sm font-medium mb-1"
-                          style={{ color: colors.textPrimary }}
-                        >
-                          {submission.name}
-                        </p>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span
+                            className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded"
+                            style={{
+                              backgroundColor: isWaitlist
+                                ? colors.paleMarigold
+                                : colors.powderBlue,
+                              color: colors.textPrimary,
+                            }}
+                          >
+                            {isWaitlist ? 'Waitlist' : 'Contact'}
+                          </span>
+                          <p
+                            className="text-sm font-medium"
+                            style={{ color: colors.textPrimary }}
+                          >
+                            {name}
+                          </p>
+                        </div>
                         <p className="text-sm" style={{ color: colors.textSecondary }}>
-                          {submission.email}
+                          {email}
                         </p>
                       </div>
                       <div className="text-sm" style={{ color: colors.textTertiary }}>
-                        {new Date(submission.created_at).toLocaleDateString()}
+                        {new Date(lead.created_at).toLocaleDateString()}
                       </div>
                     </div>
                   </li>
-                ))}
-              </ul>
-            ) : (
-              <p style={{ color: colors.textSecondary }}>No submissions yet</p>
-            )}
-          </div>
+                )
+              })}
+            </ul>
+          ) : (
+            <p style={{ color: colors.textSecondary }}>No submissions yet</p>
+          )}
         </div>
       </div>
     </div>

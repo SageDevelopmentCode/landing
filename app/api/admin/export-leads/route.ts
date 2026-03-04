@@ -22,47 +22,86 @@ export async function GET(request: NextRequest) {
       }
     )
 
-    const { data: submissions, error } = await supabase
+    // Fetch waitlist submissions
+    const { data: waitlistData, error: waitlistError } = await supabase
       .schema('waitlist')
       .from('submissions')
       .select('*')
       .order('created_at', { ascending: false })
 
-    if (error) {
-      console.error('Error fetching waitlist submissions:', error)
+    // Fetch contact submissions
+    const { data: contactData, error: contactError } = await supabase
+      .schema('contact')
+      .from('submissions')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (waitlistError || contactError) {
+      console.error('Error fetching submissions:', waitlistError || contactError)
       return NextResponse.json({ error: 'Failed to fetch submissions' }, { status: 500 })
     }
 
-    // Generate CSV
+    // Generate CSV with all columns
     const headers = [
       'ID',
+      'Type',
+      'Name',
       'Parent Name',
       'Email',
       'Phone',
       'Child Name',
       'Child Age',
       'Preferred Start',
+      'Message',
       'Status',
-      'Notes',
       'Created At',
     ]
 
-    const rows = submissions.map((item) => [
+    // Map waitlist submissions
+    const waitlistRows = (waitlistData || []).map((item) => [
       item.id,
+      'Waitlist',
+      '', // name (contact only)
       item.parent_name,
       item.email,
       item.phone || '',
       item.child_name,
       item.child_age || '',
       item.preferred_start_date || '',
+      item.message || item.additional_info || '', // any additional notes
       item.status || 'pending',
-      item.notes || '',
       new Date(item.created_at).toISOString(),
     ])
 
+    // Map contact submissions
+    const contactRows = (contactData || []).map((item) => [
+      item.id,
+      'Contact',
+      item.name,
+      '', // parent_name (waitlist only)
+      item.email,
+      item.phone || '',
+      '', // child_name (waitlist only)
+      '', // child_age (waitlist only)
+      '', // preferred_start_date (waitlist only)
+      item.message || '',
+      item.status || 'pending',
+      new Date(item.created_at).toISOString(),
+    ])
+
+    // Combine all rows
+    const allRows = [...waitlistRows, ...contactRows]
+
+    // Sort by created_at (column index 11)
+    allRows.sort((a, b) => {
+      const dateA = new Date(a[11] as string).getTime()
+      const dateB = new Date(b[11] as string).getTime()
+      return dateB - dateA // descending order (newest first)
+    })
+
     const csv = [
       headers.join(','),
-      ...rows.map((row) =>
+      ...allRows.map((row) =>
         row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')
       ),
     ].join('\n')
@@ -71,7 +110,7 @@ export async function GET(request: NextRequest) {
     return new Response(csv, {
       headers: {
         'Content-Type': 'text/csv',
-        'Content-Disposition': `attachment; filename="waitlist-submissions-${new Date().toISOString()}.csv"`,
+        'Content-Disposition': `attachment; filename="leads-${new Date().toISOString()}.csv"`,
       },
     })
   } catch (error) {
