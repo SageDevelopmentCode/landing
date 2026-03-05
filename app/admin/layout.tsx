@@ -1,32 +1,32 @@
-import { createServerSupabaseClient } from '@/app/lib/supabase-server'
-import { redirect } from 'next/navigation'
-import { signOut } from '@/app/actions/auth'
-import { Sidebar } from './components/Sidebar'
-import { TopBar } from './components/TopBar'
-import { colors, radius, shadows } from './design-system'
+import { createServerSupabaseClient } from "@/app/lib/supabase-server";
+import { redirect } from "next/navigation";
+import { signOut } from "@/app/actions/auth";
+import { Sidebar } from "./components/Sidebar";
+import { TopBar } from "./components/TopBar";
+import { colors, radius, shadows } from "./design-system";
 
 export default async function AdminLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient();
 
   const {
     data: { user },
-  } = await supabase.auth.getUser()
+  } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/login')
+    redirect("/login");
   }
 
   // Check if user is admin
   const { data: adminUser } = await supabase
-    .schema('admin')
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single()
+    .schema("admin")
+    .from("users")
+    .select("role")
+    .eq("id", user.id)
+    .single();
 
   if (!adminUser) {
     return (
@@ -57,9 +57,9 @@ export default async function AdminLayout({
               className="px-6 py-4 text-white text-base font-medium transition-all duration-200 hover:opacity-90"
               style={{
                 backgroundColor: colors.mistyForest,
-                borderRadius: '16px',
+                borderRadius: "16px",
                 boxShadow: shadows.soft,
-                border: 'none',
+                border: "none",
               }}
             >
               Sign Out
@@ -67,7 +67,7 @@ export default async function AdminLayout({
           </form>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -78,10 +78,10 @@ export default async function AdminLayout({
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <TopBar userEmail={user.email} signOutAction={signOut} />
-        <main className="flex-1 px-3 sm:px-4 lg:px-6 py-8 w-full overflow-auto">
+        <main className="flex-1 px-3 sm:px-4 lg:px-6 w-full overflow-auto">
           {children}
         </main>
       </div>
     </div>
-  )
+  );
 }
