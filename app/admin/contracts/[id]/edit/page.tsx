@@ -189,7 +189,14 @@ export default function EditContractPage() {
             Content
           </label>
           {content !== '' || !isLoading ? (
-            <ContractEditor key={id} content={content} onChange={setContent} />
+            <ContractEditor
+              key={id}
+              content={content}
+              onChange={setContent}
+              onCancel={() => router.push('/admin/contracts')}
+              onSave={handleSave}
+              isSaving={isSaving}
+            />
           ) : null}
         </div>
 
@@ -269,36 +276,6 @@ export default function EditContractPage() {
         )}
       </div>
 
-      {/* Footer */}
-      <div className="flex items-center justify-end gap-3">
-        <button
-          onClick={() => router.push('/admin/contracts')}
-          className="px-4 py-2 text-sm transition-all duration-200 hover:scale-105 active:scale-95"
-          style={{
-            backgroundColor: colors.warmLinen,
-            color: colors.textSecondary,
-            borderRadius: radius.md,
-            border: `1px solid ${colors.border}`,
-            cursor: 'pointer',
-          }}
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
-          style={{
-            backgroundColor: colors.mistyForest,
-            borderRadius: radius.md,
-            border: 'none',
-            cursor: isSaving ? 'not-allowed' : 'pointer',
-            boxShadow: shadows.soft,
-          }}
-        >
-          {isSaving ? 'Saving...' : 'Save Changes'}
-        </button>
-      </div>
     </div>
   )
 }

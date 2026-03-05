@@ -21,6 +21,10 @@ const INITIALS_HTML =
 type Props = {
   content: string
   onChange: (html: string) => void
+  onCancel?: () => void
+  onSave?: () => void
+  isSaving?: boolean
+  saveLabel?: string
 }
 
 type ToolbarButtonProps = {
@@ -88,7 +92,7 @@ function Divider() {
   )
 }
 
-export default function ContractEditor({ content, onChange }: Props) {
+export default function ContractEditor({ content, onChange, onCancel, onSave, isSaving, saveLabel }: Props) {
   const [sigMenuOpen, setSigMenuOpen] = useState(false)
   const sigMenuRef = useRef<HTMLDivElement>(null)
 
@@ -474,6 +478,45 @@ export default function ContractEditor({ content, onChange }: Props) {
             </div>
           )}
         </div>
+
+        {/* Spacer + action buttons */}
+        {(onCancel || onSave) && (
+          <>
+            <div style={{ width: '1px', height: '1.25rem', backgroundColor: colors.border, margin: '0 0.5rem' }} />
+            {onCancel && (
+              <button
+                type="button"
+                onMouseDown={(e) => { e.preventDefault(); onCancel() }}
+                className="px-3 py-1 text-xs transition-all duration-150 hover:scale-105 active:scale-95"
+                style={{
+                  backgroundColor: 'transparent',
+                  color: colors.textSecondary,
+                  borderRadius: radius.md,
+                  border: `1px solid ${colors.border}`,
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+            )}
+            {onSave && (
+              <button
+                type="button"
+                onMouseDown={(e) => { e.preventDefault(); onSave() }}
+                disabled={isSaving}
+                className="px-3 py-1 text-xs font-medium text-white transition-all duration-150 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100"
+                style={{
+                  backgroundColor: colors.mistyForest,
+                  borderRadius: radius.md,
+                  border: 'none',
+                  cursor: isSaving ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {isSaving ? 'Saving...' : (saveLabel ?? 'Save Changes')}
+              </button>
+            )}
+          </>
+        )}
       </div>
 
     </div>
