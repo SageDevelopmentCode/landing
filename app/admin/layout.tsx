@@ -72,13 +72,13 @@ export default async function AdminLayout({
 
   return (
     <div
-      className="min-h-screen flex"
+      className="h-screen flex overflow-hidden"
       style={{ backgroundColor: colors.softCloud }}
     >
       <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <TopBar userEmail={user.email} signOutAction={signOut} />
-        <main className="flex-1 px-3 sm:px-4 lg:px-6 py-8 w-full">
+        <main className="flex-1 px-3 sm:px-4 lg:px-6 py-8 w-full overflow-auto">
           {children}
         </main>
       </div>

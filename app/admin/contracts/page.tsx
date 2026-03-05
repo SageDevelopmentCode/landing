@@ -104,50 +104,51 @@ export default function ContractsPage() {
   }
 
   return (
-    <div className="space-y-6 h-full">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div>
-          <h1
-            className={`text-2xl font-bold ${merriweather.className}`}
-            style={{ color: colors.mistyForest }}
-          >
-            Contracts
-          </h1>
-          <p className="mt-2" style={{ color: colors.textSecondary }}>
-            {contracts.length} document{contracts.length !== 1 ? 's' : ''}
-          </p>
-        </div>
-        <button
-          onClick={() => router.push('/admin/contracts/new')}
-          className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:scale-105 active:scale-95"
-          style={{
-            backgroundColor: colors.mistyForest,
-            borderRadius: radius.md,
-            boxShadow: shadows.soft,
-            border: 'none',
-            cursor: 'pointer',
-          }}
-        >
-          <svg className="-ml-1 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Add Contract
-        </button>
-      </div>
-
-      {/* Two-panel layout */}
-      <div className="flex gap-6" style={{ minHeight: '600px' }}>
-        {/* Left panel: list */}
+    <div
+      className="flex h-full overflow-hidden -mx-3 sm:-mx-4 lg:-mx-6 -my-8"
+      style={{ borderTop: `1px solid ${colors.border}` }}
+    >
+      {/* Left sidebar */}
+      <div
+        className="w-72 flex-shrink-0 flex flex-col overflow-hidden"
+        style={{ borderRight: `1px solid ${colors.border}` }}
+      >
+        {/* Sidebar header */}
         <div
-          className="w-72 flex-shrink-0 overflow-y-auto"
-          style={{
-            backgroundColor: colors.softCloud,
-            borderRadius: radius.lg,
-            border: `1px solid ${colors.border}`,
-            boxShadow: shadows.soft,
-          }}
+          className="flex items-center justify-between px-4 py-4 flex-shrink-0"
+          style={{ borderBottom: `1px solid ${colors.divider}` }}
         >
+          <div>
+            <h1
+              className={`text-lg font-bold ${merriweather.className}`}
+              style={{ color: colors.mistyForest }}
+            >
+              Contracts
+            </h1>
+            <p className="text-xs mt-0.5" style={{ color: colors.textSecondary }}>
+              {contracts.length} document{contracts.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+          <button
+            onClick={() => router.push('/admin/contracts/new')}
+            className="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-white transition-all duration-200 hover:scale-105 active:scale-95"
+            style={{
+              backgroundColor: colors.mistyForest,
+              borderRadius: radius.md,
+              boxShadow: shadows.soft,
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            <svg className="-ml-0.5 mr-1 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Add
+          </button>
+        </div>
+
+        {/* Scrollable contract list */}
+        <div className="flex-1 overflow-y-auto">
           {contracts.length === 0 ? (
             <div className="p-8 text-center">
               <svg
@@ -216,43 +217,55 @@ export default function ContractsPage() {
             </ul>
           )}
         </div>
+      </div>
 
-        {/* Right panel: viewer */}
-        <div className="flex-1 overflow-y-auto">
-          {selectedContract ? (
-            <motion.div
-              key={selectedContract.id}
-              initial={animations.fadeIn.initial}
-              animate={animations.fadeIn.animate}
-              transition={animations.fadeIn.transition}
-              className="h-full"
-              style={{
-                backgroundColor: colors.softCloud,
-                borderRadius: radius.lg,
-                border: `1px solid ${colors.border}`,
-                boxShadow: shadows.soft,
-              }}
+      {/* Right panel: viewer */}
+      <div className="flex-1 overflow-y-auto" style={{ backgroundColor: colors.softCloud }}>
+        {selectedContract ? (
+          <motion.div
+            key={selectedContract.id}
+            initial={animations.fadeIn.initial}
+            animate={animations.fadeIn.animate}
+            transition={animations.fadeIn.transition}
+            className="min-h-full"
+          >
+            {/* Viewer header */}
+            <div
+              className="flex items-center justify-between px-8 py-5"
+              style={{ borderBottom: `1px solid ${colors.divider}` }}
             >
-              {/* Viewer header */}
-              <div
-                className="flex items-center justify-between px-8 py-5"
-                style={{ borderBottom: `1px solid ${colors.divider}` }}
-              >
-                <div>
-                  <h2
-                    className={`text-xl font-bold ${merriweather.className}`}
-                    style={{ color: colors.mistyForest }}
-                  >
-                    {selectedContract.title}
-                  </h2>
-                  <p className="text-sm mt-0.5" style={{ color: colors.textSecondary }}>
-                    Version {selectedContract.version} · Last updated{' '}
-                    {new Date(selectedContract.updated_at).toLocaleDateString()}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
+              <div>
+                <h2
+                  className={`text-xl font-bold ${merriweather.className}`}
+                  style={{ color: colors.mistyForest }}
+                >
+                  {selectedContract.title}
+                </h2>
+                <p className="text-sm mt-0.5" style={{ color: colors.textSecondary }}>
+                  Version {selectedContract.version} · Last updated{' '}
+                  {new Date(selectedContract.updated_at).toLocaleDateString()}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => window.print()}
+                  className="inline-flex items-center px-3 py-1.5 text-sm transition-all duration-200 hover:scale-105 active:scale-95"
+                  style={{
+                    backgroundColor: colors.warmLinen,
+                    color: colors.textSecondary,
+                    borderRadius: radius.md,
+                    border: `1px solid ${colors.border}`,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <svg className="mr-1.5 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                  </svg>
+                  Print
+                </button>
+                {history.length > 0 && (
                   <button
-                    onClick={() => window.print()}
+                    onClick={() => openDiffFromViewer(selectedContract)}
                     className="inline-flex items-center px-3 py-1.5 text-sm transition-all duration-200 hover:scale-105 active:scale-95"
                     style={{
                       backgroundColor: colors.warmLinen,
@@ -262,80 +275,57 @@ export default function ContractsPage() {
                       cursor: 'pointer',
                     }}
                   >
-                    <svg className="mr-1.5 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                    </svg>
-                    Print
+                    History ▾
                   </button>
-                  {history.length > 0 && (
-                    <button
-                      onClick={() => openDiffFromViewer(selectedContract)}
-                      className="inline-flex items-center px-3 py-1.5 text-sm transition-all duration-200 hover:scale-105 active:scale-95"
-                      style={{
-                        backgroundColor: colors.warmLinen,
-                        color: colors.textSecondary,
-                        borderRadius: radius.md,
-                        border: `1px solid ${colors.border}`,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      History ▾
-                    </button>
-                  )}
-                  <button
-                    onClick={() => router.push(`/admin/contracts/${selectedContract.id}/edit`)}
-                    className="inline-flex items-center px-3 py-1.5 text-sm text-white transition-all duration-200 hover:scale-105 active:scale-95"
-                    style={{
-                      backgroundColor: colors.mistyForest,
-                      borderRadius: radius.md,
-                      border: 'none',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <svg className="mr-1.5 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    Edit
-                  </button>
-                </div>
+                )}
+                <button
+                  onClick={() => router.push(`/admin/contracts/${selectedContract.id}/edit`)}
+                  className="inline-flex items-center px-3 py-1.5 text-sm text-white transition-all duration-200 hover:scale-105 active:scale-95"
+                  style={{
+                    backgroundColor: colors.mistyForest,
+                    borderRadius: radius.md,
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <svg className="mr-1.5 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  Edit
+                </button>
               </div>
-
-              {/* Contract body */}
-              <div className="px-8 py-6 text-sm">
-                <div
-                  dangerouslySetInnerHTML={{ __html: selectedContract.content }}
-                  className="tiptap-view"
-                />
-              </div>
-            </motion.div>
-          ) : (
-            <div
-              className="flex flex-col items-center justify-center h-full"
-              style={{
-                backgroundColor: colors.softCloud,
-                borderRadius: radius.lg,
-                border: `1px dashed ${colors.border}`,
-                minHeight: '400px',
-              }}
-            >
-              <svg
-                className="h-12 w-12 mb-3"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                style={{ color: colors.textTertiary }}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              <p style={{ color: colors.textTertiary }}>Select a contract to view</p>
             </div>
-          )}
-        </div>
+
+            {/* Contract body */}
+            <div className="px-8 py-6 text-sm">
+              <div
+                dangerouslySetInnerHTML={{ __html: selectedContract.content }}
+                className="tiptap-view"
+              />
+            </div>
+          </motion.div>
+        ) : (
+          <div
+            className="flex flex-col items-center justify-center h-full"
+            style={{ minHeight: '400px' }}
+          >
+            <svg
+              className="h-12 w-12 mb-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              style={{ color: colors.textTertiary }}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            <p style={{ color: colors.textTertiary }}>Select a contract to view</p>
+          </div>
+        )}
       </div>
 
       {/* Diff overlay */}
