@@ -18,6 +18,8 @@ type Contract = {
   content: string
   version: number
   is_active: boolean
+  requires_parent_signature: boolean
+  show_staff_signature: boolean
   created_at: string
   updated_at: string
 }
@@ -31,6 +33,8 @@ export default function EditContractPage() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [isActive, setIsActive] = useState(true)
+  const [requiresParentSignature, setRequiresParentSignature] = useState(false)
+  const [showStaffSignature, setShowStaffSignature] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -56,6 +60,8 @@ export default function EditContractPage() {
         setTitle(data.title)
         setContent(data.content)
         setIsActive(data.is_active)
+        setRequiresParentSignature(data.requires_parent_signature)
+        setShowStaffSignature(data.show_staff_signature)
       }
       setIsLoading(false)
     }
@@ -88,6 +94,8 @@ export default function EditContractPage() {
         title: title.trim(),
         content: content.trim(),
         is_active: isActive,
+        requires_parent_signature: requiresParentSignature,
+        show_staff_signature: showStaffSignature,
         version: contract.version + 1,
         updated_at: new Date().toISOString(),
       })
@@ -205,6 +213,52 @@ export default function EditContractPage() {
           </button>
           <span className="text-sm" style={{ color: colors.textPrimary }}>
             Active
+          </span>
+        </div>
+
+        {/* Require parent signature toggle */}
+        <div className="flex items-center gap-3">
+          <button
+            role="switch"
+            aria-checked={requiresParentSignature}
+            onClick={() => setRequiresParentSignature((v) => !v)}
+            className="relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200"
+            style={{
+              backgroundColor: requiresParentSignature ? colors.mistyForest : colors.border,
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            <span
+              className="inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform duration-200"
+              style={{ transform: requiresParentSignature ? 'translateX(18px)' : 'translateX(2px)' }}
+            />
+          </button>
+          <span className="text-sm" style={{ color: colors.textPrimary }}>
+            Require parent signature
+          </span>
+        </div>
+
+        {/* Show staff/director signature toggle */}
+        <div className="flex items-center gap-3">
+          <button
+            role="switch"
+            aria-checked={showStaffSignature}
+            onClick={() => setShowStaffSignature((v) => !v)}
+            className="relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200"
+            style={{
+              backgroundColor: showStaffSignature ? colors.mistyForest : colors.border,
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            <span
+              className="inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform duration-200"
+              style={{ transform: showStaffSignature ? 'translateX(18px)' : 'translateX(2px)' }}
+            />
+          </button>
+          <span className="text-sm" style={{ color: colors.textPrimary }}>
+            Show staff / director signature
           </span>
         </div>
 

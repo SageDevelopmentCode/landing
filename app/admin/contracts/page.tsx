@@ -18,6 +18,8 @@ type Contract = {
   content: string
   version: number
   is_active: boolean
+  requires_parent_signature: boolean
+  show_staff_signature: boolean
   created_at: string
   updated_at: string
 }
@@ -298,10 +300,51 @@ export default function ContractsPage() {
 
             {/* Contract body */}
             <div className="px-8 py-6 text-sm">
+              <style>{`
+                .tiptap-view ul { list-style-type: disc; padding-left: 1.5rem; }
+                .tiptap-view ul ul { list-style-type: circle; }
+                .tiptap-view ul ul ul { list-style-type: square; }
+                .tiptap-view ol { list-style-type: decimal; padding-left: 1.5rem; }
+                .tiptap-view li { margin: 0.15rem 0; }
+                .tiptap-view ul li::marker, .tiptap-view ol li::marker { color: #3D3D3D; }
+                .tiptap-view strong { font-weight: 700; }
+                .tiptap-view em { font-style: italic; }
+                .tiptap-view u { text-decoration: underline; }
+                .tiptap-view p { margin: 0.25rem 0; }
+                .tiptap-view h1 { font-size: 1.5rem; font-weight: 700; margin: 1.5rem 0 0.5rem; }
+                .tiptap-view h2 { font-size: 1.25rem; font-weight: 600; margin: 1.25rem 0 0.5rem; }
+                .tiptap-view h3 { font-size: 1rem; font-weight: 600; margin: 1rem 0 0.5rem; }
+                .tiptap-view blockquote { border-left: 3px solid #C8D9C8; padding-left: 1rem; margin: 0.5rem 0; }
+              `}</style>
               <div
                 dangerouslySetInnerHTML={{ __html: selectedContract.content }}
                 className="tiptap-view"
               />
+
+              {(selectedContract.requires_parent_signature || selectedContract.show_staff_signature) && (
+                <div className="mt-8 pt-6 space-y-6" style={{ borderTop: `1px solid ${colors.divider}` }}>
+                  {selectedContract.requires_parent_signature && (
+                    <div>
+                      <p className="text-xs font-medium mb-3" style={{ color: colors.textSecondary }}>PARENT / GUARDIAN SIGNATURE</p>
+                      <p style={{ borderBottom: `1px solid ${colors.textPrimary}`, width: '280px' }} />
+                      <div className="flex gap-8 mt-2 text-xs" style={{ color: colors.textSecondary }}>
+                        <span>Name: _______________________</span>
+                        <span>Date: ___________</span>
+                      </div>
+                    </div>
+                  )}
+                  {selectedContract.show_staff_signature && (
+                    <div>
+                      <p className="text-xs font-medium mb-3" style={{ color: colors.textSecondary }}>STAFF / DIRECTOR SIGNATURE</p>
+                      <p style={{ borderBottom: `1px solid ${colors.textPrimary}`, width: '280px' }} />
+                      <div className="flex gap-8 mt-2 text-xs" style={{ color: colors.textSecondary }}>
+                        <span>Name: _______________________</span>
+                        <span>Date: ___________</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </motion.div>
         ) : (
