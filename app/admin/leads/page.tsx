@@ -26,6 +26,7 @@ type WaitlistLead = {
   status: LeadStatus
   created_at: string
   notes?: string | null
+  preferred_start_date?: string | null
 }
 
 type ContactLead = {
