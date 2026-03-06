@@ -12,7 +12,8 @@ export default function Navbar() {
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [waitlistDialogOpen, setWaitlistDialogOpen] = useState(false);
   const pathname = usePathname();
-  const useDarkStyle = pathname === "/faq" || pathname === "/about";
+  const useDarkStyle =
+    pathname === "/faq" || pathname === "/about" || pathname === "/apply";
 
   const menuItems = [
     { label: "What We Offer", href: "/#what-we-offer" },
@@ -20,6 +21,7 @@ export default function Navbar() {
     { label: "About Us", href: "/about" },
     { label: "FAQ", href: "/faq" },
     { label: "Our Vision", href: "/vision" },
+    // { label: "Apply", href: "/apply" },
   ];
 
   const handleSmoothScroll = (
