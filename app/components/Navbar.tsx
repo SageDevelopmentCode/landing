@@ -15,8 +15,8 @@ export default function Navbar() {
   const useDarkStyle = pathname === "/faq" || pathname === "/about";
 
   const menuItems = [
-    { label: "What We Offer", href: "#what-we-offer" },
-    { label: "Educational Philosophy", href: "#educational-philosophy" },
+    { label: "What We Offer", href: "/#what-we-offer" },
+    { label: "Educational Philosophy", href: "/#educational-philosophy" },
     { label: "About Us", href: "/about" },
     { label: "FAQ", href: "/faq" },
     { label: "Our Vision", href: "/vision" },
@@ -26,10 +26,10 @@ export default function Navbar() {
     e: React.MouseEvent<HTMLAnchorElement>,
     href: string,
   ) => {
-    // Only handle anchor links (starting with #) on the home page
-    if (href.startsWith("#") && pathname === "/") {
+    // Only handle anchor links (starting with /#) on the home page
+    if (href.startsWith("/#") && pathname === "/") {
       e.preventDefault();
-      const targetId = href.substring(1);
+      const targetId = href.substring(2);
       const targetElement = document.getElementById(targetId);
 
       if (targetElement) {
