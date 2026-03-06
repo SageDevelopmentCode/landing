@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -14,8 +14,38 @@ const trustBullets = [
   "Limited spots",
 ];
 
+const slides = [
+  "/assets/Hero.jpg",
+  "/assets/ImageOne.jpg",
+  "/assets/After1.png",
+  "/assets/Interior.png",
+  "/assets/After2.png",
+  "/assets/ImageTwo.jpg",
+];
+
 export default function StartPage() {
   const [mode, setMode] = useState<Mode>("choose");
+  const [activeSlide, setActiveSlide] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startInterval = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % slides.length);
+    }, 7000);
+  };
+
+  useEffect(() => {
+    startInterval();
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, []);
+
+  const handleSelect = (i: number) => {
+    setActiveSlide(i);
+    startInterval();
+  };
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-white overflow-hidden">
@@ -26,14 +56,19 @@ export default function StartPage() {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.7, ease: "easeOut" }}
       >
-        {/* Background image */}
-        <Image
-          src="/assets/Hero.jpg"
-          alt="Sage Field"
-          fill
-          className="object-cover"
-          priority
-        />
+        {/* Background slideshow */}
+        <AnimatePresence mode="sync">
+          <motion.img
+            key={activeSlide}
+            src={slides[activeSlide]}
+            alt="Sage Field"
+            className="absolute inset-0 w-full h-full object-cover"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8 }}
+          />
+        </AnimatePresence>
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/30 to-black/10" />
 
@@ -55,7 +90,7 @@ export default function StartPage() {
 
         {/* Logo */}
         <motion.div
-          className="absolute top-6 left-1/2 -translate-x-1/2 z-20"
+          className="absolute top-6 right-6 z-20"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.5 }}
@@ -63,8 +98,8 @@ export default function StartPage() {
           <Image
             src="/assets/Logo.png"
             alt="Sage Field"
-            width={120}
-            height={48}
+            width={80}
+            height={32}
             className="object-contain"
           />
         </motion.div>
@@ -106,23 +141,24 @@ export default function StartPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8, duration: 0.5 }}
           >
-            {["/assets/ImageOne.jpg", "/assets/After1.png", "/assets/Interior.png"].map(
-              (src, i) => (
-                <div
-                  key={i}
-                  className="w-12 h-12 rounded-xl overflow-hidden border-2 border-white/30 flex-shrink-0"
-                >
-                  <img
-                    src={src}
-                    alt="Sage Field"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )
-            )}
-            <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm border-2 border-white/30 flex items-center justify-center flex-shrink-0">
-              <span className="text-white text-xs font-bold">+8</span>
-            </div>
+            {slides.map((src, i) => (
+              <motion.button
+                key={i}
+                onClick={() => handleSelect(i)}
+                whileHover={{ scale: 1.05 }}
+                className={`w-12 h-12 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all ${
+                  activeSlide === i
+                    ? "scale-105 border-white/60"
+                    : "opacity-60 border-white/30"
+                }`}
+              >
+                <img
+                  src={src}
+                  alt="Sage Field"
+                  className="w-full h-full object-cover"
+                />
+              </motion.button>
+            ))}
           </motion.div>
         </div>
       </motion.div>
@@ -135,7 +171,7 @@ export default function StartPage() {
         transition={{ delay: 0.35, duration: 0.6, ease: "easeOut" }}
       >
         {/* Step progress dots */}
-        <div className="flex items-center gap-3 mb-10">
+        {/* <div className="flex items-center gap-3 mb-10">
           {[0, 1, 2].map((step) => (
             <div key={step} className="flex flex-col items-center gap-1">
               <div
@@ -146,19 +182,13 @@ export default function StartPage() {
               <span className="text-[10px] text-gray-400 font-body">{step}</span>
             </div>
           ))}
-        </div>
+        </div> */}
 
         <div className="w-full max-w-md">
           <AnimatePresence mode="wait">
-            {mode === "choose" && (
-              <ChooseMode key="choose" setMode={setMode} />
-            )}
-            {mode === "create" && (
-              <CreateMode key="create" setMode={setMode} />
-            )}
-            {mode === "login" && (
-              <LoginMode key="login" setMode={setMode} />
-            )}
+            {mode === "choose" && <ChooseMode key="choose" setMode={setMode} />}
+            {mode === "create" && <CreateMode key="create" setMode={setMode} />}
+            {mode === "login" && <LoginMode key="login" setMode={setMode} />}
           </AnimatePresence>
         </div>
       </motion.div>
@@ -192,8 +222,12 @@ function ChooseMode({ setMode }: { setMode: (m: Mode) => void }) {
             <User size={20} className="text-primary" />
           </div>
           <div>
-            <p className="font-semibold font-body text-gray-800">Create an account</p>
-            <p className="text-sm text-gray-500 font-body">New to Sage Field? Start here.</p>
+            <p className="font-semibold font-body text-gray-800">
+              Create an account
+            </p>
+            <p className="text-sm text-gray-500 font-body">
+              New to Sage Field? Start here.
+            </p>
           </div>
         </motion.button>
 
@@ -206,13 +240,17 @@ function ChooseMode({ setMode }: { setMode: (m: Mode) => void }) {
             <LogIn size={20} className="text-primary" />
           </div>
           <div>
-            <p className="font-semibold font-body text-gray-800">Log in to continue</p>
-            <p className="text-sm text-gray-500 font-body">Already started? Pick up where you left off.</p>
+            <p className="font-semibold font-body text-gray-800">
+              Log in to continue
+            </p>
+            <p className="text-sm text-gray-500 font-body">
+              Already started? Pick up where you left off.
+            </p>
           </div>
         </motion.button>
       </div>
 
-      <div className="flex flex-col gap-2">
+      {/* <div className="flex flex-col gap-2">
         {trustBullets.map((bullet, i) => (
           <motion.div
             key={bullet}
@@ -225,7 +263,7 @@ function ChooseMode({ setMode }: { setMode: (m: Mode) => void }) {
             {bullet}
           </motion.div>
         ))}
-      </div>
+      </div> */}
     </motion.div>
   );
 }
@@ -254,7 +292,10 @@ function CreateMode({ setMode }: { setMode: (m: Mode) => void }) {
         Let&apos;s get you set up
       </h1>
 
-      <form className="flex flex-col gap-4 mb-6" onSubmit={(e) => e.preventDefault()}>
+      <form
+        className="flex flex-col gap-4 mb-6"
+        onSubmit={(e) => e.preventDefault()}
+      >
         <div>
           <label className="block text-sm font-semibold text-gray-700 font-body mb-1.5">
             Full Name
@@ -336,7 +377,10 @@ function LoginMode({ setMode }: { setMode: (m: Mode) => void }) {
         Continue your application
       </h1>
 
-      <form className="flex flex-col gap-4 mb-6" onSubmit={(e) => e.preventDefault()}>
+      <form
+        className="flex flex-col gap-4 mb-6"
+        onSubmit={(e) => e.preventDefault()}
+      >
         <div>
           <label className="block text-sm font-semibold text-gray-700 font-body mb-1.5">
             Email
