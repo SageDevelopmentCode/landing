@@ -3,22 +3,22 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Search } from "lucide-react";
-import Navbar from './components/Navbar';
-import Hero from './components/Hero';
-import WelcomeSection from './components/WelcomeSection';
-import WhatWeOfferSection from './components/WhatWeOfferSection';
-import EducationalPhilosophySection from './components/EducationalPhilosophySection';
-import ContinuitySection from './components/ContinuitySection';
-import ImageGridShowcase from './components/ImageGridShowcase';
-import CoCreationSection from './components/CoCreationSection';
-import DonationsSection from './components/DonationsSection';
-import MeetTheTeamSection from './components/MeetTheTeamSection';
-import EnrollmentCTASection from './components/EnrollmentCTASection';
-import SocialMediaSection from './components/SocialMediaSection';
-import ContactUsSection from './components/ContactUsSection';
-import FAQAccordion from './components/FAQAccordion';
-import Footer from './components/Footer';
-import WaitlistDialog from './components/WaitlistDialog';
+import Navbar from "./components/Navbar";
+import Hero from "./components/Hero";
+import WelcomeSection from "./components/WelcomeSection";
+import WhatWeOfferSection from "./components/WhatWeOfferSection";
+import EducationalPhilosophySection from "./components/EducationalPhilosophySection";
+import ContinuitySection from "./components/ContinuitySection";
+import ImageGridShowcase from "./components/ImageGridShowcase";
+import CoCreationSection from "./components/CoCreationSection";
+import DonationsSection from "./components/DonationsSection";
+import MeetTheTeamSection from "./components/MeetTheTeamSection";
+import EnrollmentCTASection from "./components/EnrollmentCTASection";
+import SocialMediaSection from "./components/SocialMediaSection";
+import ContactUsSection from "./components/ContactUsSection";
+import FAQAccordion from "./components/FAQAccordion";
+import Footer from "./components/Footer";
+import WaitlistDialog from "./components/WaitlistDialog";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -54,7 +54,8 @@ export default function Home() {
         "Our days are designed to feel calm, connected, and alive with curiosity. Mornings are for focused academic support in reading, writing, fluency, and math, individualized to each child's abilities rather than to a grade label. Afternoons flow into nature exploration, science, art, movement, sports-like games, and social-emotional learning. We use few but intentional worksheets and prioritize real-world, hands-on experiences, movement, and time outdoors.",
     },
     {
-      question: "Which subjects do you handle, and which stay fully with parents?",
+      question:
+        "Which subjects do you handle, and which stay fully with parents?",
       answer:
         "At Sage Field, we support literacy and numeracy, offer science, nature study, art, music, movement, and social-emotional learning with elements of Montessori, Waldorf, and Reggio-inspired approaches with broadly TEKS-aligned academics. We do not teach social studies or provide test prep, and we do not cover every subject a child might need for a complete homeschool program. Parents/guardians are fully responsible for social studies and any subjects we do not offer, for maintaining homeschool records, and for choosing and overseeing their child's core curriculum.",
     },
@@ -85,21 +86,23 @@ export default function Home() {
 
   const enrollmentFAQs = [
     {
-      question: "How does enrollment work and what is the financial commitment?",
+      question:
+        "How does enrollment work and what is the financial commitment?",
       answer:
         "Families start by completing an application and connecting with us to ensure a good mutual fit. If we offer a place, enrollment is finalized when you: Sign our Enrollment Agreement (including a six-month commitment), Sign our risk, medical, and media forms, and Pay the non-refundable registration/materials fee. Because we keep groups small and hold a space for your child, tuition is committed for the six-month term, with limited, clearly stated exceptions.",
     },
     {
       question: "What role do parents play?",
       answer:
-        "Parents are at the heart of Sage Field. Legally and practically, you remain your child's primary educator and are responsible for meeting all Texas homeschool requirements, choosing and managing curriculum, teaching social studies and other subjects we don't cover, and keeping any records you need. We ask parents to stay in regular communication with us, share important updates about their child, and carry the work of curiosity, practice, and emotional regulation into the home. Parents may occasionally volunteer or visit (after background checks and prior approval), and we expect all families to honor our community agreements—respectful communication, privacy, and a welcoming, secular environment where a diversity of beliefs is respected without proselytizing.",
+        "Parents are at the heart of Sage Field. Legally and practically, you remain your child's primary educator and are responsible for meeting all Texas homeschool requirements, choosing and managing curriculum, teaching social studies and other subjects we don't cover, and keeping any records you need. We ask parents to stay in regular communication with us, share important updates about their child, and carry the work of curiosity, practice, and emotional regulation into the home.",
     },
     {
       question: "How do we enroll?",
       answer: (
         <div>
           <p className="mb-4">
-            Enrollment for Summer 2026 and School Year 2026-2027 is now open. Complete our interest form to begin the enrollment process.
+            Enrollment for Summer 2026 and School Year 2026-2027 is now open.
+            Complete our interest form to begin the enrollment process.
           </p>
           <button
             onClick={() => setIsWaitlistDialogOpen(true)}
@@ -119,26 +122,26 @@ export default function Home() {
       <WhatWeOfferSection />
       <ImageGridShowcase
         images={[
-          { src: '/assets/ImageOne.jpg', alt: 'School environment' },
-          { src: '/assets/ImageTwo.jpg', alt: 'Students learning' },
-          { src: '/assets/ImageThree.jpg', alt: 'Classroom activities' },
+          { src: "/assets/ImageOne.jpg", alt: "School environment" },
+          { src: "/assets/ImageTwo.jpg", alt: "Students learning" },
+          { src: "/assets/ImageThree.jpg", alt: "Classroom activities" },
         ]}
       />
       <EducationalPhilosophySection />
       <ContinuitySection />
       <ImageGridShowcase
         images={[
-          { src: '/assets/ImageFour.jpg', alt: 'Children developing skills' },
-          { src: '/assets/ImageFive.jpg', alt: 'School community' },
+          { src: "/assets/ImageFour.jpg", alt: "Children developing skills" },
+          { src: "/assets/ImageFive.jpg", alt: "School community" },
         ]}
       />
       <CoCreationSection />
       <DonationsSection />
       <ImageGridShowcase
         images={[
-          { src: '/assets/ImageNine.jpg', alt: 'Sage Field community' },
-          { src: '/assets/ImageTen.jpg', alt: 'Learning environment' },
-          { src: '/assets/ImageEleven.jpg', alt: 'Student activities' },
+          { src: "/assets/ImageNine.jpg", alt: "Sage Field community" },
+          { src: "/assets/ImageTen.jpg", alt: "Learning environment" },
+          { src: "/assets/ImageEleven.jpg", alt: "Student activities" },
         ]}
       />
       <MeetTheTeamSection />
@@ -213,7 +216,10 @@ export default function Home() {
               <h3 className="text-2xl md:text-3xl font-bold mb-6 font-heading text-gray-800">
                 About Sage Field & Our Approach
               </h3>
-              <FAQAccordion items={aboutSageFieldFAQs} searchQuery={searchQuery} />
+              <FAQAccordion
+                items={aboutSageFieldFAQs}
+                searchQuery={searchQuery}
+              />
             </motion.div>
 
             {/* Program Details */}
@@ -226,7 +232,10 @@ export default function Home() {
               <h3 className="text-2xl md:text-3xl font-bold mb-6 font-heading text-gray-800">
                 Program Details
               </h3>
-              <FAQAccordion items={programDetailsFAQs} searchQuery={searchQuery} />
+              <FAQAccordion
+                items={programDetailsFAQs}
+                searchQuery={searchQuery}
+              />
             </motion.div>
 
             {/* Supporting All Learners */}
@@ -239,7 +248,10 @@ export default function Home() {
               <h3 className="text-2xl md:text-3xl font-bold mb-6 font-heading text-gray-800">
                 Supporting All Learners
               </h3>
-              <FAQAccordion items={supportingLearnersFAQs} searchQuery={searchQuery} />
+              <FAQAccordion
+                items={supportingLearnersFAQs}
+                searchQuery={searchQuery}
+              />
             </motion.div>
 
             {/* Enrollment & Parent Partnership */}

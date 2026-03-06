@@ -44,7 +44,8 @@ export default function FAQPage() {
         "Our days are designed to feel calm, connected, and alive with curiosity. Mornings are for focused academic support in reading, writing, fluency, and math, individualized to each child's abilities rather than to a grade label. Afternoons flow into nature exploration, science, art, movement, sports-like games, and social-emotional learning. We use few but intentional worksheets and prioritize real-world, hands-on experiences, movement, and time outdoors.",
     },
     {
-      question: "Which subjects do you handle, and which stay fully with parents?",
+      question:
+        "Which subjects do you handle, and which stay fully with parents?",
       answer:
         "At Sage Field, we support literacy and numeracy, offer science, nature study, art, music, movement, and social-emotional learning with elements of Montessori, Waldorf, and Reggio-inspired approaches with broadly TEKS-aligned academics. We do not teach social studies or provide test prep, and we do not cover every subject a child might need for a complete homeschool program. Parents/guardians are fully responsible for social studies and any subjects we do not offer, for maintaining homeschool records, and for choosing and overseeing their child's core curriculum.",
     },
@@ -75,21 +76,23 @@ export default function FAQPage() {
 
   const enrollmentFAQs = [
     {
-      question: "How does enrollment work and what is the financial commitment?",
+      question:
+        "How does enrollment work and what is the financial commitment?",
       answer:
         "Families start by completing an application and connecting with us to ensure a good mutual fit. If we offer a place, enrollment is finalized when you: Sign our Enrollment Agreement (including a six-month commitment), Sign our risk, medical, and media forms, and Pay the non-refundable registration/materials fee. Because we keep groups small and hold a space for your child, tuition is committed for the six-month term, with limited, clearly stated exceptions.",
     },
     {
       question: "What role do parents play?",
       answer:
-        "Parents are at the heart of Sage Field. Legally and practically, you remain your child's primary educator and are responsible for meeting all Texas homeschool requirements, choosing and managing curriculum, teaching social studies and other subjects we don't cover, and keeping any records you need. We ask parents to stay in regular communication with us, share important updates about their child, and carry the work of curiosity, practice, and emotional regulation into the home. Parents may occasionally volunteer or visit (after background checks and prior approval), and we expect all families to honor our community agreements—respectful communication, privacy, and a welcoming, secular environment where a diversity of beliefs is respected without proselytizing.",
+        "Parents are at the heart of Sage Field. Legally and practically, you remain your child's primary educator and are responsible for meeting all Texas homeschool requirements, choosing and managing curriculum, teaching social studies and other subjects we don't cover, and keeping any records you need. We ask parents to stay in regular communication with us, share important updates about their child, and carry the work of curiosity, practice, and emotional regulation into the home.",
     },
     {
       question: "How do we enroll?",
       answer: (
         <div>
           <p className="mb-4">
-            Enrollment for Summer 2026 and School Year 2026-2027 is now open. Complete our interest form to begin the enrollment process.
+            Enrollment for Summer 2026 and School Year 2026-2027 is now open.
+            Complete our interest form to begin the enrollment process.
           </p>
           <button
             onClick={() => setIsWaitlistDialogOpen(true)}
@@ -172,7 +175,10 @@ export default function FAQPage() {
             <h2 className="text-2xl md:text-3xl font-bold mb-6 font-heading text-gray-800">
               About Sage Field & Our Approach
             </h2>
-            <FAQAccordion items={aboutSageFieldFAQs} searchQuery={searchQuery} />
+            <FAQAccordion
+              items={aboutSageFieldFAQs}
+              searchQuery={searchQuery}
+            />
           </motion.div>
 
           {/* Program Details */}
@@ -185,7 +191,10 @@ export default function FAQPage() {
             <h2 className="text-2xl md:text-3xl font-bold mb-6 font-heading text-gray-800">
               Program Details
             </h2>
-            <FAQAccordion items={programDetailsFAQs} searchQuery={searchQuery} />
+            <FAQAccordion
+              items={programDetailsFAQs}
+              searchQuery={searchQuery}
+            />
           </motion.div>
 
           {/* Supporting All Learners */}
@@ -198,7 +207,10 @@ export default function FAQPage() {
             <h2 className="text-2xl md:text-3xl font-bold mb-6 font-heading text-gray-800">
               Supporting All Learners
             </h2>
-            <FAQAccordion items={supportingLearnersFAQs} searchQuery={searchQuery} />
+            <FAQAccordion
+              items={supportingLearnersFAQs}
+              searchQuery={searchQuery}
+            />
           </motion.div>
 
           {/* Enrollment & Parent Partnership */}
@@ -229,7 +241,8 @@ export default function FAQPage() {
             Still have questions?
           </h2>
           <p className="text-lg text-gray-600 mb-8 font-body">
-            We&apos;re here to help! Reach out to us and we&apos;ll get back to you as soon as possible.
+            We&apos;re here to help! Reach out to us and we&apos;ll get back to
+            you as soon as possible.
           </p>
           <button
             onClick={() => setIsContactDialogOpen(true)}
