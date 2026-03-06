@@ -9,10 +9,18 @@ import {
   Facebook,
   Mail,
   MapPin,
+  Shield,
+  Home,
+  Users,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import WaitlistDialog from "../components/WaitlistDialog";
+import { submitWaitlist } from "@/app/actions/waitlist";
 import DonationsSection from "../components/DonationsSection";
+import ImageGridShowcase from "../components/ImageGridShowcase";
 
 const formatPhoneNumber = (value: string) => {
   const phoneNumber = value.replace(/\D/g, "");
@@ -25,19 +33,28 @@ const formatPhoneNumber = (value: string) => {
 
 const milestones = [
   {
+    step: 1,
     title: "LLC Secured",
     description:
       "Sage Field is officially a registered LLC, laying the legal foundation for the school.",
+    status: "complete" as const,
+    icon: Shield,
   },
   {
+    step: 2,
     title: "Property Negotiations",
     description:
       "We are in active negotiations for a property in Round Rock, TX — the future home of Sage Field.",
+    status: "in-progress" as const,
+    icon: Home,
   },
   {
+    step: 3,
     title: "Enrollment Open",
     description:
       "We're already enrolling families for Summer 2026 and School Year 2026–2027.",
+    status: "open" as const,
+    icon: Users,
   },
 ];
 
@@ -60,12 +77,19 @@ export default function VisionPage() {
     phone: "",
     childName: "",
     childAge: "",
-    howCanYouHelp: "",
+    programInterest: "",
+    specialInterests: "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<{
+    type: "success" | "error" | null;
+    message: string;
+  }>({ type: null, message: "" });
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
     if (name === "phone") {
@@ -75,9 +99,35 @@ export default function VisionPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setIsSubmitting(true);
+    setSubmitStatus({ type: null, message: "" });
+
+    try {
+      const result = await submitWaitlist({
+        parentName: formData.parentName,
+        email: formData.email,
+        phone: formData.phone || undefined,
+        childName: formData.childName,
+        childAge: parseInt(formData.childAge),
+        programInterest: formData.programInterest as "summer-2026" | "school-year-2026" | "both",
+        specialInterests: formData.specialInterests || undefined,
+      });
+
+      if (result.success) {
+        setSubmitted(true);
+      } else {
+        setSubmitStatus({ type: "error", message: result.message });
+      }
+    } catch {
+      setSubmitStatus({
+        type: "error",
+        message: "An unexpected error occurred. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -134,7 +184,7 @@ export default function VisionPage() {
       <section className="py-16 px-8 sm:px-12 lg:px-16 bg-white">
         <div className="max-w-5xl mx-auto">
           <motion.div
-            className="flex justify-center mb-8"
+            className="flex justify-center mb-4"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -145,29 +195,114 @@ export default function VisionPage() {
             </span>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {milestones.map((milestone, index) => (
-              <motion.div
-                key={milestone.title}
-                className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{
-                  duration: 0.6,
-                  delay: index * 0.1,
-                  ease: "easeOut",
-                }}
-              >
-                <CheckCircle2 className="w-8 h-8 text-primary mb-4" />
-                <h3 className="text-lg font-bold font-heading text-gray-800 mb-2">
-                  {milestone.title}
-                </h3>
-                <p className="text-gray-600 font-body text-sm leading-relaxed">
-                  {milestone.description}
-                </p>
-              </motion.div>
-            ))}
+          <motion.p
+            className="text-center text-gray-500 font-body mb-12 text-base"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+          >
+            Three milestones on our path to opening day.
+          </motion.p>
+
+          {/* Timeline container */}
+          <div className="relative">
+            {/* Desktop connector line */}
+            <div className="hidden lg:block absolute top-6 left-[calc(16.67%+0px)] right-[calc(16.67%+0px)] h-0.5 bg-gray-200 z-0" />
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+              {milestones.map((milestone, index) => {
+                const Icon = milestone.icon;
+                const statusStyles = {
+                  complete: {
+                    badge: "bg-green-100 text-green-700",
+                    label: "Complete",
+                    accent: "bg-green-400",
+                    circle: "ring-2 ring-primary/30",
+                  },
+                  "in-progress": {
+                    badge: "bg-primary/15 text-primary",
+                    label: "In Progress",
+                    accent: "bg-primary",
+                    circle: "",
+                  },
+                  upcoming: {
+                    badge: "bg-gray-100 text-gray-500",
+                    label: "Coming Soon",
+                    accent: "bg-gray-200",
+                    circle: "",
+                  },
+                  open: {
+                    badge: "bg-green-500 text-white",
+                    label: "Open Now",
+                    accent: "bg-green-500",
+                    circle: "ring-2 ring-green-300",
+                  },
+                }[milestone.status];
+
+                return (
+                  <motion.div
+                    key={milestone.title}
+                    className="relative flex flex-col"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{
+                      duration: 0.6,
+                      delay: index * 0.15,
+                      ease: "easeOut",
+                    }}
+                  >
+                    {/* Mobile vertical rail */}
+                    {index < milestones.length - 1 && (
+                      <div className="lg:hidden absolute left-6 top-12 bottom-[-1.5rem] w-0.5 bg-gray-200 z-0" />
+                    )}
+
+                    {/* Step circle */}
+                    <div className="relative z-10 flex lg:justify-center mb-4 lg:mb-6">
+                      <div
+                        className={`w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center font-bold text-lg shadow-md flex-shrink-0 ${statusStyles.circle}`}
+                      >
+                        {milestone.step}
+                      </div>
+                    </div>
+
+                    {/* Card */}
+                    <div className="ml-16 lg:ml-0 flex-1 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+                      {/* Top accent bar */}
+                      <div className={`h-1 w-full ${statusStyles.accent}`} />
+
+                      <div className="p-6">
+                        {/* Status badge + icon row */}
+                        <div className="flex items-center justify-between mb-4">
+                          <span
+                            className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${statusStyles.badge}`}
+                          >
+                            {statusStyles.label}
+                          </span>
+                          <Icon className="w-5 h-5 text-gray-300" />
+                        </div>
+
+                        <h3 className="text-lg font-bold font-heading text-gray-800 mb-2">
+                          {milestone.title}
+                        </h3>
+                        <p className="text-gray-600 font-body text-sm leading-relaxed">
+                          {milestone.description}
+                        </p>
+                        {milestone.status === "open" && (
+                          <button
+                            onClick={() => setWaitlistOpen(true)}
+                            className="mt-4 w-full px-4 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary-hover transition-all duration-200 font-body cursor-pointer"
+                          >
+                            Enroll Your Child
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
@@ -287,6 +422,14 @@ export default function VisionPage() {
       {/* 4. Tuition Section */}
       <DonationsSection />
 
+      <ImageGridShowcase
+        images={[
+          { src: "/assets/Interior.png", alt: "Sage Field interior classroom" },
+          { src: "/assets/After1.png", alt: "Property after — rendering 1" },
+          { src: "/assets/After2.png", alt: "Property after — rendering 2" },
+        ]}
+      />
+
       {/* 5. "I'm Committed" CTA Form */}
       <section className="py-16 px-8 sm:px-12 lg:px-16 bg-welcome-bg">
         <div className="max-w-5xl mx-auto">
@@ -298,7 +441,7 @@ export default function VisionPage() {
             transition={{ duration: 0.6, ease: "easeOut" }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
-              Join the Movement
+              Join our Community
             </span>
           </motion.div>
 
@@ -342,7 +485,7 @@ export default function VisionPage() {
             {/* Right: Form */}
             <div className="w-full md:w-1/2">
               <motion.div
-                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8"
+                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -365,6 +508,18 @@ export default function VisionPage() {
                   </motion.div>
                 ) : (
                   <form className="space-y-5" onSubmit={handleSubmit}>
+                    {/* Error Banner */}
+                    {submitStatus.type === "error" && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex items-center gap-2 p-4 rounded-lg bg-red-50 text-red-800 border border-red-200"
+                      >
+                        <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                        <p className="text-sm font-body">{submitStatus.message}</p>
+                      </motion.div>
+                    )}
+
                     {/* Parent/Guardian Name */}
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2 font-body">
@@ -377,7 +532,8 @@ export default function VisionPage() {
                         value={formData.parentName}
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary focus:outline-none transition-colors font-body text-gray-900 placeholder:text-gray-500"
+                        disabled={isSubmitting}
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary focus:outline-none transition-colors font-body text-gray-900 placeholder:text-gray-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                         placeholder="Your full name"
                       />
                     </div>
@@ -393,7 +549,8 @@ export default function VisionPage() {
                         value={formData.email}
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary focus:outline-none transition-colors font-body text-gray-900 placeholder:text-gray-500"
+                        disabled={isSubmitting}
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary focus:outline-none transition-colors font-body text-gray-900 placeholder:text-gray-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                         placeholder="your@email.com"
                       />
                     </div>
@@ -408,7 +565,8 @@ export default function VisionPage() {
                         name="phone"
                         value={formData.phone}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary focus:outline-none transition-colors font-body text-gray-900 placeholder:text-gray-500"
+                        disabled={isSubmitting}
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary focus:outline-none transition-colors font-body text-gray-900 placeholder:text-gray-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                         placeholder="(123) 456-7890"
                       />
                     </div>
@@ -424,7 +582,8 @@ export default function VisionPage() {
                           name="childName"
                           value={formData.childName}
                           onChange={handleChange}
-                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary focus:outline-none transition-colors font-body text-gray-900 placeholder:text-gray-500"
+                          disabled={isSubmitting}
+                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary focus:outline-none transition-colors font-body text-gray-900 placeholder:text-gray-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                           placeholder="First and last name"
                         />
                       </div>
@@ -439,23 +598,45 @@ export default function VisionPage() {
                           onChange={handleChange}
                           min="1"
                           max="18"
-                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary focus:outline-none transition-colors font-body text-gray-900 placeholder:text-gray-500"
+                          disabled={isSubmitting}
+                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary focus:outline-none transition-colors font-body text-gray-900 placeholder:text-gray-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                           placeholder="e.g., 7"
                         />
                       </div>
                     </div>
 
-                    {/* How can you help */}
+                    {/* Program Interest */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2 font-body">
+                        Program Interest <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        name="programInterest"
+                        value={formData.programInterest}
+                        onChange={handleChange}
+                        required
+                        disabled={isSubmitting}
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary focus:outline-none transition-colors font-body text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      >
+                        <option value="">Select a program...</option>
+                        <option value="summer-2026">Summer 2026</option>
+                        <option value="school-year-2026">School Year 2026-2027</option>
+                        <option value="both">Both Programs</option>
+                      </select>
+                    </div>
+
+                    {/* Special Interests & Learning Needs */}
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2 font-body">
                         Special Interests & Learning Needs
                       </label>
                       <textarea
-                        name="howCanYouHelp"
-                        value={formData.howCanYouHelp}
+                        name="specialInterests"
+                        value={formData.specialInterests}
                         onChange={handleChange}
                         rows={4}
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary focus:outline-none transition-colors font-body resize-none text-gray-900 placeholder:text-gray-500"
+                        disabled={isSubmitting}
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary focus:outline-none transition-colors font-body resize-none text-gray-900 placeholder:text-gray-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                         placeholder="e.g. I'd like to enroll my child, donate, help with property setup, volunteer my skills..."
                       />
                     </div>
@@ -463,9 +644,17 @@ export default function VisionPage() {
                     {/* Submit */}
                     <button
                       type="submit"
-                      className="w-full px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-all duration-200 font-body cursor-pointer"
+                      disabled={isSubmitting}
+                      className="w-full px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-all duration-200 font-body cursor-pointer disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                      I&apos;m Committed
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Submitting...
+                        </>
+                      ) : (
+                        "I'm Committed"
+                      )}
                     </button>
                   </form>
                 )}
@@ -498,7 +687,7 @@ export default function VisionPage() {
             transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
           >
             Sage Field is a homeschool learning community for ages 6–10 in
-            Central Texas, built on hands-on, wisdom-focused education.
+            Central Texas, built on hands-on, outdoor-focused education.
           </motion.p>
 
           <motion.div
@@ -544,6 +733,11 @@ export default function VisionPage() {
       </section>
 
       <Footer />
+
+      <WaitlistDialog
+        isOpen={waitlistOpen}
+        onClose={() => setWaitlistOpen(false)}
+      />
     </div>
   );
 }

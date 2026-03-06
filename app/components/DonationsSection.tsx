@@ -219,7 +219,7 @@ const DonationsSection = () => {
 
                 {/* Title */}
                 <h3 className="text-2xl font-bold text-black mb-2 font-heading">
-                  Fun Friday
+                  Field Day Friday
                 </h3>
                 <p className="text-base text-text-gray mb-6 font-body">
                   9:00am - 1:00pm
