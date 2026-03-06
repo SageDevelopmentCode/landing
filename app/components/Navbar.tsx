@@ -19,6 +19,7 @@ export default function Navbar() {
     { label: "Educational Philosophy", href: "#educational-philosophy" },
     { label: "About Us", href: "/about" },
     { label: "FAQ", href: "/faq" },
+    { label: "Our Vision", href: "/vision" },
   ];
 
   const handleSmoothScroll = (

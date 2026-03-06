@@ -76,6 +76,14 @@ export default function Footer() {
                   FAQ
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/vision"
+                  className="text-gray-400 hover:text-white transition-colors font-body text-sm"
+                >
+                  Our Vision
+                </Link>
+              </li>
             </ul>
           </div>
 
