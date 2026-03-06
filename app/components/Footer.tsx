@@ -137,7 +137,7 @@ export default function Footer() {
               </a>
               <div className="flex items-center gap-2 text-gray-400 font-body text-sm">
                 <MapPin className="w-4 h-4 flex-shrink-0" />
-                <span>Georgetown, TX</span>
+                <span>Round Rock, TX</span>
               </div>
             </div>
 
@@ -188,7 +188,9 @@ export default function Footer() {
               </a>
             </div>
 
-            <p className="text-gray-400 text-sm font-body text-center md:text-right">Georgetown, TX</p>
+            <p className="text-gray-400 text-sm font-body text-center md:text-right">
+              Georgetown, TX
+            </p>
           </div>
         </div>
       </div>
