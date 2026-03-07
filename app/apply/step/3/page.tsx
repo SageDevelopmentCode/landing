@@ -1,7 +1,7 @@
 import { createServerSupabaseClient, createAdminClient } from "@/app/lib/supabase-server";
-import Step1Form from "./Step1Form";
+import Step3Form from "./Step3Form";
 
-export default async function ApplicationStep1() {
+export default async function ApplicationStep3() {
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -17,5 +17,5 @@ export default async function ApplicationStep1() {
     initialData = data;
   }
 
-  return <Step1Form initialData={initialData} />;
+  return <Step3Form initialData={initialData} />;
 }
