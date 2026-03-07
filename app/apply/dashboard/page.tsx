@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import ApplicationList from "./ApplicationList";
 import ProfileDropdown from "./ProfileDropdown";
+import Footer from "@/app/components/Footer";
 
 export default async function ApplicationDashboard() {
   const supabase = await createServerSupabaseClient();
@@ -38,7 +39,8 @@ export default async function ApplicationDashboard() {
   const g1Name = apps[0]?.g1_full_name ?? "there";
 
   return (
-    <div className="min-h-screen bg-welcome-bg">
+    <div className="bg-welcome-bg">
+      <div className="min-h-screen flex flex-col">
       {/* Header */}
       <header className="bg-white border-b border-gray-100 px-5 py-3 flex items-center justify-between">
         <Link href="/">
@@ -55,7 +57,7 @@ export default async function ApplicationDashboard() {
         )}
       </header>
 
-      <main className="max-w-2xl mx-auto px-6 py-12">
+      <main className="flex-1 max-w-4xl mx-auto px-6 py-12">
         {/* Review notice */}
         <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 mb-6">
           <p className="text-sm text-amber-800 font-body">
@@ -96,6 +98,8 @@ export default async function ApplicationDashboard() {
           Start another application
         </Link>
       </main>
+      </div>
+      <Footer />
     </div>
   );
 }

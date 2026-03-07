@@ -6,6 +6,18 @@ import { updateApplication } from "@/app/actions/updateApplication";
 
 type App = Record<string, string | null>;
 
+// ─── Program label map ───────────────────────────────────────────────────────
+const PROGRAM_LABELS: Record<string, string> = {
+  summer_26: "Summer 2026",
+  school_year_26_27: "School Year 2026-2027",
+  both: "Both",
+};
+
+function formatProgram(value: string | null | undefined) {
+  if (!value) return null;
+  return PROGRAM_LABELS[value] ?? value;
+}
+
 // ─── Read-only field ────────────────────────────────────────────────────────
 function field(label: string, value: string | null | undefined) {
   if (!value) return null;
@@ -57,7 +69,13 @@ function EditField({
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   const kids = Array.isArray(children) ? children.filter(Boolean) : children;
   if (!kids || (Array.isArray(kids) && kids.length === 0)) return null;
   return (
@@ -106,9 +124,21 @@ function SlideOver({
     setSaveError(null);
 
     // Strip non-editable / metadata fields before sending
-    const { id, user_id, created_at, updated_at, status, approved, approved_at, ...editableFields } = draft;
+    const {
+      id,
+      user_id,
+      created_at,
+      updated_at,
+      status,
+      approved,
+      approved_at,
+      ...editableFields
+    } = draft;
 
-    const result = await updateApplication(draft.id, editableFields as Record<string, string | null>);
+    const result = await updateApplication(
+      draft.id,
+      editableFields as Record<string, string | null>,
+    );
     setSaving(false);
 
     if ("error" in result && result.error) {
@@ -122,7 +152,13 @@ function SlideOver({
   }
 
   const ef = (label: string, key: string, multiline = false) => (
-    <EditField label={label} fieldKey={key} draft={draft} onChange={handleChange} multiline={multiline} />
+    <EditField
+      label={label}
+      fieldKey={key}
+      draft={draft}
+      onChange={handleChange}
+      multiline={multiline}
+    />
   );
 
   return (
@@ -150,7 +186,9 @@ function SlideOver({
           <div>
             <p className="text-xs text-gray-400 font-body">Application</p>
             <h2 className="text-base font-bold font-heading text-gray-800">
-              {(isEditing ? draft : app).preferred_name ?? (isEditing ? draft : app).child_legal_name ?? "—"}
+              {(isEditing ? draft : app).preferred_name ??
+                (isEditing ? draft : app).child_legal_name ??
+                "—"}
             </h2>
           </div>
 
@@ -199,11 +237,28 @@ function SlideOver({
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto px-6 py-6">
-
           {isEditing ? (
             <>
               <Section title="Child's Details">
-                {ef("Program", "program")}
+                <div className="flex flex-col gap-0.5">
+                  <label className="text-xs text-gray-400 font-body">
+                    Program
+                  </label>
+                  <select
+                    value={draft["program"] ?? ""}
+                    onChange={(e) => handleChange("program", e.target.value)}
+                    className="w-full text-sm text-gray-800 font-body border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#2C5F2E]/30 focus:border-[#2C5F2E] bg-gray-50"
+                  >
+                    <option value="" disabled>
+                      Select program
+                    </option>
+                    <option value="summer_26">Summer 2026</option>
+                    <option value="school_year_26_27">
+                      School Year 2026-2027
+                    </option>
+                    <option value="both">Both</option>
+                  </select>
+                </div>
                 {ef("Legal Name", "child_legal_name")}
                 {ef("Preferred Name", "preferred_name")}
                 {ef("Birth Month", "dob_month")}
@@ -241,9 +296,17 @@ function SlideOver({
               </Section>
 
               <Section title="Health & Support">
-                {ef("Medical Conditions", "medical_conditions_description", true)}
+                {ef(
+                  "Medical Conditions",
+                  "medical_conditions_description",
+                  true,
+                )}
                 {ef("Allergies", "allergies_description", true)}
-                {ef("Emergency Medications", "emergency_medications_description", true)}
+                {ef(
+                  "Emergency Medications",
+                  "emergency_medications_description",
+                  true,
+                )}
                 {ef("History Flags", "history_flags")}
                 {ef("Needs Aide", "needs_aide")}
               </Section>
@@ -258,7 +321,9 @@ function SlideOver({
               </Section>
 
               <Section title="Signatures">
-                <p className="text-xs text-gray-400 font-body italic">Signatures cannot be edited.</p>
+                <p className="text-xs text-gray-400 font-body italic">
+                  Signatures cannot be edited.
+                </p>
                 {field("Guardian 1 Signature", app.g1_signature_name)}
                 {field("Signature Date", app.g1_signature_date)}
                 {field("Guardian 2 Signature", app.g2_signature_name)}
@@ -268,7 +333,7 @@ function SlideOver({
           ) : (
             <>
               <Section title="Child's Details">
-                {field("Program", app.program)}
+                {field("Program", formatProgram(app.program))}
                 {field("Legal Name", app.child_legal_name)}
                 {field("Preferred Name", app.preferred_name)}
                 {field("Date of Birth", app.child_dob)}
@@ -330,7 +395,6 @@ function SlideOver({
               </Section>
             </>
           )}
-
         </div>
       </motion.div>
     </>
@@ -338,7 +402,11 @@ function SlideOver({
 }
 
 // ─── ApplicationList ─────────────────────────────────────────────────────────
-export default function ApplicationList({ apps: initialApps }: { apps: App[] }) {
+export default function ApplicationList({
+  apps: initialApps,
+}: {
+  apps: App[];
+}) {
   const [apps, setApps] = useState<App[]>(initialApps);
   const [selectedApp, setSelectedApp] = useState<App | null>(null);
 
@@ -350,7 +418,9 @@ export default function ApplicationList({ apps: initialApps }: { apps: App[] }) 
   if (apps.length === 0) {
     return (
       <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm text-center mb-6">
-        <p className="text-gray-500 font-body text-sm">No applications found.</p>
+        <p className="text-gray-500 font-body text-sm">
+          No applications found.
+        </p>
       </div>
     );
   }
@@ -359,12 +429,12 @@ export default function ApplicationList({ apps: initialApps }: { apps: App[] }) 
     <>
       <div className="flex flex-col gap-3 mb-6">
         {/* Column headers */}
-        <div className="grid grid-cols-[1fr_1fr_1fr_auto_auto] px-5 text-xs font-semibold text-gray-400 font-body uppercase tracking-wide">
+        <div className="grid grid-cols-[1fr_120px_1fr_140px_80px] px-5 text-xs font-semibold text-gray-400 font-body uppercase tracking-wide">
           <span>Child Name</span>
           <span>Grade</span>
           <span>Program</span>
           <span>Status</span>
-          <span />
+          <span>Action</span>
         </div>
 
         {apps.map((app, i) => {
@@ -372,11 +442,17 @@ export default function ApplicationList({ apps: initialApps }: { apps: App[] }) 
           return (
             <div
               key={app.id ?? i}
-              className="grid grid-cols-[1fr_1fr_1fr_auto_auto] items-center gap-4 bg-white border border-gray-200 rounded-xl px-5 py-4 shadow-sm"
+              className="grid grid-cols-[1fr_120px_1fr_140px_80px] items-center gap-4 bg-white border border-gray-200 rounded-xl px-5 py-4 shadow-sm"
             >
-              <span className="text-sm font-medium text-gray-800 font-body">{childName}</span>
-              <span className="text-sm text-gray-600 font-body">{app.child_grade ?? "—"}</span>
-              <span className="text-sm text-gray-600 font-body">{app.program ?? "—"}</span>
+              <span className="text-sm font-medium text-gray-800 font-body">
+                {childName}
+              </span>
+              <span className="text-sm text-gray-600 font-body">
+                {app.child_grade ?? "—"}
+              </span>
+              <span className="text-sm text-gray-600 font-body">
+                {formatProgram(app.program) ?? "—"}
+              </span>
               <span className="inline-flex items-center gap-1.5 w-fit px-2.5 py-1 bg-green-50 text-green-700 text-xs font-semibold rounded-full font-body border border-green-200">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
                 Submitted
@@ -385,7 +461,7 @@ export default function ApplicationList({ apps: initialApps }: { apps: App[] }) 
                 onClick={() => setSelectedApp(app)}
                 className="text-xs font-semibold text-gray-500 font-body hover:text-gray-800 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition-colors cursor-pointer"
               >
-                View
+                View/Edit
               </button>
             </div>
           );

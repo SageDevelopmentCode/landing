@@ -227,7 +227,7 @@ export default function Step1Form({
               </label>
               <div className="flex flex-col gap-2">
                 {[
-                  { value: "summer_26", label: "Summer Program 2026" },
+                  { value: "summer_26", label: "Summer 2026" },
                   {
                     value: "school_year_26_27",
                     label: "School Year 2026-2027",
