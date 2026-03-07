@@ -53,10 +53,12 @@ export default function Step1Form({
   applicationId: string | null;
 }) {
   const d = initialData;
-  const [program, setProgram] = useState<"summer" | "school_year" | "both" | "">(
-    (d?.program as "summer" | "school_year" | "both") ?? ""
+  const [program, setProgram] = useState<
+    "summer_26" | "school_year_26_27" | "both" | ""
+  >((d?.program as "summer_26" | "school_year_26_27" | "both") ?? "");
+  const [childLegalName, setChildLegalName] = useState(
+    d?.child_legal_name ?? "",
   );
-  const [childLegalName, setChildLegalName] = useState(d?.child_legal_name ?? "");
   const [preferredName, setPreferredName] = useState(d?.preferred_name ?? "");
   const [dobMonth, setDobMonth] = useState(d?.dob_month ?? "");
   const [dobDay, setDobDay] = useState(d?.dob_day ?? "");
@@ -67,16 +69,24 @@ export default function Step1Form({
   const [addressCity, setAddressCity] = useState(d?.address_city ?? "");
   const [addressState, setAddressState] = useState(d?.address_state ?? "");
   const [addressZip, setAddressZip] = useState(d?.address_zip ?? "");
-  const [householdPhone, setHouseholdPhone] = useState(d?.household_phone ?? "");
+  const [householdPhone, setHouseholdPhone] = useState(
+    d?.household_phone ?? "",
+  );
   const [isHomeschooled, setIsHomeschooled] = useState<"yes" | "no" | "">(
-    (d?.is_homeschooled as "yes" | "no") ?? ""
+    (d?.is_homeschooled as "yes" | "no") ?? "",
   );
-  const [homeschoolExplanation, setHomeschoolExplanation] = useState(d?.homeschool_explanation ?? "");
+  const [homeschoolExplanation, setHomeschoolExplanation] = useState(
+    d?.homeschool_explanation ?? "",
+  );
   const [previousSchools, setPreviousSchools] = useState<"yes" | "no" | "">(
-    (d?.previous_schools as "yes" | "no") ?? ""
+    (d?.previous_schools as "yes" | "no") ?? "",
   );
-  const [previousSchoolsList, setPreviousSchoolsList] = useState(d?.previous_schools_list ?? "");
-  const [specialInterests, setSpecialInterests] = useState(d?.special_interests ?? "");
+  const [previousSchoolsList, setPreviousSchoolsList] = useState(
+    d?.previous_schools_list ?? "",
+  );
+  const [specialInterests, setSpecialInterests] = useState(
+    d?.special_interests ?? "",
+  );
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -217,8 +227,11 @@ export default function Step1Form({
               </label>
               <div className="flex flex-col gap-2">
                 {[
-                  { value: "summer", label: "Summer Program" },
-                  { value: "school_year", label: "School Year" },
+                  { value: "summer_26", label: "Summer Program 2026" },
+                  {
+                    value: "school_year_26_27",
+                    label: "School Year 2026-2027",
+                  },
                   { value: "both", label: "Both" },
                 ].map((option) => (
                   <button
@@ -262,7 +275,9 @@ export default function Step1Form({
             <div>
               <label className="block text-sm font-semibold text-gray-700 font-body mb-1.5">
                 Preferred Name{" "}
-                <span className="font-normal text-gray-400">(if different)</span>
+                <span className="font-normal text-gray-400">
+                  (if different)
+                </span>
               </label>
               <input
                 type="text"
@@ -282,7 +297,9 @@ export default function Step1Form({
                 <input
                   type="text"
                   value={dobMonth}
-                  onChange={(e) => setDobMonth(e.target.value.replace(/\D/g, "").slice(0, 2))}
+                  onChange={(e) =>
+                    setDobMonth(e.target.value.replace(/\D/g, "").slice(0, 2))
+                  }
                   placeholder="MM"
                   maxLength={2}
                   className="w-16 px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors bg-white text-center"
@@ -291,7 +308,9 @@ export default function Step1Form({
                 <input
                   type="text"
                   value={dobDay}
-                  onChange={(e) => setDobDay(e.target.value.replace(/\D/g, "").slice(0, 2))}
+                  onChange={(e) =>
+                    setDobDay(e.target.value.replace(/\D/g, "").slice(0, 2))
+                  }
                   placeholder="DD"
                   maxLength={2}
                   className="w-16 px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors bg-white text-center"
@@ -300,7 +319,9 @@ export default function Step1Form({
                 <input
                   type="text"
                   value={dobYear}
-                  onChange={(e) => setDobYear(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                  onChange={(e) =>
+                    setDobYear(e.target.value.replace(/\D/g, "").slice(0, 4))
+                  }
                   placeholder="YYYY"
                   maxLength={4}
                   className="w-20 px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors bg-white text-center"
@@ -312,7 +333,10 @@ export default function Step1Form({
             <div className="flex gap-3">
               <div className="flex-1">
                 <label className="block text-sm font-semibold text-gray-700 font-body mb-1.5">
-                  Age <span className="font-normal text-gray-400">(as of start date)</span>
+                  Age{" "}
+                  <span className="font-normal text-gray-400">
+                    (as of start date)
+                  </span>
                 </label>
                 <input
                   type="number"
@@ -369,7 +393,9 @@ export default function Step1Form({
                   <input
                     type="text"
                     value={addressState}
-                    onChange={(e) => setAddressState(e.target.value.slice(0, 2).toUpperCase())}
+                    onChange={(e) =>
+                      setAddressState(e.target.value.slice(0, 2).toUpperCase())
+                    }
                     placeholder="ST"
                     maxLength={2}
                     className="w-20 px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors bg-white text-center"
@@ -377,7 +403,11 @@ export default function Step1Form({
                   <input
                     type="text"
                     value={addressZip}
-                    onChange={(e) => setAddressZip(e.target.value.replace(/\D/g, "").slice(0, 5))}
+                    onChange={(e) =>
+                      setAddressZip(
+                        e.target.value.replace(/\D/g, "").slice(0, 5),
+                      )
+                    }
                     placeholder="Zip"
                     maxLength={5}
                     className="w-24 px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors bg-white"
@@ -413,7 +443,9 @@ export default function Step1Form({
                   <button
                     key={option.value}
                     type="button"
-                    onClick={() => setIsHomeschooled(option.value as "yes" | "no")}
+                    onClick={() =>
+                      setIsHomeschooled(option.value as "yes" | "no")
+                    }
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg border text-sm font-body text-left transition-all cursor-pointer ${
                       isHomeschooled === option.value
                         ? "border-primary bg-primary/5 text-gray-800"
@@ -447,7 +479,8 @@ export default function Step1Form({
             {/* Has your child previously attended any learning communities? */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 font-body mb-2">
-                Has your child previously attended any learning communities, co-ops, or schools?
+                Has your child previously attended any learning communities,
+                co-ops, or schools?
               </label>
               <div className="flex flex-col gap-2">
                 {[
@@ -457,7 +490,9 @@ export default function Step1Form({
                   <button
                     key={option.value}
                     type="button"
-                    onClick={() => setPreviousSchools(option.value as "yes" | "no")}
+                    onClick={() =>
+                      setPreviousSchools(option.value as "yes" | "no")
+                    }
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg border text-sm font-body text-left transition-all cursor-pointer ${
                       previousSchools === option.value
                         ? "border-primary bg-primary/5 text-gray-800"
@@ -503,12 +538,11 @@ export default function Step1Form({
               />
             </div>
 
-            {error && (
-              <p className="text-sm text-red-500 font-body">{error}</p>
-            )}
+            {error && <p className="text-sm text-red-500 font-body">{error}</p>}
 
             <p className="text-xs text-gray-400 font-body text-center">
-              Applying for more than one child? Complete this application first — you&apos;ll be able to start another one once you&apos;re done.
+              Applying for more than one child? Complete this application first
+              — you&apos;ll be able to start another one once you&apos;re done.
             </p>
 
             <button

@@ -203,6 +203,14 @@ GRANT ALL ON contact.submissions TO authenticated;
 -- VALUES ('John Doe', 'john@example.com', '123-456-7890', 'Test Subject', 'Test message');
 
 -- ============================================
+-- 15. GRANT ADMIN SCHEMA PERMISSIONS TO SERVICE ROLE
+-- ============================================
+-- Required so the service_role key can query admin.users
+-- (service_role bypasses RLS but still needs explicit schema grants)
+GRANT USAGE ON SCHEMA admin TO service_role;
+GRANT SELECT ON admin.users TO service_role;
+
+-- ============================================
 -- SETUP COMPLETE!
 -- ============================================
 -- Next steps:

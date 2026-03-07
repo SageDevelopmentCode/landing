@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
 // Server-side Supabase client for use in Server Components and Server Actions
@@ -32,19 +33,10 @@ export async function createServerSupabaseClient() {
 }
 
 // Admin client with service role key (use only for admin operations on server)
+// Uses @supabase/supabase-js directly to support .schema() for non-public schemas
 export function createAdminClient() {
-  return createServerClient(
+  return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return []
-        },
-        setAll() {
-          // Admin client doesn't need cookie management
-        },
-      },
-    }
   )
 }

@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           created_at: string | null
           email: string
+          full_name: string | null
           id: string
           role: string | null
           updated_at: string | null
@@ -25,6 +26,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           email: string
+          full_name?: string | null
           id: string
           role?: string | null
           updated_at?: string | null
@@ -32,6 +34,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           email?: string
+          full_name?: string | null
           id?: string
           role?: string | null
           updated_at?: string | null
@@ -59,6 +62,7 @@ export type Database = {
           created_at: string | null
           email: string
           id: string
+          is_deleted: boolean
           message: string
           name: string
           notes: string | null
@@ -85,6 +89,7 @@ export type Database = {
           created_at?: string | null
           email: string
           id?: string
+          is_deleted?: boolean
           message: string
           name: string
           notes?: string | null
@@ -111,6 +116,7 @@ export type Database = {
           created_at?: string | null
           email?: string
           id?: string
+          is_deleted?: boolean
           message?: string
           name?: string
           notes?: string | null
@@ -153,238 +159,211 @@ export type Database = {
     Tables: {
       applications: {
         Row: {
-          id: string
-          user_id: string
-          status: 'not_started' | 'in_progress' | 'completed'
-          program: string | null
-          child_legal_name: string | null
-          preferred_name: string | null
-          dob_month: string | null
-          dob_day: string | null
-          dob_year: string | null
-          child_age: number | null
-          child_grade: string | null
-          address_street: string | null
+          activities_to_avoid: string | null
           address_city: string | null
           address_state: string | null
+          address_street: string | null
           address_zip: string | null
-          household_phone: string | null
-          is_homeschooled: string | null
-          homeschool_explanation: string | null
-          previous_schools: string | null
-          previous_schools_list: string | null
-          special_interests: string | null
-          g1_full_name: string | null
-          g1_relationship: string | null
-          g1_relationship_other: string | null
-          g1_email: string | null
-          g1_cell_phone: string | null
-          g1_work_phone: string | null
-          g1_preferred_contact: string | null
-          g1_lives_with_child: string | null
-          g1_has_custody: string | null
-          g2_full_name: string | null
-          g2_relationship: string | null
-          g2_relationship_other: string | null
-          g2_email: string | null
-          g2_cell_phone: string | null
-          g2_work_phone: string | null
-          g2_preferred_contact: string | null
-          g2_lives_with_child: string | null
-          g2_has_custody: string | null
-          has_custody_orders: string | null
-          custody_orders_description: string | null
-          has_medical_conditions: string | null
-          medical_conditions_description: string | null
-          has_allergies: string | null
           allergies_description: string | null
-          has_emergency_medications: string | null
-          emergency_medications_description: string | null
-          history_flags: string | null
-          history_explanation: string | null
-          needs_aide: string | null
-          needs_aide_description: string | null
-          learning_style: string | null
-          strengths_interests: string | null
-          current_challenges: string | null
-          dysregulation_response: string | null
-          regulation_strategies: string | null
-          activities_to_avoid: string | null
-          g1_signature_name: string | null
-          g1_signature: string | null
-          g1_signature_date: string | null
-          g2_signature_name: string | null
-          g2_signature: string | null
-          g2_signature_date: string | null
           approved: boolean
           approved_at: string | null
+          child_age: number | null
+          child_grade: string | null
+          child_legal_name: string | null
           created_at: string | null
+          current_challenges: string | null
+          custody_orders_description: string | null
+          dob_day: string | null
+          dob_month: string | null
+          dob_year: string | null
+          dysregulation_response: string | null
+          emergency_medications_description: string | null
+          g1_cell_phone: string | null
+          g1_email: string | null
+          g1_full_name: string | null
+          g1_has_custody: string | null
+          g1_lives_with_child: string | null
+          g1_preferred_contact: string | null
+          g1_relationship: string | null
+          g1_relationship_other: string | null
+          g1_signature: string | null
+          g1_signature_date: string | null
+          g1_signature_name: string | null
+          g1_work_phone: string | null
+          g2_cell_phone: string | null
+          g2_email: string | null
+          g2_full_name: string | null
+          g2_has_custody: string | null
+          g2_lives_with_child: string | null
+          g2_preferred_contact: string | null
+          g2_relationship: string | null
+          g2_relationship_other: string | null
+          g2_signature: string | null
+          g2_signature_date: string | null
+          g2_signature_name: string | null
+          g2_work_phone: string | null
+          has_allergies: string | null
+          has_custody_orders: string | null
+          has_emergency_medications: string | null
+          has_medical_conditions: string | null
+          history_explanation: string | null
+          history_flags: string | null
+          homeschool_explanation: string | null
+          household_phone: string | null
+          id: string
+          is_homeschooled: string | null
+          learning_style: string | null
+          medical_conditions_description: string | null
+          needs_aide: string | null
+          needs_aide_description: string | null
+          preferred_name: string | null
+          previous_schools: string | null
+          previous_schools_list: string | null
+          program: string | null
+          regulation_strategies: string | null
+          special_interests: string | null
+          status: string
+          strengths_interests: string | null
           updated_at: string | null
-        }
-        Insert: {
-          id?: string
           user_id: string
-          status?: 'not_started' | 'in_progress' | 'completed'
-          program?: string | null
-          child_legal_name?: string | null
-          preferred_name?: string | null
-          dob_month?: string | null
-          dob_day?: string | null
-          dob_year?: string | null
-          child_age?: number | null
-          child_grade?: string | null
-          address_street?: string | null
-          address_city?: string | null
-          address_state?: string | null
-          address_zip?: string | null
-          household_phone?: string | null
-          is_homeschooled?: string | null
-          homeschool_explanation?: string | null
-          previous_schools?: string | null
-          previous_schools_list?: string | null
-          special_interests?: string | null
-          g1_full_name?: string | null
-          g1_relationship?: string | null
-          g1_relationship_other?: string | null
-          g1_email?: string | null
-          g1_cell_phone?: string | null
-          g1_work_phone?: string | null
-          g1_preferred_contact?: string | null
-          g1_lives_with_child?: string | null
-          g1_has_custody?: string | null
-          g2_full_name?: string | null
-          g2_relationship?: string | null
-          g2_relationship_other?: string | null
-          g2_email?: string | null
-          g2_cell_phone?: string | null
-          g2_work_phone?: string | null
-          g2_preferred_contact?: string | null
-          g2_lives_with_child?: string | null
-          g2_has_custody?: string | null
-          has_custody_orders?: string | null
-          custody_orders_description?: string | null
-          has_medical_conditions?: string | null
-          medical_conditions_description?: string | null
-          has_allergies?: string | null
-          allergies_description?: string | null
-          has_emergency_medications?: string | null
-          emergency_medications_description?: string | null
-          history_flags?: string | null
-          history_explanation?: string | null
-          needs_aide?: string | null
-          needs_aide_description?: string | null
-          learning_style?: string | null
-          strengths_interests?: string | null
-          current_challenges?: string | null
-          dysregulation_response?: string | null
-          regulation_strategies?: string | null
-          activities_to_avoid?: string | null
-          g1_signature_name?: string | null
-          g1_signature?: string | null
-          g1_signature_date?: string | null
-          g2_signature_name?: string | null
-          g2_signature?: string | null
-          g2_signature_date?: string | null
-          approved?: boolean
-          approved_at?: string | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          status?: 'not_started' | 'in_progress' | 'completed'
-          program?: string | null
-          child_legal_name?: string | null
-          preferred_name?: string | null
-          dob_month?: string | null
-          dob_day?: string | null
-          dob_year?: string | null
-          child_age?: number | null
-          child_grade?: string | null
-          address_street?: string | null
-          address_city?: string | null
-          address_state?: string | null
-          address_zip?: string | null
-          household_phone?: string | null
-          is_homeschooled?: string | null
-          homeschool_explanation?: string | null
-          previous_schools?: string | null
-          previous_schools_list?: string | null
-          special_interests?: string | null
-          g1_full_name?: string | null
-          g1_relationship?: string | null
-          g1_relationship_other?: string | null
-          g1_email?: string | null
-          g1_cell_phone?: string | null
-          g1_work_phone?: string | null
-          g1_preferred_contact?: string | null
-          g1_lives_with_child?: string | null
-          g1_has_custody?: string | null
-          g2_full_name?: string | null
-          g2_relationship?: string | null
-          g2_relationship_other?: string | null
-          g2_email?: string | null
-          g2_cell_phone?: string | null
-          g2_work_phone?: string | null
-          g2_preferred_contact?: string | null
-          g2_lives_with_child?: string | null
-          g2_has_custody?: string | null
-          has_custody_orders?: string | null
-          custody_orders_description?: string | null
-          has_medical_conditions?: string | null
-          medical_conditions_description?: string | null
-          has_allergies?: string | null
-          allergies_description?: string | null
-          has_emergency_medications?: string | null
-          emergency_medications_description?: string | null
-          history_flags?: string | null
-          history_explanation?: string | null
-          needs_aide?: string | null
-          needs_aide_description?: string | null
-          learning_style?: string | null
-          strengths_interests?: string | null
-          current_challenges?: string | null
-          dysregulation_response?: string | null
-          regulation_strategies?: string | null
-          activities_to_avoid?: string | null
-          g1_signature_name?: string | null
-          g1_signature?: string | null
-          g1_signature_date?: string | null
-          g2_signature_name?: string | null
-          g2_signature?: string | null
-          g2_signature_date?: string | null
-          approved?: boolean
-          approved_at?: string | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      users: {
-        Row: {
-          created_at: string | null
-          email: string
-          full_name: string | null
-          id: string
-          phone: string | null
-          updated_at: string | null
         }
         Insert: {
+          activities_to_avoid?: string | null
+          address_city?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zip?: string | null
+          allergies_description?: string | null
+          approved?: boolean
+          approved_at?: string | null
+          child_age?: number | null
+          child_grade?: string | null
+          child_legal_name?: string | null
           created_at?: string | null
-          email: string
-          full_name?: string | null
-          id: string
-          phone?: string | null
+          current_challenges?: string | null
+          custody_orders_description?: string | null
+          dob_day?: string | null
+          dob_month?: string | null
+          dob_year?: string | null
+          dysregulation_response?: string | null
+          emergency_medications_description?: string | null
+          g1_cell_phone?: string | null
+          g1_email?: string | null
+          g1_full_name?: string | null
+          g1_has_custody?: string | null
+          g1_lives_with_child?: string | null
+          g1_preferred_contact?: string | null
+          g1_relationship?: string | null
+          g1_relationship_other?: string | null
+          g1_signature?: string | null
+          g1_signature_date?: string | null
+          g1_signature_name?: string | null
+          g1_work_phone?: string | null
+          g2_cell_phone?: string | null
+          g2_email?: string | null
+          g2_full_name?: string | null
+          g2_has_custody?: string | null
+          g2_lives_with_child?: string | null
+          g2_preferred_contact?: string | null
+          g2_relationship?: string | null
+          g2_relationship_other?: string | null
+          g2_signature?: string | null
+          g2_signature_date?: string | null
+          g2_signature_name?: string | null
+          g2_work_phone?: string | null
+          has_allergies?: string | null
+          has_custody_orders?: string | null
+          has_emergency_medications?: string | null
+          has_medical_conditions?: string | null
+          history_explanation?: string | null
+          history_flags?: string | null
+          homeschool_explanation?: string | null
+          household_phone?: string | null
+          id?: string
+          is_homeschooled?: string | null
+          learning_style?: string | null
+          medical_conditions_description?: string | null
+          needs_aide?: string | null
+          needs_aide_description?: string | null
+          preferred_name?: string | null
+          previous_schools?: string | null
+          previous_schools_list?: string | null
+          program?: string | null
+          regulation_strategies?: string | null
+          special_interests?: string | null
+          status?: string
+          strengths_interests?: string | null
           updated_at?: string | null
+          user_id: string
         }
         Update: {
+          activities_to_avoid?: string | null
+          address_city?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zip?: string | null
+          allergies_description?: string | null
+          approved?: boolean
+          approved_at?: string | null
+          child_age?: number | null
+          child_grade?: string | null
+          child_legal_name?: string | null
           created_at?: string | null
-          email?: string
-          full_name?: string | null
+          current_challenges?: string | null
+          custody_orders_description?: string | null
+          dob_day?: string | null
+          dob_month?: string | null
+          dob_year?: string | null
+          dysregulation_response?: string | null
+          emergency_medications_description?: string | null
+          g1_cell_phone?: string | null
+          g1_email?: string | null
+          g1_full_name?: string | null
+          g1_has_custody?: string | null
+          g1_lives_with_child?: string | null
+          g1_preferred_contact?: string | null
+          g1_relationship?: string | null
+          g1_relationship_other?: string | null
+          g1_signature?: string | null
+          g1_signature_date?: string | null
+          g1_signature_name?: string | null
+          g1_work_phone?: string | null
+          g2_cell_phone?: string | null
+          g2_email?: string | null
+          g2_full_name?: string | null
+          g2_has_custody?: string | null
+          g2_lives_with_child?: string | null
+          g2_preferred_contact?: string | null
+          g2_relationship?: string | null
+          g2_relationship_other?: string | null
+          g2_signature?: string | null
+          g2_signature_date?: string | null
+          g2_signature_name?: string | null
+          g2_work_phone?: string | null
+          has_allergies?: string | null
+          has_custody_orders?: string | null
+          has_emergency_medications?: string | null
+          has_medical_conditions?: string | null
+          history_explanation?: string | null
+          history_flags?: string | null
+          homeschool_explanation?: string | null
+          household_phone?: string | null
           id?: string
-          phone?: string | null
+          is_homeschooled?: string | null
+          learning_style?: string | null
+          medical_conditions_description?: string | null
+          needs_aide?: string | null
+          needs_aide_description?: string | null
+          preferred_name?: string | null
+          previous_schools?: string | null
+          previous_schools_list?: string | null
+          program?: string | null
+          regulation_strategies?: string | null
+          special_interests?: string | null
+          status?: string
+          strengths_interests?: string | null
           updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -411,6 +390,7 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          is_deleted: boolean
           notes: string | null
           parent_name: string
           phone: string | null
@@ -439,6 +419,7 @@ export type Database = {
           created_at?: string
           email: string
           id?: string
+          is_deleted?: boolean
           notes?: string | null
           parent_name: string
           phone?: string | null
@@ -467,6 +448,7 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          is_deleted?: boolean
           notes?: string | null
           parent_name?: string
           phone?: string | null

@@ -5,6 +5,7 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import ApplicationList from "./ApplicationList";
+import ProfileDropdown from "./ProfileDropdown";
 
 export default async function ApplicationDashboard() {
   const supabase = await createServerSupabaseClient();
@@ -13,14 +14,25 @@ export default async function ApplicationDashboard() {
   } = await supabase.auth.getUser();
 
   let apps: Record<string, string | null>[] = [];
+  let fullName: string | null = null;
   if (user) {
     const adminClient = createAdminClient();
-    const { data } = await adminClient
-      .schema("parent_app")
-      .from("applications")
-      .select("*")
-      .eq("user_id", user.id);
+    const [{ data }, { data: adminUser, error: adminUserError }] =
+      await Promise.all([
+        adminClient
+          .schema("parent_app")
+          .from("applications")
+          .select("*")
+          .eq("user_id", user.id),
+        adminClient
+          .schema("admin")
+          .from("users")
+          .select("full_name")
+          .eq("id", user.id)
+          .single(),
+      ]);
     apps = data ?? [];
+    fullName = adminUser?.full_name ?? null;
   }
 
   const g1Name = apps[0]?.g1_full_name ?? "there";
@@ -28,7 +40,7 @@ export default async function ApplicationDashboard() {
   return (
     <div className="min-h-screen bg-welcome-bg">
       {/* Header */}
-      <header className="bg-white border-b border-gray-100 px-5 py-4 flex items-center justify-between">
+      <header className="bg-white border-b border-gray-100 px-5 py-3 flex items-center justify-between">
         <Link href="/">
           <Image
             src="/assets/Logo.png"
@@ -38,6 +50,9 @@ export default async function ApplicationDashboard() {
             className="object-contain"
           />
         </Link>
+        {user?.email && (
+          <ProfileDropdown email={user.email} fullName={fullName} />
+        )}
       </header>
 
       <main className="max-w-2xl mx-auto px-6 py-12">
