@@ -137,7 +137,7 @@ export default function Footer() {
               </a>
               <div className="flex items-center gap-2 text-gray-400 font-body text-sm">
                 <MapPin className="w-4 h-4 flex-shrink-0" />
-                <span>Round Rock, TX</span>
+                <span>2760 Gattis School Rd, Round Rock, TX 78664</span>
               </div>
             </div>
 
@@ -189,7 +189,7 @@ export default function Footer() {
             </div>
 
             <p className="text-gray-400 text-sm font-body text-center md:text-right">
-              Round Rock, TX
+              2760 Gattis School Rd, Round Rock, TX 78664
             </p>
           </div>
         </div>

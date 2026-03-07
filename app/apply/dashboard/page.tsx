@@ -15,7 +15,7 @@ export default async function ApplicationDashboard() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  let apps: Record<string, string | null>[] = [];
+  let apps: Record<string, string | null | boolean>[] = [];
   let fullName: string | null = null;
   if (user) {
     const adminClient = createAdminClient();

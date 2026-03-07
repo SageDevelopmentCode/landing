@@ -113,8 +113,10 @@ export default function RootLayout({
         email: "sabrina@sagefield.co",
         address: {
           "@type": "PostalAddress",
+          streetAddress: "2760 Gattis School Rd",
           addressLocality: "Round Rock",
           addressRegion: "TX",
+          postalCode: "78664",
           addressCountry: "US",
         },
         areaServed: [

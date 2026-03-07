@@ -42,10 +42,10 @@ const milestones = [
   },
   {
     step: 2,
-    title: "Property Negotiations",
+    title: "Property Secured",
     description:
-      "We are in active negotiations for a property in Round Rock, TX — the future home of Sage Field.",
-    status: "in-progress" as const,
+      "We have secured our property at 2760 Gattis School Rd, Round Rock, TX 78664 — the future home of Sage Field.",
+    status: "complete" as const,
     icon: Home,
   },
   {
@@ -172,9 +172,8 @@ export default function VisionPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.7, ease: "easeOut" }}
             >
-              We&apos;ve secured our LLC and are in active negotiations for a
-              property in Round Rock, TX. Here&apos;s a glimpse of what&apos;s
-              coming.
+              We&apos;ve secured our LLC and our property at 2760 Gattis School
+              Rd, Round Rock, TX. Here&apos;s a glimpse of what&apos;s coming.
             </motion.p>
           </div>
         </div>
@@ -727,7 +726,7 @@ export default function VisionPage() {
             </a>
             <div className="flex items-center gap-2 text-gray-500">
               <MapPin className="w-5 h-5" />
-              <span>Round Rock, TX (upcoming)</span>
+              <span>2760 Gattis School Rd, Round Rock, TX 78664</span>
             </div>
           </motion.div>
         </div>
