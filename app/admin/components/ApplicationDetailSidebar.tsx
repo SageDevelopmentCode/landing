@@ -37,20 +37,40 @@ type Application = {
   previous_schools: string | null
   previous_schools_list: string | null
   special_interests: string | null
-  allergies: string | null
-  medical_conditions: string | null
-  emergency_meds: string | null
+  has_allergies: boolean | null
+  allergies_description: string | null
+  has_medical_conditions: boolean | null
+  medical_conditions_description: string | null
+  has_emergency_medications: boolean | null
+  emergency_medications_description: string | null
+  activities_to_avoid: string | null
+  dysregulation_response: string | null
+  regulation_strategies: string | null
+  needs_aide: boolean | null
+  needs_aide_description: string | null
+  history_flags: string | null
+  history_explanation: string | null
+  has_custody_orders: boolean | null
+  custody_orders_description: string | null
   learning_style: string | null
-  strengths: string | null
-  challenges: string | null
+  strengths_interests: string | null
+  current_challenges: string | null
   g1_full_name: string | null
   g1_relationship: string | null
-  g1_phone: string | null
+  g1_cell_phone: string | null
+  g1_work_phone: string | null
   g1_email: string | null
-  g2_name: string | null
+  g1_has_custody: boolean | null
+  g1_lives_with_child: boolean | null
+  g1_preferred_contact: boolean | null
+  g2_full_name: string | null
   g2_relationship: string | null
-  g2_phone: string | null
+  g2_cell_phone: string | null
+  g2_work_phone: string | null
   g2_email: string | null
+  g2_has_custody: boolean | null
+  g2_lives_with_child: boolean | null
+  g2_preferred_contact: boolean | null
   status: string
   approved: boolean
   approved_at: string | null
@@ -182,9 +202,21 @@ export function ApplicationDetailSidebar({
         </Section>
 
         <Section title="Health">
-          <Field label="Allergies" value={application.allergies} />
-          <Field label="Medical Conditions" value={application.medical_conditions} />
-          <Field label="Emergency Medications" value={application.emergency_meds} />
+          <Field label="Has Allergies" value={application.has_allergies != null ? (application.has_allergies ? 'Yes' : 'No') : null} />
+          <Field label="Allergies Description" value={application.allergies_description} />
+          <Field label="Has Medical Conditions" value={application.has_medical_conditions != null ? (application.has_medical_conditions ? 'Yes' : 'No') : null} />
+          <Field label="Medical Conditions Description" value={application.medical_conditions_description} />
+          <Field label="Has Emergency Medications" value={application.has_emergency_medications != null ? (application.has_emergency_medications ? 'Yes' : 'No') : null} />
+          <Field label="Emergency Medications Description" value={application.emergency_medications_description} />
+          <Field label="Needs Aide" value={application.needs_aide != null ? (application.needs_aide ? 'Yes' : 'No') : null} />
+          <Field label="Aide Description" value={application.needs_aide_description} />
+          <Field label="Activities to Avoid" value={application.activities_to_avoid} />
+          <Field label="Dysregulation Response" value={application.dysregulation_response} />
+          <Field label="Regulation Strategies" value={application.regulation_strategies} />
+          <Field label="History Flags" value={application.history_flags} />
+          <Field label="History Explanation" value={application.history_explanation} />
+          <Field label="Has Custody Orders" value={application.has_custody_orders != null ? (application.has_custody_orders ? 'Yes' : 'No') : null} />
+          <Field label="Custody Orders Description" value={application.custody_orders_description} />
         </Section>
 
         <Section title="Background">
@@ -194,22 +226,30 @@ export function ApplicationDetailSidebar({
           <Field label="Previous Schools List" value={application.previous_schools_list} />
           <Field label="Special Interests" value={application.special_interests} />
           <Field label="Learning Style" value={application.learning_style} />
-          <Field label="Strengths" value={application.strengths} />
-          <Field label="Challenges" value={application.challenges} />
+          <Field label="Strengths & Interests" value={application.strengths_interests} />
+          <Field label="Current Challenges" value={application.current_challenges} />
         </Section>
 
         <Section title="Guardian 1">
           <Field label="Name" value={application.g1_full_name} />
           <Field label="Relationship" value={application.g1_relationship} />
-          <Field label="Phone" value={application.g1_phone} />
+          <Field label="Cell Phone" value={application.g1_cell_phone} />
+          <Field label="Work Phone" value={application.g1_work_phone} />
           <Field label="Email" value={application.g1_email} />
+          <Field label="Has Custody" value={application.g1_has_custody != null ? (application.g1_has_custody ? 'Yes' : 'No') : null} />
+          <Field label="Lives with Child" value={application.g1_lives_with_child != null ? (application.g1_lives_with_child ? 'Yes' : 'No') : null} />
+          <Field label="Preferred Contact" value={application.g1_preferred_contact != null ? (application.g1_preferred_contact ? 'Yes' : 'No') : null} />
         </Section>
 
         <Section title="Guardian 2">
-          <Field label="Name" value={application.g2_name} />
+          <Field label="Name" value={application.g2_full_name} />
           <Field label="Relationship" value={application.g2_relationship} />
-          <Field label="Phone" value={application.g2_phone} />
+          <Field label="Cell Phone" value={application.g2_cell_phone} />
+          <Field label="Work Phone" value={application.g2_work_phone} />
           <Field label="Email" value={application.g2_email} />
+          <Field label="Has Custody" value={application.g2_has_custody != null ? (application.g2_has_custody ? 'Yes' : 'No') : null} />
+          <Field label="Lives with Child" value={application.g2_lives_with_child != null ? (application.g2_lives_with_child ? 'Yes' : 'No') : null} />
+          <Field label="Preferred Contact" value={application.g2_preferred_contact != null ? (application.g2_preferred_contact ? 'Yes' : 'No') : null} />
         </Section>
 
         <div className="pt-2" style={{ borderTop: `1px solid ${colors.divider}` }}>

@@ -45,20 +45,40 @@ type Application = {
   previous_schools: string | null
   previous_schools_list: string | null
   special_interests: string | null
-  allergies: string | null
-  medical_conditions: string | null
-  emergency_meds: string | null
+  has_allergies: boolean | null
+  allergies_description: string | null
+  has_medical_conditions: boolean | null
+  medical_conditions_description: string | null
+  has_emergency_medications: boolean | null
+  emergency_medications_description: string | null
+  activities_to_avoid: string | null
+  dysregulation_response: string | null
+  regulation_strategies: string | null
+  needs_aide: boolean | null
+  needs_aide_description: string | null
+  history_flags: string | null
+  history_explanation: string | null
+  has_custody_orders: boolean | null
+  custody_orders_description: string | null
   learning_style: string | null
-  strengths: string | null
-  challenges: string | null
+  strengths_interests: string | null
+  current_challenges: string | null
   g1_full_name: string | null
   g1_relationship: string | null
-  g1_phone: string | null
+  g1_cell_phone: string | null
+  g1_work_phone: string | null
   g1_email: string | null
-  g2_name: string | null
+  g1_has_custody: boolean | null
+  g1_lives_with_child: boolean | null
+  g1_preferred_contact: boolean | null
+  g2_full_name: string | null
   g2_relationship: string | null
-  g2_phone: string | null
+  g2_cell_phone: string | null
+  g2_work_phone: string | null
   g2_email: string | null
+  g2_has_custody: boolean | null
+  g2_lives_with_child: boolean | null
+  g2_preferred_contact: boolean | null
   status: string
   approved: boolean
   approved_at: string | null
