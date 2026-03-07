@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { updateApplication } from "@/app/actions/updateApplication";
 
-type App = Record<string, string | null>;
+type App = Record<string, string | null | boolean>;
 
 // ─── Program label map ───────────────────────────────────────────────────────
 const PROGRAM_LABELS: Record<string, string> = {
