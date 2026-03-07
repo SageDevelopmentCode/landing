@@ -4,7 +4,6 @@ import { DetailSidebar } from './DetailSidebar'
 import { StatusBadge } from './StatusBadge'
 import { StatusDropdown } from './StatusDropdown'
 import { EmailThread } from './EmailThread'
-import { colors, radius } from '../design-system'
 import { LeadStatus } from '../../types/lead-status'
 import { updateWaitlistStatus, updateContactStatus } from '../../actions/updateLeadStatus'
 import { updateWaitlistLead, updateContactLead } from '../../actions/updateLeadFields'
@@ -46,14 +45,15 @@ interface LeadsDetailSidebarProps {
 }
 
 const inputStyle = {
-  backgroundColor: 'white',
-  border: `1px solid ${colors.border}`,
-  borderRadius: radius.md,
-  color: colors.textPrimary,
+  backgroundColor: '#F9FAFB',
+  border: '1px solid #E5E7EB',
+  borderRadius: '8px',
+  color: '#1F2937',
   width: '100%',
-  padding: '8px 10px',
+  padding: '6px 12px',
   fontSize: '14px',
   outline: 'none',
+  fontFamily: 'inherit',
 }
 
 const labelStyle = {
@@ -61,7 +61,7 @@ const labelStyle = {
   fontSize: '12px',
   fontWeight: 500,
   marginBottom: '4px',
-  color: colors.textSecondary,
+  color: '#9CA3AF',
 }
 
 function buildDraft(sub: Lead): Record<string, string> {
@@ -233,30 +233,28 @@ export function LeadsDetailSidebar({
     <div className="flex items-center gap-3">
       <button
         onClick={() => setShowDeleteConfirm(true)}
-        className="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200"
+        className="px-3 py-1.5 text-sm font-semibold rounded-lg transition-colors hover:bg-red-50"
         style={{
           backgroundColor: 'transparent',
-          border: '1px solid #dc2626',
-          color: '#dc2626',
-          borderRadius: radius.md,
+          border: '1px solid #FECACA',
+          color: '#DC2626',
+          borderRadius: '8px',
           cursor: 'pointer',
         }}
       >
         Delete Lead
       </button>
       <div className="flex-1 text-sm">
-        {saveError && <span style={{ color: '#dc2626' }}>{saveError}</span>}
-        {saveSuccess && <span style={{ color: colors.mistyForest }}>Changes saved</span>}
+        {saveError && <span className="text-red-600">{saveError}</span>}
+        {saveSuccess && <span className="text-green-700">Changes saved</span>}
       </div>
       <button
         disabled={!isDirty || isSaving}
         onClick={handleSave}
-        className="px-4 py-2 text-sm font-medium text-white rounded-lg transition-all duration-200"
+        className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-40 disabled:cursor-not-allowed"
         style={{
-          backgroundColor: colors.mistyForest,
-          borderRadius: radius.md,
-          opacity: !isDirty || isSaving ? 0.4 : 1,
-          cursor: !isDirty || isSaving ? 'not-allowed' : 'pointer',
+          backgroundColor: '#2C5F2E',
+          borderRadius: '8px',
           border: 'none',
         }}
       >
@@ -277,30 +275,30 @@ export function LeadsDetailSidebar({
           className="p-6 w-80"
           style={{
             backgroundColor: 'white',
-            borderRadius: radius.lg,
-            border: `1px solid ${colors.border}`,
+            borderRadius: '12px',
+            border: '1px solid #E5E7EB',
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          <h2 className="text-base font-semibold mb-2" style={{ color: colors.textPrimary }}>
+          <h2 className="text-base font-semibold mb-2 text-gray-800">
             Delete this lead?
           </h2>
-          <p className="text-sm mb-5" style={{ color: colors.textSecondary }}>
+          <p className="text-sm mb-5 text-gray-500">
             This lead will be hidden from the admin panel. The record is preserved and can be recovered from the database if needed.
           </p>
           {deleteError && (
-            <p className="text-sm mb-3" style={{ color: '#dc2626' }}>{deleteError}</p>
+            <p className="text-sm mb-3 text-red-600">{deleteError}</p>
           )}
           <div className="flex gap-3 justify-end">
             <button
               onClick={() => setShowDeleteConfirm(false)}
-              className="px-4 py-2 text-sm font-medium"
+              className="px-3 py-1.5 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
               style={{
-                backgroundColor: colors.softCloud,
-                border: `1px solid ${colors.border}`,
-                borderRadius: radius.md,
-                color: colors.textPrimary,
+                border: '1px solid #E5E7EB',
+                color: '#374151',
+                backgroundColor: 'transparent',
                 cursor: 'pointer',
+                borderRadius: '8px',
               }}
             >
               Cancel
@@ -308,13 +306,11 @@ export function LeadsDetailSidebar({
             <button
               onClick={handleDelete}
               disabled={isDeleting}
-              className="px-4 py-2 text-sm font-medium text-white"
+              className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-red-700 disabled:opacity-60 disabled:cursor-not-allowed"
               style={{
-                backgroundColor: '#dc2626',
-                borderRadius: radius.md,
+                backgroundColor: '#DC2626',
                 border: 'none',
-                cursor: isDeleting ? 'not-allowed' : 'pointer',
-                opacity: isDeleting ? 0.6 : 1,
+                borderRadius: '8px',
               }}
             >
               {isDeleting ? 'Deleting...' : 'Confirm Delete'}
@@ -333,8 +329,14 @@ export function LeadsDetailSidebar({
         {/* Status */}
         <div>
           <h3
-            className="text-sm font-medium mb-3"
-            style={{ color: colors.textSecondary }}
+            style={{
+              fontSize: '11px',
+              fontWeight: 600,
+              textTransform: 'uppercase' as const,
+              letterSpacing: '0.1em',
+              color: '#9CA3AF',
+              marginBottom: '12px',
+            }}
           >
             Current Status
           </h3>
@@ -351,16 +353,24 @@ export function LeadsDetailSidebar({
 
         {/* Contact/Parent Information - Card Style */}
         <div
-          className="p-4"
           style={{
-            backgroundColor: colors.softCloud,
-            borderRadius: radius.md,
-            border: `1px solid ${colors.divider}`,
+            backgroundColor: 'white',
+            border: '1px solid #E5E7EB',
+            borderRadius: '12px',
+            padding: '16px 20px',
           }}
         >
           <h3
-            className="text-sm font-semibold mb-3"
-            style={{ color: colors.mistyForest }}
+            style={{
+              fontSize: '11px',
+              fontWeight: 600,
+              textTransform: 'uppercase' as const,
+              letterSpacing: '0.1em',
+              color: '#9CA3AF',
+              borderBottom: '1px solid #F3F4F6',
+              paddingBottom: '8px',
+              marginBottom: '12px',
+            }}
           >
             {isWaitlist ? 'Parent Information' : 'Contact Information'}
           </h3>
@@ -399,16 +409,24 @@ export function LeadsDetailSidebar({
         {/* Waitlist-specific: Child Information - Card Style */}
         {isWaitlist && (
           <div
-            className="p-4"
             style={{
-              backgroundColor: colors.softCloud,
-              borderRadius: radius.md,
-              border: `1px solid ${colors.divider}`,
+              backgroundColor: 'white',
+              border: '1px solid #E5E7EB',
+              borderRadius: '12px',
+              padding: '16px 20px',
             }}
           >
             <h3
-              className="text-sm font-semibold mb-3"
-              style={{ color: colors.mistyForest }}
+              style={{
+                fontSize: '11px',
+                fontWeight: 600,
+                textTransform: 'uppercase' as const,
+                letterSpacing: '0.1em',
+                color: '#9CA3AF',
+                borderBottom: '1px solid #F3F4F6',
+                paddingBottom: '8px',
+                marginBottom: '12px',
+              }}
             >
               Child Information
             </h3>
@@ -437,16 +455,24 @@ export function LeadsDetailSidebar({
         {/* Contact-specific: Message - Card Style */}
         {isContact && (
           <div
-            className="p-4"
             style={{
-              backgroundColor: colors.softCloud,
-              borderRadius: radius.md,
-              border: `1px solid ${colors.divider}`,
+              backgroundColor: 'white',
+              border: '1px solid #E5E7EB',
+              borderRadius: '12px',
+              padding: '16px 20px',
             }}
           >
             <h3
-              className="text-sm font-semibold mb-3"
-              style={{ color: colors.mistyForest }}
+              style={{
+                fontSize: '11px',
+                fontWeight: 600,
+                textTransform: 'uppercase' as const,
+                letterSpacing: '0.1em',
+                color: '#9CA3AF',
+                borderBottom: '1px solid #F3F4F6',
+                paddingBottom: '8px',
+                marginBottom: '12px',
+              }}
             >
               Message
             </h3>
@@ -461,8 +487,14 @@ export function LeadsDetailSidebar({
         {/* Email Thread Section */}
         <div>
           <h3
-            className="text-sm font-semibold mb-3"
-            style={{ color: colors.mistyForest }}
+            style={{
+              fontSize: '11px',
+              fontWeight: 600,
+              textTransform: 'uppercase' as const,
+              letterSpacing: '0.1em',
+              color: '#9CA3AF',
+              marginBottom: '12px',
+            }}
           >
             Email History
           </h3>
@@ -470,8 +502,8 @@ export function LeadsDetailSidebar({
         </div>
 
         {/* Submission Date - Simple, No Card */}
-        <div className="pt-2" style={{ borderTop: `1px solid ${colors.divider}` }}>
-          <p className="text-xs" style={{ color: colors.textSecondary }}>
+        <div className="pt-2 border-t border-gray-100">
+          <p className="text-xs text-gray-400 font-body">
             Submitted on {formatDate(currentSubmission.created_at)}
           </p>
         </div>

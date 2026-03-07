@@ -1,7 +1,6 @@
 'use client'
 
 import { DetailSidebar } from './DetailSidebar'
-import { colors, radius } from '../design-system'
 import { approveApplication } from '../../actions/approveApplication'
 import { denyApplication } from '../../actions/denyApplication'
 import { useState } from 'react'
@@ -92,26 +91,142 @@ interface ApplicationDetailSidebarProps {
 function Field({ label, value }: { label: string; value: string | number | null | undefined }) {
   return (
     <div>
-      <p className="text-xs font-medium mb-0.5" style={{ color: colors.textSecondary }}>{label}</p>
-      <p className="text-sm" style={{ color: value ? colors.textPrimary : colors.textTertiary }}>
-        {value ?? '—'}
-      </p>
+      <p className="text-xs text-gray-400 font-body mb-0.5">{label}</p>
+      {value != null && value !== '' ? (
+        <p className="text-sm text-gray-800 font-body">{value}</p>
+      ) : (
+        <p className="text-sm text-gray-400 font-body italic">—</p>
+      )}
     </div>
   )
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div
-      className="p-4"
-      style={{
-        backgroundColor: colors.softCloud,
-        borderRadius: radius.md,
-        border: `1px solid ${colors.divider}`,
-      }}
-    >
-      <h3 className="text-sm font-semibold mb-3" style={{ color: colors.mistyForest }}>{title}</h3>
+    <div className="bg-white border border-gray-200 rounded-xl px-5 py-4 shadow-sm">
+      <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body border-b border-gray-100 pb-2 mb-3">
+        {title}
+      </h3>
       <div className="space-y-2">{children}</div>
+    </div>
+  )
+}
+
+type CriterionResult = {
+  label: string
+  passed: boolean
+  optional?: boolean
+}
+
+function evaluateCriteria(app: Application): CriterionResult[] {
+  return [
+    {
+      label: 'Child Identity',
+      passed: !!(app.child_legal_name && app.dob_month && app.dob_day && app.dob_year),
+    },
+    {
+      label: 'Grade & Program',
+      passed: !!(app.child_grade && app.program),
+    },
+    {
+      label: 'Contact Info',
+      passed: !!(app.g1_full_name && app.g1_email && app.g1_cell_phone),
+    },
+    {
+      label: 'Address',
+      passed: !!(app.address_street && app.address_city && app.address_state && app.address_zip),
+    },
+    {
+      label: 'Health Disclosed',
+      passed: app.has_allergies != null && app.has_medical_conditions != null && app.has_emergency_medications != null,
+    },
+    {
+      label: 'Learning Profile',
+      passed: !!(app.learning_style && app.strengths_interests && app.current_challenges),
+    },
+    {
+      label: 'Safety & Support',
+      passed: app.needs_aide != null && app.history_flags != null,
+    },
+    {
+      label: 'Guardian 2',
+      passed: !!(app.g2_full_name && app.g2_email),
+      optional: true,
+    },
+  ]
+}
+
+function ApplicationSummary({ application }: { application: Application }) {
+  const criteria = evaluateCriteria(application)
+  const required = criteria.filter((c) => !c.optional)
+  const total = required.length
+  const passedCount = required.filter((c) => c.passed).length
+  const progressPct = Math.round((passedCount / total) * 100)
+
+  let badgeClass: string
+  let badgeLabel: string
+
+  if (passedCount >= total) {
+    badgeClass = 'bg-green-50 text-green-700 border border-green-200'
+    badgeLabel = 'Looks Complete'
+  } else if (passedCount >= 5) {
+    badgeClass = 'bg-amber-50 text-amber-700 border border-amber-200'
+    badgeLabel = 'Some Gaps'
+  } else {
+    badgeClass = 'bg-red-50 text-red-600 border border-red-200'
+    badgeLabel = 'Incomplete'
+  }
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl px-5 py-5 shadow-sm">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body">
+          Application Summary
+        </span>
+        <span className={`inline-flex items-center px-2.5 py-0.5 text-xs font-semibold rounded-full ${badgeClass}`}>
+          {badgeLabel}
+        </span>
+      </div>
+
+      {/* Score */}
+      <div className="flex flex-col items-center mb-4">
+        <span className="font-heading text-3xl font-bold" style={{ color: '#2C5F2E' }}>
+          {passedCount} <span className="text-gray-300 font-normal">/</span> {total}
+        </span>
+        <span className="text-xs text-gray-400 font-body mt-0.5">criteria met</span>
+      </div>
+
+      {/* Progress bar */}
+      <div className="w-full bg-gray-100 rounded-full h-1.5 mb-4">
+        <div
+          className="h-1.5 rounded-full transition-all"
+          style={{ width: `${progressPct}%`, backgroundColor: '#2C5F2E' }}
+        />
+      </div>
+
+      {/* Criteria rows */}
+      <div className="space-y-2">
+        {criteria.map((c) => {
+          const dotColor = c.passed ? 'bg-green-500' : c.optional ? 'bg-amber-400' : 'bg-red-400'
+          const pillClass = c.passed
+            ? 'bg-green-50 text-green-700 border border-green-200'
+            : c.optional
+            ? 'bg-amber-50 text-amber-700 border border-amber-200'
+            : 'bg-red-50 text-red-600 border border-red-200'
+          const pillLabel = c.passed ? 'Complete' : c.optional ? 'Optional' : 'Missing'
+
+          return (
+            <div key={c.label} className="flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${dotColor}`} />
+              <span className="text-sm text-gray-700 font-body flex-1">{c.label}</span>
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${pillClass}`}>
+                {pillLabel}
+              </span>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -168,42 +283,20 @@ export function ApplicationDetailSidebar({
         onChange={(e) => setDenyReason(e.target.value)}
         placeholder="Enter reason for denial..."
         rows={3}
-        className="w-full text-sm p-2 resize-none"
-        style={{
-          borderRadius: radius.sm,
-          border: `1px solid ${colors.border}`,
-          color: colors.textPrimary,
-          backgroundColor: colors.softCloud,
-          outline: 'none',
-        }}
+        className="w-full text-sm resize-none border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#2C5F2E]/30 focus:border-[#2C5F2E] bg-gray-50"
       />
-      {denyError && <span className="text-xs" style={{ color: colors.errorText }}>{denyError}</span>}
+      {denyError && <span className="text-xs text-red-600">{denyError}</span>}
       <div className="flex gap-2 justify-end">
         <button
           onClick={() => { setIsDenyingMode(false); setDenyReason(''); setDenyError(null) }}
-          className="px-4 py-2 text-sm font-medium transition-all duration-200"
-          style={{
-            backgroundColor: colors.powderBlue,
-            color: colors.textPrimary,
-            borderRadius: radius.md,
-            border: 'none',
-            cursor: 'pointer',
-          }}
+          className="border border-gray-200 text-gray-600 rounded-lg px-3 py-1.5 text-sm hover:bg-gray-50 transition-colors"
         >
           Cancel
         </button>
         <button
           onClick={handleDenyConfirm}
           disabled={isDenying || !denyReason.trim()}
-          className="px-4 py-2 text-sm font-medium text-white transition-all duration-200"
-          style={{
-            backgroundColor: colors.error,
-            color: colors.errorText,
-            borderRadius: radius.md,
-            border: 'none',
-            opacity: isDenying || !denyReason.trim() ? 0.5 : 1,
-            cursor: isDenying || !denyReason.trim() ? 'not-allowed' : 'pointer',
-          }}
+          className="bg-red-600 text-white rounded-lg px-4 py-1.5 text-sm font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isDenying ? 'Denying...' : 'Confirm Deny'}
         </button>
@@ -212,20 +305,14 @@ export function ApplicationDetailSidebar({
   ) : (
     <div className="flex items-center gap-3">
       <div className="flex-1 text-sm">
-        {approveError && <span style={{ color: colors.errorText }}>{approveError}</span>}
+        {approveError && <span className="text-red-600">{approveError}</span>}
         {application.approved && (
-          <span
-            className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full"
-            style={{ backgroundColor: colors.success, color: colors.successText }}
-          >
+          <span className="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full bg-green-50 text-green-700 border border-green-200">
             Approved {application.approved_at ? `on ${new Date(application.approved_at).toLocaleDateString()}` : ''}
           </span>
         )}
         {application.denied && (
-          <span
-            className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full"
-            style={{ backgroundColor: colors.error, color: colors.errorText }}
-          >
+          <span className="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full bg-red-50 text-red-600 border border-red-200">
             Denied {application.denied_at ? `on ${new Date(application.denied_at).toLocaleDateString()}` : ''}
           </span>
         )}
@@ -233,29 +320,14 @@ export function ApplicationDetailSidebar({
       <button
         onClick={() => setIsDenyingMode(true)}
         disabled={isActioned}
-        className="px-4 py-2 text-sm font-medium transition-all duration-200"
-        style={{
-          backgroundColor: application.denied ? colors.error : colors.dustyRose,
-          color: colors.errorText,
-          borderRadius: radius.md,
-          border: 'none',
-          opacity: isActioned ? 0.6 : 1,
-          cursor: isActioned ? 'not-allowed' : 'pointer',
-        }}
+        className="border border-red-200 text-red-600 rounded-lg px-3 py-1.5 text-sm font-semibold hover:bg-red-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {application.denied ? 'Denied' : 'Deny'}
       </button>
       <button
         onClick={handleApprove}
         disabled={isApproving || isActioned}
-        className="px-4 py-2 text-sm font-medium text-white transition-all duration-200"
-        style={{
-          backgroundColor: application.approved ? colors.pastelSage : colors.mistyForest,
-          borderRadius: radius.md,
-          border: 'none',
-          opacity: isApproving ? 0.6 : 1,
-          cursor: isApproving || isActioned ? 'not-allowed' : 'pointer',
-        }}
+        className="bg-[#2C5F2E] text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-[#234d25] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {isApproving ? 'Approving...' : application.approved ? 'Approved' : 'Approve'}
       </button>
@@ -270,6 +342,8 @@ export function ApplicationDetailSidebar({
       footer={footer}
     >
       <div className="space-y-4">
+        <ApplicationSummary application={application} />
+
         <Section title="Parent Info">
           <Field label="Full Name" value={application.g1_full_name} />
           <Field label="Email" value={application.g1_email} />
@@ -350,8 +424,8 @@ export function ApplicationDetailSidebar({
           <Field label="Preferred Contact" value={application.g2_preferred_contact != null ? (application.g2_preferred_contact ? 'Yes' : 'No') : null} />
         </Section>
 
-        <div className="pt-2" style={{ borderTop: `1px solid ${colors.divider}` }}>
-          <p className="text-xs" style={{ color: colors.textSecondary }}>
+        <div className="pt-2 border-t border-gray-100">
+          <p className="text-xs text-gray-400 font-body">
             Submitted on{' '}
             {application.created_at
               ? new Date(application.created_at).toLocaleDateString('en-US', {

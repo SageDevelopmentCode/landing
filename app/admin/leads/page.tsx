@@ -222,13 +222,11 @@ export default function LeadsPage() {
               >
                 <TableCell>
                   <span
-                    className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full"
-                    style={{
-                      backgroundColor: isWaitlist
-                        ? colors.paleMarigold
-                        : colors.powderBlue,
-                      color: isWaitlist ? colors.textPrimary : colors.textPrimary,
-                    }}
+                    className={`inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full border ${
+                      isWaitlist
+                        ? 'bg-amber-50 text-amber-700 border-amber-200'
+                        : 'bg-blue-50 text-blue-700 border-blue-200'
+                    }`}
                   >
                     {isWaitlist ? 'Waitlist' : 'Contact'}
                   </span>
@@ -240,7 +238,7 @@ export default function LeadsPage() {
                 </TableCell>
                 <TableCell>
                   <div>{lead.email}</div>
-                  <div className="text-sm" style={{ color: colors.textSecondary }}>
+                  <div className="text-xs text-gray-400 font-body">
                     {lead.phone}
                   </div>
                 </TableCell>
@@ -248,12 +246,12 @@ export default function LeadsPage() {
                   {isWaitlist ? (
                     <>
                       <div>{lead.child_name}</div>
-                      <div className="text-sm" style={{ color: colors.textSecondary }}>
+                      <div className="text-xs text-gray-400 font-body">
                         Age: {lead.child_age || 'N/A'}
                       </div>
                     </>
                   ) : (
-                    <div style={{ color: colors.textSecondary }}>—</div>
+                    <div className="text-gray-400">—</div>
                   )}
                 </TableCell>
                 <TableCell>
@@ -262,11 +260,11 @@ export default function LeadsPage() {
                       {lead.message}
                     </div>
                   ) : (
-                    <div style={{ color: colors.textSecondary }}>—</div>
+                    <div className="text-gray-400">—</div>
                   )}
                 </TableCell>
                 <TableCell>
-                  <div style={{ color: colors.textSecondary }}>
+                  <div className="text-gray-600">
                     {isWaitlist && lead.preferred_start_date
                       ? lead.preferred_start_date
                       : '—'}
@@ -281,7 +279,7 @@ export default function LeadsPage() {
                   />
                 </TableCell>
                 <TableCell>
-                  <div style={{ color: colors.textSecondary }}>
+                  <div className="text-gray-600">
                     {new Date(lead.created_at).toLocaleDateString()}
                   </div>
                 </TableCell>
@@ -290,15 +288,8 @@ export default function LeadsPage() {
           })}
         </Table>
       ) : (
-        <div
-          className="bg-white p-12 text-center"
-          style={{
-            borderRadius: radius.lg,
-            boxShadow: shadows.soft,
-            border: `1px solid ${colors.border}`,
-          }}
-        >
-          <p style={{ color: colors.textSecondary }}>No submissions yet</p>
+        <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm text-center">
+          <p className="text-gray-500">No submissions yet</p>
         </div>
       )}
 

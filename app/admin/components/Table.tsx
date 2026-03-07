@@ -1,7 +1,6 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { colors, radius, shadows } from '../design-system'
 import { ReactNode } from 'react'
 
 interface TableProps {
@@ -17,27 +16,15 @@ interface TableRowProps {
 
 export function Table({ headers, children }: TableProps) {
   return (
-    <div
-      className="overflow-hidden"
-      style={{
-        backgroundColor: 'white',
-        borderRadius: radius.lg,
-        boxShadow: shadows.soft,
-        border: `1px solid ${colors.border}`,
-      }}
-    >
+    <div className="overflow-hidden bg-white border border-gray-200 rounded-xl shadow-sm">
       <div className="overflow-x-auto">
         <table className="min-w-full">
           <thead>
-            <tr style={{ backgroundColor: colors.warmLinen }}>
+            <tr className="border-b border-gray-200">
               {headers.map((header, index) => (
                 <th
                   key={index}
-                  className="px-4 py-2.5 text-left text-sm font-semibold"
-                  style={{
-                    color: colors.mistyForest,
-                    borderBottom: `1px solid ${colors.border}`,
-                  }}
+                  className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-400 font-body"
                 >
                   {header}
                 </th>
@@ -70,12 +57,9 @@ export function TableRow({ children, index = 0, onClick }: TableRowProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
       onClick={onClick}
-      className={`transition-colors duration-150 ${onClick ? 'cursor-pointer' : ''}`}
-      style={{
-        borderBottom: `1px solid ${colors.divider}`,
-      }}
+      className={`transition-colors duration-150 border-b border-gray-100 ${onClick ? 'cursor-pointer' : ''}`}
       whileHover={{
-        backgroundColor: colors.warmLinen + '40', // 40 is hex for 25% opacity
+        backgroundColor: '#F9FAFB',
       }}
     >
       {children}
@@ -90,10 +74,7 @@ interface TableCellProps {
 
 export function TableCell({ children, className = '' }: TableCellProps) {
   return (
-    <td
-      className={`px-4 py-2.5 text-sm ${className}`}
-      style={{ color: colors.textPrimary }}
-    >
+    <td className={`px-4 py-3 text-sm text-gray-700 font-body ${className}`}>
       {children}
     </td>
   )

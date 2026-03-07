@@ -2,7 +2,6 @@ import { createServerSupabaseClient, createAdminClient } from "@/app/lib/supabas
 import { redirect } from "next/navigation";
 import { signOut } from "@/app/actions/auth";
 import { Sidebar } from "./components/Sidebar";
-import { TopBar } from "./components/TopBar";
 import { colors, radius, shadows } from "./design-system";
 
 export default async function AdminLayout({
@@ -86,13 +85,14 @@ export default async function AdminLayout({
       className="h-screen flex overflow-hidden"
       style={{ backgroundColor: colors.softCloud }}
     >
-      <Sidebar pendingApplications={pendingApplications ?? 0} />
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <TopBar userEmail={user.email} signOutAction={signOut} />
-        <main className="flex-1 px-3 sm:px-4 lg:px-6 w-full overflow-auto">
-          {children}
-        </main>
-      </div>
+      <Sidebar
+        pendingApplications={pendingApplications ?? 0}
+        userEmail={user.email}
+        signOutAction={signOut}
+      />
+      <main className="flex-1 px-3 sm:px-4 lg:px-6 w-full overflow-auto">
+        {children}
+      </main>
     </div>
   );
 }

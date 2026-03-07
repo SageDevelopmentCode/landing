@@ -1,4 +1,3 @@
-import { radius } from '../design-system'
 import { LeadStatus, leadStatusStyles, leadStatusLabels } from '../../types/lead-status'
 
 interface StatusBadgeProps {
@@ -10,11 +9,11 @@ export function StatusBadge({ status }: StatusBadgeProps) {
 
   return (
     <span
-      className="inline-flex items-center px-3 py-1 text-xs font-medium"
+      className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full font-body"
       style={{
         backgroundColor: styles.bg,
         color: styles.text,
-        borderRadius: radius.full,
+        border: `1px solid ${styles.bg}`,
       }}
     >
       {leadStatusLabels[status]}

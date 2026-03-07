@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { Table, TableRow, TableCell } from '../components/Table'
 import { ApplicationDetailSidebar } from '../components/ApplicationDetailSidebar'
-import { colors, radius, shadows } from '../design-system'
+import { colors } from '../design-system'
 import { Merriweather } from 'next/font/google'
 import { approveApplication } from '../../actions/approveApplication'
 import { denyApplication } from '../../actions/denyApplication'
@@ -199,14 +199,14 @@ export default function ApplicationsPage() {
               >
                 <TableCell>
                   <div className="font-medium">{app.g1_full_name ?? '—'}</div>
-                  <div className="text-xs" style={{ color: colors.textSecondary }}>
+                  <div className="text-xs text-gray-400 font-body">
                     {app.g1_email ?? '—'}
                   </div>
                 </TableCell>
                 <TableCell>
                   <div>{app.child_legal_name ?? '—'}</div>
                   {app.preferred_name && (
-                    <div className="text-xs" style={{ color: colors.textSecondary }}>
+                    <div className="text-xs text-gray-400 font-body">
                       "{app.preferred_name}"
                     </div>
                   )}
@@ -214,46 +214,34 @@ export default function ApplicationsPage() {
                 <TableCell>
                   <div>{app.child_age != null ? `Age ${app.child_age}` : '—'}</div>
                   {app.child_grade && (
-                    <div className="text-xs" style={{ color: colors.textSecondary }}>
+                    <div className="text-xs text-gray-400 font-body">
                       {app.child_grade}
                     </div>
                   )}
                 </TableCell>
                 <TableCell>
-                  <div style={{ color: colors.textSecondary }}>{formatProgram(app.program)}</div>
+                  <div className="text-gray-600">{formatProgram(app.program)}</div>
                 </TableCell>
                 <TableCell>
-                  <span
-                    className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full"
-                    style={{
-                      backgroundColor: colors.powderBlue,
-                      color: colors.textPrimary,
-                    }}
-                  >
+                  <span className="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-50 text-blue-700 border border-blue-200">
                     {app.status}
                   </span>
                 </TableCell>
                 <TableCell>
                   {app.approved ? (
-                    <span
-                      className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full"
-                      style={{ backgroundColor: colors.success, color: colors.successText }}
-                    >
+                    <span className="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full bg-green-50 text-green-700 border border-green-200">
                       Approved
                     </span>
                   ) : app.denied ? (
-                    <span
-                      className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full"
-                      style={{ backgroundColor: colors.error, color: colors.errorText }}
-                    >
+                    <span className="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full bg-red-50 text-red-600 border border-red-200">
                       Denied
                     </span>
                   ) : (
-                    <span style={{ color: colors.textTertiary }}>—</span>
+                    <span className="text-gray-400 text-sm">—</span>
                   )}
                 </TableCell>
                 <TableCell>
-                  <div style={{ color: colors.textSecondary }}>
+                  <div className="text-gray-600">
                     {app.created_at ? new Date(app.created_at).toLocaleDateString() : '—'}
                   </div>
                 </TableCell>
@@ -261,29 +249,20 @@ export default function ApplicationsPage() {
                   <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={(e) => { e.stopPropagation(); setSelectedApp(app) }}
-                      className="px-3 py-1 text-xs font-medium transition-all duration-200 hover:scale-105 active:scale-95"
-                      style={{
-                        backgroundColor: colors.powderBlue,
-                        color: colors.textPrimary,
-                        borderRadius: radius.sm,
-                        border: 'none',
-                        cursor: 'pointer',
-                      }}
+                      className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-gray-500 hover:bg-gray-50 transition-colors cursor-pointer"
                     >
                       View
                     </button>
                     <button
                       onClick={(e) => handleRowApprove(e, app)}
                       disabled={app.approved || app.denied || isApproving}
-                      className="px-3 py-1 text-xs font-medium transition-all duration-200 hover:scale-105 active:scale-95"
-                      style={{
-                        backgroundColor: app.approved ? colors.success : colors.mistyForest,
-                        color: app.approved ? colors.successText : 'white',
-                        borderRadius: radius.sm,
-                        border: 'none',
-                        cursor: app.approved || app.denied || isApproving ? 'not-allowed' : 'pointer',
-                        opacity: isApproving || app.denied ? 0.6 : 1,
-                      }}
+                      className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                        app.approved
+                          ? 'bg-green-50 text-green-700 border border-green-200'
+                          : app.denied || isApproving
+                          ? 'bg-[#2C5F2E] text-white opacity-60 cursor-not-allowed'
+                          : 'bg-[#2C5F2E] text-white hover:bg-[#234d25] cursor-pointer'
+                      }`}
                     >
                       {isApproving ? '...' : app.approved ? 'Approved' : 'Approve'}
                     </button>
@@ -294,15 +273,8 @@ export default function ApplicationsPage() {
           })}
         </Table>
       ) : (
-        <div
-          className="bg-white p-12 text-center"
-          style={{
-            borderRadius: radius.lg,
-            boxShadow: shadows.soft,
-            border: `1px solid ${colors.border}`,
-          }}
-        >
-          <p style={{ color: colors.textSecondary }}>No applications yet</p>
+        <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm text-center">
+          <p className="text-gray-500">No applications yet</p>
         </div>
       )}
 

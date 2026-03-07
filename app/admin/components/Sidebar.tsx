@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -101,11 +101,30 @@ const navItems: NavItem[] = [
 
 export function Sidebar({
   pendingApplications = 0,
+  userEmail,
+  signOutAction,
 }: {
   pendingApplications?: number;
+  userEmail?: string;
+  signOutAction?: (formData: FormData) => Promise<void>;
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const pathname = usePathname();
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleMouseDown(e: MouseEvent) {
+      if (
+        profileRef.current &&
+        !profileRef.current.contains(e.target as Node)
+      ) {
+        setProfileOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleMouseDown);
+    return () => document.removeEventListener("mousedown", handleMouseDown);
+  }, []);
 
   const isActive = (href: string) => {
     if (href === "/admin") {
@@ -113,6 +132,8 @@ export function Sidebar({
     }
     return pathname?.startsWith(href);
   };
+
+  const avatarLetter = userEmail ? userEmail.charAt(0).toUpperCase() : "A";
 
   return (
     <>
@@ -208,7 +229,8 @@ export function Sidebar({
                 >
                   {item.icon}
                   {item.href === "/admin/applications" &&
-                    pendingApplications > 0 && !active && (
+                    pendingApplications > 0 &&
+                    !active && (
                       <span
                         className="absolute top-1 right-1 flex items-center justify-center text-white font-bold rounded"
                         style={{
@@ -228,6 +250,104 @@ export function Sidebar({
             );
           })}
         </nav>
+
+        {/* Bottom: Notifications + Profile */}
+        <div className="flex flex-col items-center gap-3 mt-4">
+          {/* Notification Bell */}
+          <Tooltip content="Notifications" side="right">
+            <button
+              className="p-2.5 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95"
+              style={{
+                backgroundColor: "white",
+                border: `1px solid ${colors.border}`,
+                boxShadow: shadows.soft,
+                cursor: "pointer",
+              }}
+              disabled
+              aria-label="Notifications"
+            >
+              <svg
+                className="w-5 h-5"
+                style={{ color: colors.textSecondary }}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                />
+              </svg>
+            </button>
+          </Tooltip>
+
+          {/* Profile Avatar with dropdown */}
+          <div className="relative" ref={profileRef}>
+            <Tooltip content="Account" side="right">
+              <button
+                onClick={() => setProfileOpen((v) => !v)}
+                className="flex items-center justify-center w-10 h-10 rounded-full font-medium text-sm transition-all duration-200 hover:scale-105 active:scale-95"
+                style={{
+                  backgroundColor: colors.pastelSage,
+                  color: colors.mistyForest,
+                  boxShadow: shadows.soft,
+                  cursor: "pointer",
+                }}
+                aria-label="Account menu"
+              >
+                {avatarLetter}
+              </button>
+            </Tooltip>
+
+            <AnimatePresence>
+              {profileOpen && (
+                <motion.div
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -8 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute z-50"
+                  style={{
+                    left: "calc(100% + 12px)",
+                    bottom: 0,
+                    width: "220px",
+                    backgroundColor: "white",
+                    borderRadius: radius.lg,
+                    border: `1px solid ${colors.border}`,
+                    boxShadow: shadows.large,
+                    padding: "12px",
+                  }}
+                >
+                  {userEmail && (
+                    <p
+                      className="text-xs font-medium mb-3 truncate"
+                      style={{ color: colors.textSecondary }}
+                    >
+                      {userEmail}
+                    </p>
+                  )}
+                  {signOutAction && (
+                    <form action={signOutAction}>
+                      <button
+                        type="submit"
+                        className="w-full text-left px-3 py-2 text-sm font-medium transition-all duration-200 rounded-lg hover:opacity-80 cursor-pointer"
+                        style={{
+                          color: colors.mistyForest,
+                          backgroundColor: colors.warmLinen,
+                          border: `1px solid ${colors.border}`,
+                        }}
+                      >
+                        Sign out
+                      </button>
+                    </form>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
       </aside>
 
       {/* Mobile Sidebar */}
@@ -238,7 +358,7 @@ export function Sidebar({
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="lg:hidden fixed top-0 left-0 bottom-0 w-64 z-50 p-6"
+            className="lg:hidden fixed top-0 left-0 bottom-0 w-64 z-50 p-6 flex flex-col"
             style={{
               backgroundColor: colors.warmLinen,
               borderRight: `1px solid ${colors.border}`,
@@ -282,7 +402,8 @@ export function Sidebar({
                     {item.icon}
                     <span>{item.name}</span>
                     {item.href === "/admin/applications" &&
-                      pendingApplications > 0 && !active && (
+                      pendingApplications > 0 &&
+                      !active && (
                         <span
                           className="flex items-center justify-center text-white font-bold rounded-full ml-auto"
                           style={{
@@ -301,6 +422,36 @@ export function Sidebar({
                 );
               })}
             </nav>
+
+            {/* Mobile bottom: email + sign out */}
+            <div
+              className="mt-6 pt-4"
+              style={{ borderTop: `1px solid ${colors.border}` }}
+            >
+              {userEmail && (
+                <p
+                  className="text-xs mb-3 truncate"
+                  style={{ color: colors.textSecondary }}
+                >
+                  {userEmail}
+                </p>
+              )}
+              {signOutAction && (
+                <form action={signOutAction}>
+                  <button
+                    type="submit"
+                    className="w-full text-left px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-xl hover:opacity-80"
+                    style={{
+                      color: colors.mistyForest,
+                      backgroundColor: "white",
+                      border: `1px solid ${colors.border}`,
+                    }}
+                  >
+                    Sign out
+                  </button>
+                </form>
+              )}
+            </div>
           </motion.aside>
         )}
       </AnimatePresence>

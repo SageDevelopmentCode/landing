@@ -5,7 +5,7 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { ChevronDown, Loader2 } from 'lucide-react'
 import { LeadStatus, allLeadStatuses, leadStatusLabels, leadStatusStyles } from '../../types/lead-status'
 import { updateWaitlistStatus, updateContactStatus } from '../../actions/updateLeadStatus'
-import { colors, radius } from '../design-system'
+import { colors } from '../design-system'
 
 interface InlineStatusEditorProps {
   status: LeadStatus
@@ -57,12 +57,10 @@ export function InlineStatusEditor({
       <DropdownMenu.Root open={isOpen} onOpenChange={setIsOpen}>
         <DropdownMenu.Trigger asChild>
           <button
-            className="inline-flex items-center px-3 py-1 text-xs font-medium cursor-pointer hover:opacity-80 transition-opacity focus:outline-none focus:ring-2"
+            className="inline-flex items-center px-3 py-1 text-xs font-medium cursor-pointer hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 rounded-full"
             style={{
               backgroundColor: styles.bg,
               color: styles.text,
-              borderRadius: radius.full,
-              border: 'none',
             }}
             disabled={isPending}
           >
@@ -77,13 +75,8 @@ export function InlineStatusEditor({
 
         <DropdownMenu.Portal>
           <DropdownMenu.Content
-            className="min-w-[200px] rounded-lg shadow-lg border z-50"
-            style={{
-              backgroundColor: 'white',
-              borderColor: colors.border,
-              borderRadius: radius.md,
-              padding: '4px',
-            }}
+            className="min-w-[200px] rounded-lg shadow-lg border border-gray-200 z-50 bg-white"
+            style={{ padding: '4px' }}
             sideOffset={4}
           >
             {allLeadStatuses.map((statusOption) => {
@@ -93,10 +86,9 @@ export function InlineStatusEditor({
               return (
                 <DropdownMenu.Item
                   key={statusOption}
-                  className="flex items-center px-3 py-2 text-sm cursor-pointer outline-none rounded"
+                  className="flex items-center px-3 py-2 text-sm cursor-pointer outline-none rounded text-gray-700"
                   style={{
-                    color: colors.textPrimary,
-                    backgroundColor: isSelected ? colors.softCloud : 'transparent',
+                    backgroundColor: isSelected ? '#F3F4F6' : 'transparent',
                   }}
                   onSelect={() => handleStatusSelect(statusOption)}
                 >
