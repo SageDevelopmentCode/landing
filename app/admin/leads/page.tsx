@@ -60,6 +60,7 @@ export default function LeadsPage() {
         .schema('waitlist')
         .from('submissions')
         .select('*')
+        .eq('is_deleted', false)
         .order('created_at', { ascending: false })
 
       // Fetch contact submissions
@@ -67,6 +68,7 @@ export default function LeadsPage() {
         .schema('contact')
         .from('submissions')
         .select('*')
+        .eq('is_deleted', false)
         .order('created_at', { ascending: false })
 
       // Combine and add type field
@@ -104,6 +106,11 @@ export default function LeadsPage() {
   const handleLeadFieldsUpdate = (updatedLead: Lead) => {
     setLeads((prev) => prev.map((l) => (l.id === updatedLead.id ? updatedLead : l)))
     setSelectedLead(updatedLead)
+  }
+
+  const handleLeadDeleted = (leadId: string) => {
+    setLeads((prevLeads) => prevLeads.filter((lead) => lead.id !== leadId))
+    setSelectedLead(null)
   }
 
   const handleLeadAdded = (newLead: WaitlistLead) => {
@@ -300,6 +307,7 @@ export default function LeadsPage() {
         onClose={() => setSelectedLead(null)}
         onLeadUpdate={handleLeadUpdate}
         onLeadFieldsUpdate={handleLeadFieldsUpdate}
+        onLeadDeleted={handleLeadDeleted}
       />
 
       <AddLeadSidebar

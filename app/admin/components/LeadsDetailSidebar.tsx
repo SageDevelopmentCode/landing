@@ -8,6 +8,7 @@ import { colors, radius } from '../design-system'
 import { LeadStatus } from '../../types/lead-status'
 import { updateWaitlistStatus, updateContactStatus } from '../../actions/updateLeadStatus'
 import { updateWaitlistLead, updateContactLead } from '../../actions/updateLeadFields'
+import { deleteWaitlistLead, deleteContactLead } from '../../actions/deleteLead'
 import { useState, useEffect } from 'react'
 
 type WaitlistLead = {
@@ -41,6 +42,7 @@ interface LeadsDetailSidebarProps {
   onClose: () => void
   onLeadUpdate?: (leadId: string, newStatus: LeadStatus) => void
   onLeadFieldsUpdate?: (updatedLead: Lead) => void
+  onLeadDeleted?: (leadId: string) => void
 }
 
 const inputStyle = {
@@ -87,6 +89,7 @@ export function LeadsDetailSidebar({
   onClose,
   onLeadUpdate,
   onLeadFieldsUpdate,
+  onLeadDeleted,
 }: LeadsDetailSidebarProps) {
   const [currentSubmission, setCurrentSubmission] = useState<Lead | null>(submission)
   const [draft, setDraft] = useState<Record<string, string>>(() =>
@@ -96,6 +99,9 @@ export function LeadsDetailSidebar({
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saveSuccess, setSaveSuccess] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   // Reset draft when a different lead is selected
   useEffect(() => {
@@ -203,8 +209,41 @@ export function LeadsDetailSidebar({
     }
   }
 
+  const handleDelete = async () => {
+    if (!currentSubmission || isDeleting) return
+    setIsDeleting(true)
+    setDeleteError(null)
+
+    const result = isWaitlist
+      ? await deleteWaitlistLead(currentSubmission.id)
+      : await deleteContactLead(currentSubmission.id)
+
+    setIsDeleting(false)
+
+    if (result.success) {
+      setShowDeleteConfirm(false)
+      if (onLeadDeleted) onLeadDeleted(currentSubmission.id)
+      onClose()
+    } else {
+      setDeleteError(result.error ?? 'Failed to delete lead')
+    }
+  }
+
   const footer = (
     <div className="flex items-center gap-3">
+      <button
+        onClick={() => setShowDeleteConfirm(true)}
+        className="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200"
+        style={{
+          backgroundColor: 'transparent',
+          border: '1px solid #dc2626',
+          color: '#dc2626',
+          borderRadius: radius.md,
+          cursor: 'pointer',
+        }}
+      >
+        Delete Lead
+      </button>
       <div className="flex-1 text-sm">
         {saveError && <span style={{ color: '#dc2626' }}>{saveError}</span>}
         {saveSuccess && <span style={{ color: colors.mistyForest }}>Changes saved</span>}
@@ -227,6 +266,63 @@ export function LeadsDetailSidebar({
   )
 
   return (
+    <>
+    {showDeleteConfirm && (
+      <div
+        className="fixed inset-0 flex items-center justify-center"
+        style={{ zIndex: 60, backgroundColor: 'rgba(0,0,0,0.4)' }}
+        onClick={() => setShowDeleteConfirm(false)}
+      >
+        <div
+          className="p-6 w-80"
+          style={{
+            backgroundColor: 'white',
+            borderRadius: radius.lg,
+            border: `1px solid ${colors.border}`,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h2 className="text-base font-semibold mb-2" style={{ color: colors.textPrimary }}>
+            Delete this lead?
+          </h2>
+          <p className="text-sm mb-5" style={{ color: colors.textSecondary }}>
+            This lead will be hidden from the admin panel. The record is preserved and can be recovered from the database if needed.
+          </p>
+          {deleteError && (
+            <p className="text-sm mb-3" style={{ color: '#dc2626' }}>{deleteError}</p>
+          )}
+          <div className="flex gap-3 justify-end">
+            <button
+              onClick={() => setShowDeleteConfirm(false)}
+              className="px-4 py-2 text-sm font-medium"
+              style={{
+                backgroundColor: colors.softCloud,
+                border: `1px solid ${colors.border}`,
+                borderRadius: radius.md,
+                color: colors.textPrimary,
+                cursor: 'pointer',
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="px-4 py-2 text-sm font-medium text-white"
+              style={{
+                backgroundColor: '#dc2626',
+                borderRadius: radius.md,
+                border: 'none',
+                cursor: isDeleting ? 'not-allowed' : 'pointer',
+                opacity: isDeleting ? 0.6 : 1,
+              }}
+            >
+              {isDeleting ? 'Deleting...' : 'Confirm Delete'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     <DetailSidebar
       isOpen={true}
       onClose={onClose}
@@ -381,5 +477,6 @@ export function LeadsDetailSidebar({
         </div>
       </div>
     </DetailSidebar>
+    </>
   )
 }

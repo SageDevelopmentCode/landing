@@ -70,7 +70,7 @@ export default function StartPage() {
           />
         </AnimatePresence>
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/30 to-black/10" />
+        <div className="absolute inset-0 bg-gradient-to-br from-black/50 via-black/20 to-black/10" />
 
         {/* Back link */}
         <motion.div
