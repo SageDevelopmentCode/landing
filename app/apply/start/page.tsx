@@ -303,7 +303,7 @@ function CreateMode({ setMode }: { setMode: (m: Mode) => void }) {
           <input
             type="text"
             placeholder="Jane Smith"
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm outline-none focus:border-primary transition-colors"
+            className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
           />
         </div>
         <div>
@@ -313,7 +313,7 @@ function CreateMode({ setMode }: { setMode: (m: Mode) => void }) {
           <input
             type="email"
             placeholder="jane@example.com"
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm outline-none focus:border-primary transition-colors"
+            className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
           />
         </div>
         <div>
@@ -323,7 +323,7 @@ function CreateMode({ setMode }: { setMode: (m: Mode) => void }) {
           <input
             type="password"
             placeholder="••••••••"
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm outline-none focus:border-primary transition-colors"
+            className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
           />
         </div>
 
@@ -335,10 +335,6 @@ function CreateMode({ setMode }: { setMode: (m: Mode) => void }) {
           Create Account &amp; Begin Application
         </button>
       </form>
-
-      <p className="text-xs text-gray-400 font-body text-center mb-4">
-        Account creation coming soon — we&apos;ll notify you when ready.
-      </p>
 
       <p className="text-sm text-center font-body text-gray-500">
         Already have an account?{" "}
@@ -388,7 +384,7 @@ function LoginMode({ setMode }: { setMode: (m: Mode) => void }) {
           <input
             type="email"
             placeholder="jane@example.com"
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm outline-none focus:border-primary transition-colors"
+            className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
           />
         </div>
         <div>
@@ -398,7 +394,7 @@ function LoginMode({ setMode }: { setMode: (m: Mode) => void }) {
           <input
             type="password"
             placeholder="••••••••"
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm outline-none focus:border-primary transition-colors"
+            className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
           />
         </div>
 
@@ -410,10 +406,6 @@ function LoginMode({ setMode }: { setMode: (m: Mode) => void }) {
           Log In &amp; View Application
         </button>
       </form>
-
-      <p className="text-xs text-gray-400 font-body text-center mb-4">
-        Login portal coming soon — we&apos;ll notify you when ready.
-      </p>
 
       <p className="text-sm text-center font-body text-gray-500">
         Don&apos;t have an account?{" "}

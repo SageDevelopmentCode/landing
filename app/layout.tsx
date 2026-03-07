@@ -25,7 +25,7 @@ const merriweather = Merriweather({
 
 export const metadata: Metadata = {
   title:
-    "Sage Field - Georgetown TX Homeschool Learning Community & Enrichment Program",
+    "Sage Field - Round Rock TX Homeschool Learning Community & Enrichment Program",
   description:
     "A homeschool learning community and enrichment program for lower-elementary aged children in Georgetown, Texas offering intentional outdoor and movement-first enrichment through co-creation with homeschool families. Personalised, hands-on learning that fosters curiosity, confidence, and wisdom.",
   keywords: [
