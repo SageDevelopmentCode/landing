@@ -66,7 +66,13 @@ function RadioGroup({
   );
 }
 
-export default function Step3Form({ initialData }: { initialData: InitialData }) {
+export default function Step3Form({
+  initialData,
+  applicationId,
+}: {
+  initialData: InitialData;
+  applicationId: string | null;
+}) {
   const d = initialData;
 
   const [hasMedicalConditions, setHasMedicalConditions] = useState(d?.has_medical_conditions ?? "");
@@ -106,6 +112,7 @@ export default function Step3Form({ initialData }: { initialData: InitialData })
         historyExplanation: historyFlags.length > 0 ? historyExplanation : "",
         needsAide,
         needsAideDescription: (needsAide === "yes" || needsAide === "not_sure") ? needsAideDescription : "",
+        applicationId,
       });
       if (result?.error) setError(result.error);
     });
@@ -134,7 +141,7 @@ export default function Step3Form({ initialData }: { initialData: InitialData })
           transition={{ delay: 0.3, duration: 0.5 }}
         >
           <Link
-            href="/apply/step/2"
+            href={applicationId ? `/apply/step/2?appId=${applicationId}` : "/apply/step/2"}
             className="flex items-center gap-2 text-white/80 hover:text-white text-sm font-body transition-colors"
           >
             <ArrowLeft size={16} />

@@ -26,7 +26,13 @@ type InitialData = {
 
 const todayISO = new Date().toISOString().split("T")[0];
 
-export default function Step5Form({ initialData }: { initialData: InitialData }) {
+export default function Step5Form({
+  initialData,
+  applicationId,
+}: {
+  initialData: InitialData;
+  applicationId: string | null;
+}) {
   const d = initialData;
   const hasG2 = !!(d?.g2_full_name);
 
@@ -66,6 +72,7 @@ export default function Step5Form({ initialData }: { initialData: InitialData })
         g2SignatureName: hasG2 ? g2SignatureName : "",
         g2Signature: hasG2 ? g2Signature : "",
         g2SignatureDate: hasG2 ? g2SignatureDate : "",
+        applicationId,
       });
       if (result?.error) setError(result.error);
     });
@@ -94,7 +101,7 @@ export default function Step5Form({ initialData }: { initialData: InitialData })
           transition={{ delay: 0.3, duration: 0.5 }}
         >
           <Link
-            href="/apply/step/4"
+            href={applicationId ? `/apply/step/4?appId=${applicationId}` : "/apply/step/4"}
             className="flex items-center gap-2 text-white/80 hover:text-white text-sm font-body transition-colors"
           >
             <ArrowLeft size={16} />

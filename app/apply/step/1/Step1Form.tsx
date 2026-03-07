@@ -45,7 +45,13 @@ type InitialData = {
   special_interests?: string | null;
 } | null;
 
-export default function Step1Form({ initialData }: { initialData: InitialData }) {
+export default function Step1Form({
+  initialData,
+  applicationId,
+}: {
+  initialData: InitialData;
+  applicationId: string | null;
+}) {
   const d = initialData;
   const [program, setProgram] = useState<"summer" | "school_year" | "both" | "">(
     (d?.program as "summer" | "school_year" | "both") ?? ""
@@ -104,6 +110,7 @@ export default function Step1Form({ initialData }: { initialData: InitialData })
         previousSchools,
         previousSchoolsList,
         specialInterests,
+        applicationId,
       });
       if (result?.error) setError(result.error);
     });

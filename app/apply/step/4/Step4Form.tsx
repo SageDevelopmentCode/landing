@@ -16,7 +16,13 @@ type InitialData = {
   activities_to_avoid?: string | null;
 } | null;
 
-export default function Step4Form({ initialData }: { initialData: InitialData }) {
+export default function Step4Form({
+  initialData,
+  applicationId,
+}: {
+  initialData: InitialData;
+  applicationId: string | null;
+}) {
   const d = initialData;
 
   const [learningStyle, setLearningStyle] = useState(d?.learning_style ?? "");
@@ -40,6 +46,7 @@ export default function Step4Form({ initialData }: { initialData: InitialData })
         dysregulationResponse,
         regulationStrategies,
         activitiesToAvoid,
+        applicationId,
       });
       if (result?.error) setError(result.error);
     });
@@ -68,7 +75,7 @@ export default function Step4Form({ initialData }: { initialData: InitialData })
           transition={{ delay: 0.3, duration: 0.5 }}
         >
           <Link
-            href="/apply/step/3"
+            href={applicationId ? `/apply/step/3?appId=${applicationId}` : "/apply/step/3"}
             className="flex items-center gap-2 text-white/80 hover:text-white text-sm font-body transition-colors"
           >
             <ArrowLeft size={16} />

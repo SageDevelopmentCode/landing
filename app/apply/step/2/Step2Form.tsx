@@ -220,38 +220,53 @@ function GuardianSection({
   );
 }
 
-export default function Step2Form({ initialData }: { initialData: InitialData }) {
+export default function Step2Form({
+  initialData,
+  applicationId,
+  guardianPrefill,
+}: {
+  initialData: InitialData;
+  applicationId: string | null;
+  guardianPrefill: InitialData;
+}) {
   const d = initialData;
+  // Use guardianPrefill for guardian fields if the current app has none
+  const gp = guardianPrefill;
 
   const [g1, setG1] = useState({
-    fullName: d?.g1_full_name ?? "",
-    relationship: d?.g1_relationship ?? "",
-    relationshipOther: d?.g1_relationship_other ?? "",
-    email: d?.g1_email ?? "",
-    cellPhone: d?.g1_cell_phone ?? "",
-    workPhone: d?.g1_work_phone ?? "",
-    preferredContact: d?.g1_preferred_contact ?? "",
-    livesWithChild: d?.g1_lives_with_child ?? "",
-    hasCustody: d?.g1_has_custody ?? "",
+    fullName: d?.g1_full_name ?? gp?.g1_full_name ?? "",
+    relationship: d?.g1_relationship ?? gp?.g1_relationship ?? "",
+    relationshipOther: d?.g1_relationship_other ?? gp?.g1_relationship_other ?? "",
+    email: d?.g1_email ?? gp?.g1_email ?? "",
+    cellPhone: d?.g1_cell_phone ?? gp?.g1_cell_phone ?? "",
+    workPhone: d?.g1_work_phone ?? gp?.g1_work_phone ?? "",
+    preferredContact: d?.g1_preferred_contact ?? gp?.g1_preferred_contact ?? "",
+    livesWithChild: d?.g1_lives_with_child ?? gp?.g1_lives_with_child ?? "",
+    hasCustody: d?.g1_has_custody ?? gp?.g1_has_custody ?? "",
   });
 
   const [g2, setG2] = useState({
-    fullName: d?.g2_full_name ?? "",
-    relationship: d?.g2_relationship ?? "",
-    relationshipOther: d?.g2_relationship_other ?? "",
-    email: d?.g2_email ?? "",
-    cellPhone: d?.g2_cell_phone ?? "",
-    workPhone: d?.g2_work_phone ?? "",
-    preferredContact: d?.g2_preferred_contact ?? "",
-    livesWithChild: d?.g2_lives_with_child ?? "",
-    hasCustody: d?.g2_has_custody ?? "",
+    fullName: d?.g2_full_name ?? gp?.g2_full_name ?? "",
+    relationship: d?.g2_relationship ?? gp?.g2_relationship ?? "",
+    relationshipOther: d?.g2_relationship_other ?? gp?.g2_relationship_other ?? "",
+    email: d?.g2_email ?? gp?.g2_email ?? "",
+    cellPhone: d?.g2_cell_phone ?? gp?.g2_cell_phone ?? "",
+    workPhone: d?.g2_work_phone ?? gp?.g2_work_phone ?? "",
+    preferredContact: d?.g2_preferred_contact ?? gp?.g2_preferred_contact ?? "",
+    livesWithChild: d?.g2_lives_with_child ?? gp?.g2_lives_with_child ?? "",
+    hasCustody: d?.g2_has_custody ?? gp?.g2_has_custody ?? "",
   });
 
-  const hasG2Data = !!(d?.g2_full_name || d?.g2_email || d?.g2_cell_phone);
+  const hasG2Data = !!(
+    d?.g2_full_name || d?.g2_email || d?.g2_cell_phone ||
+    gp?.g2_full_name || gp?.g2_email || gp?.g2_cell_phone
+  );
   const [showG2, setShowG2] = useState(hasG2Data);
-  const [hasCustodyOrders, setHasCustodyOrders] = useState(d?.has_custody_orders ?? "");
+  const [hasCustodyOrders, setHasCustodyOrders] = useState(
+    d?.has_custody_orders ?? gp?.has_custody_orders ?? ""
+  );
   const [custodyOrdersDescription, setCustodyOrdersDescription] = useState(
-    d?.custody_orders_description ?? ""
+    d?.custody_orders_description ?? gp?.custody_orders_description ?? ""
   );
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -286,6 +301,7 @@ export default function Step2Form({ initialData }: { initialData: InitialData })
         g2HasCustody: showG2 ? g2.hasCustody : "",
         hasCustodyOrders,
         custodyOrdersDescription: hasCustodyOrders === "yes" ? custodyOrdersDescription : "",
+        applicationId,
       });
       if (result?.error) setError(result.error);
     });
@@ -314,7 +330,7 @@ export default function Step2Form({ initialData }: { initialData: InitialData })
           transition={{ delay: 0.3, duration: 0.5 }}
         >
           <Link
-            href="/apply/step/1"
+            href={applicationId ? `/apply/step/1?appId=${applicationId}` : "/apply/step/1"}
             className="flex items-center gap-2 text-white/80 hover:text-white text-sm font-body transition-colors"
           >
             <ArrowLeft size={16} />
