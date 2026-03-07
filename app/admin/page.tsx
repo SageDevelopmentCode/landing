@@ -69,7 +69,7 @@ export default async function AdminDashboard() {
     .slice(0, 8)
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pt-6">
       <div>
         <h1
           className={`text-3xl font-bold ${merriweather.className}`}
