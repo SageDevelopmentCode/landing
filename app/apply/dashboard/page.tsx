@@ -1,11 +1,16 @@
-import { createServerSupabaseClient, createAdminClient } from "@/app/lib/supabase-server";
+import {
+  createServerSupabaseClient,
+  createAdminClient,
+} from "@/app/lib/supabase-server";
 import Link from "next/link";
 import Image from "next/image";
 import ApplicationList from "./ApplicationList";
 
 export default async function ApplicationDashboard() {
   const supabase = await createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   let apps: Record<string, string | null>[] = [];
   if (user) {
@@ -23,16 +28,30 @@ export default async function ApplicationDashboard() {
   return (
     <div className="min-h-screen bg-welcome-bg">
       {/* Header */}
-      <header className="bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
-        <Image src="/assets/Logo.png" alt="Sage Field" width={80} height={32} className="object-contain" />
+      <header className="bg-white border-b border-gray-100 px-5 py-4 flex items-center justify-between">
+        <Link href="/">
+          <Image
+            src="/assets/Logo.png"
+            alt="Sage Field"
+            width={50}
+            height={24}
+            className="object-contain"
+          />
+        </Link>
       </header>
 
       <main className="max-w-2xl mx-auto px-6 py-12">
         {/* Review notice */}
         <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 mb-6">
           <p className="text-sm text-amber-800 font-body">
-            <span className="font-semibold">We&apos;re reviewing your application.</span> Our team will be in touch soon. In the meantime,{" "}
-            <Link href="/" className="underline underline-offset-2 hover:text-amber-900 transition-colors">
+            <span className="font-semibold">
+              We&apos;re reviewing your application.
+            </span>{" "}
+            Our team will be in touch soon. In the meantime,{" "}
+            <Link
+              href="/"
+              className="underline underline-offset-2 hover:text-amber-900 transition-colors"
+            >
               learn more about our programs
             </Link>
             .
@@ -45,7 +64,8 @@ export default async function ApplicationDashboard() {
             Welcome back, {g1Name}.
           </h1>
           <p className="text-gray-500 font-body text-sm">
-            You have {apps.length} submitted application{apps.length !== 1 ? "s" : ""}.
+            You have {apps.length} submitted application
+            {apps.length !== 1 ? "s" : ""}.
           </p>
         </div>
 

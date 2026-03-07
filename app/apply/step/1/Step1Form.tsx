@@ -507,6 +507,10 @@ export default function Step1Form({
               <p className="text-sm text-red-500 font-body">{error}</p>
             )}
 
+            <p className="text-xs text-gray-400 font-body text-center">
+              Applying for more than one child? Complete this application first — you&apos;ll be able to start another one once you&apos;re done.
+            </p>
+
             <button
               type="submit"
               disabled={isPending}
