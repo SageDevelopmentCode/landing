@@ -10,13 +10,24 @@ export async function signInWithEmail(formData: FormData) {
 
   const supabase = await createServerSupabaseClient()
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data: authData, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   })
 
   if (error) {
     return { error: error.message }
+  }
+
+  const { data: adminUser } = await supabase
+    .schema('admin')
+    .from('users')
+    .select('role')
+    .eq('id', authData.user.id)
+    .single()
+
+  if (adminUser?.role === 'parent') {
+    redirect('/apply/dashboard')
   }
 
   redirect('/admin')
@@ -87,7 +98,7 @@ export async function signInWithGoogle() {
 export async function signOut() {
   const supabase = await createServerSupabaseClient()
   await supabase.auth.signOut()
-  redirect('/login')
+  redirect('/')
 }
 
 export async function getUser() {
@@ -113,5 +124,5 @@ export async function isAdmin() {
     .eq('id', user.id)
     .single()
 
-  return !!data
+  return data?.role === 'super_admin'
 }

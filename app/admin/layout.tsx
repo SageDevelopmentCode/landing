@@ -28,7 +28,11 @@ export default async function AdminLayout({
     .eq("id", user.id)
     .single();
 
-  if (!adminUser) {
+  if (adminUser?.role === 'parent') {
+    redirect('/apply/dashboard');
+  }
+
+  if (!adminUser || adminUser.role !== 'super_admin') {
     return (
       <div
         className="min-h-screen flex items-center justify-center"

@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@/app/lib/supabase-server'
+import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -9,7 +9,21 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const supabase = await createServerSupabaseClient()
-    await supabase.auth.exchangeCodeForSession(code)
+    const { data: { session } } = await supabase.auth.exchangeCodeForSession(code)
+
+    if (session?.user) {
+      const adminClient = createAdminClient()
+      const { data: adminUser } = await adminClient
+        .schema('admin')
+        .from('users')
+        .select('role')
+        .eq('id', session.user.id)
+        .single()
+
+      if (adminUser?.role === 'parent') {
+        return NextResponse.redirect(`${origin}/apply/dashboard`)
+      }
+    }
   }
 
   // URL to redirect to after sign in process completes
