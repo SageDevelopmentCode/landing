@@ -686,8 +686,9 @@ export default function VisionPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
           >
-            Sage Field is a homeschool learning community for ages 6–10 in
-            Central Texas, built on hands-on, outdoor-focused education.
+            Sage Field Private School is a nature-based private microschool for
+            children ages 6–10 in Central Texas, built on hands-on,
+            outdoor-focused education.
           </motion.p>
 
           <motion.div

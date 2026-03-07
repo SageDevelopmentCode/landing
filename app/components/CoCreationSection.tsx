@@ -48,7 +48,7 @@ export default function CoCreationSection() {
           viewport={{ once: true }}
         >
           <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-8">
-            Co-Creation
+            Family Partnership
           </span>
         </motion.div>
 
@@ -268,15 +268,15 @@ export default function CoCreationSection() {
 
             <div className="bg-welcome-bg border-l-4 border-primary p-6 rounded-r-lg">
               <p className="text-lg font-semibold text-black font-heading mb-3">
-                At Sage Field, we call our approach Co-Creation.
+                At Sage Field, we call our approach Family Partnership.
               </p>
               <p className="text-base text-text-gray leading-relaxed font-body">
-                We know there are only so many hours in the day, and learning
-                doesn&apos;t stop when Sage Field ends. We require parents to
-                take ownership in their child&apos;s journey — extending
-                curiosity, practice, and mindfulness into the home. Together, we
-                co-create an educational rhythm that works for each
-                family&apos;s unique needs and pace.
+                We handle the full in-school program — curriculum, instruction,
+                and daily learning are our responsibility. We do ask that
+                families stay engaged and communicative: share important updates
+                about your child, attend check-ins when scheduled, and support
+                a culture of curiosity at home. Together, we create the
+                conditions for every child to thrive.
               </p>
             </div>
 

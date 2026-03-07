@@ -40,11 +40,12 @@ export default function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
             >
-              A homeschool learning community and enrichment program for
-              lower‑elementary aged children offering intentional outdoor and
-              movement first enrichment through co-creation with homeschool
-              families. Personalised, hands-on learning that fosters curiosity,
-              confidence, and wisdom.
+              Sage Field Private School is a nature-based private microschool
+              for lower-elementary children. We are a small, intentional
+              learning community where outdoor exploration, hands-on academics,
+              and child-led inquiry come together. A structured, enriching
+              drop-off program designed for families who want something better
+              than traditional school.
             </motion.p>
 
             {/* Action Buttons */}

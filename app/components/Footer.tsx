@@ -41,7 +41,7 @@ export default function Footer() {
               />
             </Link>
             <p className="text-gray-400 text-sm font-body leading-relaxed">
-              A homeschool learning community for children ages 6–10, where
+              A nature-based private microschool for children ages 6–10, where
               hands-on experiences meet wisdom-focused education.
             </p>
           </div>

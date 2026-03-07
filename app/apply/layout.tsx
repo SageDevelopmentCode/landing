@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Apply - Sage Field | Summer & School Year Programs",
   description:
-    "Apply to Sage Field's Summer 2026 or School Year 2026–2027 programs. A homeschool learning community for ages 6–10 in Round Rock, Texas. Small groups, hands-on learning, and a co-creation partnership with families.",
+    "Apply to Sage Field Private School's Summer 2026 or School Year 2026–2027 programs. A nature-based private microschool for children ages 6–10 in Round Rock, Texas. Small groups, hands-on learning, and a structured drop-off program.",
   openGraph: {
     title: "Apply - Sage Field | Summer & School Year Programs",
     description:
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
         url: "/assets/social-preview.jpg",
         width: 1200,
         height: 630,
-        alt: "Apply to Sage Field - Round Rock Texas Homeschool Learning Community",
+        alt: "Apply to Sage Field Private School - Round Rock Texas Microschool",
       },
     ],
     locale: "en_US",

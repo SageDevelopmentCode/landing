@@ -33,7 +33,7 @@ export default function AboutPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
           >
-            About Sage Field
+            About Sage Field Private School
           </motion.h1>
 
           <motion.p
@@ -42,7 +42,7 @@ export default function AboutPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
           >
-            Learn more about our mission, community, and the team behind Sage Field
+            Learn more about our private microschool, our mission, and the team behind Sage Field
           </motion.p>
         </div>
       </section>

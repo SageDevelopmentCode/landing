@@ -6,9 +6,9 @@ import { motion } from "framer-motion";
 export default function WelcomeSection() {
   const cards = [
     {
-      title: "Co-Creation",
+      title: "Family Partnership",
       description:
-        "Working alongside families to nurture curiosity and confidence through personalized learning experiences.",
+        "We stay in close communication with families and invite parents to support the learning journey at home — while Sage Field handles the full in-school program.",
       icon: "🤝",
     },
     {
@@ -70,12 +70,11 @@ export default function WelcomeSection() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
             >
-              Sage Field is a small-group learning community for children ages
-              6–10, designed especially for homeschool families seeking a
-              intentional outdoor and movement first enrichment. Rooted in the
-              idea of co-creation, we work alongside families to foster
-              curiosity, confidence, and wisdom through personalised, hands-on
-              learning.
+              Sage Field Private School is a nature-based private microschool
+              for lower-elementary children ages 6–10. We offer small-group,
+              outdoor-centered education that fosters curiosity, confidence, and
+              wisdom through personalised, hands-on learning — without the rigid
+              structure of traditional school.
             </motion.p>
 
             {/* Wisdom vs. Knowledge Section */}
@@ -110,7 +109,7 @@ export default function WelcomeSection() {
                 the mind but rarely touch the heart. We believe wisdom is what
                 transforms learning into living — it helps children connect
                 ideas to real experiences, build empathy, and make thoughtful
-                choices. Through our approach of co-creation, families, mentors,
+                choices. Through our family partnership model, parents, mentors,
                 and students work together to nurture curiosity and reflection
                 both in and beyond the lesson. In this shared garden of growth,
                 knowledge takes root, and every child has the chance to blossom

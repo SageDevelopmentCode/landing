@@ -2,6 +2,7 @@ import {
   createServerSupabaseClient,
   createAdminClient,
 } from "@/app/lib/supabase-server";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import ApplicationList from "./ApplicationList";
@@ -33,6 +34,9 @@ export default async function ApplicationDashboard() {
           .single(),
       ]);
     apps = data ?? [];
+    if (apps.some((app) => app.approved === true)) {
+      redirect("/parent/dashboard");
+    }
     fullName = adminUser?.full_name ?? null;
   }
 

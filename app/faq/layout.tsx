@@ -1,21 +1,21 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "FAQ - Sage Field Homeschool Co-op Round Rock TX | Common Questions",
+  title: "FAQ - Sage Field Private School | Texas Microschool",
   description:
-    "Frequently asked questions about Sage Field, a homeschool learning community and enrichment program in Round Rock, Texas. Learn about our co-op model, enrollment, program details, and alternative learning approach for K-3 students.",
+    "Frequently asked questions about Sage Field Private School, a nature-based private microschool in Round Rock, Texas. Learn about our program, enrollment, and approach to small-group, outdoor-centered education for lower-elementary children.",
   openGraph: {
-    title: "FAQ - Sage Field Homeschool Co-op Round Rock TX",
+    title: "FAQ - Sage Field Private School | Texas Microschool",
     description:
-      "Get answers to common questions about Sage Field homeschool learning community in Round Rock, Texas. Learn about our program, enrollment, and co-creation approach.",
+      "Get answers to common questions about Sage Field Private School in Round Rock, Texas. Learn about our microschool model, enrollment process, and nature-based education approach.",
     url: "https://sagefield.co/faq",
-    siteName: "Sage Field",
+    siteName: "Sage Field Private School",
     images: [
       {
         url: "/assets/social-preview.jpg",
         width: 1200,
         height: 630,
-        alt: "Sage Field FAQ - Round Rock Texas Homeschool Learning Community",
+        alt: "Sage Field Private School FAQ - Round Rock Texas Microschool",
       },
     ],
     locale: "en_US",
@@ -23,9 +23,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "FAQ - Sage Field Homeschool Co-op Round Rock TX",
+    title: "FAQ - Sage Field Private School | Texas Microschool",
     description:
-      "Common questions about our homeschool learning community in Round Rock, Texas. Learn about enrollment, program details, and our approach.",
+      "Common questions about Sage Field Private School in Round Rock, Texas. Learn about enrollment, program details, and our nature-based microschool approach.",
     images: ["/assets/social-preview.jpg"],
   },
   alternates: {
@@ -44,7 +44,15 @@ export default function FAQLayout({ children }: { children: React.ReactNode }) {
         name: "What is Sage Field?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Sage Field is a homeschool learning community for roughly ages 6–10 where children come together to learn, play, and grow in a small, mixed-age group. We exist to support homeschooling families with rich, hands-on experiences, not to replace your homeschool.",
+          text: "Sage Field Private School is a nature-based private microschool for lower-elementary children ages 6–10. We are a small, intentional learning community where outdoor exploration, hands-on academics, and child-led inquiry come together in a structured drop-off program. We operate under Texas private school law as an independent private school.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "What is a microschool?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "A microschool is a small, independent private school — typically serving fewer than 15–20 students — that offers a more personalized, flexible alternative to traditional schooling. Microschools prioritize small class sizes, individualized pacing, and innovative approaches to learning. Sage Field fits this model: we are a licensed private school with intentional, nature-based education at our core.",
         },
       },
       {
@@ -52,7 +60,7 @@ export default function FAQLayout({ children }: { children: React.ReactNode }) {
         name: "What ages do you serve and how big are the groups?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "We focus on lower-elementary ages, about 6–10 years with flexibility based on developmental fit. We intentionally keep our groups small with typically no more than about 10–12 children per class.",
+          text: "We serve lower-elementary aged children, about 6–10 years with flexibility based on developmental fit. We intentionally keep our groups small — typically no more than 10–12 children per class.",
         },
       },
       {
@@ -60,15 +68,7 @@ export default function FAQLayout({ children }: { children: React.ReactNode }) {
         name: "Are you a school? Will Sage Field keep grades or transcripts?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "No. Sage Field is not a traditional school, is not accredited, and does not function as a child's school of record. We do not issue grades, report cards, official assessments, or transcripts.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "What is 'Co-Creation' at Sage Field?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Co-Creation is our way of describing a true partnership between Sage Field and homeschooling families. We weave together what happens here with what you're doing at home so your child experiences one coherent learning life.",
+          text: "Yes — Sage Field Private School is a private microschool operating under Texas private school law. We are not a traditional accredited school and do not issue grades, report cards, or transcripts in the conventional sense. Instead, we provide descriptive, portfolio-based feedback on each child's growth and progress.",
         },
       },
       {

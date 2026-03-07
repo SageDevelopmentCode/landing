@@ -417,8 +417,8 @@ export default function LoginPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.65, duration: 0.5 }}
           >
-            Small groups, rich learning, and a community built for homeschool
-            families who want more.
+            Small groups, rich learning, and a private microschool built for
+            families who want something better.
           </motion.p>
 
           {/* Thumbnail row */}

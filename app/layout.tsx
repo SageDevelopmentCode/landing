@@ -25,24 +25,23 @@ const merriweather = Merriweather({
 
 export const metadata: Metadata = {
   title:
-    "Sage Field - Round Rock TX Homeschool Learning Community & Enrichment Program",
+    "Sage Field Private School - Nature-Based Microschool | Round Rock TX",
   description:
-    "A homeschool learning community and enrichment program for lower-elementary aged children in Round Rock, Texas offering intentional outdoor and movement-first enrichment through co-creation with homeschool families. Personalised, hands-on learning that fosters curiosity, confidence, and wisdom.",
+    "Sage Field Private School is a nature-based private microschool for lower-elementary children in Round Rock, Texas. Small-group, outdoor-centered education that fosters curiosity, confidence, and wisdom — a structured drop-off program without the rigidity of traditional school.",
   keywords: [
-    "homeschool co-op Round Rock Texas",
-    "homeschool pod Round Rock TX",
+    "private microschool Round Rock Texas",
+    "nature-based school Round Rock TX",
     "alternative school Round Rock",
-    "learning group community",
-    "homeschool enrichment program",
+    "private school Round Rock",
+    "microschool Texas",
     "outdoor learning Round Rock",
-    "elementary homeschool",
-    "home school group Texas",
+    "elementary private school",
+    "small group school Texas",
     "alternative learning Round Rock",
-    "K-3 homeschool",
+    "private school ages 6-10",
     "nature-based learning",
-    "homeschool community Round Rock",
-    "homeschool Cedar Park",
-    "lower elementary homeschool",
+    "private school Cedar Park",
+    "lower elementary private school",
   ],
   authors: [{ name: "Sage Field" }],
   creator: "Sage Field",
@@ -70,17 +69,17 @@ export const metadata: Metadata = {
 
   // Open Graph metadata for Facebook, LinkedIn, WhatsApp, etc.
   openGraph: {
-    title: "Sage Field: A homeschool learning community and enrichment program",
+    title: "Sage Field Private School: Nature-Based Microschool in Round Rock TX",
     description:
-      "A homeschool learning community and enrichment program for lower-elementary aged children offering intentional outdoor and movement-first enrichment through co-creation with homeschool families. Personalised, hands-on learning that fosters curiosity, confidence, and wisdom.",
+      "Sage Field Private School is a nature-based private microschool for lower-elementary children in Round Rock, Texas. Small-group, outdoor-centered education that fosters curiosity, confidence, and wisdom.",
     url: "https://sagefield.co",
-    siteName: "Sage Field",
+    siteName: "Sage Field Private School",
     images: [
       {
         url: "/assets/social-preview.jpg",
         width: 1200,
         height: 630,
-        alt: "Sage Field - A homeschool learning community and enrichment program",
+        alt: "Sage Field Private School - Nature-Based Microschool in Round Rock TX",
       },
     ],
     locale: "en_US",
@@ -90,9 +89,9 @@ export const metadata: Metadata = {
   // Twitter Card metadata
   twitter: {
     card: "summary_large_image",
-    title: "Sage Field: A homeschool learning community and enrichment program",
+    title: "Sage Field Private School: Nature-Based Microschool in Round Rock TX",
     description:
-      "A homeschool learning community and enrichment program for lower-elementary aged children offering intentional outdoor and movement-first enrichment through co-creation with homeschool families.",
+      "Sage Field Private School is a nature-based private microschool for lower-elementary children in Round Rock, Texas. Small-group, outdoor-centered education that fosters curiosity, confidence, and wisdom.",
     images: ["/assets/social-preview.jpg"],
   },
 };
@@ -108,8 +107,8 @@ export default function RootLayout({
       {
         "@type": "EducationalOrganization",
         "@id": "https://sagefield.co/#organization",
-        name: "Sage Field",
-        alternateName: "Sage Field Homeschool Co-op",
+        name: "Sage Field Private School",
+        alternateName: "Sage Field",
         url: "https://sagefield.co",
         email: "sabrina@sagefield.co",
         address: {
@@ -138,24 +137,24 @@ export default function RootLayout({
           },
         ],
         description:
-          "A homeschool learning community and enrichment program for lower-elementary aged children (K-3) offering intentional outdoor and movement-first enrichment through co-creation with homeschool families in Round Rock, Texas.",
+          "A nature-based private microschool for lower-elementary aged children (ages 6–10) in Round Rock, Texas. Small-group, outdoor-centered education that fosters curiosity, confidence, and wisdom.",
         knowsAbout: [
-          "Homeschool Education",
-          "Alternative Learning",
+          "Private School Education",
+          "Microschool",
           "Outdoor Education",
           "Elementary Education",
-          "Co-op Learning",
           "Nature-based Learning",
+          "Alternative Education",
         ],
-        educationalCredentialAwarded: "Homeschool Enrichment Certificate",
+        educationalCredentialAwarded: "Private School Enrollment",
       },
       {
         "@type": "WebSite",
         "@id": "https://sagefield.co/#website",
         url: "https://sagefield.co",
-        name: "Sage Field",
+        name: "Sage Field Private School",
         description:
-          "Round Rock Texas homeschool co-op and alternative learning community for K-3 students",
+          "Nature-based private microschool in Round Rock, Texas for lower-elementary children ages 6–10",
         publisher: {
           "@id": "https://sagefield.co/#organization",
         },

@@ -18,17 +18,22 @@ export default function FAQPage() {
     {
       question: "What is Sage Field?",
       answer:
-        "Sage Field is a homeschool learning community for roughly ages 6–10 where children come together to learn, play, and grow in a small, mixed-age group. We exist to support homeschooling families with rich, hands-on experiences, not to replace your homeschool. Legally, parents/guardians remain their child's educators of record and are responsible for complying with Texas homeschool laws.",
+        "Sage Field Private School is a nature-based private microschool for lower-elementary children ages 6–10. We are a small, intentional learning community where outdoor exploration, hands-on academics, and child-led inquiry come together in a structured drop-off program. We operate under Texas private school law as an independent private school.",
     },
     {
       question: "Are you a school? Will Sage Field keep grades or transcripts?",
       answer:
-        "No. Sage Field is not a traditional school, is not accredited, and does not function as a child's school of record. We do not issue grades, report cards, official assessments, or transcripts. Instead, we offer descriptive, anecdotal feedback and collected work samples that you can use as part of your own homeschool records. All decisions about grade level, promotion, and curriculum remain with the parent/guardian.",
+        "Yes — Sage Field Private School is a private microschool operating under Texas private school law. We are not a traditional accredited school and do not issue grades, report cards, or transcripts in the conventional sense. Instead, we provide descriptive, portfolio-based feedback on each child's growth and progress. We handle the in-school program; families manage any additional records they personally wish to keep.",
     },
     {
-      question: "What is 'Co-Creation' at Sage Field?",
+      question: "What is a microschool?",
       answer:
-        "Co-Creation is our way of describing a true partnership between Sage Field and homeschooling families. We don't 'take over' your child's education; instead, we weave together what happens here with what you're doing at home so your child experiences one coherent learning life. At Sage Field, we offer hands-on experiences, social-emotional tools, and academic support; at home, you extend those threads through your own curriculum, routines, and family culture. Together, we stay in conversation about your child's needs, strengths, and challenges so that decisions are made collaboratively, with you always remaining the primary educator and decision-maker.",
+        "A microschool is a small, independent private school — typically serving fewer than 15–20 students — that offers a more personalized, flexible alternative to traditional schooling. Microschools prioritize small class sizes, individualized pacing, and innovative approaches to learning. Sage Field fits this model: we are a licensed private school with intentional, nature-based education at our core.",
+    },
+    {
+      question: "What is the Family Partnership model?",
+      answer:
+        "At Sage Field, we believe the best outcomes happen when school and family are aligned. Our Family Partnership model means we stay in close communication with parents about their child's strengths, needs, and growth — and we invite families to extend the curiosity and reflection we spark at school into everyday life at home. Parents are not expected to run the curriculum; that's our job. But we do ask that families stay engaged, communicative, and supportive of the learning journey.",
     },
   ];
 
@@ -36,23 +41,22 @@ export default function FAQPage() {
     {
       question: "What ages do you serve and how big are the groups?",
       answer:
-        "We focus on lower-elementary ages, about 6–10 years with flexibility based on developmental fit. Community members learn together in mixed-age groups so children can move at their own pace. We intentionally keep our groups small with typically no more than about 10–12 children per class so that two adults can stay closely attuned to each child's needs.",
+        "We serve lower-elementary aged children, about 6–10 years, with flexibility based on developmental fit. Students learn together in mixed-age groups so children can move at their own pace. We intentionally keep our groups small — typically no more than 10–12 children per class — so that two adults can stay closely attuned to each child's needs.",
     },
     {
       question: "What does a typical day at Sage Field look like?",
       answer:
-        "Our days are designed to feel calm, connected, and alive with curiosity. Mornings are for focused academic support in reading, writing, fluency, and math, individualized to each child's abilities rather than to a grade label. Afternoons flow into nature exploration, science, art, movement, sports-like games, and social-emotional learning. We use few but intentional worksheets and prioritize real-world, hands-on experiences, movement, and time outdoors.",
+        "Our days are designed to feel calm, connected, and alive with curiosity. Mornings are for focused academics in reading, writing, fluency, and math, individualized to each child's abilities rather than a grade label. Afternoons flow into nature exploration, science, art, movement, sports-like games, and social-emotional learning. We prioritize real-world, hands-on experiences, movement, and time outdoors over worksheets and rote repetition.",
     },
     {
-      question:
-        "Which subjects do you handle, and which stay fully with parents?",
+      question: "What subjects does Sage Field teach?",
       answer:
-        "At Sage Field, we support literacy and numeracy, offer science, nature study, art, music, movement, and social-emotional learning with elements of Montessori, Waldorf, and Reggio-inspired approaches with broadly TEKS-aligned academics. We do not teach social studies or provide test prep, and we do not cover every subject a child might need for a complete homeschool program. Parents/guardians are fully responsible for social studies and any subjects we do not offer, for maintaining homeschool records, and for choosing and overseeing their child's core curriculum.",
+        "At Sage Field, we cover literacy, numeracy, science, nature study, art, music, movement, and social-emotional learning — drawing from Montessori, Waldorf, and Reggio-inspired approaches with broadly TEKS-aligned academics. We are a full drop-off program; families do not need to supplement our academic program at home unless they choose to.",
     },
     {
       question: "How often can my child attend? Is there a minimum?",
       answer:
-        "Sage Field is open up to four days per week for approximately six hours each day. You choose the schedule option that best fits your family's rhythm; we do not require a minimum number of days to 'qualify' as a community member. Tuition is based on the enrollment option you select, not on day-to-day attendance, and enrollment is set in six-month terms.",
+        "Sage Field is open up to four days per week for approximately six hours each day. You choose the schedule option that best fits your family's rhythm. Tuition is based on the enrollment option you select, not on day-to-day attendance, and enrollment is set in six-month terms.",
     },
   ];
 
@@ -84,7 +88,7 @@ export default function FAQPage() {
     {
       question: "What role do parents play?",
       answer:
-        "Parents are at the heart of Sage Field. Legally and practically, you remain your child's primary educator and are responsible for meeting all Texas homeschool requirements, choosing and managing curriculum, teaching social studies and other subjects we don't cover, and keeping any records you need. We ask parents to stay in regular communication with us, share important updates about their child, and carry the work of curiosity, practice, and emotional regulation into the home.",
+        "Sage Field handles the full in-school program — parents do not teach, volunteer, or manage curriculum here. What we do ask is that families stay engaged and communicative: share important updates about your child, attend check-ins when scheduled, and support a culture of curiosity and reflection at home. We see parents as partners in their child's growth, not as co-teachers.",
     },
     {
       question: "How do we enroll?",

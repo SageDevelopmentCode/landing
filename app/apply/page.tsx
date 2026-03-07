@@ -32,8 +32,8 @@ const tabContent = {
     badge: "School Year 2026",
     title: "School Year 2026–2027",
     description: [
-      "The School Year 2026–2027 program runs as a six-month commitment, offering up to four days per week of enriched learning for homeschool families. Children ages 6–10 receive individualized support in literacy and numeracy alongside science, art, movement, and social-emotional learning.",
-      "Enrollment is limited to preserve the small-group environment that makes Sage Field special. Families begin with an application and a mutual-fit conversation to ensure the program is the right match for your child and your family's homeschool approach.",
+      "The School Year 2026–2027 program runs as a six-month commitment, offering up to four days per week of enriched learning for children ages 6–10. Students receive individualized support in literacy and numeracy alongside science, art, movement, and social-emotional learning.",
+      "Enrollment is limited to preserve the small-group environment that makes Sage Field special. Families begin with an application and a mutual-fit conversation to ensure the program is the right match for your child.",
     ],
     details: [
       { label: "Start Date", value: "September 8, 2026" },

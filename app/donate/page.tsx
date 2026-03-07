@@ -1,8 +1,9 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import { Heart, TreePine, Users } from "lucide-react";
+import { Heart, TreePine, Users, X, Loader2 } from "lucide-react";
+import { useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
@@ -23,14 +24,258 @@ const impactCards = [
     icon: Users,
     title: "Community Growth",
     description:
-      "With your support, we can expand our capacity to serve more families and build a stronger homeschool learning community in Central Texas.",
+      "With your support, we can expand our capacity to serve more families and build a thriving private microschool community in Central Texas.",
   },
 ];
 
+const PRESET_AMOUNTS = [25, 50, 100, 250];
+
+function DonationModal({ onClose }: { onClose: () => void }) {
+  const [selectedAmount, setSelectedAmount] = useState<number | null>(50);
+  const [customAmount, setCustomAmount] = useState("");
+  const [donorName, setDonorName] = useState("");
+  const [donorEmail, setDonorEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [coverFees, setCoverFees] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const baseAmountDollars = selectedAmount ?? (parseFloat(customAmount) || 0);
+  const baseAmountCents = Math.round(baseAmountDollars * 100);
+  const feeAmountCents = coverFees
+    ? Math.round((baseAmountCents + 30) / (1 - 0.029)) - baseAmountCents
+    : 0;
+  const totalCents = baseAmountCents + feeAmountCents;
+
+  function formatCents(cents: number) {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(cents / 100);
+  }
+
+  async function handleDonate() {
+    setError("");
+
+    if (baseAmountCents < 100) {
+      setError("Minimum donation is $1.00");
+      return;
+    }
+    if (!donorEmail) {
+      setError("Email is required");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/stripe/create-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: baseAmountCents,
+          donorName: donorName || undefined,
+          donorEmail,
+          message: message || undefined,
+          coverFees,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Something went wrong. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      window.location.href = data.url;
+    } catch {
+      setError("Network error. Please try again.");
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <motion.div
+        className="absolute inset-0 bg-black/50"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+      />
+
+      {/* Modal */}
+      <motion.div
+        className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        transition={{ duration: 0.2 }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-badge-bg flex items-center justify-center">
+              <Heart className="w-5 h-5 text-primary" />
+            </div>
+            <h2 className="text-xl font-bold font-heading text-black">
+              Make a Donation
+            </h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+          >
+            <X className="w-4 h-4 text-gray-500" />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-5">
+          {/* Preset amounts */}
+          <div>
+            <label className="block text-sm font-semibold text-black font-body mb-2">
+              Select Amount
+            </label>
+            <div className="grid grid-cols-4 gap-2 mb-3">
+              {PRESET_AMOUNTS.map((amt) => (
+                <button
+                  key={amt}
+                  onClick={() => {
+                    setSelectedAmount(amt);
+                    setCustomAmount("");
+                  }}
+                  className={`py-2.5 rounded-lg text-sm font-semibold font-body transition-colors border ${
+                    selectedAmount === amt
+                      ? "bg-primary text-white border-primary"
+                      : "bg-white text-black border-gray-200 hover:border-primary hover:text-primary"
+                  }`}
+                >
+                  ${amt}
+                </button>
+              ))}
+            </div>
+            <input
+              type="number"
+              min="1"
+              placeholder="Custom amount"
+              value={customAmount}
+              onChange={(e) => {
+                setCustomAmount(e.target.value);
+                setSelectedAmount(null);
+              }}
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+            />
+          </div>
+
+          {/* Email */}
+          <div>
+            <label className="block text-sm font-semibold text-black font-body mb-1.5">
+              Email <span className="text-primary">*</span>
+            </label>
+            <input
+              type="email"
+              placeholder="your@email.com"
+              value={donorEmail}
+              onChange={(e) => setDonorEmail(e.target.value)}
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+            />
+          </div>
+
+          {/* Name (optional) */}
+          <div>
+            <label className="block text-sm font-semibold text-black font-body mb-1.5">
+              Name <span className="text-text-gray font-normal">(optional)</span>
+            </label>
+            <input
+              type="text"
+              placeholder="Your name"
+              value={donorName}
+              onChange={(e) => setDonorName(e.target.value)}
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+            />
+          </div>
+
+          {/* Message (optional) */}
+          <div>
+            <label className="block text-sm font-semibold text-black font-body mb-1.5">
+              Message <span className="text-text-gray font-normal">(optional)</span>
+            </label>
+            <textarea
+              placeholder="Leave a note of encouragement..."
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              rows={3}
+              maxLength={500}
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none"
+            />
+          </div>
+
+          {/* Cover fees */}
+          {baseAmountCents >= 100 && (
+            <label className="flex items-start gap-3 cursor-pointer p-3 bg-gray-50 rounded-lg">
+              <input
+                type="checkbox"
+                checked={coverFees}
+                onChange={(e) => setCoverFees(e.target.checked)}
+                className="mt-0.5 w-4 h-4 accent-primary"
+              />
+              <span className="text-sm text-text-gray font-body leading-snug">
+                Cover transaction fees ({formatCents(feeAmountCents)}) so 100%
+                of your donation goes to Sage Field
+              </span>
+            </label>
+          )}
+
+          {/* Error */}
+          {error && (
+            <p className="text-sm text-red-500 font-body">{error}</p>
+          )}
+
+          {/* Total + CTA */}
+          <div className="pt-1">
+            {totalCents >= 100 && (
+              <p className="text-center text-sm text-text-gray font-body mb-3">
+                Total:{" "}
+                <span className="font-semibold text-black">
+                  {formatCents(totalCents)}
+                </span>
+              </p>
+            )}
+            <button
+              onClick={handleDonate}
+              disabled={loading || baseAmountCents < 100}
+              className="w-full py-3.5 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Redirecting to Stripe...
+                </>
+              ) : (
+                "Donate Now"
+              )}
+            </button>
+            <p className="text-xs text-center text-text-gray font-body mt-2">
+              Secure payment powered by Stripe
+            </p>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 export default function DonatePage() {
+  const [showModal, setShowModal] = useState(false);
+
   return (
     <div className="min-h-screen bg-welcome-bg">
       <Navbar />
+
+      <AnimatePresence>
+        {showModal && <DonationModal onClose={() => setShowModal(false)} />}
+      </AnimatePresence>
 
       {/* 1. Hero Section */}
       <section className="bg-welcome-bg py-16 px-8 sm:px-12 lg:px-16 pt-36">
@@ -61,7 +306,7 @@ export default function DonatePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
           >
-            Sage Field is more than a co-op — it&apos;s a community-built dream.
+            Sage Field Private School is a community-built dream.
             We&apos;re raising funds to secure and transform our property in
             Central Texas into a thriving outdoor learning environment for
             children. Every contribution, big or small, brings us one step
@@ -73,7 +318,10 @@ export default function DonatePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
           >
-            <button className="cursor-pointer px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body">
+            <button
+              onClick={() => setShowModal(true)}
+              className="cursor-pointer px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body"
+            >
               Donate Now
             </button>
           </motion.div>
@@ -222,7 +470,10 @@ export default function DonatePage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
           >
-            <button className="px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body">
+            <button
+              onClick={() => setShowModal(true)}
+              className="px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body"
+            >
               Donate Now
             </button>
           </motion.div>

@@ -1,21 +1,21 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "About Sage Field - Round Rock TX Homeschool Learning Community",
+  title: "About Sage Field Private School - Nature-Based Microschool Round Rock TX",
   description:
-    "Learn about Sage Field, a homeschool learning community and enrichment program for lower-elementary aged children in Round Rock, Texas. Discover our philosophy of outdoor, movement-first education through co-creation with homeschool families.",
+    "Learn about Sage Field Private School, a nature-based private microschool for lower-elementary children in Round Rock, Texas. Discover our philosophy of outdoor, hands-on education and our small-group approach.",
   openGraph: {
-    title: "About Sage Field - Round Rock TX Homeschool Learning Community",
+    title: "About Sage Field Private School - Nature-Based Microschool Round Rock TX",
     description:
-      "Learn about Sage Field, a homeschool learning community and enrichment program for lower-elementary aged children in Round Rock, Texas.",
+      "Learn about Sage Field Private School, a nature-based private microschool for lower-elementary children in Round Rock, Texas.",
     url: "https://sagefield.co/about",
-    siteName: "Sage Field",
+    siteName: "Sage Field Private School",
     images: [
       {
         url: "/assets/social-preview.jpg",
         width: 1200,
         height: 630,
-        alt: "About Sage Field - Round Rock Texas Homeschool Learning Community",
+        alt: "About Sage Field Private School - Round Rock Texas Microschool",
       },
     ],
     locale: "en_US",
@@ -23,9 +23,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "About Sage Field - Round Rock TX Homeschool Learning Community",
+    title: "About Sage Field Private School - Nature-Based Microschool Round Rock TX",
     description:
-      "Learn about our homeschool learning community in Round Rock, Texas offering outdoor, movement-first enrichment for lower-elementary children.",
+      "Learn about our nature-based private microschool in Round Rock, Texas offering outdoor, hands-on education for lower-elementary children.",
     images: ["/assets/social-preview.jpg"],
   },
   alternates: {

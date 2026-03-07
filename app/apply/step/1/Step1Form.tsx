@@ -430,10 +430,10 @@ export default function Step1Form({
               />
             </div>
 
-            {/* Is your child currently homeschooled? */}
+            {/* What is your child's current schooling situation? */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 font-body mb-2">
-                Is your child currently homeschooled?
+                Is your child currently being educated at home?
               </label>
               <div className="flex flex-col gap-2">
                 {[
@@ -480,7 +480,7 @@ export default function Step1Form({
             <div>
               <label className="block text-sm font-semibold text-gray-700 font-body mb-2">
                 Has your child previously attended any learning communities,
-                co-ops, or schools?
+                microschools, or schools?
               </label>
               <div className="flex flex-col gap-2">
                 {[
