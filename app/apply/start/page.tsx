@@ -3,8 +3,10 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, User, LogIn, CheckCircle } from "lucide-react";
+import { ArrowLeft, User, LogIn, CheckCircle, Eye, EyeOff } from "lucide-react";
+import { signUpParent } from "@/app/actions/signUpParent";
 
 type Mode = "choose" | "create" | "login";
 
@@ -270,6 +272,34 @@ function ChooseMode({ setMode }: { setMode: (m: Mode) => void }) {
 
 /* ── Mode: Create ── */
 function CreateMode({ setMode }: { setMode: (m: Mode) => void }) {
+  const router = useRouter();
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    setLoading(true);
+
+    const result = await signUpParent(fullName, email, password);
+    if (result?.error) {
+      setError(result.error);
+      setLoading(false);
+    }
+    // On success, signUpParent calls redirect() server-side which navigates automatically
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -292,10 +322,7 @@ function CreateMode({ setMode }: { setMode: (m: Mode) => void }) {
         Let&apos;s get you set up
       </h1>
 
-      <form
-        className="flex flex-col gap-4 mb-6"
-        onSubmit={(e) => e.preventDefault()}
-      >
+      <form className="flex flex-col gap-4 mb-6" onSubmit={handleSubmit}>
         <div>
           <label className="block text-sm font-semibold text-gray-700 font-body mb-1.5">
             Full Name
@@ -303,6 +330,9 @@ function CreateMode({ setMode }: { setMode: (m: Mode) => void }) {
           <input
             type="text"
             placeholder="Jane Smith"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            required
             className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
           />
         </div>
@@ -313,6 +343,9 @@ function CreateMode({ setMode }: { setMode: (m: Mode) => void }) {
           <input
             type="email"
             placeholder="jane@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
             className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
           />
         </div>
@@ -320,19 +353,57 @@ function CreateMode({ setMode }: { setMode: (m: Mode) => void }) {
           <label className="block text-sm font-semibold text-gray-700 font-body mb-1.5">
             Password
           </label>
-          <input
-            type="password"
-            placeholder="••••••••"
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full px-4 py-3 pr-11 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 font-body mb-1.5">
+            Confirm Password
+          </label>
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="••••••••"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              className="w-full px-4 py-3 pr-11 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
         </div>
 
+        {error && (
+          <p className="text-sm text-red-600 font-body">{error}</p>
+        )}
+
         <button
-          type="button"
-          onClick={() => {}}
-          className="w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer mt-2"
+          type="submit"
+          disabled={loading}
+          className="w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          Create Account &amp; Begin Application
+          {loading ? "Creating account…" : "Create Account & Begin Application"}
         </button>
       </form>
 
