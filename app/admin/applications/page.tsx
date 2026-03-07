@@ -7,6 +7,7 @@ import { ApplicationDetailSidebar } from '../components/ApplicationDetailSidebar
 import { colors, radius, shadows } from '../design-system'
 import { Merriweather } from 'next/font/google'
 import { approveApplication } from '../../actions/approveApplication'
+import { denyApplication } from '../../actions/denyApplication'
 
 const merriweather = Merriweather({
   weight: ['300', '400', '700', '900'],
@@ -82,6 +83,9 @@ type Application = {
   status: string
   approved: boolean
   approved_at: string | null
+  denied: boolean
+  denied_at: string | null
+  denied_reason: string | null
   created_at: string | null
   [key: string]: unknown
 }
@@ -121,6 +125,18 @@ export default function ApplicationsPage() {
     )
     setSelectedApp((prev) =>
       prev?.id === id ? { ...prev, approved: true, approved_at: now } : prev
+    )
+  }
+
+  const handleDenied = (id: string, reason: string) => {
+    const now = new Date().toISOString()
+    setApplications((prev) =>
+      prev.map((app) =>
+        app.id === id ? { ...app, denied: true, denied_at: now, denied_reason: reason } : app
+      )
+    )
+    setSelectedApp((prev) =>
+      prev?.id === id ? { ...prev, denied: true, denied_at: now, denied_reason: reason } : prev
     )
   }
 
@@ -225,6 +241,13 @@ export default function ApplicationsPage() {
                     >
                       Approved
                     </span>
+                  ) : app.denied ? (
+                    <span
+                      className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full"
+                      style={{ backgroundColor: colors.error, color: colors.errorText }}
+                    >
+                      Denied
+                    </span>
                   ) : (
                     <span style={{ color: colors.textTertiary }}>—</span>
                   )}
@@ -251,15 +274,15 @@ export default function ApplicationsPage() {
                     </button>
                     <button
                       onClick={(e) => handleRowApprove(e, app)}
-                      disabled={app.approved || isApproving}
+                      disabled={app.approved || app.denied || isApproving}
                       className="px-3 py-1 text-xs font-medium transition-all duration-200 hover:scale-105 active:scale-95"
                       style={{
                         backgroundColor: app.approved ? colors.success : colors.mistyForest,
                         color: app.approved ? colors.successText : 'white',
                         borderRadius: radius.sm,
                         border: 'none',
-                        cursor: app.approved || isApproving ? 'not-allowed' : 'pointer',
-                        opacity: isApproving ? 0.6 : 1,
+                        cursor: app.approved || app.denied || isApproving ? 'not-allowed' : 'pointer',
+                        opacity: isApproving || app.denied ? 0.6 : 1,
                       }}
                     >
                       {isApproving ? '...' : app.approved ? 'Approved' : 'Approve'}
@@ -288,6 +311,7 @@ export default function ApplicationsPage() {
           application={selectedApp}
           onClose={() => setSelectedApp(null)}
           onApproved={handleApproved}
+          onDenied={handleDenied}
         />
       )}
     </div>

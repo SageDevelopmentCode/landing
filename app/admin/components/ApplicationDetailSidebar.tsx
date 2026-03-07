@@ -3,6 +3,7 @@
 import { DetailSidebar } from './DetailSidebar'
 import { colors, radius } from '../design-system'
 import { approveApplication } from '../../actions/approveApplication'
+import { denyApplication } from '../../actions/denyApplication'
 import { useState } from 'react'
 
 const PROGRAM_LABELS: Record<string, string> = {
@@ -74,6 +75,9 @@ type Application = {
   status: string
   approved: boolean
   approved_at: string | null
+  denied: boolean
+  denied_at: string | null
+  denied_reason: string | null
   created_at: string | null
   [key: string]: unknown
 }
@@ -82,6 +86,7 @@ interface ApplicationDetailSidebarProps {
   application: Application | null
   onClose: () => void
   onApproved: (id: string) => void
+  onDenied: (id: string, reason: string) => void
 }
 
 function Field({ label, value }: { label: string; value: string | number | null | undefined }) {
@@ -115,14 +120,21 @@ export function ApplicationDetailSidebar({
   application,
   onClose,
   onApproved,
+  onDenied,
 }: ApplicationDetailSidebarProps) {
   const [isApproving, setIsApproving] = useState(false)
   const [approveError, setApproveError] = useState<string | null>(null)
+  const [isDenyingMode, setIsDenyingMode] = useState(false)
+  const [denyReason, setDenyReason] = useState('')
+  const [isDenying, setIsDenying] = useState(false)
+  const [denyError, setDenyError] = useState<string | null>(null)
 
   if (!application) return null
 
+  const isActioned = application.approved || application.denied
+
   const handleApprove = async () => {
-    if (isApproving || application.approved) return
+    if (isApproving || isActioned) return
     setIsApproving(true)
     setApproveError(null)
     const result = await approveApplication(application.id)
@@ -134,10 +146,73 @@ export function ApplicationDetailSidebar({
     }
   }
 
-  const footer = (
+  const handleDenyConfirm = async () => {
+    if (isDenying || !denyReason.trim()) return
+    setIsDenying(true)
+    setDenyError(null)
+    const result = await denyApplication(application.id, denyReason.trim())
+    setIsDenying(false)
+    if (result.success) {
+      onDenied(application.id, denyReason.trim())
+      setIsDenyingMode(false)
+      setDenyReason('')
+    } else {
+      setDenyError(result.error ?? 'Failed to deny')
+    }
+  }
+
+  const footer = isDenyingMode ? (
+    <div className="flex flex-col gap-3 w-full">
+      <textarea
+        value={denyReason}
+        onChange={(e) => setDenyReason(e.target.value)}
+        placeholder="Enter reason for denial..."
+        rows={3}
+        className="w-full text-sm p-2 resize-none"
+        style={{
+          borderRadius: radius.sm,
+          border: `1px solid ${colors.border}`,
+          color: colors.textPrimary,
+          backgroundColor: colors.softCloud,
+          outline: 'none',
+        }}
+      />
+      {denyError && <span className="text-xs" style={{ color: colors.errorText }}>{denyError}</span>}
+      <div className="flex gap-2 justify-end">
+        <button
+          onClick={() => { setIsDenyingMode(false); setDenyReason(''); setDenyError(null) }}
+          className="px-4 py-2 text-sm font-medium transition-all duration-200"
+          style={{
+            backgroundColor: colors.powderBlue,
+            color: colors.textPrimary,
+            borderRadius: radius.md,
+            border: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleDenyConfirm}
+          disabled={isDenying || !denyReason.trim()}
+          className="px-4 py-2 text-sm font-medium text-white transition-all duration-200"
+          style={{
+            backgroundColor: colors.error,
+            color: colors.errorText,
+            borderRadius: radius.md,
+            border: 'none',
+            opacity: isDenying || !denyReason.trim() ? 0.5 : 1,
+            cursor: isDenying || !denyReason.trim() ? 'not-allowed' : 'pointer',
+          }}
+        >
+          {isDenying ? 'Denying...' : 'Confirm Deny'}
+        </button>
+      </div>
+    </div>
+  ) : (
     <div className="flex items-center gap-3">
       <div className="flex-1 text-sm">
-        {approveError && <span style={{ color: '#dc2626' }}>{approveError}</span>}
+        {approveError && <span style={{ color: colors.errorText }}>{approveError}</span>}
         {application.approved && (
           <span
             className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full"
@@ -146,17 +221,40 @@ export function ApplicationDetailSidebar({
             Approved {application.approved_at ? `on ${new Date(application.approved_at).toLocaleDateString()}` : ''}
           </span>
         )}
+        {application.denied && (
+          <span
+            className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full"
+            style={{ backgroundColor: colors.error, color: colors.errorText }}
+          >
+            Denied {application.denied_at ? `on ${new Date(application.denied_at).toLocaleDateString()}` : ''}
+          </span>
+        )}
       </div>
       <button
+        onClick={() => setIsDenyingMode(true)}
+        disabled={isActioned}
+        className="px-4 py-2 text-sm font-medium transition-all duration-200"
+        style={{
+          backgroundColor: application.denied ? colors.error : colors.dustyRose,
+          color: colors.errorText,
+          borderRadius: radius.md,
+          border: 'none',
+          opacity: isActioned ? 0.6 : 1,
+          cursor: isActioned ? 'not-allowed' : 'pointer',
+        }}
+      >
+        {application.denied ? 'Denied' : 'Deny'}
+      </button>
+      <button
         onClick={handleApprove}
-        disabled={isApproving || application.approved}
+        disabled={isApproving || isActioned}
         className="px-4 py-2 text-sm font-medium text-white transition-all duration-200"
         style={{
           backgroundColor: application.approved ? colors.pastelSage : colors.mistyForest,
           borderRadius: radius.md,
           border: 'none',
           opacity: isApproving ? 0.6 : 1,
-          cursor: isApproving || application.approved ? 'not-allowed' : 'pointer',
+          cursor: isApproving || isActioned ? 'not-allowed' : 'pointer',
         }}
       >
         {isApproving ? 'Approving...' : application.approved ? 'Approved' : 'Approve'}
