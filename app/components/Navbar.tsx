@@ -13,7 +13,7 @@ export default function Navbar() {
   const [waitlistDialogOpen, setWaitlistDialogOpen] = useState(false);
   const pathname = usePathname();
   const useDarkStyle =
-    pathname === "/faq" || pathname === "/about" || pathname === "/apply";
+    pathname === "/faq" || pathname === "/about" || pathname === "/apply" || pathname === "/donate";
 
   const menuItems = [
     { label: "What We Offer", href: "/#what-we-offer" },

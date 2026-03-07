@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title:
-    "FAQ - Sage Field Homeschool Co-op Georgetown TX | Common Questions",
+  title: "FAQ - Sage Field Homeschool Co-op Round Rock TX | Common Questions",
   description:
-    "Frequently asked questions about Sage Field, a homeschool learning community and enrichment program in Georgetown, Texas. Learn about our co-op model, enrollment, program details, and alternative learning approach for K-3 students.",
+    "Frequently asked questions about Sage Field, a homeschool learning community and enrichment program in Round Rock, Texas. Learn about our co-op model, enrollment, program details, and alternative learning approach for K-3 students.",
   openGraph: {
-    title: "FAQ - Sage Field Homeschool Co-op Georgetown TX",
+    title: "FAQ - Sage Field Homeschool Co-op Round Rock TX",
     description:
-      "Get answers to common questions about Sage Field homeschool learning community in Georgetown, Texas. Learn about our program, enrollment, and co-creation approach.",
+      "Get answers to common questions about Sage Field homeschool learning community in Round Rock, Texas. Learn about our program, enrollment, and co-creation approach.",
     url: "https://sagefield.co/faq",
     siteName: "Sage Field",
     images: [
@@ -16,7 +15,7 @@ export const metadata: Metadata = {
         url: "/assets/social-preview.jpg",
         width: 1200,
         height: 630,
-        alt: "Sage Field FAQ - Georgetown Texas Homeschool Learning Community",
+        alt: "Sage Field FAQ - Round Rock Texas Homeschool Learning Community",
       },
     ],
     locale: "en_US",
@@ -24,9 +23,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "FAQ - Sage Field Homeschool Co-op Georgetown TX",
+    title: "FAQ - Sage Field Homeschool Co-op Round Rock TX",
     description:
-      "Common questions about our homeschool learning community in Georgetown, Texas. Learn about enrollment, program details, and our approach.",
+      "Common questions about our homeschool learning community in Round Rock, Texas. Learn about enrollment, program details, and our approach.",
     images: ["/assets/social-preview.jpg"],
   },
   alternates: {
@@ -34,11 +33,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function FAQLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function FAQLayout({ children }: { children: React.ReactNode }) {
   // Structured data for FAQ page - helps with rich results in search engines
   const faqStructuredData = {
     "@context": "https://schema.org",

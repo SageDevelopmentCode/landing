@@ -27,17 +27,17 @@ export const metadata: Metadata = {
   title:
     "Sage Field - Round Rock TX Homeschool Learning Community & Enrichment Program",
   description:
-    "A homeschool learning community and enrichment program for lower-elementary aged children in Georgetown, Texas offering intentional outdoor and movement-first enrichment through co-creation with homeschool families. Personalised, hands-on learning that fosters curiosity, confidence, and wisdom.",
+    "A homeschool learning community and enrichment program for lower-elementary aged children in Round Rock, Texas offering intentional outdoor and movement-first enrichment through co-creation with homeschool families. Personalised, hands-on learning that fosters curiosity, confidence, and wisdom.",
   keywords: [
-    "homeschool co-op Georgetown Texas",
-    "homeschool pod Georgetown TX",
-    "alternative school Georgetown",
+    "homeschool co-op Round Rock Texas",
+    "homeschool pod Round Rock TX",
+    "alternative school Round Rock",
     "learning group community",
     "homeschool enrichment program",
-    "outdoor learning Georgetown",
+    "outdoor learning Round Rock",
     "elementary homeschool",
     "home school group Texas",
-    "alternative learning Georgetown",
+    "alternative learning Round Rock",
     "K-3 homeschool",
     "nature-based learning",
     "homeschool community Round Rock",
@@ -114,19 +114,19 @@ export default function RootLayout({
         email: "sabrina@sagefield.co",
         address: {
           "@type": "PostalAddress",
-          addressLocality: "Georgetown",
+          addressLocality: "Round Rock",
           addressRegion: "TX",
           addressCountry: "US",
         },
         areaServed: [
           {
             "@type": "City",
-            name: "Georgetown",
-            "@id": "https://en.wikipedia.org/wiki/Georgetown,_Texas",
+            name: "Round Rock",
+            "@id": "https://en.wikipedia.org/wiki/Round_Rock,_Texas",
           },
           {
             "@type": "City",
-            name: "Round Rock",
+            name: "Austin",
           },
           {
             "@type": "City",
@@ -138,7 +138,7 @@ export default function RootLayout({
           },
         ],
         description:
-          "A homeschool learning community and enrichment program for lower-elementary aged children (K-3) offering intentional outdoor and movement-first enrichment through co-creation with homeschool families in Georgetown, Texas.",
+          "A homeschool learning community and enrichment program for lower-elementary aged children (K-3) offering intentional outdoor and movement-first enrichment through co-creation with homeschool families in Round Rock, Texas.",
         knowsAbout: [
           "Homeschool Education",
           "Alternative Learning",
@@ -155,7 +155,7 @@ export default function RootLayout({
         url: "https://sagefield.co",
         name: "Sage Field",
         description:
-          "Georgetown Texas homeschool co-op and alternative learning community for K-3 students",
+          "Round Rock Texas homeschool co-op and alternative learning community for K-3 students",
         publisher: {
           "@id": "https://sagefield.co/#organization",
         },

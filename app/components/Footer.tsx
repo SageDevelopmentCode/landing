@@ -189,7 +189,7 @@ export default function Footer() {
             </div>
 
             <p className="text-gray-400 text-sm font-body text-center md:text-right">
-              Georgetown, TX
+              Round Rock, TX
             </p>
           </div>
         </div>

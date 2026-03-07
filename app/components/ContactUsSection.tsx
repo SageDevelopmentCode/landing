@@ -122,7 +122,7 @@ export default function ContactUsSection() {
                     Location
                   </h4>
                   <p className="text-base text-text-gray font-body">
-                    TBD - Round Rock / Georgetown, TX
+                    TBD - Round Rock, TX
                   </p>
                   <p className="text-xs text-text-gray mt-1 italic font-body">
                     For more information, please email us at{" "}
