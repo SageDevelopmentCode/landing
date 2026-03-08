@@ -164,7 +164,7 @@ function DonationModal({ onClose }: { onClose: () => void }) {
                 setCustomAmount(e.target.value);
                 setSelectedAmount(null);
               }}
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm font-body text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary placeholder:text-gray-400"
             />
           </div>
 
@@ -178,7 +178,7 @@ function DonationModal({ onClose }: { onClose: () => void }) {
               placeholder="your@email.com"
               value={donorEmail}
               onChange={(e) => setDonorEmail(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm font-body text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary placeholder:text-gray-400"
             />
           </div>
 
@@ -192,7 +192,7 @@ function DonationModal({ onClose }: { onClose: () => void }) {
               placeholder="Your name"
               value={donorName}
               onChange={(e) => setDonorName(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm font-body text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary placeholder:text-gray-400"
             />
           </div>
 
@@ -207,7 +207,7 @@ function DonationModal({ onClose }: { onClose: () => void }) {
               onChange={(e) => setMessage(e.target.value)}
               rows={3}
               maxLength={500}
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none"
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm font-body text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none placeholder:text-gray-400"
             />
           </div>
 

@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import { motion } from 'framer-motion'
 import { ReactNode } from 'react'
 
@@ -70,11 +71,12 @@ export function TableRow({ children, index = 0, onClick }: TableRowProps) {
 interface TableCellProps {
   children: ReactNode
   className?: string
+  style?: React.CSSProperties
 }
 
-export function TableCell({ children, className = '' }: TableCellProps) {
+export function TableCell({ children, className = '', style }: TableCellProps) {
   return (
-    <td className={`px-4 py-3 text-sm text-gray-700 font-body ${className}`}>
+    <td className={`px-4 py-3 text-sm text-gray-700 font-body ${className}`} style={style}>
       {children}
     </td>
   )

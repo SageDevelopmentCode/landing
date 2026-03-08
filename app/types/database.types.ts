@@ -606,6 +606,52 @@ export type CompositeTypes<
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
+// =====================================================
+// Budget schema interfaces
+// =====================================================
+
+export interface BudgetLineItem {
+  id: string
+  category: string
+  item_name: string
+  planned_amount: number
+  is_active: boolean
+  sort_order: number
+  notes: string | null
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface BudgetExpense {
+  id: string
+  expense_name: string
+  category: string
+  amount: number
+  payment_method: string | null
+  expense_date: string
+  notes: string | null
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface BudgetIncome {
+  id: string
+  source: 'tuition' | 'aftercare' | 'fun_friday' | 'summer' | 'other'
+  student_name: string | null
+  description: string | null
+  amount: number
+  income_date: string
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface BudgetSettings {
+  id: string
+  key: string
+  value: unknown
+  updated_at: string | null
+}
+
 export const Constants = {
   admin: {
     Enums: {},
