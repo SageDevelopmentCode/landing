@@ -1,4 +1,4 @@
-import { stripe } from "@/app/lib/stripe";
+import { getStripe } from "@/app/lib/stripe";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import { Heart } from "lucide-react";
@@ -16,7 +16,7 @@ export default async function DonateSuccessPage({ searchParams }: Props) {
 
   if (session_id) {
     try {
-      const session = await stripe.checkout.sessions.retrieve(session_id);
+      const session = await getStripe().checkout.sessions.retrieve(session_id);
       const cents = session.amount_total ?? 0;
       amountFormatted = new Intl.NumberFormat("en-US", {
         style: "currency",
@@ -52,8 +52,8 @@ export default async function DonateSuccessPage({ searchParams }: Props) {
 
           <p className="text-base md:text-lg text-text-gray leading-relaxed font-body mb-10">
             Your generosity helps us build a thriving outdoor learning
-            environment for children in Central Texas. We&apos;ll send a
-            receipt to your email shortly.
+            environment for children in Central Texas. We&apos;ll send a receipt
+            to your email shortly.
           </p>
 
           <Link
