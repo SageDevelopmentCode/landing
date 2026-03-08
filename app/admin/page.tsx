@@ -144,9 +144,9 @@ export default async function AdminDashboard() {
             <ul style={{ borderTop: `1px solid ${colors.divider}` }}>
               {recentLeads.map((lead, index) => {
                 const isWaitlist = lead.type === 'waitlist'
-                const name = isWaitlist
-                  ? (lead as any).parent_name
-                  : (lead as any).name
+                const name = 'parent_name' in lead
+                  ? (lead as { parent_name: string }).parent_name
+                  : (lead as { name: string }).name
                 const email = lead.email
 
                 return (

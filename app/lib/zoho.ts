@@ -528,7 +528,7 @@ export async function buildApplicationConfirmationEmail(opts: {
   g1FullName: string
   childLegalName: string
   program: string | null
-}): { subject: string; content: string } {
+}): Promise<{ subject: string; content: string }> {
   const subject = 'Your Sage Field Application Has Been Received'
   const content = `
 <!DOCTYPE html>
