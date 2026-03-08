@@ -58,7 +58,7 @@ export async function saveApplicationStep5(formData: {
         program: app.program,
         specialInterests: app.special_interests,
       })
-      await sendDiscordNotification(embed, process.env.DISCORD_WEBHOOK_APPLICATIONS_URL)
+      await sendDiscordNotification(embed)
 
       const { subject, content } = await buildApplicationConfirmationEmail({
         g1FullName: app.g1_full_name ?? '',

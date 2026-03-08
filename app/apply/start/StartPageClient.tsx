@@ -21,6 +21,12 @@ const slides = [
 
 export default function StartPageClient() {
   const [mode, setMode] = useState<Mode>("choose");
+  const [sharedEmail, setSharedEmail] = useState("");
+
+  const handleSwitchToLogin = (email: string) => {
+    setSharedEmail(email);
+    setMode("login");
+  };
   const [activeSlide, setActiveSlide] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -169,8 +175,8 @@ export default function StartPageClient() {
         <div className="w-full max-w-md">
           <AnimatePresence mode="wait">
             {mode === "choose" && <ChooseMode key="choose" setMode={setMode} />}
-            {mode === "create" && <CreateMode key="create" setMode={setMode} />}
-            {mode === "login" && <LoginMode key="login" setMode={setMode} />}
+            {mode === "create" && <CreateMode key="create" setMode={setMode} onSwitchToLogin={handleSwitchToLogin} />}
+            {mode === "login" && <LoginMode key={`login-${sharedEmail}`} setMode={setMode} defaultEmail={sharedEmail} />}
           </AnimatePresence>
         </div>
       </motion.div>
@@ -236,7 +242,10 @@ function ChooseMode({ setMode }: { setMode: (m: Mode) => void }) {
 }
 
 /* ── Mode: Create ── */
-function CreateMode({ setMode }: { setMode: (m: Mode) => void }) {
+function CreateMode({ setMode, onSwitchToLogin }: {
+  setMode: (m: Mode) => void
+  onSwitchToLogin: (email: string) => void
+}) {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -244,10 +253,12 @@ function CreateMode({ setMode }: { setMode: (m: Mode) => void }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [emailExists, setEmailExists] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setEmailExists(false);
 
     if (password !== confirmPassword) {
       setError("Passwords do not match");
@@ -257,7 +268,10 @@ function CreateMode({ setMode }: { setMode: (m: Mode) => void }) {
     setLoading(true);
 
     const result = await signUpParent(fullName, email, password);
-    if (result?.error) {
+    if (result?.error === 'EMAIL_EXISTS') {
+      setEmailExists(true);
+      setLoading(false);
+    } else if (result?.error) {
       setError(result.error);
       setLoading(false);
     }
@@ -358,6 +372,19 @@ function CreateMode({ setMode }: { setMode: (m: Mode) => void }) {
           </div>
         </div>
 
+        {emailExists && (
+          <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 flex flex-col gap-2">
+            <p className="text-sm text-amber-800 font-body font-semibold">An account with this email already exists.</p>
+            <button
+              type="button"
+              onClick={() => onSwitchToLogin(email)}
+              className="self-start text-sm text-primary font-semibold font-body hover:underline cursor-pointer"
+            >
+              Log in instead →
+            </button>
+          </div>
+        )}
+
         {error && (
           <p className="text-sm text-red-600 font-body">{error}</p>
         )}
@@ -385,8 +412,8 @@ function CreateMode({ setMode }: { setMode: (m: Mode) => void }) {
 }
 
 /* ── Mode: Login ── */
-function LoginMode({ setMode }: { setMode: (m: Mode) => void }) {
-  const [email, setEmail] = useState("");
+function LoginMode({ setMode, defaultEmail = "" }: { setMode: (m: Mode) => void; defaultEmail?: string }) {
+  const [email, setEmail] = useState(defaultEmail);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);

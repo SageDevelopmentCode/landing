@@ -17,7 +17,7 @@ const tabContent = {
       "This is an ideal way to experience Sage Field before committing to a full school year. Families who complete the summer program and wish to continue will have priority consideration for School Year 2026–2027 enrollment.",
     ],
     details: [
-      { label: "Dates", value: "May 26 – August 24, 2026" },
+      { label: "Dates", value: "May 26 – August 20, 2026" },
       { label: "Ages", value: "4–10 years" },
       { label: "Schedule", value: "Mon–Thu, ~6 hrs/day" },
       { label: "Group Size", value: "15–20 children" },
@@ -242,6 +242,242 @@ export default function ApplyPage() {
                       </div>
                     </div>
                   </div>
+                )}
+
+                {/* Educational Philosophy — Summer 2026 only */}
+                {activeTab === "summer" && (
+                  <motion.div
+                    className="border-t border-gray-100 pt-10 mb-10"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6, ease: "easeOut" }}
+                  >
+                    {/* Badge */}
+                    <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6">
+                      How We Learn
+                    </span>
+
+                    {/* Heading */}
+                    <h2 className="text-2xl md:text-3xl font-bold text-black font-heading mb-3">
+                      How We Learn
+                    </h2>
+
+                    {/* Subtitle */}
+                    <p className="text-lg font-semibold text-primary font-heading mb-6">
+                      Educational Philosophy
+                    </p>
+
+                    {/* Paragraphs */}
+                    <p className="text-base text-text-gray mb-4 leading-relaxed font-body">
+                      Our approach integrates elements of{" "}
+                      <span className="text-primary font-semibold">Montessori</span>,{" "}
+                      <span className="text-primary font-semibold">Waldorf</span>, and{" "}
+                      <span className="text-primary font-semibold">Reggio Emilia</span>{" "}
+                      methods with{" "}
+                      <span className="text-primary font-semibold">TEKS-aligned academics</span>.
+                      We enrich learning with social-emotional education, arts, music, and creative problem-solving.
+                    </p>
+
+                    <p className="text-base text-text-gray mb-6 leading-relaxed font-body">
+                      We value{" "}
+                      <span className="text-primary font-semibold">emotional regulation</span>,
+                      both for students and educators. A calm, connected teacher creates a community where children thrive.
+                    </p>
+
+                    {/* Key Pillars Callout */}
+                    <div className="mb-8 p-4 bg-primary/10 rounded-lg border-l-4 border-primary">
+                      <h3 className="text-base font-semibold text-black mb-3 font-heading">
+                        Our Key Pillars
+                      </h3>
+                      <ul className="space-y-2 text-sm text-text-gray font-body">
+                        {[
+                          "Hands-on, experiential learning",
+                          "Emotional regulation & mindfulness practices",
+                          "Artistic and musical creativity",
+                          "Movement-based and outdoor education",
+                        ].map((item) => (
+                          <li key={item} className="flex items-start">
+                            <span className="text-primary mr-2">•</span>
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Pillar Cards 2×2 */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {[
+                        { icon: "🌱", title: "Hands-on Learning", description: "Experiential activities that engage curiosity" },
+                        { icon: "🧘", title: "Emotional Regulation", description: "Mindfulness practices for students & educators" },
+                        { icon: "🎨", title: "Creative Expression", description: "Artistic and musical creativity flourish" },
+                        { icon: "🌳", title: "Movement & Nature", description: "Movement-based and outdoor education" },
+                      ].map((pillar, index) => (
+                        <motion.div
+                          key={index}
+                          className="bg-white p-5 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02] cursor-pointer group"
+                          initial={{ opacity: 0, y: 20 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.5, delay: 0.1 + index * 0.1, ease: "easeOut" }}
+                        >
+                          <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mb-3 group-hover:bg-primary/30 transition-colors duration-200">
+                            <span className="text-2xl">{pillar.icon}</span>
+                          </div>
+                          <h3 className="text-base font-semibold text-black mb-1 font-heading">{pillar.title}</h3>
+                          <p className="text-sm text-text-gray font-body">{pillar.description}</p>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* A Day in the Life — Summer 2026 only */}
+                {activeTab === "summer" && (
+                  <motion.div
+                    className="mb-10"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6, ease: "easeOut" }}
+                  >
+                    {/* Badge */}
+                    <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6">
+                      Sample Curriculum
+                    </span>
+
+                    <h2 className="text-2xl md:text-3xl font-bold text-black font-heading mb-6">
+                      A Day in the Life
+                    </h2>
+
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                      {/* Week Header */}
+                      <p className="text-lg font-bold text-gray-500 font-heading mb-5">
+                        Week 1 · Tuesday
+                      </p>
+
+                      {/* Daily Activity */}
+                      <p className="text-sm font-bold underline text-gray-800 font-body mb-4">
+                        Daily Activity: Camp Kick Off Games
+                      </p>
+
+                      <div className="space-y-5">
+                        {/* Camp Scavenger Hunt */}
+                        <div>
+                          <p className="text-sm font-semibold text-gray-700 font-body mb-1">Camp Scavenger Hunt</p>
+                          <p className="text-sm text-text-gray font-body mb-2">
+                            Explore camp grounds and find items from the list below.
+                          </p>
+                          <ul className="space-y-1 pl-4">
+                            {[
+                              "Find something that floats",
+                              "Find 5 different plants",
+                              "Find something shaped like a circle",
+                              "Find something soft",
+                              "Find an insect or bug",
+                            ].map((item) => (
+                              <li key={item} className="text-sm text-text-gray font-body flex items-start">
+                                <span className="text-primary mr-2">•</span>
+                                <span>{item}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        {/* Name Toss */}
+                        <div>
+                          <p className="text-sm font-semibold text-gray-700 font-body mb-1">Name Toss</p>
+                          <p className="text-xs text-text-gray font-body mb-2">
+                            <span className="font-semibold">Materials:</span> Soft ball
+                          </p>
+                          <ol className="space-y-1 pl-4 list-decimal list-inside">
+                            {[
+                              "Everyone stands in a circle",
+                              "Say your name and toss the ball to someone",
+                              "Catcher says another name and tosses the ball",
+                              "Add more balls to create fun chaos!",
+                            ].map((step) => (
+                              <li key={step} className="text-sm text-text-gray font-body">{step}</li>
+                            ))}
+                          </ol>
+                        </div>
+
+                        {/* Whole Body Rock Paper Scissors */}
+                        <div>
+                          <p className="text-sm font-semibold text-gray-700 font-body mb-1">Whole Body Rock Paper Scissors</p>
+                          <ul className="space-y-1 pl-4 mb-2">
+                            {[
+                              "Rock — squat and curl into a ball",
+                              "Paper — stand straight, arms at sides",
+                              "Scissors — stand with legs and arms spread apart",
+                            ].map((pose) => (
+                              <li key={pose} className="text-sm text-text-gray font-body flex items-start">
+                                <span className="text-primary mr-2">•</span>
+                                <span>{pose}</span>
+                              </li>
+                            ))}
+                          </ul>
+                          <p className="text-xs text-text-gray font-body italic">
+                            Jump 3 times for rock, paper, scissors — then show your answer for shoot!
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Materials Callout */}
+                      <div className="mt-5 p-3 bg-primary/10 border-l-4 border-primary rounded-r-lg">
+                        <p className="text-sm font-semibold text-gray-800 font-body">
+                          Daily Activity Materials: 1–3 Soft Balls
+                        </p>
+                      </div>
+
+                      {/* Age Note */}
+                      <p className="mt-3 text-xs italic text-gray-400 font-body">
+                        (Suitable for all ages 4–10, including neurodivergent learners)
+                      </p>
+
+                      {/* Daily Craft */}
+                      <div className="border-t border-gray-100 mt-6 pt-5">
+                        <p className="text-sm font-bold underline text-gray-800 font-body mb-4">
+                          Daily Craft: Camp Name Tags
+                        </p>
+
+                        {/* Craft Image placeholder */}
+                        <img
+                          src="/assets/ImageOne.jpg"
+                          alt="Camp Name Tags craft"
+                          className="rounded-xl aspect-video object-cover mb-5 w-full"
+                        />
+
+                        {/* Craft Materials */}
+                        <div className="mb-4">
+                          <p className="text-sm font-semibold text-gray-700 font-body mb-2">Materials</p>
+                          <ul className="space-y-1 pl-4">
+                            {["Wooden Round Circles", "Markers", "Twine", "Beads"].map((mat) => (
+                              <li key={mat} className="text-sm text-text-gray font-body flex items-start">
+                                <span className="text-primary mr-2">•</span>
+                                <span>{mat}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        {/* Craft Directions */}
+                        <div>
+                          <p className="text-sm font-semibold text-gray-700 font-body mb-2">Directions</p>
+                          <ol className="space-y-1 pl-4 list-decimal list-inside">
+                            {[
+                              "Write your name on the round circle",
+                              "Decorate your name plate however you like",
+                              "Tie string through the hole (add beads if you want!)",
+                              "Put on your name tag and wear it proudly",
+                            ].map((step) => (
+                              <li key={step} className="text-sm text-text-gray font-body">{step}</li>
+                            ))}
+                          </ol>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
                 )}
 
                 {/* Mobile CTA — visible only below lg */}

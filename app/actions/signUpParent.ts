@@ -7,7 +7,13 @@ export async function signUpParent(fullName: string, email: string, password: st
 
   // 1. Sign up the user
   const { data, error } = await supabase.auth.signUp({ email, password })
+
+  // When email confirmation is ON, Supabase throws a real error for duplicate emails
+  if (error?.message === 'User already registered') return { error: 'EMAIL_EXISTS' }
   if (error) return { error: error.message }
+
+  // When email confirmation is OFF, Supabase returns existing user with empty identities
+  if (data.user?.identities?.length === 0) return { error: 'EMAIL_EXISTS' }
 
   const userId = data.user?.id
   if (!userId) return { error: 'Account creation failed. Please try again.' }
