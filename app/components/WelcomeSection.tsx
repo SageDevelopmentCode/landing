@@ -20,7 +20,7 @@ export default function WelcomeSection() {
     {
       title: "Small Groups",
       description:
-        "Personalized attention for lower elementary aged children in intimate learning environments designed for learning and growth.",
+        "Personalized attention in intimate learning environments designed for learning and growth.",
       icon: "👥",
     },
     {

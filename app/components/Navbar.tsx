@@ -1,17 +1,119 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { ChevronDown } from "lucide-react";
 import ContactDialog from "./ContactDialog";
 import WaitlistDialog from "./WaitlistDialog";
+
+// ─── Data model ────────────────────────────────────────────────────────────
+
+type NavAction =
+  | { kind: "link"; href: string }
+  | { kind: "smooth-scroll"; href: string }
+  | { kind: "dialog"; target: "waitlist" | "contact" }
+  | { kind: "disabled" };
+
+interface NavLeaf {
+  label: string;
+  action: NavAction;
+  badge?: "Coming Soon";
+}
+
+type NavTab =
+  | { kind: "single"; label: string; action: NavAction }
+  | { kind: "dropdown"; label: string; items: NavLeaf[] };
+
+const NAV_TABS: NavTab[] = [
+  {
+    kind: "dropdown",
+    label: "About Us",
+    items: [
+      { label: "About Us", action: { kind: "link", href: "/about" } },
+      { label: "FAQ", action: { kind: "link", href: "/faq" } },
+      { label: "Our Vision", action: { kind: "link", href: "/vision" } },
+      {
+        label: "What We Offer",
+        action: { kind: "smooth-scroll", href: "/#what-we-offer" },
+      },
+      {
+        label: "Educational Philosophy",
+        action: { kind: "smooth-scroll", href: "/#educational-philosophy" },
+      },
+    ],
+  },
+  {
+    kind: "dropdown",
+    label: "Programs & Tuition",
+    items: [
+      {
+        label: "Summer Program 2026",
+        action: { kind: "disabled" },
+        badge: "Coming Soon",
+      },
+      {
+        label: "School Year 2026-2027",
+        action: { kind: "disabled" },
+        badge: "Coming Soon",
+      },
+      { label: "Tuition", action: { kind: "disabled" }, badge: "Coming Soon" },
+    ],
+  },
+  {
+    kind: "dropdown",
+    label: "Apply",
+    items: [
+      {
+        label: "Apply for a Program",
+        action: { kind: "link", href: "/apply" },
+      },
+      {
+        label: "Interest Form",
+        action: { kind: "dialog", target: "waitlist" },
+      },
+    ],
+  },
+  {
+    kind: "dropdown",
+    label: "Resources & Support",
+    items: [
+      {
+        label: "Community & Education Resources",
+        action: { kind: "disabled" },
+        badge: "Coming Soon",
+      },
+      {
+        label: "Academic Calendar",
+        action: { kind: "disabled" },
+        badge: "Coming Soon",
+      },
+      { label: "FAQ", action: { kind: "link", href: "/faq" } },
+      { label: "Donate", action: { kind: "link", href: "/donate" } },
+    ],
+  },
+  {
+    kind: "single",
+    label: "Contact",
+    action: { kind: "disabled" },
+  },
+];
+
+// ─── Component ──────────────────────────────────────────────────────────────
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [waitlistDialogOpen, setWaitlistDialogOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [openMobileSection, setOpenMobileSection] = useState<string | null>(
+    null,
+  );
+
+  const navRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+
   const useDarkStyle =
     pathname === "/faq" ||
     pathname === "/about" ||
@@ -19,39 +121,113 @@ export default function Navbar() {
     pathname === "/donate" ||
     pathname === "/donate/success";
 
-  const menuItems = [
-    { label: "What We Offer", href: "/#what-we-offer" },
-    { label: "Educational Philosophy", href: "/#educational-philosophy" },
-    { label: "About Us", href: "/about" },
-    { label: "FAQ", href: "/faq" },
-    { label: "Our Vision", href: "/vision" },
-    // { label: "Apply", href: "/apply" },
-  ];
+  // Close everything on route change
+  useEffect(() => {
+    setOpenDropdown(null);
+    setOpenMobileSection(null);
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
-  const handleSmoothScroll = (
-    e: React.MouseEvent<HTMLAnchorElement>,
-    href: string,
-  ) => {
-    // Only handle anchor links (starting with /#) on the home page
-    if (href.startsWith("/#") && pathname === "/") {
-      e.preventDefault();
-      const targetId = href.substring(2);
-      const targetElement = document.getElementById(targetId);
-
-      if (targetElement) {
-        const navbarHeight = 80; // Height of the navbar in pixels
-        const targetPosition = targetElement.offsetTop - navbarHeight;
-
-        window.scrollTo({
-          top: targetPosition,
-          behavior: "smooth",
-        });
-
-        // Close mobile menu if open
-        setMobileMenuOpen(false);
+  // Click-outside: close desktop dropdown
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+        setOpenDropdown(null);
       }
     }
-  };
+    if (openDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [openDropdown]);
+
+  // ── Leaf action handler ──────────────────────────────────────────────────
+
+  function handleLeafAction(action: NavAction) {
+    if (action.kind === "disabled") return;
+
+    if (action.kind === "dialog") {
+      if (action.target === "waitlist") setWaitlistDialogOpen(true);
+      if (action.target === "contact") setContactDialogOpen(true);
+      setMobileMenuOpen(false);
+      setOpenDropdown(null);
+      return;
+    }
+
+    if (action.kind === "smooth-scroll") {
+      const id = action.href.replace("/#", "");
+      const el = document.getElementById(id);
+      if (el) {
+        const top = el.offsetTop - 80;
+        window.scrollTo({ top, behavior: "smooth" });
+      }
+      setMobileMenuOpen(false);
+      setOpenDropdown(null);
+      return;
+    }
+
+    // link — Next.js <Link> handles it; just close nav
+    setMobileMenuOpen(false);
+    setOpenDropdown(null);
+  }
+
+  // ── Leaf renderer ────────────────────────────────────────────────────────
+
+  function renderLeaf(leaf: NavLeaf, mobile = false) {
+    const base = mobile
+      ? "flex items-center justify-between w-full text-left py-2 px-1 rounded-lg text-sm font-medium"
+      : "flex items-center justify-between w-full text-left px-4 py-2.5 rounded-lg text-sm transition-colors duration-150";
+
+    const badge = leaf.badge ? (
+      <span className="ml-2 text-[10px] font-semibold uppercase bg-gray-100 text-gray-400 rounded-full px-2 py-0.5 shrink-0">
+        {leaf.badge}
+      </span>
+    ) : null;
+
+    if (leaf.action.kind === "disabled") {
+      return (
+        <span
+          key={leaf.label}
+          className={`${base} text-gray-400 opacity-50 cursor-not-allowed select-none`}
+        >
+          <span>{leaf.label}</span>
+          {badge}
+        </span>
+      );
+    }
+
+    if (leaf.action.kind === "link") {
+      return (
+        <Link
+          key={leaf.label}
+          href={leaf.action.href}
+          onClick={() => handleLeafAction(leaf.action)}
+          className={`${base} text-gray-700 hover:bg-gray-50 hover:text-gray-900`}
+        >
+          <span>{leaf.label}</span>
+          {badge}
+        </Link>
+      );
+    }
+
+    // smooth-scroll or dialog
+    return (
+      <button
+        key={leaf.label}
+        onClick={() => handleLeafAction(leaf.action)}
+        className={`${base} text-gray-700 hover:bg-gray-50 hover:text-gray-900 cursor-pointer`}
+      >
+        <span>{leaf.label}</span>
+        {badge}
+      </button>
+    );
+  }
+
+  // ── Trigger text color ───────────────────────────────────────────────────
+
+  const triggerClass = useDarkStyle
+    ? "text-gray-800/90 hover:text-gray-800"
+    : "text-white/90 hover:text-white";
 
   return (
     <motion.nav
@@ -59,6 +235,7 @@ export default function Navbar() {
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
+      ref={navRef}
     >
       <div className="px-12 mx-auto">
         <div className="flex items-center justify-between h-20 relative">
@@ -78,30 +255,71 @@ export default function Navbar() {
             </Link>
           </motion.div>
 
-          {/* Desktop Menu Items - Center */}
-          <div className="hidden lg:flex items-center space-x-8 absolute left-1/2 -translate-x-1/2">
-            {menuItems.map((item, index) => (
-              <motion.a
-                key={item.label}
-                href={item.href}
-                onClick={(e) => handleSmoothScroll(e, item.href)}
-                className={`${
-                  useDarkStyle
-                    ? "text-gray-800/90 hover:text-gray-800"
-                    : "text-white/90 hover:text-white"
-                } font-semibold transition-colors duration-200`}
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: 0.5,
-                  delay: 0.2 + index * 0.1,
-                  ease: "easeOut",
-                }}
-              >
-                {item.label}
-              </motion.a>
-            ))}
-          </div>
+          {/* Desktop Nav — Center */}
+          <motion.div
+            className="hidden lg:flex items-center space-x-1 absolute left-1/2 -translate-x-1/2"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
+          >
+            {NAV_TABS.map((tab) => {
+              if (tab.kind === "single") {
+                const isDisabled = tab.action.kind === "disabled";
+                return (
+                  <span
+                    key={tab.label}
+                    className={`px-3 py-2 font-semibold text-sm transition-colors duration-200 ${
+                      isDisabled
+                        ? "text-gray-400/60 cursor-not-allowed select-none"
+                        : `${triggerClass} cursor-pointer`
+                    }`}
+                  >
+                    {tab.label}
+                  </span>
+                );
+              }
+
+              // dropdown
+              const isOpen = openDropdown === tab.label;
+              return (
+                <div
+                  key={tab.label}
+                  className="relative"
+                  onMouseEnter={() => setOpenDropdown(tab.label)}
+                  onMouseLeave={() => setOpenDropdown(null)}
+                >
+                  <button
+                    className={`flex items-center gap-1 px-3 py-2 font-semibold text-sm transition-colors duration-200 ${triggerClass} cursor-pointer focus:outline-none`}
+                  >
+                    {tab.label}
+                    <motion.span
+                      animate={{ rotate: isOpen ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="flex items-center"
+                    >
+                      <ChevronDown className="w-3.5 h-3.5" strokeWidth={2.5} />
+                    </motion.span>
+                  </button>
+
+                  <AnimatePresence>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                        transition={{ duration: 0.15, ease: "easeOut" }}
+                        className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50"
+                      >
+                        <div className="px-2 py-1 flex flex-col gap-0.5">
+                          {tab.items.map((leaf) => renderLeaf(leaf))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
+          </motion.div>
 
           {/* Action Buttons */}
           <motion.div
@@ -110,7 +328,6 @@ export default function Navbar() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
           >
-            {/* Contact Us Button - Secondary */}
             <button
               onClick={() => setContactDialogOpen(true)}
               className={`border-2 ${
@@ -121,8 +338,6 @@ export default function Navbar() {
             >
               Contact Us
             </button>
-
-            {/* Enrollment Button - Primary */}
             <button
               onClick={() => setWaitlistDialogOpen(true)}
               className="border-2 border-white bg-primary hover:bg-primary-hover text-white font-semibold px-6 py-2 rounded-lg transition-all duration-250 cursor-pointer shadow-lg"
@@ -131,7 +346,7 @@ export default function Navbar() {
             </button>
           </motion.div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Hamburger */}
           <div className="lg:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -173,47 +388,96 @@ export default function Navbar() {
             transition={{ duration: 0.3, ease: "easeInOut" }}
           >
             <motion.div
-              className="px-5 py-3 space-y-3"
+              className="px-5 py-3"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2, delay: 0.1 }}
             >
-              {menuItems.map((item, index) => (
-                <motion.a
-                  key={item.label}
-                  href={item.href}
-                  className={`block ${
-                    useDarkStyle
-                      ? "text-gray-800/90 hover:text-gray-800"
-                      : "text-white/90 hover:text-white"
-                  } font-semibold py-2 transition-colors duration-200`}
-                  onClick={(e) => handleSmoothScroll(e, item.href)}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                >
-                  {item.label}
-                </motion.a>
-              ))}
+              {/* Accordion sections */}
+              <div className="space-y-1 mb-4">
+                {NAV_TABS.map((tab) => {
+                  const mobileTextBase = useDarkStyle
+                    ? "text-gray-800"
+                    : "text-white";
 
-              {/* Mobile Enrollment Button - Primary */}
+                  if (tab.kind === "single") {
+                    const isDisabled = tab.action.kind === "disabled";
+                    return (
+                      <div key={tab.label} className="py-2">
+                        <span
+                          className={`block font-semibold text-sm ${
+                            isDisabled
+                              ? "text-gray-400/60 cursor-not-allowed select-none"
+                              : mobileTextBase
+                          }`}
+                        >
+                          {tab.label}
+                        </span>
+                      </div>
+                    );
+                  }
+
+                  const isExpanded = openMobileSection === tab.label;
+
+                  return (
+                    <div key={tab.label}>
+                      <button
+                        onClick={() =>
+                          setOpenMobileSection(
+                            isExpanded ? null : tab.label,
+                          )
+                        }
+                        className={`w-full flex items-center justify-between py-2.5 font-semibold text-sm ${mobileTextBase} focus:outline-none cursor-pointer`}
+                      >
+                        {tab.label}
+                        <motion.span
+                          animate={{ rotate: isExpanded ? 180 : 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="flex items-center"
+                        >
+                          <ChevronDown
+                            className="w-4 h-4 opacity-70"
+                            strokeWidth={2.5}
+                          />
+                        </motion.span>
+                      </button>
+
+                      <AnimatePresence>
+                        {isExpanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.25, ease: "easeInOut" }}
+                            className="overflow-hidden"
+                          >
+                            <div className="border-l-2 border-primary/30 pl-4 pb-2 flex flex-col gap-0.5">
+                              {tab.items.map((leaf) => renderLeaf(leaf, true))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Mobile action buttons */}
               <motion.button
                 onClick={() => {
                   setWaitlistDialogOpen(true);
                   setMobileMenuOpen(false);
                 }}
-                className="w-full border-2 border-white bg-primary hover:bg-primary-hover text-white font-semibold px-6 py-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-250 cursor-pointer"
+                className="w-full border-2 border-white bg-primary hover:bg-primary-hover text-white font-semibold px-6 py-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-250 cursor-pointer mb-2"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.3, delay: 0.3 }}
+                transition={{ duration: 0.3, delay: 0.1 }}
               >
                 Now Open for Enrollment
               </motion.button>
 
-              {/* Mobile Contact Button - Secondary */}
               <motion.button
                 onClick={() => {
                   setContactDialogOpen(true);
@@ -227,7 +491,7 @@ export default function Navbar() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.3, delay: 0.4 }}
+                transition={{ duration: 0.3, delay: 0.15 }}
               >
                 Contact Us
               </motion.button>
@@ -236,13 +500,11 @@ export default function Navbar() {
         )}
       </AnimatePresence>
 
-      {/* Contact Dialog */}
+      {/* Dialogs */}
       <ContactDialog
         isOpen={contactDialogOpen}
         onClose={() => setContactDialogOpen(false)}
       />
-
-      {/* Waitlist Dialog */}
       <WaitlistDialog
         isOpen={waitlistDialogOpen}
         onClose={() => setWaitlistDialogOpen(false)}

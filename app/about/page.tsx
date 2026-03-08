@@ -42,7 +42,8 @@ export default function AboutPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
           >
-            Learn more about our private microschool, our mission, and the team behind Sage Field
+            Learn more about our private microschool, our mission, and the team
+            behind Sage Field
           </motion.p>
 
           <motion.blockquote
@@ -51,7 +52,8 @@ export default function AboutPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
           >
-            &ldquo;Children are not meant to rot in classrooms. Choose outdoor learning.&rdquo;
+            &ldquo;Children are not meant to rot in classrooms! Choose outdoor
+            learning!&rdquo;
           </motion.blockquote>
         </div>
       </section>

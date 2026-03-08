@@ -13,14 +13,14 @@ const tabContent = {
     badge: "Summer 2026",
     title: "Summer 2026 Program",
     description: [
-      "Our Summer 2026 program is a six-week immersive experience designed for curious learners ages 6–10. Each day blends hands-on projects, nature exploration, literacy and math support, and plenty of time for creative play—all in a small, nurturing group setting.",
+      "Our Summer 2026 program is a thirteen-week immersive experience designed for curious learners ages 4–10. Each day blends hands-on projects, nature exploration, literacy and math support, and plenty of time for creative play—all in a small, nurturing group setting.",
       "This is an ideal way to experience Sage Field before committing to a full school year. Families who complete the summer program and wish to continue will have priority consideration for School Year 2026–2027 enrollment.",
     ],
     details: [
-      { label: "Dates", value: "June 9 – July 18, 2026" },
-      { label: "Ages", value: "6–10 years" },
+      { label: "Dates", value: "May 26 – August 24, 2026" },
+      { label: "Ages", value: "4–10 years" },
       { label: "Schedule", value: "Mon–Thu, ~6 hrs/day" },
-      { label: "Group Size", value: "10–12 children" },
+      { label: "Group Size", value: "15–20 children" },
     ],
     images: [
       "/assets/After1.png",
@@ -170,6 +170,80 @@ export default function ApplyPage() {
                   </div>
                 </div>
 
+                {/* Daily Schedule — Summer only */}
+                {activeTab === "summer" && (
+                  <div className="mb-10">
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                      <div className="px-6 py-4 border-b border-gray-100">
+                        <h3 className="font-heading font-bold text-lg text-gray-800">
+                          Daily Schedule
+                        </h3>
+                      </div>
+                      <div className="divide-y divide-gray-50">
+                        {[
+                          {
+                            time: "8:30 – 9:00 AM",
+                            activity: "Check-In & Free Play 🌞",
+                          },
+                          {
+                            time: "9:00 – 9:15 AM",
+                            activity: "Good Citizenship Meeting 🌟",
+                          },
+                          {
+                            time: "9:15 – 9:30 AM",
+                            activity: "ELA Math Challenger Block 📚",
+                          },
+                          {
+                            time: "9:30 – 9:45 AM",
+                            activity: "Math Academic Block 🔢",
+                          },
+                          {
+                            time: "9:45 – 10:15 AM",
+                            activity: "Morning Snack Break 🍎",
+                          },
+                          {
+                            time: "10:15 – 10:45 AM",
+                            activity: "Daily Activity 🌟",
+                          },
+                          { time: "10:45 – 11:15 AM", activity: "Art 🎨" },
+                          { time: "11:15 – 11:30 AM", activity: "Music 🎵" },
+                          { time: "11:30 AM – 12:15 PM", activity: "Lunch 🍱" },
+                          {
+                            time: "12:15 – 1:15 PM",
+                            activity: "Water Play 💦",
+                          },
+                          {
+                            time: "1:15 – 1:45 PM",
+                            activity: "Journaling & Reflection 📝",
+                          },
+                          {
+                            time: "1:45 – 2:30 PM",
+                            activity: "Homesteading 🌱",
+                          },
+                          {
+                            time: "2:30 – 3:30 PM",
+                            activity: "Outdoor Exploration & Dismissal 🧸",
+                          },
+                        ].map((row, i) => (
+                          <div
+                            key={i}
+                            className={`flex items-center gap-4 px-6 py-3 ${
+                              i % 2 === 0 ? "bg-white" : "bg-gray-50/60"
+                            }`}
+                          >
+                            <span className="text-xs text-gray-400 font-body whitespace-nowrap w-36 shrink-0">
+                              {row.time}
+                            </span>
+                            <span className="text-sm font-semibold text-gray-800 font-body">
+                              {row.activity}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Mobile CTA — visible only below lg */}
                 <div className="lg:hidden">
                   <button
@@ -206,7 +280,6 @@ export default function ApplyPage() {
       </section>
 
       <Footer />
-
     </div>
   );
 }
