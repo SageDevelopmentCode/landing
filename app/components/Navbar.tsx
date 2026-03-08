@@ -96,7 +96,7 @@ const NAV_TABS: NavTab[] = [
   {
     kind: "single",
     label: "Contact",
-    action: { kind: "disabled" },
+    action: { kind: "dialog", target: "contact" },
   },
 ];
 
@@ -123,9 +123,12 @@ export default function Navbar() {
 
   // Close everything on route change
   useEffect(() => {
-    setOpenDropdown(null);
-    setOpenMobileSection(null);
-    setMobileMenuOpen(false);
+    const t = setTimeout(() => {
+      setOpenDropdown(null);
+      setOpenMobileSection(null);
+      setMobileMenuOpen(false);
+    }, 0);
+    return () => clearTimeout(t);
   }, [pathname]);
 
   // Click-outside: close desktop dropdown
@@ -265,17 +268,24 @@ export default function Navbar() {
             {NAV_TABS.map((tab) => {
               if (tab.kind === "single") {
                 const isDisabled = tab.action.kind === "disabled";
+                if (isDisabled) {
+                  return (
+                    <span
+                      key={tab.label}
+                      className="px-3 py-2 font-semibold text-sm text-gray-400/60 cursor-not-allowed select-none"
+                    >
+                      {tab.label}
+                    </span>
+                  );
+                }
                 return (
-                  <span
+                  <button
                     key={tab.label}
-                    className={`px-3 py-2 font-semibold text-sm transition-colors duration-200 ${
-                      isDisabled
-                        ? "text-gray-400/60 cursor-not-allowed select-none"
-                        : `${triggerClass} cursor-pointer`
-                    }`}
+                    onClick={() => handleLeafAction(tab.action)}
+                    className={`px-3 py-2 font-semibold text-sm transition-colors duration-200 ${triggerClass} cursor-pointer focus:outline-none`}
                   >
                     {tab.label}
-                  </span>
+                  </button>
                 );
               }
 
@@ -403,17 +413,23 @@ export default function Navbar() {
 
                   if (tab.kind === "single") {
                     const isDisabled = tab.action.kind === "disabled";
+                    if (isDisabled) {
+                      return (
+                        <div key={tab.label} className="py-2">
+                          <span className="block font-semibold text-sm text-gray-400/60 cursor-not-allowed select-none">
+                            {tab.label}
+                          </span>
+                        </div>
+                      );
+                    }
                     return (
                       <div key={tab.label} className="py-2">
-                        <span
-                          className={`block font-semibold text-sm ${
-                            isDisabled
-                              ? "text-gray-400/60 cursor-not-allowed select-none"
-                              : mobileTextBase
-                          }`}
+                        <button
+                          onClick={() => handleLeafAction(tab.action)}
+                          className={`block font-semibold text-sm ${mobileTextBase} cursor-pointer focus:outline-none`}
                         >
                           {tab.label}
-                        </span>
+                        </button>
                       </div>
                     );
                   }

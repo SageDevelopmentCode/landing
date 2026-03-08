@@ -522,6 +522,80 @@ export async function fetchEmailThread(
 }
 
 /**
+ * Build HTML confirmation email for a completed application
+ */
+export async function buildApplicationConfirmationEmail(opts: {
+  g1FullName: string
+  childLegalName: string
+  program: string | null
+}): { subject: string; content: string } {
+  const subject = 'Your Sage Field Application Has Been Received'
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${opts.g1FullName},</p>
+
+  <p>Thank you for submitting your application for <strong>${opts.childLegalName}</strong>${opts.program ? ` to the <strong>${opts.program}</strong> program` : ''} at Sage Field School. We are delighted to have received it.</p>
+
+  <p>Our team will carefully review your application and reach out to you within <strong>5–7 business days</strong> to discuss next steps.</p>
+
+  <p>In the meantime, if you have any questions or would like to share anything additional, please don't hesitate to reach out to us directly at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a>.</p>
+
+  <p style="margin-top: 32px;">Warmly,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim()
+
+  return { subject, content }
+}
+
+/**
+ * Send an email via Zoho Mail API
+ */
+export async function sendZohoEmail(opts: {
+  toAddress: string
+  subject: string
+  content: string
+}): Promise<boolean> {
+  try {
+    const accessToken = await getValidAccessToken()
+    const accountId = await getZohoAccountId()
+
+    const response = await fetch(
+      `https://mail.zoho.com/api/accounts/${accountId}/messages`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Zoho-oauthtoken ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fromAddress: 'sabrina@sagefield.co',
+          toAddress: opts.toAddress,
+          subject: opts.subject,
+          content: opts.content,
+          mailFormat: 'html',
+        }),
+      }
+    )
+
+    if (!response.ok) {
+      const error = await response.text()
+      console.error('Failed to send Zoho email:', error)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('Error sending Zoho email:', error)
+    return false
+  }
+}
+
+/**
  * Generate OAuth authorization URL
  */
 export async function getAuthorizationUrl(): Promise<string> {

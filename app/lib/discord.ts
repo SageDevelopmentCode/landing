@@ -26,13 +26,14 @@ interface DiscordWebhookPayload {
  * @returns Promise<boolean> - True if successful, false otherwise
  */
 export async function sendDiscordNotification(
-  embed: DiscordEmbed
+  embed: DiscordEmbed,
+  webhookUrl?: string
 ): Promise<boolean> {
-  const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+  const resolvedUrl = webhookUrl ?? process.env.DISCORD_WEBHOOK_URL;
 
   // If no webhook URL is configured, log and return
-  if (!webhookUrl) {
-    console.warn("DISCORD_WEBHOOK_URL not configured. Skipping Discord notification.");
+  if (!resolvedUrl) {
+    console.warn("No Discord webhook URL configured. Skipping Discord notification.");
     return false;
   }
 
@@ -41,7 +42,7 @@ export async function sendDiscordNotification(
       embeds: [embed],
     };
 
-    const response = await fetch(webhookUrl, {
+    const response = await fetch(resolvedUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -181,6 +182,63 @@ export function createContactEmbed(data: {
   return {
     title: "📧 New Contact Form Submission",
     color: 0x2ecc71, // Green
+    fields,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * Creates a Discord embed for application completions
+ */
+export function createApplicationEmbed(data: {
+  g1FullName: string;
+  g1Email: string;
+  g1Phone: string;
+  g2FullName?: string | null;
+  g2Email?: string | null;
+  childLegalName: string;
+  childAge: number | null;
+  childGrade: string | null;
+  program: string | null;
+  specialInterests?: string | null;
+}): DiscordEmbed {
+  const fields: DiscordEmbedField[] = [
+    { name: "Guardian 1 Name", value: data.g1FullName || "N/A", inline: true },
+    { name: "Guardian 1 Email", value: data.g1Email || "N/A", inline: true },
+    { name: "Guardian 1 Phone", value: data.g1Phone || "N/A", inline: true },
+  ];
+
+  if (data.g2FullName) {
+    fields.push({ name: "Guardian 2 Name", value: data.g2FullName, inline: true });
+  }
+  if (data.g2Email) {
+    fields.push({ name: "Guardian 2 Email", value: data.g2Email, inline: true });
+  }
+
+  fields.push(
+    { name: "Child Legal Name", value: data.childLegalName || "N/A", inline: true },
+    {
+      name: "Age / Grade",
+      value: `${data.childAge ?? "N/A"} / ${data.childGrade ?? "N/A"}`,
+      inline: true,
+    },
+    { name: "Program", value: data.program || "N/A", inline: true }
+  );
+
+  if (data.specialInterests) {
+    fields.push({
+      name: "Special Interests / Notes",
+      value:
+        data.specialInterests.length > 1024
+          ? data.specialInterests.substring(0, 1021) + "..."
+          : data.specialInterests,
+      inline: false,
+    });
+  }
+
+  return {
+    title: "📋 New Application Submitted",
+    color: 0xf39c12, // Orange/gold
     fields,
     timestamp: new Date().toISOString(),
   };
