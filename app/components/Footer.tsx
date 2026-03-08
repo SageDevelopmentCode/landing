@@ -40,9 +40,9 @@ export default function Footer() {
                 className="h-12 mb-4 cursor-pointer"
               />
             </Link>
-            <p className="text-gray-400 text-sm font-body leading-relaxed">
-              A nature-based private microschool for children ages 6–10, where
-              hands-on experiences meet wisdom-focused education.
+            <p className="text-gray-400 text-sm font-body leading-relaxed italic">
+              Children are not meant to rot in classrooms. Choose outdoor
+              learning.
             </p>
           </div>
 

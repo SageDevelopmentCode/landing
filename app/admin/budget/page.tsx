@@ -566,8 +566,19 @@ function BudgetTab({
     notes: '',
   })
   const [saving, setSaving] = useState(false)
+  const [disabledIds, setDisabledIds] = useState<Set<string>>(new Set())
 
-  const total = lineItems.reduce((s, i) => s + Number(i.planned_amount), 0)
+  const toggleDisabled = (id: string) =>
+    setDisabledIds(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+
+  const total = lineItems.reduce(
+    (s, i) => disabledIds.has(i.id) ? s : s + Number(i.planned_amount),
+    0
+  )
 
   const byCategory = lineItems.reduce<Record<string, BudgetLineItem[]>>((acc, item) => {
     if (!acc[item.category]) acc[item.category] = []
@@ -699,7 +710,10 @@ function BudgetTab({
 
       <Table headers={['Category', 'Item', 'Planned Amount', 'Notes', '']}>
         {Object.entries(byCategory).map(([cat, items]) => {
-          const catTotal = items.reduce((s, i) => s + Number(i.planned_amount), 0)
+          const catTotal = items.reduce(
+            (s, i) => disabledIds.has(i.id) ? s : s + Number(i.planned_amount),
+            0
+          )
           return (
             <React.Fragment key={`cat-${cat}`}>
               <tr style={{ backgroundColor: '#F6F1E8' }}>
@@ -714,7 +728,7 @@ function BudgetTab({
               {items.map((item, i) => {
                 const editing = editingId === item.id
                 return (
-                  <TableRow key={item.id} index={i}>
+                  <TableRow key={item.id} index={i} style={{ opacity: disabledIds.has(item.id) ? 0.4 : 1 }}>
                     <TableCell>{item.category}</TableCell>
                     <TableCell>
                       {editing ? (
@@ -776,6 +790,13 @@ function BudgetTab({
                           </>
                         ) : (
                           <>
+                            <button
+                              style={{ ...btnGhost, padding: '4px 10px', fontSize: '12px' }}
+                              onClick={() => toggleDisabled(item.id)}
+                              title={disabledIds.has(item.id) ? 'Re-enable' : 'Exclude from total'}
+                            >
+                              {disabledIds.has(item.id) ? 'Enable' : 'Exclude'}
+                            </button>
                             <button
                               style={{ ...btnGhost, padding: '4px 10px', fontSize: '12px' }}
                               onClick={() => {
@@ -1795,16 +1816,12 @@ function AnalysisTab({
   const [targetProfit, setTargetProfit] = useState(500)
   const [activeSubTab, setActiveSubTab] = useState<'School Year' | 'Summer'>('School Year')
 
-  const [syStudents, setSyStudents] = useState<Record<string, number>>(() => {
-    const neededAlone_14 = Math.ceil((totalBudget + 500) / TUITION_RATES.full_14)
-    const neededAlone_primary = Math.ceil((totalBudget + 500) / TUITION_RATES.full_primary)
-    return {
-      full_14: neededAlone_14,
-      full_primary: Math.max(0, neededAlone_primary - 2),
-      aftercare_enrolled: 3,
-      aftercare_non: 2,
-      fun_friday: 2,
-    }
+  const [syStudents, setSyStudents] = useState<Record<string, number>>({
+    full_14: 15,
+    full_primary: 10,
+    aftercare_enrolled: 0,
+    aftercare_non: 0,
+    fun_friday: 0,
   })
   const [swStudents, setSwStudents] = useState<Record<string, number>>(() =>
     Object.fromEntries(SUMMER_WEEKLY_RATES.map(r => [r.key, Math.ceil((totalBudget + 500) / (r.rate * 4.33))]))

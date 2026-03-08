@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   title:
     "Sage Field Private School - Nature-Based Microschool | Round Rock TX",
   description:
-    "Sage Field Private School is a nature-based private microschool for lower-elementary children in Round Rock, Texas. Small-group, outdoor-centered education that fosters curiosity, confidence, and wisdom — a structured drop-off program without the rigidity of traditional school.",
+    "Children are not meant to rot in classrooms. Choose outdoor learning. Sage Field Private School is a nature-based private microschool for lower-elementary children in Round Rock, Texas. Small-group, outdoor-centered education that fosters curiosity, confidence, and wisdom — a structured drop-off program without the rigidity of traditional school.",
   keywords: [
     "private microschool Round Rock Texas",
     "nature-based school Round Rock TX",

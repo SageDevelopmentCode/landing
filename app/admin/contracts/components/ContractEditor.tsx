@@ -96,6 +96,12 @@ export default function ContractEditor({ content, onChange, onCancel, onSave, is
   const [sigMenuOpen, setSigMenuOpen] = useState(false)
   const sigMenuRef = useRef<HTMLDivElement>(null)
 
+  const [fieldMenuOpen, setFieldMenuOpen] = useState(false)
+  const [fieldModal, setFieldModal] = useState<'input' | 'yesno' | 'dropdown' | null>(null)
+  const [fieldLabel, setFieldLabel] = useState('')
+  const [fieldOptions, setFieldOptions] = useState('')
+  const fieldMenuRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
     if (!sigMenuOpen) return
     function handleClickOutside(e: MouseEvent) {
@@ -106,6 +112,17 @@ export default function ContractEditor({ content, onChange, onCancel, onSave, is
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [sigMenuOpen])
+
+  useEffect(() => {
+    if (!fieldMenuOpen) return
+    function handleClickOutside(e: MouseEvent) {
+      if (fieldMenuRef.current && !fieldMenuRef.current.contains(e.target as Node)) {
+        setFieldMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [fieldMenuOpen])
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -127,6 +144,22 @@ export default function ContractEditor({ content, onChange, onCancel, onSave, is
       },
     },
   })
+
+  function insertField() {
+    if (!fieldLabel.trim() || !editor) return
+    const label = fieldLabel.trim()
+    const type = fieldModal!
+    const prefix = type === 'input' ? '[ ]' : type === 'yesno' ? 'Y/N' : '▼'
+    const optionsAttr = type === 'dropdown' && fieldOptions.trim()
+      ? ` data-field-options="${fieldOptions.trim()}"`
+      : ''
+    const html = `<span class="contract-field" data-field-type="${type}" data-field-label="${label}"${optionsAttr} contenteditable="false">${prefix} ${label}</span>&nbsp;`
+    editor.chain().focus().insertContent(html).run()
+    setFieldModal(null)
+    setFieldLabel('')
+    setFieldOptions('')
+    setFieldMenuOpen(false)
+  }
 
   if (!editor) return null
 
@@ -171,7 +204,32 @@ export default function ContractEditor({ content, onChange, onCancel, onSave, is
           pointer-events: none;
           height: 0;
         }
-
+        .contract-field {
+          display: inline-block;
+          font-family: 'Courier New', Courier, monospace;
+          font-size: 0.8rem;
+          padding: 1px 6px;
+          border-radius: 4px;
+          border: 1px solid currentColor;
+          user-select: none;
+          cursor: default;
+          vertical-align: baseline;
+        }
+        .contract-field[data-field-type="input"] {
+          background-color: #D4EAF7;
+          color: #1a6a9a;
+          border-color: #9ecae8;
+        }
+        .contract-field[data-field-type="yesno"] {
+          background-color: #BFD8C0;
+          color: #2e6b3f;
+          border-color: #8fbf91;
+        }
+        .contract-field[data-field-type="dropdown"] {
+          background-color: #FDE68A;
+          color: #92400e;
+          border-color: #f5c842;
+        }
       `}</style>
 
       {/* Editor area */}
@@ -475,6 +533,164 @@ export default function ContractEditor({ content, onChange, onCancel, onSave, is
                   }}
                 />
               ))}
+            </div>
+          )}
+        </div>
+
+        {/* Field insertion dropdown */}
+        <div ref={fieldMenuRef} style={{ position: 'relative' }}>
+          <button
+            type="button"
+            onMouseDown={(e) => {
+              e.preventDefault()
+              setFieldMenuOpen((open) => !open)
+              setFieldModal(null)
+            }}
+            title="Insert field"
+            className="inline-flex items-center justify-center h-7 text-xs transition-colors duration-150"
+            style={{
+              padding: '0 6px',
+              backgroundColor: fieldMenuOpen || fieldModal ? colors.pastelSage : 'transparent',
+              color: fieldMenuOpen || fieldModal ? colors.mistyForest : colors.textSecondary,
+              borderRadius: radius.sm,
+              border: 'none',
+              cursor: 'pointer',
+              gap: '2px',
+            }}
+          >
+            ＋ Field <span style={{ fontSize: '0.6rem' }}>▾</span>
+          </button>
+
+          {/* Field type dropdown */}
+          {fieldMenuOpen && !fieldModal && (
+            <div
+              style={{
+                position: 'absolute',
+                bottom: 'calc(100% + 4px)',
+                left: 0,
+                backgroundColor: '#fff',
+                border: `1px solid ${colors.border}`,
+                borderRadius: radius.md,
+                boxShadow: shadows.medium,
+                zIndex: 50,
+                minWidth: '150px',
+                padding: '4px 0',
+              }}
+            >
+              {([
+                { type: 'input', label: 'Text Input' },
+                { type: 'yesno', label: 'Yes / No' },
+                { type: 'dropdown', label: 'Dropdown' },
+              ] as const).map(({ type, label }) => (
+                <SigOption
+                  key={type}
+                  label={label}
+                  onMouseDown={(e) => {
+                    e.preventDefault()
+                    setFieldMenuOpen(false)
+                    setFieldModal(type)
+                  }}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Field label popover */}
+          {fieldModal && (
+            <div
+              style={{
+                position: 'absolute',
+                bottom: 'calc(100% + 4px)',
+                left: 0,
+                backgroundColor: '#fff',
+                border: `1px solid ${colors.border}`,
+                borderRadius: radius.md,
+                boxShadow: shadows.medium,
+                zIndex: 50,
+                minWidth: '220px',
+                padding: '10px 12px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+              }}
+            >
+              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: colors.textPrimary }}>
+                {fieldModal === 'input' ? 'Text Input' : fieldModal === 'yesno' ? 'Yes / No' : 'Dropdown'} field
+              </div>
+              <input
+                autoFocus
+                type="text"
+                placeholder="Field label"
+                value={fieldLabel}
+                onChange={(e) => setFieldLabel(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') insertField() }}
+                style={{
+                  fontSize: '0.8rem',
+                  padding: '4px 8px',
+                  borderRadius: radius.sm,
+                  border: `1px solid ${colors.border}`,
+                  outline: 'none',
+                  color: colors.textPrimary,
+                }}
+              />
+              {fieldModal === 'dropdown' && (
+                <input
+                  type="text"
+                  placeholder="Options (comma-separated)"
+                  value={fieldOptions}
+                  onChange={(e) => setFieldOptions(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') insertField() }}
+                  style={{
+                    fontSize: '0.8rem',
+                    padding: '4px 8px',
+                    borderRadius: radius.sm,
+                    border: `1px solid ${colors.border}`,
+                    outline: 'none',
+                    color: colors.textPrimary,
+                  }}
+                />
+              )}
+              <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault()
+                    setFieldModal(null)
+                    setFieldLabel('')
+                    setFieldOptions('')
+                  }}
+                  style={{
+                    fontSize: '0.75rem',
+                    padding: '3px 10px',
+                    borderRadius: radius.sm,
+                    border: `1px solid ${colors.border}`,
+                    backgroundColor: 'transparent',
+                    color: colors.textSecondary,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault()
+                    insertField()
+                  }}
+                  style={{
+                    fontSize: '0.75rem',
+                    padding: '3px 10px',
+                    borderRadius: radius.sm,
+                    border: 'none',
+                    backgroundColor: colors.mistyForest,
+                    color: '#fff',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                  }}
+                >
+                  Insert
+                </button>
+              </div>
             </div>
           )}
         </div>

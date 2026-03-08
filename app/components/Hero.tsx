@@ -30,6 +30,15 @@ export default function Hero() {
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold text-white drop-shadow-lg max-w-sm font-heading leading-tight">
               Welcome to Sage Field!
             </h1>
+            <motion.p
+              className="mt-4 text-lg md:text-xl text-white font-semibold italic drop-shadow-md font-body max-w-sm"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
+            >
+              Children are not meant to rot in classrooms. Choose outdoor
+              learning.
+            </motion.p>
           </motion.div>
 
           {/* Right: Description and Buttons */}
@@ -40,12 +49,11 @@ export default function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
             >
-              Sage Field Private School is a nature-based private microschool
-              for lower-elementary children. We are a small, intentional
-              learning community where outdoor exploration, hands-on academics,
-              and child-led inquiry come together. A structured, enriching
-              drop-off program designed for families who want something better
-              than traditional school.
+              Sage Field Private School is a nature-based private microschool.
+              We are a small, intentional learning community where outdoor
+              exploration, hands-on academics, and child-led inquiry come
+              together. A structured, enriching drop-off program designed for
+              families who want something better than traditional school.
             </motion.p>
 
             {/* Action Buttons */}

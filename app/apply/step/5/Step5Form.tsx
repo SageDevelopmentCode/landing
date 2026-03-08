@@ -175,6 +175,7 @@ export default function Step5Form({
             <h2 className="text-sm font-semibold text-gray-700 font-body mb-4 uppercase tracking-wide">
               Section 8 — Confirmation and Initial Agreements
             </h2>
+            <p className="text-sm text-gray-600 font-body mb-3">By signing below, I confirm that:</p>
             <ul className="flex flex-col gap-3 text-sm text-gray-600 font-body">
               <li className="flex gap-2">
                 <span className="text-primary mt-0.5 flex-shrink-0">•</span>
@@ -185,13 +186,13 @@ export default function Step5Form({
               <li className="flex gap-2">
                 <span className="text-primary mt-0.5 flex-shrink-0">•</span>
                 <span>
-                  Submitting this application does not guarantee enrollment. Sage Field will review each application and contact families regarding next steps.
+                  Submitting this application does not guarantee enrollment. Sage Field School will review each application to determine fit and will contact families regarding next steps.
                 </span>
               </li>
               <li className="flex gap-2">
                 <span className="text-primary mt-0.5 flex-shrink-0">•</span>
                 <span>
-                  If offered a place, enrollment is finalized only after completing the following:
+                  If offered a place, enrollment is only finalized after completing all of the following:
                 </span>
               </li>
               <li className="ml-4">
@@ -201,6 +202,7 @@ export default function Step5Form({
                     "Sign Liability Waiver",
                     "Complete Medical & Emergency Authorization",
                     "Sign Policies Acknowledgment",
+                    "Complete supplemental, required documents that may be provided",
                     "Pay registration/materials fee",
                   ].map((step, i) => (
                     <li key={i} className="flex gap-2">
@@ -213,7 +215,7 @@ export default function Step5Form({
               <li className="flex gap-2">
                 <span className="text-primary mt-0.5 flex-shrink-0">•</span>
                 <span>
-                  I agree to notify Sage Field in writing if any information provided in this application changes before enrollment.
+                  I agree to notify Sage Field School in writing if any information provided in this application changes prior to enrollment.
                 </span>
               </li>
             </ul>

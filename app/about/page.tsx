@@ -37,13 +37,22 @@ export default function AboutPage() {
           </motion.h1>
 
           <motion.p
-            className="text-lg md:text-xl text-center text-gray-600 mb-12 font-body"
+            className="text-lg md:text-xl text-center text-gray-600 mb-8 font-body"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
           >
             Learn more about our private microschool, our mission, and the team behind Sage Field
           </motion.p>
+
+          <motion.blockquote
+            className="text-center text-xl md:text-2xl font-semibold italic text-primary border-l-4 border-primary pl-6 mx-auto max-w-2xl mb-12 font-body text-left"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+          >
+            &ldquo;Children are not meant to rot in classrooms. Choose outdoor learning.&rdquo;
+          </motion.blockquote>
         </div>
       </section>
 

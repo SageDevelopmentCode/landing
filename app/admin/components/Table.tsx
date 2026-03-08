@@ -13,6 +13,7 @@ interface TableRowProps {
   children: ReactNode
   index?: number
   onClick?: () => void
+  style?: React.CSSProperties
 }
 
 export function Table({ headers, children }: TableProps) {
@@ -51,13 +52,14 @@ export function Table({ headers, children }: TableProps) {
   )
 }
 
-export function TableRow({ children, index = 0, onClick }: TableRowProps) {
+export function TableRow({ children, index = 0, onClick, style }: TableRowProps) {
   return (
     <motion.tr
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
       onClick={onClick}
+      style={style}
       className={`transition-colors duration-150 border-b border-gray-100 ${onClick ? 'cursor-pointer' : ''}`}
       whileHover={{
         backgroundColor: '#F9FAFB',
