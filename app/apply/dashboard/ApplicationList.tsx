@@ -13,18 +13,19 @@ const PROGRAM_LABELS: Record<string, string> = {
   both: "Both",
 };
 
-function formatProgram(value: string | null | undefined) {
-  if (!value) return null;
+function formatProgram(value: string | null | boolean | undefined) {
+  if (!value || typeof value === "boolean") return null;
   return PROGRAM_LABELS[value] ?? value;
 }
 
 // ─── Read-only field ────────────────────────────────────────────────────────
-function field(label: string, value: string | null | undefined) {
-  if (!value) return null;
+function field(label: string, value: string | null | boolean | undefined) {
+  if (value == null || value === false || value === "") return null;
+  const display = value === true ? "Yes" : value;
   return (
     <div className="flex flex-col gap-0.5">
       <span className="text-xs text-gray-400 font-body">{label}</span>
-      <span className="text-sm text-gray-800 font-body">{value}</span>
+      <span className="text-sm text-gray-800 font-body">{display}</span>
     </div>
   );
 }
@@ -43,7 +44,7 @@ function EditField({
   onChange: (key: string, value: string) => void;
   multiline?: boolean;
 }) {
-  const value = draft[fieldKey] ?? "";
+  const value = draft[fieldKey] == null ? "" : String(draft[fieldKey]);
   const inputClass =
     "w-full text-sm text-gray-800 font-body border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#2C5F2E]/30 focus:border-[#2C5F2E] bg-gray-50";
 
@@ -136,7 +137,7 @@ function SlideOver({
     } = draft;
 
     const result = await updateApplication(
-      draft.id,
+      draft.id as string,
       editableFields as Record<string, string | null>,
     );
     setSaving(false);
@@ -245,7 +246,7 @@ function SlideOver({
                     Program
                   </label>
                   <select
-                    value={draft["program"] ?? ""}
+                    value={draft["program"] == null ? "" : String(draft["program"])}
                     onChange={(e) => handleChange("program", e.target.value)}
                     className="w-full text-sm text-gray-800 font-body border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#2C5F2E]/30 focus:border-[#2C5F2E] bg-gray-50"
                   >
@@ -441,7 +442,7 @@ export default function ApplicationList({
           const childName = app.preferred_name ?? app.child_legal_name ?? "—";
           return (
             <div
-              key={app.id ?? i}
+              key={(app.id as string | null | undefined) ?? i}
               className="grid grid-cols-[1fr_120px_1fr_140px_80px] items-center gap-4 bg-white border border-gray-200 rounded-xl px-5 py-4 shadow-sm"
             >
               <span className="text-sm font-medium text-gray-800 font-body">
