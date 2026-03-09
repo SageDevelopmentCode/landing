@@ -224,20 +224,22 @@ export default function Step2Form({
   initialData,
   applicationId,
   guardianPrefill,
+  accountInfo,
 }: {
   initialData: InitialData;
   applicationId: string | null;
   guardianPrefill: InitialData;
+  accountInfo: { full_name?: string | null; email?: string | null } | null;
 }) {
   const d = initialData;
   // Use guardianPrefill for guardian fields if the current app has none
   const gp = guardianPrefill;
 
   const [g1, setG1] = useState({
-    fullName: d?.g1_full_name ?? gp?.g1_full_name ?? "",
+    fullName: d?.g1_full_name ?? gp?.g1_full_name ?? accountInfo?.full_name ?? "",
     relationship: d?.g1_relationship ?? gp?.g1_relationship ?? "",
     relationshipOther: d?.g1_relationship_other ?? gp?.g1_relationship_other ?? "",
-    email: d?.g1_email ?? gp?.g1_email ?? "",
+    email: d?.g1_email ?? gp?.g1_email ?? accountInfo?.email ?? "",
     cellPhone: d?.g1_cell_phone ?? gp?.g1_cell_phone ?? "",
     workPhone: d?.g1_work_phone ?? gp?.g1_work_phone ?? "",
     preferredContact: d?.g1_preferred_contact ?? gp?.g1_preferred_contact ?? "",

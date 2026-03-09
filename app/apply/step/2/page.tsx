@@ -14,9 +14,18 @@ export default async function ApplicationStep2({
 
   let initialData = null;
   let guardianPrefill = null;
+  let accountInfo = null;
 
   if (user) {
     const adminClient = createAdminClient();
+
+    const { data: userRecord } = await adminClient
+      .schema('admin')
+      .from('users')
+      .select('full_name, email')
+      .eq('id', user.id)
+      .single();
+    accountInfo = userRecord;
 
     if (appId) {
       // Fetch the specific application being filled out
@@ -64,6 +73,7 @@ export default async function ApplicationStep2({
       initialData={initialData}
       applicationId={appId ?? initialData?.id ?? null}
       guardianPrefill={guardianPrefill}
+      accountInfo={accountInfo}
     />
   );
 }

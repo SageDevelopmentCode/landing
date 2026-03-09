@@ -28,7 +28,7 @@ export async function signUpParent(fullName: string, email: string, password: st
     .schema('admin')
     .from('users')
     .insert({ id: userId, email, full_name: fullName, role: 'parent' })
-  if (insertError) console.error('admin.users insert failed:', insertError.message)
+  if (insertError) return { error: `Account setup failed: ${insertError.message}` }
 
   // 4. Redirect to step 1 (must be outside try/catch)
   redirect('/apply/step/1')

@@ -607,7 +607,7 @@ export async function getAuthorizationUrl(): Promise<string> {
     client_id: ZOHO_CLIENT_ID,
     response_type: 'code',
     redirect_uri: ZOHO_REDIRECT_URI,
-    scope: 'ZohoMail.messages.READ,ZohoMail.accounts.READ,ZohoMail.folders.READ',
+    scope: 'ZohoMail.messages.READ,ZohoMail.messages.CREATE,ZohoMail.accounts.READ,ZohoMail.folders.READ',
     access_type: 'offline',
     prompt: 'consent',
   })
