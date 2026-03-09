@@ -3,6 +3,37 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 
+const TEAM_MEMBERS = [
+  {
+    name: "Paige Wood",
+    role: "Primary Lead Teacher",
+    image: "/assets/team/Paige.webp",
+    description:
+      "Ms. Paige is the Lead Primary (ages 3–6) Guide at Sage Field Private School. She has a passion for nature-based learning and creating environments where young children feel safe, curious, and inspired. With experience in Montessori-style education and outdoor learning, she brings creativity and intentionality to every lesson.",
+  },
+  {
+    name: "Zelinda Melo",
+    role: "Teacher Aide",
+    image: "/assets/team/Zelinda.webp",
+    description:
+      "Hello, Sage Field families!! My name is Zelinda and I am so excited to be a part of this incredible team. I have a deep love for children and a heart for nurturing their growth in a safe and encouraging environment. I look forward to supporting each child's learning journey and being a positive presence in their day.",
+  },
+  {
+    name: "Nicole Elias",
+    role: "Summer Program Curriculum Coordinator",
+    image: "/assets/team/Nicole.jpg",
+    description:
+      "My name is Nicole, and I am a teacher with a passion for hands-on, experiential learning. I believe every child deserves an education that sparks curiosity and joy. I am excited to bring creative, nature-inspired curriculum to our summer program and help children discover the world around them.",
+  },
+  {
+    name: "Taylor Elias",
+    role: "Summer Program Curriculum Coordinator",
+    image: "/assets/team/Taylor.jpg",
+    description:
+      "My name is Taylor, and I recently completed my education studies with a focus on child development and outdoor learning. I am passionate about creating meaningful experiences for children that connect them to nature and inspire a love of learning. I am thrilled to join the Sage Field team this summer.",
+  },
+];
+
 export default function MeetTheTeamSection() {
   return (
     <section className="bg-welcome-bg py-16 px-8 sm:px-12 lg:px-16 min-h-[80vh] flex items-center">
@@ -33,8 +64,8 @@ export default function MeetTheTeamSection() {
           Meet the Team
         </motion.h2>
 
-        {/* Two-column layout: Image LEFT, Text RIGHT */}
-        <div className="flex flex-col lg:flex-row lg:justify-between items-center gap-16">
+        {/* Featured: Sabrina — Two-column layout */}
+        <div className="flex flex-col lg:flex-row lg:justify-between items-center gap-16 mb-20">
           {/* Left: Headshot Image */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
@@ -89,16 +120,6 @@ export default function MeetTheTeamSection() {
               </p>
             </div>
 
-            {/* Assistant Tutor */}
-            <div className="space-y-2">
-              <h3 className="text-2xl md:text-3xl font-semibold text-primary font-heading">
-                Assistant Teacher/Aide
-              </h3>
-              <p className="text-xl md:text-2xl font-semibold text-text-gray font-heading">
-                TBD
-              </p>
-            </div>
-
             {/* Description */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -115,6 +136,41 @@ export default function MeetTheTeamSection() {
               </p>
             </motion.div>
           </motion.div>
+        </div>
+
+        {/* Team Grid: 4 members in 2×2 */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+          {TEAM_MEMBERS.map((member, i) => (
+            <motion.div
+              key={member.name}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 * i, ease: "easeOut" }}
+              className="bg-white rounded-2xl shadow-md overflow-hidden"
+            >
+              <div className="relative w-full aspect-[4/5]">
+                <Image
+                  src={member.image}
+                  alt={member.name}
+                  fill
+                  className="object-cover object-top"
+                  sizes="(max-width: 640px) 100vw, 50vw"
+                />
+              </div>
+              <div className="p-6 space-y-3">
+                <p className="text-xl font-semibold text-text-gray font-heading">
+                  {member.name}
+                </p>
+                <span className="inline-block bg-primary/10 text-primary text-xs font-semibold px-3 py-1 rounded-full">
+                  {member.role}
+                </span>
+                <p className="text-sm text-text-gray leading-relaxed font-body">
+                  {member.description}
+                </p>
+              </div>
+            </motion.div>
+          ))}
         </div>
       </div>
     </section>

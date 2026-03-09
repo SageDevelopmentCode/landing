@@ -32,6 +32,7 @@ const NAV_TABS: NavTab[] = [
     label: "About Us",
     items: [
       { label: "About Us", action: { kind: "link", href: "/about" } },
+      { label: "Our Team", action: { kind: "link", href: "/team" } },
       { label: "FAQ", action: { kind: "link", href: "/faq" } },
       { label: "Our Vision", action: { kind: "link", href: "/vision" } },
       {
@@ -119,7 +120,8 @@ export default function Navbar() {
     pathname === "/about" ||
     pathname === "/apply" ||
     pathname === "/donate" ||
-    pathname === "/donate/success";
+    pathname === "/donate/success" ||
+    pathname === "/team";
 
   // Close everything on route change
   useEffect(() => {
