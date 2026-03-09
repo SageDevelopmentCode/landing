@@ -1210,6 +1210,7 @@ function ExpensesTab({
     payment_method: "",
     expense_date: new Date().toISOString().slice(0, 10),
     notes: "",
+    tax_deductible: false,
   });
   const [saving, setSaving] = useState(false);
 
@@ -1291,6 +1292,7 @@ function ExpensesTab({
         payment_method: editValues.payment_method ?? null,
         expense_date: editValues.expense_date,
         notes: editValues.notes ?? null,
+        tax_deductible: editValues.tax_deductible ?? false,
       })
       .eq("id", id);
     setSaving(false);
@@ -1300,7 +1302,7 @@ function ExpensesTab({
 
   async function deleteExpense(id: string) {
     if (!confirm("Delete this expense?")) return;
-    await db.schema("budget").from("expenses").delete().eq("id", id);
+    await db.schema("budget").from("expenses").update({ is_deleted: true }).eq("id", id);
     onRefresh();
   }
 
@@ -1317,6 +1319,7 @@ function ExpensesTab({
         payment_method: newExp.payment_method || null,
         expense_date: newExp.expense_date,
         notes: newExp.notes || null,
+        tax_deductible: newExp.tax_deductible,
       });
     setSaving(false);
     setShowAdd(false);
@@ -1327,6 +1330,7 @@ function ExpensesTab({
       payment_method: "",
       expense_date: new Date().toISOString().slice(0, 10),
       notes: "",
+      tax_deductible: false,
     });
     onRefresh();
   }
@@ -1473,13 +1477,26 @@ function ExpensesTab({
                         style={inputStyle}
                         type={type}
                         placeholder={placeholder}
-                        value={(newExp as Record<string, string>)[key]}
+                        value={(newExp as Record<string, unknown>)[key] as string}
                         onChange={(e) =>
                           setNewExp((p) => ({ ...p, [key]: e.target.value }))
                         }
                       />
                     </div>
                   ))}
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="new-tax-deductible"
+                      checked={newExp.tax_deductible}
+                      onChange={(e) =>
+                        setNewExp((p) => ({ ...p, tax_deductible: e.target.checked }))
+                      }
+                    />
+                    <label htmlFor="new-tax-deductible" className="text-xs" style={{ color: colors.textSecondary }}>
+                      Tax Deductible
+                    </label>
+                  </div>
                   <div>
                     <label
                       className="text-xs mb-1 block"
@@ -1567,13 +1584,14 @@ function ExpensesTab({
             "Payment Method",
             "Date",
             "Notes",
+            "Tax Ded.",
             "Actions",
           ]}
         >
           {filtered.length === 0 ? (
             <tr>
               <td
-                colSpan={7}
+                colSpan={8}
                 className="px-4 py-8 text-center text-sm text-gray-400"
               >
                 No expenses found.
@@ -1597,7 +1615,7 @@ function ExpensesTab({
                     }}
                     onClick={() => toggleMonth(monthKey)}
                   >
-                    <td colSpan={7} style={{ padding: "10px 16px" }}>
+                    <td colSpan={8} style={{ padding: "10px 16px" }}>
                       <div
                         style={{
                           display: "flex",
@@ -1642,33 +1660,52 @@ function ExpensesTab({
                   {/* Expense rows */}
                   {!isCollapsed &&
                     monthExps.map((exp, i) => (
-                      <TableRow key={exp.id} index={i}>
+                      <TableRow
+                        key={exp.id}
+                        index={i}
+                        onClick={() => {
+                          setEditingId(exp.id);
+                          setEditValues({ ...exp });
+                        }}
+                      >
                         <TableCell>{exp.expense_name}</TableCell>
                         <TableCell>{exp.category ?? "—"}</TableCell>
                         <TableCell>{fmt(Number(exp.amount))}</TableCell>
                         <TableCell>{exp.payment_method ?? "—"}</TableCell>
                         <TableCell>{exp.expense_date}</TableCell>
                         <TableCell>{exp.notes ?? "—"}</TableCell>
+                        <TableCell>{exp.tax_deductible ? "Yes" : "No"}</TableCell>
                         <TableCell>
-                          <div className="flex gap-2">
+                          <div className="flex gap-1 items-center">
                             <button
-                              style={{
-                                ...btnGhost,
-                                padding: "4px 10px",
-                                fontSize: "12px",
-                              }}
-                              onClick={() => {
+                              title="Edit"
+                              style={{ ...btnGhost, padding: "4px 6px", lineHeight: 1 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 setEditingId(exp.id);
                                 setEditValues({ ...exp });
                               }}
                             >
-                              Edit
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                              </svg>
                             </button>
                             <button
+                              title="Delete"
                               style={btnDanger}
-                              onClick={() => deleteExpense(exp.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteExpense(exp.id);
+                              }}
                             >
-                              Del
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                                <path d="M10 11v6"/>
+                                <path d="M14 11v6"/>
+                                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                              </svg>
                             </button>
                           </div>
                         </TableCell>
@@ -1694,7 +1731,7 @@ function ExpensesTab({
             >
               {fmt(total)}
             </td>
-            <td colSpan={4} />
+            <td colSpan={5} />
           </tr>
         </Table>
       )}
@@ -2212,6 +2249,19 @@ function ExpensesTab({
                 setEditValues((v) => ({ ...v, notes: e.target.value }))
               }
             />
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="edit-tax-deductible"
+              checked={editValues.tax_deductible ?? false}
+              onChange={(e) =>
+                setEditValues((v) => ({ ...v, tax_deductible: e.target.checked }))
+              }
+            />
+            <label htmlFor="edit-tax-deductible" className="text-xs" style={{ color: colors.textSecondary }}>
+              Tax Deductible
+            </label>
           </div>
         </div>
       </DetailSidebar>
@@ -3750,6 +3800,7 @@ export default function BudgetPage() {
         .schema("budget")
         .from("expenses")
         .select("*")
+        .eq("is_deleted", false)
         .order("expense_date", { ascending: false }),
       db
         .schema("budget")

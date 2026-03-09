@@ -630,6 +630,8 @@ export interface BudgetExpense {
   payment_method: string | null
   expense_date: string
   notes: string | null
+  tax_deductible: boolean
+  is_deleted: boolean
   created_at: string | null
   updated_at: string | null
 }
