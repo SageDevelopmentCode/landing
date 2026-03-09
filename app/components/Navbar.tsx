@@ -59,7 +59,7 @@ const NAV_TABS: NavTab[] = [
         action: { kind: "disabled" },
         badge: "Coming Soon",
       },
-      { label: "Tuition", action: { kind: "disabled" }, badge: "Coming Soon" },
+      { label: "Tuition", action: { kind: "link", href: "/tuition" } },
     ],
   },
   {
@@ -121,7 +121,8 @@ export default function Navbar() {
     pathname === "/apply" ||
     pathname === "/donate" ||
     pathname === "/donate/success" ||
-    pathname === "/team";
+    pathname === "/team" ||
+    pathname === "/tuition";
 
   // Close everything on route change
   useEffect(() => {

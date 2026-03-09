@@ -95,15 +95,25 @@ const DonationsSection = () => {
                         </p>
                         <div className="space-y-3">
                           <div>
-                            <p className="text-xs text-text-gray font-body">1st – 4th Grade</p>
+                            <p className="text-xs text-text-gray font-body">
+                              1st – 4th Grade
+                            </p>
                             <p className="text-2xl font-bold text-primary font-heading">
-                              $350<span className="text-sm text-text-gray font-normal">/wk</span>
+                              $350
+                              <span className="text-sm text-text-gray font-normal">
+                                /wk
+                              </span>
                             </p>
                           </div>
                           <div>
-                            <p className="text-xs text-text-gray font-body">Primary (Pre-K – K)</p>
+                            <p className="text-xs text-text-gray font-body">
+                              Primary (Pre-K – K)
+                            </p>
                             <p className="text-2xl font-bold text-primary font-heading">
-                              $375<span className="text-sm text-text-gray font-normal">/wk</span>
+                              $375
+                              <span className="text-sm text-text-gray font-normal">
+                                /wk
+                              </span>
                             </p>
                           </div>
                         </div>
@@ -119,28 +129,43 @@ const DonationsSection = () => {
                         </p>
                         <div className="space-y-3">
                           <div>
-                            <p className="text-xs text-white/70 font-body">1st – 4th Grade</p>
+                            <p className="text-xs text-white/70 font-body">
+                              1st – 4th Grade
+                            </p>
                             <p className="text-2xl font-bold text-white font-heading">
                               $4,095
                             </p>
                             <p className="text-xs text-white/60 font-body">
                               <span className="line-through">$4,550</span>
-                              <span className="ml-1 text-white/80">· $455 off</span>
+                              <span className="ml-1 text-white/80">
+                                · $455 off
+                              </span>
                             </p>
                           </div>
                           <div>
-                            <p className="text-xs text-white/70 font-body">Primary (Pre-K – K)</p>
+                            <p className="text-xs text-white/70 font-body">
+                              Primary (Pre-K – K)
+                            </p>
                             <p className="text-2xl font-bold text-white font-heading">
                               $4,388
                             </p>
                             <p className="text-xs text-white/60 font-body">
                               <span className="line-through">$4,875</span>
-                              <span className="ml-1 text-white/80">· $487 off</span>
+                              <span className="ml-1 text-white/80">
+                                · $487 off
+                              </span>
                             </p>
                           </div>
                         </div>
                       </div>
                     </div>
+
+                    <p className="text-xs text-text-gray font-body mb-4">
+                      <span className="font-semibold text-black">
+                        Registration fee:
+                      </span>{" "}
+                      Summer school registration $75 · One-time fee
+                    </p>
 
                     <button
                       onClick={() => setIsWaitlistOpen(true)}
@@ -227,7 +252,7 @@ const DonationsSection = () => {
                         Enrollment fees:
                       </span>{" "}
                       First-time registration $500 · Re-registration $300 ·
-                      Supply fee $300
+                      Annual supply fee $300
                     </p>
 
                     <button
