@@ -50,26 +50,28 @@ export default function LoginForm() {
     startInterval();
   };
 
-  async function handleEmailPasswordSubmit(formData: FormData) {
+  async function handleEmailPasswordSubmit(
+    e: React.FormEvent<HTMLFormElement>,
+  ) {
+    e.preventDefault();
     setLoading(true);
     setError(null);
     setMessage(null);
-
+    const formData = new FormData(e.currentTarget);
     const result = await signInWithEmail(formData);
-
     if (result?.error) {
       setError(result.error);
       setLoading(false);
     }
   }
 
-  async function handleMagicLinkSubmit(formData: FormData) {
+  async function handleMagicLinkSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setLoading(true);
     setError(null);
     setMessage(null);
-
+    const formData = new FormData(e.currentTarget);
     const result = await signInWithMagicLink(formData);
-
     if (result?.error) {
       setError(result.error);
       setLoading(false);
@@ -90,6 +92,20 @@ export default function LoginForm() {
       setError(result.error);
       setLoading(false);
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-welcome-bg flex items-center justify-center">
+        <img
+          src="/assets/Logo.png"
+          alt="Sage Field"
+          width={80}
+          height={80}
+          className="object-contain animate-pulse"
+        />
+      </div>
+    );
   }
 
   return (
@@ -113,9 +129,6 @@ export default function LoginForm() {
             />
           </div>
 
-          <span className="inline-block px-4 py-1.5 bg-badge-bg text-black text-xs font-semibold rounded-full mb-4 font-body">
-            Admin Access
-          </span>
           <h1 className="text-3xl font-bold font-heading text-gray-800 mb-8">
             Welcome back
           </h1>
@@ -195,7 +208,7 @@ export default function LoginForm() {
             {authMode === "password" ? (
               <motion.form
                 key="password"
-                action={handleEmailPasswordSubmit}
+                onSubmit={handleEmailPasswordSubmit}
                 className="flex flex-col gap-4"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -249,7 +262,7 @@ export default function LoginForm() {
             ) : (
               <motion.form
                 key="magic-link"
-                action={handleMagicLinkSubmit}
+                onSubmit={handleMagicLinkSubmit}
                 className="flex flex-col gap-4"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -290,7 +303,7 @@ export default function LoginForm() {
             )}
           </AnimatePresence>
 
-          {/* Divider */}
+          {/* Divider
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-200" />
@@ -300,10 +313,10 @@ export default function LoginForm() {
                 Or continue with
               </span>
             </div>
-          </div>
+          </div> */}
 
           {/* Google */}
-          <button
+          {/* <button
             type="button"
             onClick={handleGoogleSignIn}
             disabled={loading}
@@ -336,7 +349,7 @@ export default function LoginForm() {
               </svg>
             )}
             {loading ? "Connecting..." : "Sign in with Google"}
-          </button>
+          </button> */}
 
           {/* Back to home */}
           <div className="text-center mt-8">
