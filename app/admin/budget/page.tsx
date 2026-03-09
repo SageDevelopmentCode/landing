@@ -7,6 +7,7 @@ import { Merriweather } from 'next/font/google'
 import { colors, radius, shadows } from '../design-system'
 import type { BudgetLineItem, BudgetExpense, BudgetIncome } from '../../types/database.types'
 import { Table, TableRow, TableCell } from '../components/Table'
+import { DetailSidebar } from '../components/DetailSidebar'
 
 const merriweather = Merriweather({
   weight: ['300', '400', '700', '900'],
@@ -27,23 +28,57 @@ const TABS = ['Overview', 'Budget', 'Expenses', 'Revenue', 'Taxes', 'Analysis'] 
 type Tab = (typeof TABS)[number]
 
 const EXPENSE_CATEGORIES = [
-  'Personnel',
-  'Facilities',
-  'Program',
+  // Income-related
+  'Tuition',
+  'Donations',
+  // Personnel
+  'Teacher Pay',
+  'Staff Pay',
+  'Contractor / 1099',
+  'Payroll Taxes',
+  // Facilities
+  'Rent',
+  'Utilities',
+  'Maintenance & Repairs',
+  // Program
+  'Supplies & Materials',
+  'Curriculum',
+  'Field Trips',
   'Technology & Software',
+  // Operations
+  'Insurance',
   'Marketing',
-  'Risk',
+  'Professional Services',
+  'Administrative',
+  // Other
   'Savings',
   'Other',
 ]
 
 const BUDGET_CATEGORIES = [
-  'Personnel',
-  'Facilities',
-  'Program',
+  // Income-related
+  'Tuition',
+  'Donations',
+  // Personnel
+  'Teacher Pay',
+  'Staff Pay',
+  'Contractor / 1099',
+  'Payroll Taxes',
+  // Facilities
+  'Rent',
+  'Utilities',
+  'Maintenance & Repairs',
+  // Program
+  'Supplies & Materials',
+  'Curriculum',
+  'Field Trips',
   'Technology & Software',
+  // Operations
+  'Insurance',
   'Marketing',
-  'Risk',
+  'Professional Services',
+  'Administrative',
+  // Other
   'Savings',
 ]
 
@@ -599,6 +634,7 @@ function BudgetTab({
       .schema('budget')
       .from('line_items')
       .update({
+        category: editValues.category,
         item_name: editValues.item_name,
         planned_amount: Number(editValues.planned_amount),
         notes: editValues.notes ?? null,
@@ -725,101 +761,42 @@ function BudgetTab({
                   {cat} — {fmt(catTotal)}
                 </td>
               </tr>
-              {items.map((item, i) => {
-                const editing = editingId === item.id
-                return (
+              {items.map((item, i) => (
                   <TableRow key={item.id} index={i} style={{ opacity: disabledIds.has(item.id) ? 0.4 : 1 }}>
                     <TableCell>{item.category}</TableCell>
-                    <TableCell>
-                      {editing ? (
-                        <input
-                          style={{ ...inputStyle, width: '140px' }}
-                          value={editValues.item_name ?? item.item_name}
-                          onChange={(e) =>
-                            setEditValues((p) => ({ ...p, item_name: e.target.value }))
-                          }
-                        />
-                      ) : (
-                        item.item_name
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {editing ? (
-                        <input
-                          style={{ ...inputStyle, width: '100px' }}
-                          type="number"
-                          value={editValues.planned_amount ?? item.planned_amount}
-                          onChange={(e) =>
-                            setEditValues((p) => ({ ...p, planned_amount: Number(e.target.value) }))
-                          }
-                        />
-                      ) : (
-                        fmt(Number(item.planned_amount))
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {editing ? (
-                        <input
-                          style={{ ...inputStyle, width: '160px' }}
-                          value={editValues.notes ?? (item.notes ?? '')}
-                          onChange={(e) =>
-                            setEditValues((p) => ({ ...p, notes: e.target.value }))
-                          }
-                        />
-                      ) : (
-                        item.notes ?? '—'
-                      )}
-                    </TableCell>
+                    <TableCell>{item.item_name}</TableCell>
+                    <TableCell>{fmt(Number(item.planned_amount))}</TableCell>
+                    <TableCell>{item.notes ?? '—'}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        {editing ? (
-                          <>
-                            <button
-                              style={{ ...btnPrimary, padding: '4px 10px', fontSize: '12px' }}
-                              onClick={() => saveEdit(item.id)}
-                              disabled={saving}
-                            >
-                              Save
-                            </button>
-                            <button
-                              style={{ ...btnGhost, padding: '4px 10px', fontSize: '12px' }}
-                              onClick={() => setEditingId(null)}
-                            >
-                              Cancel
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              style={{ ...btnGhost, padding: '4px 10px', fontSize: '12px' }}
-                              onClick={() => toggleDisabled(item.id)}
-                              title={disabledIds.has(item.id) ? 'Re-enable' : 'Exclude from total'}
-                            >
-                              {disabledIds.has(item.id) ? 'Enable' : 'Exclude'}
-                            </button>
-                            <button
-                              style={{ ...btnGhost, padding: '4px 10px', fontSize: '12px' }}
-                              onClick={() => {
-                                setEditingId(item.id)
-                                setEditValues({
-                                  item_name: item.item_name,
-                                  planned_amount: item.planned_amount,
-                                  notes: item.notes ?? '',
-                                })
-                              }}
-                            >
-                              Edit
-                            </button>
-                            <button style={btnDanger} onClick={() => deleteItem(item.id)}>
-                              Del
-                            </button>
-                          </>
-                        )}
+                        <button
+                          style={{ ...btnGhost, padding: '4px 10px', fontSize: '12px' }}
+                          onClick={() => toggleDisabled(item.id)}
+                          title={disabledIds.has(item.id) ? 'Re-enable' : 'Exclude from total'}
+                        >
+                          {disabledIds.has(item.id) ? 'Enable' : 'Exclude'}
+                        </button>
+                        <button
+                          style={{ ...btnGhost, padding: '4px 10px', fontSize: '12px' }}
+                          onClick={() => {
+                            setEditingId(item.id)
+                            setEditValues({
+                              category: item.category,
+                              item_name: item.item_name,
+                              planned_amount: item.planned_amount,
+                              notes: item.notes ?? '',
+                            })
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <button style={btnDanger} onClick={() => deleteItem(item.id)}>
+                          Del
+                        </button>
                       </div>
                     </TableCell>
                   </TableRow>
-                )
-              })}
+              ))}
             </React.Fragment>
           )
         })}
@@ -833,6 +810,61 @@ function BudgetTab({
           <td colSpan={2} />
         </tr>
       </Table>
+
+      <DetailSidebar
+        isOpen={editingId !== null}
+        onClose={() => { setEditingId(null); setEditValues({}) }}
+        title="Edit Budget Item"
+        footer={
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+            <button style={btnGhost} onClick={() => { setEditingId(null); setEditValues({}) }}>Cancel</button>
+            <button style={btnPrimary} disabled={saving} onClick={() => saveEdit(editingId!)}>
+              {saving ? 'Saving…' : 'Save Changes'}
+            </button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs mb-1 block" style={{ color: colors.textSecondary }}>Category</label>
+            <select
+              style={inputStyle}
+              value={editValues.category ?? ''}
+              onChange={e => setEditValues(v => ({ ...v, category: e.target.value }))}
+            >
+              {Array.from(new Set([
+                ...(editValues.category && !BUDGET_CATEGORIES.includes(editValues.category) ? [editValues.category] : []),
+                ...BUDGET_CATEGORIES,
+              ])).map(c => <option key={c}>{c}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs mb-1 block" style={{ color: colors.textSecondary }}>Item Name</label>
+            <input
+              style={inputStyle}
+              value={editValues.item_name ?? ''}
+              onChange={e => setEditValues(v => ({ ...v, item_name: e.target.value }))}
+            />
+          </div>
+          <div>
+            <label className="text-xs mb-1 block" style={{ color: colors.textSecondary }}>Planned Amount ($)</label>
+            <input
+              style={inputStyle}
+              type="number"
+              value={editValues.planned_amount ?? ''}
+              onChange={e => setEditValues(v => ({ ...v, planned_amount: Number(e.target.value) }))}
+            />
+          </div>
+          <div>
+            <label className="text-xs mb-1 block" style={{ color: colors.textSecondary }}>Notes</label>
+            <input
+              style={inputStyle}
+              value={editValues.notes ?? ''}
+              onChange={e => setEditValues(v => ({ ...v, notes: e.target.value }))}
+            />
+          </div>
+        </div>
+      </DetailSidebar>
     </div>
   )
 }
