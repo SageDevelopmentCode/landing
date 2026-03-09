@@ -5,6 +5,7 @@ import { createServerSupabaseClient } from "@/app/lib/supabase-server";
 import {
   sendDiscordNotification,
   createContactEmbed,
+  createErrorEmbed,
 } from "@/app/lib/discord";
 import {
   createTrelloCard,
@@ -69,6 +70,7 @@ export async function submitContact(
 
     if (error) {
       console.error("Supabase error:", error);
+      void sendDiscordNotification(createErrorEmbed({ context: 'Contact – DB Insert', error: error.message, details: { email: validated.email } })).catch(() => {})
 
       return {
         success: false,
@@ -113,6 +115,9 @@ export async function submitContact(
     };
   } catch (error) {
     console.error("Contact submission error:", error);
+    if (!(error instanceof z.ZodError)) {
+      void sendDiscordNotification(createErrorEmbed({ context: 'Contact – Unexpected Error', error: error instanceof Error ? error.message : String(error) })).catch(() => {})
+    }
 
     // Handle validation errors
     if (error instanceof z.ZodError) {

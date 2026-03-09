@@ -188,6 +188,31 @@ export function createContactEmbed(data: {
 }
 
 /**
+ * Creates a Discord embed for server errors
+ */
+export function createErrorEmbed(data: {
+  context: string
+  error: string
+  details?: Record<string, string>
+}): DiscordEmbed {
+  const fields: DiscordEmbedField[] = [
+    { name: 'Context', value: data.context, inline: false },
+    { name: 'Error', value: data.error.substring(0, 1024), inline: false },
+  ]
+  if (data.details) {
+    for (const [k, v] of Object.entries(data.details)) {
+      fields.push({ name: k, value: v.substring(0, 1024), inline: true })
+    }
+  }
+  return {
+    title: '🚨 Server Error',
+    color: 0xe74c3c,
+    fields,
+    timestamp: new Date().toISOString(),
+  }
+}
+
+/**
  * Creates a Discord embed for application completions
  */
 export function createApplicationEmbed(data: {

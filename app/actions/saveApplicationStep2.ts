@@ -1,6 +1,7 @@
 'use server'
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
 import { redirect } from 'next/navigation'
+import { sendDiscordNotification, createErrorEmbed } from '@/app/lib/discord'
 
 export async function saveApplicationStep2(formData: {
   g1FullName: string
@@ -65,7 +66,10 @@ export async function saveApplicationStep2(formData: {
     .eq('id', formData.applicationId)
     .eq('user_id', user.id)
 
-  if (error) return { error: error.message }
+  if (error) {
+    void sendDiscordNotification(createErrorEmbed({ context: 'Step 2 – DB Save', error: error.message, details: { applicationId: formData.applicationId } })).catch(() => {})
+    return { error: error.message }
+  }
 
   redirect(`/apply/step/3?appId=${formData.applicationId}`)
 }

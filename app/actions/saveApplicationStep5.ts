@@ -1,7 +1,7 @@
 'use server'
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
 import { redirect } from 'next/navigation'
-import { createApplicationEmbed, sendDiscordNotification } from '@/app/lib/discord'
+import { createApplicationEmbed, sendDiscordNotification, createErrorEmbed } from '@/app/lib/discord'
 import { sendZohoEmail, buildApplicationConfirmationEmail } from '@/app/lib/zoho'
 
 export async function saveApplicationStep5(formData: {
@@ -35,7 +35,10 @@ export async function saveApplicationStep5(formData: {
     .eq('id', formData.applicationId)
     .eq('user_id', user.id)
 
-  if (error) return { error: error.message }
+  if (error) {
+    void sendDiscordNotification(createErrorEmbed({ context: 'Step 5 – DB Save', error: error.message, details: { applicationId: formData.applicationId } })).catch(() => {})
+    return { error: error.message }
+  }
 
   const { data: app } = await adminClient
     .schema('parent_app')
@@ -65,7 +68,26 @@ export async function saveApplicationStep5(formData: {
         childLegalName: app.child_legal_name ?? '',
         program: app.program,
       })
-      await sendZohoEmail({ toAddress: app.g1_email ?? '', subject, content })
+      const emailResult = await sendZohoEmail({ toAddress: app.g1_email ?? '', subject, content })
+
+      if (!emailResult.success) {
+        void sendDiscordNotification(createErrorEmbed({
+          context: 'Email Send – Application Confirmation',
+          error: emailResult.error ?? 'Unknown error',
+          details: { to: app.g1_email ?? '', applicationId: formData.applicationId },
+        })).catch(() => {})
+      }
+
+      await adminClient
+        .schema('email_logs')
+        .from('sends')
+        .insert({
+          application_id: formData.applicationId,
+          to_address: app.g1_email ?? '',
+          subject,
+          status: emailResult.success ? 'success' : 'error',
+          error_message: emailResult.error ?? null,
+        })
     }
   } catch (notifError) {
     console.error('Failed to send notifications:', notifError)

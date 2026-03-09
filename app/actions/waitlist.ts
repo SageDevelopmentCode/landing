@@ -5,6 +5,7 @@ import { createServerSupabaseClient } from "@/app/lib/supabase-server";
 import {
   sendDiscordNotification,
   createWaitlistEmbed,
+  createErrorEmbed,
 } from "@/app/lib/discord";
 import {
   createTrelloCard,
@@ -79,6 +80,7 @@ export async function submitWaitlist(
 
     if (error) {
       console.error("Supabase error:", error);
+      void sendDiscordNotification(createErrorEmbed({ context: 'Waitlist – DB Insert', error: error.message, details: { email: validated.email } })).catch(() => {})
 
       // Check for duplicate email (if we add a unique constraint later)
       if (error.code === "23505") {
@@ -136,6 +138,9 @@ export async function submitWaitlist(
     };
   } catch (error) {
     console.error("Waitlist submission error:", error);
+    if (!(error instanceof z.ZodError)) {
+      void sendDiscordNotification(createErrorEmbed({ context: 'Waitlist – Unexpected Error', error: error instanceof Error ? error.message : String(error) })).catch(() => {})
+    }
 
     // Handle validation errors
     if (error instanceof z.ZodError) {

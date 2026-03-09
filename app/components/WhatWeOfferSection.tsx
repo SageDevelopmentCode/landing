@@ -108,21 +108,6 @@ export default function WhatWeOfferSection() {
               This structure supports emotional stability and helps children
               feel confident and connected each day.
             </motion.p>
-
-            {/* Trial Session Note */}
-            <motion.div
-              className="mt-8 p-4 bg-primary/10 rounded-lg border-l-4 border-primary"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
-            >
-              <p className="text-base md:text-lg text-text-gray font-body">
-                A trial session will run during{" "}
-                <span className="text-primary font-semibold">Summer 2026</span>,
-                depending on student interest.
-              </p>
-            </motion.div>
           </div>
         </div>
       </div>

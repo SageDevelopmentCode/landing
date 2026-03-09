@@ -1,6 +1,7 @@
 'use server'
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
 import { redirect } from 'next/navigation'
+import { sendDiscordNotification, createErrorEmbed } from '@/app/lib/discord'
 
 export async function saveApplicationStep1(formData: {
   program: string
@@ -63,7 +64,10 @@ export async function saveApplicationStep1(formData: {
       .eq('id', formData.applicationId)
       .eq('user_id', user.id)
 
-    if (error) return { error: error.message }
+    if (error) {
+      void sendDiscordNotification(createErrorEmbed({ context: 'Step 1 – DB Save', error: error.message })).catch(() => {})
+      return { error: error.message }
+    }
     appId = formData.applicationId
   } else {
     // Insert new row
@@ -74,7 +78,10 @@ export async function saveApplicationStep1(formData: {
       .select('id')
       .single()
 
-    if (error) return { error: error.message }
+    if (error) {
+      void sendDiscordNotification(createErrorEmbed({ context: 'Step 1 – DB Save', error: error.message })).catch(() => {})
+      return { error: error.message }
+    }
     appId = data.id
   }
 

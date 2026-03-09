@@ -559,7 +559,7 @@ export async function sendZohoEmail(opts: {
   toAddress: string
   subject: string
   content: string
-}): Promise<boolean> {
+}): Promise<{ success: boolean; error?: string }> {
   try {
     const accessToken = await getValidAccessToken()
     const accountId = await getZohoAccountId()
@@ -583,15 +583,15 @@ export async function sendZohoEmail(opts: {
     )
 
     if (!response.ok) {
-      const error = await response.text()
-      console.error('Failed to send Zoho email:', error)
-      return false
+      const errorText = await response.text()
+      console.error('Failed to send Zoho email:', errorText)
+      return { success: false, error: errorText }
     }
 
-    return true
+    return { success: true }
   } catch (error) {
     console.error('Error sending Zoho email:', error)
-    return false
+    return { success: false, error: String(error) }
   }
 }
 
