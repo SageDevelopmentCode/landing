@@ -401,27 +401,27 @@ export default function ApplyPage() {
                           {
                             emoji: "💦",
                             title: "Giant Slip & Slide",
-                            desc: "Cool off and race down the big slide",
+                            desc: "\u201cCool off and race down the big slide\u201d",
                           },
                           {
                             emoji: "🌈",
                             title: "Rainbow Foam Party",
-                            desc: "Splash through colorful foam clouds",
+                            desc: "\u201cSplash through colorful foam clouds\u201d",
                           },
                           {
                             emoji: "🏞️",
                             title: "Cross the River",
-                            desc: "Hop across lily pads without falling in",
+                            desc: "\u201cHop across lily pads without falling in\u201d",
                           },
                           {
                             emoji: "🌋",
                             title: "The Floor is Lava",
-                            desc: "Jump, dodge, and survive the eruption",
+                            desc: "\u201cJump, dodge, and survive the eruption\u201d",
                           },
                           {
                             emoji: "🎶",
                             title: "Musical Hula Hoops",
-                            desc: "Dance, move, and claim your hoop",
+                            desc: "\u201cDance, move, and claim your hoop\u201d",
                           },
                         ].map((activity) => (
                           <div

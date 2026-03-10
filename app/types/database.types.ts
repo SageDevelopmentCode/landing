@@ -14,6 +14,90 @@ export type Database = {
   }
   admin: {
     Tables: {
+      students: {
+        Row: {
+          id: string
+          parent_id: string
+          child_legal_name: string | null
+          dob_month: string | null
+          dob_day: string | null
+          dob_year: string | null
+          special_interests: string | null
+          has_medical_conditions: string | null
+          medical_conditions_description: string | null
+          has_allergies: string | null
+          allergies_description: string | null
+          has_emergency_medications: string | null
+          emergency_medications_description: string | null
+          history_flags: string | null
+          history_explanation: string | null
+          needs_aide: string | null
+          needs_aide_description: string | null
+          learning_style: string | null
+          strengths_interests: string | null
+          current_challenges: string | null
+          dysregulation_response: string | null
+          regulation_strategies: string | null
+          activities_to_avoid: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          parent_id: string
+          child_legal_name?: string | null
+          dob_month?: string | null
+          dob_day?: string | null
+          dob_year?: string | null
+          special_interests?: string | null
+          has_medical_conditions?: string | null
+          medical_conditions_description?: string | null
+          has_allergies?: string | null
+          allergies_description?: string | null
+          has_emergency_medications?: string | null
+          emergency_medications_description?: string | null
+          history_flags?: string | null
+          history_explanation?: string | null
+          needs_aide?: string | null
+          needs_aide_description?: string | null
+          learning_style?: string | null
+          strengths_interests?: string | null
+          current_challenges?: string | null
+          dysregulation_response?: string | null
+          regulation_strategies?: string | null
+          activities_to_avoid?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          parent_id?: string
+          child_legal_name?: string | null
+          dob_month?: string | null
+          dob_day?: string | null
+          dob_year?: string | null
+          special_interests?: string | null
+          has_medical_conditions?: string | null
+          medical_conditions_description?: string | null
+          has_allergies?: string | null
+          allergies_description?: string | null
+          has_emergency_medications?: string | null
+          emergency_medications_description?: string | null
+          history_flags?: string | null
+          history_explanation?: string | null
+          needs_aide?: string | null
+          needs_aide_description?: string | null
+          learning_style?: string | null
+          strengths_interests?: string | null
+          current_challenges?: string | null
+          dysregulation_response?: string | null
+          regulation_strategies?: string | null
+          activities_to_avoid?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           created_at: string | null
@@ -22,6 +106,22 @@ export type Database = {
           id: string
           role: string | null
           updated_at: string | null
+          g1_cell_phone: string | null
+          g1_work_phone: string | null
+          g1_preferred_contact: string | null
+          g1_lives_with_child: string | null
+          g1_has_custody: string | null
+          g2_full_name: string | null
+          g2_relationship: string | null
+          g2_relationship_other: string | null
+          g2_email: string | null
+          g2_cell_phone: string | null
+          g2_work_phone: string | null
+          g2_preferred_contact: string | null
+          g2_lives_with_child: string | null
+          g2_has_custody: string | null
+          has_custody_orders: string | null
+          custody_orders_description: string | null
         }
         Insert: {
           created_at?: string | null
@@ -30,6 +130,22 @@ export type Database = {
           id: string
           role?: string | null
           updated_at?: string | null
+          g1_cell_phone?: string | null
+          g1_work_phone?: string | null
+          g1_preferred_contact?: string | null
+          g1_lives_with_child?: string | null
+          g1_has_custody?: string | null
+          g2_full_name?: string | null
+          g2_relationship?: string | null
+          g2_relationship_other?: string | null
+          g2_email?: string | null
+          g2_cell_phone?: string | null
+          g2_work_phone?: string | null
+          g2_preferred_contact?: string | null
+          g2_lives_with_child?: string | null
+          g2_has_custody?: string | null
+          has_custody_orders?: string | null
+          custody_orders_description?: string | null
         }
         Update: {
           created_at?: string | null
@@ -38,6 +154,22 @@ export type Database = {
           id?: string
           role?: string | null
           updated_at?: string | null
+          g1_cell_phone?: string | null
+          g1_work_phone?: string | null
+          g1_preferred_contact?: string | null
+          g1_lives_with_child?: string | null
+          g1_has_custody?: string | null
+          g2_full_name?: string | null
+          g2_relationship?: string | null
+          g2_relationship_other?: string | null
+          g2_email?: string | null
+          g2_cell_phone?: string | null
+          g2_work_phone?: string | null
+          g2_preferred_contact?: string | null
+          g2_lives_with_child?: string | null
+          g2_has_custody?: string | null
+          has_custody_orders?: string | null
+          custody_orders_description?: string | null
         }
         Relationships: []
       }
@@ -224,6 +356,7 @@ export type Database = {
           special_interests: string | null
           status: string
           strengths_interests: string | null
+          student_id: string | null
           updated_at: string | null
           user_id: string
         }
@@ -293,6 +426,7 @@ export type Database = {
           special_interests?: string | null
           status?: string
           strengths_interests?: string | null
+          student_id?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -362,6 +496,7 @@ export type Database = {
           special_interests?: string | null
           status?: string
           strengths_interests?: string | null
+          student_id?: string | null
           updated_at?: string | null
           user_id?: string
         }
