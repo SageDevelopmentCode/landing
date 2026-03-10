@@ -71,14 +71,6 @@ export default function FAQLayout({ children }: { children: React.ReactNode }) {
           text: "Yes — Sage Field Private School is a private microschool operating under Texas private school law. We are not a traditional accredited school and do not issue grades, report cards, or transcripts in the conventional sense. Instead, we provide descriptive, portfolio-based feedback on each child's growth and progress.",
         },
       },
-      {
-        "@type": "Question",
-        name: "How often can my child attend?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Sage Field is open up to four days per week for approximately six hours each day. You choose the schedule option that best fits your family's rhythm.",
-        },
-      },
     ],
   };
 

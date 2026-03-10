@@ -63,11 +63,6 @@ export default function Home() {
       answer:
         "At Sage Field, we cover literacy, numeracy, science, nature study, art, music, movement, and social-emotional learning — drawing from Montessori, Waldorf, and Reggio-inspired approaches with broadly TEKS-aligned academics. We are a full drop-off program; families do not need to supplement our academic program at home unless they choose to.",
     },
-    {
-      question: "How often can my child attend? Is there a minimum?",
-      answer:
-        "Sage Field is open up to four days per week for approximately six hours each day. You choose the schedule option that best fits your family's rhythm. Tuition is based on the enrollment option you select, not on day-to-day attendance, and enrollment is set in six-month terms.",
-    },
   ];
 
   const supportingLearnersFAQs = [
@@ -98,7 +93,7 @@ export default function Home() {
     {
       question: "What role do parents play?",
       answer:
-        "Sage Field handles the full in-school program — parents do not teach, volunteer, or manage curriculum here. What we do ask is that families stay engaged and communicative: share important updates about your child, attend check-ins when scheduled, and support a culture of curiosity and reflection at home. We see parents as partners in their child's growth, not as co-teachers.",
+        "Sage Field handles the in-school program and we ask that families stay engaged and communicative: share important updates about your child, attend check-ins when scheduled, and support a culture of curiosity and reflection at home. We see parents as partners in their child's growth, not as co-teachers.",
     },
     {
       question: "How do we enroll?",
