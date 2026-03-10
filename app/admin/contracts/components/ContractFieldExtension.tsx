@@ -1,7 +1,7 @@
 'use client'
 
 import { Node, mergeAttributes } from '@tiptap/core'
-import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react'
+import { ReactNodeViewRenderer, NodeViewWrapper, ReactNodeViewProps } from '@tiptap/react'
 import { useState, useEffect, useRef } from 'react'
 
 // ─── Color theme ────────────────────────────────────────────────────────────
@@ -14,12 +14,8 @@ const THEME = {
 type FieldType = 'input' | 'yesno' | 'dropdown'
 
 // ─── React NodeView component ────────────────────────────────────────────────
-function ContractFieldView({ node, updateAttributes, deleteNode }: {
-  node: { attrs: { fieldType: FieldType; fieldLabel: string; fieldOptions: string; fieldRequired: string } }
-  updateAttributes: (attrs: Record<string, string>) => void
-  deleteNode: () => void
-}) {
-  const { fieldType, fieldLabel, fieldOptions, fieldRequired } = node.attrs
+function ContractFieldView({ node, updateAttributes, deleteNode }: ReactNodeViewProps) {
+  const { fieldType, fieldLabel, fieldOptions, fieldRequired } = node.attrs as { fieldType: FieldType; fieldLabel: string; fieldOptions: string; fieldRequired: string }
   const theme = THEME[fieldType] ?? THEME.input
 
   const [labelPopover, setLabelPopover] = useState(false)
@@ -38,7 +34,7 @@ function ContractFieldView({ node, updateAttributes, deleteNode }: {
   useEffect(() => {
     if (!labelPopover) return
     function handler(e: MouseEvent) {
-      if (labelRef.current && !labelRef.current.contains(e.target as Node)) {
+      if (labelRef.current && !labelRef.current.contains(e.target as globalThis.Node)) {
         setLabelPopover(false)
         setDraftLabel(fieldLabel) // reset draft
       }
@@ -51,7 +47,7 @@ function ContractFieldView({ node, updateAttributes, deleteNode }: {
   useEffect(() => {
     if (!optionsPopover) return
     function handler(e: MouseEvent) {
-      if (optionsRef.current && !optionsRef.current.contains(e.target as Node)) {
+      if (optionsRef.current && !optionsRef.current.contains(e.target as globalThis.Node)) {
         setOptionsPopover(false)
         setDraftOptions(fieldOptions ?? '') // reset draft
       }
