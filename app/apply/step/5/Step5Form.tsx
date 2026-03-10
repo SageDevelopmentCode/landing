@@ -34,16 +34,16 @@ export default function Step5Form({
   applicationId: string | null;
 }) {
   const d = initialData;
-  const hasG2 = !!(d?.g2_full_name);
+  const hasG2 = !!d?.g2_full_name;
 
   const [g1SignatureName, setG1SignatureName] = useState(
-    d?.g1_signature_name ?? d?.g1_full_name ?? ""
+    d?.g1_signature_name ?? d?.g1_full_name ?? "",
   );
   const [g1Signature, setG1Signature] = useState(d?.g1_signature ?? "");
   const [g1SignatureDate] = useState(d?.g1_signature_date ?? todayISO);
 
   const [g2SignatureName, setG2SignatureName] = useState(
-    d?.g2_signature_name ?? d?.g2_full_name ?? ""
+    d?.g2_signature_name ?? d?.g2_full_name ?? "",
   );
   const [g2Signature, setG2Signature] = useState(d?.g2_signature ?? "");
   const [g2SignatureDate] = useState(d?.g2_signature_date ?? todayISO);
@@ -79,7 +79,9 @@ export default function Step5Form({
   };
 
   return (
-    <div className={`${dancingScript.variable} flex flex-col lg:flex-row min-h-screen lg:h-screen bg-white lg:overflow-hidden`}>
+    <div
+      className={`${dancingScript.variable} flex flex-col lg:flex-row min-h-screen lg:h-screen bg-white lg:overflow-hidden`}
+    >
       {/* ── Left Brand Panel ── */}
       <motion.div
         className="relative lg:w-1/2 h-64 sm:h-80 lg:h-screen lg:sticky lg:top-0 flex-shrink-0 overflow-hidden"
@@ -101,7 +103,11 @@ export default function Step5Form({
           transition={{ delay: 0.3, duration: 0.5 }}
         >
           <Link
-            href={applicationId ? `/apply/step/4?appId=${applicationId}` : "/apply/step/4"}
+            href={
+              applicationId
+                ? `/apply/step/4?appId=${applicationId}`
+                : "/apply/step/4"
+            }
             className="flex items-center gap-2 text-white/80 hover:text-white text-sm font-body transition-colors"
           >
             <ArrowLeft size={16} />
@@ -175,24 +181,30 @@ export default function Step5Form({
             <h2 className="text-sm font-semibold text-gray-700 font-body mb-4 uppercase tracking-wide">
               Section 8 — Confirmation and Initial Agreements
             </h2>
-            <p className="text-sm text-gray-600 font-body mb-3">By signing below, I confirm that:</p>
+            <p className="text-sm text-gray-600 font-body mb-3">
+              By signing below, I confirm that:
+            </p>
             <ul className="flex flex-col gap-3 text-sm text-gray-600 font-body">
               <li className="flex gap-2">
                 <span className="text-primary mt-0.5 flex-shrink-0">•</span>
                 <span>
-                  The information provided in this application is true and complete to the best of my knowledge.
+                  The information provided in this application is true and
+                  complete to the best of my knowledge.
                 </span>
               </li>
               <li className="flex gap-2">
                 <span className="text-primary mt-0.5 flex-shrink-0">•</span>
                 <span>
-                  Submitting this application does not guarantee enrollment. Sage Field School will review each application to determine fit and will contact families regarding next steps.
+                  Submitting this application does not guarantee enrollment.
+                  Sage Field School will review each application to determine
+                  fit and will contact families regarding next steps.
                 </span>
               </li>
               <li className="flex gap-2">
                 <span className="text-primary mt-0.5 flex-shrink-0">•</span>
                 <span>
-                  If offered a place, enrollment is only finalized after completing all of the following:
+                  If offered a place, enrollment is only finalized after
+                  completing all of the following:
                 </span>
               </li>
               <li className="ml-4">
@@ -206,7 +218,9 @@ export default function Step5Form({
                     "Pay registration/materials fee",
                   ].map((step, i) => (
                     <li key={i} className="flex gap-2">
-                      <span className="text-gray-400 flex-shrink-0">{i + 1}.</span>
+                      <span className="text-gray-400 flex-shrink-0">
+                        {i + 1}.
+                      </span>
                       <span>{step}</span>
                     </li>
                   ))}
@@ -215,7 +229,9 @@ export default function Step5Form({
               <li className="flex gap-2">
                 <span className="text-primary mt-0.5 flex-shrink-0">•</span>
                 <span>
-                  I agree to notify Sage Field School in writing if any information provided in this application changes prior to enrollment.
+                  I agree to notify Sage Field School in writing if any
+                  information provided in this application changes prior to
+                  enrollment.
                 </span>
               </li>
             </ul>
@@ -244,9 +260,7 @@ export default function Step5Form({
               />
             )}
 
-            {error && (
-              <p className="text-sm text-red-500 font-body">{error}</p>
-            )}
+            {error && <p className="text-sm text-red-500 font-body">{error}</p>}
 
             <button
               type="submit"
@@ -297,33 +311,37 @@ function SignatureBlock({
         />
       </div>
 
-      {/* Type to sign */}
+      {/* Click to sign */}
       <div>
         <label className="block text-sm font-semibold text-gray-700 font-body mb-1.5">
           Type your name to sign
         </label>
-        <input
-          type="text"
-          value={signature}
-          onChange={(e) => onSignatureChange(e.target.value)}
-          placeholder="Type name here"
-          className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors bg-white"
-        />
-        {/* Cursive preview */}
-        <div className="mt-2 min-h-[48px] px-4 py-3 rounded-lg border border-dashed border-gray-200 bg-gray-50">
-          {signature ? (
+        {signature ? (
+          <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-dashed border-gray-200 bg-gray-50">
             <p
-              className="text-2xl text-gray-700"
+              className="text-2xl text-gray-700 flex-1"
               style={{ fontFamily: "var(--font-dancing-script)" }}
             >
               {signature}
             </p>
-          ) : (
-            <p className="text-sm text-gray-400 font-body italic">
-              Signature preview will appear here
-            </p>
-          )}
-        </div>
+            <button
+              type="button"
+              onClick={() => onSignatureChange("")}
+              className="text-xs text-gray-400 hover:text-gray-600 font-body underline shrink-0"
+            >
+              Clear
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onSignatureChange(printedName)}
+            disabled={!printedName}
+            className="cursor-pointer w-full px-4 py-3 rounded-lg border border-gray-200 bg-white text-sm font-body text-primary hover:bg-primary/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-left"
+          >
+            Click to sign
+          </button>
+        )}
       </div>
 
       {/* Date */}

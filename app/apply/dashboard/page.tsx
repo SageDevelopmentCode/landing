@@ -8,6 +8,7 @@ import Image from "next/image";
 import ApplicationList from "./ApplicationList";
 import ProfileDropdown from "./ProfileDropdown";
 import Footer from "@/app/components/Footer";
+import EnrollmentCodeEntry from "./EnrollmentCodeEntry";
 
 export default async function ApplicationDashboard() {
   const supabase = await createServerSupabaseClient();
@@ -43,8 +44,8 @@ export default async function ApplicationDashboard() {
   const accountFirstName = fullName?.split(" ")[0] ?? "there";
   const g1Name = (apps[0]?.g1_full_name as string | null) ?? accountFirstName;
 
-  const submittedCount = apps.filter((a) => a.status === "submitted").length;
   const inProgressCount = apps.filter((a) => a.status === "in_progress").length;
+  const submittedCount = apps.filter((a) => a.status !== "in_progress" && a.status != null).length;
   const hasSubmitted = submittedCount > 0;
 
   function buildSubtitle() {
@@ -97,6 +98,9 @@ export default async function ApplicationDashboard() {
               </Link>
               .
             </p>
+            <div className="mt-3">
+              <EnrollmentCodeEntry autoOpen={hasSubmitted} />
+            </div>
           </div>
         )}
 
