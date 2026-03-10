@@ -40,7 +40,26 @@ export default async function ApplicationDashboard() {
     fullName = adminUser?.full_name ?? null;
   }
 
-  const g1Name = apps[0]?.g1_full_name ?? "there";
+  const accountFirstName = fullName?.split(" ")[0] ?? "there";
+  const g1Name = (apps[0]?.g1_full_name as string | null) ?? accountFirstName;
+
+  const submittedCount = apps.filter((a) => a.status === "submitted").length;
+  const inProgressCount = apps.filter((a) => a.status === "in_progress").length;
+  const hasSubmitted = submittedCount > 0;
+
+  function buildSubtitle() {
+    const parts: string[] = [];
+    if (inProgressCount > 0)
+      parts.push(
+        `${inProgressCount} in-progress application${inProgressCount !== 1 ? "s" : ""}`
+      );
+    if (submittedCount > 0)
+      parts.push(
+        `${submittedCount} submitted application${submittedCount !== 1 ? "s" : ""}`
+      );
+    if (parts.length === 0) return "No applications found.";
+    return `You have ${parts.join(" and ")}.`;
+  }
 
   return (
     <div className="bg-welcome-bg">
@@ -62,32 +81,31 @@ export default async function ApplicationDashboard() {
       </header>
 
       <main className="flex-1 max-w-4xl mx-auto px-6 py-12">
-        {/* Review notice */}
-        <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 mb-6">
-          <p className="text-sm text-amber-800 font-body">
-            <span className="font-semibold">
-              We&apos;re reviewing your application.
-            </span>{" "}
-            Our team will be in touch soon. In the meantime,{" "}
-            <Link
-              href="/"
-              className="underline underline-offset-2 hover:text-amber-900 transition-colors"
-            >
-              learn more about our programs
-            </Link>
-            .
-          </p>
-        </div>
+        {/* Review notice — only shown when at least one app is submitted */}
+        {hasSubmitted && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 mb-6">
+            <p className="text-sm text-amber-800 font-body">
+              <span className="font-semibold">
+                We&apos;re reviewing your application.
+              </span>{" "}
+              Our team will be in touch soon. In the meantime,{" "}
+              <Link
+                href="/"
+                className="underline underline-offset-2 hover:text-amber-900 transition-colors"
+              >
+                learn more about our programs
+              </Link>
+              .
+            </p>
+          </div>
+        )}
 
         {/* Welcome */}
         <div className="mb-10">
           <h1 className="text-3xl font-bold font-heading text-gray-800 mb-2">
             Welcome back, {g1Name}.
           </h1>
-          <p className="text-gray-500 font-body text-sm">
-            You have {apps.length} submitted application
-            {apps.length !== 1 ? "s" : ""}.
-          </p>
+          <p className="text-gray-500 font-body text-sm">{buildSubtitle()}</p>
         </div>
 
         {/* Application List */}

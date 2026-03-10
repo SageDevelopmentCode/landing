@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { updateApplication } from "@/app/actions/updateApplication";
 
@@ -440,6 +441,16 @@ export default function ApplicationList({
 
         {apps.map((app, i) => {
           const childName = app.preferred_name ?? app.child_legal_name ?? "—";
+          const isInProgress = app.status === "in_progress";
+
+          function getContinueStep(): number {
+            if (!app.g1_full_name) return 2;
+            if (!app.has_medical_conditions && !app.medical_conditions_description) return 3;
+            if (!app.learning_style) return 4;
+            if (!app.g1_signature_name) return 5;
+            return 1;
+          }
+
           return (
             <div
               key={(app.id as string | null | undefined) ?? i}
@@ -454,16 +465,32 @@ export default function ApplicationList({
               <span className="text-sm text-gray-600 font-body">
                 {formatProgram(app.program) ?? "—"}
               </span>
-              <span className="inline-flex items-center gap-1.5 w-fit px-2.5 py-1 bg-green-50 text-green-700 text-xs font-semibold rounded-full font-body border border-green-200">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                Submitted
-              </span>
-              <button
-                onClick={() => setSelectedApp(app)}
-                className="text-xs font-semibold text-gray-500 font-body hover:text-gray-800 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition-colors cursor-pointer"
-              >
-                View/Edit
-              </button>
+              {isInProgress ? (
+                <span className="inline-flex items-center gap-1.5 w-fit px-2.5 py-1 bg-amber-50 text-amber-700 text-xs font-semibold rounded-full font-body border border-amber-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                  In Progress
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 w-fit px-2.5 py-1 bg-green-50 text-green-700 text-xs font-semibold rounded-full font-body border border-green-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                  Submitted
+                </span>
+              )}
+              {isInProgress ? (
+                <Link
+                  href={`/apply/step/${getContinueStep()}?appId=${app.id}`}
+                  className="text-xs font-semibold text-white font-body bg-[#2C5F2E] hover:bg-[#234d25] rounded-lg px-3 py-1.5 transition-colors whitespace-nowrap"
+                >
+                  Continue
+                </Link>
+              ) : (
+                <button
+                  onClick={() => setSelectedApp(app)}
+                  className="text-xs font-semibold text-gray-500 font-body hover:text-gray-800 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  View/Edit
+                </button>
+              )}
             </div>
           );
         })}
