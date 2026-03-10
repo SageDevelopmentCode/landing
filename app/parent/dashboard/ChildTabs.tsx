@@ -12,12 +12,36 @@ import {
   UserPlus,
   PenLine,
   CreditCard,
+  CheckCircle,
 } from "lucide-react";
 import type { Database } from "@/app/types/database.types";
+import type {
+  StudentSignatureMap,
+  SignatureMap,
+} from "@/app/types/enrollment-signatures";
+import {
+  CONTRACT_1_ID,
+  CONTRACT_1_TOTAL_SECTIONS,
+  isContractComplete,
+} from "@/app/types/enrollment-signatures";
+import ContractModal from "./ContractModal";
 
 type Application = Database["parent_app"]["Tables"]["applications"]["Row"];
 
-const checklistItems = [
+interface ChecklistItem {
+  id: number;
+  title: string;
+  subtitle: string;
+  icon: React.ReactNode;
+  iconBg: string;
+  iconColor: string;
+  required: boolean;
+  isContract: boolean;
+  contractId?: number;
+  contractSections?: number;
+}
+
+const checklistItems: ChecklistItem[] = [
   {
     id: 1,
     title: "Program Description, Parent Responsibilities, and Key Policies",
@@ -27,6 +51,8 @@ const checklistItems = [
     iconColor: "text-blue-500",
     required: true,
     isContract: true,
+    contractId: CONTRACT_1_ID,
+    contractSections: CONTRACT_1_TOTAL_SECTIONS,
   },
   {
     id: 2,
@@ -110,11 +136,26 @@ const checklistItems = [
   },
 ];
 
-const completedCount = 0;
 const totalCount = checklistItems.length;
-const progressPercent = Math.round((completedCount / totalCount) * 100);
 
-function Checklist({ childName }: { childName: string }) {
+function Checklist({
+  childName,
+  signatureMap,
+  onContractClick,
+}: {
+  childName: string;
+  signatureMap: SignatureMap;
+  onContractClick: (contractId: number) => void;
+}) {
+  const completedCount = checklistItems.filter((item) => {
+    if (item.contractId && item.contractSections) {
+      return isContractComplete(signatureMap, item.contractId, item.contractSections);
+    }
+    return false;
+  }).length;
+
+  const progressPercent = Math.round((completedCount / totalCount) * 100);
+
   return (
     <div>
       <div className="mb-5 bg-white border border-gray-200 rounded-2xl px-5 py-4 shadow-sm">
@@ -148,46 +189,105 @@ function Checklist({ childName }: { childName: string }) {
       </div>
 
       <div className="flex flex-col gap-3">
-        {checklistItems.map((item) => (
-          <div
-            key={item.id}
-            className="bg-white border border-gray-200 rounded-2xl px-5 py-4 shadow-sm flex items-center gap-4"
-          >
+        {checklistItems.map((item) => {
+          const isComplete =
+            item.contractId && item.contractSections
+              ? isContractComplete(signatureMap, item.contractId, item.contractSections)
+              : false;
+
+          const signedCount =
+            item.contractId && item.contractSections
+              ? Object.keys(signatureMap).filter((k) =>
+                  k.startsWith(`${item.contractId}-`)
+                ).length
+              : 0;
+
+          const isInProgress =
+            item.isContract && item.contractId != null && signedCount > 0 && !isComplete;
+
+          const isClickable = item.isContract && item.contractId != null;
+
+          return (
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${item.iconBg} ${item.iconColor}`}
+              key={item.id}
+              onClick={() => {
+                if (isClickable && item.contractId != null) {
+                  onContractClick(item.contractId);
+                }
+              }}
+              className={`rounded-2xl px-5 py-4 shadow-sm flex items-center gap-4 border transition-all ${
+                isComplete
+                  ? "bg-emerald-50 border-emerald-200"
+                  : isClickable
+                  ? "bg-white border-gray-200 cursor-pointer hover:border-gray-300 hover:shadow-md"
+                  : "bg-white border-gray-200"
+              }`}
             >
-              {item.icon}
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  isComplete
+                    ? "bg-emerald-100 text-emerald-600"
+                    : `${item.iconBg} ${item.iconColor}`
+                }`}
+              >
+                {isComplete ? <CheckCircle className="w-4 h-4" /> : item.icon}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className={`text-sm font-semibold font-heading truncate ${isComplete ? "text-emerald-800" : "text-gray-800"}`}>
+                  {item.title}
+                </p>
+                <p className={`text-xs font-body truncate ${isComplete ? "text-emerald-600/70" : "text-gray-400"}`}>
+                  {item.subtitle}
+                </p>
+              </div>
+              <div className="flex-shrink-0 flex items-center gap-2">
+                {item.isContract && (
+                  isComplete ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border bg-emerald-100 text-emerald-700 border-emerald-300">
+                      <CheckCircle className="w-3 h-3" />
+                      Completed
+                    </span>
+                  ) : isInProgress ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border bg-blue-50 text-blue-700 border-blue-200">
+                      <PenLine className="w-3 h-3" />
+                      {signedCount} / {item.contractSections} signed
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border bg-amber-50 text-amber-700 border-amber-200">
+                      <PenLine className="w-3 h-3" />
+                      Sign
+                    </span>
+                  )
+                )}
+                {!item.required && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-gray-100 text-gray-500 border-gray-200">
+                    Optional
+                  </span>
+                )}
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold font-heading text-gray-800 truncate">
-                {item.title}
-              </p>
-              <p className="text-xs text-gray-400 font-body truncate">
-                {item.subtitle}
-              </p>
-            </div>
-            <div className="flex-shrink-0 flex items-center gap-2">
-              {item.isContract && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border bg-amber-50 text-amber-700 border-amber-200">
-                  <PenLine className="w-3 h-3" />
-                  Sign
-                </span>
-              )}
-              {!item.required && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-gray-100 text-gray-500 border-gray-200">
-                  Optional
-                </span>
-              )}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
 }
 
-export default function ChildTabs({ apps }: { apps: Application[] }) {
+interface ChildTabsProps {
+  apps: Application[];
+  signaturesByStudent: StudentSignatureMap;
+  parentName: string;
+}
+
+export default function ChildTabs({
+  apps,
+  signaturesByStudent,
+  parentName,
+}: ChildTabsProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [openContractId, setOpenContractId] = useState<number | null>(null);
+  const [openStudentId, setOpenStudentId] = useState<string | null>(null);
+  const [localSigs, setLocalSigs] = useState<StudentSignatureMap>(signaturesByStudent);
 
   if (apps.length === 0) {
     return (
@@ -198,34 +298,69 @@ export default function ChildTabs({ apps }: { apps: Application[] }) {
   const activeApp = apps[activeIndex];
   const childName =
     activeApp.preferred_name ?? activeApp.child_legal_name ?? "Student";
+  const activeStudentId = activeApp.student_id ?? "";
 
-  if (apps.length === 1) {
-    return <Checklist childName={childName} />;
-  }
+  const handleContractClick = (contractId: number) => {
+    setOpenContractId(contractId);
+    setOpenStudentId(activeStudentId);
+  };
+
+  const handleClose = () => {
+    setOpenContractId(null);
+    setOpenStudentId(null);
+  };
+
+  const handleSignaturesSaved = (updatedMap: SignatureMap) => {
+    if (!openStudentId) return;
+    setLocalSigs((prev) => ({ ...prev, [openStudentId]: updatedMap }));
+  };
+
+  const checklist = (
+    <Checklist
+      childName={childName}
+      signatureMap={localSigs[activeStudentId] ?? {}}
+      onContractClick={handleContractClick}
+    />
+  );
 
   return (
     <div>
-      <div className="flex gap-2 mb-6 flex-wrap">
-        {apps.map((app, index) => {
-          const label =
-            app.preferred_name ?? app.child_legal_name ?? "Student";
-          const isActive = index === activeIndex;
-          return (
-            <button
-              key={app.id}
-              onClick={() => setActiveIndex(index)}
-              className={`px-4 py-1.5 rounded-xl text-sm font-semibold font-heading transition-colors ${
-                isActive
-                  ? "bg-gray-800 text-white"
-                  : "bg-white border border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </div>
-      <Checklist childName={childName} />
+      {apps.length > 1 && (
+        <div className="flex gap-2 mb-6 flex-wrap">
+          {apps.map((app, index) => {
+            const label =
+              app.preferred_name ?? app.child_legal_name ?? "Student";
+            const isActive = index === activeIndex;
+            return (
+              <button
+                key={app.id}
+                onClick={() => setActiveIndex(index)}
+                className={`px-4 py-1.5 rounded-xl text-sm font-semibold font-heading transition-colors ${
+                  isActive
+                    ? "bg-gray-800 text-white"
+                    : "bg-white border border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {checklist}
+
+      {openContractId !== null && openStudentId !== null && (
+        <ContractModal
+          isOpen
+          onClose={handleClose}
+          contractId={openContractId}
+          studentId={openStudentId}
+          parentName={parentName}
+          existingSignatures={localSigs[openStudentId] ?? {}}
+          onSignaturesSaved={handleSignaturesSaved}
+        />
+      )}
     </div>
   );
 }

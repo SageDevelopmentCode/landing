@@ -8,6 +8,7 @@ import Image from "next/image";
 import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import Footer from "@/app/components/Footer";
 import ChildTabs from "./ChildTabs";
+import type { StudentSignatureMap } from "@/app/types/enrollment-signatures";
 
 export default async function ParentDashboard() {
   const supabase = await createServerSupabaseClient();
@@ -38,6 +39,27 @@ export default async function ParentDashboard() {
   const fullName = adminUser?.full_name ?? null;
   const approvedApps = apps ?? [];
 
+  const studentIds = approvedApps
+    .map((a) => a.student_id)
+    .filter((id): id is string => id !== null);
+
+  let signaturesByStudent: StudentSignatureMap = {};
+  if (studentIds.length > 0) {
+    const { data: sigs } = await adminClient
+      .schema("parent_app")
+      .from("enrollment_signatures")
+      .select("*")
+      .eq("parent_id", user.id)
+      .in("student_id", studentIds);
+
+    for (const sig of sigs ?? []) {
+      signaturesByStudent[sig.student_id] ??= {};
+      signaturesByStudent[sig.student_id][
+        `${sig.contract_id}-${sig.section_id}`
+      ] = sig;
+    }
+  }
+
   return (
     <div className="bg-welcome-bg">
       <div className="min-h-screen flex flex-col">
@@ -65,7 +87,11 @@ export default async function ParentDashboard() {
             </h1>
           </div>
 
-          <ChildTabs apps={approvedApps} />
+          <ChildTabs
+            apps={approvedApps}
+            signaturesByStudent={signaturesByStudent}
+            parentName={fullName ?? ""}
+          />
         </main>
       </div>
       <Footer />
