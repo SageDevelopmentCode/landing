@@ -8,10 +8,10 @@ import Footer from "../components/Footer";
 import WaitlistDialog from "../components/WaitlistDialog";
 
 const details = [
-  { label: "Dates", value: "May 26 – Aug 20, 2026" },
+  { label: "Dates", value: "May 26 – Aug 13, 2026" },
   { label: "Ages", value: "4–10 years" },
   { label: "Schedule", value: "Mon–Thu, ~6 hrs/day" },
-  { label: "Group Size", value: "15–20 children" },
+  { label: "Group Size", value: "10 children" },
 ];
 
 const weeks = [
@@ -19,73 +19,181 @@ const weeks = [
     week: 1,
     dates: "May 26–29",
     theme: "Welcome to Camp",
-    highlights: ["Kick-off games & camp orientation", "Water balloon races", "Musical hula hoops"],
+    highlights: [
+      "Camp Kick-Off Games",
+      "Water Balloon Race and Toss",
+      "Musical Hulahoops",
+      "Cross the River",
+      "Camp Name Tags",
+      "Paper Plate Sun Craft",
+      "Leaf Rubbing Art",
+      "Friendship Bracelets",
+    ],
   },
   {
     week: 2,
     dates: "Jun 1–4",
-    theme: "Mystery Escape & Foam Party",
-    highlights: ["Giant slip & slide", "Crab soccer", "The floor is lava"],
+    theme: "Mystery Camp Escape Challenge",
+    highlights: [
+      "Giant Slip and Slide",
+      "Chicken Enrichment Toys",
+      "Crab Soccer",
+      "The Floor is Lava",
+      "Painted Stones",
+      "Chicken Wood Painting",
+      "Nature Paint",
+      "DIY Camp Flags",
+    ],
   },
   {
     week: 3,
     dates: "Jun 8–11",
     theme: "Beach Day Bash",
-    highlights: ["Ice cream bar", "Tug of war", "Ocean slime making"],
+    highlights: [
+      "Ice Cream Bar",
+      "Tug of War & Field Games",
+      "Ocean Slime",
+      "Paper Plate Swimming Fish",
+      "Medal Making",
+      "Sports Jersey Art",
+      "Seashell Painting",
+      "DIY Sea Animal",
+    ],
   },
   {
     week: 4,
     dates: "Jun 15–18",
-    theme: "Science & Engineering Lab",
-    highlights: ["Treasure map expedition", "Slime lab", "Bridge building challenge"],
+    theme: "Scientist and Space Engineering Lab",
+    highlights: [
+      "Treasure Map Expedition",
+      "Puppet Safari Skit",
+      "Slime Lab",
+      "Build a Bridge Challenge",
+      "Volcano Model",
+      "Rocket Ship Craft",
+      "Galaxy Slime",
+      "Popsicle Stick Bridge",
+    ],
   },
   {
     week: 5,
     dates: "Jun 22–25",
-    theme: "Safari Adventure",
-    highlights: ["Safari journals", "Habitat building", "Nature sketching"],
+    theme: "Safari Escape",
+    highlights: [
+      "Safari Journals",
+      "Safari Bingo",
+      "Build a Habitat",
+      "Nature Sketching",
+      "Animal Masks",
+      "Paper Plate Lions",
+      "Clay Animal Sculptures",
+      "Animal Footprint Activity",
+    ],
   },
   {
     week: 6,
     dates: "Jun 29–Jul 2",
     theme: "Splash Into Summer",
-    highlights: ["Water relay races", "Sponge dodgeball", "Splash pad games"],
+    highlights: [
+      "Water Relay Races",
+      "Sponge Dodgeball",
+      "Splash Pad Games",
+      "Beach Ball Volleyball",
+      "Tie Dye Bandanas",
+      "Paper Boats",
+      "Paper Plate Jellyfish",
+      "Sand Art",
+    ],
   },
   {
     week: 7,
     dates: "Jul 6–9",
     theme: "Dino Hunt",
-    highlights: ["Dinosaur dig", "Dino egg hunt", "Dino tag"],
+    highlights: [
+      "Dinosaur Dig",
+      "Dino Egg Hunt",
+      "Build a Dino Habitat",
+      "Dino Tag",
+      "Dinosaur Fossils",
+      "Paper Plate Dinosaurs",
+      "Dino Footprint Clay Painting",
+      "Moon Sand",
+    ],
   },
   {
     week: 8,
     dates: "Jul 13–16",
     theme: "Pirate Adventure",
-    highlights: ["Treasure hunt", "Plank walk challenge", "Pirate relay races"],
+    highlights: [
+      "X Marks the Spot",
+      "Walk the Plank Game",
+      "Build a Pirate Ship",
+      "Pirate Relay Races",
+      "Pirate Hats",
+      "Treasure Maps",
+      "Cardboard Boats",
+      "Beaded Eye Patches",
+    ],
   },
   {
     week: 9,
     dates: "Jul 20–23",
-    theme: "Superhero Week",
-    highlights: ["Superhero obstacle course", "Strength games", "Team bingo"],
+    theme: "You are a Superhero!",
+    highlights: [
+      "Trip to the 'Movies'",
+      "Bingo",
+      "Super Strength Games",
+      "Hero Obstacle Course",
+      "Design Your Superhero",
+      "Superhero Masks",
+      "Comic Strip Art",
+      "Cape Decorating",
+    ],
   },
   {
     week: 10,
     dates: "Jul 27–30",
-    theme: "Space Explorers",
-    highlights: ["Rocket launch games", "Alien tag", "Planet hunt"],
+    theme: "Space Explorers: Mission to the Stars",
+    highlights: [
+      "Space Trivia",
+      "Rocket Launch Game",
+      "Alien Tag",
+      "Planet Scavenger Hunt",
+      "Galaxy Paintings",
+      "Straw Rockets",
+      "Alien Headbands",
+      "Planet Craft",
+    ],
   },
   {
     week: 11,
     dates: "Aug 3–6",
     theme: "Down on the Farm",
-    highlights: ["Sack races", "Garden scavenger hunt", "Egg & spoon relay"],
+    highlights: [
+      "Sack Races",
+      "Garden Scavenger Hunt",
+      "Dance Party Games",
+      "Egg and Spoon Relay",
+      "Barn Collage",
+      "Flower Pot Painting",
+      "Paper Plate Chickens",
+      "Vegetable Stamp Art",
+    ],
   },
   {
     week: 12,
-    dates: "Aug 17–20",
-    theme: "Camp Finale",
-    highlights: ["Camp celebration", "Memory scrapbook", "Friendship activities"],
+    dates: "Aug 10–13",
+    theme: "Finale of Camp",
+    highlights: [
+      "Friendship Bracelets",
+      "Group Banner",
+      "Photo Booth",
+      "Camp Celebration Party",
+      "Decorate Camp T-Shirts",
+      "Friendship Necklaces",
+      "Camp Memory Scrapbook",
+      "Thank-You Cards",
+    ],
   },
 ];
 
@@ -126,7 +234,7 @@ export default function Summer2026Page() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
           >
-            May 26 – August 20, 2026 · 13 Weeks · Mon–Thu
+            May 26 – August 13, 2026 · 13 Weeks · Mon–Thu
           </motion.p>
         </div>
       </section>
@@ -141,10 +249,12 @@ export default function Summer2026Page() {
             className="space-y-4 mb-10"
           >
             <p className="text-lg text-gray-600 font-body leading-relaxed">
-              Our Summer 2026 program is a thirteen-week immersive experience designed for curious learners ages 4–10. Each day blends hands-on projects, nature exploration, literacy and math support, art, music, and plenty of time for creative play—all in a small, nurturing group setting of 15–20 children, Monday through Thursday, approximately six hours a day.
-            </p>
-            <p className="text-lg text-gray-600 font-body leading-relaxed">
-              This is an ideal introduction to Sage Field before committing to a full school year. Families who complete the summer program will have priority consideration for School Year 2026–2027 enrollment.
+              Our Summer 2026 program is a thirteen-week immersive experience
+              designed for curious learners ages 4–10. Each day blends hands-on
+              projects, nature exploration, literacy and math support, art,
+              music, and plenty of time for creative play—all in a small,
+              nurturing group setting of about 10 children, Monday through
+              Thursday, approximately six hours a day.
             </p>
           </motion.div>
 
@@ -196,20 +306,29 @@ export default function Summer2026Page() {
                 className="bg-white rounded-xl p-5 shadow-sm border border-gray-100"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.1 + i * 0.05, ease: "easeOut" }}
+                transition={{
+                  duration: 0.4,
+                  delay: 0.1 + i * 0.05,
+                  ease: "easeOut",
+                }}
               >
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-xs font-bold text-white bg-primary rounded-full px-2.5 py-0.5 font-body">
                     Week {w.week}
                   </span>
-                  <span className="text-xs text-gray-400 font-body">{w.dates}</span>
+                  <span className="text-xs text-gray-400 font-body">
+                    {w.dates}
+                  </span>
                 </div>
                 <h3 className="text-sm font-bold text-gray-800 font-heading mb-2 leading-snug">
                   {w.theme}
                 </h3>
                 <ul className="space-y-1">
                   {w.highlights.map((h) => (
-                    <li key={h} className="flex items-start gap-1.5 text-xs text-gray-600 font-body">
+                    <li
+                      key={h}
+                      className="flex items-start gap-1.5 text-xs text-gray-600 font-body"
+                    >
                       <span className="text-primary mt-0.5">•</span>
                       <span>{h}</span>
                     </li>
@@ -234,7 +353,8 @@ export default function Summer2026Page() {
               Ready to join us this summer?
             </h2>
             <p className="text-gray-500 font-body text-sm mb-6">
-              Spots are limited — apply early to secure your child&apos;s place in the Summer 2026 program.
+              Spots are limited — apply early to secure your child&apos;s place
+              in the Summer 2026 program.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
@@ -256,7 +376,10 @@ export default function Summer2026Page() {
 
       <Footer />
 
-      <WaitlistDialog isOpen={waitlistOpen} onClose={() => setWaitlistOpen(false)} />
+      <WaitlistDialog
+        isOpen={waitlistOpen}
+        onClose={() => setWaitlistOpen(false)}
+      />
     </div>
   );
 }

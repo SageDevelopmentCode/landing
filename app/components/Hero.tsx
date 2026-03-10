@@ -52,9 +52,7 @@ export default function Hero() {
               Sage Field Private School is an outdoor-focused private
               microschool in Round Rock, Texas. We are a small, intentional
               learning community where outdoor exploration, hands-on academics,
-              and child-led inquiry come together. A structured, enriching
-              drop-off program designed for families who want something better
-              than traditional school.
+              and child-led inquiry come together.
             </motion.p>
 
             {/* Action Buttons */}

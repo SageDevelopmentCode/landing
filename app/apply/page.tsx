@@ -20,7 +20,7 @@ const tabContent = {
       { label: "Dates", value: "May 26 – August 20, 2026" },
       { label: "Ages", value: "4–10 years" },
       { label: "Schedule", value: "Mon–Thu, ~6 hrs/day" },
-      { label: "Group Size", value: "15–20 children" },
+      { label: "Group Size", value: "10 children" },
     ],
     images: [
       "/assets/After1.png",
@@ -32,12 +32,12 @@ const tabContent = {
     badge: "School Year 2026",
     title: "School Year 2026–2027",
     description: [
-      "The School Year 2026–2027 program runs as a six-month commitment, offering up to four days per week of enriched learning for children ages 6–10. Students receive individualized support in literacy and numeracy alongside science, art, movement, and social-emotional learning.",
+      "The School Year 2026–2027 program runs as a six-month commitment, offering up to four days per week of enriched learning for children ages 4-11. Students receive individualized support in literacy and numeracy alongside science, art, movement, and social-emotional learning.",
       "Enrollment is limited to preserve the small-group environment that makes Sage Field special. Families begin with an application and a mutual-fit conversation to ensure the program is the right match for your child.",
     ],
     details: [
       { label: "Start Date", value: "September 8, 2026" },
-      { label: "Ages", value: "6–10 years" },
+      { label: "Ages", value: "4-11 years" },
       { label: "Schedule", value: "Up to 4 days/week" },
       { label: "Term", value: "6-month commitment" },
     ],
@@ -271,18 +271,32 @@ export default function ApplyPage() {
                     {/* Paragraphs */}
                     <p className="text-base text-text-gray mb-4 leading-relaxed font-body">
                       Our approach integrates elements of{" "}
-                      <span className="text-primary font-semibold">Montessori</span>,{" "}
-                      <span className="text-primary font-semibold">Waldorf</span>, and{" "}
-                      <span className="text-primary font-semibold">Reggio Emilia</span>{" "}
+                      <span className="text-primary font-semibold">
+                        Montessori
+                      </span>
+                      ,{" "}
+                      <span className="text-primary font-semibold">
+                        Waldorf
+                      </span>
+                      , and{" "}
+                      <span className="text-primary font-semibold">
+                        Reggio Emilia
+                      </span>{" "}
                       methods with{" "}
-                      <span className="text-primary font-semibold">TEKS-aligned academics</span>.
-                      We enrich learning with social-emotional education, arts, music, and creative problem-solving.
+                      <span className="text-primary font-semibold">
+                        TEKS-aligned academics
+                      </span>
+                      . We enrich learning with social-emotional education,
+                      arts, music, and creative problem-solving.
                     </p>
 
                     <p className="text-base text-text-gray mb-6 leading-relaxed font-body">
                       We value{" "}
-                      <span className="text-primary font-semibold">emotional regulation</span>,
-                      both for students and educators. A calm, connected teacher creates a community where children thrive.
+                      <span className="text-primary font-semibold">
+                        emotional regulation
+                      </span>
+                      , both for students and educators. A calm, connected
+                      teacher creates a community where children thrive.
                     </p>
 
                     {/* Key Pillars Callout */}
@@ -308,10 +322,29 @@ export default function ApplyPage() {
                     {/* Pillar Cards 2×2 */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {[
-                        { icon: "🌱", title: "Hands-on Learning", description: "Experiential activities that engage curiosity" },
-                        { icon: "🧘", title: "Emotional Regulation", description: "Mindfulness practices for students & educators" },
-                        { icon: "🎨", title: "Creative Expression", description: "Artistic and musical creativity flourish" },
-                        { icon: "🌳", title: "Movement & Nature", description: "Movement-based and outdoor education" },
+                        {
+                          icon: "🌱",
+                          title: "Hands-on Learning",
+                          description:
+                            "Experiential activities that engage curiosity",
+                        },
+                        {
+                          icon: "🧘",
+                          title: "Emotional Regulation",
+                          description:
+                            "Mindfulness practices for students & educators",
+                        },
+                        {
+                          icon: "🎨",
+                          title: "Creative Expression",
+                          description:
+                            "Artistic and musical creativity flourish",
+                        },
+                        {
+                          icon: "🌳",
+                          title: "Movement & Nature",
+                          description: "Movement-based and outdoor education",
+                        },
                       ].map((pillar, index) => (
                         <motion.div
                           key={index}
@@ -319,13 +352,21 @@ export default function ApplyPage() {
                           initial={{ opacity: 0, y: 20 }}
                           whileInView={{ opacity: 1, y: 0 }}
                           viewport={{ once: true }}
-                          transition={{ duration: 0.5, delay: 0.1 + index * 0.1, ease: "easeOut" }}
+                          transition={{
+                            duration: 0.5,
+                            delay: 0.1 + index * 0.1,
+                            ease: "easeOut",
+                          }}
                         >
                           <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mb-3 group-hover:bg-primary/30 transition-colors duration-200">
                             <span className="text-2xl">{pillar.icon}</span>
                           </div>
-                          <h3 className="text-base font-semibold text-black mb-1 font-heading">{pillar.title}</h3>
-                          <p className="text-sm text-text-gray font-body">{pillar.description}</p>
+                          <h3 className="text-base font-semibold text-black mb-1 font-heading">
+                            {pillar.title}
+                          </h3>
+                          <p className="text-sm text-text-gray font-body">
+                            {pillar.description}
+                          </p>
                         </motion.div>
                       ))}
                     </div>
@@ -357,17 +398,46 @@ export default function ApplyPage() {
                       </p>
                       <div className="grid grid-cols-2 gap-3 mb-6">
                         {[
-                          { emoji: "💦", title: "Giant Slip & Slide", desc: "Cool off and race down the big slide" },
-                          { emoji: "🌈", title: "Rainbow Foam Party", desc: "Splash through colorful foam clouds" },
-                          { emoji: "🏞️", title: "Cross the River", desc: "Hop across lily pads without falling in" },
-                          { emoji: "🌋", title: "The Floor is Lava", desc: "Jump, dodge, and survive the eruption" },
-                          { emoji: "🎶", title: "Musical Hula Hoops", desc: "Dance, move, and claim your hoop" },
+                          {
+                            emoji: "💦",
+                            title: "Giant Slip & Slide",
+                            desc: "Cool off and race down the big slide",
+                          },
+                          {
+                            emoji: "🌈",
+                            title: "Rainbow Foam Party",
+                            desc: "Splash through colorful foam clouds",
+                          },
+                          {
+                            emoji: "🏞️",
+                            title: "Cross the River",
+                            desc: "Hop across lily pads without falling in",
+                          },
+                          {
+                            emoji: "🌋",
+                            title: "The Floor is Lava",
+                            desc: "Jump, dodge, and survive the eruption",
+                          },
+                          {
+                            emoji: "🎶",
+                            title: "Musical Hula Hoops",
+                            desc: "Dance, move, and claim your hoop",
+                          },
                         ].map((activity) => (
-                          <div key={activity.title} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                            <span className="text-2xl leading-none">{activity.emoji}</span>
+                          <div
+                            key={activity.title}
+                            className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100"
+                          >
+                            <span className="text-2xl leading-none">
+                              {activity.emoji}
+                            </span>
                             <div>
-                              <p className="text-sm font-bold text-gray-800 font-body leading-tight">{activity.title}</p>
-                              <p className="text-xs text-text-gray font-body mt-0.5">{activity.desc}</p>
+                              <p className="text-sm font-bold text-gray-800 font-body leading-tight">
+                                {activity.title}
+                              </p>
+                              <p className="text-xs text-text-gray font-body mt-0.5">
+                                {activity.desc}
+                              </p>
                             </div>
                           </div>
                         ))}
@@ -382,15 +452,36 @@ export default function ApplyPage() {
                       </p>
                       <div className="grid grid-cols-2 gap-3">
                         {[
-                          { emoji: "🎨", title: "Nature Paint", desc: "Use leaves, sticks & mud as your brush" },
-                          { emoji: "🍃", title: "Leaf Rubbing Art", desc: "Reveal hidden patterns from nature" },
-                          { emoji: "🪢", title: "Friendship Bracelets", desc: "Weave a bracelet to share with a friend" },
+                          {
+                            emoji: "🎨",
+                            title: "Nature Paint",
+                            desc: "Use leaves, sticks & mud as your brush",
+                          },
+                          {
+                            emoji: "🍃",
+                            title: "Leaf Rubbing Art",
+                            desc: "Reveal hidden patterns from nature",
+                          },
+                          {
+                            emoji: "🪢",
+                            title: "Friendship Bracelets",
+                            desc: "Weave a bracelet to share with a friend",
+                          },
                         ].map((craft) => (
-                          <div key={craft.title} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                            <span className="text-2xl leading-none">{craft.emoji}</span>
+                          <div
+                            key={craft.title}
+                            className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100"
+                          >
+                            <span className="text-2xl leading-none">
+                              {craft.emoji}
+                            </span>
                             <div>
-                              <p className="text-sm font-bold text-gray-800 font-body leading-tight">{craft.title}</p>
-                              <p className="text-xs text-text-gray font-body mt-0.5">{craft.desc}</p>
+                              <p className="text-sm font-bold text-gray-800 font-body leading-tight">
+                                {craft.title}
+                              </p>
+                              <p className="text-xs text-text-gray font-body mt-0.5">
+                                {craft.desc}
+                              </p>
                             </div>
                           </div>
                         ))}

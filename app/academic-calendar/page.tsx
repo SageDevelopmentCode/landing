@@ -195,7 +195,7 @@ export default function AcademicCalendarPage() {
                 </span>
               </div>
               <h3 className="text-2xl font-bold text-gray-800 font-heading mb-2">
-                May 26 – August 20, 2026
+                May 26 – August 13, 2026
               </h3>
               <p className="text-gray-600 font-body leading-relaxed">
                 Our summer program runs before the school year begins. An

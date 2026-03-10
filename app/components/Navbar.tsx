@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import ContactDialog from "./ContactDialog";
 import WaitlistDialog from "./WaitlistDialog";
 
@@ -181,13 +181,21 @@ export default function Navbar() {
 
   function renderLeaf(leaf: NavLeaf, mobile = false) {
     const base = mobile
-      ? "flex items-center justify-between w-full text-left py-2 px-1 rounded-lg text-sm font-medium"
+      ? "flex items-center justify-between w-full text-left py-3 px-2 rounded-lg text-sm font-medium"
       : "flex items-center justify-between w-full text-left px-4 py-2.5 rounded-lg text-sm transition-colors duration-150";
+
+    const colorClass = mobile
+      ? "text-white/80 hover:bg-white/10 hover:text-white"
+      : "text-gray-700 hover:bg-gray-50 hover:text-gray-900";
 
     const badge = leaf.badge ? (
       <span className="ml-2 text-[10px] font-semibold uppercase bg-gray-100 text-gray-400 rounded-full px-2 py-0.5 shrink-0">
         {leaf.badge}
       </span>
+    ) : null;
+
+    const arrow = mobile ? (
+      <ChevronRight className="w-4 h-4 opacity-50 shrink-0 ml-1" strokeWidth={2} />
     ) : null;
 
     if (leaf.action.kind === "disabled") {
@@ -208,10 +216,13 @@ export default function Navbar() {
           key={leaf.label}
           href={leaf.action.href}
           onClick={() => handleLeafAction(leaf.action)}
-          className={`${base} text-gray-700 hover:bg-gray-50 hover:text-gray-900`}
+          className={`${base} ${colorClass}`}
         >
           <span>{leaf.label}</span>
-          {badge}
+          <span className="flex items-center gap-1">
+            {badge}
+            {arrow}
+          </span>
         </Link>
       );
     }
@@ -221,10 +232,13 @@ export default function Navbar() {
       <button
         key={leaf.label}
         onClick={() => handleLeafAction(leaf.action)}
-        className={`${base} text-gray-700 hover:bg-gray-50 hover:text-gray-900 cursor-pointer`}
+        className={`${base} ${colorClass} cursor-pointer`}
       >
         <span>{leaf.label}</span>
-        {badge}
+        <span className="flex items-center gap-1">
+          {badge}
+          {arrow}
+        </span>
       </button>
     );
   }
@@ -342,16 +356,6 @@ export default function Navbar() {
             transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
           >
             <button
-              onClick={() => setContactDialogOpen(true)}
-              className={`border-2 ${
-                useDarkStyle
-                  ? "border-gray-800 text-gray-800 hover:bg-gray-100"
-                  : "border-white text-white hover:bg-white/10"
-              } bg-transparent font-semibold px-6 py-2 rounded-lg transition-all duration-250 cursor-pointer`}
-            >
-              Contact Us
-            </button>
-            <button
               onClick={() => setWaitlistDialogOpen(true)}
               className="border-2 border-white bg-primary hover:bg-primary-hover text-white font-semibold px-6 py-2 rounded-lg transition-all duration-250 cursor-pointer shadow-lg"
             >
@@ -410,9 +414,7 @@ export default function Navbar() {
               {/* Accordion sections */}
               <div className="space-y-1 mb-4">
                 {NAV_TABS.map((tab) => {
-                  const mobileTextBase = useDarkStyle
-                    ? "text-gray-800"
-                    : "text-white";
+                  const mobileTextBase = "text-white";
 
                   if (tab.kind === "single") {
                     const isDisabled = tab.action.kind === "disabled";
@@ -429,9 +431,10 @@ export default function Navbar() {
                       <div key={tab.label} className="py-2">
                         <button
                           onClick={() => handleLeafAction(tab.action)}
-                          className={`block font-semibold text-sm ${mobileTextBase} cursor-pointer focus:outline-none`}
+                          className={`w-full flex items-center justify-between py-3 font-semibold text-sm ${mobileTextBase} cursor-pointer focus:outline-none`}
                         >
                           {tab.label}
+                          <ChevronRight className="w-4 h-4 opacity-50" strokeWidth={2} />
                         </button>
                       </div>
                     );

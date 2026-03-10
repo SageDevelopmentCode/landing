@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Apply - Sage Field | Summer & School Year Programs",
   description:
-    "Apply to Sage Field Private School's Summer 2026 or School Year 2026–2027 programs. A nature-based private microschool for children ages 6–10 in Round Rock, Texas. Small groups, hands-on learning, and a structured drop-off program.",
+    "Apply to Sage Field Private School's Summer 2026 or School Year 2026–2027 programs. A nature-based private microschool for children ages 4-11 in Round Rock, Texas. Small groups, hands-on learning, and a structured drop-off program.",
   openGraph: {
     title: "Apply - Sage Field | Summer & School Year Programs",
     description:
