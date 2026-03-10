@@ -51,8 +51,7 @@ const NAV_TABS: NavTab[] = [
     items: [
       {
         label: "Summer Program 2026",
-        action: { kind: "disabled" },
-        badge: "Coming Soon",
+        action: { kind: "link", href: "/summer-2026" },
       },
       {
         label: "School Year 2026-2027",
@@ -122,7 +121,8 @@ export default function Navbar() {
     pathname === "/donate/success" ||
     pathname === "/team" ||
     pathname === "/tuition" ||
-    pathname === "/academic-calendar";
+    pathname === "/academic-calendar" ||
+    pathname === "/summer-2026";
 
   // Close everything on route change
   useEffect(() => {
