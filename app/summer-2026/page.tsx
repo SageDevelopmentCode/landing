@@ -340,6 +340,51 @@ export default function Summer2026Page() {
         </div>
       </section>
 
+      {/* Field Day Fridays */}
+      <section className="pb-16 px-8 sm:px-12 lg:px-16">
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+          >
+            <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4">
+              Optional Add-On
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 font-heading mb-4">
+              <span className="text-primary">Field Day</span> Fridays
+            </h2>
+            <p className="text-gray-500 font-body text-base mb-8 max-w-xl mx-auto">
+              Fridays are an optional add-on — join us for a full day of outdoor adventure from 9 am to 1 pm. Every Field Day Friday is a unique, one-of-a-kind experience!
+            </p>
+          </motion.div>
+
+          <motion.div
+            className="flex flex-wrap justify-center gap-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+          >
+            <div className="flex items-center gap-2 px-5 py-3 bg-primary/10 rounded-full">
+              <span>🌿</span>
+              <span className="text-sm font-semibold text-primary font-body">Outdoor &amp; Nature</span>
+            </div>
+            <div className="flex items-center gap-2 px-5 py-3 bg-primary/10 rounded-full">
+              <span>🕘</span>
+              <span className="text-sm font-semibold text-primary font-body">9 am – 1 pm</span>
+            </div>
+            <div className="flex items-center gap-2 px-5 py-3 bg-primary/10 rounded-full">
+              <span>✅</span>
+              <span className="text-sm font-semibold text-primary font-body">Optional Add-On</span>
+            </div>
+            <div className="flex items-center gap-2 px-5 py-3 bg-primary/10 rounded-full">
+              <span>🎉</span>
+              <span className="text-sm font-semibold text-primary font-body">Unique Each Week</span>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Enrollment CTA */}
       <section className="pb-20 px-8 sm:px-12 lg:px-16">
         <div className="max-w-2xl mx-auto">

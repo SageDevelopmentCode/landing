@@ -140,7 +140,7 @@ export default function AcademicCalendarPage() {
                 First Day of School
               </p>
               <p className="text-3xl font-bold text-gray-800 font-heading leading-tight">
-                August 24,
+                August 17,
                 <br />
                 2026
               </p>
@@ -158,7 +158,7 @@ export default function AcademicCalendarPage() {
                 Last Day of School
               </p>
               <p className="text-3xl font-bold text-gray-800 font-heading leading-tight">
-                May 28,
+                May 31,
                 <br />
                 2027
               </p>
