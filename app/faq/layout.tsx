@@ -44,7 +44,7 @@ export default function FAQLayout({ children }: { children: React.ReactNode }) {
         name: "What is Sage Field?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Sage Field Private School is a nature-based private microschool for lower-elementary children ages 6–10. We are a small, intentional learning community where outdoor exploration, hands-on academics, and child-led inquiry come together in a structured drop-off program. We operate under Texas private school law as an independent private school.",
+          text: "Sage Field Private School is an outdoor-focused private microschool in Round Rock, Texas. We are a small-group, outdoor-centered education that fosters curiosity, confidence, and wisdom — a structured drop-off program without the rigidity of traditional school.",
         },
       },
       {

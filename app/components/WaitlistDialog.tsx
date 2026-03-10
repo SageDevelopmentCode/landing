@@ -55,7 +55,10 @@ export default function WaitlistDialog({
         phone: formData.phone || undefined,
         childName: formData.childName,
         childAge: parseInt(formData.childAge),
-        programInterest: formData.programInterest as "summer-2026" | "school-year-2026" | "both",
+        programInterest: formData.programInterest as
+          | "summer-2026"
+          | "school-year-2026"
+          | "both",
         specialInterests: formData.specialInterests || undefined,
       });
 
@@ -90,7 +93,9 @@ export default function WaitlistDialog({
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) => {
     const { name, value } = e.target;
 
@@ -148,7 +153,7 @@ export default function WaitlistDialog({
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h2 className="text-2xl md:text-3xl font-heading font-semibold text-text-gray">
-                    Enroll Your Child
+                    Sage Field Interest Form
                   </h2>
                   <p className="text-sm md:text-base text-gray-600 mt-2 font-body">
                     We&apos;re excited to begin this learning journey with your
@@ -306,7 +311,9 @@ export default function WaitlistDialog({
                   >
                     <option value="">Select a program...</option>
                     <option value="summer-2026">Summer 2026</option>
-                    <option value="school-year-2026">School Year 2026-2027</option>
+                    <option value="school-year-2026">
+                      School Year 2026-2027
+                    </option>
                     <option value="both">Both Programs</option>
                   </select>
                 </div>

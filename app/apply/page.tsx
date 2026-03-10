@@ -351,130 +351,49 @@ export default function ApplyPage() {
                     </h2>
 
                     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                      {/* Week Header */}
-                      <p className="text-lg font-bold text-gray-500 font-heading mb-5">
-                        Week 1 · Tuesday
+                      {/* Active Adventures */}
+                      <p className="text-sm font-bold text-gray-500 font-heading uppercase tracking-wide mb-4">
+                        Active Adventures
                       </p>
-
-                      {/* Daily Activity */}
-                      <p className="text-sm font-bold underline text-gray-800 font-body mb-4">
-                        Daily Activity: Camp Kick Off Games
-                      </p>
-
-                      <div className="space-y-5">
-                        {/* Camp Scavenger Hunt */}
-                        <div>
-                          <p className="text-sm font-semibold text-gray-700 font-body mb-1">Camp Scavenger Hunt</p>
-                          <p className="text-sm text-text-gray font-body mb-2">
-                            Explore camp grounds and find items from the list below.
-                          </p>
-                          <ul className="space-y-1 pl-4">
-                            {[
-                              "Find something that floats",
-                              "Find 5 different plants",
-                              "Find something shaped like a circle",
-                              "Find something soft",
-                              "Find an insect or bug",
-                            ].map((item) => (
-                              <li key={item} className="text-sm text-text-gray font-body flex items-start">
-                                <span className="text-primary mr-2">•</span>
-                                <span>{item}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        {/* Name Toss */}
-                        <div>
-                          <p className="text-sm font-semibold text-gray-700 font-body mb-1">Name Toss</p>
-                          <p className="text-xs text-text-gray font-body mb-2">
-                            <span className="font-semibold">Materials:</span> Soft ball
-                          </p>
-                          <ol className="space-y-1 pl-4 list-decimal list-inside">
-                            {[
-                              "Everyone stands in a circle",
-                              "Say your name and toss the ball to someone",
-                              "Catcher says another name and tosses the ball",
-                              "Add more balls to create fun chaos!",
-                            ].map((step) => (
-                              <li key={step} className="text-sm text-text-gray font-body">{step}</li>
-                            ))}
-                          </ol>
-                        </div>
-
-                        {/* Whole Body Rock Paper Scissors */}
-                        <div>
-                          <p className="text-sm font-semibold text-gray-700 font-body mb-1">Whole Body Rock Paper Scissors</p>
-                          <ul className="space-y-1 pl-4 mb-2">
-                            {[
-                              "Rock — squat and curl into a ball",
-                              "Paper — stand straight, arms at sides",
-                              "Scissors — stand with legs and arms spread apart",
-                            ].map((pose) => (
-                              <li key={pose} className="text-sm text-text-gray font-body flex items-start">
-                                <span className="text-primary mr-2">•</span>
-                                <span>{pose}</span>
-                              </li>
-                            ))}
-                          </ul>
-                          <p className="text-xs text-text-gray font-body italic">
-                            Jump 3 times for rock, paper, scissors — then show your answer for shoot!
-                          </p>
-                        </div>
+                      <div className="grid grid-cols-2 gap-3 mb-6">
+                        {[
+                          { emoji: "💦", title: "Giant Slip & Slide", desc: "Cool off and race down the big slide" },
+                          { emoji: "🌈", title: "Rainbow Foam Party", desc: "Splash through colorful foam clouds" },
+                          { emoji: "🏞️", title: "Cross the River", desc: "Hop across lily pads without falling in" },
+                          { emoji: "🌋", title: "The Floor is Lava", desc: "Jump, dodge, and survive the eruption" },
+                          { emoji: "🎶", title: "Musical Hula Hoops", desc: "Dance, move, and claim your hoop" },
+                        ].map((activity) => (
+                          <div key={activity.title} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                            <span className="text-2xl leading-none">{activity.emoji}</span>
+                            <div>
+                              <p className="text-sm font-bold text-gray-800 font-body leading-tight">{activity.title}</p>
+                              <p className="text-xs text-text-gray font-body mt-0.5">{activity.desc}</p>
+                            </div>
+                          </div>
+                        ))}
                       </div>
 
-                      {/* Materials Callout */}
-                      <div className="mt-5 p-3 bg-primary/10 border-l-4 border-primary rounded-r-lg">
-                        <p className="text-sm font-semibold text-gray-800 font-body">
-                          Daily Activity Materials: 1–3 Soft Balls
-                        </p>
-                      </div>
+                      {/* Divider */}
+                      <div className="border-t border-gray-100 mb-6" />
 
-                      {/* Age Note */}
-                      <p className="mt-3 text-xs italic text-gray-400 font-body">
-                        (Suitable for all ages 4–10, including neurodivergent learners)
+                      {/* Creative Crafts */}
+                      <p className="text-sm font-bold text-gray-500 font-heading uppercase tracking-wide mb-4">
+                        Creative Crafts
                       </p>
-
-                      {/* Daily Craft */}
-                      <div className="border-t border-gray-100 mt-6 pt-5">
-                        <p className="text-sm font-bold underline text-gray-800 font-body mb-4">
-                          Daily Craft: Camp Name Tags
-                        </p>
-
-                        {/* Craft Image placeholder */}
-                        <img
-                          src="/assets/ImageOne.jpg"
-                          alt="Camp Name Tags craft"
-                          className="rounded-xl aspect-video object-cover mb-5 w-full"
-                        />
-
-                        {/* Craft Materials */}
-                        <div className="mb-4">
-                          <p className="text-sm font-semibold text-gray-700 font-body mb-2">Materials</p>
-                          <ul className="space-y-1 pl-4">
-                            {["Wooden Round Circles", "Markers", "Twine", "Beads"].map((mat) => (
-                              <li key={mat} className="text-sm text-text-gray font-body flex items-start">
-                                <span className="text-primary mr-2">•</span>
-                                <span>{mat}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        {/* Craft Directions */}
-                        <div>
-                          <p className="text-sm font-semibold text-gray-700 font-body mb-2">Directions</p>
-                          <ol className="space-y-1 pl-4 list-decimal list-inside">
-                            {[
-                              "Write your name on the round circle",
-                              "Decorate your name plate however you like",
-                              "Tie string through the hole (add beads if you want!)",
-                              "Put on your name tag and wear it proudly",
-                            ].map((step) => (
-                              <li key={step} className="text-sm text-text-gray font-body">{step}</li>
-                            ))}
-                          </ol>
-                        </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        {[
+                          { emoji: "🎨", title: "Nature Paint", desc: "Use leaves, sticks & mud as your brush" },
+                          { emoji: "🍃", title: "Leaf Rubbing Art", desc: "Reveal hidden patterns from nature" },
+                          { emoji: "🪢", title: "Friendship Bracelets", desc: "Weave a bracelet to share with a friend" },
+                        ].map((craft) => (
+                          <div key={craft.title} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                            <span className="text-2xl leading-none">{craft.emoji}</span>
+                            <div>
+                              <p className="text-sm font-bold text-gray-800 font-body leading-tight">{craft.title}</p>
+                              <p className="text-xs text-text-gray font-body mt-0.5">{craft.desc}</p>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </motion.div>

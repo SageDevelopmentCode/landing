@@ -18,7 +18,7 @@ export default function FAQPage() {
     {
       question: "What is Sage Field?",
       answer:
-        "Sage Field Private School is a nature-based private microschool for lower-elementary children ages 6–10. We are a small, intentional learning community where outdoor exploration, hands-on academics, and child-led inquiry come together in a structured drop-off program. We operate under Texas private school law as an independent private school.",
+        "Sage Field Private School is an outdoor-focused private microschool in Round Rock, Texas. We are a small-group, outdoor-centered education that fosters curiosity, confidence, and wisdom — a structured drop-off program without the rigidity of traditional school.",
     },
     {
       question: "Are you a school? Will Sage Field keep grades or transcripts?",
@@ -41,7 +41,7 @@ export default function FAQPage() {
     {
       question: "What ages do you serve and how big are the groups?",
       answer:
-        "We serve lower-elementary aged children, about 6–10 years, with flexibility based on developmental fit. Students learn together in mixed-age groups so children can move at their own pace. We intentionally keep our groups small — typically no more than 10–12 children per class — so that two adults can stay closely attuned to each child's needs.",
+        "We serve ages 4-11, with flexibility based on developmental fit. Students learn together in mixed-age groups so children can move at their own pace. We intentionally keep our groups small — typically no more than 10–12 children per class — so that two adults can stay closely attuned to each child's needs.",
     },
     {
       question: "What does a typical day at Sage Field look like?",

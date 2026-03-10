@@ -68,7 +68,7 @@ export default function WhatWeOfferSection() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
             >
-              Sage Field operates as a learning community using intentional
+              Sage Field operates as a private microschool using intentional
               enrichment. We focus on{" "}
               <span className="text-primary font-semibold">
                 whole-child growth

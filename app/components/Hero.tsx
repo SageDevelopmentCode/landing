@@ -49,11 +49,12 @@ export default function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
             >
-              Sage Field Private School is a nature-based private microschool.
-              We are a small, intentional learning community where outdoor
-              exploration, hands-on academics, and child-led inquiry come
-              together. A structured, enriching drop-off program designed for
-              families who want something better than traditional school.
+              Sage Field Private School is an outdoor-focused private
+              microschool in Round Rock, Texas. We are a small, intentional
+              learning community where outdoor exploration, hands-on academics,
+              and child-led inquiry come together. A structured, enriching
+              drop-off program designed for families who want something better
+              than traditional school.
             </motion.p>
 
             {/* Action Buttons */}

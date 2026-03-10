@@ -89,7 +89,9 @@ export default function VisionPage() {
   const [waitlistOpen, setWaitlistOpen] = useState(false);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) => {
     const { name, value } = e.target;
     if (name === "phone") {
@@ -111,7 +113,10 @@ export default function VisionPage() {
         phone: formData.phone || undefined,
         childName: formData.childName,
         childAge: parseInt(formData.childAge),
-        programInterest: formData.programInterest as "summer-2026" | "school-year-2026" | "both",
+        programInterest: formData.programInterest as
+          | "summer-2026"
+          | "school-year-2026"
+          | "both",
         specialInterests: formData.specialInterests || undefined,
       });
 
@@ -515,7 +520,9 @@ export default function VisionPage() {
                         className="flex items-center gap-2 p-4 rounded-lg bg-red-50 text-red-800 border border-red-200"
                       >
                         <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                        <p className="text-sm font-body">{submitStatus.message}</p>
+                        <p className="text-sm font-body">
+                          {submitStatus.message}
+                        </p>
                       </motion.div>
                     )}
 
@@ -619,7 +626,9 @@ export default function VisionPage() {
                       >
                         <option value="">Select a program...</option>
                         <option value="summer-2026">Summer 2026</option>
-                        <option value="school-year-2026">School Year 2026-2027</option>
+                        <option value="school-year-2026">
+                          School Year 2026-2027
+                        </option>
                         <option value="both">Both Programs</option>
                       </select>
                     </div>
@@ -685,9 +694,11 @@ export default function VisionPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
           >
-            Sage Field Private School is a nature-based private microschool for
-            children ages 6–10 in Central Texas, built on hands-on,
-            outdoor-focused education.
+            Sage Field Private School is an outdoor-focused private microschool
+            in Round Rock, Texas. We are a small-group, outdoor-centered
+            education that fosters curiosity, confidence, and wisdom — a
+            structured drop-off program without the rigidity of traditional
+            school.
           </motion.p>
 
           <motion.div

@@ -371,6 +371,44 @@ export default function ContractsPage() {
                 .tiptap-view h2 { font-size: 1.25rem; font-weight: 600; margin: 1.25rem 0 0.5rem; }
                 .tiptap-view h3 { font-size: 1rem; font-weight: 600; margin: 1rem 0 0.5rem; }
                 .tiptap-view blockquote { border-left: 3px solid #C8D9C8; padding-left: 1rem; margin: 0.5rem 0; }
+                .tiptap-view .contract-field {
+                  display: inline-flex;
+                  align-items: center;
+                  border-radius: 4px;
+                  padding: 1px 6px;
+                  font-size: 0.75rem;
+                  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                  vertical-align: middle;
+                  white-space: nowrap;
+                  line-height: 1.5;
+                }
+                .tiptap-view .contract-field[data-field-type="input"] {
+                  background-color: #D4EAF7;
+                  color: #1a6a9a;
+                  border: 1px solid #9ecae8;
+                }
+                .tiptap-view .contract-field[data-field-type="yesno"] {
+                  background-color: #BFD8C0;
+                  color: #2e6b3f;
+                  border: 1px solid #8fbf91;
+                }
+                .tiptap-view .contract-field[data-field-type="dropdown"] {
+                  background-color: #FDE68A;
+                  color: #92400e;
+                  border: 1px solid #f5c842;
+                }
+                .tiptap-view .contract-field[data-field-required="true"]::after {
+                  content: "req";
+                  font-size: 0.6rem;
+                  font-weight: 700;
+                  padding: 0px 4px;
+                  border-radius: 999px;
+                  border: 1px solid #dc2626;
+                  background-color: #fee2e2;
+                  color: #dc2626;
+                  margin-left: 4px;
+                  line-height: 1.4;
+                }
               `}</style>
               <div
                 dangerouslySetInnerHTML={{ __html: selectedContract.content }}

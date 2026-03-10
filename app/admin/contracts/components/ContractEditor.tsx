@@ -10,6 +10,7 @@ import { Color } from '@tiptap/extension-color'
 import Highlight from '@tiptap/extension-highlight'
 import TextAlign from '@tiptap/extension-text-align'
 import { colors, radius, shadows } from '../../design-system'
+import { ContractFieldNode } from './ContractFieldExtension'
 
 const FULL_SIGNATURE_HTML =
   '<p style="margin-top: 1rem;"><strong>Signature:</strong> _____________________________________ &nbsp;&nbsp; ' +
@@ -133,6 +134,7 @@ export default function ContractEditor({ content, onChange, onCancel, onSave, is
       Color,
       Highlight.configure({ multicolor: true }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
+      ContractFieldNode,
     ],
     content,
     onUpdate({ editor }) {
@@ -147,14 +149,14 @@ export default function ContractEditor({ content, onChange, onCancel, onSave, is
 
   function insertField() {
     if (!fieldLabel.trim() || !editor) return
-    const label = fieldLabel.trim()
-    const type = fieldModal!
-    const prefix = type === 'input' ? '[ ]' : type === 'yesno' ? 'Y/N' : '▼'
-    const optionsAttr = type === 'dropdown' && fieldOptions.trim()
-      ? ` data-field-options="${fieldOptions.trim()}"`
-      : ''
-    const html = `<span class="contract-field" data-field-type="${type}" data-field-label="${label}"${optionsAttr} contenteditable="false">${prefix} ${label}</span>&nbsp;`
-    editor.chain().focus().insertContent(html).run()
+    editor.chain().focus().insertContent({
+      type: 'contractField',
+      attrs: {
+        fieldType: fieldModal!,
+        fieldLabel: fieldLabel.trim(),
+        fieldOptions: fieldModal === 'dropdown' ? fieldOptions.trim() : '',
+      },
+    }).run()
     setFieldModal(null)
     setFieldLabel('')
     setFieldOptions('')

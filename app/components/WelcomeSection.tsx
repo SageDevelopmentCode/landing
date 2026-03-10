@@ -70,11 +70,12 @@ export default function WelcomeSection() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
             >
-              Sage Field Private School is a nature-based private microschool
-              for lower-elementary children ages 6–10. We offer small-group,
-              outdoor-centered education that fosters curiosity, confidence, and
-              wisdom through personalised, hands-on learning — without the rigid
-              structure of traditional school.
+              Sage Field Private School is an outdoor-focused private
+              microschool in Round Rock, Texas. for lower-elementary children
+              ages 6–10. We offer small-group, outdoor-centered education that
+              fosters curiosity, confidence, and wisdom through personalised,
+              hands-on learning — without the rigid structure of traditional
+              school.
             </motion.p>
 
             {/* Wisdom vs. Knowledge Section */}

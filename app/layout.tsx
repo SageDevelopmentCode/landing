@@ -24,10 +24,9 @@ const merriweather = Merriweather({
 });
 
 export const metadata: Metadata = {
-  title:
-    "Sage Field Private School - Nature-Based Microschool | Round Rock TX",
+  title: "Sage Field Private School - Nature-Based Microschool | Round Rock TX",
   description:
-    "Children are not meant to rot in classrooms. Choose outdoor learning. Sage Field Private School is a nature-based private microschool for lower-elementary children in Round Rock, Texas. Small-group, outdoor-centered education that fosters curiosity, confidence, and wisdom — a structured drop-off program without the rigidity of traditional school.",
+    "Children are not meant to rot in classrooms. Choose outdoor learning. Sage Field Private School is an outdoor-focused private microschool in Round Rock, Texas. We are a small-group, outdoor-centered education that fosters curiosity, confidence, and wisdom — a structured drop-off program without the rigidity of traditional school.",
   keywords: [
     "private microschool Round Rock Texas",
     "nature-based school Round Rock TX",
@@ -38,7 +37,7 @@ export const metadata: Metadata = {
     "elementary private school",
     "small group school Texas",
     "alternative learning Round Rock",
-    "private school ages 6-10",
+    "private school ages 4-11",
     "nature-based learning",
     "private school Cedar Park",
     "lower elementary private school",
@@ -69,9 +68,10 @@ export const metadata: Metadata = {
 
   // Open Graph metadata for Facebook, LinkedIn, WhatsApp, etc.
   openGraph: {
-    title: "Sage Field Private School: Nature-Based Microschool in Round Rock TX",
+    title:
+      "Sage Field Private School: Nature-Based Microschool in Round Rock TX",
     description:
-      "Sage Field Private School is a nature-based private microschool for lower-elementary children in Round Rock, Texas. Small-group, outdoor-centered education that fosters curiosity, confidence, and wisdom.",
+      "Sage Field Private School is an outdoor-focused private microschool in Round Rock, Texas. We are a small-group, outdoor-centered education that fosters curiosity, confidence, and wisdom — a structured drop-off program without the rigidity of traditional school.",
     url: "https://sagefield.co",
     siteName: "Sage Field Private School",
     images: [
@@ -89,9 +89,10 @@ export const metadata: Metadata = {
   // Twitter Card metadata
   twitter: {
     card: "summary_large_image",
-    title: "Sage Field Private School: Nature-Based Microschool in Round Rock TX",
+    title:
+      "Sage Field Private School: Nature-Based Microschool in Round Rock TX",
     description:
-      "Sage Field Private School is a nature-based private microschool for lower-elementary children in Round Rock, Texas. Small-group, outdoor-centered education that fosters curiosity, confidence, and wisdom.",
+      "Sage Field Private School is an outdoor-focused private microschool in Round Rock, Texas. We are a small-group, outdoor-centered education that fosters curiosity, confidence, and wisdom — a structured drop-off program without the rigidity of traditional school.",
     images: ["/assets/social-preview.jpg"],
   },
 };
