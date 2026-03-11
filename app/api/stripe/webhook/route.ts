@@ -18,27 +18,6 @@ export async function POST(request: NextRequest) {
   const body = await request.text();
   const signature = request.headers.get("stripe-signature");
 
-  // #region agent log
-  fetch("http://127.0.0.1:7244/ingest/a31ec2ad-152f-4d45-8abb-fa0a042d78c8", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      location: "webhook/route.ts:entry",
-      message: "H-A: Webhook POST received",
-      data: {
-        hasSignature: !!signature,
-        secretSet: !!process.env.STRIPE_WEBHOOK_SECRET,
-        discordSet: !!process.env.DISCORD_WEBHOOK_URL,
-        zohoSet: !!(
-          process.env.ZOHO_REFRESH_TOKEN && process.env.ZOHO_CLIENT_ID
-        ),
-      },
-      timestamp: Date.now(),
-      hypothesisId: "H-A",
-    }),
-  }).catch(() => {});
-  // #endregion
-
   if (!signature) {
     return NextResponse.json({ error: "Missing signature" }, { status: 400 });
   }
@@ -51,58 +30,14 @@ export async function POST(request: NextRequest) {
       process.env.STRIPE_WEBHOOK_SECRET!,
     );
   } catch (err) {
-    // #region agent log
-    fetch("http://127.0.0.1:7244/ingest/a31ec2ad-152f-4d45-8abb-fa0a042d78c8", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        location: "webhook/route.ts:sig-fail",
-        message: "H-B: Signature FAILED",
-        data: { error: String(err) },
-        timestamp: Date.now(),
-        hypothesisId: "H-B",
-      }),
-    }).catch(() => {});
-    // #endregion
     console.error("Webhook signature verification failed:", err);
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
-
-  // #region agent log
-  fetch("http://127.0.0.1:7244/ingest/a31ec2ad-152f-4d45-8abb-fa0a042d78c8", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      location: "webhook/route.ts:sig-ok",
-      message: "H-B: Signature OK — event type",
-      data: { eventType: event.type },
-      timestamp: Date.now(),
-      hypothesisId: "H-B",
-    }),
-  }).catch(() => {});
-  // #endregion
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
 
     const supabase = createAdminClient();
-
-    // #region agent log
-    fetch("http://127.0.0.1:7244/ingest/a31ec2ad-152f-4d45-8abb-fa0a042d78c8", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        location: "webhook/route.ts:session",
-        message: "H-E: session.completed — payment_type",
-        data: {
-          paymentType: session.metadata?.payment_type,
-          sessionId: session.id,
-        },
-        timestamp: Date.now(),
-        hypothesisId: "H-E",
-      }),
-    }).catch(() => {});
-    // #endregion
 
     if (session.metadata?.payment_type === "registration_fee") {
       const applicationId = session.metadata?.application_id;
@@ -180,6 +115,7 @@ export async function POST(request: NextRequest) {
                 subject,
                 template: "registration_fee_confirmation",
                 application_id: applicationId,
+                status: "success",
               });
             } else {
               throw new Error(emailResult.error ?? "Unknown email error");
@@ -232,29 +168,6 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // #region agent log
-      fetch(
-        "http://127.0.0.1:7244/ingest/a31ec2ad-152f-4d45-8abb-fa0a042d78c8",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            location: "webhook/route.ts:donation-start",
-            message: "H-C,H-D: donation branch reached",
-            data: {
-              donorEmail,
-              discordSet: !!process.env.DISCORD_WEBHOOK_URL,
-              zohoSet: !!(
-                process.env.ZOHO_REFRESH_TOKEN && process.env.ZOHO_CLIENT_ID
-              ),
-            },
-            timestamp: Date.now(),
-            hypothesisId: "H-C,H-D",
-          }),
-        },
-      ).catch(() => {});
-      // #endregion
-
       // Discord notification (non-blocking)
       sendDiscordNotification(
         createDonationEmbed({
@@ -264,44 +177,9 @@ export async function POST(request: NextRequest) {
           message: donationMessage,
           coverFees,
         }),
-      )
-        .then((ok) => {
-          // #region agent log
-          fetch(
-            "http://127.0.0.1:7244/ingest/a31ec2ad-152f-4d45-8abb-fa0a042d78c8",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                location: "webhook/route.ts:discord-done",
-                message: "H-C: Discord result",
-                data: { success: ok },
-                timestamp: Date.now(),
-                hypothesisId: "H-C",
-              }),
-            },
-          ).catch(() => {});
-          // #endregion
-        })
-        .catch((err) => {
-          // #region agent log
-          fetch(
-            "http://127.0.0.1:7244/ingest/a31ec2ad-152f-4d45-8abb-fa0a042d78c8",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                location: "webhook/route.ts:discord-err",
-                message: "H-C: Discord threw",
-                data: { error: String(err) },
-                timestamp: Date.now(),
-                hypothesisId: "H-C",
-              }),
-            },
-          ).catch(() => {});
-          // #endregion
-          console.error("Discord donation notification failed:", err);
-        });
+      ).catch((err) =>
+        console.error("Discord donation notification failed:", err),
+      );
 
       // Confirmation email (non-blocking, with error embed fallback)
       if (donorEmail) {
@@ -321,52 +199,17 @@ export async function POST(request: NextRequest) {
               content,
             });
 
-            // #region agent log
-            fetch(
-              "http://127.0.0.1:7244/ingest/a31ec2ad-152f-4d45-8abb-fa0a042d78c8",
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  location: "webhook/route.ts:email-done",
-                  message: "H-D: Zoho result",
-                  data: {
-                    success: emailResult.success,
-                    error: emailResult.error ?? null,
-                  },
-                  timestamp: Date.now(),
-                  hypothesisId: "H-D",
-                }),
-              },
-            ).catch(() => {});
-            // #endregion
-
             if (emailResult.success) {
               await supabase.schema("email_logs").from("sends").insert({
                 to_address: donorEmail,
                 subject,
                 template: "donation_confirmation",
+                status: "success",
               });
             } else {
               throw new Error(emailResult.error ?? "Unknown email error");
             }
           } catch (err) {
-            // #region agent log
-            fetch(
-              "http://127.0.0.1:7244/ingest/a31ec2ad-152f-4d45-8abb-fa0a042d78c8",
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  location: "webhook/route.ts:email-catch",
-                  message: "H-D: email IIFE caught error",
-                  data: { error: String(err) },
-                  timestamp: Date.now(),
-                  hypothesisId: "H-D",
-                }),
-              },
-            ).catch(() => {});
-            // #endregion
             console.error("Donation confirmation email failed:", err);
             sendDiscordNotification(
               createErrorEmbed({
