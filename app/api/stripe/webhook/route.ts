@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/app/lib/stripe";
 import { createAdminClient } from "@/app/lib/supabase-server";
 import Stripe from "stripe";
+import {
+  createRegistrationFeeEmbed,
+  createErrorEmbed,
+  sendDiscordNotification,
+} from "@/app/lib/discord";
+import {
+  buildRegistrationFeeConfirmationEmail,
+  sendZohoEmail,
+} from "@/app/lib/zoho";
 
 export async function POST(request: NextRequest) {
   const body = await request.text();
@@ -44,6 +53,83 @@ export async function POST(request: NextRequest) {
             { status: 500 }
           );
         }
+
+        // Fetch application row for notification data
+        const { data: application } = await supabase
+          .schema("parent_app")
+          .from("applications")
+          .select("g1_full_name, g1_email, child_legal_name, program")
+          .eq("id", applicationId)
+          .single();
+
+        const programMap: Record<string, string> = {
+          summer_26: "Summer 2026",
+          school_year_26_27: "School Year 2026-27",
+          both: "Summer 2026 & School Year 2026-27",
+        };
+        const programLabel =
+          programMap[session.metadata?.program ?? ""] ||
+          application?.program ||
+          "N/A";
+        const amountCents = session.amount_total ?? 0;
+        const amountDollars = (amountCents / 100).toFixed(2);
+
+        // Discord notification (non-blocking)
+        sendDiscordNotification(
+          createRegistrationFeeEmbed({
+            parentName: application?.g1_full_name ?? "N/A",
+            parentEmail: application?.g1_email ?? session.customer_email ?? "N/A",
+            childName: application?.child_legal_name ?? "N/A",
+            program: programLabel,
+            amountCents,
+          })
+        ).catch((err) => console.error("Discord notification failed:", err));
+
+        // Email notification (non-blocking, with error embed fallback)
+        (async () => {
+          try {
+            const toAddress =
+              application?.g1_email ?? session.customer_email ?? "";
+            if (!toAddress) return;
+
+            const { subject, content } =
+              await buildRegistrationFeeConfirmationEmail({
+                g1FullName: application?.g1_full_name ?? "Parent",
+                childLegalName: application?.child_legal_name ?? "your child",
+                program: programLabel,
+                amountDollars,
+              });
+
+            const emailResult = await sendZohoEmail({
+              toAddress,
+              subject,
+              content,
+            });
+
+            if (emailResult.success) {
+              await supabase
+                .schema("email_logs")
+                .from("sends")
+                .insert({
+                  to_address: toAddress,
+                  subject,
+                  template: "registration_fee_confirmation",
+                  application_id: applicationId,
+                });
+            } else {
+              throw new Error(emailResult.error ?? "Unknown email error");
+            }
+          } catch (err) {
+            console.error("Registration fee confirmation email failed:", err);
+            sendDiscordNotification(
+              createErrorEmbed({
+                context: "Registration fee confirmation email",
+                error: String(err),
+                details: { applicationId },
+              })
+            ).catch(() => {});
+          }
+        })();
       }
     } else {
       const { error } = await supabase

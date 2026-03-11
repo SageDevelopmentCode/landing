@@ -213,6 +213,31 @@ export function createErrorEmbed(data: {
 }
 
 /**
+ * Creates a Discord embed for registration fee payments
+ */
+export function createRegistrationFeeEmbed(data: {
+  parentName: string;
+  parentEmail: string;
+  childName: string;
+  program: string;
+  amountCents: number;
+}): DiscordEmbed {
+  const amountDollars = (data.amountCents / 100).toFixed(2);
+  return {
+    title: "💳 Registration Fee Paid",
+    color: 0x27ae60, // Green
+    fields: [
+      { name: "Parent", value: data.parentName || "N/A", inline: true },
+      { name: "Email", value: data.parentEmail || "N/A", inline: true },
+      { name: "Child", value: data.childName || "N/A", inline: true },
+      { name: "Program", value: data.program || "N/A", inline: true },
+      { name: "Amount Paid", value: `$${amountDollars}`, inline: true },
+    ],
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
  * Creates a Discord embed for application completions
  */
 export function createApplicationEmbed(data: {

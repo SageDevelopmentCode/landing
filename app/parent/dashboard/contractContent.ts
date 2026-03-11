@@ -55,7 +55,7 @@ export const CONTRACT_5_SECTIONS: ContractSection[] = [
     id: 6,
     title: "6. Duration and Revocation",
     paragraphs: [
-      "6.1 — This consent is valid for the duration of my child's enrollment at Sage Field Private School. It may be revoked at any time by submitting a written notice to the director at director@sagefieldacademy.org.",
+      "6.1 — This consent is valid for the duration of my child's enrollment at Sage Field Private School. It may be revoked at any time by submitting a written notice to the director at sabrina@sagefield.co.",
       "6.2 — Revocation is effective upon receipt and applies to future use only. It does not apply retroactively to media already published or distributed.",
     ],
   },
@@ -131,33 +131,29 @@ export const CONTRACT_1_SECTIONS: ContractSection[] = [
     id: 1,
     title: "1. What Sage Field Is",
     paragraphs: [
-      "Sage Field Private School is a nature-based micro-school offering small-group, project-driven learning for children ages 6–13. Our program integrates academic instruction with hands-on exploration, outdoor education, and community-centered learning.",
-      "Sage Field is not a daycare or a traditional school. We operate as an independent educational program. Parents who enroll their children agree to embrace our philosophy, structure, and community expectations as described in this document.",
+      "Sage Field Private School is a nature-based micro-school offering small-group, project-driven learning for children ages 4-11. Our program integrates academic instruction with hands-on exploration, outdoor education, and community-centered learning.",
+      "Sage Field is not a daycare or a traditional school. We operate as a private school. Parents who enroll their children agree to embrace our philosophy, structure, and community expectations as described in this document.",
     ],
   },
   {
     id: 2,
     title: "2. Program Schedule and Attendance",
     paragraphs: [
-      "The program runs Monday through Thursday, with optional Friday enrichment sessions available for an additional fee. Core program hours are 8:30 AM – 3:00 PM. Drop-off begins at 8:15 AM; students must be picked up no later than 3:15 PM unless enrolled in extended care.",
+      "The program runs Monday through Thursday, with optional Friday enrichment sessions available for an additional fee. Core program hours are 9:00 AM – 3:00 PM. Drop-off begins at 8:45 AM; students must be picked up no later than 3:15 PM unless enrolled in extended care.",
     ],
-    bullets: [
-      "Consistent attendance is essential to our learning community. Please notify us by 8:00 AM if your child will be absent.",
-      "Repeated unexcused absences or late pick-ups may affect your child's enrollment status.",
-      "Friday sessions are optional add-ons and billed separately. You must confirm Friday participation at the start of each month.",
-    ],
+    bullets: ["Friday sessions are optional add-ons and billed separately."],
   },
   {
     id: 3,
     title: "3. Tuition, Fees, and Payment",
     paragraphs: [
-      "Tuition is due on the 1st of each month. A grace period of five (5) calendar days is provided. Accounts not paid by the 6th of the month will incur a $25 late fee.",
+      "Tuition is due on the 1st of each month. A grace period of three (3) calendar days is provided. Accounts not paid by the 4th of the month will incur a $50 late fee.",
     ],
     bullets: [
-      "Tuition is non-refundable once a session begins.",
+      "Tuition is non-refundable.",
       "Registration fees are non-refundable under any circumstances.",
       "If an account remains unpaid for more than 30 days, your child's enrollment may be suspended until the balance is resolved.",
-      "We accept payment via ACH bank transfer, check, or credit card (a 3% processing fee applies to card payments).",
+      "We accept payment via ACH bank transfer (lower processing fee), check, or credit card (a 3% processing fee applies to card payments).",
     ],
     afterBullets: [
       "Families experiencing financial hardship should contact the director to discuss payment plan options before a payment becomes overdue.",
@@ -167,11 +163,11 @@ export const CONTRACT_1_SECTIONS: ContractSection[] = [
     id: 4,
     title: "4. Withdrawal and Enrollment Changes",
     paragraphs: [
-      "If you need to withdraw your child or change their enrollment, we require 30 days written notice. Tuition for the notice period is still owed in full, regardless of attendance.",
-      "To withdraw, email the director at director@sagefieldacademy.org with your child's name, your name, and the intended last day of enrollment.",
+      "If you need to withdraw your child or change their enrollment, we require 30 days written notice. Tuition for the contracted commitment is still owed in full, regardless of attendance.",
+      "To withdraw, email the director at sabrina@sagefield.co with your child's name, your name, and the intended last day of enrollment.",
     ],
     bullets: [
-      "Withdrawing mid-month does not entitle a family to a prorated refund.",
+      "Withdrawing mid-contractual time does not entitle a family to a prorated refund.",
       "Re-enrollment after withdrawal is subject to availability and is not guaranteed.",
     ],
   },
@@ -199,7 +195,7 @@ export const CONTRACT_1_SECTIONS: ContractSection[] = [
       "Outdoor education is a core part of the Sage Field experience. Students spend significant time outside in all weather conditions except for lightning, extreme heat (above 100°F), or conditions deemed unsafe by staff.",
     ],
     bullets: [
-      "Please dress your child in layers and appropriate footwear daily. Closed-toe shoes are required.",
+      "Please dress your child in layers and appropriate footwear daily.",
       "Sage Field is not liable for normal wear and tear on clothing or minor scrapes and bruises that occur during typical outdoor play and learning activities.",
       "Students may engage in hiking, gardening, building projects, and free outdoor exploration as part of the curriculum.",
     ],
@@ -231,7 +227,7 @@ export const CONTRACT_1_SECTIONS: ContractSection[] = [
     bullets: [
       "Staff will ask for photo ID from any adult they do not recognize.",
       "If someone not on the authorized list arrives, the child will not be released until a parent or guardian on file gives explicit verbal confirmation.",
-      "Late pick-up (after 3:15 PM) will be charged at $1 per minute. Chronic late pick-up may result in loss of enrollment.",
+      "Late pick-up (after 3:15 PM) will be automatically enrolled into After Care. They will be charged the drop-in after-care rate in the next billing cycle.",
       "If you need to permanently or temporarily add or remove an authorized pickup person, submit a written update to the director.",
     ],
   },
@@ -251,7 +247,7 @@ export const CONTRACT_1_SECTIONS: ContractSection[] = [
     id: 10,
     title: "10. Emergency Procedures",
     paragraphs: [
-      "In the event of a medical emergency, Sage Field staff will call 911 immediately and then contact the parent or guardian. Do not wait for parental approval before calling emergency services.",
+      "In the event of a medical emergency, Sage Field staff will call 911 immediately and then contact the parent or guardian. We willnot wait for parental approval before calling emergency services.",
     ],
     bullets: [
       "In the event of evacuation (fire, gas leak, etc.), students will be moved to the designated assembly area and parents will be notified as soon as it is safe to do so.",
@@ -266,8 +262,7 @@ export const CONTRACT_1_SECTIONS: ContractSection[] = [
       "Sage Field is a community — parent involvement makes us stronger. We ask families to engage actively and respectfully.",
     ],
     bullets: [
-      "Attend at least one parent community event per semester.",
-      "Respond to staff communications within 48 hours on school days.",
+      "Respond to important staff communications within 72 hours on school days.",
       "Read newsletters and updates sent through our primary communication channel (currently email).",
       "If you have concerns about your child's experience, please bring them to the director directly rather than discussing them with other families first.",
     ],

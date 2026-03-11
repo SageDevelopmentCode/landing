@@ -572,6 +572,37 @@ export async function buildApplicationConfirmationEmail(opts: {
 }
 
 /**
+ * Build HTML confirmation email for a paid registration fee
+ */
+export async function buildRegistrationFeeConfirmationEmail(opts: {
+  g1FullName: string;
+  childLegalName: string;
+  program: string;
+  amountDollars: string;
+}): Promise<{ subject: string; content: string }> {
+  const subject = "Registration Fee Received — Welcome to Sage Field!";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${opts.g1FullName},</p>
+
+  <p>We are thrilled to confirm that your registration fee of <strong>$${opts.amountDollars}</strong> has been received for <strong>${opts.childLegalName}</strong> in the <strong>${opts.program}</strong> program at Sage Field School.</p>
+
+  <p>Your child's spot is now secured and we cannot wait to welcome them. Our team will be in touch soon with more details about what to expect next.</p>
+
+  <p>If you have any questions in the meantime, please don't hesitate to reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a>.</p>
+
+  <p style="margin-top: 32px;">With excitement,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+  return { subject, content };
+}
+
+/**
  * Send an email via Zoho Mail API
  */
 export async function sendZohoEmail(opts: {
