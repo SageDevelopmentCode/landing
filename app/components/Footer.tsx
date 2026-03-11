@@ -2,35 +2,136 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { Mail, MapPin, Instagram, Facebook } from "lucide-react";
 import ContactDialog from "./ContactDialog";
 import WaitlistDialog from "./WaitlistDialog";
+
+type NavAction =
+  | { kind: "link"; href: string }
+  | { kind: "smooth-scroll"; href: string }
+  | { kind: "dialog"; target: "waitlist" | "contact" }
+  | { kind: "disabled" };
+
+interface NavLeaf {
+  label: string;
+  action: NavAction;
+}
+
+interface NavColumn {
+  heading: string;
+  items: NavLeaf[];
+}
+
+const FOOTER_COLUMNS: NavColumn[] = [
+  {
+    heading: "About Us",
+    items: [
+      { label: "About Us", action: { kind: "link", href: "/about" } },
+      { label: "Our Team", action: { kind: "link", href: "/team" } },
+      { label: "FAQ", action: { kind: "link", href: "/faq" } },
+      { label: "Our Vision", action: { kind: "link", href: "/vision" } },
+      {
+        label: "What We Offer",
+        action: { kind: "smooth-scroll", href: "/#what-we-offer" },
+      },
+      {
+        label: "Educational Philosophy",
+        action: { kind: "smooth-scroll", href: "/#educational-philosophy" },
+      },
+    ],
+  },
+  {
+    heading: "Programs & Tuition",
+    items: [
+      {
+        label: "Summer Program 2026",
+        action: { kind: "link", href: "/summer-2026" },
+      },
+      {
+        label: "School Year 2026-2027",
+        action: { kind: "disabled" },
+      },
+      { label: "Tuition", action: { kind: "link", href: "/tuition" } },
+    ],
+  },
+  {
+    heading: "Apply",
+    items: [
+      {
+        label: "Apply for a Program",
+        action: { kind: "link", href: "/apply" },
+      },
+      {
+        label: "Interest Form",
+        action: { kind: "dialog", target: "waitlist" },
+      },
+    ],
+  },
+  {
+    heading: "Resources & Support",
+    items: [
+      {
+        label: "Community & Education Resources",
+        action: { kind: "disabled" },
+      },
+      {
+        label: "Academic Calendar",
+        action: { kind: "link", href: "/academic-calendar" },
+      },
+      { label: "FAQ", action: { kind: "link", href: "/faq" } },
+      { label: "Donate", action: { kind: "link", href: "/donate" } },
+    ],
+  },
+];
 
 export default function Footer() {
   const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
   const [isWaitlistDialogOpen, setIsWaitlistDialogOpen] = useState(false);
 
-  const handleSectionClick = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      const navbarHeight = 80;
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition =
-        elementPosition + window.pageYOffset - navbarHeight;
+  function renderItem(item: NavLeaf) {
+    const base =
+      "text-gray-400 hover:text-white transition-colors font-body text-sm";
 
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: "smooth",
-      });
+    if (item.action.kind === "disabled") {
+      return (
+        <li key={item.label}>
+          <span className="text-gray-600 font-body text-sm cursor-not-allowed select-none">
+            {item.label}
+          </span>
+        </li>
+      );
     }
-  };
+
+    if (item.action.kind === "link" || item.action.kind === "smooth-scroll") {
+      return (
+        <li key={item.label}>
+          <Link href={item.action.href} className={base}>
+            {item.label}
+          </Link>
+        </li>
+      );
+    }
+
+    // dialog
+    const openDialog =
+      item.action.target === "waitlist"
+        ? () => setIsWaitlistDialogOpen(true)
+        : () => setIsContactDialogOpen(true);
+
+    return (
+      <li key={item.label}>
+        <button onClick={openDialog} className={`${base} cursor-pointer`}>
+          {item.label}
+        </button>
+      </li>
+    );
+  }
 
   return (
     <footer className="bg-gray-900 text-white">
-      <div className="max-w-7xl mx-auto px-8 sm:px-12 lg:px-16 py-16">
+      <div className="max-w-screen-xl mx-auto px-6 sm:px-8 lg:px-12 py-16">
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12 mb-12">
           {/* Logo & Description */}
           <div className="lg:col-span-1">
             <Link href="/">
@@ -46,81 +147,15 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Quick Links */}
-          <div>
-            <h3 className="text-lg font-semibold font-heading mb-4">
-              Quick Links
-            </h3>
-            <ul className="space-y-3">
-              <li>
-                <Link
-                  href="/"
-                  className="text-gray-400 hover:text-white transition-colors font-body text-sm"
-                >
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/about"
-                  className="text-gray-400 hover:text-white transition-colors font-body text-sm"
-                >
-                  About Us
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/faq"
-                  className="text-gray-400 hover:text-white transition-colors font-body text-sm"
-                >
-                  FAQ
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/vision"
-                  className="text-gray-400 hover:text-white transition-colors font-body text-sm"
-                >
-                  Our Vision
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Sections */}
-          <div>
-            <h3 className="text-lg font-semibold font-heading mb-4">Explore</h3>
-            <ul className="space-y-3">
-              <li>
-                <Link
-                  href="/#what-we-offer"
-                  onClick={(e) => {
-                    if (window.location.pathname === "/") {
-                      e.preventDefault();
-                      handleSectionClick("what-we-offer");
-                    }
-                  }}
-                  className="text-gray-400 hover:text-white transition-colors font-body text-sm"
-                >
-                  What We Offer
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/#educational-philosophy"
-                  onClick={(e) => {
-                    if (window.location.pathname === "/") {
-                      e.preventDefault();
-                      handleSectionClick("educational-philosophy");
-                    }
-                  }}
-                  className="text-gray-400 hover:text-white transition-colors font-body text-sm"
-                >
-                  Educational Philosophy
-                </Link>
-              </li>
-            </ul>
-          </div>
+          {/* Nav Columns */}
+          {FOOTER_COLUMNS.map((col) => (
+            <div key={col.heading}>
+              <h3 className="text-lg font-semibold font-heading mb-4">
+                {col.heading}
+              </h3>
+              <ul className="space-y-3">{col.items.map(renderItem)}</ul>
+            </div>
+          ))}
 
           {/* Contact & CTA */}
           <div>

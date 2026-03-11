@@ -19,6 +19,7 @@ import ContactUsSection from "./components/ContactUsSection";
 import FAQAccordion from "./components/FAQAccordion";
 import Footer from "./components/Footer";
 import WaitlistDialog from "./components/WaitlistDialog";
+import EnrollmentAnnouncementPopup from "./components/EnrollmentAnnouncementPopup";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -268,6 +269,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      <EnrollmentAnnouncementPopup />
       <Footer />
       <WaitlistDialog
         isOpen={isWaitlistDialogOpen}

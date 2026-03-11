@@ -65,10 +65,10 @@ const NAV_TABS: NavTab[] = [
     kind: "dropdown",
     label: "Apply",
     items: [
-      // {
-      //   label: "Apply for a Program",
-      //   action: { kind: "link", href: "/apply" },
-      // },
+      {
+        label: "Apply for a Program",
+        action: { kind: "link", href: "/apply" },
+      },
       {
         label: "Interest Form",
         action: { kind: "dialog", target: "waitlist" },

@@ -164,7 +164,7 @@ const checklistItems: ChecklistItem[] = [
     icon: <UserPlus className="w-4 h-4" />,
     iconBg: "bg-indigo-50",
     iconColor: "text-indigo-500",
-    required: true,
+    required: false,
     isContract: true,
     contractId: CONTRACT_7_ID,
     contractSections: CONTRACT_7_TOTAL_SECTIONS,
@@ -365,6 +365,21 @@ function getProgramLabel(program: string | null): string {
   return "the program";
 }
 
+function computeIsEnrollmentComplete(
+  signatureMap: SignatureMap,
+  immunizationFileCount: number,
+  registrationFeePaid: boolean,
+): boolean {
+  const requiredItems = checklistItems.filter((i) => i.required);
+  return requiredItems.every((item) => {
+    if (item.id === 5) return immunizationFileCount > 0;
+    if (item.id === 9) return registrationFeePaid;
+    if (item.contractId && item.contractSections)
+      return isContractComplete(signatureMap, item.contractId, item.contractSections);
+    return false;
+  });
+}
+
 function Checklist({
   childName,
   signatureMap,
@@ -399,18 +414,11 @@ function Checklist({
     return false;
   }).length;
 
-  const requiredItems = checklistItems.filter((i) => i.required);
-  const isEnrollmentComplete = requiredItems.every((item) => {
-    if (item.id === 5) return immunizationFileCount > 0;
-    if (item.id === 9) return registrationFeePaid;
-    if (item.contractId && item.contractSections)
-      return isContractComplete(
-        signatureMap,
-        item.contractId,
-        item.contractSections,
-      );
-    return false;
-  });
+  const isEnrollmentComplete = computeIsEnrollmentComplete(
+    signatureMap,
+    immunizationFileCount,
+    registrationFeePaid,
+  );
 
   const programLabel = getProgramLabel(program);
   const progressPercent = Math.round((completedCount / totalCount) * 100);
@@ -494,9 +502,6 @@ function Checklist({
             <h2 className="text-xl font-semibold font-heading text-gray-800 mb-0.5">
               Enrollment Checklist
             </h2>
-            <p className="text-xs text-gray-400 font-body">
-              {childName} is enrolled at Sage Field Private School.
-            </p>
             <p className="text-xs text-gray-400 font-body mt-0.5">
               {completedCount} of {totalCount} steps completed
             </p>
@@ -928,16 +933,27 @@ export default function ChildTabs({
             const label =
               app.preferred_name ?? app.child_legal_name ?? "Student";
             const isActive = index === activeIndex;
+            const sid = app.student_id ?? "";
+            const isComplete = computeIsEnrollmentComplete(
+              localSigs[sid] ?? {},
+              localImmunizationCounts[sid] ?? 0,
+              localRegistrationFeePaid[sid] ?? false,
+            );
             return (
               <button
                 key={app.id}
                 onClick={() => setActiveIndex(index)}
-                className={`px-4 py-1.5 rounded-xl text-sm font-semibold font-heading transition-colors cursor-pointer ${
+                className={`px-4 py-1.5 rounded-xl text-sm font-semibold font-heading transition-colors cursor-pointer flex items-center gap-1.5 ${
                   isActive
-                    ? "bg-gray-800 text-white"
+                    ? isComplete
+                      ? "bg-emerald-600 text-white"
+                      : "bg-gray-800 text-white"
+                    : isComplete
+                    ? "bg-emerald-50 border border-emerald-300 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-400"
                     : "bg-white border border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
               >
+                {isComplete && <CheckCircle className="w-3.5 h-3.5" />}
                 {label}
               </button>
             );

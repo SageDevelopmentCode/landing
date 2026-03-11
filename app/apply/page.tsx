@@ -18,9 +18,9 @@ const tabContent = {
     ],
     details: [
       { label: "Dates", value: "May 26 – August 20, 2026" },
-      { label: "Ages", value: "4–10 years" },
+      { label: "Ages", value: "4–11 years" },
       { label: "Schedule", value: "Mon–Thu, ~6 hrs/day" },
-      { label: "Group Size", value: "10 children" },
+      { label: "Group Size", value: "~10 children" },
     ],
     images: [
       "/assets/After1.png",
