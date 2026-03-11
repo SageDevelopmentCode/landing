@@ -29,12 +29,16 @@ import {
   CONTRACT_3_TOTAL_SECTIONS,
   CONTRACT_4_ID,
   CONTRACT_4_TOTAL_SECTIONS,
+  CONTRACT_5_ID,
+  CONTRACT_5_TOTAL_SECTIONS,
   isContractComplete,
 } from "@/app/types/enrollment-signatures";
+import type { EnrollmentSignature } from "@/app/types/enrollment-signatures";
 import ContractModal from "./ContractModal";
 import HealthFormModal from "./HealthFormModal";
 import MedicationPlanModal from "./MedicationPlanModal";
 import ImmunizationUploadModal from "./ImmunizationUploadModal";
+import PhotoReleaseModal from "./PhotoReleaseModal";
 
 type StudentHealthInfo = Database["parent_app"]["Tables"]["student_health_info"]["Row"];
 type StudentMedicationPlan = Database["parent_app"]["Tables"]["student_medication_plan"]["Row"];
@@ -123,6 +127,8 @@ const checklistItems: ChecklistItem[] = [
     iconColor: "text-sky-500",
     required: true,
     isContract: true,
+    contractId: CONTRACT_5_ID,
+    contractSections: CONTRACT_5_TOTAL_SECTIONS,
   },
   {
     id: 7,
@@ -322,6 +328,7 @@ interface ChildTabsProps {
   parentName: string;
   parentId: string;
   immunizationFileCountByStudent: Record<string, number>;
+  consentByStudent: Record<string, "FULL" | "LIMITED" | "NO">;
 }
 
 export default function ChildTabs({
@@ -332,6 +339,7 @@ export default function ChildTabs({
   parentName,
   parentId,
   immunizationFileCountByStudent,
+  consentByStudent,
 }: ChildTabsProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [openContractId, setOpenContractId] = useState<number | null>(null);
@@ -350,6 +358,9 @@ export default function ChildTabs({
   const [localImmunizationCounts, setLocalImmunizationCounts] = useState<Record<string, number>>(
     immunizationFileCountByStudent
   );
+  const [localConsent, setLocalConsent] = useState<Record<string, "FULL" | "LIMITED" | "NO">>(consentByStudent);
+  const [photoReleaseOpen, setPhotoReleaseOpen] = useState(false);
+  const [photoReleaseStudentId, setPhotoReleaseStudentId] = useState<string | null>(null);
 
   if (apps.length === 0) {
     return (
@@ -369,6 +380,9 @@ export default function ChildTabs({
     } else if (contractId === CONTRACT_4_ID) {
       setMedicationPlanStudentId(activeStudentId);
       setMedicationPlanOpen(true);
+    } else if (contractId === CONTRACT_5_ID) {
+      setPhotoReleaseStudentId(activeStudentId);
+      setPhotoReleaseOpen(true);
     } else {
       setOpenContractId(contractId);
       setOpenStudentId(activeStudentId);
@@ -403,6 +417,25 @@ export default function ChildTabs({
     const sid = openStudentId ?? healthFormStudentId ?? medicationPlanStudentId;
     if (!sid) return;
     setLocalSigs((prev) => ({ ...prev, [sid]: updatedMap }));
+  };
+
+  const handlePhotoReleaseSectionSaved = (sig: EnrollmentSignature) => {
+    if (!photoReleaseStudentId) return;
+    const key = `${sig.contract_id}-${sig.section_id}`;
+    setLocalSigs((prev) => ({
+      ...prev,
+      [photoReleaseStudentId]: { ...(prev[photoReleaseStudentId] ?? {}), [key]: sig },
+    }));
+  };
+
+  const handleConsentSaved = (level: "FULL" | "LIMITED" | "NO") => {
+    if (!photoReleaseStudentId) return;
+    setLocalConsent((prev) => ({ ...prev, [photoReleaseStudentId]: level }));
+  };
+
+  const handlePhotoReleaseClose = () => {
+    setPhotoReleaseOpen(false);
+    setPhotoReleaseStudentId(null);
   };
 
   const handleHealthInfoSaved = (info: StudentHealthInfo) => {
@@ -502,6 +535,25 @@ export default function ChildTabs({
           }
           onSignaturesSaved={handleSignaturesSaved}
           onPlanSaved={handleMedicationPlanSaved}
+        />
+      )}
+
+      {photoReleaseOpen && photoReleaseStudentId !== null && (
+        <PhotoReleaseModal
+          open
+          onClose={handlePhotoReleaseClose}
+          studentId={photoReleaseStudentId}
+          studentName={
+            apps.find((a) => a.student_id === photoReleaseStudentId)?.preferred_name ??
+            apps.find((a) => a.student_id === photoReleaseStudentId)?.child_legal_name ??
+            "Student"
+          }
+          parentId={parentId}
+          parentName={parentName}
+          signatures={localSigs[photoReleaseStudentId] ?? {}}
+          onSectionSaved={handlePhotoReleaseSectionSaved}
+          existingConsent={localConsent[photoReleaseStudentId] ?? null}
+          onConsentSaved={handleConsentSaved}
         />
       )}
 

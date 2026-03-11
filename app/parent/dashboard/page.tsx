@@ -52,6 +52,7 @@ export default async function ParentDashboard() {
   let healthInfoByStudent: Record<string, StudentHealthInfo> = {};
   let medicationPlanByStudent: Record<string, { plan: StudentMedicationPlan | null; medications: StudentMedication[] }> = {};
   let immunizationFileCountByStudent: Record<string, number> = {};
+  let consentByStudent: Record<string, "FULL" | "LIMITED" | "NO"> = {};
 
   if (studentIds.length > 0) {
     const [
@@ -59,6 +60,7 @@ export default async function ParentDashboard() {
       { data: healthInfoRows },
       { data: medicationPlanRows },
       { data: medicationRows },
+      { data: consentRows },
     ] = await Promise.all([
       adminClient
         .schema("parent_app")
@@ -84,6 +86,12 @@ export default async function ParentDashboard() {
         .select("*")
         .eq("parent_id", user.id)
         .in("student_id", studentIds),
+      adminClient
+        .schema("parent_app")
+        .from("student_photo_release_consent")
+        .select("*")
+        .eq("parent_id", user.id)
+        .in("student_id", studentIds),
     ]);
 
     // Fetch immunization file counts for each student
@@ -98,6 +106,10 @@ export default async function ParentDashboard() {
     );
     for (const { sid, count } of immunizationCounts) {
       immunizationFileCountByStudent[sid] = count;
+    }
+
+    for (const row of consentRows ?? []) {
+      consentByStudent[row.student_id] = row.consent_level as "FULL" | "LIMITED" | "NO";
     }
 
     for (const sig of sigs ?? []) {
@@ -154,6 +166,7 @@ export default async function ParentDashboard() {
             parentName={fullName ?? ""}
             parentId={user.id}
             immunizationFileCountByStudent={immunizationFileCountByStudent}
+            consentByStudent={consentByStudent}
           />
         </main>
       </div>

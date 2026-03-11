@@ -6,12 +6,75 @@ export interface ContractSection {
   afterBullets?: string[];
 }
 
+export const CONTRACT_5_SECTIONS: ContractSection[] = [
+  {
+    id: 1,
+    title: "1. Permission to Photograph, Record, and Use Likeness",
+    paragraphs: [
+      '1.1 — I, the undersigned parent or legal guardian, hereby grant Sage Field Private School ("the School") permission to photograph, video record, and otherwise capture images or likenesses of my child during school activities, programs, field trips, events, and related educational experiences.',
+      "1.2 — I understand that these images and recordings may be used for educational, promotional, or informational purposes, including but not limited to the School's website, social media channels, newsletters, printed materials, grant applications, and community presentations.",
+      "1.3 — This permission extends to the School's authorized staff, contractors, and volunteers acting in an official capacity for the School.",
+    ],
+  },
+  {
+    id: 2,
+    title: "2. Scope of Use and Ownership",
+    paragraphs: [
+      "2.1 — All photographs, videos, and other media captured by Sage Field Private School staff or on behalf of the School are the property of Sage Field Private School.",
+      "2.2 — The School may edit, crop, enhance, or otherwise modify media for use in materials described above.",
+      "2.3 — The School will not sell images of students to third parties or use them in commercial advertising without separate, explicit written consent.",
+    ],
+  },
+  {
+    id: 3,
+    title: "3. No Compensation and No Obligation to Use",
+    paragraphs: [
+      "3.1 — I understand that no compensation will be provided for the use of my child's likeness, and I waive any right to review or approve the final use of any image or recording before publication.",
+      "3.2 — The School is under no obligation to use any image or recording and may choose not to publish or distribute specific materials at its discretion.",
+    ],
+  },
+  {
+    id: 4,
+    title: "4. Release of Claims",
+    paragraphs: [
+      "4.1 — By signing this form, I release Sage Field Private School, its directors, staff, volunteers, and agents from any and all claims, liabilities, or causes of action arising out of or in connection with the use of photographs or recordings of my child as described herein.",
+      "4.2 — This release applies to all current and future uses consistent with this agreement and shall remain in effect for the duration of my child's enrollment unless revoked in writing.",
+    ],
+  },
+  {
+    id: 5,
+    title: "5. Optional Levels of Consent",
+    paragraphs: [
+      "Please select your preferred level of consent for how your child's image may be used by Sage Field Private School. Your selection will be noted and honored throughout your child's enrollment.",
+      "Full Consent — My child's image and name may be used in all School materials, including website, social media, newsletters, print, and presentations.",
+      "Limited Consent — My child's image may be used in internal School materials only (e.g., newsletters sent to enrolled families). My child's image may NOT be used on public-facing platforms such as the website or social media.",
+      "No Consent — I do not consent to any photography or video recording of my child for School use. My child will be excluded from group photos and media captures.",
+    ],
+  },
+  {
+    id: 6,
+    title: "6. Duration and Revocation",
+    paragraphs: [
+      "6.1 — This consent is valid for the duration of my child's enrollment at Sage Field Private School. It may be revoked at any time by submitting a written notice to the director at director@sagefieldacademy.org.",
+      "6.2 — Revocation is effective upon receipt and applies to future use only. It does not apply retroactively to media already published or distributed.",
+    ],
+  },
+  {
+    id: 7,
+    title: "7. Miscellaneous",
+    paragraphs: [
+      "7.1 — This agreement constitutes the entire understanding between the parties with respect to media consent and supersedes any prior verbal or written discussions on this subject.",
+      "7.2 — If any provision of this agreement is found to be unenforceable, the remaining provisions shall remain in full force and effect.",
+    ],
+  },
+];
+
 export const CONTRACT_2_SECTIONS: ContractSection[] = [
   {
     id: 1,
     title: "1. Core Community Commitments",
     paragraphs: [
-      "As a member of the Sage Field Academy community — whether as a family or staff member — I commit to upholding the following values and behaviors that make our community safe, respectful, and thriving:",
+      "As a member of the Sage Field Private School community — whether as a family or staff member — I commit to upholding the following values and behaviors that make our community safe, respectful, and thriving:",
     ],
     bullets: [
       "Respect for All People: I will treat every child, parent, caregiver, and staff member with dignity and respect — regardless of background, ability, race, religion, family structure, or any other characteristic. I will not make derogatory remarks, engage in exclusionary behavior, or tolerate discrimination of any kind.",
@@ -58,7 +121,7 @@ export const CONTRACT_2_SECTIONS: ContractSection[] = [
     id: 4,
     title: "4. Acknowledgment and Agreement",
     paragraphs: [
-      "By signing this agreement, I acknowledge that I have read, understood, and agree to uphold the community standards described above. I understand that my participation in the Sage Field Academy community — as a family or staff member — comes with a shared responsibility to protect and nurture the culture we are building together. I agree that violations of this agreement may result in consequences up to and including disenrollment of my child or termination of my employment or contractor relationship with Sage Field Academy.",
+      "By signing this agreement, I acknowledge that I have read, understood, and agree to uphold the community standards described above. I understand that my participation in the Sage Field Private School community — as a family or staff member — comes with a shared responsibility to protect and nurture the culture we are building together. I agree that violations of this agreement may result in consequences up to and including disenrollment of my child or termination of my employment or contractor relationship with Sage Field Private School.",
     ],
   },
 ];
@@ -68,7 +131,7 @@ export const CONTRACT_1_SECTIONS: ContractSection[] = [
     id: 1,
     title: "1. What Sage Field Is",
     paragraphs: [
-      "Sage Field Academy is a nature-based micro-school offering small-group, project-driven learning for children ages 6–13. Our program integrates academic instruction with hands-on exploration, outdoor education, and community-centered learning.",
+      "Sage Field Private School is a nature-based micro-school offering small-group, project-driven learning for children ages 6–13. Our program integrates academic instruction with hands-on exploration, outdoor education, and community-centered learning.",
       "Sage Field is not a daycare or a traditional school. We operate as an independent educational program. Parents who enroll their children agree to embrace our philosophy, structure, and community expectations as described in this document.",
     ],
   },
@@ -216,7 +279,7 @@ export const CONTRACT_1_SECTIONS: ContractSection[] = [
     id: 12,
     title: "12. Program Changes and Director Authority",
     paragraphs: [
-      "Sage Field Academy reserves the right to update program schedules, policies, staff, and fees with reasonable notice (generally 30 days, except in cases of health or safety necessity).",
+      "Sage Field Private School reserves the right to update program schedules, policies, staff, and fees with reasonable notice (generally 30 days, except in cases of health or safety necessity).",
       "The director has final authority over all enrollment, curriculum, staffing, and behavior decisions. Families who repeatedly challenge staff authority or undermine the program culture may be asked to find alternative educational options for their child.",
     ],
   },
@@ -224,8 +287,8 @@ export const CONTRACT_1_SECTIONS: ContractSection[] = [
     id: 13,
     title: "13. Final Acknowledgment",
     paragraphs: [
-      "By signing each section of this document, I confirm that I have read, understood, and agree to the terms described in that section. I understand that this agreement governs my child's enrollment at Sage Field Academy and that violations of these terms may result in consequences up to and including disenrollment.",
-      "I enter this agreement freely and understand that Sage Field Academy is acting in good faith to provide a safe, enriching, and community-centered learning environment for my child.",
+      "By signing each section of this document, I confirm that I have read, understood, and agree to the terms described in that section. I understand that this agreement governs my child's enrollment at Sage Field Private School and that violations of these terms may result in consequences up to and including disenrollment.",
+      "I enter this agreement freely and understand that Sage Field Private School is acting in good faith to provide a safe, enriching, and community-centered learning environment for my child.",
     ],
   },
 ];
