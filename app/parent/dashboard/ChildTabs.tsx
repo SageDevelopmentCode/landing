@@ -13,6 +13,7 @@ import {
   PenLine,
   CreditCard,
   CheckCircle,
+  Upload,
 } from "lucide-react";
 import type { Database } from "@/app/types/database.types";
 import type {
@@ -33,6 +34,7 @@ import {
 import ContractModal from "./ContractModal";
 import HealthFormModal from "./HealthFormModal";
 import MedicationPlanModal from "./MedicationPlanModal";
+import ImmunizationUploadModal from "./ImmunizationUploadModal";
 
 type StudentHealthInfo = Database["parent_app"]["Tables"]["student_health_info"]["Row"];
 type StudentMedicationPlan = Database["parent_app"]["Tables"]["student_medication_plan"]["Row"];
@@ -160,12 +162,17 @@ function Checklist({
   childName,
   signatureMap,
   onContractClick,
+  onImmunizationClick,
+  immunizationFileCount,
 }: {
   childName: string;
   signatureMap: SignatureMap;
   onContractClick: (contractId: number) => void;
+  onImmunizationClick: () => void;
+  immunizationFileCount: number;
 }) {
   const completedCount = checklistItems.filter((item) => {
+    if (item.id === 5) return immunizationFileCount > 0;
     if (item.contractId && item.contractSections) {
       return isContractComplete(signatureMap, item.contractId, item.contractSections);
     }
@@ -208,10 +215,12 @@ function Checklist({
 
       <div className="flex flex-col gap-3">
         {checklistItems.map((item) => {
-          const isComplete =
-            item.contractId && item.contractSections
-              ? isContractComplete(signatureMap, item.contractId, item.contractSections)
-              : false;
+          const isImmunization = item.id === 5;
+          const isComplete = isImmunization
+            ? immunizationFileCount > 0
+            : item.contractId && item.contractSections
+            ? isContractComplete(signatureMap, item.contractId, item.contractSections)
+            : false;
 
           const signedCount =
             item.contractId && item.contractSections
@@ -223,13 +232,15 @@ function Checklist({
           const isInProgress =
             item.isContract && item.contractId != null && signedCount > 0 && !isComplete;
 
-          const isClickable = item.isContract && item.contractId != null;
+          const isClickable = isImmunization || (item.isContract && item.contractId != null);
 
           return (
             <div
               key={item.id}
               onClick={() => {
-                if (isClickable && item.contractId != null) {
+                if (isImmunization) {
+                  onImmunizationClick();
+                } else if (isClickable && item.contractId != null) {
                   onContractClick(item.contractId);
                 }
               }}
@@ -259,7 +270,19 @@ function Checklist({
                 </p>
               </div>
               <div className="flex-shrink-0 flex items-center gap-2">
-                {item.isContract && (
+                {isImmunization ? (
+                  isComplete ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border bg-emerald-100 text-emerald-700 border-emerald-300">
+                      <CheckCircle className="w-3 h-3" />
+                      Uploaded
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border bg-amber-50 text-amber-700 border-amber-200">
+                      <Upload className="w-3 h-3" />
+                      Upload
+                    </span>
+                  )
+                ) : item.isContract ? (
                   isComplete ? (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border bg-emerald-100 text-emerald-700 border-emerald-300">
                       <CheckCircle className="w-3 h-3" />
@@ -276,7 +299,7 @@ function Checklist({
                       Sign
                     </span>
                   )
-                )}
+                ) : null}
                 {!item.required && (
                   <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-gray-100 text-gray-500 border-gray-200">
                     Optional
@@ -297,6 +320,8 @@ interface ChildTabsProps {
   healthInfoByStudent: Record<string, StudentHealthInfo>;
   medicationPlanByStudent: Record<string, { plan: StudentMedicationPlan | null; medications: StudentMedication[] }>;
   parentName: string;
+  parentId: string;
+  immunizationFileCountByStudent: Record<string, number>;
 }
 
 export default function ChildTabs({
@@ -305,6 +330,8 @@ export default function ChildTabs({
   healthInfoByStudent,
   medicationPlanByStudent,
   parentName,
+  parentId,
+  immunizationFileCountByStudent,
 }: ChildTabsProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [openContractId, setOpenContractId] = useState<number | null>(null);
@@ -313,11 +340,16 @@ export default function ChildTabs({
   const [healthFormStudentId, setHealthFormStudentId] = useState<string | null>(null);
   const [medicationPlanOpen, setMedicationPlanOpen] = useState(false);
   const [medicationPlanStudentId, setMedicationPlanStudentId] = useState<string | null>(null);
+  const [immunizationOpen, setImmunizationOpen] = useState(false);
+  const [immunizationStudentId, setImmunizationStudentId] = useState<string | null>(null);
   const [localSigs, setLocalSigs] = useState<StudentSignatureMap>(signaturesByStudent);
   const [localHealthInfo, setLocalHealthInfo] = useState<Record<string, StudentHealthInfo>>(healthInfoByStudent);
   const [localMedicationPlan, setLocalMedicationPlan] = useState<
     Record<string, { plan: StudentMedicationPlan | null; medications: StudentMedication[] }>
   >(medicationPlanByStudent);
+  const [localImmunizationCounts, setLocalImmunizationCounts] = useState<Record<string, number>>(
+    immunizationFileCountByStudent
+  );
 
   if (apps.length === 0) {
     return (
@@ -358,6 +390,15 @@ export default function ChildTabs({
     setMedicationPlanStudentId(null);
   };
 
+  const handleImmunizationClose = () => {
+    setImmunizationOpen(false);
+    setImmunizationStudentId(null);
+  };
+
+  const handleImmunizationUploadComplete = (sid: string) => {
+    setLocalImmunizationCounts((prev) => ({ ...prev, [sid]: (prev[sid] ?? 0) + 1 }));
+  };
+
   const handleSignaturesSaved = (updatedMap: SignatureMap) => {
     const sid = openStudentId ?? healthFormStudentId ?? medicationPlanStudentId;
     if (!sid) return;
@@ -380,11 +421,18 @@ export default function ChildTabs({
     }));
   };
 
+  const handleImmunizationClick = () => {
+    setImmunizationStudentId(activeStudentId);
+    setImmunizationOpen(true);
+  };
+
   const checklist = (
     <Checklist
       childName={childName}
       signatureMap={localSigs[activeStudentId] ?? {}}
       onContractClick={handleContractClick}
+      onImmunizationClick={handleImmunizationClick}
+      immunizationFileCount={localImmunizationCounts[activeStudentId] ?? 0}
     />
   );
 
@@ -454,6 +502,21 @@ export default function ChildTabs({
           }
           onSignaturesSaved={handleSignaturesSaved}
           onPlanSaved={handleMedicationPlanSaved}
+        />
+      )}
+
+      {immunizationOpen && immunizationStudentId !== null && (
+        <ImmunizationUploadModal
+          isOpen
+          onClose={handleImmunizationClose}
+          parentId={parentId}
+          studentId={immunizationStudentId}
+          studentName={
+            apps.find((a) => a.student_id === immunizationStudentId)?.preferred_name ??
+            apps.find((a) => a.student_id === immunizationStudentId)?.child_legal_name ??
+            "Student"
+          }
+          onUploadComplete={handleImmunizationUploadComplete}
         />
       )}
     </div>

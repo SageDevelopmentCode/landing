@@ -51,6 +51,7 @@ export default async function ParentDashboard() {
   let signaturesByStudent: StudentSignatureMap = {};
   let healthInfoByStudent: Record<string, StudentHealthInfo> = {};
   let medicationPlanByStudent: Record<string, { plan: StudentMedicationPlan | null; medications: StudentMedication[] }> = {};
+  let immunizationFileCountByStudent: Record<string, number> = {};
 
   if (studentIds.length > 0) {
     const [
@@ -84,6 +85,20 @@ export default async function ParentDashboard() {
         .eq("parent_id", user.id)
         .in("student_id", studentIds),
     ]);
+
+    // Fetch immunization file counts for each student
+    const immunizationCounts = await Promise.all(
+      studentIds.map(async (sid) => {
+        const { data } = await adminClient.storage
+          .from("immunization-records")
+          .list(`${user.id}/${sid}`);
+        const count = (data ?? []).filter((f) => f.name !== ".emptyFolderPlaceholder").length;
+        return { sid, count };
+      })
+    );
+    for (const { sid, count } of immunizationCounts) {
+      immunizationFileCountByStudent[sid] = count;
+    }
 
     for (const sig of sigs ?? []) {
       signaturesByStudent[sig.student_id] ??= {};
@@ -137,6 +152,8 @@ export default async function ParentDashboard() {
             healthInfoByStudent={healthInfoByStudent}
             medicationPlanByStudent={medicationPlanByStudent}
             parentName={fullName ?? ""}
+            parentId={user.id}
+            immunizationFileCountByStudent={immunizationFileCountByStudent}
           />
         </main>
       </div>
