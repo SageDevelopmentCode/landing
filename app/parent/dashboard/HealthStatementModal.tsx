@@ -263,29 +263,41 @@ export default function HealthStatementModal({
                 <p className="text-sm font-semibold font-heading text-gray-800">
                   Select one of the following:
                 </p>
-                <label className="flex items-start gap-3 cursor-pointer group">
+                <label
+                  className={`flex items-center gap-3 cursor-pointer rounded-xl border px-4 py-3 transition-colors ${
+                    selectedOption === "professional"
+                      ? "border-teal-500 bg-teal-50/60"
+                      : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
                   <input
                     type="radio"
                     name="health-option"
                     value="professional"
                     checked={selectedOption === "professional"}
                     onChange={() => handleOptionChange("professional")}
-                    className="mt-0.5 accent-teal-600 cursor-pointer"
+                    className="accent-teal-600 cursor-pointer flex-shrink-0"
                   />
-                  <span className="text-sm font-body text-gray-700 group-hover:text-gray-900 transition-colors">
+                  <span className="flex-1 text-sm font-body text-gray-700">
                     <span className="font-semibold">Option A:</span> My child has been examined by a health care professional within the past year
                   </span>
                 </label>
-                <label className="flex items-start gap-3 cursor-pointer group">
+                <label
+                  className={`flex items-center gap-3 cursor-pointer rounded-xl border px-4 py-3 transition-colors ${
+                    selectedOption === "religious"
+                      ? "border-purple-400 bg-purple-50/40"
+                      : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
                   <input
                     type="radio"
                     name="health-option"
                     value="religious"
                     checked={selectedOption === "religious"}
                     onChange={() => handleOptionChange("religious")}
-                    className="mt-0.5 accent-teal-600 cursor-pointer"
+                    className="accent-teal-600 cursor-pointer flex-shrink-0"
                   />
-                  <span className="text-sm font-body text-gray-700 group-hover:text-gray-900 transition-colors">
+                  <span className="flex-1 text-sm font-body text-gray-700">
                     <span className="font-semibold">Option B:</span> Religious exemption — I object to physical examination of my child on religious grounds
                   </span>
                 </label>
