@@ -502,6 +502,81 @@ export type Database = {
         }
         Relationships: []
       }
+      student_authorized_pickup_plan: {
+        Row: {
+          id: string
+          parent_id: string
+          student_id: string
+          date_of_request: string | null
+          effective_until: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          parent_id: string
+          student_id: string
+          date_of_request?: string | null
+          effective_until?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          parent_id?: string
+          student_id?: string
+          date_of_request?: string | null
+          effective_until?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      student_authorized_pickup_persons: {
+        Row: {
+          id: string
+          parent_id: string
+          student_id: string
+          sort_order: number | null
+          full_name: string
+          relationship: string | null
+          phone: string | null
+          email: string | null
+          dl_state_id_number: string | null
+          vehicle_info: string | null
+          license_plate_state: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          parent_id: string
+          student_id: string
+          sort_order?: number | null
+          full_name: string
+          relationship?: string | null
+          phone?: string | null
+          email?: string | null
+          dl_state_id_number?: string | null
+          vehicle_info?: string | null
+          license_plate_state?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          parent_id?: string
+          student_id?: string
+          sort_order?: number | null
+          full_name?: string
+          relationship?: string | null
+          phone?: string | null
+          email?: string | null
+          dl_state_id_number?: string | null
+          vehicle_info?: string | null
+          license_plate_state?: string | null
+          created_at?: string | null
+        }
+        Relationships: []
+      }
       student_medication_plan: {
         Row: {
           id: string

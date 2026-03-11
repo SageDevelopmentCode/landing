@@ -14,6 +14,8 @@ import type { Database } from "@/app/types/database.types";
 type StudentHealthInfo = Database["parent_app"]["Tables"]["student_health_info"]["Row"];
 type StudentMedicationPlan = Database["parent_app"]["Tables"]["student_medication_plan"]["Row"];
 type StudentMedication = Database["parent_app"]["Tables"]["student_medications"]["Row"];
+type AuthorizedPickupPlan = Database["parent_app"]["Tables"]["student_authorized_pickup_plan"]["Row"];
+type AuthorizedPickupPerson = Database["parent_app"]["Tables"]["student_authorized_pickup_persons"]["Row"];
 
 export default async function ParentDashboard() {
   const supabase = await createServerSupabaseClient();
@@ -53,6 +55,7 @@ export default async function ParentDashboard() {
   let medicationPlanByStudent: Record<string, { plan: StudentMedicationPlan | null; medications: StudentMedication[] }> = {};
   let immunizationFileCountByStudent: Record<string, number> = {};
   let consentByStudent: Record<string, "FULL" | "LIMITED" | "NO"> = {};
+  let authorizedPickupByStudent: Record<string, { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] }> = {};
 
   if (studentIds.length > 0) {
     const [
@@ -61,6 +64,8 @@ export default async function ParentDashboard() {
       { data: medicationPlanRows },
       { data: medicationRows },
       { data: consentRows },
+      { data: authorizedPickupPlanRows },
+      { data: authorizedPickupPersonRows },
     ] = await Promise.all([
       adminClient
         .schema("parent_app")
@@ -89,6 +94,18 @@ export default async function ParentDashboard() {
       adminClient
         .schema("parent_app")
         .from("student_photo_release_consent")
+        .select("*")
+        .eq("parent_id", user.id)
+        .in("student_id", studentIds),
+      adminClient
+        .schema("parent_app")
+        .from("student_authorized_pickup_plan")
+        .select("*")
+        .eq("parent_id", user.id)
+        .in("student_id", studentIds),
+      adminClient
+        .schema("parent_app")
+        .from("student_authorized_pickup_persons")
         .select("*")
         .eq("parent_id", user.id)
         .in("student_id", studentIds),
@@ -129,6 +146,13 @@ export default async function ParentDashboard() {
         medications: (medicationRows ?? []).filter((r) => r.student_id === sid) as StudentMedication[],
       };
     }
+
+    for (const sid of studentIds) {
+      authorizedPickupByStudent[sid] = {
+        plan: (authorizedPickupPlanRows ?? []).find((r) => r.student_id === sid) as AuthorizedPickupPlan | null ?? null,
+        persons: (authorizedPickupPersonRows ?? []).filter((r) => r.student_id === sid) as AuthorizedPickupPerson[],
+      };
+    }
   }
 
   return (
@@ -167,6 +191,7 @@ export default async function ParentDashboard() {
             parentId={user.id}
             immunizationFileCountByStudent={immunizationFileCountByStudent}
             consentByStudent={consentByStudent}
+            authorizedPickupByStudent={authorizedPickupByStudent}
           />
         </main>
       </div>

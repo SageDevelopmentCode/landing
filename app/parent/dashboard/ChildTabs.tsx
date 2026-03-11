@@ -33,6 +33,8 @@ import {
   CONTRACT_5_TOTAL_SECTIONS,
   CONTRACT_6_ID,
   CONTRACT_6_TOTAL_SECTIONS,
+  CONTRACT_7_ID,
+  CONTRACT_7_TOTAL_SECTIONS,
   isContractComplete,
 } from "@/app/types/enrollment-signatures";
 import type { EnrollmentSignature } from "@/app/types/enrollment-signatures";
@@ -42,10 +44,13 @@ import MedicationPlanModal from "./MedicationPlanModal";
 import ImmunizationUploadModal from "./ImmunizationUploadModal";
 import PhotoReleaseModal from "./PhotoReleaseModal";
 import AssumptionOfRiskModal from "./AssumptionOfRiskModal";
+import AuthorizedPickupModal from "./AuthorizedPickupModal";
 
 type StudentHealthInfo = Database["parent_app"]["Tables"]["student_health_info"]["Row"];
 type StudentMedicationPlan = Database["parent_app"]["Tables"]["student_medication_plan"]["Row"];
 type StudentMedication = Database["parent_app"]["Tables"]["student_medications"]["Row"];
+type AuthorizedPickupPlan = Database["parent_app"]["Tables"]["student_authorized_pickup_plan"]["Row"];
+type AuthorizedPickupPerson = Database["parent_app"]["Tables"]["student_authorized_pickup_persons"]["Row"];
 
 type Application = Database["parent_app"]["Tables"]["applications"]["Row"];
 
@@ -154,6 +159,8 @@ const checklistItems: ChecklistItem[] = [
     iconColor: "text-indigo-500",
     required: true,
     isContract: true,
+    contractId: CONTRACT_7_ID,
+    contractSections: CONTRACT_7_TOTAL_SECTIONS,
   },
   {
     id: 9,
@@ -334,6 +341,7 @@ interface ChildTabsProps {
   parentId: string;
   immunizationFileCountByStudent: Record<string, number>;
   consentByStudent: Record<string, "FULL" | "LIMITED" | "NO">;
+  authorizedPickupByStudent: Record<string, { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] }>;
 }
 
 export default function ChildTabs({
@@ -345,6 +353,7 @@ export default function ChildTabs({
   parentId,
   immunizationFileCountByStudent,
   consentByStudent,
+  authorizedPickupByStudent,
 }: ChildTabsProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [openContractId, setOpenContractId] = useState<number | null>(null);
@@ -368,6 +377,11 @@ export default function ChildTabs({
   const [photoReleaseStudentId, setPhotoReleaseStudentId] = useState<string | null>(null);
   const [assumptionOfRiskOpen, setAssumptionOfRiskOpen] = useState(false);
   const [assumptionOfRiskStudentId, setAssumptionOfRiskStudentId] = useState<string | null>(null);
+  const [authorizedPickupOpen, setAuthorizedPickupOpen] = useState(false);
+  const [authorizedPickupStudentId, setAuthorizedPickupStudentId] = useState<string | null>(null);
+  const [localAuthorizedPickup, setLocalAuthorizedPickup] = useState<
+    Record<string, { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] }>
+  >(authorizedPickupByStudent);
 
   if (apps.length === 0) {
     return (
@@ -393,6 +407,9 @@ export default function ChildTabs({
     } else if (contractId === CONTRACT_6_ID) {
       setAssumptionOfRiskStudentId(activeStudentId);
       setAssumptionOfRiskOpen(true);
+    } else if (contractId === CONTRACT_7_ID) {
+      setAuthorizedPickupStudentId(activeStudentId);
+      setAuthorizedPickupOpen(true);
     } else {
       setOpenContractId(contractId);
       setOpenStudentId(activeStudentId);
@@ -459,6 +476,31 @@ export default function ChildTabs({
     setLocalSigs((prev) => ({
       ...prev,
       [assumptionOfRiskStudentId]: { ...(prev[assumptionOfRiskStudentId] ?? {}), [key]: sig },
+    }));
+  };
+
+  const handleAuthorizedPickupClose = () => {
+    setAuthorizedPickupOpen(false);
+    setAuthorizedPickupStudentId(null);
+  };
+
+  const handleAuthorizedPickupSectionSaved = (sig: EnrollmentSignature) => {
+    if (!authorizedPickupStudentId) return;
+    const key = `${sig.contract_id}-${sig.section_id}`;
+    setLocalSigs((prev) => ({
+      ...prev,
+      [authorizedPickupStudentId]: { ...(prev[authorizedPickupStudentId] ?? {}), [key]: sig },
+    }));
+  };
+
+  const handleAuthorizedPickupPlanSaved = (plan: AuthorizedPickupPlan) => {
+    if (!authorizedPickupStudentId) return;
+    setLocalAuthorizedPickup((prev) => ({
+      ...prev,
+      [authorizedPickupStudentId]: {
+        plan,
+        persons: prev[authorizedPickupStudentId]?.persons ?? [],
+      },
     }));
   };
 
@@ -591,6 +633,23 @@ export default function ChildTabs({
           app={apps.find((a) => a.student_id === assumptionOfRiskStudentId)!}
           signatures={localSigs[assumptionOfRiskStudentId] ?? {}}
           onSectionSaved={handleAssumptionOfRiskSectionSaved}
+        />
+      )}
+
+      {authorizedPickupOpen && authorizedPickupStudentId !== null && (
+        <AuthorizedPickupModal
+          open
+          onClose={handleAuthorizedPickupClose}
+          studentId={authorizedPickupStudentId}
+          parentId={parentId}
+          parentName={parentName}
+          app={apps.find((a) => a.student_id === authorizedPickupStudentId)!}
+          signatures={localSigs[authorizedPickupStudentId] ?? {}}
+          onSectionSaved={handleAuthorizedPickupSectionSaved}
+          existingPlan={
+            localAuthorizedPickup[authorizedPickupStudentId] ?? { plan: null, persons: [] }
+          }
+          onPlanSaved={handleAuthorizedPickupPlanSaved}
         />
       )}
 
