@@ -1,0 +1,18 @@
+'use server'
+
+import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
+
+export async function listReligiousExemptions(parentId: string, studentId: string) {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated', files: [] }
+  if (parentId !== user.id) return { error: 'Unauthorized', files: [] }
+
+  const adminClient = createAdminClient()
+  const { data, error } = await adminClient.storage
+    .from('religious-exemption-affidavits')
+    .list(`${parentId}/${studentId}`, { sortBy: { column: 'created_at', order: 'asc' } })
+
+  if (error) return { error: error.message, files: [] }
+  return { files: data ?? [] }
+}

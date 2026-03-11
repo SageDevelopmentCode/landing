@@ -15,6 +15,7 @@ import {
   CreditCard,
   CheckCircle,
   Upload,
+  ClipboardList,
 } from "lucide-react";
 import type { Database } from "@/app/types/database.types";
 import type {
@@ -36,6 +37,8 @@ import {
   CONTRACT_6_TOTAL_SECTIONS,
   CONTRACT_7_ID,
   CONTRACT_7_TOTAL_SECTIONS,
+  CONTRACT_8_ID,
+  CONTRACT_8_TOTAL_SECTIONS,
   isContractComplete,
 } from "@/app/types/enrollment-signatures";
 import type { EnrollmentSignature } from "@/app/types/enrollment-signatures";
@@ -47,6 +50,7 @@ import PhotoReleaseModal from "./PhotoReleaseModal";
 import AssumptionOfRiskModal from "./AssumptionOfRiskModal";
 import AuthorizedPickupModal from "./AuthorizedPickupModal";
 import ApplicationViewSlideOver from "./ApplicationViewSlideOver";
+import HealthStatementModal from "./HealthStatementModal";
 
 type StudentHealthInfo =
   Database["parent_app"]["Tables"]["student_health_info"]["Row"];
@@ -132,6 +136,18 @@ const checklistItems: ChecklistItem[] = [
     iconColor: "text-green-600",
     required: true,
     isContract: false,
+  },
+  {
+    id: 10,
+    title: "Health Information Form",
+    subtitle: "Complete and sign the health information statement",
+    icon: <ClipboardList className="w-4 h-4" />,
+    iconBg: "bg-teal-50",
+    iconColor: "text-teal-500",
+    required: true,
+    isContract: true,
+    contractId: CONTRACT_8_ID,
+    contractSections: CONTRACT_8_TOTAL_SECTIONS,
   },
   {
     id: 6,
@@ -677,6 +693,8 @@ interface ChildTabsProps {
     { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] }
   >;
   registrationFeePaidByStudent: Record<string, boolean>;
+  healthStatementByStudent: Record<string, { option_type: string } | null>;
+  religiousExemptionCountByStudent: Record<string, number>;
 }
 
 export default function ChildTabs({
@@ -691,6 +709,8 @@ export default function ChildTabs({
   consentByStudent,
   authorizedPickupByStudent,
   registrationFeePaidByStudent,
+  healthStatementByStudent,
+  religiousExemptionCountByStudent,
 }: ChildTabsProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [appViewOpen, setAppViewOpen] = useState(false);
@@ -745,6 +765,14 @@ export default function ChildTabs({
   const [localRegistrationFeePaid, setLocalRegistrationFeePaid] = useState<
     Record<string, boolean>
   >(registrationFeePaidByStudent);
+  const [healthStatementOpen, setHealthStatementOpen] = useState(false);
+  const [healthStatementStudentId, setHealthStatementStudentId] = useState<string | null>(null);
+  const [localHealthStatements, setLocalHealthStatements] = useState<
+    Record<string, { option_type: string } | null>
+  >(healthStatementByStudent);
+  const [localReligiousExemptionCounts, setLocalReligiousExemptionCounts] = useState<
+    Record<string, number>
+  >(religiousExemptionCountByStudent);
 
   if (apps.length === 0) {
     return (
@@ -773,6 +801,9 @@ export default function ChildTabs({
     } else if (contractId === CONTRACT_7_ID) {
       setAuthorizedPickupStudentId(activeStudentId);
       setAuthorizedPickupOpen(true);
+    } else if (contractId === CONTRACT_8_ID) {
+      setHealthStatementStudentId(activeStudentId);
+      setHealthStatementOpen(true);
     } else {
       setOpenContractId(contractId);
       setOpenStudentId(activeStudentId);
@@ -891,6 +922,23 @@ export default function ChildTabs({
       [medicationPlanStudentId]: {
         plan,
         medications: prev[medicationPlanStudentId]?.medications ?? [],
+      },
+    }));
+  };
+
+  const handleHealthStatementClose = () => {
+    setHealthStatementOpen(false);
+    setHealthStatementStudentId(null);
+  };
+
+  const handleHealthStatementSectionSaved = (sig: EnrollmentSignature) => {
+    if (!healthStatementStudentId) return;
+    const key = `${sig.contract_id}-${sig.section_id}`;
+    setLocalSigs((prev) => ({
+      ...prev,
+      [healthStatementStudentId]: {
+        ...(prev[healthStatementStudentId] ?? {}),
+        [key]: sig,
       },
     }));
   };
@@ -1059,6 +1107,19 @@ export default function ChildTabs({
             }
           }
           onPlanSaved={handleAuthorizedPickupPlanSaved}
+        />
+      )}
+
+      {healthStatementOpen && healthStatementStudentId !== null && (
+        <HealthStatementModal
+          app={apps.find((a) => a.student_id === healthStatementStudentId)!}
+          parentId={parentId}
+          parentName={parentName}
+          existingStatement={localHealthStatements[healthStatementStudentId] ?? null}
+          initialReligiousExemptionCount={localReligiousExemptionCounts[healthStatementStudentId] ?? 0}
+          existingSig={localSigs[healthStatementStudentId]?.[`${CONTRACT_8_ID}-1`]}
+          onSectionSaved={handleHealthStatementSectionSaved}
+          onClose={handleHealthStatementClose}
         />
       )}
 

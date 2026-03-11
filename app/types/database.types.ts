@@ -502,6 +502,33 @@ export type Database = {
         }
         Relationships: []
       }
+      student_health_statement: {
+        Row: {
+          id: string
+          parent_id: string
+          student_id: string
+          option_type: string
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          parent_id: string
+          student_id: string
+          option_type: string
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          parent_id?: string
+          student_id?: string
+          option_type?: string
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       student_authorized_pickup_plan: {
         Row: {
           id: string

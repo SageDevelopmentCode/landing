@@ -63,6 +63,8 @@ export default async function ParentDashboard() {
   let immunizationFileCountByStudent: Record<string, number> = {};
   let consentByStudent: Record<string, "FULL" | "LIMITED" | "NO"> = {};
   let authorizedPickupByStudent: Record<string, { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] }> = {};
+  let healthStatementByStudent: Record<string, { option_type: string } | null> = {};
+  let religiousExemptionCountByStudent: Record<string, number> = {};
 
   if (studentIds.length > 0) {
     const [
@@ -73,6 +75,7 @@ export default async function ParentDashboard() {
       { data: consentRows },
       { data: authorizedPickupPlanRows },
       { data: authorizedPickupPersonRows },
+      { data: healthStatementRows },
     ] = await Promise.all([
       adminClient
         .schema("parent_app")
@@ -116,20 +119,44 @@ export default async function ParentDashboard() {
         .select("*")
         .eq("parent_id", user.id)
         .in("student_id", studentIds),
+      adminClient
+        .schema("parent_app")
+        .from("student_health_statement")
+        .select("*")
+        .eq("parent_id", user.id)
+        .in("student_id", studentIds),
     ]);
 
     // Fetch immunization file counts for each student
-    const immunizationCounts = await Promise.all(
-      studentIds.map(async (sid) => {
-        const { data } = await adminClient.storage
-          .from("immunization-records")
-          .list(`${user.id}/${sid}`);
-        const count = (data ?? []).filter((f) => f.name !== ".emptyFolderPlaceholder").length;
-        return { sid, count };
-      })
-    );
+    const [immunizationCounts, religiousExemptionCounts] = await Promise.all([
+      Promise.all(
+        studentIds.map(async (sid) => {
+          const { data } = await adminClient.storage
+            .from("immunization-records")
+            .list(`${user.id}/${sid}`);
+          const count = (data ?? []).filter((f) => f.name !== ".emptyFolderPlaceholder").length;
+          return { sid, count };
+        })
+      ),
+      Promise.all(
+        studentIds.map(async (sid) => {
+          const { data } = await adminClient.storage
+            .from("religious-exemption-affidavits")
+            .list(`${user.id}/${sid}`);
+          const count = (data ?? []).filter((f) => f.name !== ".emptyFolderPlaceholder").length;
+          return { sid, count };
+        })
+      ),
+    ]);
     for (const { sid, count } of immunizationCounts) {
       immunizationFileCountByStudent[sid] = count;
+    }
+    for (const { sid, count } of religiousExemptionCounts) {
+      religiousExemptionCountByStudent[sid] = count;
+    }
+
+    for (const row of healthStatementRows ?? []) {
+      healthStatementByStudent[row.student_id] = { option_type: row.option_type };
     }
 
     for (const row of consentRows ?? []) {
@@ -201,6 +228,8 @@ export default async function ParentDashboard() {
             consentByStudent={consentByStudent}
             authorizedPickupByStudent={authorizedPickupByStudent}
             registrationFeePaidByStudent={registrationFeePaidByStudent}
+            healthStatementByStudent={healthStatementByStudent}
+            religiousExemptionCountByStudent={religiousExemptionCountByStudent}
           />
         </main>
       </div>

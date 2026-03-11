@@ -36,6 +36,9 @@ export const CONTRACT_6_TOTAL_SECTIONS = 1; // single signature at bottom
 export const CONTRACT_7_ID = 7;
 export const CONTRACT_7_TOTAL_SECTIONS = 1; // single signature at the bottom
 
+export const CONTRACT_8_ID = 8;
+export const CONTRACT_8_TOTAL_SECTIONS = 1;
+
 export function isContractComplete(
   map: SignatureMap,
   contractId: number,
