@@ -65,10 +65,10 @@ const NAV_TABS: NavTab[] = [
     kind: "dropdown",
     label: "Apply",
     items: [
-      {
-        label: "Apply for a Program",
-        action: { kind: "link", href: "/apply" },
-      },
+      // {
+      //   label: "Apply for a Program",
+      //   action: { kind: "link", href: "/apply" },
+      // },
       {
         label: "Interest Form",
         action: { kind: "dialog", target: "waitlist" },
@@ -195,7 +195,10 @@ export default function Navbar() {
     ) : null;
 
     const arrow = mobile ? (
-      <ChevronRight className="w-4 h-4 opacity-50 shrink-0 ml-1" strokeWidth={2} />
+      <ChevronRight
+        className="w-4 h-4 opacity-50 shrink-0 ml-1"
+        strokeWidth={2}
+      />
     ) : null;
 
     if (leaf.action.kind === "disabled") {
@@ -434,7 +437,10 @@ export default function Navbar() {
                           className={`w-full flex items-center justify-between py-3 font-semibold text-sm ${mobileTextBase} cursor-pointer focus:outline-none`}
                         >
                           {tab.label}
-                          <ChevronRight className="w-4 h-4 opacity-50" strokeWidth={2} />
+                          <ChevronRight
+                            className="w-4 h-4 opacity-50"
+                            strokeWidth={2}
+                          />
                         </button>
                       </div>
                     );
@@ -446,9 +452,7 @@ export default function Navbar() {
                     <div key={tab.label}>
                       <button
                         onClick={() =>
-                          setOpenMobileSection(
-                            isExpanded ? null : tab.label,
-                          )
+                          setOpenMobileSection(isExpanded ? null : tab.label)
                         }
                         className={`w-full flex items-center justify-between py-2.5 font-semibold text-sm ${mobileTextBase} focus:outline-none cursor-pointer`}
                       >
