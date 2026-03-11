@@ -193,7 +193,7 @@ export default function ImmunizationUploadModal({
             <div className="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-6">
               {/* Info */}
               <p className="text-sm text-gray-500 font-body">
-                Upload your child&apos;s current immunization records. Accepted formats: PDF, JPG, PNG, WEBP, HEIC. Max 10MB per file.
+                Upload your child&apos;s current immunization records. If your child has no current immunization record, you may instead upload a notarized religious exemption affidavit. Accepted formats: PDF, JPG, PNG, WEBP, HEIC. Max 10MB per file.
               </p>
 
               {/* File count */}
