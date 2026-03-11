@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, CheckCircle, PenLine, Save } from "lucide-react";
 import { Dancing_Script } from "next/font/google";
@@ -218,6 +218,13 @@ export default function HealthFormModal({
   const [healthSaveError, setHealthSaveError] = useState<string | null>(null);
   const [healthSaveSuccess, setHealthSaveSuccess] = useState(false);
   const [localSigs, setLocalSigs] = useState<SignatureMap>(existingSignatures);
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
 
   const set = (field: keyof HealthDraft, value: string | boolean | null) =>
     setDraft((prev) => ({ ...prev, [field]: value }));

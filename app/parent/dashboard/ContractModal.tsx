@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, CheckCircle, PenLine } from "lucide-react";
 import { Dancing_Script } from "next/font/google";
@@ -37,6 +37,13 @@ export default function ContractModal({
   onSignaturesSaved,
 }: ContractModalProps) {
   const [localSigs, setLocalSigs] = useState<SignatureMap>(existingSignatures);
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
 
   const sections = contractId === CONTRACT_2_ID ? CONTRACT_2_SECTIONS : CONTRACT_1_SECTIONS;
   const contractTitle = contractId === CONTRACT_2_ID
