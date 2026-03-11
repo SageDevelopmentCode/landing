@@ -27,13 +27,15 @@ interface DiscordWebhookPayload {
  */
 export async function sendDiscordNotification(
   embed: DiscordEmbed,
-  webhookUrl?: string
+  webhookUrl?: string,
 ): Promise<boolean> {
   const resolvedUrl = webhookUrl ?? process.env.DISCORD_WEBHOOK_URL;
 
   // If no webhook URL is configured, log and return
   if (!resolvedUrl) {
-    console.warn("No Discord webhook URL configured. Skipping Discord notification.");
+    console.warn(
+      "No Discord webhook URL configured. Skipping Discord notification.",
+    );
     return false;
   }
 
@@ -53,7 +55,7 @@ export async function sendDiscordNotification(
     if (!response.ok) {
       console.error(
         `Discord webhook failed with status ${response.status}:`,
-        await response.text()
+        await response.text(),
       );
       return false;
     }
@@ -191,25 +193,25 @@ export function createContactEmbed(data: {
  * Creates a Discord embed for server errors
  */
 export function createErrorEmbed(data: {
-  context: string
-  error: string
-  details?: Record<string, string>
+  context: string;
+  error: string;
+  details?: Record<string, string>;
 }): DiscordEmbed {
   const fields: DiscordEmbedField[] = [
-    { name: 'Context', value: data.context, inline: false },
-    { name: 'Error', value: data.error.substring(0, 1024), inline: false },
-  ]
+    { name: "Context", value: data.context, inline: false },
+    { name: "Error", value: data.error.substring(0, 1024), inline: false },
+  ];
   if (data.details) {
     for (const [k, v] of Object.entries(data.details)) {
-      fields.push({ name: k, value: v.substring(0, 1024), inline: true })
+      fields.push({ name: k, value: v.substring(0, 1024), inline: true });
     }
   }
   return {
-    title: '🚨 Server Error',
+    title: "🚨 Server Error",
     color: 0xe74c3c,
     fields,
     timestamp: new Date().toISOString(),
-  }
+  };
 }
 
 /**
@@ -238,6 +240,45 @@ export function createRegistrationFeeEmbed(data: {
 }
 
 /**
+ * Creates a Discord embed for donation payments
+ */
+export function createDonationEmbed(data: {
+  donorName?: string;
+  donorEmail: string;
+  amountCents: number;
+  message?: string;
+  coverFees: boolean;
+}): DiscordEmbed {
+  const amountDollars = (data.amountCents / 100).toFixed(2);
+  const fields: DiscordEmbedField[] = [
+    { name: "Donor", value: data.donorName || "Anonymous", inline: true },
+    { name: "Email", value: data.donorEmail || "N/A", inline: true },
+    { name: "Amount Received", value: `$${amountDollars}`, inline: true },
+    {
+      name: "Covered Fees",
+      value: data.coverFees ? "Yes" : "No",
+      inline: true,
+    },
+  ];
+  if (data.message) {
+    fields.push({
+      name: "Message",
+      value:
+        data.message.length > 1024
+          ? data.message.substring(0, 1021) + "..."
+          : data.message,
+      inline: false,
+    });
+  }
+  return {
+    title: "💚 New Donation Received",
+    color: 0xe91e8c,
+    fields,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
  * Creates a Discord embed for application completions
  */
 export function createApplicationEmbed(data: {
@@ -259,20 +300,32 @@ export function createApplicationEmbed(data: {
   ];
 
   if (data.g2FullName) {
-    fields.push({ name: "Guardian 2 Name", value: data.g2FullName, inline: true });
+    fields.push({
+      name: "Guardian 2 Name",
+      value: data.g2FullName,
+      inline: true,
+    });
   }
   if (data.g2Email) {
-    fields.push({ name: "Guardian 2 Email", value: data.g2Email, inline: true });
+    fields.push({
+      name: "Guardian 2 Email",
+      value: data.g2Email,
+      inline: true,
+    });
   }
 
   fields.push(
-    { name: "Child Legal Name", value: data.childLegalName || "N/A", inline: true },
+    {
+      name: "Child Legal Name",
+      value: data.childLegalName || "N/A",
+      inline: true,
+    },
     {
       name: "Age / Grade",
       value: `${data.childAge ?? "N/A"} / ${data.childGrade ?? "N/A"}`,
       inline: true,
     },
-    { name: "Program", value: data.program || "N/A", inline: true }
+    { name: "Program", value: data.program || "N/A", inline: true },
   );
 
   if (data.specialInterests) {

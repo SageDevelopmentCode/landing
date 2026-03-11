@@ -541,6 +541,102 @@ export async function fetchEmailThread(
 }
 
 /**
+ * Build HTML thank-you email for a completed donation
+ */
+export async function buildDonationConfirmationEmail(opts: {
+  donorName?: string;
+  donorEmail: string;
+  amountDollars: string;
+  message?: string;
+}): Promise<{ subject: string; content: string }> {
+  const displayName = opts.donorName || "Friend";
+  const subject = "Thank You for Supporting Sage Field!";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${displayName},</p>
+
+  <p>Thank you so much for your generous donation of <strong>$${opts.amountDollars}</strong> to Sage Field Private School. Your support means the world to us and brings our dream one meaningful step closer to reality.</p>
+
+${opts.message ? `  <p style="padding: 12px 16px; background: #f7f4f0; border-left: 3px solid #a8c5a0; margin: 24px 0; font-style: italic;">"${opts.message}"</p>` : ""}
+
+  <h2 style="font-size: 18px; margin-top: 32px; margin-bottom: 8px; color: #2c2c2c;">Our Vision</h2>
+  <p>At Sage Field, we believe that children learn best when they are connected to the living world. Our farm property will become an extension of the classroom — a place where kids can dig, plant, care for animals, and discover the rhythms of nature through direct, unhurried experience. From raised garden beds to a chicken coop and an aquatic pond, every element of our farm is designed to spark curiosity, build responsibility, and cultivate a deep love for the natural world.</p>
+
+  <h2 style="font-size: 18px; margin-top: 32px; margin-bottom: 12px; color: #2c2c2c;">How Your Gift Will Be Used</h2>
+  <p>We are working toward a <strong>$10,000 goal</strong> to transform our Central Texas property into a thriving outdoor learning environment. Here is how every dollar is being put to work:</p>
+
+  <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px;">
+    <tr style="background: #f7f4f0;">
+      <td style="padding: 10px 12px; font-weight: bold;">Raised Garden Beds</td>
+      <td style="padding: 10px 12px; text-align: right;">$2,000</td>
+    </tr>
+    <tr>
+      <td style="padding: 10px 12px; color: #555;">Children plant, tend, and harvest their own vegetables and herbs — learning nutrition and life cycles hands-on.</td>
+      <td></td>
+    </tr>
+    <tr style="background: #f7f4f0;">
+      <td style="padding: 10px 12px; font-weight: bold;">Chicken Coop</td>
+      <td style="padding: 10px 12px; text-align: right;">$2,000</td>
+    </tr>
+    <tr>
+      <td style="padding: 10px 12px; color: #555;">A small flock of chickens gives children daily responsibility, empathy, and a connection to where food comes from.</td>
+      <td></td>
+    </tr>
+    <tr style="background: #f7f4f0;">
+      <td style="padding: 10px 12px; font-weight: bold;">Pond &amp; Aquatic Area</td>
+      <td style="padding: 10px 12px; text-align: right;">$1,500</td>
+    </tr>
+    <tr>
+      <td style="padding: 10px 12px; color: #555;">A small pond with native plants and aquatic life creates a living science lab right in our backyard.</td>
+      <td></td>
+    </tr>
+    <tr style="background: #f7f4f0;">
+      <td style="padding: 10px 12px; font-weight: bold;">Farm Infrastructure</td>
+      <td style="padding: 10px 12px; text-align: right;">$1,500</td>
+    </tr>
+    <tr>
+      <td style="padding: 10px 12px; color: #555;">Fencing, pathways, and safety structures to make the entire farm property safe and fully accessible.</td>
+      <td></td>
+    </tr>
+    <tr style="background: #f7f4f0;">
+      <td style="padding: 10px 12px; font-weight: bold;">Mud Kitchen</td>
+      <td style="padding: 10px 12px; text-align: right;">$700</td>
+    </tr>
+    <tr>
+      <td style="padding: 10px 12px; color: #555;">An outdoor mud kitchen sparks imaginative play and sensory exploration — a Montessori staple in nature education.</td>
+      <td></td>
+    </tr>
+    <tr style="background: #f7f4f0;">
+      <td style="padding: 10px 12px; font-weight: bold;">Misc. Improvements</td>
+      <td style="padding: 10px 12px; text-align: right;">$2,300</td>
+    </tr>
+    <tr>
+      <td style="padding: 10px 12px; color: #555;">Shade structures, tool storage, signage, and finishing touches to make the space fully functional and beautiful.</td>
+      <td></td>
+    </tr>
+    <tr style="border-top: 2px solid #2c2c2c;">
+      <td style="padding: 12px; font-weight: bold;">Total Goal</td>
+      <td style="padding: 12px; text-align: right; font-weight: bold;">$10,000</td>
+    </tr>
+  </table>
+
+  <p>Your contribution — no matter the size — is a real, tangible investment in the children of Central Texas and the kind of education we believe every child deserves.</p>
+
+  <p>If you have any questions or would like to stay connected with our journey, please don't hesitate to reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a>.</p>
+
+  <p style="margin-top: 32px;">With deep gratitude,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field Private School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
+/**
  * Build HTML confirmation email for a completed application
  */
 export async function buildApplicationConfirmationEmail(opts: {
