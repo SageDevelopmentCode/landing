@@ -133,12 +133,12 @@ const DonationsSection = () => {
                               1st – 4th Grade
                             </p>
                             <p className="text-2xl font-bold text-white font-heading">
-                              $4,095
+                              $3,780
                             </p>
                             <p className="text-xs text-white/60 font-body">
-                              <span className="line-through">$4,550</span>
+                              <span className="line-through">$4,200</span>
                               <span className="ml-1 text-white/80">
-                                · $455 off
+                                · $420 off
                               </span>
                             </p>
                           </div>
@@ -147,12 +147,12 @@ const DonationsSection = () => {
                               Primary (Pre-K – K)
                             </p>
                             <p className="text-2xl font-bold text-white font-heading">
-                              $4,388
+                              $4,050
                             </p>
                             <p className="text-xs text-white/60 font-body">
-                              <span className="line-through">$4,875</span>
+                              <span className="line-through">$4,500</span>
                               <span className="ml-1 text-white/80">
-                                · $487 off
+                                · $450 off
                               </span>
                             </p>
                           </div>
