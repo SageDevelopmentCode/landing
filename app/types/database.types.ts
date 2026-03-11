@@ -502,6 +502,84 @@ export type Database = {
         }
         Relationships: []
       }
+      student_medication_plan: {
+        Row: {
+          id: string
+          parent_id: string
+          student_id: string
+          emergency_procedure: string | null
+          special_instructions: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          parent_id: string
+          student_id: string
+          emergency_procedure?: string | null
+          special_instructions?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          parent_id?: string
+          student_id?: string
+          emergency_procedure?: string | null
+          special_instructions?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      student_medications: {
+        Row: {
+          id: string
+          parent_id: string
+          student_id: string
+          medication_name: string
+          condition_reason: string | null
+          dosage_frequency: string | null
+          physician_name: string | null
+          physician_phone: string | null
+          expiration_date: string | null
+          is_daily: boolean | null
+          is_emergency_only: boolean | null
+          sort_order: number | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          parent_id: string
+          student_id: string
+          medication_name: string
+          condition_reason?: string | null
+          dosage_frequency?: string | null
+          physician_name?: string | null
+          physician_phone?: string | null
+          expiration_date?: string | null
+          is_daily?: boolean | null
+          is_emergency_only?: boolean | null
+          sort_order?: number | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          parent_id?: string
+          student_id?: string
+          medication_name?: string
+          condition_reason?: string | null
+          dosage_frequency?: string | null
+          physician_name?: string | null
+          physician_phone?: string | null
+          expiration_date?: string | null
+          is_daily?: boolean | null
+          is_emergency_only?: boolean | null
+          sort_order?: number | null
+          created_at?: string | null
+        }
+        Relationships: []
+      }
       student_health_info: {
         Row: {
           id: string

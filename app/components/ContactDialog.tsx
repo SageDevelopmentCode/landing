@@ -11,6 +11,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { submitContact } from "@/app/actions/contact";
+import { formatPhone } from "@/app/utils/formatPhone";
 
 interface ContactDialogProps {
   isOpen: boolean;
@@ -32,19 +33,6 @@ export default function ContactDialog({ isOpen, onClose }: ContactDialogProps) {
     message: string;
   }>({ type: null, message: "" });
 
-  // Format phone number as user types: (123) 456-7890
-  const formatPhoneNumber = (value: string) => {
-    // Remove all non-numeric characters
-    const phoneNumber = value.replace(/\D/g, "");
-
-    // Format based on length
-    if (phoneNumber.length === 0) return "";
-    if (phoneNumber.length <= 3) return `(${phoneNumber}`;
-    if (phoneNumber.length <= 6)
-      return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`;
-    return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`;
-  };
-
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
@@ -52,7 +40,7 @@ export default function ContactDialog({ isOpen, onClose }: ContactDialogProps) {
 
     // Apply phone formatting if it's the phone field
     if (name === "phone") {
-      const formatted = formatPhoneNumber(value);
+      const formatted = formatPhone(value);
       setFormData((prev) => ({
         ...prev,
         phone: formatted,

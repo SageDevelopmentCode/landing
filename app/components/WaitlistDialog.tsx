@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { submitWaitlist } from "@/app/actions/waitlist";
+import { formatPhone } from "@/app/utils/formatPhone";
 
 interface WaitlistDialogProps {
   isOpen: boolean;
@@ -29,19 +30,6 @@ export default function WaitlistDialog({
     type: "success" | "error" | null;
     message: string;
   }>({ type: null, message: "" });
-
-  // Format phone number as user types: (123) 456-7890
-  const formatPhoneNumber = (value: string) => {
-    // Remove all non-numeric characters
-    const phoneNumber = value.replace(/\D/g, "");
-
-    // Format based on length
-    if (phoneNumber.length === 0) return "";
-    if (phoneNumber.length <= 3) return `(${phoneNumber}`;
-    if (phoneNumber.length <= 6)
-      return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`;
-    return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`;
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,7 +89,7 @@ export default function WaitlistDialog({
 
     // Apply phone formatting if it's the phone field
     if (name === "phone") {
-      const formatted = formatPhoneNumber(value);
+      const formatted = formatPhone(value);
       setFormData((prev) => ({
         ...prev,
         phone: formatted,

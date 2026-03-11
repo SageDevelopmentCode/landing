@@ -12,6 +12,8 @@ import type { StudentSignatureMap } from "@/app/types/enrollment-signatures";
 import type { Database } from "@/app/types/database.types";
 
 type StudentHealthInfo = Database["parent_app"]["Tables"]["student_health_info"]["Row"];
+type StudentMedicationPlan = Database["parent_app"]["Tables"]["student_medication_plan"]["Row"];
+type StudentMedication = Database["parent_app"]["Tables"]["student_medications"]["Row"];
 
 export default async function ParentDashboard() {
   const supabase = await createServerSupabaseClient();
@@ -48,9 +50,15 @@ export default async function ParentDashboard() {
 
   let signaturesByStudent: StudentSignatureMap = {};
   let healthInfoByStudent: Record<string, StudentHealthInfo> = {};
+  let medicationPlanByStudent: Record<string, { plan: StudentMedicationPlan | null; medications: StudentMedication[] }> = {};
 
   if (studentIds.length > 0) {
-    const [{ data: sigs }, { data: healthInfoRows }] = await Promise.all([
+    const [
+      { data: sigs },
+      { data: healthInfoRows },
+      { data: medicationPlanRows },
+      { data: medicationRows },
+    ] = await Promise.all([
       adminClient
         .schema("parent_app")
         .from("enrollment_signatures")
@@ -60,6 +68,18 @@ export default async function ParentDashboard() {
       adminClient
         .schema("parent_app")
         .from("student_health_info")
+        .select("*")
+        .eq("parent_id", user.id)
+        .in("student_id", studentIds),
+      adminClient
+        .schema("parent_app")
+        .from("student_medication_plan")
+        .select("*")
+        .eq("parent_id", user.id)
+        .in("student_id", studentIds),
+      adminClient
+        .schema("parent_app")
+        .from("student_medications")
         .select("*")
         .eq("parent_id", user.id)
         .in("student_id", studentIds),
@@ -74,6 +94,13 @@ export default async function ParentDashboard() {
 
     for (const row of healthInfoRows ?? []) {
       healthInfoByStudent[row.student_id] = row as StudentHealthInfo;
+    }
+
+    for (const sid of studentIds) {
+      medicationPlanByStudent[sid] = {
+        plan: (medicationPlanRows ?? []).find((r) => r.student_id === sid) as StudentMedicationPlan | null ?? null,
+        medications: (medicationRows ?? []).filter((r) => r.student_id === sid) as StudentMedication[],
+      };
     }
   }
 
@@ -108,6 +135,7 @@ export default async function ParentDashboard() {
             apps={approvedApps}
             signaturesByStudent={signaturesByStudent}
             healthInfoByStudent={healthInfoByStudent}
+            medicationPlanByStudent={medicationPlanByStudent}
             parentName={fullName ?? ""}
           />
         </main>

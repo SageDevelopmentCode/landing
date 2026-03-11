@@ -6,6 +6,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { saveApplicationStep1 } from "@/app/actions/saveApplicationStep1";
+import { formatPhone } from "@/app/utils/formatPhone";
 
 const gradeOptions = [
   "Pre-K",
@@ -89,13 +90,6 @@ export default function Step1Form({
   );
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-
-  const formatPhone = (value: string) => {
-    const digits = value.replace(/\D/g, "").slice(0, 10);
-    if (digits.length <= 3) return digits;
-    if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
-    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

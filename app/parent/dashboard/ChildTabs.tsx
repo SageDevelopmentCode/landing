@@ -26,12 +26,17 @@ import {
   CONTRACT_2_TOTAL_SECTIONS,
   CONTRACT_3_ID,
   CONTRACT_3_TOTAL_SECTIONS,
+  CONTRACT_4_ID,
+  CONTRACT_4_TOTAL_SECTIONS,
   isContractComplete,
 } from "@/app/types/enrollment-signatures";
 import ContractModal from "./ContractModal";
 import HealthFormModal from "./HealthFormModal";
+import MedicationPlanModal from "./MedicationPlanModal";
 
 type StudentHealthInfo = Database["parent_app"]["Tables"]["student_health_info"]["Row"];
+type StudentMedicationPlan = Database["parent_app"]["Tables"]["student_medication_plan"]["Row"];
+type StudentMedication = Database["parent_app"]["Tables"]["student_medications"]["Row"];
 
 type Application = Database["parent_app"]["Tables"]["applications"]["Row"];
 
@@ -90,10 +95,12 @@ const checklistItems: ChecklistItem[] = [
     title: "Emergency Medication Plan on File",
     subtitle: "Submit if your child requires emergency medication",
     icon: <Pill className="w-4 h-4" />,
-    iconBg: "bg-gray-100",
-    iconColor: "text-gray-400",
+    iconBg: "bg-orange-50",
+    iconColor: "text-orange-500",
     required: false,
-    isContract: false,
+    isContract: true,
+    contractId: CONTRACT_4_ID,
+    contractSections: CONTRACT_4_TOTAL_SECTIONS,
   },
   {
     id: 5,
@@ -288,6 +295,7 @@ interface ChildTabsProps {
   apps: Application[];
   signaturesByStudent: StudentSignatureMap;
   healthInfoByStudent: Record<string, StudentHealthInfo>;
+  medicationPlanByStudent: Record<string, { plan: StudentMedicationPlan | null; medications: StudentMedication[] }>;
   parentName: string;
 }
 
@@ -295,6 +303,7 @@ export default function ChildTabs({
   apps,
   signaturesByStudent,
   healthInfoByStudent,
+  medicationPlanByStudent,
   parentName,
 }: ChildTabsProps) {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -302,8 +311,13 @@ export default function ChildTabs({
   const [openStudentId, setOpenStudentId] = useState<string | null>(null);
   const [healthFormOpen, setHealthFormOpen] = useState(false);
   const [healthFormStudentId, setHealthFormStudentId] = useState<string | null>(null);
+  const [medicationPlanOpen, setMedicationPlanOpen] = useState(false);
+  const [medicationPlanStudentId, setMedicationPlanStudentId] = useState<string | null>(null);
   const [localSigs, setLocalSigs] = useState<StudentSignatureMap>(signaturesByStudent);
   const [localHealthInfo, setLocalHealthInfo] = useState<Record<string, StudentHealthInfo>>(healthInfoByStudent);
+  const [localMedicationPlan, setLocalMedicationPlan] = useState<
+    Record<string, { plan: StudentMedicationPlan | null; medications: StudentMedication[] }>
+  >(medicationPlanByStudent);
 
   if (apps.length === 0) {
     return (
@@ -320,6 +334,9 @@ export default function ChildTabs({
     if (contractId === CONTRACT_3_ID) {
       setHealthFormStudentId(activeStudentId);
       setHealthFormOpen(true);
+    } else if (contractId === CONTRACT_4_ID) {
+      setMedicationPlanStudentId(activeStudentId);
+      setMedicationPlanOpen(true);
     } else {
       setOpenContractId(contractId);
       setOpenStudentId(activeStudentId);
@@ -336,8 +353,13 @@ export default function ChildTabs({
     setHealthFormStudentId(null);
   };
 
+  const handleMedicationPlanClose = () => {
+    setMedicationPlanOpen(false);
+    setMedicationPlanStudentId(null);
+  };
+
   const handleSignaturesSaved = (updatedMap: SignatureMap) => {
-    const sid = openStudentId ?? healthFormStudentId;
+    const sid = openStudentId ?? healthFormStudentId ?? medicationPlanStudentId;
     if (!sid) return;
     setLocalSigs((prev) => ({ ...prev, [sid]: updatedMap }));
   };
@@ -345,6 +367,17 @@ export default function ChildTabs({
   const handleHealthInfoSaved = (info: StudentHealthInfo) => {
     if (!healthFormStudentId) return;
     setLocalHealthInfo((prev) => ({ ...prev, [healthFormStudentId]: info }));
+  };
+
+  const handleMedicationPlanSaved = (plan: StudentMedicationPlan) => {
+    if (!medicationPlanStudentId) return;
+    setLocalMedicationPlan((prev) => ({
+      ...prev,
+      [medicationPlanStudentId]: {
+        plan,
+        medications: prev[medicationPlanStudentId]?.medications ?? [],
+      },
+    }));
   };
 
   const checklist = (
@@ -405,6 +438,22 @@ export default function ChildTabs({
           existingHealthInfo={localHealthInfo[healthFormStudentId] ?? null}
           onSignaturesSaved={handleSignaturesSaved}
           onHealthInfoSaved={handleHealthInfoSaved}
+        />
+      )}
+
+      {medicationPlanOpen && medicationPlanStudentId !== null && (
+        <MedicationPlanModal
+          isOpen
+          onClose={handleMedicationPlanClose}
+          studentId={medicationPlanStudentId}
+          parentName={parentName}
+          app={apps.find((a) => a.student_id === medicationPlanStudentId)!}
+          existingSignatures={localSigs[medicationPlanStudentId] ?? {}}
+          existingPlan={
+            localMedicationPlan[medicationPlanStudentId] ?? { plan: null, medications: [] }
+          }
+          onSignaturesSaved={handleSignaturesSaved}
+          onPlanSaved={handleMedicationPlanSaved}
         />
       )}
     </div>

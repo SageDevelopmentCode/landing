@@ -22,7 +22,10 @@ export const CONTRACT_2_ID = 2;
 export const CONTRACT_2_TOTAL_SECTIONS = 4;
 
 export const CONTRACT_3_ID = 3;
-export const CONTRACT_3_TOTAL_SECTIONS = 5;
+export const CONTRACT_3_TOTAL_SECTIONS = 3;
+
+export const CONTRACT_4_ID = 4;
+export const CONTRACT_4_TOTAL_SECTIONS = 1;
 
 export function isContractComplete(
   map: SignatureMap,
