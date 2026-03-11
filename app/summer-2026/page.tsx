@@ -395,6 +395,36 @@ export default function Summer2026Page() {
         </div>
       </section>
 
+      {/* Summer Blurb */}
+      <section className="pb-16 px-8 sm:px-12 lg:px-16">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 space-y-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+          >
+            <p className="text-base text-gray-600 font-body leading-relaxed">
+              Summer at Sage Field is a season of sunshine, discovery, and play!
+              Each day is filled with outdoor adventures, daily water play,
+              music, art (both guided and free exploration), and ever-changing
+              hands-on activities that spark imagination and joy. We focus on
+              creating a space where children can explore, make friends, and
+              simply enjoy being kids.
+            </p>
+            <p className="text-base text-gray-600 font-body leading-relaxed">
+              Amid all the fun, we also keep minds curious and confident with
+              short, engaging academic blocks—15 minutes each of reading and
+              English, math, and writing. Our teachers individualize learning
+              for every child, meeting them right where they are and turning
+              lessons into exciting, achievable challenges. This gentle rhythm
+              keeps learning meaningful and fun while helping students transition
+              smoothly into the new school year.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Enrollment CTA */}
       <section className="pb-20 px-8 sm:px-12 lg:px-16">
         <div className="max-w-2xl mx-auto">
