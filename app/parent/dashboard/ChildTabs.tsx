@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   FileText,
   Users,
@@ -45,6 +46,7 @@ import ImmunizationUploadModal from "./ImmunizationUploadModal";
 import PhotoReleaseModal from "./PhotoReleaseModal";
 import AssumptionOfRiskModal from "./AssumptionOfRiskModal";
 import AuthorizedPickupModal from "./AuthorizedPickupModal";
+import ApplicationViewSlideOver from "./ApplicationViewSlideOver";
 
 type StudentHealthInfo = Database["parent_app"]["Tables"]["student_health_info"]["Row"];
 type StudentMedicationPlan = Database["parent_app"]["Tables"]["student_medication_plan"]["Row"];
@@ -176,21 +178,191 @@ const checklistItems: ChecklistItem[] = [
 
 const totalCount = checklistItems.length;
 
+function RegistrationFeeModal({
+  app,
+  parentEmail,
+  onClose,
+  onPaid,
+}: {
+  app: Application;
+  parentEmail: string;
+  onClose: () => void;
+  onPaid: () => void;
+}) {
+  const [coverFees, setCoverFees] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const childName = app.preferred_name ?? app.child_legal_name ?? "Student";
+  const isSummer = app.program === "summer_26";
+  const isSchool = app.program === "school_year_26_27";
+  const isBoth = app.program === "both";
+  const totalBase = isBoth ? 575 : isSummer ? 75 : 500;
+  const cardFee = isBoth ? 17.47 : isSummer ? 2.48 : 14.80;
+  const achFee = 0.60;
+
+  const handleProceed = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/stripe/create-registration-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          parentId: app.user_id,
+          parentEmail,
+          studentId: app.student_id,
+          applicationId: app.id,
+          coverFees,
+          program: app.program,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Something went wrong. Please try again.");
+        setLoading(false);
+        return;
+      }
+      onPaid();
+      window.location.href = data.url;
+    } catch {
+      setError("Network error. Please try again.");
+      setLoading(false);
+    }
+  };
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.15 }}
+    >
+      <motion.div
+        className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6"
+        initial={{ opacity: 0, scale: 0.95, y: 8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 8 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
+      >
+        <h2 className="text-lg font-bold font-heading text-gray-800 mb-1">
+          Pay Registration Fee
+        </h2>
+        <p className="text-sm text-gray-500 font-body mb-5">
+          {childName} &mdash;{" "}
+          {isBoth ? "Summer 2026 + School Year 2026–27" : isSummer ? "Summer 2026" : "School Year 2026–27"}
+        </p>
+
+        <div className="bg-gray-50 rounded-xl p-4 mb-4 space-y-2">
+          {isBoth ? (
+            <>
+              <div className="flex justify-between text-sm font-body">
+                <span className="text-gray-600">Summer 2026 registration</span>
+                <span className="font-semibold text-gray-800">$75.00</span>
+              </div>
+              <div className="flex justify-between text-sm font-body">
+                <span className="text-gray-600">School Year 2026–27 registration</span>
+                <span className="font-semibold text-gray-800">$500.00</span>
+              </div>
+              <div className="flex justify-between text-sm font-body border-t border-gray-200 pt-2 mt-1">
+                <span className="text-gray-700 font-medium">Total</span>
+                <span className="font-semibold text-gray-800">$575.00</span>
+              </div>
+            </>
+          ) : (
+            <div className="flex justify-between text-sm font-body">
+              <span className="text-gray-600">Registration fee</span>
+              <span className="font-semibold text-gray-800">${totalBase.toFixed(2)}</span>
+            </div>
+          )}
+          <div className="flex justify-between text-xs text-gray-400 font-body">
+            <span>Card processing fee (est.)</span>
+            <span>~${cardFee.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-xs text-gray-400 font-body">
+            <span>ACH / bank transfer fee (est.)</span>
+            <span>~${achFee.toFixed(2)}</span>
+          </div>
+        </div>
+
+        <label className="flex items-start gap-3 mb-5 cursor-pointer group">
+          <input
+            type="checkbox"
+            checked={coverFees}
+            onChange={(e) => setCoverFees(e.target.checked)}
+            className="mt-0.5 w-4 h-4 rounded accent-emerald-600 cursor-pointer"
+          />
+          <span className="text-sm text-gray-600 font-body group-hover:text-gray-800 transition-colors">
+            I agree to pay the processing fee
+          </span>
+        </label>
+
+        <p className="text-xs text-gray-400 font-body mb-2">
+          Pay by card or bank transfer (ACH) — ACH has a lower processing fee (~$0.60).
+        </p>
+        <p className="text-xs text-gray-400 font-body mb-5">
+          Prefer to pay by check? Email us at{" "}
+          <a href="mailto:sabrina@sagefield.co" className="underline hover:text-gray-600 transition-colors">
+            sabrina@sagefield.co
+          </a>{" "}
+          and we&apos;ll send you instructions.
+        </p>
+
+        {error && (
+          <p className="text-sm text-red-600 font-body mb-4">{error}</p>
+        )}
+
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold font-body border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50 cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleProceed}
+            disabled={loading || !coverFees}
+            className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold font-body bg-emerald-600 text-white hover:bg-emerald-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+          >
+            {loading ? (
+              <>
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Redirecting…
+              </>
+            ) : (
+              "Proceed to Payment"
+            )}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 function Checklist({
   childName,
   signatureMap,
   onContractClick,
   onImmunizationClick,
   immunizationFileCount,
+  onViewApplication,
+  onRegistrationFeeClick,
+  registrationFeePaid,
 }: {
   childName: string;
   signatureMap: SignatureMap;
   onContractClick: (contractId: number) => void;
   onImmunizationClick: () => void;
   immunizationFileCount: number;
+  onViewApplication: () => void;
+  onRegistrationFeeClick: () => void;
+  registrationFeePaid: boolean;
 }) {
   const completedCount = checklistItems.filter((item) => {
     if (item.id === 5) return immunizationFileCount > 0;
+    if (item.id === 9) return registrationFeePaid;
     if (item.contractId && item.contractSections) {
       return isContractComplete(signatureMap, item.contractId, item.contractSections);
     }
@@ -214,8 +386,12 @@ function Checklist({
               {completedCount} of {totalCount} steps completed
             </p>
           </div>
-          <button className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold font-body bg-emerald-500 text-white hover:bg-emerald-600 transition-colors cursor-pointer">
-            Get Started
+          <button
+            onClick={onViewApplication}
+            className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold font-body bg-white border border-gray-200 text-gray-500 hover:text-gray-800 hover:bg-gray-50 shadow-sm transition-colors cursor-pointer"
+          >
+            <FileText className="w-3.5 h-3.5" />
+            View Application
           </button>
         </div>
         <div className="w-full bg-gray-100 rounded-full h-2">
@@ -234,8 +410,11 @@ function Checklist({
       <div className="flex flex-col gap-3">
         {checklistItems.map((item) => {
           const isImmunization = item.id === 5;
+          const isRegistrationFee = item.id === 9;
           const isComplete = isImmunization
             ? immunizationFileCount > 0
+            : isRegistrationFee
+            ? registrationFeePaid
             : item.contractId && item.contractSections
             ? isContractComplete(signatureMap, item.contractId, item.contractSections)
             : false;
@@ -250,7 +429,7 @@ function Checklist({
           const isInProgress =
             item.isContract && item.contractId != null && signedCount > 0 && !isComplete;
 
-          const isClickable = isImmunization || (item.isContract && item.contractId != null);
+          const isClickable = isImmunization || isRegistrationFee || (item.isContract && item.contractId != null);
 
           return (
             <div
@@ -258,6 +437,8 @@ function Checklist({
               onClick={() => {
                 if (isImmunization) {
                   onImmunizationClick();
+                } else if (isRegistrationFee) {
+                  onRegistrationFeeClick();
                 } else if (isClickable && item.contractId != null) {
                   onContractClick(item.contractId);
                 }
@@ -288,7 +469,19 @@ function Checklist({
                 </p>
               </div>
               <div className="flex-shrink-0 flex items-center gap-2">
-                {isImmunization ? (
+                {isRegistrationFee ? (
+                  isComplete ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border bg-emerald-100 text-emerald-700 border-emerald-300">
+                      <CheckCircle className="w-3 h-3" />
+                      Paid
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border bg-amber-50 text-amber-700 border-amber-200">
+                      <CreditCard className="w-3 h-3" />
+                      Pay
+                    </span>
+                  )
+                ) : isImmunization ? (
                   isComplete ? (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border bg-emerald-100 text-emerald-700 border-emerald-300">
                       <CheckCircle className="w-3 h-3" />
@@ -339,9 +532,11 @@ interface ChildTabsProps {
   medicationPlanByStudent: Record<string, { plan: StudentMedicationPlan | null; medications: StudentMedication[] }>;
   parentName: string;
   parentId: string;
+  parentEmail: string;
   immunizationFileCountByStudent: Record<string, number>;
   consentByStudent: Record<string, "FULL" | "LIMITED" | "NO">;
   authorizedPickupByStudent: Record<string, { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] }>;
+  registrationFeePaidByStudent: Record<string, boolean>;
 }
 
 export default function ChildTabs({
@@ -351,11 +546,14 @@ export default function ChildTabs({
   medicationPlanByStudent,
   parentName,
   parentId,
+  parentEmail,
   immunizationFileCountByStudent,
   consentByStudent,
   authorizedPickupByStudent,
+  registrationFeePaidByStudent,
 }: ChildTabsProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [appViewOpen, setAppViewOpen] = useState(false);
   const [openContractId, setOpenContractId] = useState<number | null>(null);
   const [openStudentId, setOpenStudentId] = useState<string | null>(null);
   const [healthFormOpen, setHealthFormOpen] = useState(false);
@@ -382,6 +580,10 @@ export default function ChildTabs({
   const [localAuthorizedPickup, setLocalAuthorizedPickup] = useState<
     Record<string, { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] }>
   >(authorizedPickupByStudent);
+  const [registrationFeeOpen, setRegistrationFeeOpen] = useState(false);
+  const [localRegistrationFeePaid, setLocalRegistrationFeePaid] = useState<Record<string, boolean>>(
+    registrationFeePaidByStudent
+  );
 
   if (apps.length === 0) {
     return (
@@ -525,6 +727,14 @@ export default function ChildTabs({
     setImmunizationOpen(true);
   };
 
+  const handleRegistrationFeeClick = () => {
+    setRegistrationFeeOpen(true);
+  };
+
+  const handleRegistrationFeePaid = () => {
+    setLocalRegistrationFeePaid((prev) => ({ ...prev, [activeStudentId]: true }));
+  };
+
   const checklist = (
     <Checklist
       childName={childName}
@@ -532,6 +742,9 @@ export default function ChildTabs({
       onContractClick={handleContractClick}
       onImmunizationClick={handleImmunizationClick}
       immunizationFileCount={localImmunizationCounts[activeStudentId] ?? 0}
+      onViewApplication={() => setAppViewOpen(true)}
+      onRegistrationFeeClick={handleRegistrationFeeClick}
+      registrationFeePaid={localRegistrationFeePaid[activeStudentId] ?? false}
     />
   );
 
@@ -667,6 +880,26 @@ export default function ChildTabs({
           onUploadComplete={handleImmunizationUploadComplete}
         />
       )}
+
+      <AnimatePresence>
+        {registrationFeeOpen && (
+          <RegistrationFeeModal
+            app={activeApp}
+            parentEmail={parentEmail}
+            onClose={() => setRegistrationFeeOpen(false)}
+            onPaid={handleRegistrationFeePaid}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {appViewOpen && (
+          <ApplicationViewSlideOver
+            app={activeApp}
+            onClose={() => setAppViewOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -46,6 +46,13 @@ export default async function ParentDashboard() {
   const fullName = adminUser?.full_name ?? null;
   const approvedApps = apps ?? [];
 
+  const registrationFeePaidByStudent: Record<string, boolean> = {};
+  for (const app of approvedApps) {
+    if (app.student_id) {
+      registrationFeePaidByStudent[app.student_id] = app.registration_fee_paid ?? false;
+    }
+  }
+
   const studentIds = approvedApps
     .map((a) => a.student_id)
     .filter((id): id is string => id !== null);
@@ -189,9 +196,11 @@ export default async function ParentDashboard() {
             medicationPlanByStudent={medicationPlanByStudent}
             parentName={fullName ?? ""}
             parentId={user.id}
+            parentEmail={user.email ?? ""}
             immunizationFileCountByStudent={immunizationFileCountByStudent}
             consentByStudent={consentByStudent}
             authorizedPickupByStudent={authorizedPickupByStudent}
+            registrationFeePaidByStudent={registrationFeePaidByStudent}
           />
         </main>
       </div>

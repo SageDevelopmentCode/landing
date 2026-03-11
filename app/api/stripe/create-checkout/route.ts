@@ -45,6 +45,8 @@ export async function POST(request: NextRequest) {
         },
       ],
       metadata: {
+        payment_type: "donation",
+        description: "Donation to Sage Field",
         donor_name: donorName || "",
         donor_email: donorEmail,
         message: message || "",

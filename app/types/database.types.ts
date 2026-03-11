@@ -352,6 +352,7 @@ export type Database = {
           previous_schools: string | null
           previous_schools_list: string | null
           program: string | null
+          registration_fee_paid: boolean | null
           regulation_strategies: string | null
           special_interests: string | null
           status: string
@@ -422,6 +423,7 @@ export type Database = {
           previous_schools?: string | null
           previous_schools_list?: string | null
           program?: string | null
+          registration_fee_paid?: boolean | null
           regulation_strategies?: string | null
           special_interests?: string | null
           status?: string
@@ -492,6 +494,7 @@ export type Database = {
           previous_schools?: string | null
           previous_schools_list?: string | null
           program?: string | null
+          registration_fee_paid?: boolean | null
           regulation_strategies?: string | null
           special_interests?: string | null
           status?: string
@@ -838,6 +841,85 @@ export type Database = {
             | "not_fit"
             | "lost"
             | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+  billing: {
+    Tables: {
+      stripe_transactions: {
+        Row: {
+          id: string
+          stripe_session_id: string
+          stripe_payment_intent_id: string | null
+          payment_type: string
+          status: string
+          amount_cents: number
+          intended_amount_cents: number | null
+          currency: string
+          cover_fees: boolean | null
+          payer_name: string | null
+          payer_email: string | null
+          description: string | null
+          student_id: string | null
+          application_id: string | null
+          parent_id: string | null
+          metadata: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          stripe_session_id: string
+          stripe_payment_intent_id?: string | null
+          payment_type: string
+          status?: string
+          amount_cents: number
+          intended_amount_cents?: number | null
+          currency?: string
+          cover_fees?: boolean | null
+          payer_name?: string | null
+          payer_email?: string | null
+          description?: string | null
+          student_id?: string | null
+          application_id?: string | null
+          parent_id?: string | null
+          metadata?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          stripe_session_id?: string
+          stripe_payment_intent_id?: string | null
+          payment_type?: string
+          status?: string
+          amount_cents?: number
+          intended_amount_cents?: number | null
+          currency?: string
+          cover_fees?: boolean | null
+          payer_name?: string | null
+          payer_email?: string | null
+          description?: string | null
+          student_id?: string | null
+          application_id?: string | null
+          parent_id?: string | null
+          metadata?: Json
+          created_at?: string
           updated_at?: string
         }
         Relationships: []
