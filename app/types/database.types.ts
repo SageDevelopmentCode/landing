@@ -341,7 +341,6 @@ export type Database = {
           history_explanation: string | null
           history_flags: string | null
           homeschool_explanation: string | null
-          household_phone: string | null
           id: string
           is_homeschooled: string | null
           learning_style: string | null
@@ -412,7 +411,6 @@ export type Database = {
           history_explanation?: string | null
           history_flags?: string | null
           homeschool_explanation?: string | null
-          household_phone?: string | null
           id?: string
           is_homeschooled?: string | null
           learning_style?: string | null
@@ -483,7 +481,6 @@ export type Database = {
           history_explanation?: string | null
           history_flags?: string | null
           homeschool_explanation?: string | null
-          household_phone?: string | null
           id?: string
           is_homeschooled?: string | null
           learning_style?: string | null

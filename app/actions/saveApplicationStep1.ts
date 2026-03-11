@@ -16,7 +16,6 @@ export async function saveApplicationStep1(formData: {
   addressCity: string
   addressState: string
   addressZip: string
-  householdPhone: string
   isHomeschooled: string
   homeschoolExplanation: string
   previousSchools: string
@@ -44,7 +43,6 @@ export async function saveApplicationStep1(formData: {
     address_city: formData.addressCity || null,
     address_state: formData.addressState || null,
     address_zip: formData.addressZip || null,
-    household_phone: formData.householdPhone || null,
     is_homeschooled: formData.isHomeschooled || null,
     homeschool_explanation: formData.homeschoolExplanation || null,
     previous_schools: formData.previousSchools || null,

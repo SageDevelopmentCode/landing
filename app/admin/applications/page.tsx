@@ -40,7 +40,6 @@ type Application = {
   address_city: string | null
   address_state: string | null
   address_zip: string | null
-  household_phone: string | null
   is_homeschooled: string | null
   homeschool_explanation: string | null
   previous_schools: string | null

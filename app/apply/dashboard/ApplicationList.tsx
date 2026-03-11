@@ -271,7 +271,6 @@ function SlideOver({
                 {ef("City", "address_city")}
                 {ef("State", "address_state")}
                 {ef("Zip", "address_zip")}
-                {ef("Household Phone", "household_phone")}
                 {ef("Homeschooled", "is_homeschooled")}
                 {ef("Previous Schools", "previous_schools", true)}
                 {ef("Special Interests", "special_interests", true)}
@@ -342,7 +341,6 @@ function SlideOver({
                 {field("Age", app.child_age)}
                 {field("Grade", app.child_grade)}
                 {field("Address", app.address)}
-                {field("Household Phone", app.household_phone)}
                 {field("Homeschooled", app.is_homeschooled)}
                 {field("Previous Schools", app.previous_schools)}
                 {field("Special Interests", app.special_interests)}

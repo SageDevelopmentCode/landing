@@ -249,8 +249,8 @@ export default function Summer2026Page() {
             className="space-y-4 mb-10"
           >
             <p className="text-lg text-gray-600 font-body leading-relaxed">
-              Our Summer 2026 program is a thirteen-week immersive experience
-              designed for curious learners ages 4–10. Each day blends hands-on
+              Our Summer 2026 program is a twelve-week immersive experience
+              designed for curious learners ages 4–11. Each day blends hands-on
               projects, nature exploration, literacy and math support, art,
               music, and plenty of time for creative play—all in a small,
               nurturing group setting of about 10 children, Monday through
@@ -355,7 +355,9 @@ export default function Summer2026Page() {
               <span className="text-primary">Field Day</span> Fridays
             </h2>
             <p className="text-gray-500 font-body text-base mb-8 max-w-xl mx-auto">
-              Fridays are an optional add-on — join us for a full day of outdoor adventure from 9 am to 1 pm. Every Field Day Friday is a unique, one-of-a-kind experience!
+              Fridays are an optional add-on — join us for a full day of outdoor
+              adventure from 9 am to 1 pm. Every Field Day Friday is a unique,
+              one-of-a-kind experience!
             </p>
           </motion.div>
 
@@ -367,19 +369,27 @@ export default function Summer2026Page() {
           >
             <div className="flex items-center gap-2 px-5 py-3 bg-primary/10 rounded-full">
               <span>🌿</span>
-              <span className="text-sm font-semibold text-primary font-body">Outdoor &amp; Nature</span>
+              <span className="text-sm font-semibold text-primary font-body">
+                Outdoor &amp; Nature
+              </span>
             </div>
             <div className="flex items-center gap-2 px-5 py-3 bg-primary/10 rounded-full">
               <span>🕘</span>
-              <span className="text-sm font-semibold text-primary font-body">9 am – 1 pm</span>
+              <span className="text-sm font-semibold text-primary font-body">
+                9 am – 1 pm
+              </span>
             </div>
             <div className="flex items-center gap-2 px-5 py-3 bg-primary/10 rounded-full">
               <span>✅</span>
-              <span className="text-sm font-semibold text-primary font-body">Optional Add-On</span>
+              <span className="text-sm font-semibold text-primary font-body">
+                Optional Add-On
+              </span>
             </div>
             <div className="flex items-center gap-2 px-5 py-3 bg-primary/10 rounded-full">
               <span>🎉</span>
-              <span className="text-sm font-semibold text-primary font-body">Unique Each Week</span>
+              <span className="text-sm font-semibold text-primary font-body">
+                Unique Each Week
+              </span>
             </div>
           </motion.div>
         </div>

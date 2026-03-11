@@ -31,7 +31,6 @@ type Application = {
   address_city: string | null
   address_state: string | null
   address_zip: string | null
-  household_phone: string | null
   is_homeschooled: string | null
   homeschool_explanation: string | null
   previous_schools: string | null
@@ -363,7 +362,6 @@ export function ApplicationDetailSidebar({
           <Field label="Age" value={application.child_age} />
           <Field label="Grade" value={application.child_grade} />
           <Field label="Program" value={formatProgram(application.program)} />
-          <Field label="Household Phone" value={application.household_phone} />
         </Section>
 
         <Section title="Address">

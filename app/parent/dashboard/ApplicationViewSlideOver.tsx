@@ -102,7 +102,6 @@ export default function ApplicationViewSlideOver({
             {field("Age", app.child_age != null ? String(app.child_age) : null)}
             {field("Grade", app.child_grade)}
             {field("Address", [app.address_street, app.address_city, app.address_state, app.address_zip].filter(Boolean).join(", ") || null)}
-            {field("Household Phone", app.household_phone)}
             {field("Homeschooled", app.is_homeschooled)}
             {field("Previous Schools", app.previous_schools)}
             {field("Special Interests", app.special_interests)}

@@ -6,7 +6,6 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { saveApplicationStep1 } from "@/app/actions/saveApplicationStep1";
-import { formatPhone } from "@/app/utils/formatPhone";
 
 const gradeOptions = [
   "Pre-K",
@@ -38,7 +37,6 @@ type InitialData = {
   address_city?: string | null;
   address_state?: string | null;
   address_zip?: string | null;
-  household_phone?: string | null;
   is_homeschooled?: string | null;
   homeschool_explanation?: string | null;
   previous_schools?: string | null;
@@ -70,9 +68,6 @@ export default function Step1Form({
   const [addressCity, setAddressCity] = useState(d?.address_city ?? "");
   const [addressState, setAddressState] = useState(d?.address_state ?? "");
   const [addressZip, setAddressZip] = useState(d?.address_zip ?? "");
-  const [householdPhone, setHouseholdPhone] = useState(
-    d?.household_phone ?? "",
-  );
   const [isHomeschooled, setIsHomeschooled] = useState<"yes" | "no" | "">(
     (d?.is_homeschooled as "yes" | "no") ?? "",
   );
@@ -108,7 +103,6 @@ export default function Step1Form({
         addressCity,
         addressState,
         addressZip,
-        householdPhone,
         isHomeschooled,
         homeschoolExplanation,
         previousSchools,
@@ -408,20 +402,6 @@ export default function Step1Form({
                   />
                 </div>
               </div>
-            </div>
-
-            {/* Household Phone */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 font-body mb-1.5">
-                Primary Household Phone
-              </label>
-              <input
-                type="tel"
-                value={householdPhone}
-                onChange={(e) => setHouseholdPhone(formatPhone(e.target.value))}
-                placeholder="(555) 000-0000"
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors bg-white"
-              />
             </div>
 
             {/* What is your child's current schooling situation? */}
