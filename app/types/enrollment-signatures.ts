@@ -18,6 +18,12 @@ export type StudentSignatureMap = Record<string, SignatureMap>;
 export const CONTRACT_1_ID = 1;
 export const CONTRACT_1_TOTAL_SECTIONS = 13;
 
+export const CONTRACT_2_ID = 2;
+export const CONTRACT_2_TOTAL_SECTIONS = 4;
+
+export const CONTRACT_3_ID = 3;
+export const CONTRACT_3_TOTAL_SECTIONS = 5;
+
 export function isContractComplete(
   map: SignatureMap,
   contractId: number,

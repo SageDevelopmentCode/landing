@@ -9,6 +9,9 @@ import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import Footer from "@/app/components/Footer";
 import ChildTabs from "./ChildTabs";
 import type { StudentSignatureMap } from "@/app/types/enrollment-signatures";
+import type { Database } from "@/app/types/database.types";
+
+type StudentHealthInfo = Database["parent_app"]["Tables"]["student_health_info"]["Row"];
 
 export default async function ParentDashboard() {
   const supabase = await createServerSupabaseClient();
@@ -44,19 +47,33 @@ export default async function ParentDashboard() {
     .filter((id): id is string => id !== null);
 
   let signaturesByStudent: StudentSignatureMap = {};
+  let healthInfoByStudent: Record<string, StudentHealthInfo> = {};
+
   if (studentIds.length > 0) {
-    const { data: sigs } = await adminClient
-      .schema("parent_app")
-      .from("enrollment_signatures")
-      .select("*")
-      .eq("parent_id", user.id)
-      .in("student_id", studentIds);
+    const [{ data: sigs }, { data: healthInfoRows }] = await Promise.all([
+      adminClient
+        .schema("parent_app")
+        .from("enrollment_signatures")
+        .select("*")
+        .eq("parent_id", user.id)
+        .in("student_id", studentIds),
+      adminClient
+        .schema("parent_app")
+        .from("student_health_info")
+        .select("*")
+        .eq("parent_id", user.id)
+        .in("student_id", studentIds),
+    ]);
 
     for (const sig of sigs ?? []) {
       signaturesByStudent[sig.student_id] ??= {};
       signaturesByStudent[sig.student_id][
         `${sig.contract_id}-${sig.section_id}`
       ] = sig;
+    }
+
+    for (const row of healthInfoRows ?? []) {
+      healthInfoByStudent[row.student_id] = row as StudentHealthInfo;
     }
   }
 
@@ -90,6 +107,7 @@ export default async function ParentDashboard() {
           <ChildTabs
             apps={approvedApps}
             signaturesByStudent={signaturesByStudent}
+            healthInfoByStudent={healthInfoByStudent}
             parentName={fullName ?? ""}
           />
         </main>

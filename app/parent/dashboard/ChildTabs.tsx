@@ -22,9 +22,16 @@ import type {
 import {
   CONTRACT_1_ID,
   CONTRACT_1_TOTAL_SECTIONS,
+  CONTRACT_2_ID,
+  CONTRACT_2_TOTAL_SECTIONS,
+  CONTRACT_3_ID,
+  CONTRACT_3_TOTAL_SECTIONS,
   isContractComplete,
 } from "@/app/types/enrollment-signatures";
 import ContractModal from "./ContractModal";
+import HealthFormModal from "./HealthFormModal";
+
+type StudentHealthInfo = Database["parent_app"]["Tables"]["student_health_info"]["Row"];
 
 type Application = Database["parent_app"]["Tables"]["applications"]["Row"];
 
@@ -63,6 +70,8 @@ const checklistItems: ChecklistItem[] = [
     iconColor: "text-purple-500",
     required: true,
     isContract: true,
+    contractId: CONTRACT_2_ID,
+    contractSections: CONTRACT_2_TOTAL_SECTIONS,
   },
   {
     id: 3,
@@ -73,6 +82,8 @@ const checklistItems: ChecklistItem[] = [
     iconColor: "text-rose-500",
     required: true,
     isContract: true,
+    contractId: CONTRACT_3_ID,
+    contractSections: CONTRACT_3_TOTAL_SECTIONS,
   },
   {
     id: 4,
@@ -171,7 +182,7 @@ function Checklist({
               {completedCount} of {totalCount} steps completed
             </p>
           </div>
-          <button className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold font-body bg-emerald-500 text-white hover:bg-emerald-600 transition-colors">
+          <button className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold font-body bg-emerald-500 text-white hover:bg-emerald-600 transition-colors cursor-pointer">
             Get Started
           </button>
         </div>
@@ -217,7 +228,7 @@ function Checklist({
               }}
               className={`rounded-2xl px-5 py-4 shadow-sm flex items-center gap-4 border transition-all ${
                 isComplete
-                  ? "bg-emerald-50 border-emerald-200"
+                  ? "bg-emerald-50 border-emerald-200 cursor-pointer hover:border-emerald-300 hover:shadow-md"
                   : isClickable
                   ? "bg-white border-gray-200 cursor-pointer hover:border-gray-300 hover:shadow-md"
                   : "bg-white border-gray-200"
@@ -276,18 +287,23 @@ function Checklist({
 interface ChildTabsProps {
   apps: Application[];
   signaturesByStudent: StudentSignatureMap;
+  healthInfoByStudent: Record<string, StudentHealthInfo>;
   parentName: string;
 }
 
 export default function ChildTabs({
   apps,
   signaturesByStudent,
+  healthInfoByStudent,
   parentName,
 }: ChildTabsProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [openContractId, setOpenContractId] = useState<number | null>(null);
   const [openStudentId, setOpenStudentId] = useState<string | null>(null);
+  const [healthFormOpen, setHealthFormOpen] = useState(false);
+  const [healthFormStudentId, setHealthFormStudentId] = useState<string | null>(null);
   const [localSigs, setLocalSigs] = useState<StudentSignatureMap>(signaturesByStudent);
+  const [localHealthInfo, setLocalHealthInfo] = useState<Record<string, StudentHealthInfo>>(healthInfoByStudent);
 
   if (apps.length === 0) {
     return (
@@ -301,8 +317,13 @@ export default function ChildTabs({
   const activeStudentId = activeApp.student_id ?? "";
 
   const handleContractClick = (contractId: number) => {
-    setOpenContractId(contractId);
-    setOpenStudentId(activeStudentId);
+    if (contractId === CONTRACT_3_ID) {
+      setHealthFormStudentId(activeStudentId);
+      setHealthFormOpen(true);
+    } else {
+      setOpenContractId(contractId);
+      setOpenStudentId(activeStudentId);
+    }
   };
 
   const handleClose = () => {
@@ -310,9 +331,20 @@ export default function ChildTabs({
     setOpenStudentId(null);
   };
 
+  const handleHealthFormClose = () => {
+    setHealthFormOpen(false);
+    setHealthFormStudentId(null);
+  };
+
   const handleSignaturesSaved = (updatedMap: SignatureMap) => {
-    if (!openStudentId) return;
-    setLocalSigs((prev) => ({ ...prev, [openStudentId]: updatedMap }));
+    const sid = openStudentId ?? healthFormStudentId;
+    if (!sid) return;
+    setLocalSigs((prev) => ({ ...prev, [sid]: updatedMap }));
+  };
+
+  const handleHealthInfoSaved = (info: StudentHealthInfo) => {
+    if (!healthFormStudentId) return;
+    setLocalHealthInfo((prev) => ({ ...prev, [healthFormStudentId]: info }));
   };
 
   const checklist = (
@@ -335,7 +367,7 @@ export default function ChildTabs({
               <button
                 key={app.id}
                 onClick={() => setActiveIndex(index)}
-                className={`px-4 py-1.5 rounded-xl text-sm font-semibold font-heading transition-colors ${
+                className={`px-4 py-1.5 rounded-xl text-sm font-semibold font-heading transition-colors cursor-pointer ${
                   isActive
                     ? "bg-gray-800 text-white"
                     : "bg-white border border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -359,6 +391,20 @@ export default function ChildTabs({
           parentName={parentName}
           existingSignatures={localSigs[openStudentId] ?? {}}
           onSignaturesSaved={handleSignaturesSaved}
+        />
+      )}
+
+      {healthFormOpen && healthFormStudentId !== null && (
+        <HealthFormModal
+          isOpen
+          onClose={handleHealthFormClose}
+          studentId={healthFormStudentId}
+          parentName={parentName}
+          app={apps.find((a) => a.student_id === healthFormStudentId)!}
+          existingSignatures={localSigs[healthFormStudentId] ?? {}}
+          existingHealthInfo={localHealthInfo[healthFormStudentId] ?? null}
+          onSignaturesSaved={handleSignaturesSaved}
+          onHealthInfoSaved={handleHealthInfoSaved}
         />
       )}
     </div>

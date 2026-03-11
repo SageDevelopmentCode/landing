@@ -502,6 +502,87 @@ export type Database = {
         }
         Relationships: []
       }
+      student_health_info: {
+        Row: {
+          id: string
+          parent_id: string
+          student_id: string
+          in_state_contact_name: string | null
+          in_state_contact_relation: string | null
+          in_state_contact_phone: string | null
+          out_of_state_contact_name: string | null
+          out_of_state_contact_relation: string | null
+          out_of_state_contact_phone: string | null
+          physician_name: string | null
+          clinic_name: string | null
+          physician_phone: string | null
+          insurance_provider: string | null
+          policy_number: string | null
+          group_number: string | null
+          preferred_hospital: string | null
+          health_conditions: string | null
+          ongoing_care: boolean | null
+          ongoing_care_description: string | null
+          emergency_medication_required: boolean | null
+          emergency_medication_description: string | null
+          immunization_status: 'record' | 'exemption' | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          parent_id: string
+          student_id: string
+          in_state_contact_name?: string | null
+          in_state_contact_relation?: string | null
+          in_state_contact_phone?: string | null
+          out_of_state_contact_name?: string | null
+          out_of_state_contact_relation?: string | null
+          out_of_state_contact_phone?: string | null
+          physician_name?: string | null
+          clinic_name?: string | null
+          physician_phone?: string | null
+          insurance_provider?: string | null
+          policy_number?: string | null
+          group_number?: string | null
+          preferred_hospital?: string | null
+          health_conditions?: string | null
+          ongoing_care?: boolean | null
+          ongoing_care_description?: string | null
+          emergency_medication_required?: boolean | null
+          emergency_medication_description?: string | null
+          immunization_status?: 'record' | 'exemption' | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          parent_id?: string
+          student_id?: string
+          in_state_contact_name?: string | null
+          in_state_contact_relation?: string | null
+          in_state_contact_phone?: string | null
+          out_of_state_contact_name?: string | null
+          out_of_state_contact_relation?: string | null
+          out_of_state_contact_phone?: string | null
+          physician_name?: string | null
+          clinic_name?: string | null
+          physician_phone?: string | null
+          insurance_provider?: string | null
+          policy_number?: string | null
+          group_number?: string | null
+          preferred_hospital?: string | null
+          health_conditions?: string | null
+          ongoing_care?: boolean | null
+          ongoing_care_description?: string | null
+          emergency_medication_required?: boolean | null
+          emergency_medication_description?: string | null
+          immunization_status?: 'record' | 'exemption' | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

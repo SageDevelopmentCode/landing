@@ -6,6 +6,63 @@ export interface ContractSection {
   afterBullets?: string[];
 }
 
+export const CONTRACT_2_SECTIONS: ContractSection[] = [
+  {
+    id: 1,
+    title: "1. Core Community Commitments",
+    paragraphs: [
+      "As a member of the Sage Field Academy community — whether as a family or staff member — I commit to upholding the following values and behaviors that make our community safe, respectful, and thriving:",
+    ],
+    bullets: [
+      "Respect for All People: I will treat every child, parent, caregiver, and staff member with dignity and respect — regardless of background, ability, race, religion, family structure, or any other characteristic. I will not make derogatory remarks, engage in exclusionary behavior, or tolerate discrimination of any kind.",
+      "Honest and Constructive Communication: I will communicate concerns directly, honestly, and respectfully. I will not gossip about other families or staff, spread rumors, or discuss community conflicts in front of children. If I have a concern, I will bring it to the appropriate person (staff member or director) through the proper channels.",
+      "Support for Children's Learning and Wellbeing: I understand that children learn best in emotionally safe environments. I will not undermine staff authority, second-guess educators in front of children, or create tension that disrupts the learning environment. I trust the Sage Field team to make thoughtful educational decisions.",
+      "Care for Shared Spaces and Property: I will model and encourage responsible care for all shared materials, outdoor spaces, and facilities. I will not damage, misuse, or allow my child to damage school property.",
+      "Digital and Social Media Conduct: I will not post negative, disparaging, or identifying content about Sage Field staff, families, or children on social media or in online groups. If I have concerns or feedback, I will raise them directly with the director — not publicly online.",
+      "Active Community Participation: I understand that Sage Field is a community — not just a service provider. I will show up, engage, and contribute to a positive culture. This includes volunteering when asked, attending community events, and supporting other families when I can.",
+    ],
+  },
+  {
+    id: 2,
+    title: "2. Unacceptable Behaviors (Zero Tolerance)",
+    paragraphs: [
+      "The following behaviors are not acceptable in our community and may result in immediate disenrollment or termination of the staff relationship:",
+    ],
+    bullets: [
+      "Physical aggression or threats toward any child, parent, or staff member",
+      "Verbal abuse, harassment, or intimidation of staff or families",
+      "Discrimination or hate speech of any kind",
+      "Deliberate damage to school property",
+      "Sharing private information about other families or children without consent",
+      "Attempting to organize other families against staff or school leadership",
+      "Persistent violations of this agreement after being formally warned",
+    ],
+  },
+  {
+    id: 3,
+    title: "3. Conflict Resolution Process",
+    paragraphs: [
+      "We recognize that disagreements will sometimes arise. When they do, we ask that all parties follow this process:",
+    ],
+    bullets: [
+      "Step 1 — Direct Conversation: Address the issue directly and respectfully with the person involved, when safe and appropriate to do so.",
+      "Step 2 — Staff Involvement: If the issue involves a child's experience or classroom dynamic, bring it to the lead educator first.",
+      "Step 3 — Director Review: If the issue is unresolved or involves a staff member, bring it to the director in writing or by requesting a meeting.",
+      "Step 4 — Formal Resolution: The director will review the situation, speak with all involved parties, and make a final decision. That decision is binding.",
+    ],
+    afterBullets: [
+      "Bypassing this process — for example, by confronting another parent or staff member publicly or escalating directly to legal threats without first attempting resolution — is itself a violation of this agreement.",
+    ],
+  },
+  {
+    id: 4,
+    title: "4. Acknowledgment and Agreement",
+    paragraphs: [
+      "By signing this agreement, I acknowledge that I have read, understood, and agree to uphold the community standards described above. I understand that my participation in the Sage Field Academy community — as a family or staff member — comes with a shared responsibility to protect and nurture the culture we are building together. I agree that violations of this agreement may result in consequences up to and including disenrollment of my child or termination of my employment or contractor relationship with Sage Field Academy.",
+    ],
+  },
+];
+
 export const CONTRACT_1_SECTIONS: ContractSection[] = [
   {
     id: 1,
