@@ -153,7 +153,7 @@ export const CONTRACT_1_SECTIONS: ContractSection[] = [
       "Tuition is non-refundable.",
       "Registration fees are non-refundable under any circumstances.",
       "If an account remains unpaid for more than 30 days, your child's enrollment may be suspended until the balance is resolved.",
-      "We accept payment via ACH bank transfer (lower processing fee), check, or credit card (a 3% processing fee applies to card payments).",
+      "We accept payment via ACH bank transfer (0.8% fee, max $5), check, or credit card (2.9% + $0.30 processing fee applies to card payments).",
     ],
     afterBullets: [
       "Families experiencing financial hardship should contact the director to discuss payment plan options before a payment becomes overdue.",

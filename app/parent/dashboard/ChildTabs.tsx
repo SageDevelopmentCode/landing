@@ -48,11 +48,16 @@ import AssumptionOfRiskModal from "./AssumptionOfRiskModal";
 import AuthorizedPickupModal from "./AuthorizedPickupModal";
 import ApplicationViewSlideOver from "./ApplicationViewSlideOver";
 
-type StudentHealthInfo = Database["parent_app"]["Tables"]["student_health_info"]["Row"];
-type StudentMedicationPlan = Database["parent_app"]["Tables"]["student_medication_plan"]["Row"];
-type StudentMedication = Database["parent_app"]["Tables"]["student_medications"]["Row"];
-type AuthorizedPickupPlan = Database["parent_app"]["Tables"]["student_authorized_pickup_plan"]["Row"];
-type AuthorizedPickupPerson = Database["parent_app"]["Tables"]["student_authorized_pickup_persons"]["Row"];
+type StudentHealthInfo =
+  Database["parent_app"]["Tables"]["student_health_info"]["Row"];
+type StudentMedicationPlan =
+  Database["parent_app"]["Tables"]["student_medication_plan"]["Row"];
+type StudentMedication =
+  Database["parent_app"]["Tables"]["student_medications"]["Row"];
+type AuthorizedPickupPlan =
+  Database["parent_app"]["Tables"]["student_authorized_pickup_plan"]["Row"];
+type AuthorizedPickupPerson =
+  Database["parent_app"]["Tables"]["student_authorized_pickup_persons"]["Row"];
 
 type Application = Database["parent_app"]["Tables"]["applications"]["Row"];
 
@@ -198,8 +203,8 @@ function RegistrationFeeModal({
   const isSchool = app.program === "school_year_26_27";
   const isBoth = app.program === "both";
   const totalBase = isBoth ? 575 : isSummer ? 75 : 500;
-  const cardFee = isBoth ? 17.47 : isSummer ? 2.48 : 14.80;
-  const achFee = 0.60;
+  const cardFee = Math.round((totalBase * 0.029 + 0.3) * 100) / 100;
+  const achFee = Math.min(Math.round(totalBase * 0.008 * 100) / 100, 5.0);
 
   const handleProceed = async () => {
     setLoading(true);
@@ -251,7 +256,11 @@ function RegistrationFeeModal({
         </h2>
         <p className="text-sm text-gray-500 font-body mb-5">
           {childName} &mdash;{" "}
-          {isBoth ? "Summer 2026 + School Year 2026–27" : isSummer ? "Summer 2026" : "School Year 2026–27"}
+          {isBoth
+            ? "Summer 2026 + School Year 2026–27"
+            : isSummer
+              ? "Summer 2026"
+              : "School Year 2026–27"}
         </p>
 
         <div className="bg-gray-50 rounded-xl p-4 mb-4 space-y-2">
@@ -262,7 +271,9 @@ function RegistrationFeeModal({
                 <span className="font-semibold text-gray-800">$75.00</span>
               </div>
               <div className="flex justify-between text-sm font-body">
-                <span className="text-gray-600">School Year 2026–27 registration</span>
+                <span className="text-gray-600">
+                  School Year 2026–27 registration
+                </span>
                 <span className="font-semibold text-gray-800">$500.00</span>
               </div>
               <div className="flex justify-between text-sm font-body border-t border-gray-200 pt-2 mt-1">
@@ -273,7 +284,9 @@ function RegistrationFeeModal({
           ) : (
             <div className="flex justify-between text-sm font-body">
               <span className="text-gray-600">Registration fee</span>
-              <span className="font-semibold text-gray-800">${totalBase.toFixed(2)}</span>
+              <span className="font-semibold text-gray-800">
+                ${totalBase.toFixed(2)}
+              </span>
             </div>
           )}
           <div className="flex justify-between text-xs text-gray-400 font-body">
@@ -299,11 +312,15 @@ function RegistrationFeeModal({
         </label>
 
         <p className="text-xs text-gray-400 font-body mb-2">
-          Pay by card or bank transfer (ACH) — ACH has a lower processing fee (~$0.60).
+          Pay by card or bank transfer (ACH) — ACH has a lower processing fee
+          (0.8%, max $5).
         </p>
         <p className="text-xs text-gray-400 font-body mb-5">
           Prefer to pay by check? Email us at{" "}
-          <a href="mailto:sabrina@sagefield.co" className="underline hover:text-gray-600 transition-colors">
+          <a
+            href="mailto:sabrina@sagefield.co"
+            className="underline hover:text-gray-600 transition-colors"
+          >
             sabrina@sagefield.co
           </a>{" "}
           and we&apos;ll send you instructions.
@@ -364,7 +381,11 @@ function Checklist({
     if (item.id === 5) return immunizationFileCount > 0;
     if (item.id === 9) return registrationFeePaid;
     if (item.contractId && item.contractSections) {
-      return isContractComplete(signatureMap, item.contractId, item.contractSections);
+      return isContractComplete(
+        signatureMap,
+        item.contractId,
+        item.contractSections,
+      );
     }
     return false;
   }).length;
@@ -380,7 +401,7 @@ function Checklist({
               Enrollment Checklist
             </h2>
             <p className="text-xs text-gray-400 font-body">
-              {childName} is enrolled at Sage Field Academy.
+              {childName} is enrolled at Sage Field Private School.
             </p>
             <p className="text-xs text-gray-400 font-body mt-0.5">
               {completedCount} of {totalCount} steps completed
@@ -414,22 +435,32 @@ function Checklist({
           const isComplete = isImmunization
             ? immunizationFileCount > 0
             : isRegistrationFee
-            ? registrationFeePaid
-            : item.contractId && item.contractSections
-            ? isContractComplete(signatureMap, item.contractId, item.contractSections)
-            : false;
+              ? registrationFeePaid
+              : item.contractId && item.contractSections
+                ? isContractComplete(
+                    signatureMap,
+                    item.contractId,
+                    item.contractSections,
+                  )
+                : false;
 
           const signedCount =
             item.contractId && item.contractSections
               ? Object.keys(signatureMap).filter((k) =>
-                  k.startsWith(`${item.contractId}-`)
+                  k.startsWith(`${item.contractId}-`),
                 ).length
               : 0;
 
           const isInProgress =
-            item.isContract && item.contractId != null && signedCount > 0 && !isComplete;
+            item.isContract &&
+            item.contractId != null &&
+            signedCount > 0 &&
+            !isComplete;
 
-          const isClickable = isImmunization || isRegistrationFee || (item.isContract && item.contractId != null);
+          const isClickable =
+            isImmunization ||
+            isRegistrationFee ||
+            (item.isContract && item.contractId != null);
 
           return (
             <div
@@ -447,8 +478,8 @@ function Checklist({
                 isComplete
                   ? "bg-emerald-50 border-emerald-200 cursor-pointer hover:border-emerald-300 hover:shadow-md"
                   : isClickable
-                  ? "bg-white border-gray-200 cursor-pointer hover:border-gray-300 hover:shadow-md"
-                  : "bg-white border-gray-200"
+                    ? "bg-white border-gray-200 cursor-pointer hover:border-gray-300 hover:shadow-md"
+                    : "bg-white border-gray-200"
               }`}
             >
               <div
@@ -461,10 +492,14 @@ function Checklist({
                 {isComplete ? <CheckCircle className="w-4 h-4" /> : item.icon}
               </div>
               <div className="flex-1 min-w-0">
-                <p className={`text-sm font-semibold font-heading truncate ${isComplete ? "text-emerald-800" : "text-gray-800"}`}>
+                <p
+                  className={`text-sm font-semibold font-heading truncate ${isComplete ? "text-emerald-800" : "text-gray-800"}`}
+                >
                   {item.title}
                 </p>
-                <p className={`text-xs font-body truncate ${isComplete ? "text-emerald-600/70" : "text-gray-400"}`}>
+                <p
+                  className={`text-xs font-body truncate ${isComplete ? "text-emerald-600/70" : "text-gray-400"}`}
+                >
                   {item.subtitle}
                 </p>
               </div>
@@ -529,13 +564,19 @@ interface ChildTabsProps {
   apps: Application[];
   signaturesByStudent: StudentSignatureMap;
   healthInfoByStudent: Record<string, StudentHealthInfo>;
-  medicationPlanByStudent: Record<string, { plan: StudentMedicationPlan | null; medications: StudentMedication[] }>;
+  medicationPlanByStudent: Record<
+    string,
+    { plan: StudentMedicationPlan | null; medications: StudentMedication[] }
+  >;
   parentName: string;
   parentId: string;
   parentEmail: string;
   immunizationFileCountByStudent: Record<string, number>;
   consentByStudent: Record<string, "FULL" | "LIMITED" | "NO">;
-  authorizedPickupByStudent: Record<string, { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] }>;
+  authorizedPickupByStudent: Record<
+    string,
+    { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] }
+  >;
   registrationFeePaidByStudent: Record<string, boolean>;
 }
 
@@ -557,33 +598,54 @@ export default function ChildTabs({
   const [openContractId, setOpenContractId] = useState<number | null>(null);
   const [openStudentId, setOpenStudentId] = useState<string | null>(null);
   const [healthFormOpen, setHealthFormOpen] = useState(false);
-  const [healthFormStudentId, setHealthFormStudentId] = useState<string | null>(null);
-  const [medicationPlanOpen, setMedicationPlanOpen] = useState(false);
-  const [medicationPlanStudentId, setMedicationPlanStudentId] = useState<string | null>(null);
-  const [immunizationOpen, setImmunizationOpen] = useState(false);
-  const [immunizationStudentId, setImmunizationStudentId] = useState<string | null>(null);
-  const [localSigs, setLocalSigs] = useState<StudentSignatureMap>(signaturesByStudent);
-  const [localHealthInfo, setLocalHealthInfo] = useState<Record<string, StudentHealthInfo>>(healthInfoByStudent);
-  const [localMedicationPlan, setLocalMedicationPlan] = useState<
-    Record<string, { plan: StudentMedicationPlan | null; medications: StudentMedication[] }>
-  >(medicationPlanByStudent);
-  const [localImmunizationCounts, setLocalImmunizationCounts] = useState<Record<string, number>>(
-    immunizationFileCountByStudent
+  const [healthFormStudentId, setHealthFormStudentId] = useState<string | null>(
+    null,
   );
-  const [localConsent, setLocalConsent] = useState<Record<string, "FULL" | "LIMITED" | "NO">>(consentByStudent);
+  const [medicationPlanOpen, setMedicationPlanOpen] = useState(false);
+  const [medicationPlanStudentId, setMedicationPlanStudentId] = useState<
+    string | null
+  >(null);
+  const [immunizationOpen, setImmunizationOpen] = useState(false);
+  const [immunizationStudentId, setImmunizationStudentId] = useState<
+    string | null
+  >(null);
+  const [localSigs, setLocalSigs] =
+    useState<StudentSignatureMap>(signaturesByStudent);
+  const [localHealthInfo, setLocalHealthInfo] =
+    useState<Record<string, StudentHealthInfo>>(healthInfoByStudent);
+  const [localMedicationPlan, setLocalMedicationPlan] = useState<
+    Record<
+      string,
+      { plan: StudentMedicationPlan | null; medications: StudentMedication[] }
+    >
+  >(medicationPlanByStudent);
+  const [localImmunizationCounts, setLocalImmunizationCounts] = useState<
+    Record<string, number>
+  >(immunizationFileCountByStudent);
+  const [localConsent, setLocalConsent] =
+    useState<Record<string, "FULL" | "LIMITED" | "NO">>(consentByStudent);
   const [photoReleaseOpen, setPhotoReleaseOpen] = useState(false);
-  const [photoReleaseStudentId, setPhotoReleaseStudentId] = useState<string | null>(null);
+  const [photoReleaseStudentId, setPhotoReleaseStudentId] = useState<
+    string | null
+  >(null);
   const [assumptionOfRiskOpen, setAssumptionOfRiskOpen] = useState(false);
-  const [assumptionOfRiskStudentId, setAssumptionOfRiskStudentId] = useState<string | null>(null);
+  const [assumptionOfRiskStudentId, setAssumptionOfRiskStudentId] = useState<
+    string | null
+  >(null);
   const [authorizedPickupOpen, setAuthorizedPickupOpen] = useState(false);
-  const [authorizedPickupStudentId, setAuthorizedPickupStudentId] = useState<string | null>(null);
+  const [authorizedPickupStudentId, setAuthorizedPickupStudentId] = useState<
+    string | null
+  >(null);
   const [localAuthorizedPickup, setLocalAuthorizedPickup] = useState<
-    Record<string, { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] }>
+    Record<
+      string,
+      { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] }
+    >
   >(authorizedPickupByStudent);
   const [registrationFeeOpen, setRegistrationFeeOpen] = useState(false);
-  const [localRegistrationFeePaid, setLocalRegistrationFeePaid] = useState<Record<string, boolean>>(
-    registrationFeePaidByStudent
-  );
+  const [localRegistrationFeePaid, setLocalRegistrationFeePaid] = useState<
+    Record<string, boolean>
+  >(registrationFeePaidByStudent);
 
   if (apps.length === 0) {
     return (
@@ -639,7 +701,10 @@ export default function ChildTabs({
   };
 
   const handleImmunizationUploadComplete = (sid: string) => {
-    setLocalImmunizationCounts((prev) => ({ ...prev, [sid]: (prev[sid] ?? 0) + 1 }));
+    setLocalImmunizationCounts((prev) => ({
+      ...prev,
+      [sid]: (prev[sid] ?? 0) + 1,
+    }));
   };
 
   const handleSignaturesSaved = (updatedMap: SignatureMap) => {
@@ -653,7 +718,10 @@ export default function ChildTabs({
     const key = `${sig.contract_id}-${sig.section_id}`;
     setLocalSigs((prev) => ({
       ...prev,
-      [photoReleaseStudentId]: { ...(prev[photoReleaseStudentId] ?? {}), [key]: sig },
+      [photoReleaseStudentId]: {
+        ...(prev[photoReleaseStudentId] ?? {}),
+        [key]: sig,
+      },
     }));
   };
 
@@ -677,7 +745,10 @@ export default function ChildTabs({
     const key = `${sig.contract_id}-${sig.section_id}`;
     setLocalSigs((prev) => ({
       ...prev,
-      [assumptionOfRiskStudentId]: { ...(prev[assumptionOfRiskStudentId] ?? {}), [key]: sig },
+      [assumptionOfRiskStudentId]: {
+        ...(prev[assumptionOfRiskStudentId] ?? {}),
+        [key]: sig,
+      },
     }));
   };
 
@@ -691,7 +762,10 @@ export default function ChildTabs({
     const key = `${sig.contract_id}-${sig.section_id}`;
     setLocalSigs((prev) => ({
       ...prev,
-      [authorizedPickupStudentId]: { ...(prev[authorizedPickupStudentId] ?? {}), [key]: sig },
+      [authorizedPickupStudentId]: {
+        ...(prev[authorizedPickupStudentId] ?? {}),
+        [key]: sig,
+      },
     }));
   };
 
@@ -732,7 +806,10 @@ export default function ChildTabs({
   };
 
   const handleRegistrationFeePaid = () => {
-    setLocalRegistrationFeePaid((prev) => ({ ...prev, [activeStudentId]: true }));
+    setLocalRegistrationFeePaid((prev) => ({
+      ...prev,
+      [activeStudentId]: true,
+    }));
   };
 
   const checklist = (
@@ -810,7 +887,10 @@ export default function ChildTabs({
           app={apps.find((a) => a.student_id === medicationPlanStudentId)!}
           existingSignatures={localSigs[medicationPlanStudentId] ?? {}}
           existingPlan={
-            localMedicationPlan[medicationPlanStudentId] ?? { plan: null, medications: [] }
+            localMedicationPlan[medicationPlanStudentId] ?? {
+              plan: null,
+              medications: [],
+            }
           }
           onSignaturesSaved={handleSignaturesSaved}
           onPlanSaved={handleMedicationPlanSaved}
@@ -823,8 +903,10 @@ export default function ChildTabs({
           onClose={handlePhotoReleaseClose}
           studentId={photoReleaseStudentId}
           studentName={
-            apps.find((a) => a.student_id === photoReleaseStudentId)?.preferred_name ??
-            apps.find((a) => a.student_id === photoReleaseStudentId)?.child_legal_name ??
+            apps.find((a) => a.student_id === photoReleaseStudentId)
+              ?.preferred_name ??
+            apps.find((a) => a.student_id === photoReleaseStudentId)
+              ?.child_legal_name ??
             "Student"
           }
           parentId={parentId}
@@ -860,7 +942,10 @@ export default function ChildTabs({
           signatures={localSigs[authorizedPickupStudentId] ?? {}}
           onSectionSaved={handleAuthorizedPickupSectionSaved}
           existingPlan={
-            localAuthorizedPickup[authorizedPickupStudentId] ?? { plan: null, persons: [] }
+            localAuthorizedPickup[authorizedPickupStudentId] ?? {
+              plan: null,
+              persons: [],
+            }
           }
           onPlanSaved={handleAuthorizedPickupPlanSaved}
         />
@@ -873,8 +958,10 @@ export default function ChildTabs({
           parentId={parentId}
           studentId={immunizationStudentId}
           studentName={
-            apps.find((a) => a.student_id === immunizationStudentId)?.preferred_name ??
-            apps.find((a) => a.student_id === immunizationStudentId)?.child_legal_name ??
+            apps.find((a) => a.student_id === immunizationStudentId)
+              ?.preferred_name ??
+            apps.find((a) => a.student_id === immunizationStudentId)
+              ?.child_legal_name ??
             "Student"
           }
           onUploadComplete={handleImmunizationUploadComplete}

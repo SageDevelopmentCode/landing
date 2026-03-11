@@ -9,7 +9,10 @@ import type {
   SignatureMap,
   EnrollmentSignature,
 } from "@/app/types/enrollment-signatures";
-import { CONTRACT_4_ID, CONTRACT_4_TOTAL_SECTIONS } from "@/app/types/enrollment-signatures";
+import {
+  CONTRACT_4_ID,
+  CONTRACT_4_TOTAL_SECTIONS,
+} from "@/app/types/enrollment-signatures";
 import SectionSignatureBlock from "./SectionSignatureBlock";
 import { saveMedicationPlan } from "@/app/actions/saveMedicationPlan";
 import type { MedicationEntry } from "@/app/actions/saveMedicationPlan";
@@ -139,7 +142,10 @@ interface MedicationPlanModalProps {
   parentName: string;
   app: Application;
   existingSignatures: SignatureMap;
-  existingPlan: { plan: StudentMedicationPlan | null; medications: StudentMedication[] };
+  existingPlan: {
+    plan: StudentMedicationPlan | null;
+    medications: StudentMedication[];
+  };
   onSignaturesSaved: (updated: SignatureMap) => void;
   onPlanSaved: (plan: StudentMedicationPlan) => void;
 }
@@ -156,13 +162,13 @@ export default function MedicationPlanModal({
   onPlanSaved,
 }: MedicationPlanModalProps) {
   const [medications, setMedications] = useState<MedicationEntry[]>(() =>
-    initMedications(existingPlan.medications)
+    initMedications(existingPlan.medications),
   );
   const [emergencyProcedure, setEmergencyProcedure] = useState(
-    existingPlan.plan?.emergency_procedure ?? ""
+    existingPlan.plan?.emergency_procedure ?? "",
   );
   const [specialInstructions, setSpecialInstructions] = useState(
-    existingPlan.plan?.special_instructions ?? ""
+    existingPlan.plan?.special_instructions ?? "",
   );
   const [planReady, setPlanReady] = useState(!!existingPlan.plan);
   const [localSigs, setLocalSigs] = useState<SignatureMap>(existingSignatures);
@@ -177,9 +183,13 @@ export default function MedicationPlanModal({
     };
   }, []);
 
-  const updateMedication = (index: number, field: keyof MedicationEntry, value: string | boolean) => {
+  const updateMedication = (
+    index: number,
+    field: keyof MedicationEntry,
+    value: string | boolean,
+  ) => {
     setMedications((prev) =>
-      prev.map((m, i) => (i === index ? { ...m, [field]: value } : m))
+      prev.map((m, i) => (i === index ? { ...m, [field]: value } : m)),
     );
   };
 
@@ -225,11 +235,12 @@ export default function MedicationPlanModal({
 
   const signedCount = Array.from(
     { length: CONTRACT_4_TOTAL_SECTIONS },
-    (_, i) => i + 1
+    (_, i) => i + 1,
   ).filter((i) => !!localSigs[`${CONTRACT_4_ID}-${i}`]).length;
 
   const dobFormatted =
-    [app.dob_month, app.dob_day, app.dob_year].filter(Boolean).join("/") || null;
+    [app.dob_month, app.dob_day, app.dob_year].filter(Boolean).join("/") ||
+    null;
 
   return (
     <AnimatePresence>
@@ -279,10 +290,19 @@ export default function MedicationPlanModal({
                 <div className="flex flex-col gap-4">
                   <SectionHeader number="1" title="Student Information" />
                   <div className="grid grid-cols-2 gap-4 bg-gray-50 rounded-xl px-4 py-4">
-                    <ReadOnlyField label="Full Legal Name" value={app.child_legal_name} />
+                    <ReadOnlyField
+                      label="Full Legal Name"
+                      value={app.child_legal_name}
+                    />
                     <ReadOnlyField label="Date of Birth" value={dobFormatted} />
-                    <ReadOnlyField label="Grade Level" value={app.child_grade} />
-                    <ReadOnlyField label="Preferred Name" value={app.preferred_name} />
+                    <ReadOnlyField
+                      label="Grade Level"
+                      value={app.child_grade}
+                    />
+                    <ReadOnlyField
+                      label="Preferred Name"
+                      value={app.preferred_name}
+                    />
                   </div>
                 </div>
 
@@ -294,8 +314,14 @@ export default function MedicationPlanModal({
                       Primary Guardian
                     </p>
                     <div className="grid grid-cols-2 gap-4 bg-gray-50 rounded-xl px-4 py-4">
-                      <ReadOnlyField label="Full Name" value={app.g1_full_name} />
-                      <ReadOnlyField label="Mobile Phone" value={app.g1_cell_phone} />
+                      <ReadOnlyField
+                        label="Full Name"
+                        value={app.g1_full_name}
+                      />
+                      <ReadOnlyField
+                        label="Mobile Phone"
+                        value={app.g1_cell_phone}
+                      />
                     </div>
                     {app.g2_full_name && (
                       <>
@@ -303,8 +329,14 @@ export default function MedicationPlanModal({
                           Secondary Guardian
                         </p>
                         <div className="grid grid-cols-2 gap-4 bg-gray-50 rounded-xl px-4 py-4">
-                          <ReadOnlyField label="Full Name" value={app.g2_full_name} />
-                          <ReadOnlyField label="Mobile Phone" value={app.g2_cell_phone} />
+                          <ReadOnlyField
+                            label="Full Name"
+                            value={app.g2_full_name}
+                          />
+                          <ReadOnlyField
+                            label="Mobile Phone"
+                            value={app.g2_cell_phone}
+                          />
                         </div>
                       </>
                     )}
@@ -313,13 +345,18 @@ export default function MedicationPlanModal({
 
                 {/* Section 3: Emergency Contact */}
                 <div className="flex flex-col gap-4">
-                  <SectionHeader number="3" title="Emergency Contact (other than parent)" />
+                  <SectionHeader
+                    number="3"
+                    title="Emergency Contact (other than parent)"
+                  />
                   <div className="bg-gray-50 rounded-xl px-4 py-4">
                     <p className="text-xs text-gray-500 font-body">
-                      In case of emergency, school staff will contact the parent/guardian listed above first.
-                      If unreachable, staff will contact the emergency contact listed on your student&apos;s
-                      health form. To update emergency contacts, please edit the Emergency Contact, Health,
-                      and Immunization Form.
+                      In case of emergency, school staff will contact the
+                      parent/guardian listed above first. If unreachable, staff
+                      will contact the emergency contact listed on your
+                      student&apos;s health form. To update emergency contacts,
+                      please edit the Emergency Contact, Health, and
+                      Immunization Form.
                     </p>
                   </div>
                 </div>
@@ -328,8 +365,9 @@ export default function MedicationPlanModal({
                 <div className="flex flex-col gap-4">
                   <SectionHeader number="4" title="Medication Information" />
                   <p className="text-sm text-gray-600 font-body leading-relaxed">
-                    List all medications your child may require while at school. Include both
-                    daily medications and emergency-use medications.
+                    List all medications your child may require while at school.
+                    Include both daily medications and emergency-use
+                    medications.
                   </p>
 
                   <div className="flex flex-col gap-6">
@@ -358,39 +396,53 @@ export default function MedicationPlanModal({
                           <FormField
                             label="Medication Name"
                             value={med.medicationName}
-                            onChange={(v) => updateMedication(index, "medicationName", v)}
+                            onChange={(v) =>
+                              updateMedication(index, "medicationName", v)
+                            }
                             placeholder="e.g., EpiPen, Albuterol"
                           />
                           <FormField
                             label="Condition / Reason"
                             value={med.conditionReason}
-                            onChange={(v) => updateMedication(index, "conditionReason", v)}
+                            onChange={(v) =>
+                              updateMedication(index, "conditionReason", v)
+                            }
                             placeholder="e.g., Severe allergy, Asthma"
                           />
                           <FormField
                             label="Dosage & Frequency"
                             value={med.dosageFrequency}
-                            onChange={(v) => updateMedication(index, "dosageFrequency", v)}
+                            onChange={(v) =>
+                              updateMedication(index, "dosageFrequency", v)
+                            }
                             placeholder="e.g., 0.3mg as needed"
                           />
                           <FormField
                             label="Prescribing Physician"
                             value={med.physicianName}
-                            onChange={(v) => updateMedication(index, "physicianName", v)}
+                            onChange={(v) =>
+                              updateMedication(index, "physicianName", v)
+                            }
                             placeholder="Dr. Name"
                           />
                           <FormField
                             label="Physician Phone"
                             value={med.physicianPhone}
                             onChange={(v) =>
-                              updateMedication(index, "physicianPhone", formatPhone(v))
+                              updateMedication(
+                                index,
+                                "physicianPhone",
+                                formatPhone(v),
+                              )
                             }
                             placeholder="(555) 000-0000"
                           />
                           <FormField
                             label="Expiration Date"
                             value={med.expirationDate}
-                            onChange={(v) => updateMedication(index, "expirationDate", v)}
+                            onChange={(v) =>
+                              updateMedication(index, "expirationDate", v)
+                            }
                             placeholder="MM/YYYY"
                           />
                         </div>
@@ -401,22 +453,34 @@ export default function MedicationPlanModal({
                               type="checkbox"
                               checked={med.isDaily}
                               onChange={(e) =>
-                                updateMedication(index, "isDaily", e.target.checked)
+                                updateMedication(
+                                  index,
+                                  "isDaily",
+                                  e.target.checked,
+                                )
                               }
                               className="w-4 h-4 rounded border-gray-300 accent-primary"
                             />
-                            <span className="text-xs font-body text-gray-600">Daily medication</span>
+                            <span className="text-xs font-body text-gray-600">
+                              Daily medication
+                            </span>
                           </label>
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input
                               type="checkbox"
                               checked={med.isEmergencyOnly}
                               onChange={(e) =>
-                                updateMedication(index, "isEmergencyOnly", e.target.checked)
+                                updateMedication(
+                                  index,
+                                  "isEmergencyOnly",
+                                  e.target.checked,
+                                )
                               }
                               className="w-4 h-4 rounded border-gray-300 accent-primary"
                             />
-                            <span className="text-xs font-body text-gray-600">Emergency use only</span>
+                            <span className="text-xs font-body text-gray-600">
+                              Emergency use only
+                            </span>
                           </label>
                         </div>
                       </div>
@@ -458,7 +522,9 @@ export default function MedicationPlanModal({
                 {/* Save Button */}
                 <div className="flex flex-col gap-3">
                   {saveError && (
-                    <p className="text-xs text-red-500 font-body">{saveError}</p>
+                    <p className="text-xs text-red-500 font-body">
+                      {saveError}
+                    </p>
                   )}
                   {saveSuccess && (
                     <p className="text-xs text-emerald-600 font-body">
@@ -479,22 +545,26 @@ export default function MedicationPlanModal({
                 <div className="flex flex-col gap-4">
                   <SectionHeader number="7" title="Authorization and Release" />
                   <p className="text-sm text-gray-600 font-body leading-relaxed">
-                    I hereby authorize Sage Field Academy staff to administer the medication(s)
-                    listed above to my child in accordance with the instructions provided. I
-                    understand that school staff are not licensed medical professionals and will
-                    follow the instructions given to the best of their ability. I release Sage
-                    Field Academy and its staff from liability for any adverse reactions that
-                    occur when medication is administered as directed.
+                    I hereby authorize Sage Field Private School staff to
+                    administer the medication(s) listed above to my child in
+                    accordance with the instructions provided. I understand that
+                    school staff are not licensed medical professionals and will
+                    follow the instructions given to the best of their ability.
+                    I release Sage Field Private School and its staff from
+                    liability for any adverse reactions that occur when
+                    medication is administered as directed.
                   </p>
                   <p className="text-sm text-gray-600 font-body leading-relaxed">
-                    I agree to provide medication in its original, clearly labeled container and
-                    to update this form whenever medication information changes.
+                    I agree to provide medication in its original, clearly
+                    labeled container and to update this form whenever
+                    medication information changes.
                   </p>
 
                   {!planReady ? (
                     <div className="mt-4 border border-dashed border-amber-200 rounded-xl px-4 py-3 bg-amber-50">
                       <p className="text-xs text-amber-700 font-body">
-                        Complete and save the medication plan above before signing this section.
+                        Complete and save the medication plan above before
+                        signing this section.
                       </p>
                     </div>
                   ) : (
