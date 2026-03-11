@@ -167,7 +167,7 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="en">
+    <html lang="en" style={{ background: "#FFF9F5" }}>
       <head>
         <script
           type="application/ld+json"

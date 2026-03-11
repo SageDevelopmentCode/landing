@@ -359,10 +359,23 @@ export default function ApplyPage() {
                 {activeTab === "summer" && (
                   <div className="mb-10 p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
                     <p className="text-base text-gray-600 font-body leading-relaxed mb-4">
-                      Summer at Sage Field is a season of sunshine, discovery, and play! Each day is filled with outdoor adventures, daily water play, music, art (both guided and free exploration), and ever-changing hands-on activities that spark imagination and joy. We focus on creating a space where children can explore, make friends, and simply enjoy being kids.
+                      Summer at Sage Field is a season of sunshine, discovery,
+                      and play! Each day is filled with outdoor adventures,
+                      daily water play, music, art (both guided and free
+                      exploration), and ever-changing hands-on activities that
+                      spark imagination and joy. We focus on creating a space
+                      where children can explore, make friends, and simply enjoy
+                      being kids.
                     </p>
                     <p className="text-base text-gray-600 font-body leading-relaxed">
-                      Amid all the fun, we also keep minds curious and confident with short, engaging academic blocks—15 minutes each of reading and English, math, and writing. Our teachers individualize learning for every child, meeting them right where they are and turning lessons into exciting, achievable challenges. This gentle rhythm keeps learning meaningful and fun while helping students transition smoothly into the new school year.
+                      Amid all the fun, we also keep minds curious and confident
+                      with short, engaging academic blocks—15 minutes each of
+                      reading and English, math, and writing. Our teachers
+                      individualize learning for every child, meeting them right
+                      where they are and turning lessons into exciting,
+                      achievable challenges. This gentle rhythm keeps learning
+                      meaningful and fun while helping students transition
+                      smoothly into the new school year.
                     </p>
                   </div>
                 )}
@@ -583,11 +596,9 @@ export default function ApplyPage() {
                     <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6">
                       Sample Curriculum
                     </span>
-
                     <h2 className="text-2xl md:text-3xl font-bold text-black font-heading mb-6">
                       A Day in the Life
                     </h2>
-
                     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                       {/* Active Adventures */}
                       <p className="text-sm font-bold text-gray-500 font-heading uppercase tracking-wide mb-4">
@@ -684,7 +695,6 @@ export default function ApplyPage() {
                         ))}
                       </div>
                     </div>
-
                     {/* Weekly Breakdown */}
                     <div className="mt-8">
                       <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6">
@@ -701,20 +711,29 @@ export default function ApplyPage() {
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
-                            transition={{ duration: 0.4, delay: 0.05 * i, ease: "easeOut" }}
+                            transition={{
+                              duration: 0.4,
+                              delay: 0.05 * i,
+                              ease: "easeOut",
+                            }}
                           >
                             <div className="flex items-center gap-2 mb-2">
                               <span className="text-xs font-bold text-white bg-primary rounded-full px-2.5 py-0.5 font-body">
                                 Week {w.week}
                               </span>
-                              <span className="text-xs text-gray-400 font-body">{w.dates}</span>
+                              <span className="text-xs text-gray-400 font-body">
+                                {w.dates}
+                              </span>
                             </div>
                             <h3 className="text-sm font-bold text-gray-800 font-heading mb-2 leading-snug">
                               {w.theme}
                             </h3>
                             <ul className="space-y-1">
                               {w.highlights.map((h) => (
-                                <li key={h} className="flex items-start gap-1.5 text-xs text-gray-600 font-body">
+                                <li
+                                  key={h}
+                                  className="flex items-start gap-1.5 text-xs text-gray-600 font-body"
+                                >
                                   <span className="text-primary mt-0.5">•</span>
                                   <span>{h}</span>
                                 </li>
@@ -743,7 +762,8 @@ export default function ApplyPage() {
                       Have any questions?
                     </h2>
                     <p className="text-gray-500 font-body text-sm mb-6 max-w-md mx-auto">
-                      We&apos;d love to hear from you. Reach out directly or send us a message.
+                      We&apos;d love to hear from you. Reach out directly or
+                      send us a message.
                     </p>
                     <a
                       href="mailto:sabrina@sagefield.co"
@@ -805,7 +825,10 @@ export default function ApplyPage() {
 
       <Footer />
 
-      <ContactDialog isOpen={contactOpen} onClose={() => setContactOpen(false)} />
+      <ContactDialog
+        isOpen={contactOpen}
+        onClose={() => setContactOpen(false)}
+      />
     </div>
   );
 }
