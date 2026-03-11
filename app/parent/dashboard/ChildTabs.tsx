@@ -31,6 +31,8 @@ import {
   CONTRACT_4_TOTAL_SECTIONS,
   CONTRACT_5_ID,
   CONTRACT_5_TOTAL_SECTIONS,
+  CONTRACT_6_ID,
+  CONTRACT_6_TOTAL_SECTIONS,
   isContractComplete,
 } from "@/app/types/enrollment-signatures";
 import type { EnrollmentSignature } from "@/app/types/enrollment-signatures";
@@ -39,6 +41,7 @@ import HealthFormModal from "./HealthFormModal";
 import MedicationPlanModal from "./MedicationPlanModal";
 import ImmunizationUploadModal from "./ImmunizationUploadModal";
 import PhotoReleaseModal from "./PhotoReleaseModal";
+import AssumptionOfRiskModal from "./AssumptionOfRiskModal";
 
 type StudentHealthInfo = Database["parent_app"]["Tables"]["student_health_info"]["Row"];
 type StudentMedicationPlan = Database["parent_app"]["Tables"]["student_medication_plan"]["Row"];
@@ -139,6 +142,8 @@ const checklistItems: ChecklistItem[] = [
     iconColor: "text-amber-500",
     required: true,
     isContract: true,
+    contractId: CONTRACT_6_ID,
+    contractSections: CONTRACT_6_TOTAL_SECTIONS,
   },
   {
     id: 8,
@@ -361,6 +366,8 @@ export default function ChildTabs({
   const [localConsent, setLocalConsent] = useState<Record<string, "FULL" | "LIMITED" | "NO">>(consentByStudent);
   const [photoReleaseOpen, setPhotoReleaseOpen] = useState(false);
   const [photoReleaseStudentId, setPhotoReleaseStudentId] = useState<string | null>(null);
+  const [assumptionOfRiskOpen, setAssumptionOfRiskOpen] = useState(false);
+  const [assumptionOfRiskStudentId, setAssumptionOfRiskStudentId] = useState<string | null>(null);
 
   if (apps.length === 0) {
     return (
@@ -383,6 +390,9 @@ export default function ChildTabs({
     } else if (contractId === CONTRACT_5_ID) {
       setPhotoReleaseStudentId(activeStudentId);
       setPhotoReleaseOpen(true);
+    } else if (contractId === CONTRACT_6_ID) {
+      setAssumptionOfRiskStudentId(activeStudentId);
+      setAssumptionOfRiskOpen(true);
     } else {
       setOpenContractId(contractId);
       setOpenStudentId(activeStudentId);
@@ -436,6 +446,20 @@ export default function ChildTabs({
   const handlePhotoReleaseClose = () => {
     setPhotoReleaseOpen(false);
     setPhotoReleaseStudentId(null);
+  };
+
+  const handleAssumptionOfRiskClose = () => {
+    setAssumptionOfRiskOpen(false);
+    setAssumptionOfRiskStudentId(null);
+  };
+
+  const handleAssumptionOfRiskSectionSaved = (sig: EnrollmentSignature) => {
+    if (!assumptionOfRiskStudentId) return;
+    const key = `${sig.contract_id}-${sig.section_id}`;
+    setLocalSigs((prev) => ({
+      ...prev,
+      [assumptionOfRiskStudentId]: { ...(prev[assumptionOfRiskStudentId] ?? {}), [key]: sig },
+    }));
   };
 
   const handleHealthInfoSaved = (info: StudentHealthInfo) => {
@@ -554,6 +578,19 @@ export default function ChildTabs({
           onSectionSaved={handlePhotoReleaseSectionSaved}
           existingConsent={localConsent[photoReleaseStudentId] ?? null}
           onConsentSaved={handleConsentSaved}
+        />
+      )}
+
+      {assumptionOfRiskOpen && assumptionOfRiskStudentId !== null && (
+        <AssumptionOfRiskModal
+          open
+          onClose={handleAssumptionOfRiskClose}
+          studentId={assumptionOfRiskStudentId}
+          parentId={parentId}
+          parentName={parentName}
+          app={apps.find((a) => a.student_id === assumptionOfRiskStudentId)!}
+          signatures={localSigs[assumptionOfRiskStudentId] ?? {}}
+          onSectionSaved={handleAssumptionOfRiskSectionSaved}
         />
       )}
 
