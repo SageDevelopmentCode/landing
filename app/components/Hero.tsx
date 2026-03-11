@@ -42,7 +42,7 @@ export default function Hero() {
           </motion.div>
 
           {/* Right: Description and Buttons */}
-          <div className="text-center md:text-right space-y-6 max-w-2xl md:ml-auto">
+          <div className="text-center md:text-right flex flex-col justify-end space-y-6 max-w-2xl md:ml-auto">
             <motion.p
               className="text-base md:text-lg text-white font-semibold drop-shadow-md max-w-2xl font-body"
               initial={{ opacity: 0, y: 30 }}
