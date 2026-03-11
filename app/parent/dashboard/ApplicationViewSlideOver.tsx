@@ -98,10 +98,10 @@ export default function ApplicationViewSlideOver({
             {field("Program", formatProgram(app.program))}
             {field("Legal Name", app.child_legal_name)}
             {field("Preferred Name", app.preferred_name)}
-            {field("Date of Birth", app.child_dob)}
-            {field("Age", app.child_age)}
+            {field("Date of Birth", app.dob_month && app.dob_day && app.dob_year ? `${app.dob_month}/${app.dob_day}/${app.dob_year}` : null)}
+            {field("Age", app.child_age != null ? String(app.child_age) : null)}
             {field("Grade", app.child_grade)}
-            {field("Address", app.address)}
+            {field("Address", [app.address_street, app.address_city, app.address_state, app.address_zip].filter(Boolean).join(", ") || null)}
             {field("Household Phone", app.household_phone)}
             {field("Homeschooled", app.is_homeschooled)}
             {field("Previous Schools", app.previous_schools)}
@@ -133,9 +133,9 @@ export default function ApplicationViewSlideOver({
           </Section>
 
           <Section title="Health & Support">
-            {field("Medical Conditions", app.medical_conditions)}
-            {field("Allergies", app.allergies)}
-            {field("Emergency Medications", app.emergency_medications)}
+            {field("Medical Conditions", app.medical_conditions_description)}
+            {field("Allergies", app.allergies_description)}
+            {field("Emergency Medications", app.emergency_medications_description)}
             {field("History Flags", app.history_flags)}
             {field("Needs Aide", app.needs_aide)}
           </Section>
