@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from "react";
 import {
   signInWithEmail,
-  signInWithMagicLink,
   signInWithGoogle,
 } from "@/app/actions/auth";
 import Link from "next/link";
@@ -21,9 +20,6 @@ const slides = [
 ];
 
 export default function LoginForm() {
-  const [authMode, setAuthMode] = useState<"password" | "magic-link">(
-    "password",
-  );
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -61,22 +57,6 @@ export default function LoginForm() {
     const result = await signInWithEmail(formData);
     if (result?.error) {
       setError(result.error);
-      setLoading(false);
-    }
-  }
-
-  async function handleMagicLinkSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setMessage(null);
-    const formData = new FormData(e.currentTarget);
-    const result = await signInWithMagicLink(formData);
-    if (result?.error) {
-      setError(result.error);
-      setLoading(false);
-    } else if (result?.message) {
-      setMessage(result.message);
       setLoading(false);
     }
   }
@@ -164,144 +144,55 @@ export default function LoginForm() {
             </motion.div>
           )}
 
-          {/* Tab switcher */}
-          <div
-            className="flex gap-2 p-1.5 mb-6 rounded-xl"
-            style={{ backgroundColor: "#F6F1E8" }}
+          {/* Password form */}
+          <form
+            onSubmit={handleEmailPasswordSubmit}
+            className="flex flex-col gap-4"
           >
-            <button
-              type="button"
-              onClick={() => setAuthMode("password")}
-              className="flex-1 py-3 px-4 font-medium font-body transition-all duration-200 rounded-xl"
-              style={{
-                backgroundColor:
-                  authMode === "password" ? "white" : "transparent",
-                color: authMode === "password" ? "#5E7C68" : "#6B6B6B",
-                boxShadow:
-                  authMode === "password"
-                    ? "0 2px 8px rgba(94, 124, 104, 0.08)"
-                    : "none",
-              }}
-            >
-              Password
-            </button>
-            <button
-              type="button"
-              onClick={() => setAuthMode("magic-link")}
-              className="flex-1 py-3 px-4 font-medium font-body transition-all duration-200 rounded-xl"
-              style={{
-                backgroundColor:
-                  authMode === "magic-link" ? "white" : "transparent",
-                color: authMode === "magic-link" ? "#5E7C68" : "#6B6B6B",
-                boxShadow:
-                  authMode === "magic-link"
-                    ? "0 2px 8px rgba(94, 124, 104, 0.08)"
-                    : "none",
-              }}
-            >
-              Magic Link
-            </button>
-          </div>
-
-          {/* Forms */}
-          <AnimatePresence mode="wait">
-            {authMode === "password" ? (
-              <motion.form
-                key="password"
-                onSubmit={handleEmailPasswordSubmit}
-                className="flex flex-col gap-4"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.25 }}
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-sm font-semibold text-gray-700 font-body mb-1.5"
               >
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-semibold text-gray-700 font-body mb-1.5"
-                  >
-                    Email address
-                  </label>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    placeholder="you@example.com"
-                    className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="password"
-                    className="block text-sm font-semibold text-gray-700 font-body mb-1.5"
-                  >
-                    Password
-                  </label>
-                  <input
-                    id="password"
-                    name="password"
-                    type="password"
-                    autoComplete="current-password"
-                    required
-                    placeholder="Enter your password"
-                    className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full flex justify-center items-center gap-2 py-4 px-4 bg-primary text-white font-semibold font-body rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg cursor-pointer mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {loading && <Spinner />}
-                  {loading ? "Signing in..." : "Sign in with Email"}
-                </button>
-              </motion.form>
-            ) : (
-              <motion.form
-                key="magic-link"
-                onSubmit={handleMagicLinkSubmit}
-                className="flex flex-col gap-4"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.25 }}
+                Email address
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                placeholder="you@example.com"
+                className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="password"
+                className="block text-sm font-semibold text-gray-700 font-body mb-1.5"
               >
-                <div>
-                  <label
-                    htmlFor="email-magic"
-                    className="block text-sm font-semibold text-gray-700 font-body mb-1.5"
-                  >
-                    Email address
-                  </label>
-                  <input
-                    id="email-magic"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    placeholder="you@example.com"
-                    className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
-                  />
-                  <p className="mt-2 text-xs text-gray-400 font-body">
-                    We&apos;ll send you a magic link to sign in without a
-                    password
-                  </p>
-                </div>
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                placeholder="Enter your password"
+                className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
+              />
+            </div>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full flex justify-center items-center gap-2 py-4 px-4 bg-primary text-white font-semibold font-body rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg cursor-pointer mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {loading && <Spinner />}
-                  {loading ? "Sending..." : "Send Magic Link"}
-                </button>
-              </motion.form>
-            )}
-          </AnimatePresence>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex justify-center items-center gap-2 py-4 px-4 bg-primary text-white font-semibold font-body rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg cursor-pointer mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {loading && <Spinner />}
+              {loading ? "Signing in..." : "Sign in with Email"}
+            </button>
+          </form>
 
           {/* Divider
           <div className="relative my-6">
