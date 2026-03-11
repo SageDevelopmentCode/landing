@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   FileText,
@@ -358,6 +358,13 @@ function RegistrationFeeModal({
   );
 }
 
+function getProgramLabel(program: string | null): string {
+  if (program === "summer_26") return "Summer 2026";
+  if (program === "school_year_26_27") return "School Year 2026–27";
+  if (program === "both") return "Summer 2026 + School Year 2026–27";
+  return "the program";
+}
+
 function Checklist({
   childName,
   signatureMap,
@@ -367,6 +374,7 @@ function Checklist({
   onViewApplication,
   onRegistrationFeeClick,
   registrationFeePaid,
+  program,
 }: {
   childName: string;
   signatureMap: SignatureMap;
@@ -376,6 +384,7 @@ function Checklist({
   onViewApplication: () => void;
   onRegistrationFeeClick: () => void;
   registrationFeePaid: boolean;
+  program: string | null;
 }) {
   const completedCount = checklistItems.filter((item) => {
     if (item.id === 5) return immunizationFileCount > 0;
@@ -390,10 +399,95 @@ function Checklist({
     return false;
   }).length;
 
+  const requiredItems = checklistItems.filter((i) => i.required);
+  const isEnrollmentComplete = requiredItems.every((item) => {
+    if (item.id === 5) return immunizationFileCount > 0;
+    if (item.id === 9) return registrationFeePaid;
+    if (item.contractId && item.contractSections)
+      return isContractComplete(
+        signatureMap,
+        item.contractId,
+        item.contractSections,
+      );
+    return false;
+  });
+
+  const programLabel = getProgramLabel(program);
   const progressPercent = Math.round((completedCount / totalCount) * 100);
+
+  const firedRef = useRef(false);
+  useEffect(() => {
+    if (!isEnrollmentComplete || firedRef.current) return;
+    firedRef.current = true;
+
+    const fire = async () => {
+      const confetti = (await import("canvas-confetti")).default;
+      const colors = [
+        "#ff595e",
+        "#ffca3a",
+        "#6a4c93",
+        "#1982c4",
+        "#8ac926",
+        "#ff924c",
+        "#ffffff",
+        "#ff6b9d",
+      ];
+
+      const burst = (opts: Parameters<typeof confetti>[0]) =>
+        confetti({ particleCount: 60, spread: 70, colors, ...opts });
+
+      burst({ origin: { x: 0.3, y: 0.55 } });
+      setTimeout(() => burst({ origin: { x: 0.7, y: 0.55 } }), 180);
+      setTimeout(
+        () =>
+          burst({ origin: { x: 0.5, y: 0.4 }, particleCount: 80, spread: 90 }),
+        360,
+      );
+    };
+
+    fire();
+  }, [isEnrollmentComplete]);
 
   return (
     <div>
+      {isEnrollmentComplete && (
+        <motion.div
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="mb-5 bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-5 shadow-sm"
+        >
+          <div className="flex items-start gap-3">
+            <span className="text-2xl leading-none mt-0.5">🎉</span>
+            <div>
+              <h3 className="text-base font-bold font-heading text-emerald-800 mb-0.5">
+                Enrollment Confirmed!
+              </h3>
+              <p className="text-sm font-semibold font-body text-emerald-700 mb-2">
+                {childName} is confirmed and received for the{" "}
+                <span className="font-bold">{programLabel}</span> at Sage Field
+                Private School. ✨
+              </p>
+              <p className="text-sm font-body text-emerald-700/90 mb-2">
+                Your child&apos;s spot is now secured and we cannot wait to
+                welcome them. Our team will be in touch soon with more details
+                about what to expect next.
+              </p>
+              <p className="text-sm font-body text-emerald-700/80">
+                If you have any questions in the meantime, please don&apos;t
+                hesitate to reach out at{" "}
+                <a
+                  href="mailto:sabrina@sagefield.co"
+                  className="font-semibold underline underline-offset-2 hover:text-emerald-900 transition-colors"
+                >
+                  sabrina@sagefield.co
+                </a>
+                .
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      )}
       <div className="mb-5 bg-white border border-gray-200 rounded-2xl px-5 py-4 shadow-sm">
         <div className="flex items-start justify-between gap-4 mb-3">
           <div>
@@ -422,7 +516,7 @@ function Checklist({
           />
         </div>
         <p className="mt-2 text-xs text-gray-400 font-body">
-          {completedCount === totalCount
+          {isEnrollmentComplete
             ? "All steps complete — enrollment is finalized!"
             : `${totalCount - completedCount} step${totalCount - completedCount !== 1 ? "s" : ""} remaining`}
         </p>
@@ -822,6 +916,7 @@ export default function ChildTabs({
       onViewApplication={() => setAppViewOpen(true)}
       onRegistrationFeeClick={handleRegistrationFeeClick}
       registrationFeePaid={localRegistrationFeePaid[activeStudentId] ?? false}
+      program={activeApp.program ?? null}
     />
   );
 
