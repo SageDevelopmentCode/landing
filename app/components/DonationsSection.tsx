@@ -125,7 +125,7 @@ const DonationsSection = () => {
                           Save 10%
                         </div>
                         <p className="text-xs font-semibold uppercase tracking-wide text-white/80 font-body mb-3">
-                          Full Summer · 13 Weeks
+                          Full Summer · 12 Weeks
                         </p>
                         <div className="space-y-3">
                           <div>

@@ -234,7 +234,7 @@ export default function Summer2026Page() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
           >
-            May 26 – August 13, 2026 · 13 Weeks · Mon–Thu
+            May 26 – August 13, 2026 · 12 Weeks · Mon–Thu
           </motion.p>
         </div>
       </section>
@@ -418,8 +418,8 @@ export default function Summer2026Page() {
               English, math, and writing. Our teachers individualize learning
               for every child, meeting them right where they are and turning
               lessons into exciting, achievable challenges. This gentle rhythm
-              keeps learning meaningful and fun while helping students transition
-              smoothly into the new school year.
+              keeps learning meaningful and fun while helping students
+              transition smoothly into the new school year.
             </p>
           </motion.div>
         </div>
