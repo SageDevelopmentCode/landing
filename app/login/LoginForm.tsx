@@ -5,6 +5,7 @@ import {
   signInWithEmail,
   signInWithGoogle,
 } from "@/app/actions/auth";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -20,6 +21,7 @@ const slides = [
 ];
 
 export default function LoginForm() {
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -58,6 +60,8 @@ export default function LoginForm() {
     if (result?.error) {
       setError(result.error);
       setLoading(false);
+    } else if (result?.redirectTo) {
+      router.push(result.redirectTo);
     }
   }
 

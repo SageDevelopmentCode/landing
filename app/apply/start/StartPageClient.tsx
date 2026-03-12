@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -246,6 +247,7 @@ function CreateMode({ setMode, onSwitchToLogin }: {
   setMode: (m: Mode) => void
   onSwitchToLogin: (email: string) => void
 }) {
+  const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -274,8 +276,9 @@ function CreateMode({ setMode, onSwitchToLogin }: {
     } else if (result?.error) {
       setError(result.error);
       setLoading(false);
+    } else if (result?.redirectTo) {
+      router.push(result.redirectTo);
     }
-    // On success, signUpParent calls redirect() server-side which navigates automatically
   };
 
   return (
@@ -413,6 +416,7 @@ function CreateMode({ setMode, onSwitchToLogin }: {
 
 /* ── Mode: Login ── */
 function LoginMode({ setMode, defaultEmail = "" }: { setMode: (m: Mode) => void; defaultEmail?: string }) {
+  const router = useRouter();
   const [email, setEmail] = useState(defaultEmail);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -428,8 +432,9 @@ function LoginMode({ setMode, defaultEmail = "" }: { setMode: (m: Mode) => void;
     if (result?.error) {
       setError(result.error);
       setLoading(false);
+    } else if (result?.redirectTo) {
+      router.push(result.redirectTo);
     }
-    // On success, loginParent calls redirect() server-side which navigates automatically
   };
 
   return (

@@ -9,6 +9,7 @@ import { LayoutDashboard, TrendingUp, Users, ClipboardList, DollarSign, Graduati
 import { colors, radius, shadows, spacing } from "../design-system";
 import { Tooltip } from "./Tooltip";
 import { Merriweather } from "next/font/google";
+import { signOut } from "@/app/actions/auth";
 
 const merriweather = Merriweather({
   weight: ["300", "400", "700", "900"],
@@ -57,11 +58,9 @@ const navItems: NavItem[] = [
 export function Sidebar({
   pendingApplications = 0,
   userEmail,
-  signOutAction,
 }: {
   pendingApplications?: number;
   userEmail?: string;
-  signOutAction?: (formData: FormData) => Promise<void>;
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -283,21 +282,19 @@ export function Sidebar({
                       {userEmail}
                     </p>
                   )}
-                  {signOutAction && (
-                    <form action={signOutAction}>
-                      <button
-                        type="submit"
-                        className="w-full text-left px-3 py-2 text-sm font-medium transition-all duration-200 rounded-lg hover:opacity-80 cursor-pointer"
-                        style={{
-                          color: colors.mistyForest,
-                          backgroundColor: colors.warmLinen,
-                          border: `1px solid ${colors.border}`,
-                        }}
-                      >
-                        Sign out
-                      </button>
-                    </form>
-                  )}
+                  <form action={signOut}>
+                    <button
+                      type="submit"
+                      className="w-full text-left px-3 py-2 text-sm font-medium transition-all duration-200 rounded-lg hover:opacity-80 cursor-pointer"
+                      style={{
+                        color: colors.mistyForest,
+                        backgroundColor: colors.warmLinen,
+                        border: `1px solid ${colors.border}`,
+                      }}
+                    >
+                      Sign out
+                    </button>
+                  </form>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -391,21 +388,19 @@ export function Sidebar({
                   {userEmail}
                 </p>
               )}
-              {signOutAction && (
-                <form action={signOutAction}>
-                  <button
-                    type="submit"
-                    className="w-full text-left px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-xl hover:opacity-80"
-                    style={{
-                      color: colors.mistyForest,
-                      backgroundColor: "white",
-                      border: `1px solid ${colors.border}`,
-                    }}
-                  >
-                    Sign out
-                  </button>
-                </form>
-              )}
+              <form action={signOut}>
+                <button
+                  type="submit"
+                  className="w-full text-left px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-xl hover:opacity-80"
+                  style={{
+                    color: colors.mistyForest,
+                    backgroundColor: "white",
+                    border: `1px solid ${colors.border}`,
+                  }}
+                >
+                  Sign out
+                </button>
+              </form>
             </div>
           </motion.aside>
         )}

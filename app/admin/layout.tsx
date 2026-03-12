@@ -88,7 +88,6 @@ export default async function AdminLayout({
       <Sidebar
         pendingApplications={pendingApplications ?? 0}
         userEmail={user.email}
-        signOutAction={signOut}
       />
       <main className="flex-1 px-3 sm:px-4 lg:px-6 w-full overflow-auto">
         {children}

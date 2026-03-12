@@ -27,10 +27,10 @@ export async function signInWithEmail(formData: FormData) {
     .single()
 
   if (adminUser?.role === 'parent') {
-    redirect('/apply/dashboard')
+    return { redirectTo: '/apply/dashboard' }
   }
 
-  redirect('/admin')
+  return { redirectTo: '/admin' }
 }
 
 export async function signUpWithEmail(formData: FormData) {

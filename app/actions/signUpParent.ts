@@ -1,6 +1,5 @@
 'use server'
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
-import { redirect } from 'next/navigation'
 import { sendDiscordNotification, createErrorEmbed, createParentSignupEmbed } from '@/app/lib/discord'
 
 export async function signUpParent(fullName: string, email: string, password: string) {
@@ -40,7 +39,7 @@ export async function signUpParent(fullName: string, email: string, password: st
     return { error: `Account setup failed: ${insertError.message}` }
   }
 
-  // 4. Notify Discord and redirect to step 1 (must be outside try/catch)
+  // 4. Notify Discord and return redirect URL
   void sendDiscordNotification(createParentSignupEmbed({ fullName, email })).catch(() => {})
-  redirect('/apply/step/1')
+  return { redirectTo: '/apply/step/1' }
 }
