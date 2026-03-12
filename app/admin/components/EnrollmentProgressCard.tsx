@@ -39,6 +39,7 @@ import { useState } from 'react'
 
 export type ApprovedApplication = {
   id: string
+  user_id: string
   student_id: string
   child_legal_name: string | null
   preferred_name: string | null

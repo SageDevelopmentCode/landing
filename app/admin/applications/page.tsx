@@ -86,6 +86,7 @@ type Application = {
   denied_at: string | null
   denied_reason: string | null
   created_at: string | null
+  student_id: string | null
   [key: string]: unknown
 }
 
