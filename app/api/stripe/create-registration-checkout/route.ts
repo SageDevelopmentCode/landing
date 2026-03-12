@@ -120,6 +120,9 @@ export async function POST(request: NextRequest) {
       mode: "payment",
       payment_method_types: ["card", "us_bank_account"],
       customer_email: parentEmail,
+      payment_intent_data: {
+        receipt_email: parentEmail,
+      },
       line_items: lineItems,
       metadata: {
         payment_type: "registration_fee",

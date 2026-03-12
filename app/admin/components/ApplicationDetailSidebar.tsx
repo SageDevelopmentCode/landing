@@ -4,6 +4,8 @@ import { DetailSidebar } from './DetailSidebar'
 import { SidebarField, SidebarSection } from '../../components/SidebarPrimitives'
 import { approveApplication } from '../../actions/approveApplication'
 import { denyApplication } from '../../actions/denyApplication'
+import { getApplicationNotes } from '../../actions/getApplicationNotes'
+import { addApplicationNote } from '../../actions/addApplicationNote'
 import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { getAdminEnrollmentData, type AdminEnrollmentData } from '../../actions/getAdminEnrollmentData'
@@ -81,6 +83,7 @@ type Application = {
   g2_lives_with_child: boolean | null
   g2_preferred_contact: boolean | null
   student_id: string | null
+  admin_notes: string | null
   status: string
   approved: boolean
   approved_at: string | null
@@ -106,6 +109,10 @@ export function ApplicationDetailSidebar({
   onApproved,
   onDenied,
 }: ApplicationDetailSidebarProps) {
+  const [notes, setNotes] = useState<{ id: string; content: string; created_at: string }[]>([])
+  const [newNote, setNewNote] = useState('')
+  const [isAddingNote, setIsAddingNote] = useState(false)
+  const [addNoteError, setAddNoteError] = useState<string | null>(null)
   const [isApproving, setIsApproving] = useState(false)
   const [approveError, setApproveError] = useState<string | null>(null)
   const [isDenyingMode, setIsDenyingMode] = useState(false)
@@ -188,9 +195,33 @@ export function ApplicationDetailSidebar({
     load()
   }, [application?.id, application?.approved, application?.user_id])
 
+  useEffect(() => {
+    setNotes([])
+    setNewNote('')
+    if (application?.id) {
+      getApplicationNotes(application.id).then((res) => {
+        if (res.notes) setNotes(res.notes)
+      })
+    }
+  }, [application?.id])
+
   if (!application) return null
 
   const isActioned = application.approved || application.denied
+
+  const handleAddNote = async () => {
+    if (!newNote.trim()) return
+    setIsAddingNote(true)
+    setAddNoteError(null)
+    const result = await addApplicationNote(application.id, newNote.trim())
+    setIsAddingNote(false)
+    if (result.note) {
+      setNotes((prev) => [result.note!, ...prev])
+      setNewNote('')
+    } else {
+      setAddNoteError(result.error ?? 'Failed to add note')
+    }
+  }
 
   const handleApprove = async () => {
     if (isApproving || isActioned) return
@@ -391,6 +422,40 @@ export function ApplicationDetailSidebar({
             />
           ) : null
         )}
+
+        <SidebarSection title="Admin Notes">
+          {notes.length > 0 && (
+            <div className="space-y-2 mb-3 max-h-48 overflow-y-auto">
+              {notes.map((note) => (
+                <div key={note.id} className="bg-gray-50 rounded-lg px-3 py-2 text-sm">
+                  <p className="text-gray-900 whitespace-pre-wrap">{note.content}</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {new Date(note.created_at).toLocaleString()}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+          <textarea
+            value={newNote}
+            onChange={(e) => { setNewNote(e.target.value); setAddNoteError(null) }}
+            placeholder="Add a note..."
+            rows={3}
+            className="w-full text-sm resize-none border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#2C5F2E]/30 focus:border-[#2C5F2E] bg-white text-gray-900 placeholder:text-gray-400"
+          />
+          <div className="flex items-center justify-between mt-2">
+            {addNoteError
+              ? <span className="text-xs text-red-600">{addNoteError}</span>
+              : <span />}
+            <button
+              onClick={handleAddNote}
+              disabled={isAddingNote || !newNote.trim()}
+              className="bg-[#2C5F2E] text-white rounded-lg px-4 py-1.5 text-sm font-semibold hover:bg-[#234d25] transition-colors disabled:opacity-50"
+            >
+              {isAddingNote ? 'Adding...' : 'Add Note'}
+            </button>
+          </div>
+        </SidebarSection>
 
         <div className="pt-2 border-t border-gray-100">
           <p className="text-xs text-gray-400 font-body">
