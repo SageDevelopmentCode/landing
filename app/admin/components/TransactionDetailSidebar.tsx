@@ -1,11 +1,16 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { ExternalLink } from 'lucide-react'
-import { createBrowserClient } from '@supabase/ssr'
+import { ChevronRight, ExternalLink } from 'lucide-react'
 import { DetailSidebar } from './DetailSidebar'
+import { getTransactionRelatedRecords } from '@/app/actions/getTransactionRelatedRecords'
+import { getParentDetail } from '@/app/actions/getParentDetail'
+import { getStudentDetail } from '@/app/actions/getStudentDetail'
 import { SidebarField, SidebarSection } from '../../components/SidebarPrimitives'
 import { colors } from '../design-system'
+import { ApplicationDetailSidebar } from './ApplicationDetailSidebar'
+import { ParentDetailSidebar } from './ParentDetailSidebar'
+import { StudentDetailSidebar } from './StudentDetailSidebar'
 
 type StripeTransaction = {
   id: string
@@ -51,6 +56,135 @@ type UserRecord = {
   email: string | null
 }
 
+// Types matching the shapes expected by the nested sidebars
+type FullApplication = {
+  id: string
+  user_id: string
+  child_legal_name: string | null
+  preferred_name: string | null
+  dob_month: string | null
+  dob_day: string | null
+  dob_year: string | null
+  child_age: number | null
+  child_grade: string | null
+  program: string | null
+  address_street: string | null
+  address_city: string | null
+  address_state: string | null
+  address_zip: string | null
+  is_homeschooled: string | null
+  homeschool_explanation: string | null
+  previous_schools: string | null
+  previous_schools_list: string | null
+  special_interests: string | null
+  has_allergies: boolean | null
+  allergies_description: string | null
+  has_medical_conditions: boolean | null
+  medical_conditions_description: string | null
+  has_emergency_medications: boolean | null
+  emergency_medications_description: string | null
+  activities_to_avoid: string | null
+  dysregulation_response: string | null
+  regulation_strategies: string | null
+  needs_aide: boolean | null
+  needs_aide_description: string | null
+  history_flags: string | null
+  history_explanation: string | null
+  has_custody_orders: boolean | null
+  custody_orders_description: string | null
+  learning_style: string | null
+  strengths_interests: string | null
+  current_challenges: string | null
+  g1_full_name: string | null
+  g1_relationship: string | null
+  g1_cell_phone: string | null
+  g1_work_phone: string | null
+  g1_email: string | null
+  g1_has_custody: boolean | null
+  g1_lives_with_child: boolean | null
+  g1_preferred_contact: boolean | null
+  g2_full_name: string | null
+  g2_relationship: string | null
+  g2_cell_phone: string | null
+  g2_work_phone: string | null
+  g2_email: string | null
+  g2_has_custody: boolean | null
+  g2_lives_with_child: boolean | null
+  g2_preferred_contact: boolean | null
+  student_id: string | null
+  admin_notes: string | null
+  status: string
+  approved: boolean
+  approved_at: string | null
+  denied: boolean
+  denied_at: string | null
+  denied_reason: string | null
+  created_at: string | null
+  [key: string]: unknown
+}
+
+type FullParent = {
+  id: string
+  full_name: string | null
+  g1_cell_phone: string | null
+  g1_work_phone: string | null
+  g1_preferred_contact: boolean | null
+  g1_lives_with_child: boolean | null
+  g1_has_custody: boolean | null
+  g2_full_name: string | null
+  g2_relationship: string | null
+  g2_email: string | null
+  g2_cell_phone: string | null
+  g2_work_phone: string | null
+  [key: string]: unknown
+}
+
+type ParentDetail = {
+  children: {
+    id: string
+    child_legal_name: string | null
+    dob_month: string | null
+    dob_day: string | null
+    dob_year: string | null
+  }[]
+  applications: {
+    id: string
+    child_legal_name: string | null
+    program: string | null
+    status: string
+    approved: boolean
+    approved_at: string | null
+    updated_at: string | null
+  }[]
+}
+
+type FullStudent = {
+  id: string
+  parent_id: string
+  child_legal_name: string | null
+  dob_month: string | null
+  dob_day: string | null
+  dob_year: string | null
+  special_interests: string | null
+  has_medical_conditions: string | null
+  medical_conditions_description: string | null
+  has_allergies: string | null
+  allergies_description: string | null
+  has_emergency_medications: string | null
+  emergency_medications_description: string | null
+  history_flags: string | null
+  history_explanation: string | null
+  needs_aide: string | null
+  needs_aide_description: string | null
+  learning_style: string | null
+  strengths_interests: string | null
+  current_challenges: string | null
+  dysregulation_response: string | null
+  regulation_strategies: string | null
+  activities_to_avoid: string | null
+  parent_name?: string | null
+}
+
 const PROGRAM_LABELS: Record<string, string> = {
   summer_26: 'Summer 2026',
   school_year_26_27: 'School Year 2026–2027',
@@ -60,6 +194,11 @@ const PROGRAM_LABELS: Record<string, string> = {
 function formatProgram(value: string | null): string {
   if (!value) return '—'
   return PROGRAM_LABELS[value] ?? value
+}
+
+function getInitials(name: string | null): string {
+  if (!name) return '?'
+  return name.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase()
 }
 
 export function formatPaymentType(type: string): string {
@@ -99,53 +238,90 @@ export function TransactionDetailSidebar({ transaction, onClose }: TransactionDe
   const [applicationRecord, setApplicationRecord] = useState<ApplicationRecord | null>(null)
   const [userRecord, setUserRecord] = useState<UserRecord | null>(null)
 
+  // Nested sidebar state
+  const [openApplication, setOpenApplication] = useState<FullApplication | null>(null)
+  const [applicationLoading, setApplicationLoading] = useState(false)
+
+  const [openParent, setOpenParent] = useState<FullParent | null>(null)
+  const [openParentDetail, setOpenParentDetail] = useState<ParentDetail | null>(null)
+  const [parentDetailLoading, setParentDetailLoading] = useState(false)
+
+  const [openStudent, setOpenStudent] = useState<FullStudent | null>(null)
+  const [studentDetailLoading, setStudentDetailLoading] = useState(false)
+
   useEffect(() => {
     setStudentRecord(null)
     setApplicationRecord(null)
     setUserRecord(null)
+    setOpenApplication(null)
+    setOpenParent(null)
+    setOpenParentDetail(null)
+    setOpenStudent(null)
 
     if (!transaction?.id) return
     if (transaction.payment_type === 'donation') return
 
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-
     const load = async () => {
-      if (transaction.student_id) {
-        const { data } = await supabase
-          .schema('admin')
-          .from('students')
-          .select('id, child_legal_name, dob_month, dob_day, dob_year')
-          .eq('id', transaction.student_id)
-          .single()
-        if (data) setStudentRecord(data as StudentRecord)
-      }
+      const effectiveStudentId =
+        transaction.student_id ?? (transaction.metadata?.student_id as string | null) ?? null
+      const effectiveApplicationId =
+        transaction.application_id ?? (transaction.metadata?.application_id as string | null) ?? null
+      const effectiveParentId =
+        transaction.parent_id ?? (transaction.metadata?.parent_id as string | null) ?? null
 
-      if (transaction.application_id) {
-        const { data } = await supabase
-          .schema('parent_app')
-          .from('applications')
-          .select('id, child_legal_name, g1_full_name, g1_email, program, status')
-          .eq('id', transaction.application_id)
-          .single()
-        if (data) setApplicationRecord(data as ApplicationRecord)
-      }
+      const result = await getTransactionRelatedRecords({
+        studentId: effectiveStudentId,
+        applicationId: effectiveApplicationId,
+        parentId: effectiveParentId,
+      })
 
-      if (transaction.parent_id) {
-        const { data } = await supabase
-          .schema('admin')
-          .from('users')
-          .select('id, full_name, email')
-          .eq('id', transaction.parent_id)
-          .single()
-        if (data) setUserRecord(data as UserRecord)
-      }
+      if (result.student) setStudentRecord(result.student as StudentRecord)
+      if (result.application) setApplicationRecord(result.application as ApplicationRecord)
+      if (result.parent) setUserRecord(result.parent as UserRecord)
     }
 
     load()
   }, [transaction?.id])
+
+  const handleOpenApplication = async () => {
+    if (!applicationRecord || applicationLoading) return
+    setApplicationLoading(true)
+    const { createBrowserClient } = await import('@supabase/ssr')
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    const { data } = await supabase
+      .schema('parent_app')
+      .from('applications')
+      .select('*')
+      .eq('id', applicationRecord.id)
+      .single()
+    setApplicationLoading(false)
+    if (data) setOpenApplication(data as FullApplication)
+  }
+
+  const handleOpenParent = async () => {
+    if (!userRecord || parentDetailLoading) return
+    setParentDetailLoading(true)
+    const result = await getParentDetail(userRecord.id)
+    setParentDetailLoading(false)
+    if (result.parent) {
+      setOpenParent(result.parent as FullParent)
+      setOpenParentDetail({
+        children: result.children as ParentDetail['children'],
+        applications: result.applications as ParentDetail['applications'],
+      })
+    }
+  }
+
+  const handleOpenStudent = async () => {
+    if (!studentRecord || studentDetailLoading) return
+    setStudentDetailLoading(true)
+    const data = await getStudentDetail(studentRecord.id)
+    setStudentDetailLoading(false)
+    if (data) setOpenStudent(data as FullStudent)
+  }
 
   const title = transaction
     ? transaction.payer_name ?? transaction.payer_email ?? formatPaymentType(transaction.payment_type)
@@ -156,87 +332,164 @@ export function TransactionDetailSidebar({ transaction, onClose }: TransactionDe
     Object.keys(transaction.metadata).length === 0
 
   return (
-    <DetailSidebar isOpen={!!transaction} onClose={onClose} title={title}>
-      {transaction && (
-        <div className="space-y-4">
-          <SidebarSection title="Payment">
-            <SidebarField label="Type" value={formatPaymentType(transaction.payment_type)} />
-            <SidebarField label="Status" value={transaction.status} />
-            <SidebarField label="Amount" value={formatCents(transaction.amount_cents, transaction.currency)} />
-            {transaction.cover_fees && (
-              <SidebarField label="Net Amount" value={formatCents(transaction.intended_amount_cents, transaction.currency)} />
-            )}
-            <SidebarField label="Covers Fees" value={transaction.cover_fees ?? false} />
-            <SidebarField label="Currency" value={transaction.currency.toUpperCase()} />
-            <SidebarField label="Description" value={transaction.description} />
-          </SidebarSection>
-
-          <SidebarSection title="Payer">
-            {transaction.payer_name && (
-              <SidebarField label="Name" value={transaction.payer_name} />
-            )}
-            <SidebarField label="Email" value={transaction.payer_email} />
-          </SidebarSection>
-
-          <SidebarSection title="References">
-            <SidebarField label="Session ID" value={transaction.stripe_session_id} />
-            <SidebarField label="Payment Intent ID" value={transaction.stripe_payment_intent_id} />
-            {stripeUrl(transaction) && (
-              <a
-                href={stripeUrl(transaction)!}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-sm font-medium"
-                style={{ color: colors.mistyForest }}
-              >
-                View in Stripe Dashboard
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-            )}
-          </SidebarSection>
-
-          {studentRecord && (
-            <SidebarSection title="Student">
-              <SidebarField label="Name" value={studentRecord.child_legal_name} />
-              <SidebarField
-                label="Date of Birth"
-                value={
-                  studentRecord.dob_month && studentRecord.dob_day && studentRecord.dob_year
-                    ? `${studentRecord.dob_month}/${studentRecord.dob_day}/${studentRecord.dob_year}`
-                    : null
-                }
-              />
+    <>
+      <DetailSidebar isOpen={!!transaction} onClose={onClose} title={title}>
+        {transaction && (
+          <div className="space-y-4">
+            <SidebarSection title="Payment">
+              <SidebarField label="Type" value={formatPaymentType(transaction.payment_type)} />
+              <SidebarField label="Status" value={transaction.status} />
+              {transaction.cover_fees ? (
+                <div className="space-y-1.5 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Base</span>
+                    <span className="text-gray-800">{formatCents(transaction.intended_amount_cents, transaction.currency)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Processing fee</span>
+                    <span className="text-gray-800">{formatCents(transaction.amount_cents - (transaction.intended_amount_cents ?? 0), transaction.currency)}</span>
+                  </div>
+                  <div className="flex justify-between font-semibold border-t border-gray-100 pt-1.5">
+                    <span className="text-gray-800">Total</span>
+                    <span className="text-gray-800">{formatCents(transaction.amount_cents, transaction.currency)}</span>
+                  </div>
+                </div>
+              ) : (
+                <SidebarField label="Amount" value={formatCents(transaction.amount_cents, transaction.currency)} />
+              )}
+              <SidebarField label="Currency" value={transaction.currency.toUpperCase()} />
+              <SidebarField label="Description" value={transaction.description} />
             </SidebarSection>
-          )}
 
-          {applicationRecord && (
-            <SidebarSection title="Application">
-              <SidebarField label="Child Name" value={applicationRecord.child_legal_name} />
-              <SidebarField label="Guardian" value={applicationRecord.g1_full_name} />
-              <SidebarField label="Guardian Email" value={applicationRecord.g1_email} />
-              <SidebarField label="Program" value={formatProgram(applicationRecord.program)} />
-              <SidebarField label="Status" value={applicationRecord.status} />
+            <SidebarSection title="Payer">
+              {transaction.payer_name && (
+                <SidebarField label="Name" value={transaction.payer_name} />
+              )}
+              <SidebarField label="Email" value={transaction.payer_email} />
             </SidebarSection>
-          )}
 
-          {userRecord && (
-            <SidebarSection title="Parent Account">
-              <SidebarField label="Name" value={userRecord.full_name} />
-              <SidebarField label="Email" value={userRecord.email} />
+            <SidebarSection title="References">
+              <SidebarField label="Session ID" value={transaction.stripe_session_id} />
+              <SidebarField label="Payment Intent ID" value={transaction.stripe_payment_intent_id} />
+              {stripeUrl(transaction) && (
+                <a
+                  href={stripeUrl(transaction)!}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium"
+                  style={{ color: colors.mistyForest }}
+                >
+                  View in Stripe Dashboard
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              )}
             </SidebarSection>
-          )}
 
-          <SidebarSection title="Metadata">
-            {metadataIsEmpty ? (
-              <span className="text-sm text-gray-400 font-body">No metadata</span>
-            ) : (
-              <pre className="text-xs text-gray-700 bg-gray-50 rounded-lg p-3 overflow-x-auto whitespace-pre-wrap break-all font-mono">
-                {JSON.stringify(transaction.metadata, null, 2)}
-              </pre>
+            {studentRecord && (
+              <SidebarSection title="Student">
+                <button
+                  onClick={handleOpenStudent}
+                  disabled={studentDetailLoading}
+                  style={{ backgroundColor: colors.pastelSage + '33' }}
+                  className="w-full text-left rounded-xl px-4 py-3 hover:brightness-95 transition-all flex items-center gap-3 disabled:opacity-60 cursor-pointer"
+                >
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: colors.pastelSage }}
+                  >
+                    <span className="text-xs font-semibold" style={{ color: colors.mistyForest }}>{getInitials(studentRecord.child_legal_name)}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800">{studentRecord.child_legal_name ?? '—'}</p>
+                    <p className="text-xs text-gray-500">
+                      {studentRecord.dob_month && studentRecord.dob_day && studentRecord.dob_year
+                        ? `DOB: ${studentRecord.dob_month}/${studentRecord.dob_day}/${studentRecord.dob_year}`
+                        : 'No DOB'}
+                    </p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: colors.mistyForest }} />
+                </button>
+              </SidebarSection>
             )}
-          </SidebarSection>
-        </div>
+
+            {applicationRecord && (
+              <SidebarSection title="Application">
+                <button
+                  onClick={handleOpenApplication}
+                  disabled={applicationLoading}
+                  style={{ backgroundColor: colors.powderBlue + '33' }}
+                  className="w-full text-left rounded-xl px-4 py-3 hover:brightness-95 transition-all flex items-center gap-3 disabled:opacity-60 cursor-pointer"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800">{applicationRecord.child_legal_name ?? '—'}</p>
+                    <p className="text-xs text-gray-500">{formatProgram(applicationRecord.program)} · {applicationRecord.status}</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: colors.infoText }} />
+                </button>
+              </SidebarSection>
+            )}
+
+            {userRecord && (
+              <SidebarSection title="Parent">
+                <button
+                  onClick={handleOpenParent}
+                  disabled={parentDetailLoading}
+                  style={{ backgroundColor: colors.paleMarigold + '33' }}
+                  className="w-full text-left rounded-xl px-4 py-3 hover:brightness-95 transition-all flex items-center gap-3 disabled:opacity-60 cursor-pointer"
+                >
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: colors.paleMarigold }}
+                  >
+                    <span className="text-xs font-semibold" style={{ color: colors.warningText }}>{getInitials(userRecord.full_name)}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800">{userRecord.full_name ?? '—'}</p>
+                    <p className="text-xs text-gray-500">{userRecord.email ?? '—'}</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: colors.warningText }} />
+                </button>
+              </SidebarSection>
+            )}
+
+            <SidebarSection title="Metadata">
+              {metadataIsEmpty ? (
+                <span className="text-sm text-gray-400 font-body">No metadata</span>
+              ) : (
+                <pre className="text-xs text-gray-700 bg-gray-50 rounded-lg p-3 overflow-x-auto whitespace-pre-wrap break-all font-mono">
+                  {JSON.stringify(transaction.metadata, null, 2)}
+                </pre>
+              )}
+            </SidebarSection>
+          </div>
+        )}
+      </DetailSidebar>
+
+      {openApplication && (
+        <ApplicationDetailSidebar
+          application={openApplication}
+          onClose={() => setOpenApplication(null)}
+          onApproved={() => {}}
+          onDenied={() => {}}
+        />
       )}
-    </DetailSidebar>
+
+      {(openParent || parentDetailLoading) && (
+        <ParentDetailSidebar
+          parent={openParent}
+          detail={openParentDetail}
+          loading={parentDetailLoading}
+          onClose={() => { setOpenParent(null); setOpenParentDetail(null) }}
+        />
+      )}
+
+      {(openStudent || studentDetailLoading) && (
+        <StudentDetailSidebar
+          student={openStudent}
+          loading={studentDetailLoading}
+          onClose={() => setOpenStudent(null)}
+        />
+      )}
+    </>
   )
 }
