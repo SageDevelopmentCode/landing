@@ -370,9 +370,7 @@ export default function Navbar() {
           <div className="lg:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className={`${
-                useDarkStyle ? "text-gray-800" : "text-white"
-              } focus:outline-none cursor-pointer`}
+              className={`${pathname === "/" ? "text-white" : "text-gray-900"} focus:outline-none cursor-pointer`}
               aria-label="Toggle menu"
             >
               <svg
@@ -399,9 +397,7 @@ export default function Navbar() {
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
-            className={`lg:hidden ${
-              useDarkStyle ? "bg-white/95" : "bg-black/80"
-            } backdrop-blur-md`}
+            className="lg:hidden bg-black/80 backdrop-blur-md"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
@@ -509,11 +505,7 @@ export default function Navbar() {
                   setContactDialogOpen(true);
                   setMobileMenuOpen(false);
                 }}
-                className={`w-full border-2 ${
-                  useDarkStyle
-                    ? "border-gray-800 text-gray-800 hover:bg-gray-100"
-                    : "border-white text-white hover:bg-white/10"
-                } bg-transparent font-semibold px-6 py-3 rounded-lg transition-all duration-250 cursor-pointer`}
+                className="w-full border-2 border-white text-white hover:bg-white/10 bg-transparent font-semibold px-6 py-3 rounded-lg transition-all duration-250 cursor-pointer"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
