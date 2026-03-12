@@ -1,6 +1,7 @@
 'use server'
 
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
+import { sendDiscordNotification, createErrorEmbed } from '@/app/lib/discord'
 
 export interface PickupPersonEntry {
   fullName: string
@@ -44,7 +45,25 @@ export async function saveAuthorizedPickup(payload: AuthorizedPickupPayload) {
     .select()
     .single()
 
-  if (planError) return { error: planError.message }
+  if (planError) {
+    void (async () => {
+      let parentName = 'N/A', childName = 'N/A'
+      try {
+        const [{ data: u }, { data: s }] = await Promise.all([
+          adminClient.schema('admin').from('users').select('full_name').eq('id', user.id).single(),
+          adminClient.schema('admin').from('students').select('child_legal_name').eq('id', payload.studentId).single(),
+        ])
+        parentName = u?.full_name ?? 'N/A'
+        childName = s?.child_legal_name ?? 'N/A'
+      } catch {}
+      await sendDiscordNotification(createErrorEmbed({
+        context: 'Authorized Pickup – Upsert Plan',
+        error: planError.message,
+        details: { 'Parent': parentName, 'Email': user.email ?? 'N/A', 'Child': childName, 'Student ID': payload.studentId },
+      }))
+    })().catch(() => {})
+    return { error: planError.message }
+  }
 
   // 2. Delete existing persons for this student
   const { error: deleteError } = await adminClient
@@ -54,7 +73,25 @@ export async function saveAuthorizedPickup(payload: AuthorizedPickupPayload) {
     .eq('parent_id', user.id)
     .eq('student_id', payload.studentId)
 
-  if (deleteError) return { error: deleteError.message }
+  if (deleteError) {
+    void (async () => {
+      let parentName = 'N/A', childName = 'N/A'
+      try {
+        const [{ data: u }, { data: s }] = await Promise.all([
+          adminClient.schema('admin').from('users').select('full_name').eq('id', user.id).single(),
+          adminClient.schema('admin').from('students').select('child_legal_name').eq('id', payload.studentId).single(),
+        ])
+        parentName = u?.full_name ?? 'N/A'
+        childName = s?.child_legal_name ?? 'N/A'
+      } catch {}
+      await sendDiscordNotification(createErrorEmbed({
+        context: 'Authorized Pickup – Delete Old Persons',
+        error: deleteError.message,
+        details: { 'Parent': parentName, 'Email': user.email ?? 'N/A', 'Child': childName, 'Student ID': payload.studentId },
+      }))
+    })().catch(() => {})
+    return { error: deleteError.message }
+  }
 
   // 3. Insert new persons rows
   if (payload.persons.length > 0) {
@@ -76,7 +113,25 @@ export async function saveAuthorizedPickup(payload: AuthorizedPickupPayload) {
       .from('student_authorized_pickup_persons')
       .insert(rows)
 
-    if (insertError) return { error: insertError.message }
+    if (insertError) {
+      void (async () => {
+        let parentName = 'N/A', childName = 'N/A'
+        try {
+          const [{ data: u }, { data: s }] = await Promise.all([
+            adminClient.schema('admin').from('users').select('full_name').eq('id', user.id).single(),
+            adminClient.schema('admin').from('students').select('child_legal_name').eq('id', payload.studentId).single(),
+          ])
+          parentName = u?.full_name ?? 'N/A'
+          childName = s?.child_legal_name ?? 'N/A'
+        } catch {}
+        await sendDiscordNotification(createErrorEmbed({
+          context: 'Authorized Pickup – Insert Persons',
+          error: insertError.message,
+          details: { 'Parent': parentName, 'Email': user.email ?? 'N/A', 'Child': childName, 'Student ID': payload.studentId },
+        }))
+      })().catch(() => {})
+      return { error: insertError.message }
+    }
   }
 
   return { data }

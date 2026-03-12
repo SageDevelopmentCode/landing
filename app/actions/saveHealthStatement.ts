@@ -1,6 +1,7 @@
 'use server'
 
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
+import { sendDiscordNotification, createErrorEmbed } from '@/app/lib/discord'
 
 export async function saveHealthStatement(studentId: string, optionType: 'professional' | 'religious') {
   const supabase = await createServerSupabaseClient()
@@ -23,6 +24,24 @@ export async function saveHealthStatement(studentId: string, optionType: 'profes
     .select()
     .single()
 
-  if (error) return { error: error.message }
+  if (error) {
+    void (async () => {
+      let parentName = 'N/A', childName = 'N/A'
+      try {
+        const [{ data: u }, { data: s }] = await Promise.all([
+          adminClient.schema('admin').from('users').select('full_name').eq('id', user.id).single(),
+          adminClient.schema('admin').from('students').select('child_legal_name').eq('id', studentId).single(),
+        ])
+        parentName = u?.full_name ?? 'N/A'
+        childName = s?.child_legal_name ?? 'N/A'
+      } catch {}
+      await sendDiscordNotification(createErrorEmbed({
+        context: 'Health Statement – DB Save',
+        error: error.message,
+        details: { 'Parent': parentName, 'Email': user.email ?? 'N/A', 'Child': childName, 'Student ID': studentId },
+      }))
+    })().catch(() => {})
+    return { error: error.message }
+  }
   return { data }
 }
