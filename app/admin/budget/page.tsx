@@ -37,6 +37,7 @@ const TABS = [
   "Revenue",
   "Taxes",
   "Analysis",
+  "Summer Program Analysis",
 ] as const;
 type Tab = (typeof TABS)[number];
 
@@ -3463,11 +3464,13 @@ function RevenueGoalHeader({
   mixTotal,
   budget,
   targetProfit,
+  label = "School Year · 10 months · Mon–Thu",
 }: {
   revenueGoal: number;
   mixTotal: number;
   budget: number;
   targetProfit: number;
+  label?: string;
 }) {
   const diff = mixTotal - revenueGoal;
   const surplus = diff >= 0;
@@ -3482,7 +3485,7 @@ function RevenueGoalHeader({
             className="text-xs font-semibold uppercase tracking-wide mb-0.5"
             style={{ color: colors.textSecondary }}
           >
-            School Year · 10 months · Mon–Thu
+            {label}
           </p>
           <p className="text-xs" style={{ color: colors.textTertiary }}>
             Adjust enrollments below to track toward your revenue target.
@@ -3727,8 +3730,8 @@ function CoreSliderRow({
   );
 }
 
-const FULL_SUMMER_14 = 4095;
-const FULL_SUMMER_PRIMARY = 4388;
+const FULL_SUMMER_14 = 3780;
+const FULL_SUMMER_PRIMARY = 4050;
 
 const SCHOOL_YEAR_RATES = [
   {
@@ -3784,6 +3787,240 @@ const SUMMER_SEASON_RATES = [
   },
 ];
 
+function SummerAnalysisTab({
+  lineItems,
+  expenses,
+  income,
+}: {
+  lineItems: BudgetLineItem[];
+  expenses: BudgetExpense[];
+  income: BudgetIncome[];
+}) {
+  const totalBudget = lineItems.reduce(
+    (s, i) => s + Number(i.planned_amount),
+    0,
+  );
+  const totalRevenue = income.reduce((s, i) => s + Number(i.amount), 0);
+  const totalExpenses = expenses.reduce((s, i) => s + Number(i.amount), 0);
+  const netProfit = totalRevenue - totalExpenses;
+
+  const [targetProfit, setTargetProfit] = useState(500);
+  const [swWeeks, setSwWeeks] = useState(12);
+  const [swStudents, setSwStudents] = useState<Record<string, number>>(() =>
+    Object.fromEntries(
+      SUMMER_WEEKLY_RATES.map((r) => [
+        r.key,
+        Math.ceil((totalBudget + 500) / (r.rate * 4.33)),
+      ]),
+    ),
+  );
+  const [ssStudents, setSsStudents] = useState<Record<string, number>>(() =>
+    Object.fromEntries(
+      SUMMER_SEASON_RATES.map((r) => [
+        r.key,
+        Math.ceil(((totalBudget + 500) * 3) / r.totalPrice),
+      ]),
+    ),
+  );
+
+  const netProfitColor = netProfit >= 0 ? colors.successText : colors.errorText;
+  const swMultiplier = swWeeks * (4.33 / 12);
+  const swMixTotal = SUMMER_WEEKLY_RATES.reduce(
+    (s, { key, rate }) => s + (swStudents[key] ?? 0) * rate * swMultiplier,
+    0,
+  );
+
+  return (
+    <div className="space-y-6">
+      {/* ── Hero: Profit Target Slider ── */}
+      <div style={{ ...cardStyle, padding: "32px" }}>
+        <div className="text-center mb-6">
+          <p
+            className="text-xs font-semibold uppercase tracking-widest mb-2"
+            style={{ color: colors.textSecondary }}
+          >
+            I want to make
+          </p>
+          <p
+            className="text-5xl font-bold mb-1"
+            style={{ color: colors.mistyForest }}
+          >
+            {fmt(targetProfit)}
+          </p>
+          <p className="text-sm" style={{ color: colors.textSecondary }}>
+            per month profit
+          </p>
+        </div>
+        <input
+          type="range"
+          min={0}
+          max={5000}
+          step={100}
+          value={targetProfit}
+          onChange={(e) => setTargetProfit(Number(e.target.value))}
+          style={{ width: "100%", accentColor: colors.mistyForest }}
+        />
+        <div
+          className="flex justify-between text-xs mt-1 mb-4"
+          style={{ color: colors.textTertiary }}
+        >
+          <span>$0</span>
+          <span>$5,000</span>
+        </div>
+        <div className="flex justify-center">
+          <div
+            className="text-sm px-4 py-2 rounded-full"
+            style={{ backgroundColor: colors.softCloud }}
+          >
+            <span style={{ color: colors.textSecondary }}>
+              Current actual profit:{" "}
+            </span>
+            <span className="font-bold" style={{ color: netProfitColor }}>
+              {fmt(netProfit)}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Weekly Enrollment ── */}
+      <div style={{ ...cardStyle, padding: "24px" }}>
+        <RevenueGoalHeader
+          revenueGoal={totalBudget + targetProfit}
+          mixTotal={swMixTotal}
+          budget={totalBudget}
+          targetProfit={targetProfit}
+          label="Summer Program · 12 weeks · Mon–Thu"
+        />
+
+        {/* Weeks attended slider */}
+        <div className="flex items-center gap-4 mb-4 mt-4">
+          <p className="text-xs font-semibold uppercase tracking-wide whitespace-nowrap"
+             style={{ color: colors.textSecondary }}>
+            Weeks attended
+          </p>
+          <input
+            type="range" min={1} max={12} step={1} value={swWeeks}
+            onChange={(e) => setSwWeeks(Number(e.target.value))}
+            style={{ flex: 1, accentColor: colors.mistyForest }}
+          />
+          <p className="text-xs font-bold whitespace-nowrap"
+             style={{ color: colors.mistyForest }}>
+            {swWeeks} {swWeeks === 1 ? "week" : "weeks"}
+          </p>
+        </div>
+
+        <div
+          style={{
+            borderTop: `1px solid ${colors.border}`,
+            margin: "20px 0",
+          }}
+        />
+
+        <p
+          className="text-xs font-semibold uppercase tracking-wide mb-3"
+          style={{ color: colors.textSecondary }}
+        >
+          Weekly Enrollment
+        </p>
+        <div className="space-y-6 mb-4">
+          {SUMMER_WEEKLY_RATES.map(({ key, label, rate }) => {
+            const neededAlone = Math.ceil(
+              (totalBudget + targetProfit) / (rate * swMultiplier),
+            );
+            const targetCount = swStudents[key] ?? 0;
+            const contribution = targetCount * rate * swMultiplier;
+            return (
+              <CoreSliderRow
+                key={key}
+                label={label}
+                rateLabel={`${fmt(rate)}/wk`}
+                contributionLabel={`${fmt(contribution)}/mo`}
+                neededAlone={neededAlone}
+                targetCount={targetCount}
+                onChange={(n) => setSwStudents((p) => ({ ...p, [key]: n }))}
+              />
+            );
+          })}
+        </div>
+        <MixSummary
+          mixTotal={SUMMER_WEEKLY_RATES.reduce(
+            (s, { key, rate }) => s + (swStudents[key] ?? 0) * rate * swMultiplier,
+            0,
+          )}
+          goal={totalBudget + targetProfit}
+          label="Weekly"
+          budget={totalBudget}
+          targetProfit={targetProfit}
+          onReset={() =>
+            setSwStudents(
+              Object.fromEntries(SUMMER_WEEKLY_RATES.map((r) => [r.key, 0])),
+            )
+          }
+        />
+
+        <div
+          style={{
+            borderTop: `1px solid ${colors.border}`,
+            margin: "24px 0",
+          }}
+        />
+
+        <p
+          className="text-xs font-semibold uppercase tracking-wide mb-3"
+          style={{ color: colors.textSecondary }}
+        >
+          Full Season Enrollment
+        </p>
+        <div className="space-y-6">
+          {SUMMER_SEASON_RATES.map(({ key, label, totalPrice }) => {
+            const neededAlone = Math.ceil(
+              ((totalBudget + targetProfit) * 3) / totalPrice,
+            );
+            const targetCount = ssStudents[key] ?? 0;
+            const contribution = targetCount * totalPrice;
+            return (
+              <CoreSliderRow
+                key={key}
+                label={label}
+                rateLabel={`${fmt(totalPrice)} total`}
+                contributionLabel={`${fmt(contribution)} total`}
+                neededAlone={neededAlone}
+                targetCount={targetCount}
+                onChange={(n) => setSsStudents((p) => ({ ...p, [key]: n }))}
+              />
+            );
+          })}
+        </div>
+        <MixSummary
+          mixTotal={
+            SUMMER_SEASON_RATES.reduce(
+              (s, { key, totalPrice }) =>
+                s + (ssStudents[key] ?? 0) * totalPrice,
+              0,
+            ) / 3
+          }
+          goal={totalBudget + targetProfit}
+          label="Full season (÷3 months)"
+          budget={totalBudget}
+          targetProfit={targetProfit}
+          onReset={() =>
+            setSsStudents(
+              Object.fromEntries(SUMMER_SEASON_RATES.map((r) => [r.key, 0])),
+            )
+          }
+        />
+
+        <p
+          className="text-xs mt-4"
+          style={{ color: colors.textTertiary }}
+        >
+          Registration fee: $75/student · one-time fee
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function AnalysisTab({
   lineItems,
   expenses,
@@ -3802,9 +4039,6 @@ function AnalysisTab({
   const netProfit = totalRevenue - totalExpenses;
 
   const [targetProfit, setTargetProfit] = useState(500);
-  const [activeSubTab, setActiveSubTab] = useState<"School Year" | "Summer">(
-    "School Year",
-  );
 
   const [syStudents, setSyStudents] = useState<Record<string, number>>({
     full_14: 15,
@@ -3813,22 +4047,6 @@ function AnalysisTab({
     aftercare_non: 0,
     fun_friday: 0,
   });
-  const [swStudents, setSwStudents] = useState<Record<string, number>>(() =>
-    Object.fromEntries(
-      SUMMER_WEEKLY_RATES.map((r) => [
-        r.key,
-        Math.ceil((totalBudget + 500) / (r.rate * 4.33)),
-      ]),
-    ),
-  );
-  const [ssStudents, setSsStudents] = useState<Record<string, number>>(() =>
-    Object.fromEntries(
-      SUMMER_SEASON_RATES.map((r) => [
-        r.key,
-        Math.ceil(((totalBudget + 500) * 3) / r.totalPrice),
-      ]),
-    ),
-  );
 
   const netProfitColor = netProfit >= 0 ? colors.successText : colors.errorText;
 
@@ -3887,284 +4105,134 @@ function AnalysisTab({
         </div>
       </div>
 
-      {/* ── Sub-tab toggle ── */}
-      <div
-        className="flex gap-1 p-1 rounded-xl w-fit"
-        style={{
-          backgroundColor: colors.warmLinen,
-          border: `1px solid ${colors.border}`,
-        }}
-      >
-        {(["School Year", "Summer"] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveSubTab(tab)}
-            style={{
-              padding: "6px 18px",
-              borderRadius: 10,
-              border: "none",
-              cursor: "pointer",
-              fontSize: 13,
-              fontWeight: activeSubTab === tab ? 600 : 400,
-              backgroundColor: activeSubTab === tab ? "#FFFFFF" : "transparent",
-              color:
-                activeSubTab === tab
-                  ? colors.textPrimary
-                  : colors.textSecondary,
-              boxShadow:
-                activeSubTab === tab ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
-              transition: "all 0.15s ease",
-            }}
-          >
-            {tab === "School Year" ? "School Year" : "Summer Program"}
-          </button>
-        ))}
-      </div>
+      {/* ── School Year Enrollment ── */}
+      <div style={{ ...cardStyle, padding: "24px" }}>
+        {(() => {
+          const syMixTotal = SCHOOL_YEAR_RATES.reduce(
+            (s, { key, rate }) => s + (syStudents[key] ?? 0) * rate,
+            0,
+          );
+          return (
+            <>
+              <RevenueGoalHeader
+                revenueGoal={totalBudget + targetProfit}
+                mixTotal={syMixTotal}
+                budget={totalBudget}
+                targetProfit={targetProfit}
+              />
 
-      {/* ── School Year Sub-tab ── */}
-      {activeSubTab === "School Year" && (
-        <div style={{ ...cardStyle, padding: "24px" }}>
-          {(() => {
-            const syMixTotal = SCHOOL_YEAR_RATES.reduce(
-              (s, { key, rate }) => s + (syStudents[key] ?? 0) * rate,
-              0,
-            );
-            return (
-              <>
-                <RevenueGoalHeader
-                  revenueGoal={totalBudget + targetProfit}
-                  mixTotal={syMixTotal}
-                  budget={totalBudget}
-                  targetProfit={targetProfit}
-                />
+              <div
+                style={{
+                  borderTop: `1px solid ${colors.border}`,
+                  margin: "20px 0",
+                }}
+              />
 
-                <div
-                  style={{
-                    borderTop: `1px solid ${colors.border}`,
-                    margin: "20px 0",
-                  }}
-                />
+              {/* Core Enrollment */}
+              <p
+                className="text-xs font-semibold uppercase tracking-wide mb-1"
+                style={{ color: colors.textSecondary }}
+              >
+                Core Enrollment
+              </p>
+              <p
+                className="text-xs mb-4"
+                style={{ color: colors.textTertiary }}
+              >
+                Full-time students are your primary revenue driver.
+              </p>
+              <div className="space-y-6 mb-6">
+                {CORE_SY_RATES.map(({ key, label, rate }) => {
+                  const neededAlone = Math.ceil(
+                    (totalBudget + targetProfit) / rate,
+                  );
+                  const targetCount = syStudents[key] ?? 0;
+                  return (
+                    <CoreSliderRow
+                      key={key}
+                      label={label}
+                      rateLabel={`${fmt(rate)}/mo`}
+                      contributionLabel={`${fmt(targetCount * rate)}/mo`}
+                      neededAlone={neededAlone}
+                      targetCount={targetCount}
+                      onChange={(n) =>
+                        setSyStudents((p) => ({ ...p, [key]: n }))
+                      }
+                    />
+                  );
+                })}
+              </div>
 
-                {/* Core Enrollment */}
-                <p
-                  className="text-xs font-semibold uppercase tracking-wide mb-1"
-                  style={{ color: colors.textSecondary }}
-                >
-                  Core Enrollment
-                </p>
+              {/* Add-On Programs */}
+              <div
+                style={{
+                  borderTop: `1px solid ${colors.border}`,
+                  paddingTop: 16,
+                }}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <p
+                    className="text-xs font-semibold uppercase tracking-wide"
+                    style={{ color: colors.textTertiary }}
+                  >
+                    Add-On Programs
+                  </p>
+                  <span
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 600,
+                      padding: "2px 8px",
+                      borderRadius: 99,
+                      backgroundColor: colors.info,
+                      color: colors.infoText,
+                    }}
+                  >
+                    bonus revenue
+                  </span>
+                </div>
                 <p
                   className="text-xs mb-4"
                   style={{ color: colors.textTertiary }}
                 >
-                  Full-time students are your primary revenue driver.
+                  These supplement core revenue — no target needed, every
+                  student is a bonus.
                 </p>
-                <div className="space-y-6 mb-6">
-                  {CORE_SY_RATES.map(({ key, label, rate }) => {
-                    const neededAlone = Math.ceil(
-                      (totalBudget + targetProfit) / rate,
-                    );
-                    const targetCount = syStudents[key] ?? 0;
-                    return (
-                      <CoreSliderRow
-                        key={key}
-                        label={label}
-                        rateLabel={`${fmt(rate)}/mo`}
-                        contributionLabel={`${fmt(targetCount * rate)}/mo`}
-                        neededAlone={neededAlone}
-                        targetCount={targetCount}
-                        onChange={(n) =>
-                          setSyStudents((p) => ({ ...p, [key]: n }))
-                        }
-                      />
-                    );
-                  })}
+                <div className="space-y-4">
+                  {SUPPL_SY_RATES.map(({ key, label, rate }) => (
+                    <SupplementalStepper
+                      key={key}
+                      label={label}
+                      rateLabel={`${fmt(rate)}/mo`}
+                      rate={rate}
+                      count={syStudents[key] ?? 0}
+                      onChange={(n) =>
+                        setSyStudents((p) => ({ ...p, [key]: n }))
+                      }
+                    />
+                  ))}
                 </div>
+              </div>
 
-                {/* Add-On Programs */}
-                <div
-                  style={{
-                    borderTop: `1px solid ${colors.border}`,
-                    paddingTop: 16,
-                  }}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <p
-                      className="text-xs font-semibold uppercase tracking-wide"
-                      style={{ color: colors.textTertiary }}
-                    >
-                      Add-On Programs
-                    </p>
-                    <span
-                      style={{
-                        fontSize: 10,
-                        fontWeight: 600,
-                        padding: "2px 8px",
-                        borderRadius: 99,
-                        backgroundColor: colors.info,
-                        color: colors.infoText,
-                      }}
-                    >
-                      bonus revenue
-                    </span>
-                  </div>
-                  <p
-                    className="text-xs mb-4"
-                    style={{ color: colors.textTertiary }}
-                  >
-                    These supplement core revenue — no target needed, every
-                    student is a bonus.
-                  </p>
-                  <div className="space-y-4">
-                    {SUPPL_SY_RATES.map(({ key, label, rate }) => (
-                      <SupplementalStepper
-                        key={key}
-                        label={label}
-                        rateLabel={`${fmt(rate)}/mo`}
-                        rate={rate}
-                        count={syStudents[key] ?? 0}
-                        onChange={(n) =>
-                          setSyStudents((p) => ({ ...p, [key]: n }))
-                        }
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                <MixSummary
-                  mixTotal={syMixTotal}
-                  goal={totalBudget + targetProfit}
-                  label="School year"
-                  budget={totalBudget}
-                  targetProfit={targetProfit}
-                  onReset={() =>
-                    setSyStudents({
-                      full_14: 0,
-                      full_primary: 0,
-                      aftercare_enrolled: 0,
-                      aftercare_non: 0,
-                      fun_friday: 0,
-                    })
-                  }
-                />
-              </>
-            );
-          })()}
-        </div>
-      )}
-
-      {/* ── Summer Sub-tab ── */}
-      {activeSubTab === "Summer" && (
-        <div style={{ ...cardStyle, padding: "24px" }}>
-          <div className="flex flex-wrap items-baseline justify-between gap-2 mb-1">
-            <p
-              className="text-sm font-semibold uppercase tracking-wide"
-              style={{ color: colors.textPrimary }}
-            >
-              Summer Program · 12 weeks · Mon–Thu
-            </p>
-          </div>
-          <p className="text-xs mb-5" style={{ color: colors.textTertiary }}>
-            Weekly rates shown as monthly equivalent (×4.33). Full season is
-            total price per student for the 13-week summer.
-          </p>
-
-          {/* Weekly rows */}
-          <p
-            className="text-xs font-semibold uppercase tracking-wide mb-3"
-            style={{ color: colors.textSecondary }}
-          >
-            Weekly Enrollment
-          </p>
-          <div className="space-y-6 mb-4">
-            {SUMMER_WEEKLY_RATES.map(({ key, label, rate }) => {
-              const neededAlone = Math.ceil(
-                (totalBudget + targetProfit) / (rate * 4.33),
-              );
-              const targetCount = swStudents[key] ?? 0;
-              const contribution = targetCount * rate * 4.33;
-              return (
-                <CoreSliderRow
-                  key={key}
-                  label={label}
-                  rateLabel={`${fmt(rate)}/wk`}
-                  contributionLabel={`${fmt(contribution)}/mo`}
-                  neededAlone={neededAlone}
-                  targetCount={targetCount}
-                  onChange={(n) => setSwStudents((p) => ({ ...p, [key]: n }))}
-                />
-              );
-            })}
-          </div>
-          <MixSummary
-            mixTotal={SUMMER_WEEKLY_RATES.reduce(
-              (s, { key, rate }) => s + (swStudents[key] ?? 0) * rate * 4.33,
-              0,
-            )}
-            goal={totalBudget + targetProfit}
-            label="Weekly"
-            budget={totalBudget}
-            targetProfit={targetProfit}
-            onReset={() =>
-              setSwStudents(
-                Object.fromEntries(SUMMER_WEEKLY_RATES.map((r) => [r.key, 0])),
-              )
-            }
-          />
-
-          <div
-            style={{
-              borderTop: `1px solid ${colors.border}`,
-              margin: "24px 0",
-            }}
-          />
-
-          {/* Full Season rows */}
-          <p
-            className="text-xs font-semibold uppercase tracking-wide mb-3"
-            style={{ color: colors.textSecondary }}
-          >
-            Full Season Enrollment
-          </p>
-          <div className="space-y-6">
-            {SUMMER_SEASON_RATES.map(({ key, label, totalPrice }) => {
-              const neededAlone = Math.ceil(
-                ((totalBudget + targetProfit) * 3) / totalPrice,
-              );
-              const targetCount = ssStudents[key] ?? 0;
-              const contribution = targetCount * totalPrice;
-              return (
-                <CoreSliderRow
-                  key={key}
-                  label={label}
-                  rateLabel={`${fmt(totalPrice)} total`}
-                  contributionLabel={`${fmt(contribution)} total`}
-                  neededAlone={neededAlone}
-                  targetCount={targetCount}
-                  onChange={(n) => setSsStudents((p) => ({ ...p, [key]: n }))}
-                />
-              );
-            })}
-          </div>
-          <MixSummary
-            mixTotal={
-              SUMMER_SEASON_RATES.reduce(
-                (s, { key, totalPrice }) =>
-                  s + (ssStudents[key] ?? 0) * totalPrice,
-                0,
-              ) / 3
-            }
-            goal={totalBudget + targetProfit}
-            label="Full season (÷3 months)"
-            budget={totalBudget}
-            targetProfit={targetProfit}
-            onReset={() =>
-              setSsStudents(
-                Object.fromEntries(SUMMER_SEASON_RATES.map((r) => [r.key, 0])),
-              )
-            }
-          />
-        </div>
-      )}
+              <MixSummary
+                mixTotal={syMixTotal}
+                goal={totalBudget + targetProfit}
+                label="School year"
+                budget={totalBudget}
+                targetProfit={targetProfit}
+                onReset={() =>
+                  setSyStudents({
+                    full_14: 0,
+                    full_primary: 0,
+                    aftercare_enrolled: 0,
+                    aftercare_non: 0,
+                    fun_friday: 0,
+                  })
+                }
+              />
+            </>
+          );
+        })()}
+      </div>
     </div>
   );
 }
@@ -4329,6 +4397,13 @@ export default function BudgetPage() {
               )}
               {activeTab === "Analysis" && (
                 <AnalysisTab
+                  lineItems={lineItems}
+                  expenses={expenses}
+                  income={income}
+                />
+              )}
+              {activeTab === "Summer Program Analysis" && (
+                <SummerAnalysisTab
                   lineItems={lineItems}
                   expenses={expenses}
                   income={income}
