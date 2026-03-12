@@ -111,7 +111,7 @@ export default function TuitionPage() {
                       <div className="space-y-3">
                         <div>
                           <p className="text-xs text-text-gray font-body">
-                            1st – 4th Grade
+                            2nd – 4th Grade
                           </p>
                           <p className="text-2xl font-bold text-primary font-heading">
                             $350
@@ -122,7 +122,7 @@ export default function TuitionPage() {
                         </div>
                         <div>
                           <p className="text-xs text-text-gray font-body">
-                            Primary (Pre-K – K)
+                            Primary (Pre-K – 1st Grade)
                           </p>
                           <p className="text-2xl font-bold text-primary font-heading">
                             $375
@@ -145,7 +145,7 @@ export default function TuitionPage() {
                       <div className="space-y-3">
                         <div>
                           <p className="text-xs text-white/70 font-body">
-                            1st – 4th Grade
+                            2nd – 4th Grade
                           </p>
                           <p className="text-2xl font-bold text-white font-heading">
                             $3,780
@@ -159,7 +159,7 @@ export default function TuitionPage() {
                         </div>
                         <div>
                           <p className="text-xs text-white/70 font-body">
-                            Primary (Pre-K – K)
+                            Primary (Pre-K – 1st Grade)
                           </p>
                           <p className="text-2xl font-bold text-white font-heading">
                             $4,050
@@ -237,7 +237,7 @@ export default function TuitionPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                     <div className="px-6 py-4 bg-white rounded-lg shadow-md">
                       <p className="text-sm font-semibold text-text-gray font-body mb-1">
-                        1st – 4th Grade
+                        2nd – 4th Grade
                       </p>
                       <p className="text-3xl font-bold text-primary font-heading">
                         $1,095
@@ -251,7 +251,7 @@ export default function TuitionPage() {
                     </div>
                     <div className="px-6 py-4 bg-white rounded-lg shadow-md">
                       <p className="text-sm font-semibold text-text-gray font-body mb-1">
-                        Primary (Pre-K – Kindergarten)
+                        Primary (Pre-K – 1st Grade)
                       </p>
                       <p className="text-3xl font-bold text-primary font-heading">
                         $1,195
