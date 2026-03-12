@@ -4,7 +4,10 @@ import { DetailSidebar } from './DetailSidebar'
 import { SidebarField, SidebarSection } from '../../components/SidebarPrimitives'
 import { approveApplication } from '../../actions/approveApplication'
 import { denyApplication } from '../../actions/denyApplication'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createBrowserClient } from '@supabase/ssr'
+import { getAdminEnrollmentData, type AdminEnrollmentData } from '../../actions/getAdminEnrollmentData'
+import { EnrollmentProgressCard, type ApprovedApplication } from './EnrollmentProgressCard'
 
 const PROGRAM_LABELS: Record<string, string> = {
   summer_26: 'Summer 2026',
@@ -71,6 +74,7 @@ type Application = {
   g2_has_custody: boolean | null
   g2_lives_with_child: boolean | null
   g2_preferred_contact: boolean | null
+  student_id: string | null
   status: string
   approved: boolean
   approved_at: string | null
@@ -89,124 +93,6 @@ interface ApplicationDetailSidebarProps {
 }
 
 
-type CriterionResult = {
-  label: string
-  passed: boolean
-  optional?: boolean
-}
-
-function evaluateCriteria(app: Application): CriterionResult[] {
-  return [
-    {
-      label: 'Child Identity',
-      passed: !!(app.child_legal_name && app.dob_month && app.dob_day && app.dob_year),
-    },
-    {
-      label: 'Grade & Program',
-      passed: !!(app.child_grade && app.program),
-    },
-    {
-      label: 'Contact Info',
-      passed: !!(app.g1_full_name && app.g1_email && app.g1_cell_phone),
-    },
-    {
-      label: 'Address',
-      passed: !!(app.address_street && app.address_city && app.address_state && app.address_zip),
-    },
-    {
-      label: 'Health Disclosed',
-      passed: app.has_allergies != null && app.has_medical_conditions != null && app.has_emergency_medications != null,
-    },
-    {
-      label: 'Learning Profile',
-      passed: !!(app.learning_style && app.strengths_interests && app.current_challenges),
-    },
-    {
-      label: 'Safety & Support',
-      passed: app.needs_aide != null && app.history_flags != null,
-    },
-    {
-      label: 'Guardian 2',
-      passed: !!(app.g2_full_name && app.g2_email),
-      optional: true,
-    },
-  ]
-}
-
-function ApplicationSummary({ application }: { application: Application }) {
-  const criteria = evaluateCriteria(application)
-  const required = criteria.filter((c) => !c.optional)
-  const total = required.length
-  const passedCount = required.filter((c) => c.passed).length
-  const progressPct = Math.round((passedCount / total) * 100)
-
-  let badgeClass: string
-  let badgeLabel: string
-
-  if (passedCount >= total) {
-    badgeClass = 'bg-green-50 text-green-700 border border-green-200'
-    badgeLabel = 'Looks Complete'
-  } else if (passedCount >= 5) {
-    badgeClass = 'bg-amber-50 text-amber-700 border border-amber-200'
-    badgeLabel = 'Some Gaps'
-  } else {
-    badgeClass = 'bg-red-50 text-red-600 border border-red-200'
-    badgeLabel = 'Incomplete'
-  }
-
-  return (
-    <div className="bg-white border border-gray-200 rounded-2xl px-5 py-5 shadow-sm">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body">
-          Application Summary
-        </span>
-        <span className={`inline-flex items-center px-2.5 py-0.5 text-xs font-semibold rounded-full ${badgeClass}`}>
-          {badgeLabel}
-        </span>
-      </div>
-
-      {/* Score */}
-      <div className="flex flex-col items-center mb-4">
-        <span className="font-heading text-3xl font-bold" style={{ color: '#2C5F2E' }}>
-          {passedCount} <span className="text-gray-300 font-normal">/</span> {total}
-        </span>
-        <span className="text-xs text-gray-400 font-body mt-0.5">criteria met</span>
-      </div>
-
-      {/* Progress bar */}
-      <div className="w-full bg-gray-100 rounded-full h-1.5 mb-4">
-        <div
-          className="h-1.5 rounded-full transition-all"
-          style={{ width: `${progressPct}%`, backgroundColor: '#2C5F2E' }}
-        />
-      </div>
-
-      {/* Criteria rows */}
-      <div className="space-y-2">
-        {criteria.map((c) => {
-          const dotColor = c.passed ? 'bg-green-500' : c.optional ? 'bg-amber-400' : 'bg-red-400'
-          const pillClass = c.passed
-            ? 'bg-green-50 text-green-700 border border-green-200'
-            : c.optional
-            ? 'bg-amber-50 text-amber-700 border border-amber-200'
-            : 'bg-red-50 text-red-600 border border-red-200'
-          const pillLabel = c.passed ? 'Complete' : c.optional ? 'Optional' : 'Missing'
-
-          return (
-            <div key={c.label} className="flex items-center gap-2">
-              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${dotColor}`} />
-              <span className="text-sm text-gray-700 font-body flex-1">{c.label}</span>
-              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${pillClass}`}>
-                {pillLabel}
-              </span>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
 
 export function ApplicationDetailSidebar({
   application,
@@ -220,6 +106,67 @@ export function ApplicationDetailSidebar({
   const [denyReason, setDenyReason] = useState('')
   const [isDenying, setIsDenying] = useState(false)
   const [denyError, setDenyError] = useState<string | null>(null)
+  const [enrollmentData, setEnrollmentData] = useState<AdminEnrollmentData & { registrationFeePaidByStudent: Record<string, boolean> } | null>(null)
+  const [enrollmentLoading, setEnrollmentLoading] = useState(false)
+  const [siblingApps, setSiblingApps] = useState<ApprovedApplication[]>([])
+
+  useEffect(() => {
+    if (!application?.approved) {
+      setEnrollmentData(null)
+      setSiblingApps([])
+      return
+    }
+
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+
+    const load = async () => {
+      setEnrollmentLoading(true)
+      try {
+        const { data: appRows } = await supabase
+          .schema('parent_app')
+          .from('applications')
+          .select('id, user_id, student_id, child_legal_name, preferred_name, registration_fee_paid')
+          .eq('user_id', application.user_id)
+          .eq('approved', true)
+
+        const validApps: ApprovedApplication[] = (appRows ?? []).filter(
+          (a): a is ApprovedApplication => a.student_id != null
+        )
+        setSiblingApps(validApps)
+
+        const studentIds = validApps.map((a) => a.student_id)
+
+        if (studentIds.length === 0) {
+          setEnrollmentData({
+            signaturesByStudent: {},
+            immunizationFileCountByStudent: {},
+            religiousExemptionCountByStudent: {},
+            registrationFeePaidByStudent: {},
+          })
+          setEnrollmentLoading(false)
+          return
+        }
+
+        const registrationFeePaidByStudent: Record<string, boolean> = {}
+        for (const a of validApps) {
+          registrationFeePaidByStudent[a.student_id] = a.registration_fee_paid ?? false
+        }
+
+        const data = await getAdminEnrollmentData(application.user_id, studentIds)
+        setEnrollmentData({ ...data, registrationFeePaidByStudent })
+      } catch (err) {
+        console.error('Failed to load enrollment data', err)
+        setEnrollmentData(null)
+      } finally {
+        setEnrollmentLoading(false)
+      }
+    }
+
+    load()
+  }, [application?.id, application?.approved, application?.user_id])
 
   if (!application) return null
 
@@ -253,7 +200,7 @@ export function ApplicationDetailSidebar({
     }
   }
 
-  const footer = isDenyingMode ? (
+  const footer = application.approved ? undefined : isDenyingMode ? (
     <div className="flex flex-col gap-3 w-full">
       <textarea
         value={denyReason}
@@ -283,11 +230,6 @@ export function ApplicationDetailSidebar({
     <div className="flex items-center gap-3">
       <div className="flex-1 text-sm">
         {approveError && <span className="text-red-600">{approveError}</span>}
-        {application.approved && (
-          <span className="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full bg-green-50 text-green-700 border border-green-200">
-            Approved {application.approved_at ? `on ${new Date(application.approved_at).toLocaleDateString()}` : ''}
-          </span>
-        )}
         {application.denied && (
           <span className="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full bg-red-50 text-red-600 border border-red-200">
             Denied {application.denied_at ? `on ${new Date(application.denied_at).toLocaleDateString()}` : ''}
@@ -306,7 +248,7 @@ export function ApplicationDetailSidebar({
         disabled={isApproving || isActioned}
         className="bg-[#2C5F2E] text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-[#234d25] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        {isApproving ? 'Approving...' : application.approved ? 'Approved' : 'Approve'}
+        {isApproving ? 'Approving...' : 'Approve'}
       </button>
     </div>
   )
@@ -319,7 +261,21 @@ export function ApplicationDetailSidebar({
       footer={footer}
     >
       <div className="space-y-4">
-        <ApplicationSummary application={application} />
+        {application.approved && (
+          enrollmentLoading ? (
+            <div className="bg-white border border-gray-200 rounded-2xl px-5 py-5 shadow-sm">
+              <p className="text-xs text-gray-400 font-body">Loading enrollment progress...</p>
+            </div>
+          ) : enrollmentData ? (
+            <EnrollmentProgressCard
+              apps={siblingApps}
+              signaturesByStudent={enrollmentData.signaturesByStudent}
+              immunizationFileCountByStudent={enrollmentData.immunizationFileCountByStudent}
+              registrationFeePaidByStudent={enrollmentData.registrationFeePaidByStudent}
+              initialActiveStudentId={application.student_id ?? undefined}
+            />
+          ) : null
+        )}
 
         <SidebarSection title="Parent Info">
           <SidebarField label="Full Name" value={application.g1_full_name} />
