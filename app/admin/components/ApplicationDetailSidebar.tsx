@@ -9,6 +9,12 @@ import { createBrowserClient } from '@supabase/ssr'
 import { getAdminEnrollmentData, type AdminEnrollmentData } from '../../actions/getAdminEnrollmentData'
 import { EnrollmentProgressCard, type ApprovedApplication } from './EnrollmentProgressCard'
 
+type CachedEnrollmentData = AdminEnrollmentData & {
+  registrationFeePaidByStudent: Record<string, boolean>
+  siblingApps: ApprovedApplication[]
+}
+const enrollmentCache = new Map<string, CachedEnrollmentData>()
+
 const PROGRAM_LABELS: Record<string, string> = {
   summer_26: 'Summer 2026',
   school_year_26_27: 'School Year 2026-2027',
@@ -123,6 +129,14 @@ export function ApplicationDetailSidebar({
     )
 
     const load = async () => {
+      // Cache hit — use immediately, no loading state
+      const cached = enrollmentCache.get(application.user_id)
+      if (cached) {
+        setSiblingApps(cached.siblingApps)
+        setEnrollmentData(cached)
+        return
+      }
+
       setEnrollmentLoading(true)
       try {
         const { data: appRows } = await supabase
@@ -135,17 +149,20 @@ export function ApplicationDetailSidebar({
         const validApps: ApprovedApplication[] = (appRows ?? []).filter(
           (a): a is ApprovedApplication => a.student_id != null
         )
-        setSiblingApps(validApps)
 
         const studentIds = validApps.map((a) => a.student_id)
 
         if (studentIds.length === 0) {
-          setEnrollmentData({
+          const result: CachedEnrollmentData = {
             signaturesByStudent: {},
             immunizationFileCountByStudent: {},
             religiousExemptionCountByStudent: {},
             registrationFeePaidByStudent: {},
-          })
+            siblingApps: validApps,
+          }
+          enrollmentCache.set(application.user_id, result)
+          setSiblingApps(validApps)
+          setEnrollmentData(result)
           setEnrollmentLoading(false)
           return
         }
@@ -156,7 +173,10 @@ export function ApplicationDetailSidebar({
         }
 
         const data = await getAdminEnrollmentData(application.user_id, studentIds)
-        setEnrollmentData({ ...data, registrationFeePaidByStudent })
+        const result = { ...data, registrationFeePaidByStudent, siblingApps: validApps }
+        enrollmentCache.set(application.user_id, result)
+        setEnrollmentData(result)
+        setSiblingApps(validApps)
       } catch (err) {
         console.error('Failed to load enrollment data', err)
         setEnrollmentData(null)
@@ -261,22 +281,6 @@ export function ApplicationDetailSidebar({
       footer={footer}
     >
       <div className="space-y-4">
-        {application.approved && (
-          enrollmentLoading ? (
-            <div className="bg-white border border-gray-200 rounded-2xl px-5 py-5 shadow-sm">
-              <p className="text-xs text-gray-400 font-body">Loading enrollment progress...</p>
-            </div>
-          ) : enrollmentData ? (
-            <EnrollmentProgressCard
-              apps={siblingApps}
-              signaturesByStudent={enrollmentData.signaturesByStudent}
-              immunizationFileCountByStudent={enrollmentData.immunizationFileCountByStudent}
-              registrationFeePaidByStudent={enrollmentData.registrationFeePaidByStudent}
-              initialActiveStudentId={application.student_id ?? undefined}
-            />
-          ) : null
-        )}
-
         <SidebarSection title="Parent Info">
           <SidebarField label="Full Name" value={application.g1_full_name} />
           <SidebarField label="Email" value={application.g1_email} />
@@ -355,6 +359,38 @@ export function ApplicationDetailSidebar({
           <SidebarField label="Lives with Child" value={application.g2_lives_with_child} />
           <SidebarField label="Preferred Contact" value={application.g2_preferred_contact} />
         </SidebarSection>
+
+        {application.approved && (
+          enrollmentLoading ? (
+            <div className="space-y-3">
+              {/* Header card skeleton */}
+              <div className="bg-white border border-gray-200 rounded-2xl px-5 py-4 shadow-sm animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-1/2 mb-2" />
+                <div className="h-3 bg-gray-100 rounded w-1/4 mb-3" />
+                <div className="h-2 bg-gray-200 rounded-full w-full" />
+              </div>
+              {/* Checklist row skeletons — 5 rows */}
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="bg-white border border-gray-200 rounded-2xl px-5 py-4 shadow-sm animate-pulse flex items-center gap-4">
+                  <div className="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0" />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="h-3 bg-gray-200 rounded w-3/4" />
+                    <div className="h-2.5 bg-gray-100 rounded w-1/2" />
+                  </div>
+                  <div className="h-5 w-16 bg-gray-200 rounded-full flex-shrink-0" />
+                </div>
+              ))}
+            </div>
+          ) : enrollmentData ? (
+            <EnrollmentProgressCard
+              apps={siblingApps}
+              signaturesByStudent={enrollmentData.signaturesByStudent}
+              immunizationFileCountByStudent={enrollmentData.immunizationFileCountByStudent}
+              registrationFeePaidByStudent={enrollmentData.registrationFeePaidByStudent}
+              initialActiveStudentId={application.student_id ?? undefined}
+            />
+          ) : null
+        )}
 
         <div className="pt-2 border-t border-gray-100">
           <p className="text-xs text-gray-400 font-body">
