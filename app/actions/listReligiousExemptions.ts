@@ -1,6 +1,7 @@
 'use server'
 
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
+import { sendDiscordNotification, createErrorEmbed } from '@/app/lib/discord'
 
 export async function listReligiousExemptions(parentId: string, studentId: string) {
   const supabase = await createServerSupabaseClient()
@@ -13,6 +14,9 @@ export async function listReligiousExemptions(parentId: string, studentId: strin
     .from('religious-exemption-affidavits')
     .list(`${parentId}/${studentId}`, { sortBy: { column: 'created_at', order: 'asc' } })
 
-  if (error) return { error: error.message, files: [] }
+  if (error) {
+    void sendDiscordNotification(createErrorEmbed({ context: 'listReligiousExemptions – Storage List', error: error.message, details: { parentId, studentId } })).catch(() => {})
+    return { error: error.message, files: [] }
+  }
   return { files: data ?? [] }
 }

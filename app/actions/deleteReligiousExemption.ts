@@ -1,6 +1,7 @@
 'use server'
 
 import { createServerSupabaseClient } from '@/app/lib/supabase-server'
+import { sendDiscordNotification, createErrorEmbed } from '@/app/lib/discord'
 
 export async function deleteReligiousExemption(path: string, parentId: string) {
   const supabase = await createServerSupabaseClient()
@@ -14,6 +15,9 @@ export async function deleteReligiousExemption(path: string, parentId: string) {
     .from('religious-exemption-affidavits')
     .remove([path])
 
-  if (error) return { error: error.message }
+  if (error) {
+    void sendDiscordNotification(createErrorEmbed({ context: 'deleteReligiousExemption – Storage Remove', error: error.message, details: { path, parentId } })).catch(() => {})
+    return { error: error.message }
+  }
   return { success: true }
 }

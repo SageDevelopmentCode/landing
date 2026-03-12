@@ -1,6 +1,7 @@
 'use server'
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
 import { redirect } from 'next/navigation'
+import { sendDiscordNotification, createErrorEmbed } from '@/app/lib/discord'
 
 export async function signUpParent(fullName: string, email: string, password: string) {
   const supabase = await createServerSupabaseClient()
@@ -10,7 +11,10 @@ export async function signUpParent(fullName: string, email: string, password: st
 
   // When email confirmation is ON, Supabase throws a real error for duplicate emails
   if (error?.message === 'User already registered') return { error: 'EMAIL_EXISTS' }
-  if (error) return { error: error.message }
+  if (error) {
+    void sendDiscordNotification(createErrorEmbed({ context: 'signUpParent – Auth SignUp', error: error.message, details: { email } })).catch(() => {})
+    return { error: error.message }
+  }
 
   // When email confirmation is OFF, Supabase returns existing user with empty identities
   if (data.user?.identities?.length === 0) return { error: 'EMAIL_EXISTS' }
@@ -20,7 +24,10 @@ export async function signUpParent(fullName: string, email: string, password: st
 
   // 2. Sign them in immediately (Supabase auto-confirms if email confirm is disabled)
   const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
-  if (signInError) return { error: signInError.message }
+  if (signInError) {
+    void sendDiscordNotification(createErrorEmbed({ context: 'signUpParent – Auth SignIn', error: signInError.message, details: { email } })).catch(() => {})
+    return { error: signInError.message }
+  }
 
   // 3. Insert into admin.users via service role to bypass RLS
   const adminClient = createAdminClient()
@@ -28,7 +35,10 @@ export async function signUpParent(fullName: string, email: string, password: st
     .schema('admin')
     .from('users')
     .insert({ id: userId, email, full_name: fullName, role: 'parent' })
-  if (insertError) return { error: `Account setup failed: ${insertError.message}` }
+  if (insertError) {
+    void sendDiscordNotification(createErrorEmbed({ context: 'signUpParent – DB Insert user', error: insertError.message, details: { email, userId } })).catch(() => {})
+    return { error: `Account setup failed: ${insertError.message}` }
+  }
 
   // 4. Redirect to step 1 (must be outside try/catch)
   redirect('/apply/step/1')

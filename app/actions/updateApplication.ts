@@ -1,5 +1,6 @@
 'use server'
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
+import { sendDiscordNotification, createErrorEmbed } from '@/app/lib/discord'
 
 export async function updateApplication(applicationId: string, fields: Record<string, string | null>) {
   const supabase = await createServerSupabaseClient()
@@ -15,6 +16,9 @@ export async function updateApplication(applicationId: string, fields: Record<st
     .select()
     .single()
 
-  if (error) return { error: error.message }
+  if (error) {
+    void sendDiscordNotification(createErrorEmbed({ context: 'updateApplication – DB Update', error: error.message, details: { applicationId, userId: user.id } })).catch(() => {})
+    return { error: error.message }
+  }
   return { data }
 }

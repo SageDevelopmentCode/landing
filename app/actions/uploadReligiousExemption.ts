@@ -1,6 +1,7 @@
 'use server'
 
 import { createServerSupabaseClient } from '@/app/lib/supabase-server'
+import { sendDiscordNotification, createErrorEmbed } from '@/app/lib/discord'
 
 export async function uploadReligiousExemption(formData: FormData) {
   const supabase = await createServerSupabaseClient()
@@ -22,6 +23,9 @@ export async function uploadReligiousExemption(formData: FormData) {
     .from('religious-exemption-affidavits')
     .upload(path, file, { contentType: file.type, upsert: false })
 
-  if (error) return { error: error.message }
+  if (error) {
+    void sendDiscordNotification(createErrorEmbed({ context: 'uploadReligiousExemption – Storage Upload', error: error.message, details: { parentId, studentId, path } })).catch(() => {})
+    return { error: error.message }
+  }
   return { path }
 }

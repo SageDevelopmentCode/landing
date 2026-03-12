@@ -1,6 +1,7 @@
 'use server'
 
 import { createServerSupabaseClient } from '@/app/lib/supabase-server'
+import { sendDiscordNotification, createErrorEmbed } from '@/app/lib/discord'
 
 export async function uploadImmunizationRecord(formData: FormData) {
   const supabase = await createServerSupabaseClient()
@@ -22,6 +23,9 @@ export async function uploadImmunizationRecord(formData: FormData) {
     .from('immunization-records')
     .upload(path, file, { contentType: file.type, upsert: false })
 
-  if (error) return { error: error.message }
+  if (error) {
+    void sendDiscordNotification(createErrorEmbed({ context: 'uploadImmunizationRecord – Storage Upload', error: error.message, details: { parentId, studentId, path } })).catch(() => {})
+    return { error: error.message }
+  }
   return { path }
 }
