@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
+import { ChevronRight } from 'lucide-react'
 import { DetailSidebar } from './DetailSidebar'
 import { SidebarField, SidebarSection } from '../../components/SidebarPrimitives'
 import { deleteParent } from '../../actions/deleteParent'
@@ -9,6 +11,11 @@ const PROGRAM_LABELS: Record<string, string> = {
   summer_26: 'Summer 2026',
   school_year_26_27: 'School Year 2026-2027',
   both: 'Both',
+}
+
+function getInitials(name: string | null): string {
+  if (!name) return '?'
+  return name.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase()
 }
 
 function formatProgram(value: string | null): string {
@@ -88,6 +95,14 @@ function LoadingSkeleton() {
 }
 
 export function ParentDetailSidebar({ parent, detail, loading, onClose, onParentDeleted }: ParentDetailSidebarProps) {
+  const hasGuardian2 = !!(
+    parent?.g2_full_name ||
+    parent?.g2_relationship ||
+    parent?.g2_email ||
+    parent?.g2_cell_phone ||
+    parent?.g2_work_phone
+  )
+
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
@@ -130,7 +145,7 @@ export function ParentDetailSidebar({ parent, detail, loading, onClose, onParent
 
   return (
     <>
-      {showDeleteConfirm && (
+      {showDeleteConfirm && createPortal(
         <div
           className="fixed inset-0 flex items-center justify-center"
           style={{ zIndex: 60, backgroundColor: 'rgba(0,0,0,0.4)' }}
@@ -182,7 +197,8 @@ export function ParentDetailSidebar({ parent, detail, loading, onClose, onParent
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+      document.body
       )}
       <DetailSidebar
         isOpen={!!parent}
@@ -204,49 +220,51 @@ export function ParentDetailSidebar({ parent, detail, loading, onClose, onParent
             </SidebarSection>
 
             {/* Guardian 2 */}
-            <SidebarSection title="Guardian 2">
-              <SidebarField label="Full Name" value={parent?.g2_full_name} />
-              <SidebarField label="Relationship" value={parent?.g2_relationship} />
-              <SidebarField label="Email" value={parent?.g2_email} />
-              <SidebarField label="Cell Phone" value={parent?.g2_cell_phone} />
-              <SidebarField label="Work Phone" value={parent?.g2_work_phone} />
-            </SidebarSection>
+            {hasGuardian2 && (
+              <SidebarSection title="Guardian 2">
+                <SidebarField label="Full Name" value={parent?.g2_full_name} />
+                <SidebarField label="Relationship" value={parent?.g2_relationship} />
+                <SidebarField label="Email" value={parent?.g2_email} />
+                <SidebarField label="Cell Phone" value={parent?.g2_cell_phone} />
+                <SidebarField label="Work Phone" value={parent?.g2_work_phone} />
+              </SidebarSection>
+            )}
 
             {/* Children */}
-            <div className="bg-white border border-gray-200 rounded-2xl px-5 py-4 shadow-sm">
-              <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body border-b border-gray-100 pb-2 mb-3">
-                Children
-              </h3>
+            <SidebarSection title="Children">
               {!detail || detail.children.length === 0 ? (
                 <p className="text-sm text-gray-400 font-body italic">No children found</p>
               ) : (
-                <div className="space-y-3">
+                <>
                   {detail.children.map((child) => (
-                    <div key={child.id} className="bg-gray-50 rounded-lg px-3 py-2 space-y-1">
-                      <p className="text-sm font-medium text-gray-800 font-body">
-                        {child.child_legal_name ?? '—'}
-                      </p>
-                      <p className="text-xs text-gray-400 font-body">
-                        DOB:{' '}
-                        {child.dob_month && child.dob_day && child.dob_year
-                          ? `${child.dob_month}/${child.dob_day}/${child.dob_year}`
-                          : '—'}
-                      </p>
+                    <div key={child.id} className="bg-gray-50 rounded-lg px-3 py-2 flex items-center gap-3 cursor-pointer">
+                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs font-semibold text-gray-500">{getInitials(child.child_legal_name)}</span>
+                      </div>
+                      <div className="flex-1 space-y-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-800 font-body">
+                          {child.child_legal_name ?? '—'}
+                        </p>
+                        <p className="text-xs text-gray-400 font-body">
+                          DOB:{' '}
+                          {child.dob_month && child.dob_day && child.dob_year
+                            ? `${child.dob_month}/${child.dob_day}/${child.dob_year}`
+                            : '—'}
+                        </p>
+                      </div>
+                      <ChevronRight size={14} className="text-gray-300 flex-shrink-0" />
                     </div>
                   ))}
-                </div>
+                </>
               )}
-            </div>
+            </SidebarSection>
 
             {/* Applications */}
-            <div className="bg-white border border-gray-200 rounded-2xl px-5 py-4 shadow-sm">
-              <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body border-b border-gray-100 pb-2 mb-3">
-                Applications
-              </h3>
+            <SidebarSection title="Applications">
               {!detail || detail.applications.length === 0 ? (
                 <p className="text-sm text-gray-400 font-body italic">No applications found</p>
               ) : (
-                <div className="space-y-3">
+                <>
                   {detail.applications.map((app) => {
                     const dateLabel = app.approved
                       ? app.approved_at
@@ -257,34 +275,37 @@ export function ParentDetailSidebar({ parent, detail, loading, onClose, onParent
                       : null
 
                     return (
-                      <div key={app.id} className="bg-gray-50 rounded-lg px-3 py-2 space-y-2">
-                        <p className="text-sm font-medium text-gray-800 font-body">
-                          {app.child_legal_name ?? '—'}
-                        </p>
-                        <p className="text-xs text-gray-500 font-body">{formatProgram(app.program)}</p>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200">
-                            {app.status}
-                          </span>
-                          {app.approved ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
-                              Approved
+                      <div key={app.id} className="bg-gray-50 rounded-lg px-3 py-2 flex items-center gap-2 cursor-pointer">
+                        <div className="flex-1 space-y-2 min-w-0">
+                          <p className="text-sm font-medium text-gray-800 font-body">
+                            {app.child_legal_name ?? '—'}
+                          </p>
+                          <p className="text-xs text-gray-500 font-body">{formatProgram(app.program)}</p>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200">
+                              {app.status}
                             </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500 border border-gray-200">
-                              Pending
-                            </span>
+                            {app.approved ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
+                                Approved
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500 border border-gray-200">
+                                Pending
+                              </span>
+                            )}
+                          </div>
+                          {dateLabel && (
+                            <p className="text-xs text-gray-400 font-body">{dateLabel}</p>
                           )}
                         </div>
-                        {dateLabel && (
-                          <p className="text-xs text-gray-400 font-body">{dateLabel}</p>
-                        )}
+                        <ChevronRight size={14} className="text-gray-300 flex-shrink-0" />
                       </div>
                     )
                   })}
-                </div>
+                </>
               )}
-            </div>
+            </SidebarSection>
           </div>
         )}
       </DetailSidebar>

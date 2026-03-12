@@ -12,3 +12,6 @@ GRANT SELECT ON admin.students TO service_role;
 
 -- Allow service_role to update admin.users (for G1/G2/custody fields)
 GRANT UPDATE ON admin.users TO service_role;
+
+-- Allow service_role to update admin.students (for soft-delete)
+GRANT UPDATE ON admin.students TO service_role;
