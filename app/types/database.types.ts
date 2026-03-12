@@ -39,6 +39,7 @@ export type Database = {
           dysregulation_response: string | null
           regulation_strategies: string | null
           activities_to_avoid: string | null
+          is_deleted: boolean
           created_at: string | null
           updated_at: string | null
         }
@@ -66,6 +67,7 @@ export type Database = {
           dysregulation_response?: string | null
           regulation_strategies?: string | null
           activities_to_avoid?: string | null
+          is_deleted?: boolean
           created_at?: string | null
           updated_at?: string | null
         }
@@ -93,6 +95,7 @@ export type Database = {
           dysregulation_response?: string | null
           regulation_strategies?: string | null
           activities_to_avoid?: string | null
+          is_deleted?: boolean
           created_at?: string | null
           updated_at?: string | null
         }
@@ -122,6 +125,7 @@ export type Database = {
           g2_has_custody: string | null
           has_custody_orders: string | null
           custody_orders_description: string | null
+          is_deleted: boolean
         }
         Insert: {
           created_at?: string | null
@@ -146,6 +150,7 @@ export type Database = {
           g2_has_custody?: string | null
           has_custody_orders?: string | null
           custody_orders_description?: string | null
+          is_deleted?: boolean
         }
         Update: {
           created_at?: string | null
@@ -170,6 +175,7 @@ export type Database = {
           g2_has_custody?: string | null
           has_custody_orders?: string | null
           custody_orders_description?: string | null
+          is_deleted?: boolean
         }
         Relationships: []
       }

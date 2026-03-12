@@ -1,6 +1,7 @@
 'use client'
 
 import { DetailSidebar } from './DetailSidebar'
+import { SidebarField, SidebarSection } from '../../components/SidebarPrimitives'
 import { approveApplication } from '../../actions/approveApplication'
 import { denyApplication } from '../../actions/denyApplication'
 import { useState } from 'react'
@@ -87,29 +88,6 @@ interface ApplicationDetailSidebarProps {
   onDenied: (id: string, reason: string) => void
 }
 
-function Field({ label, value }: { label: string; value: string | number | null | undefined }) {
-  return (
-    <div>
-      <p className="text-xs text-gray-400 font-body mb-0.5">{label}</p>
-      {value != null && value !== '' ? (
-        <p className="text-sm text-gray-800 font-body">{value}</p>
-      ) : (
-        <p className="text-sm text-gray-400 font-body italic">—</p>
-      )}
-    </div>
-  )
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="bg-white border border-gray-200 rounded-xl px-5 py-4 shadow-sm">
-      <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body border-b border-gray-100 pb-2 mb-3">
-        {title}
-      </h3>
-      <div className="space-y-2">{children}</div>
-    </div>
-  )
-}
 
 type CriterionResult = {
   label: string
@@ -177,7 +155,7 @@ function ApplicationSummary({ application }: { application: Application }) {
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl px-5 py-5 shadow-sm">
+    <div className="bg-white border border-gray-200 rounded-2xl px-5 py-5 shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <span className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body">
@@ -343,15 +321,15 @@ export function ApplicationDetailSidebar({
       <div className="space-y-4">
         <ApplicationSummary application={application} />
 
-        <Section title="Parent Info">
-          <Field label="Full Name" value={application.g1_full_name} />
-          <Field label="Email" value={application.g1_email} />
-        </Section>
+        <SidebarSection title="Parent Info">
+          <SidebarField label="Full Name" value={application.g1_full_name} />
+          <SidebarField label="Email" value={application.g1_email} />
+        </SidebarSection>
 
-        <Section title="Child Info">
-          <Field label="Legal Name" value={application.child_legal_name} />
-          <Field label="Preferred Name" value={application.preferred_name} />
-          <Field
+        <SidebarSection title="Child Info">
+          <SidebarField label="Legal Name" value={application.child_legal_name} />
+          <SidebarField label="Preferred Name" value={application.preferred_name} />
+          <SidebarField
             label="Date of Birth"
             value={
               application.dob_month && application.dob_day && application.dob_year
@@ -359,68 +337,68 @@ export function ApplicationDetailSidebar({
                 : null
             }
           />
-          <Field label="Age" value={application.child_age} />
-          <Field label="Grade" value={application.child_grade} />
-          <Field label="Program" value={formatProgram(application.program)} />
-        </Section>
+          <SidebarField label="Age" value={application.child_age} />
+          <SidebarField label="Grade" value={application.child_grade} />
+          <SidebarField label="Program" value={formatProgram(application.program)} />
+        </SidebarSection>
 
-        <Section title="Address">
-          <Field label="Street" value={application.address_street} />
-          <Field label="City" value={application.address_city} />
-          <Field label="State" value={application.address_state} />
-          <Field label="ZIP" value={application.address_zip} />
-        </Section>
+        <SidebarSection title="Address">
+          <SidebarField label="Street" value={application.address_street} />
+          <SidebarField label="City" value={application.address_city} />
+          <SidebarField label="State" value={application.address_state} />
+          <SidebarField label="ZIP" value={application.address_zip} />
+        </SidebarSection>
 
-        <Section title="Health">
-          <Field label="Has Allergies" value={application.has_allergies != null ? (application.has_allergies ? 'Yes' : 'No') : null} />
-          <Field label="Allergies Description" value={application.allergies_description} />
-          <Field label="Has Medical Conditions" value={application.has_medical_conditions != null ? (application.has_medical_conditions ? 'Yes' : 'No') : null} />
-          <Field label="Medical Conditions Description" value={application.medical_conditions_description} />
-          <Field label="Has Emergency Medications" value={application.has_emergency_medications != null ? (application.has_emergency_medications ? 'Yes' : 'No') : null} />
-          <Field label="Emergency Medications Description" value={application.emergency_medications_description} />
-          <Field label="Needs Aide" value={application.needs_aide != null ? (application.needs_aide ? 'Yes' : 'No') : null} />
-          <Field label="Aide Description" value={application.needs_aide_description} />
-          <Field label="Activities to Avoid" value={application.activities_to_avoid} />
-          <Field label="Dysregulation Response" value={application.dysregulation_response} />
-          <Field label="Regulation Strategies" value={application.regulation_strategies} />
-          <Field label="History Flags" value={application.history_flags} />
-          <Field label="History Explanation" value={application.history_explanation} />
-          <Field label="Has Custody Orders" value={application.has_custody_orders != null ? (application.has_custody_orders ? 'Yes' : 'No') : null} />
-          <Field label="Custody Orders Description" value={application.custody_orders_description} />
-        </Section>
+        <SidebarSection title="Health">
+          <SidebarField label="Has Allergies" value={application.has_allergies} />
+          <SidebarField label="Allergies Description" value={application.allergies_description} />
+          <SidebarField label="Has Medical Conditions" value={application.has_medical_conditions} />
+          <SidebarField label="Medical Conditions Description" value={application.medical_conditions_description} />
+          <SidebarField label="Has Emergency Medications" value={application.has_emergency_medications} />
+          <SidebarField label="Emergency Medications Description" value={application.emergency_medications_description} />
+          <SidebarField label="Needs Aide" value={application.needs_aide} />
+          <SidebarField label="Aide Description" value={application.needs_aide_description} />
+          <SidebarField label="Activities to Avoid" value={application.activities_to_avoid} />
+          <SidebarField label="Dysregulation Response" value={application.dysregulation_response} />
+          <SidebarField label="Regulation Strategies" value={application.regulation_strategies} />
+          <SidebarField label="History Flags" value={application.history_flags} />
+          <SidebarField label="History Explanation" value={application.history_explanation} />
+          <SidebarField label="Has Custody Orders" value={application.has_custody_orders} />
+          <SidebarField label="Custody Orders Description" value={application.custody_orders_description} />
+        </SidebarSection>
 
-        <Section title="Background">
-          <Field label="Previously Homeschooled" value={application.is_homeschooled} />
-          <Field label="Homeschool Explanation" value={application.homeschool_explanation} />
-          <Field label="Previous Schools" value={application.previous_schools} />
-          <Field label="Previous Schools List" value={application.previous_schools_list} />
-          <Field label="Special Interests" value={application.special_interests} />
-          <Field label="Learning Style" value={application.learning_style} />
-          <Field label="Strengths & Interests" value={application.strengths_interests} />
-          <Field label="Current Challenges" value={application.current_challenges} />
-        </Section>
+        <SidebarSection title="Background">
+          <SidebarField label="Previously Homeschooled" value={application.is_homeschooled} />
+          <SidebarField label="Homeschool Explanation" value={application.homeschool_explanation} />
+          <SidebarField label="Previous Schools" value={application.previous_schools} />
+          <SidebarField label="Previous Schools List" value={application.previous_schools_list} />
+          <SidebarField label="Special Interests" value={application.special_interests} />
+          <SidebarField label="Learning Style" value={application.learning_style} />
+          <SidebarField label="Strengths & Interests" value={application.strengths_interests} />
+          <SidebarField label="Current Challenges" value={application.current_challenges} />
+        </SidebarSection>
 
-        <Section title="Guardian 1">
-          <Field label="Name" value={application.g1_full_name} />
-          <Field label="Relationship" value={application.g1_relationship} />
-          <Field label="Cell Phone" value={application.g1_cell_phone} />
-          <Field label="Work Phone" value={application.g1_work_phone} />
-          <Field label="Email" value={application.g1_email} />
-          <Field label="Has Custody" value={application.g1_has_custody != null ? (application.g1_has_custody ? 'Yes' : 'No') : null} />
-          <Field label="Lives with Child" value={application.g1_lives_with_child != null ? (application.g1_lives_with_child ? 'Yes' : 'No') : null} />
-          <Field label="Preferred Contact" value={application.g1_preferred_contact != null ? (application.g1_preferred_contact ? 'Yes' : 'No') : null} />
-        </Section>
+        <SidebarSection title="Guardian 1">
+          <SidebarField label="Name" value={application.g1_full_name} />
+          <SidebarField label="Relationship" value={application.g1_relationship} />
+          <SidebarField label="Cell Phone" value={application.g1_cell_phone} />
+          <SidebarField label="Work Phone" value={application.g1_work_phone} />
+          <SidebarField label="Email" value={application.g1_email} />
+          <SidebarField label="Has Custody" value={application.g1_has_custody} />
+          <SidebarField label="Lives with Child" value={application.g1_lives_with_child} />
+          <SidebarField label="Preferred Contact" value={application.g1_preferred_contact} />
+        </SidebarSection>
 
-        <Section title="Guardian 2">
-          <Field label="Name" value={application.g2_full_name} />
-          <Field label="Relationship" value={application.g2_relationship} />
-          <Field label="Cell Phone" value={application.g2_cell_phone} />
-          <Field label="Work Phone" value={application.g2_work_phone} />
-          <Field label="Email" value={application.g2_email} />
-          <Field label="Has Custody" value={application.g2_has_custody != null ? (application.g2_has_custody ? 'Yes' : 'No') : null} />
-          <Field label="Lives with Child" value={application.g2_lives_with_child != null ? (application.g2_lives_with_child ? 'Yes' : 'No') : null} />
-          <Field label="Preferred Contact" value={application.g2_preferred_contact != null ? (application.g2_preferred_contact ? 'Yes' : 'No') : null} />
-        </Section>
+        <SidebarSection title="Guardian 2">
+          <SidebarField label="Name" value={application.g2_full_name} />
+          <SidebarField label="Relationship" value={application.g2_relationship} />
+          <SidebarField label="Cell Phone" value={application.g2_cell_phone} />
+          <SidebarField label="Work Phone" value={application.g2_work_phone} />
+          <SidebarField label="Email" value={application.g2_email} />
+          <SidebarField label="Has Custody" value={application.g2_has_custody} />
+          <SidebarField label="Lives with Child" value={application.g2_lives_with_child} />
+          <SidebarField label="Preferred Contact" value={application.g2_preferred_contact} />
+        </SidebarSection>
 
         <div className="pt-2 border-t border-gray-100">
           <p className="text-xs text-gray-400 font-body">

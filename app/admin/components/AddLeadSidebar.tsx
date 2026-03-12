@@ -51,9 +51,9 @@ const inputStyle = {
 const labelStyle = {
   display: 'block',
   fontSize: '12px',
-  fontWeight: 500,
+  fontWeight: 600,
   marginBottom: '6px',
-  color: colors.textSecondary,
+  color: '#6B7280',
 }
 
 export function AddLeadSidebar({ isOpen, onClose, onLeadAdded }: AddLeadSidebarProps) {

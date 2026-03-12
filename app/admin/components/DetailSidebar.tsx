@@ -71,29 +71,21 @@ export function DetailSidebar({
           >
             {/* Header */}
             <div
-              className="sticky top-0 z-10 px-6 py-5 flex items-center justify-between border-b flex-shrink-0"
-              style={{
-                backgroundColor: colors.warmLinen,
-                borderBottom: `1px solid ${colors.border}`,
-              }}
+              className="sticky top-0 z-10 px-6 py-5 flex items-center justify-between border-b border-gray-100 flex-shrink-0 bg-white"
             >
-              <h2
-                className="text-xl font-semibold"
-                style={{ color: colors.mistyForest }}
-              >
+              <h2 className="text-lg font-bold font-heading text-gray-800">
                 {title}
               </h2>
               <button
                 onClick={onClose}
-                className="p-2 rounded-lg transition-all duration-200 hover:bg-white/50"
+                className="p-2 rounded-full transition-colors hover:bg-gray-100"
                 aria-label="Close sidebar"
               >
                 <svg
-                  className="w-5 h-5"
+                  className="w-5 h-5 text-gray-500"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
-                  style={{ color: colors.textSecondary }}
                 >
                   <path
                     strokeLinecap="round"
@@ -110,13 +102,7 @@ export function DetailSidebar({
 
             {/* Footer */}
             {footer && (
-              <div
-                className="flex-shrink-0 px-6 py-4"
-                style={{
-                  borderTop: `1px solid ${colors.border}`,
-                  backgroundColor: colors.warmLinen,
-                }}
-              >
+              <div className="flex-shrink-0 px-6 py-4 bg-white border-t border-gray-100">
                 {footer}
               </div>
             )}

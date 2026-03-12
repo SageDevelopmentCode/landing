@@ -59,9 +59,9 @@ const inputStyle = {
 const labelStyle = {
   display: 'block' as const,
   fontSize: '12px',
-  fontWeight: 500,
+  fontWeight: 600,
   marginBottom: '4px',
-  color: '#9CA3AF',
+  color: '#6B7280',
 }
 
 function buildDraft(sub: Lead): Record<string, string> {
@@ -275,7 +275,7 @@ export function LeadsDetailSidebar({
           className="p-6 w-80"
           style={{
             backgroundColor: 'white',
-            borderRadius: '12px',
+            borderRadius: '16px',
             border: '1px solid #E5E7EB',
           }}
           onClick={(e) => e.stopPropagation()}
@@ -327,17 +327,8 @@ export function LeadsDetailSidebar({
     >
       <div className="space-y-5">
         {/* Status */}
-        <div>
-          <h3
-            style={{
-              fontSize: '11px',
-              fontWeight: 600,
-              textTransform: 'uppercase' as const,
-              letterSpacing: '0.1em',
-              color: '#9CA3AF',
-              marginBottom: '12px',
-            }}
-          >
+        <div className="mb-6">
+          <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-3 border-b border-gray-100 pb-2">
             Current Status
           </h3>
           <div className="mb-3">
@@ -351,27 +342,9 @@ export function LeadsDetailSidebar({
           />
         </div>
 
-        {/* Contact/Parent Information - Card Style */}
-        <div
-          style={{
-            backgroundColor: 'white',
-            border: '1px solid #E5E7EB',
-            borderRadius: '12px',
-            padding: '16px 20px',
-          }}
-        >
-          <h3
-            style={{
-              fontSize: '11px',
-              fontWeight: 600,
-              textTransform: 'uppercase' as const,
-              letterSpacing: '0.1em',
-              color: '#9CA3AF',
-              borderBottom: '1px solid #F3F4F6',
-              paddingBottom: '8px',
-              marginBottom: '12px',
-            }}
-          >
+        {/* Contact/Parent Information */}
+        <div className="mb-6">
+          <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-3 border-b border-gray-100 pb-2">
             {isWaitlist ? 'Parent Information' : 'Contact Information'}
           </h3>
           <div className="space-y-3">
@@ -406,28 +379,10 @@ export function LeadsDetailSidebar({
           </div>
         </div>
 
-        {/* Waitlist-specific: Child Information - Card Style */}
+        {/* Waitlist-specific: Child Information */}
         {isWaitlist && (
-          <div
-            style={{
-              backgroundColor: 'white',
-              border: '1px solid #E5E7EB',
-              borderRadius: '12px',
-              padding: '16px 20px',
-            }}
-          >
-            <h3
-              style={{
-                fontSize: '11px',
-                fontWeight: 600,
-                textTransform: 'uppercase' as const,
-                letterSpacing: '0.1em',
-                color: '#9CA3AF',
-                borderBottom: '1px solid #F3F4F6',
-                paddingBottom: '8px',
-                marginBottom: '12px',
-              }}
-            >
+          <div className="mb-6">
+            <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-3 border-b border-gray-100 pb-2">
               Child Information
             </h3>
             <div className="space-y-3">
@@ -452,28 +407,10 @@ export function LeadsDetailSidebar({
           </div>
         )}
 
-        {/* Contact-specific: Message - Card Style */}
+        {/* Contact-specific: Message */}
         {isContact && (
-          <div
-            style={{
-              backgroundColor: 'white',
-              border: '1px solid #E5E7EB',
-              borderRadius: '12px',
-              padding: '16px 20px',
-            }}
-          >
-            <h3
-              style={{
-                fontSize: '11px',
-                fontWeight: 600,
-                textTransform: 'uppercase' as const,
-                letterSpacing: '0.1em',
-                color: '#9CA3AF',
-                borderBottom: '1px solid #F3F4F6',
-                paddingBottom: '8px',
-                marginBottom: '12px',
-              }}
-            >
+          <div className="mb-6">
+            <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-3 border-b border-gray-100 pb-2">
               Message
             </h3>
             <textarea
@@ -485,17 +422,8 @@ export function LeadsDetailSidebar({
         )}
 
         {/* Email Thread Section */}
-        <div>
-          <h3
-            style={{
-              fontSize: '11px',
-              fontWeight: 600,
-              textTransform: 'uppercase' as const,
-              letterSpacing: '0.1em',
-              color: '#9CA3AF',
-              marginBottom: '12px',
-            }}
-          >
+        <div className="mb-6">
+          <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-3 border-b border-gray-100 pb-2">
             Email History
           </h3>
           <EmailThread emailAddress={currentSubmission.email} />

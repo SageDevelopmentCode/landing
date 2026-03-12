@@ -3,16 +3,10 @@
 import { DetailSidebar } from './DetailSidebar'
 import { StatusBadge } from './StatusBadge'
 import { StatusDropdown } from './StatusDropdown'
-import { colors, radius, shadows, spacing } from '../design-system'
-import { Merriweather } from 'next/font/google'
 import { LeadStatus } from '../../types/lead-status'
 import { updateWaitlistStatus } from '../../actions/updateLeadStatus'
 import { useState } from 'react'
 
-const merriweather = Merriweather({
-  weight: ['300', '400', '700', '900'],
-  subsets: ['latin'],
-})
 
 interface WaitlistSubmission {
   id: string
@@ -77,11 +71,8 @@ export function WaitlistDetailSidebar({
     >
       <div className="space-y-8">
         {/* Status Section */}
-        <div>
-          <h3
-            className={`text-sm font-semibold mb-3 uppercase tracking-wide ${merriweather.className}`}
-            style={{ color: colors.textSecondary }}
-          >
+        <div className="mb-6">
+          <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-3 border-b border-gray-100 pb-2">
             Current Status
           </h3>
           <div className="mb-3">
@@ -96,122 +87,50 @@ export function WaitlistDetailSidebar({
         </div>
 
         {/* Parent Information */}
-        <div>
-          <h3
-            className={`text-lg font-bold mb-4 ${merriweather.className}`}
-            style={{ color: colors.mistyForest }}
-          >
+        <div className="mb-6">
+          <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-3 border-b border-gray-100 pb-2">
             Parent Information
           </h3>
-          <div
-            className="p-5 rounded-xl space-y-4"
-            style={{
-              backgroundColor: colors.softCloud,
-              border: `1px solid ${colors.border}`,
-            }}
-          >
-            <div>
-              <label
-                className="block text-xs font-semibold uppercase tracking-wide mb-1"
-                style={{ color: colors.textSecondary }}
-              >
-                Full Name
-              </label>
-              <p
-                className="text-lg font-medium"
-                style={{ color: colors.textPrimary }}
-              >
-                {currentSubmission.parent_name}
-              </p>
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-xs text-gray-400 font-body">Full Name</span>
+              <span className="text-sm text-gray-800 font-body">{currentSubmission.parent_name}</span>
             </div>
-            <div className="pt-3" style={{ borderTop: `1px solid ${colors.divider}` }}>
-              <label
-                className="block text-xs font-semibold uppercase tracking-wide mb-1"
-                style={{ color: colors.textSecondary }}
-              >
-                Email Address
-              </label>
-              <p className="text-base" style={{ color: colors.textPrimary }}>
-                <a
-                  href={`mailto:${currentSubmission.email}`}
-                  className="hover:underline"
-                  style={{ color: colors.mistyForest }}
-                >
-                  {currentSubmission.email}
-                </a>
-              </p>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-xs text-gray-400 font-body">Email Address</span>
+              <a href={`mailto:${currentSubmission.email}`} className="text-sm text-[#2C5F2E] font-body hover:underline">
+                {currentSubmission.email}
+              </a>
             </div>
-            <div className="pt-3" style={{ borderTop: `1px solid ${colors.divider}` }}>
-              <label
-                className="block text-xs font-semibold uppercase tracking-wide mb-1"
-                style={{ color: colors.textSecondary }}
-              >
-                Phone Number
-              </label>
-              <p className="text-base" style={{ color: colors.textPrimary }}>
-                <a
-                  href={`tel:${currentSubmission.phone}`}
-                  className="hover:underline"
-                  style={{ color: colors.mistyForest }}
-                >
-                  {currentSubmission.phone}
-                </a>
-              </p>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-xs text-gray-400 font-body">Phone Number</span>
+              <a href={`tel:${currentSubmission.phone}`} className="text-sm text-[#2C5F2E] font-body hover:underline">
+                {currentSubmission.phone}
+              </a>
             </div>
           </div>
         </div>
 
         {/* Child Information */}
-        <div>
-          <h3
-            className={`text-lg font-bold mb-4 ${merriweather.className}`}
-            style={{ color: colors.mistyForest }}
-          >
+        <div className="mb-6">
+          <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-3 border-b border-gray-100 pb-2">
             Child Information
           </h3>
-          <div
-            className="p-5 rounded-xl space-y-4"
-            style={{
-              backgroundColor: colors.softCloud,
-              border: `1px solid ${colors.border}`,
-            }}
-          >
-            <div>
-              <label
-                className="block text-xs font-semibold uppercase tracking-wide mb-1"
-                style={{ color: colors.textSecondary }}
-              >
-                Child's Name
-              </label>
-              <p
-                className="text-lg font-medium"
-                style={{ color: colors.textPrimary }}
-              >
-                {currentSubmission.child_name}
-              </p>
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-xs text-gray-400 font-body">Child's Name</span>
+              <span className="text-sm text-gray-800 font-body">{currentSubmission.child_name}</span>
             </div>
-            <div className="pt-3" style={{ borderTop: `1px solid ${colors.divider}` }}>
-              <label
-                className="block text-xs font-semibold uppercase tracking-wide mb-1"
-                style={{ color: colors.textSecondary }}
-              >
-                Age
-              </label>
-              <p className="text-base" style={{ color: colors.textPrimary }}>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-xs text-gray-400 font-body">Age</span>
+              <span className="text-sm text-gray-800 font-body">
                 {currentSubmission.child_age ? `${currentSubmission.child_age} years old` : 'Not specified'}
-              </p>
+              </span>
             </div>
             {currentSubmission.preferred_start_date && (
-              <div className="pt-3" style={{ borderTop: `1px solid ${colors.divider}` }}>
-                <label
-                  className="block text-xs font-semibold uppercase tracking-wide mb-1"
-                  style={{ color: colors.textSecondary }}
-                >
-                  Preferred Start Date
-                </label>
-                <p className="text-base" style={{ color: colors.textPrimary }}>
-                  {currentSubmission.preferred_start_date}
-                </p>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-xs text-gray-400 font-body">Preferred Start Date</span>
+                <span className="text-sm text-gray-800 font-body">{currentSubmission.preferred_start_date}</span>
               </div>
             )}
           </div>
@@ -219,49 +138,21 @@ export function WaitlistDetailSidebar({
 
         {/* Message/Additional Info */}
         {currentSubmission.notes && (
-          <div>
-            <h3
-              className={`text-lg font-bold mb-4 ${merriweather.className}`}
-              style={{ color: colors.mistyForest }}
-            >
+          <div className="mb-6">
+            <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-3 border-b border-gray-100 pb-2">
               Additional Information
             </h3>
-            <div
-              className="p-5 rounded-xl"
-              style={{
-                backgroundColor: colors.softCloud,
-                border: `1px solid ${colors.border}`,
-              }}
-            >
-              <p
-                className="text-base leading-relaxed whitespace-pre-wrap"
-                style={{ color: colors.textPrimary }}
-              >
-                {currentSubmission.notes}
-              </p>
-            </div>
+            <p className="text-sm text-gray-800 font-body leading-relaxed whitespace-pre-wrap">
+              {currentSubmission.notes}
+            </p>
           </div>
         )}
 
         {/* Submission Date */}
-        <div
-          className="pt-6"
-          style={{ borderTop: `2px solid ${colors.divider}` }}
-        >
-          <h3
-            className={`text-sm font-semibold mb-3 uppercase tracking-wide ${merriweather.className}`}
-            style={{ color: colors.textSecondary }}
-          >
-            Submission Details
-          </h3>
-          <div className="space-y-2">
-            <p className="text-base" style={{ color: colors.textPrimary }}>
-              <span className="font-medium">Date:</span> {formatDate(currentSubmission.created_at)}
-            </p>
-            <p className="text-base" style={{ color: colors.textPrimary }}>
-              <span className="font-medium">Time:</span> {formatTime(currentSubmission.created_at)}
-            </p>
-          </div>
+        <div className="pt-2 border-t border-gray-100">
+          <p className="text-xs text-gray-400 font-body">
+            Submitted on {formatDate(currentSubmission.created_at)} at {formatTime(currentSubmission.created_at)}
+          </p>
         </div>
       </div>
     </DetailSidebar>
