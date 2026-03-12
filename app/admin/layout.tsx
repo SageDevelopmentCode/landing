@@ -77,8 +77,7 @@ export default async function AdminLayout({
     .schema('parent_app')
     .from('applications')
     .select('id', { count: 'exact', head: true })
-    .eq('status', 'completed')
-    .eq('approved', false)
+    .eq('status', 'in_review')
 
   return (
     <div

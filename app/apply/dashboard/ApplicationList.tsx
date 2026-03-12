@@ -440,6 +440,7 @@ export default function ApplicationList({
         {apps.map((app, i) => {
           const childName = app.preferred_name ?? app.child_legal_name ?? "—";
           const isInProgress = app.status === "in_progress";
+          const isInReview = app.status === "in_review";
 
           function getContinueStep(): number {
             if (!app.g1_full_name) return 2;
@@ -468,10 +469,15 @@ export default function ApplicationList({
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                   In Progress
                 </span>
+              ) : isInReview ? (
+                <span className="inline-flex items-center gap-1.5 w-fit px-2.5 py-1 bg-amber-50 text-amber-700 text-xs font-semibold rounded-full font-body border border-amber-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                  In Review
+                </span>
               ) : (
                 <span className="inline-flex items-center gap-1.5 w-fit px-2.5 py-1 bg-green-50 text-green-700 text-xs font-semibold rounded-full font-body border border-green-200">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                  Submitted
+                  Enrolling
                 </span>
               )}
               {isInProgress ? (

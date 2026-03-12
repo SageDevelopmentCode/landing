@@ -109,6 +109,7 @@ export async function POST(request: Request) {
           approved: true,
           approved_at: new Date().toISOString(),
           student_id: studentRow.id,
+          status: 'enrolling',
         })
         .eq("id", app.id);
 

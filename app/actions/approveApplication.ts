@@ -6,7 +6,7 @@ export async function approveApplication(id: string) {
   const { error } = await adminClient
     .schema('parent_app')
     .from('applications')
-    .update({ approved: true, approved_at: new Date().toISOString() })
+    .update({ approved: true, approved_at: new Date().toISOString(), status: 'enrolling' })
     .eq('id', id)
   if (error) return { error: error.message }
   return { success: true }

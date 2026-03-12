@@ -23,7 +23,7 @@ export async function saveApplicationStep5(formData: {
     .schema('parent_app')
     .from('applications')
     .update({
-      status: 'completed',
+      status: 'in_review',
       g1_signature_name: formData.g1SignatureName || null,
       g1_signature: formData.g1Signature || null,
       g1_signature_date: formData.g1SignatureDate || null,
