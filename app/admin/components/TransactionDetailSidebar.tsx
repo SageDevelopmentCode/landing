@@ -249,6 +249,8 @@ export function TransactionDetailSidebar({ transaction, onClose }: TransactionDe
   const [openStudent, setOpenStudent] = useState<FullStudent | null>(null)
   const [studentDetailLoading, setStudentDetailLoading] = useState(false)
 
+  const [showTransactionSidebar, setShowTransactionSidebar] = useState(true)
+
   useEffect(() => {
     setStudentRecord(null)
     setApplicationRecord(null)
@@ -257,6 +259,7 @@ export function TransactionDetailSidebar({ transaction, onClose }: TransactionDe
     setOpenParent(null)
     setOpenParentDetail(null)
     setOpenStudent(null)
+    setShowTransactionSidebar(true)
 
     if (!transaction?.id) return
     if (transaction.payment_type === 'donation') return
@@ -298,7 +301,10 @@ export function TransactionDetailSidebar({ transaction, onClose }: TransactionDe
       .eq('id', applicationRecord.id)
       .single()
     setApplicationLoading(false)
-    if (data) setOpenApplication(data as FullApplication)
+    if (data) {
+      setOpenApplication(data as FullApplication)
+      setShowTransactionSidebar(false)
+    }
   }
 
   const handleOpenParent = async () => {
@@ -312,6 +318,7 @@ export function TransactionDetailSidebar({ transaction, onClose }: TransactionDe
         children: result.children as ParentDetail['children'],
         applications: result.applications as ParentDetail['applications'],
       })
+      setShowTransactionSidebar(false)
     }
   }
 
@@ -320,7 +327,10 @@ export function TransactionDetailSidebar({ transaction, onClose }: TransactionDe
     setStudentDetailLoading(true)
     const data = await getStudentDetail(studentRecord.id)
     setStudentDetailLoading(false)
-    if (data) setOpenStudent(data as FullStudent)
+    if (data) {
+      setOpenStudent(data as FullStudent)
+      setShowTransactionSidebar(false)
+    }
   }
 
   const title = transaction
@@ -333,7 +343,7 @@ export function TransactionDetailSidebar({ transaction, onClose }: TransactionDe
 
   return (
     <>
-      <DetailSidebar isOpen={!!transaction} onClose={onClose} title={title}>
+      <DetailSidebar isOpen={!!transaction && showTransactionSidebar} onClose={onClose} title={title}>
         {transaction && (
           <div className="space-y-4">
             <SidebarSection title="Payment">
@@ -468,7 +478,7 @@ export function TransactionDetailSidebar({ transaction, onClose }: TransactionDe
       {openApplication && (
         <ApplicationDetailSidebar
           application={openApplication}
-          onClose={() => setOpenApplication(null)}
+          onClose={() => { setOpenApplication(null); setShowTransactionSidebar(true) }}
           onApproved={() => {}}
           onDenied={() => {}}
         />
@@ -479,7 +489,7 @@ export function TransactionDetailSidebar({ transaction, onClose }: TransactionDe
           parent={openParent}
           detail={openParentDetail}
           loading={parentDetailLoading}
-          onClose={() => { setOpenParent(null); setOpenParentDetail(null) }}
+          onClose={() => { setOpenParent(null); setOpenParentDetail(null); setShowTransactionSidebar(true) }}
         />
       )}
 
@@ -487,7 +497,7 @@ export function TransactionDetailSidebar({ transaction, onClose }: TransactionDe
         <StudentDetailSidebar
           student={openStudent}
           loading={studentDetailLoading}
-          onClose={() => setOpenStudent(null)}
+          onClose={() => { setOpenStudent(null); setShowTransactionSidebar(true) }}
         />
       )}
     </>
