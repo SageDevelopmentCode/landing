@@ -197,7 +197,7 @@ const tabContent = {
     badge: "Summer 2026",
     title: "Summer 2026 Program",
     description: [
-      "Our Summer 2026 program is a twelve-week immersive experience designed for curious learners ages 4–10. Each day blends hands-on projects, nature exploration, literacy and math support, and plenty of time for creative play—all in a small, nurturing group setting.",
+      "Our Summer 2026 program is a twelve-week immersive experience designed for curious learners ages 4–11. Each day blends hands-on projects, nature exploration, literacy and math support, and plenty of time for creative play—all in a small, nurturing group setting.",
       "This is an ideal way to experience Sage Field before committing to a full school year. Families who complete the summer program and wish to continue will have priority consideration for School Year 2026–2027 enrollment.",
     ],
     details: [
