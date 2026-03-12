@@ -14,21 +14,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { code } = await request.json();
+  const { code, applicationId } = await request.json();
 
   if (typeof code !== "string" || code.trim().toUpperCase() !== "WELCOME") {
-    return NextResponse.json({ success: false, error: "Invalid code" }, { status: 400 });
+    return NextResponse.json(
+      { success: false, error: "Invalid code" },
+      { status: 400 },
+    );
   }
 
   const adminClient = createAdminClient();
 
-  // Fetch all submitted (non-in_progress) applications for this user
-  const { data: submittedApps, error: fetchError } = await adminClient
+  // Fetch submitted applications — scoped to a single app when applicationId is provided
+  const baseQuery = adminClient
     .schema("parent_app")
     .from("applications")
     .select("*")
     .eq("user_id", user.id)
     .neq("status", "in_progress");
+
+  const { data: submittedApps, error: fetchError } = applicationId
+    ? await baseQuery.eq("id", applicationId)
+    : await baseQuery;
 
   if (fetchError) {
     return NextResponse.json({ error: fetchError.message }, { status: 500 });
@@ -63,7 +70,10 @@ export async function POST(request: Request) {
       .eq("id", user.id);
 
     if (userUpdateError) {
-      return NextResponse.json({ error: userUpdateError.message }, { status: 500 });
+      return NextResponse.json(
+        { error: userUpdateError.message },
+        { status: 500 },
+      );
     }
 
     // For each submitted app: insert admin.students row, then update application
@@ -83,7 +93,8 @@ export async function POST(request: Request) {
           has_allergies: app.has_allergies,
           allergies_description: app.allergies_description,
           has_emergency_medications: app.has_emergency_medications,
-          emergency_medications_description: app.emergency_medications_description,
+          emergency_medications_description:
+            app.emergency_medications_description,
           history_flags: app.history_flags,
           history_explanation: app.history_explanation,
           needs_aide: app.needs_aide,
@@ -99,7 +110,10 @@ export async function POST(request: Request) {
         .single();
 
       if (studentInsertError) {
-        return NextResponse.json({ error: studentInsertError.message }, { status: 500 });
+        return NextResponse.json(
+          { error: studentInsertError.message },
+          { status: 500 },
+        );
       }
 
       const { error: appUpdateError } = await adminClient
@@ -109,12 +123,15 @@ export async function POST(request: Request) {
           approved: true,
           approved_at: new Date().toISOString(),
           student_id: studentRow.id,
-          status: 'enrolling',
+          status: "enrolling",
         })
         .eq("id", app.id);
 
       if (appUpdateError) {
-        return NextResponse.json({ error: appUpdateError.message }, { status: 500 });
+        return NextResponse.json(
+          { error: appUpdateError.message },
+          { status: 500 },
+        );
       }
     }
   }

@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import Link from "next/link";
+import EnrollmentCodeEntry from "@/app/apply/dashboard/EnrollmentCodeEntry";
 import {
   FileText,
   Users,
@@ -16,6 +19,9 @@ import {
   CheckCircle,
   Upload,
   ClipboardList,
+  PlusCircle,
+  Clock,
+  ArrowRight,
 } from "lucide-react";
 import type { Database } from "@/app/types/database.types";
 import type {
@@ -392,7 +398,11 @@ function computeIsEnrollmentComplete(
     if (item.id === 5) return immunizationFileCount > 0;
     if (item.id === 9) return registrationFeePaid;
     if (item.contractId && item.contractSections)
-      return isContractComplete(signatureMap, item.contractId, item.contractSections);
+      return isContractComplete(
+        signatureMap,
+        item.contractId,
+        item.contractSections,
+      );
     return false;
   });
 }
@@ -682,6 +692,7 @@ function Checklist({
 
 interface ChildTabsProps {
   apps: Application[];
+  pendingApps: Application[];
   signaturesByStudent: StudentSignatureMap;
   healthInfoByStudent: Record<string, StudentHealthInfo>;
   medicationPlanByStudent: Record<
@@ -704,6 +715,7 @@ interface ChildTabsProps {
 
 export default function ChildTabs({
   apps,
+  pendingApps,
   signaturesByStudent,
   healthInfoByStudent,
   medicationPlanByStudent,
@@ -717,7 +729,8 @@ export default function ChildTabs({
   healthStatementByStudent,
   religiousExemptionCountByStudent,
 }: ChildTabsProps) {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const router = useRouter();
+  const [activeTabId, setActiveTabId] = useState<string>(apps[0].id);
   const [appViewOpen, setAppViewOpen] = useState(false);
   const [openContractId, setOpenContractId] = useState<number | null>(null);
   const [openStudentId, setOpenStudentId] = useState<string | null>(null);
@@ -771,13 +784,17 @@ export default function ChildTabs({
     Record<string, boolean>
   >(registrationFeePaidByStudent);
   const [healthStatementOpen, setHealthStatementOpen] = useState(false);
-  const [healthStatementStudentId, setHealthStatementStudentId] = useState<string | null>(null);
+  const [healthStatementStudentId, setHealthStatementStudentId] = useState<
+    string | null
+  >(null);
   const [localHealthStatements, setLocalHealthStatements] = useState<
     Record<string, { option_type: string } | null>
   >(healthStatementByStudent);
-  const [localReligiousExemptionCounts, setLocalReligiousExemptionCounts] = useState<
-    Record<string, number>
-  >(religiousExemptionCountByStudent);
+  const [localReligiousExemptionCounts, setLocalReligiousExemptionCounts] =
+    useState<Record<string, number>>(religiousExemptionCountByStudent);
+  const [pendingViewApp, setPendingViewApp] = useState<Application | null>(
+    null,
+  );
 
   if (apps.length === 0) {
     return (
@@ -785,10 +802,14 @@ export default function ChildTabs({
     );
   }
 
-  const activeApp = apps[activeIndex];
+  const activeApprovedApp = apps.find((a) => a.id === activeTabId) ?? apps[0];
+  const activePendingApp =
+    pendingApps.find((a) => a.id === activeTabId) ?? null;
   const childName =
-    activeApp.preferred_name ?? activeApp.child_legal_name ?? "Student";
-  const activeStudentId = activeApp.student_id ?? "";
+    activeApprovedApp.preferred_name ??
+    activeApprovedApp.child_legal_name ??
+    "Student";
+  const activeStudentId = activeApprovedApp.student_id ?? "";
 
   const handleContractClick = (contractId: number) => {
     if (contractId === CONTRACT_3_ID) {
@@ -974,46 +995,144 @@ export default function ChildTabs({
       onViewApplication={() => setAppViewOpen(true)}
       onRegistrationFeeClick={handleRegistrationFeeClick}
       registrationFeePaid={localRegistrationFeePaid[activeStudentId] ?? false}
-      program={activeApp.program ?? null}
-      applicationId={activeApp.id}
+      program={activeApprovedApp.program ?? null}
+      applicationId={activeApprovedApp.id}
     />
   );
 
   return (
     <div>
-      <div className="flex gap-2 mb-6 flex-wrap">
-          {apps.map((app, index) => {
-            const label =
-              app.preferred_name ?? app.child_legal_name ?? "Student";
-            const isActive = index === activeIndex;
-            const sid = app.student_id ?? "";
-            const isComplete = computeIsEnrollmentComplete(
-              localSigs[sid] ?? {},
-              localImmunizationCounts[sid] ?? 0,
-              localRegistrationFeePaid[sid] ?? false,
-            );
-            return (
-              <button
-                key={app.id}
-                onClick={() => setActiveIndex(index)}
-                className={`px-4 py-1.5 rounded-xl text-sm font-semibold font-heading transition-colors cursor-pointer flex items-center gap-1.5 ${
-                  isActive
-                    ? isComplete
-                      ? "bg-emerald-600 text-white"
-                      : "bg-gray-800 text-white"
-                    : isComplete
+      <div className="flex gap-2 mb-6 flex-wrap items-center">
+        {apps.map((app) => {
+          const label = app.preferred_name ?? app.child_legal_name ?? "Student";
+          const isActive = app.id === activeTabId;
+          const sid = app.student_id ?? "";
+          const isComplete = computeIsEnrollmentComplete(
+            localSigs[sid] ?? {},
+            localImmunizationCounts[sid] ?? 0,
+            localRegistrationFeePaid[sid] ?? false,
+          );
+          return (
+            <button
+              key={app.id}
+              onClick={() => setActiveTabId(app.id)}
+              className={`px-4 py-1.5 rounded-xl text-sm font-semibold font-heading transition-colors cursor-pointer flex items-center gap-1.5 ${
+                isActive
+                  ? isComplete
+                    ? "bg-emerald-600 text-white"
+                    : "bg-gray-800 text-white"
+                  : isComplete
                     ? "bg-emerald-50 border border-emerald-300 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-400"
                     : "bg-white border border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
-              >
-                {isComplete && <CheckCircle className="w-3.5 h-3.5" />}
-                {label}
-              </button>
-            );
-          })}
-        </div>
+              }`}
+            >
+              {isComplete && <CheckCircle className="w-3.5 h-3.5" />}
+              {label}
+            </button>
+          );
+        })}
+        {pendingApps.map((app) => {
+          const label = app.preferred_name ?? app.child_legal_name ?? "Student";
+          const isActive = app.id === activeTabId;
+          return (
+            <button
+              key={app.id}
+              onClick={() => setActiveTabId(app.id)}
+              className={`px-4 py-1.5 rounded-xl text-sm font-semibold font-heading transition-colors cursor-pointer flex items-center gap-1.5 ${
+                isActive
+                  ? "bg-amber-500 text-white"
+                  : "bg-amber-50 border border-amber-300 text-amber-700 hover:bg-amber-100 hover:border-amber-400"
+              }`}
+            >
+              <Clock className="w-3.5 h-3.5" />
+              {label}
+            </button>
+          );
+        })}
+        <Link
+          href="/apply/step/1?new=1"
+          className="px-4 py-1.5 rounded-xl text-sm font-semibold font-heading transition-colors flex items-center gap-1.5 bg-white border border-dashed border-gray-300 text-gray-400 hover:text-gray-600 hover:border-gray-400"
+        >
+          <PlusCircle className="w-3.5 h-3.5" />
+          New Application
+        </Link>
+      </div>
 
-      {checklist}
+      {activePendingApp
+        ? (() => {
+            const app = activePendingApp;
+            const pendingChildName =
+              app.preferred_name ?? app.child_legal_name ?? "Student";
+            const isInProgress = app.status === "in_progress";
+            const programLabel =
+              app.program === "summer_26"
+                ? "Summer 2026"
+                : app.program === "school_year_26_27"
+                  ? "School Year 2026–27"
+                  : app.program === "both"
+                    ? "Summer 2026 + School Year 2026–27"
+                    : null;
+
+            function getContinueStep(): number {
+              if (!app.g1_full_name) return 2;
+              if (
+                !app.has_medical_conditions &&
+                !app.medical_conditions_description
+              )
+                return 3;
+              if (!app.learning_style) return 4;
+              if (!app.g1_signature_name) return 5;
+              return 1;
+            }
+
+            return (
+              <div className="bg-white border border-amber-200 rounded-2xl p-8 flex flex-col items-center text-center gap-5 shadow-sm">
+                <div className="w-14 h-14 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center">
+                  <Clock className="w-6 h-6 text-amber-500" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold font-heading text-gray-800 mb-1">
+                    {isInProgress
+                      ? "Application Incomplete"
+                      : "Application Under Review"}
+                  </h2>
+                  {programLabel && (
+                    <p className="text-sm text-amber-600 font-body font-medium mb-2">
+                      {programLabel}
+                    </p>
+                  )}
+                  <p className="text-sm text-gray-500 font-body max-w-sm">
+                    {isInProgress
+                      ? `${pendingChildName}'s application hasn't been submitted yet. Pick up where you left off to complete it.`
+                      : `${pendingChildName}'s application has been submitted and is currently under review. We'll be in touch once a decision has been made.`}
+                  </p>
+                </div>
+                {isInProgress ? (
+                  <Link
+                    href={`/apply/step/${getContinueStep()}?appId=${app.id}`}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold font-heading text-white bg-[#2C5F2E] hover:bg-[#234d25] transition-colors"
+                  >
+                    Continue Application
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                ) : (
+                  <div className="flex flex-col items-center gap-3">
+                    <button
+                      onClick={() => setPendingViewApp(app)}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold font-heading text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 hover:text-gray-800 transition-colors cursor-pointer"
+                    >
+                      View Application
+                    </button>
+                    <EnrollmentCodeEntry
+                      applicationId={app.id}
+                      onSuccess={() => router.refresh()}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })()
+        : checklist}
 
       {openContractId !== null && openStudentId !== null && (
         <ContractModal
@@ -1119,9 +1238,15 @@ export default function ChildTabs({
           app={apps.find((a) => a.student_id === healthStatementStudentId)!}
           parentId={parentId}
           parentName={parentName}
-          existingStatement={localHealthStatements[healthStatementStudentId] ?? null}
-          initialReligiousExemptionCount={localReligiousExemptionCounts[healthStatementStudentId] ?? 0}
-          existingSig={localSigs[healthStatementStudentId]?.[`${CONTRACT_8_ID}-1`]}
+          existingStatement={
+            localHealthStatements[healthStatementStudentId] ?? null
+          }
+          initialReligiousExemptionCount={
+            localReligiousExemptionCounts[healthStatementStudentId] ?? 0
+          }
+          existingSig={
+            localSigs[healthStatementStudentId]?.[`${CONTRACT_8_ID}-1`]
+          }
           onSectionSaved={handleHealthStatementSectionSaved}
           onClose={handleHealthStatementClose}
         />
@@ -1147,7 +1272,7 @@ export default function ChildTabs({
       <AnimatePresence>
         {registrationFeeOpen && (
           <RegistrationFeeModal
-            app={activeApp}
+            app={activeApprovedApp}
             parentEmail={parentEmail}
             onClose={() => setRegistrationFeeOpen(false)}
             onPaid={handleRegistrationFeePaid}
@@ -1158,8 +1283,17 @@ export default function ChildTabs({
       <AnimatePresence>
         {appViewOpen && (
           <ApplicationViewSlideOver
-            app={activeApp}
+            app={activeApprovedApp}
             onClose={() => setAppViewOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {pendingViewApp !== null && (
+          <ApplicationViewSlideOver
+            app={pendingViewApp}
+            onClose={() => setPendingViewApp(null)}
           />
         )}
       </AnimatePresence>

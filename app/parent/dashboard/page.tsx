@@ -11,11 +11,16 @@ import ChildTabs from "./ChildTabs";
 import type { StudentSignatureMap } from "@/app/types/enrollment-signatures";
 import type { Database } from "@/app/types/database.types";
 
-type StudentHealthInfo = Database["parent_app"]["Tables"]["student_health_info"]["Row"];
-type StudentMedicationPlan = Database["parent_app"]["Tables"]["student_medication_plan"]["Row"];
-type StudentMedication = Database["parent_app"]["Tables"]["student_medications"]["Row"];
-type AuthorizedPickupPlan = Database["parent_app"]["Tables"]["student_authorized_pickup_plan"]["Row"];
-type AuthorizedPickupPerson = Database["parent_app"]["Tables"]["student_authorized_pickup_persons"]["Row"];
+type StudentHealthInfo =
+  Database["parent_app"]["Tables"]["student_health_info"]["Row"];
+type StudentMedicationPlan =
+  Database["parent_app"]["Tables"]["student_medication_plan"]["Row"];
+type StudentMedication =
+  Database["parent_app"]["Tables"]["student_medications"]["Row"];
+type AuthorizedPickupPlan =
+  Database["parent_app"]["Tables"]["student_authorized_pickup_plan"]["Row"];
+type AuthorizedPickupPerson =
+  Database["parent_app"]["Tables"]["student_authorized_pickup_persons"]["Row"];
 
 export default async function ParentDashboard() {
   const supabase = await createServerSupabaseClient();
@@ -28,28 +33,38 @@ export default async function ParentDashboard() {
   }
 
   const adminClient = createAdminClient();
-  const [{ data: apps }, { data: adminUser }] = await Promise.all([
-    adminClient
-      .schema("parent_app")
-      .from("applications")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("approved", true),
-    adminClient
-      .schema("admin")
-      .from("users")
-      .select("full_name")
-      .eq("id", user.id)
-      .single(),
-  ]);
+  const [{ data: apps }, { data: pendingAppsData }, { data: adminUser }] =
+    await Promise.all([
+      adminClient
+        .schema("parent_app")
+        .from("applications")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("approved", true),
+      adminClient
+        .schema("parent_app")
+        .from("applications")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("approved", false)
+        .eq("denied", false),
+      adminClient
+        .schema("admin")
+        .from("users")
+        .select("full_name")
+        .eq("id", user.id)
+        .single(),
+    ]);
 
   const fullName = adminUser?.full_name ?? null;
   const approvedApps = apps ?? [];
+  const pendingApps = pendingAppsData ?? [];
 
   const registrationFeePaidByStudent: Record<string, boolean> = {};
   for (const app of approvedApps) {
     if (app.student_id) {
-      registrationFeePaidByStudent[app.student_id] = app.registration_fee_paid ?? false;
+      registrationFeePaidByStudent[app.student_id] =
+        app.registration_fee_paid ?? false;
     }
   }
 
@@ -59,11 +74,18 @@ export default async function ParentDashboard() {
 
   let signaturesByStudent: StudentSignatureMap = {};
   let healthInfoByStudent: Record<string, StudentHealthInfo> = {};
-  let medicationPlanByStudent: Record<string, { plan: StudentMedicationPlan | null; medications: StudentMedication[] }> = {};
+  let medicationPlanByStudent: Record<
+    string,
+    { plan: StudentMedicationPlan | null; medications: StudentMedication[] }
+  > = {};
   let immunizationFileCountByStudent: Record<string, number> = {};
   let consentByStudent: Record<string, "FULL" | "LIMITED" | "NO"> = {};
-  let authorizedPickupByStudent: Record<string, { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] }> = {};
-  let healthStatementByStudent: Record<string, { option_type: string } | null> = {};
+  let authorizedPickupByStudent: Record<
+    string,
+    { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] }
+  > = {};
+  let healthStatementByStudent: Record<string, { option_type: string } | null> =
+    {};
   let religiousExemptionCountByStudent: Record<string, number> = {};
 
   if (studentIds.length > 0) {
@@ -134,18 +156,22 @@ export default async function ParentDashboard() {
           const { data } = await adminClient.storage
             .from("immunization-records")
             .list(`${user.id}/${sid}`);
-          const count = (data ?? []).filter((f) => f.name !== ".emptyFolderPlaceholder").length;
+          const count = (data ?? []).filter(
+            (f) => f.name !== ".emptyFolderPlaceholder",
+          ).length;
           return { sid, count };
-        })
+        }),
       ),
       Promise.all(
         studentIds.map(async (sid) => {
           const { data } = await adminClient.storage
             .from("religious-exemption-affidavits")
             .list(`${user.id}/${sid}`);
-          const count = (data ?? []).filter((f) => f.name !== ".emptyFolderPlaceholder").length;
+          const count = (data ?? []).filter(
+            (f) => f.name !== ".emptyFolderPlaceholder",
+          ).length;
           return { sid, count };
-        })
+        }),
       ),
     ]);
     for (const { sid, count } of immunizationCounts) {
@@ -156,11 +182,16 @@ export default async function ParentDashboard() {
     }
 
     for (const row of healthStatementRows ?? []) {
-      healthStatementByStudent[row.student_id] = { option_type: row.option_type };
+      healthStatementByStudent[row.student_id] = {
+        option_type: row.option_type,
+      };
     }
 
     for (const row of consentRows ?? []) {
-      consentByStudent[row.student_id] = row.consent_level as "FULL" | "LIMITED" | "NO";
+      consentByStudent[row.student_id] = row.consent_level as
+        | "FULL"
+        | "LIMITED"
+        | "NO";
     }
 
     for (const sig of sigs ?? []) {
@@ -176,15 +207,25 @@ export default async function ParentDashboard() {
 
     for (const sid of studentIds) {
       medicationPlanByStudent[sid] = {
-        plan: (medicationPlanRows ?? []).find((r) => r.student_id === sid) as StudentMedicationPlan | null ?? null,
-        medications: (medicationRows ?? []).filter((r) => r.student_id === sid) as StudentMedication[],
+        plan:
+          ((medicationPlanRows ?? []).find(
+            (r) => r.student_id === sid,
+          ) as StudentMedicationPlan | null) ?? null,
+        medications: (medicationRows ?? []).filter(
+          (r) => r.student_id === sid,
+        ) as StudentMedication[],
       };
     }
 
     for (const sid of studentIds) {
       authorizedPickupByStudent[sid] = {
-        plan: (authorizedPickupPlanRows ?? []).find((r) => r.student_id === sid) as AuthorizedPickupPlan | null ?? null,
-        persons: (authorizedPickupPersonRows ?? []).filter((r) => r.student_id === sid) as AuthorizedPickupPerson[],
+        plan:
+          ((authorizedPickupPlanRows ?? []).find(
+            (r) => r.student_id === sid,
+          ) as AuthorizedPickupPlan | null) ?? null,
+        persons: (authorizedPickupPersonRows ?? []).filter(
+          (r) => r.student_id === sid,
+        ) as AuthorizedPickupPerson[],
       };
     }
   }
@@ -218,6 +259,7 @@ export default async function ParentDashboard() {
 
           <ChildTabs
             apps={approvedApps}
+            pendingApps={pendingApps}
             signaturesByStudent={signaturesByStudent}
             healthInfoByStudent={healthInfoByStudent}
             medicationPlanByStudent={medicationPlanByStudent}
