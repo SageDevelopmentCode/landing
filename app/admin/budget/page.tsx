@@ -3733,12 +3733,12 @@ const FULL_SUMMER_PRIMARY = 4388;
 const SCHOOL_YEAR_RATES = [
   {
     key: "full_14",
-    label: "Full Enrollment (1st–4th)",
+    label: "Full Enrollment (2nd–4th)",
     rate: TUITION_RATES.full_14,
   },
   {
     key: "full_primary",
-    label: "Full Enrollment (Primary, Pre-K–K)",
+    label: "Full Enrollment (Primary, Pre-K–1st Grade)",
     rate: TUITION_RATES.full_primary,
   },
   {

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "FAQ - Sage Field Private School | Texas Microschool",
   description:
-    "Frequently asked questions about Sage Field Private School, a nature-based private microschool in Round Rock, Texas. Learn about our program, enrollment, and approach to small-group, outdoor-centered education for lower-elementary children.",
+    "Frequently asked questions about Sage Field Private School, a nature-based private microschool in Round Rock, Texas. Learn about our program, enrollment, and approach to small-group, outdoor-centered education for children ages 4-11.",
   openGraph: {
     title: "FAQ - Sage Field Private School | Texas Microschool",
     description:
@@ -60,7 +60,7 @@ export default function FAQLayout({ children }: { children: React.ReactNode }) {
         name: "What ages do you serve and how big are the groups?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "We serve lower-elementary aged children, about 4-11 years with flexibility based on developmental fit. We intentionally keep our groups small — typically no more than 10 - 12 children per class.",
+          text: "We serve children ages 4-11, with flexibility based on developmental fit. Students learn together in mixed-age groups so children can move at their own pace. We intentionally keep our groups small — typically no more than 10–12 children per class — so that two adults can stay closely attuned to each child's needs.",
         },
       },
       {

@@ -9,7 +9,7 @@ import WaitlistDialog from "../components/WaitlistDialog";
 
 const details = [
   { label: "Dates", value: "May 26 – Aug 13, 2026" },
-  { label: "Ages", value: "4–10 years" },
+  { label: "Ages", value: "4–11 years" },
   { label: "Schedule", value: "Mon–Thu, ~6 hrs/day" },
   { label: "Group Size", value: "10 children" },
 ];

@@ -140,7 +140,7 @@ export default function RootLayout({
           },
         ],
         description:
-          "A nature-based private microschool for lower-elementary aged children (ages 4-11) in Round Rock, Texas. Small-group, outdoor-centered education that fosters curiosity, confidence, and wisdom.",
+          "A nature-based private microschool for children ages 4-11 in Round Rock, Texas. Small-group, outdoor-centered education that fosters curiosity, confidence, and wisdom.",
         knowsAbout: [
           "Private School Education",
           "Microschool",
@@ -157,7 +157,7 @@ export default function RootLayout({
         url: "https://sagefield.co",
         name: "Sage Field Private School",
         description:
-          "Nature-based private microschool in Round Rock, Texas for lower-elementary children ages 4-11",
+          "Nature-based private microschool in Round Rock, Texas for children ages 4-11",
         publisher: {
           "@id": "https://sagefield.co/#organization",
         },

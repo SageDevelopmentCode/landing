@@ -52,7 +52,7 @@ export default function Home() {
     {
       question: "What ages do you serve and how big are the groups?",
       answer:
-        "We serve lower-elementary aged children, about 6–10 years, with flexibility based on developmental fit. Students learn together in mixed-age groups so children can move at their own pace. We intentionally keep our groups small — typically no more than 10–12 children per class — so that two adults can stay closely attuned to each child's needs.",
+        "We serve children ages 4-11, with flexibility based on developmental fit. Students learn together in mixed-age groups so children can move at their own pace. We intentionally keep our groups small — typically no more than 10–12 children per class — so that two adults can stay closely attuned to each child's needs.",
     },
     {
       question: "What does a typical day at Sage Field look like?",
