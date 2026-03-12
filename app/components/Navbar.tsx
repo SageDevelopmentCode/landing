@@ -100,7 +100,7 @@ const NAV_TABS: NavTab[] = [
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-export default function Navbar() {
+export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [waitlistDialogOpen, setWaitlistDialogOpen] = useState(false);
@@ -113,16 +113,17 @@ export default function Navbar() {
   const pathname = usePathname();
 
   const useDarkStyle =
-    pathname === "/faq" ||
-    pathname === "/about" ||
-    pathname === "/apply" ||
-    pathname === "/donate" ||
-    pathname === "/donate/success" ||
-    pathname === "/team" ||
-    pathname === "/tuition" ||
-    pathname === "/academic-calendar" ||
-    pathname === "/summer-2026" ||
-    pathname === "/school-year-2026-2027";
+    darkStyle ??
+    (pathname === "/faq" ||
+      pathname === "/about" ||
+      pathname === "/apply" ||
+      pathname === "/donate" ||
+      pathname === "/donate/success" ||
+      pathname === "/team" ||
+      pathname === "/tuition" ||
+      pathname === "/academic-calendar" ||
+      pathname === "/summer-2026" ||
+      pathname === "/school-year-2026-2027");
 
   // Close everything on route change
   useEffect(() => {
