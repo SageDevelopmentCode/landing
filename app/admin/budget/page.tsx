@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import { motion, AnimatePresence } from "framer-motion";
 import { Merriweather } from "next/font/google";
@@ -12,6 +12,11 @@ import type {
 } from "../../types/database.types";
 import { Table, TableRow, TableCell } from "../components/Table";
 import { DetailSidebar } from "../components/DetailSidebar";
+import { Upload, Trash2, FileText } from "lucide-react";
+import { uploadExpenseReceipt } from "@/app/actions/uploadExpenseReceipt";
+import { deleteExpenseReceipt } from "@/app/actions/deleteExpenseReceipt";
+import { listExpenseReceipts } from "@/app/actions/listExpenseReceipts";
+import type { FileObject } from "@supabase/storage-js";
 
 const merriweather = Merriweather({
   weight: ["300", "400", "700", "900"],
@@ -1216,6 +1221,83 @@ function ExpensesTab({
     tax_deductible: false,
   });
   const [saving, setSaving] = useState(false);
+
+  // Receipt upload state
+  const [receiptFiles, setReceiptFiles] = useState<FileObject[]>([]);
+  const [isLoadingReceipts, setIsLoadingReceipts] = useState(false);
+  const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
+  const [isDraggingReceipt, setIsDraggingReceipt] = useState(false);
+  const [deletingReceiptPath, setDeletingReceiptPath] = useState<string | null>(null);
+  const [receiptError, setReceiptError] = useState<string | null>(null);
+  const receiptInputRef = useRef<HTMLInputElement>(null);
+  const hasFetchedReceipts = useRef<string | null>(null);
+
+  const MAX_RECEIPT_FILES = 10;
+  const MAX_FILE_SIZE = 10 * 1024 * 1024;
+  const ACCEPTED_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/heic'];
+
+  async function loadReceipts(expenseId: string) {
+    setIsLoadingReceipts(true);
+    setReceiptError(null);
+    const result = await listExpenseReceipts(expenseId);
+    if ('error' in result && result.error) {
+      setReceiptError(result.error);
+    } else {
+      setReceiptFiles(result.files as FileObject[]);
+    }
+    setIsLoadingReceipts(false);
+  }
+
+  useEffect(() => {
+    if (editingId === null) {
+      setReceiptFiles([]);
+      setReceiptError(null);
+      hasFetchedReceipts.current = null;
+      return;
+    }
+    if (hasFetchedReceipts.current === editingId) return;
+    hasFetchedReceipts.current = editingId;
+    loadReceipts(editingId);
+  }, [editingId]);
+
+  async function handleReceiptUpload(file: File) {
+    if (!editingId) return;
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      setReceiptError('File type not supported. Use PDF, JPEG, PNG, WEBP, or HEIC.');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      setReceiptError('File exceeds 10 MB limit.');
+      return;
+    }
+    if (receiptFiles.length >= MAX_RECEIPT_FILES) {
+      setReceiptError(`Maximum ${MAX_RECEIPT_FILES} files allowed.`);
+      return;
+    }
+    setReceiptError(null);
+    setIsUploadingReceipt(true);
+    const fd = new FormData();
+    fd.append('expenseId', editingId);
+    fd.append('file', file);
+    const result = await uploadExpenseReceipt(fd);
+    if ('error' in result && result.error) {
+      setReceiptError(result.error);
+    } else {
+      await loadReceipts(editingId);
+    }
+    setIsUploadingReceipt(false);
+  }
+
+  async function handleReceiptDelete(path: string) {
+    setDeletingReceiptPath(path);
+    const result = await deleteExpenseReceipt(path);
+    if ('error' in result && result.error) {
+      setReceiptError(result.error);
+    } else if (editingId) {
+      await loadReceipts(editingId);
+    }
+    setDeletingReceiptPath(null);
+  }
 
   const filtered = expenses.filter((e) => {
     if (filterMonth && !e.expense_date.startsWith(filterMonth)) return false;
@@ -2652,6 +2734,116 @@ function ExpensesTab({
             >
               Tax Deductible
             </label>
+          </div>
+
+          {/* Receipts & Screenshots */}
+          <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: 16, marginTop: 8 }}>
+            <p className="text-xs font-semibold mb-3" style={{ color: colors.textPrimary, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+              Receipts &amp; Screenshots
+            </p>
+
+            {/* File list */}
+            {isLoadingReceipts ? (
+              <p className="text-xs" style={{ color: colors.textSecondary }}>Loading…</p>
+            ) : receiptFiles.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
+                {receiptFiles.map((f) => {
+                  const filePath = `expenses/${editingId}/${f.name}`;
+                  return (
+                    <div
+                      key={f.name}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        padding: '6px 10px',
+                        background: colors.softCloud,
+                        border: `1px solid ${colors.border}`,
+                        borderRadius: radius.sm,
+                      }}
+                    >
+                      <FileText size={14} style={{ color: colors.textSecondary, flexShrink: 0 }} />
+                      <span
+                        className="text-xs"
+                        style={{
+                          color: colors.textPrimary,
+                          flex: 1,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {f.name.replace(/^\d+-/, '')}
+                      </span>
+                      <button
+                        onClick={() => handleReceiptDelete(filePath)}
+                        disabled={deletingReceiptPath === filePath}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: deletingReceiptPath === filePath ? 'not-allowed' : 'pointer',
+                          padding: 2,
+                          color: colors.textSecondary,
+                          opacity: deletingReceiptPath === filePath ? 0.4 : 1,
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : null}
+
+            {/* Drop zone */}
+            {receiptFiles.length < MAX_RECEIPT_FILES && (
+              <div
+                onDragOver={(e) => { e.preventDefault(); setIsDraggingReceipt(true); }}
+                onDragLeave={() => setIsDraggingReceipt(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDraggingReceipt(false);
+                  const file = e.dataTransfer.files[0];
+                  if (file) handleReceiptUpload(file);
+                }}
+                onClick={() => receiptInputRef.current?.click()}
+                style={{
+                  border: `2px dashed ${isDraggingReceipt ? colors.mistyForest : colors.border}`,
+                  borderRadius: radius.sm,
+                  padding: '16px 12px',
+                  textAlign: 'center',
+                  cursor: isUploadingReceipt ? 'not-allowed' : 'pointer',
+                  background: isDraggingReceipt ? colors.pastelSage + '30' : colors.softCloud,
+                  transition: 'border-color 0.15s, background 0.15s',
+                  opacity: isUploadingReceipt ? 0.6 : 1,
+                }}
+              >
+                <Upload size={18} style={{ color: colors.textSecondary, margin: '0 auto 6px' }} />
+                <p className="text-xs" style={{ color: colors.textSecondary }}>
+                  {isUploadingReceipt ? 'Uploading…' : 'Drop a file or click to upload'}
+                </p>
+                <p className="text-xs" style={{ color: colors.textSecondary, opacity: 0.6, marginTop: 2 }}>
+                  PDF, JPEG, PNG, WEBP, HEIC · max 10 MB
+                </p>
+              </div>
+            )}
+
+            <input
+              ref={receiptInputRef}
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png,.webp,.heic"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleReceiptUpload(file);
+                e.target.value = '';
+              }}
+            />
+
+            {receiptError && (
+              <p className="text-xs mt-2" style={{ color: '#ef4444' }}>{receiptError}</p>
+            )}
           </div>
         </div>
       </DetailSidebar>
