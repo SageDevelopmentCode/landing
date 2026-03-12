@@ -1,9 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { ExternalLink } from 'lucide-react'
 import { createBrowserClient } from '@supabase/ssr'
 import { DetailSidebar } from './DetailSidebar'
 import { SidebarField, SidebarSection } from '../../components/SidebarPrimitives'
+import { colors } from '../design-system'
 
 type StripeTransaction = {
   id: string
@@ -68,6 +70,14 @@ export function formatPaymentType(type: string): string {
     deposit: 'Deposit',
   }
   return labels[type] ?? type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+export function stripeUrl(tx: { stripe_payment_intent_id: string | null; stripe_session_id: string | null }): string | null {
+  const isTest = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.startsWith('pk_test_')
+  const base = `https://dashboard.stripe.com${isTest ? '/test' : ''}`
+  if (tx.stripe_payment_intent_id) return `${base}/payments/${tx.stripe_payment_intent_id}`
+  if (tx.stripe_session_id) return `${base}/checkout/sessions/${tx.stripe_session_id}`
+  return null
 }
 
 export function formatCents(cents: number | null, currency = 'USD'): string {
@@ -171,6 +181,18 @@ export function TransactionDetailSidebar({ transaction, onClose }: TransactionDe
           <SidebarSection title="References">
             <SidebarField label="Session ID" value={transaction.stripe_session_id} />
             <SidebarField label="Payment Intent ID" value={transaction.stripe_payment_intent_id} />
+            {stripeUrl(transaction) && (
+              <a
+                href={stripeUrl(transaction)!}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm font-medium"
+                style={{ color: colors.mistyForest }}
+              >
+                View in Stripe Dashboard
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            )}
           </SidebarSection>
 
           {studentRecord && (

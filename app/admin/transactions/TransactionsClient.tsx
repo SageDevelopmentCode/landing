@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { ExternalLink } from 'lucide-react'
 import { Table, TableRow, TableCell } from '../components/Table'
-import { TransactionDetailSidebar, formatCents, formatPaymentType } from '../components/TransactionDetailSidebar'
+import { TransactionDetailSidebar, formatCents, formatPaymentType, stripeUrl } from '../components/TransactionDetailSidebar'
 import { colors } from '../design-system'
 
 type StripeTransaction = {
@@ -53,7 +54,24 @@ export function TransactionsClient({ transactions }: TransactionsClientProps) {
       <Table headers={['Type', 'Status', 'Payer', 'Amount', 'Net Amount', 'Date']}>
         {transactions.map((tx, index) => (
           <TableRow key={tx.id} index={index} onClick={() => setSelectedTransaction(tx)}>
-            <TableCell>{formatPaymentType(tx.payment_type)}</TableCell>
+            <TableCell>
+              <div className="flex items-center gap-2">
+                {formatPaymentType(tx.payment_type)}
+                {stripeUrl(tx) && (
+                  <a
+                    href={stripeUrl(tx)!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="opacity-40 hover:opacity-100 transition-opacity"
+                    style={{ color: colors.mistyForest }}
+                    title="View in Stripe"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                )}
+              </div>
+            </TableCell>
             <TableCell>
               <StatusBadge status={tx.status} />
             </TableCell>
