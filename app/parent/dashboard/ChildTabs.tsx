@@ -51,6 +51,7 @@ import AssumptionOfRiskModal from "./AssumptionOfRiskModal";
 import AuthorizedPickupModal from "./AuthorizedPickupModal";
 import ApplicationViewSlideOver from "./ApplicationViewSlideOver";
 import HealthStatementModal from "./HealthStatementModal";
+import { enrollApplication } from "@/app/actions/enrollApplication";
 
 type StudentHealthInfo =
   Database["parent_app"]["Tables"]["student_health_info"]["Row"];
@@ -406,6 +407,7 @@ function Checklist({
   onRegistrationFeeClick,
   registrationFeePaid,
   program,
+  applicationId,
 }: {
   childName: string;
   signatureMap: SignatureMap;
@@ -416,6 +418,7 @@ function Checklist({
   onRegistrationFeeClick: () => void;
   registrationFeePaid: boolean;
   program: string | null;
+  applicationId: string;
 }) {
   const completedCount = checklistItems.filter((item) => {
     if (item.id === 5) return immunizationFileCount > 0;
@@ -444,6 +447,8 @@ function Checklist({
     if (!isEnrollmentComplete || firedRef.current) return;
     firedRef.current = true;
 
+    enrollApplication(applicationId);
+
     const fire = async () => {
       const confetti = (await import("canvas-confetti")).default;
       const colors = [
@@ -470,7 +475,7 @@ function Checklist({
     };
 
     fire();
-  }, [isEnrollmentComplete]);
+  }, [isEnrollmentComplete, applicationId]);
 
   return (
     <div>
@@ -970,6 +975,7 @@ export default function ChildTabs({
       onRegistrationFeeClick={handleRegistrationFeeClick}
       registrationFeePaid={localRegistrationFeePaid[activeStudentId] ?? false}
       program={activeApp.program ?? null}
+      applicationId={activeApp.id}
     />
   );
 
