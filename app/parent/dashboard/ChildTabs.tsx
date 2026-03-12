@@ -981,8 +981,7 @@ export default function ChildTabs({
 
   return (
     <div>
-      {apps.length > 1 && (
-        <div className="flex gap-2 mb-6 flex-wrap">
+      <div className="flex gap-2 mb-6 flex-wrap">
           {apps.map((app, index) => {
             const label =
               app.preferred_name ?? app.child_legal_name ?? "Student";
@@ -1013,7 +1012,6 @@ export default function ChildTabs({
             );
           })}
         </div>
-      )}
 
       {checklist}
 
