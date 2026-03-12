@@ -13,9 +13,9 @@ CREATE TABLE billing.stripe_transactions (
   payer_name               TEXT,
   payer_email              TEXT,
   description              TEXT,                  -- e.g. "Summer 2026 Registration Fee"
-  student_id               TEXT,
-  application_id           TEXT,
-  parent_id                TEXT,
+  student_id               UUID        REFERENCES admin.students(id) ON DELETE SET NULL,
+  application_id           UUID        REFERENCES parent_app.applications(id) ON DELETE SET NULL,
+  parent_id                UUID        REFERENCES admin.users(id) ON DELETE SET NULL,
   metadata                 JSONB       DEFAULT '{}',
   created_at               TIMESTAMPTZ DEFAULT now(),
   updated_at               TIMESTAMPTZ DEFAULT now()
