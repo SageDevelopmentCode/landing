@@ -279,6 +279,24 @@ export function createDonationEmbed(data: {
 }
 
 /**
+ * Creates a Discord embed for new parent account creation
+ */
+export function createParentSignupEmbed(data: {
+  fullName: string;
+  email: string;
+}): DiscordEmbed {
+  return {
+    title: "🆕 New Parent Account Created",
+    color: 0x5865f2, // Discord blurple
+    fields: [
+      { name: "Name", value: data.fullName || "N/A", inline: true },
+      { name: "Email", value: data.email || "N/A", inline: true },
+    ],
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
  * Creates a Discord embed for application completions
  */
 export function createApplicationEmbed(data: {
