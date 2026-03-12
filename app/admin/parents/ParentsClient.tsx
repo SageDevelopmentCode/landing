@@ -44,7 +44,8 @@ interface ParentsClientProps {
   fetchParentDetail: (parentId: string) => Promise<ParentDetail>
 }
 
-export function ParentsClient({ parents, fetchParentDetail }: ParentsClientProps) {
+export function ParentsClient({ parents: initialParents, fetchParentDetail }: ParentsClientProps) {
+  const [parents, setParents] = useState<Parent[]>(initialParents)
   const [selectedParent, setSelectedParent] = useState<Parent | null>(null)
   const [detail, setDetail] = useState<ParentDetail | null>(null)
   const [loading, setLoading] = useState(false)
@@ -64,6 +65,10 @@ export function ParentsClient({ parents, fetchParentDetail }: ParentsClientProps
   const handleClose = () => {
     setSelectedParent(null)
     setDetail(null)
+  }
+
+  const handleParentDeleted = (parentId: string) => {
+    setParents((prev) => prev.filter((p) => p.id !== parentId))
   }
 
   return (
@@ -97,6 +102,7 @@ export function ParentsClient({ parents, fetchParentDetail }: ParentsClientProps
         detail={detail}
         loading={loading}
         onClose={handleClose}
+        onParentDeleted={handleParentDeleted}
       />
     </>
   )

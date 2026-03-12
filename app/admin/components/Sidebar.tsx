@@ -208,7 +208,7 @@ export function Sidebar({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="lg:hidden fixed inset-0 bg-black/20 z-40 backdrop-blur-sm"
+            className="lg:hidden fixed inset-0 h-[100dvh] bg-black/20 z-40 backdrop-blur-sm"
             onClick={() => setIsMobileMenuOpen(false)}
           />
         )}
