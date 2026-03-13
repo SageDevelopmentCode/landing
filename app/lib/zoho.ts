@@ -706,6 +706,14 @@ export async function buildApprovalEmail(opts: {
   childLegalName: string;
   program: string | null;
 }): Promise<{ subject: string; content: string }> {
+  function formatProgram(program: string | null): string | null {
+    if (!program) return null;
+    if (program === "both") return "Summer 2026 and School Year 2026-2027";
+    if (program === "summer_2026") return "Summer 2026";
+    if (program === "school_year_26_27") return "School Year 2026-2027";
+    return program;
+  }
+
   const subject = "Your Application Has Been Approved — Next Steps to Complete Enrollment";
   const content = `
 <!DOCTYPE html>
@@ -714,7 +722,7 @@ export async function buildApprovalEmail(opts: {
 <body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
   <p style="margin-bottom: 24px;">Dear ${opts.g1FullName},</p>
 
-  <p>We are thrilled to let you know that <strong>${opts.childLegalName}</strong>'s application${opts.program ? ` for the <strong>${opts.program}</strong> program` : ""} has been <strong>approved</strong>. Welcome to the Sage Field family!</p>
+  <p>We are thrilled to let you know that <strong>${opts.childLegalName}</strong>'s application${formatProgram(opts.program) ? ` for the <strong>${formatProgram(opts.program)}</strong> program` : ""} has been <strong>approved</strong>. Welcome to the Sage Field family!</p>
 
   <p>To complete enrollment, please log in to your parent dashboard and work through the enrollment checklist:</p>
 
