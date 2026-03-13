@@ -119,6 +119,7 @@ type FullApplication = {
   denied: boolean
   denied_at: string | null
   denied_reason: string | null
+  is_active: boolean | null
   created_at: string | null
   [key: string]: unknown
 }
@@ -481,6 +482,7 @@ export function TransactionDetailSidebar({ transaction, onClose }: TransactionDe
           onClose={() => { setOpenApplication(null); setShowTransactionSidebar(true) }}
           onApproved={() => {}}
           onDenied={() => {}}
+          onDeactivated={() => {}}
         />
       )}
 
