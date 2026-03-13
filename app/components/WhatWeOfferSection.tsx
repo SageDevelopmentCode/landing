@@ -197,11 +197,11 @@ export default function WhatWeOfferSection() {
                     {/* Content area */}
                     <div className="p-6 flex flex-col flex-1">
                       {/* Badge */}
-                      <span
+                      {/* <span
                         className={`inline-block px-3 py-1 ${program.badgeColor} text-black text-xs font-semibold rounded-full mb-4 self-start`}
                       >
                         {program.badge}
-                      </span>
+                      </span> */}
 
                       {/* Title */}
                       <h3 className="text-xl font-bold text-black font-heading mb-3">
@@ -209,7 +209,9 @@ export default function WhatWeOfferSection() {
                       </h3>
 
                       {/* Dates — highlighted pill */}
-                      <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ${program.dateBg} ${program.dateText} text-xs font-semibold mb-4 self-start`}>
+                      <div
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ${program.dateBg} ${program.dateText} text-xs font-semibold mb-4 self-start`}
+                      >
                         📅 {program.dates}
                       </div>
 
