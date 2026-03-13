@@ -113,6 +113,7 @@ type Application = {
   created_at: string | null
   student_id: string | null
   admin_notes: string | null
+  is_active: boolean | null
   [key: string]: unknown
 }
 
@@ -122,6 +123,7 @@ export default function ApplicationsPage() {
   const [selectedApp, setSelectedApp] = useState<Application | null>(null)
   const [approvingId, setApprovingId] = useState<string | null>(null)
   const [view, setView] = useState<'table' | 'kanban'>('table')
+  const [activeTab, setActiveTab] = useState<'active' | 'inactive'>('active')
 
   useEffect(() => {
     const supabase = createBrowserClient(
@@ -130,18 +132,22 @@ export default function ApplicationsPage() {
     )
 
     async function fetchData() {
-      const { data: appsData } = await supabase
+      const query = supabase
         .schema('parent_app')
         .from('applications')
         .select('*')
         .order('created_at', { ascending: false })
+
+      const { data: appsData } = await (activeTab === 'active'
+        ? query.eq('is_active', true)
+        : query.eq('is_active', false))
 
       setApplications(appsData ?? [])
       setIsLoading(false)
     }
 
     fetchData()
-  }, [])
+  }, [activeTab])
 
   const handleApproved = (id: string) => {
     const now = new Date().toISOString()
@@ -165,6 +171,11 @@ export default function ApplicationsPage() {
     setSelectedApp((prev) =>
       prev?.id === id ? { ...prev, denied: true, denied_at: now, denied_reason: reason } : prev
     )
+  }
+
+  const handleDeactivated = (id: string) => {
+    setApplications((prev) => prev.filter((app) => app.id !== id))
+    setSelectedApp((prev) => (prev?.id === id ? null : prev))
   }
 
   const handleRowApprove = async (e: React.MouseEvent, app: Application) => {
@@ -202,20 +213,37 @@ export default function ApplicationsPage() {
             {applications.length} total application{applications.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <div className="flex gap-1 p-1 rounded-xl w-fit mt-1" style={{ backgroundColor: colors.warmLinen, border: `1px solid ${colors.border}` }}>
-          {(['table', 'kanban'] as const).map(v => (
-            <button
-              key={v}
-              onClick={() => setView(v)}
-              className="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all"
-              style={view === v
-                ? { backgroundColor: '#fff', color: colors.mistyForest, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }
-                : { color: colors.textSecondary }
-              }
-            >
-              {v === 'table' ? 'Table' : 'Board'}
-            </button>
-          ))}
+        <div className="flex items-center gap-2 mt-1">
+          <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ backgroundColor: colors.warmLinen, border: `1px solid ${colors.border}` }}>
+            {(['active', 'inactive'] as const).map(tab => (
+              <button
+                key={tab}
+                onClick={() => { setActiveTab(tab); setSelectedApp(null) }}
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all capitalize"
+                style={activeTab === tab
+                  ? { backgroundColor: '#fff', color: colors.mistyForest, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }
+                  : { color: colors.textSecondary }
+                }
+              >
+                {tab === 'active' ? 'Active' : 'Inactive'}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ backgroundColor: colors.warmLinen, border: `1px solid ${colors.border}` }}>
+            {(['table', 'kanban'] as const).map(v => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all"
+                style={view === v
+                  ? { backgroundColor: '#fff', color: colors.mistyForest, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }
+                  : { color: colors.textSecondary }
+                }
+              >
+                {v === 'table' ? 'Table' : 'Board'}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -422,6 +450,7 @@ export default function ApplicationsPage() {
           onClose={() => setSelectedApp(null)}
           onApproved={handleApproved}
           onDenied={handleDenied}
+          onDeactivated={handleDeactivated}
         />
       )}
     </div>

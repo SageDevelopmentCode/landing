@@ -4,6 +4,7 @@ import { DetailSidebar } from './DetailSidebar'
 import { SidebarField, SidebarSection } from '../../components/SidebarPrimitives'
 import { approveApplication } from '../../actions/approveApplication'
 import { denyApplication } from '../../actions/denyApplication'
+import { deactivateApplication } from '../../actions/deactivateApplication'
 import { getApplicationNotes } from '../../actions/getApplicationNotes'
 import { addApplicationNote } from '../../actions/addApplicationNote'
 import { useState, useEffect } from 'react'
@@ -91,6 +92,7 @@ type Application = {
   denied_at: string | null
   denied_reason: string | null
   created_at: string | null
+  is_active: boolean | null
   [key: string]: unknown
 }
 
@@ -99,6 +101,7 @@ interface ApplicationDetailSidebarProps {
   onClose: () => void
   onApproved: (id: string) => void
   onDenied: (id: string, reason: string) => void
+  onDeactivated: (id: string) => void
 }
 
 
@@ -108,6 +111,7 @@ export function ApplicationDetailSidebar({
   onClose,
   onApproved,
   onDenied,
+  onDeactivated,
 }: ApplicationDetailSidebarProps) {
   const [notes, setNotes] = useState<{ id: string; content: string; created_at: string }[]>([])
   const [newNote, setNewNote] = useState('')
@@ -119,6 +123,7 @@ export function ApplicationDetailSidebar({
   const [denyReason, setDenyReason] = useState('')
   const [isDenying, setIsDenying] = useState(false)
   const [denyError, setDenyError] = useState<string | null>(null)
+  const [isDeactivating, setIsDeactivating] = useState(false)
   const [enrollmentData, setEnrollmentData] = useState<AdminEnrollmentData & { registrationFeePaidByStudent: Record<string, boolean> } | null>(null)
   const [enrollmentLoading, setEnrollmentLoading] = useState(false)
   const [siblingApps, setSiblingApps] = useState<ApprovedApplication[]>([])
@@ -236,6 +241,16 @@ export function ApplicationDetailSidebar({
     }
   }
 
+  const handleDeactivate = async () => {
+    if (isDeactivating) return
+    setIsDeactivating(true)
+    const result = await deactivateApplication(application.id)
+    setIsDeactivating(false)
+    if (result.success) {
+      onDeactivated(application.id)
+    }
+  }
+
   const handleDenyConfirm = async () => {
     if (isDenying || !denyReason.trim()) return
     setIsDenying(true)
@@ -251,7 +266,7 @@ export function ApplicationDetailSidebar({
     }
   }
 
-  const footer = application.approved ? undefined : isDenyingMode ? (
+  const footer = isDenyingMode ? (
     <div className="flex flex-col gap-3 w-full">
       <textarea
         value={denyReason}
@@ -278,29 +293,40 @@ export function ApplicationDetailSidebar({
       </div>
     </div>
   ) : (
-    <div className="flex items-center gap-3">
-      <div className="flex-1 text-sm">
-        {approveError && <span className="text-red-600">{approveError}</span>}
-        {application.denied && (
-          <span className="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full bg-red-50 text-red-600 border border-red-200">
-            Denied {application.denied_at ? `on ${new Date(application.denied_at).toLocaleDateString()}` : ''}
-          </span>
-        )}
+    <div className="flex items-center gap-3 w-full">
+      {application.is_active !== false && (
+        <button
+          onClick={handleDeactivate}
+          disabled={isDeactivating}
+          className="text-xs text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50 mr-auto"
+        >
+          {isDeactivating ? 'Marking inactive...' : 'Mark Inactive'}
+        </button>
+      )}
+      <div className="flex items-center gap-3 ml-auto">
+        <div className="text-sm">
+          {approveError && <span className="text-red-600">{approveError}</span>}
+          {application.denied && (
+            <span className="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full bg-red-50 text-red-600 border border-red-200">
+              Denied {application.denied_at ? `on ${new Date(application.denied_at).toLocaleDateString()}` : ''}
+            </span>
+          )}
+        </div>
+        <button
+          onClick={() => setIsDenyingMode(true)}
+          disabled={isActioned}
+          className="border border-red-200 text-red-600 rounded-lg px-3 py-1.5 text-sm font-semibold hover:bg-red-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {application.denied ? 'Denied' : 'Deny'}
+        </button>
+        <button
+          onClick={handleApprove}
+          disabled={isApproving || isActioned}
+          className="bg-[#2C5F2E] text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-[#234d25] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {isApproving ? 'Approving...' : 'Approve'}
+        </button>
       </div>
-      <button
-        onClick={() => setIsDenyingMode(true)}
-        disabled={isActioned}
-        className="border border-red-200 text-red-600 rounded-lg px-3 py-1.5 text-sm font-semibold hover:bg-red-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-      >
-        {application.denied ? 'Denied' : 'Deny'}
-      </button>
-      <button
-        onClick={handleApprove}
-        disabled={isApproving || isActioned}
-        className="bg-[#2C5F2E] text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-[#234d25] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-      >
-        {isApproving ? 'Approving...' : 'Approve'}
-      </button>
     </div>
   )
 
