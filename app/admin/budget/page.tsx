@@ -17,6 +17,8 @@ import { uploadExpenseReceipt } from "@/app/actions/uploadExpenseReceipt";
 import { deleteExpenseReceipt } from "@/app/actions/deleteExpenseReceipt";
 import { listExpenseReceipts } from "@/app/actions/listExpenseReceipts";
 import { getExpenseReceiptUrl } from "@/app/actions/getExpenseReceiptUrl";
+import { fetchBudgetStudents } from "@/app/actions/fetchBudgetStudents";
+import { fetchBudgetParents } from "@/app/actions/fetchBudgetParents";
 import type { FileObject } from "@supabase/storage-js";
 
 const merriweather = Merriweather({
@@ -1234,7 +1236,7 @@ function ExpensesTab({
   const [previewName, setPreviewName] = useState<string>('');
   const [loadingPreviewPath, setLoadingPreviewPath] = useState<string | null>(null);
   const receiptInputRef = useRef<HTMLInputElement>(null);
-  const hasFetchedReceipts = useRef<string | null>(null);
+  const receiptCacheRef = useRef<Map<string, FileObject[]>>(new Map());
 
   const MAX_RECEIPT_FILES = 10;
   const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -1247,20 +1249,22 @@ function ExpensesTab({
     if ('error' in result && result.error) {
       setReceiptError(result.error);
     } else {
-      setReceiptFiles(result.files as FileObject[]);
+      const files = result.files as FileObject[];
+      receiptCacheRef.current.set(expenseId, files);
+      setReceiptFiles(files);
     }
     setIsLoadingReceipts(false);
   }
 
   useEffect(() => {
     if (editingId === null) {
-      setReceiptFiles([]);
       setReceiptError(null);
-      hasFetchedReceipts.current = null;
       return;
     }
-    if (hasFetchedReceipts.current === editingId) return;
-    hasFetchedReceipts.current = editingId;
+    if (receiptCacheRef.current.has(editingId)) {
+      setReceiptFiles(receiptCacheRef.current.get(editingId)!);
+      return;
+    }
     loadReceipts(editingId);
   }, [editingId]);
 
@@ -2983,11 +2987,21 @@ function ExpensesTab({
 // ─── Revenue Tab ──────────────────────────────────────────────────────────────
 
 const SOURCE_LABELS: Record<string, string> = {
-  tuition: "Tuition",
-  aftercare: "After Care",
-  fun_friday: "Field Day Friday",
-  summer: "Summer",
-  other: "Other",
+  tuition:          "Tuition",
+  aftercare:        "After Care",
+  fun_friday:       "Field Day Friday",
+  summer:           "Summer Program",
+  registration_fee: "Registration Fee",
+  supply_fee:       "Supply Fee",
+  late_fee:         "Late Fee",
+  donation:         "Donation",
+  fundraiser:       "Fundraiser",
+  grant:            "Grant / Sponsorship",
+  field_trip_fee:   "Field Trip Fee",
+  uniform_fee:      "Uniform / Spirit Wear",
+  extended_care:    "Extended Care (Drop-in)",
+  event:            "Event / Workshop",
+  other:            "Other",
 };
 
 const TUITION_RATES = {
@@ -3011,12 +3025,15 @@ function RevenueTab({
   const [showAdd, setShowAdd] = useState(false);
   const [newIncome, setNewIncome] = useState({
     source: "tuition" as BudgetIncome["source"],
-    student_name: "",
+    student_id: null as string | null,
+    parent_id: null as string | null,
     description: "",
     amount: "",
     income_date: new Date().toISOString().slice(0, 10),
   });
   const [saving, setSaving] = useState(false);
+  const [students, setStudents] = useState<{ id: string; child_legal_name: string | null }[]>([]);
+  const [parents, setParents] = useState<{ id: string; full_name: string | null; email: string; g1_cell_phone: string | null }[]>([]);
   const [enrollment, setEnrollment] = useState({
     full_14: 0,
     full_primary: 0,
@@ -3024,6 +3041,18 @@ function RevenueTab({
     fun_friday: 0,
     summer: 0,
   });
+
+  useEffect(() => {
+    async function fetchLists() {
+      const [studentsData, parentsData] = await Promise.all([
+        fetchBudgetStudents(),
+        fetchBudgetParents(),
+      ]);
+      setStudents(studentsData);
+      setParents(parentsData);
+    }
+    fetchLists();
+  }, []);
 
   const totalActual = income.reduce((s, i) => s + Number(i.amount), 0);
 
@@ -3042,7 +3071,8 @@ function RevenueTab({
       .from("income")
       .insert({
         source: newIncome.source,
-        student_name: newIncome.student_name || null,
+        student_id: newIncome.student_id || null,
+        parent_id: newIncome.parent_id || null,
         description: newIncome.description || null,
         amount: Number(newIncome.amount),
         income_date: newIncome.income_date,
@@ -3051,7 +3081,8 @@ function RevenueTab({
     setShowAdd(false);
     setNewIncome({
       source: "tuition",
-      student_name: "",
+      student_id: null,
+      parent_id: null,
       description: "",
       amount: "",
       income_date: new Date().toISOString().slice(0, 10),
@@ -3081,122 +3112,233 @@ function RevenueTab({
           </button>
         </div>
 
-        {showAdd && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            style={{ ...cardStyle, padding: "20px", marginBottom: "16px" }}
-          >
-            <p
-              className="text-sm font-semibold mb-3"
-              style={{ color: colors.textPrimary }}
-            >
-              New Income Entry
-            </p>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
-              <div>
-                <label
-                  className="text-xs mb-1 block"
-                  style={{ color: colors.textSecondary }}
+        <AnimatePresence>
+          {showAdd && (
+            <>
+              {/* Backdrop */}
+              <motion.div
+                key="income-backdrop"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowAdd(false)}
+                style={{
+                  position: "fixed",
+                  inset: 0,
+                  backgroundColor: "rgba(0,0,0,0.35)",
+                  zIndex: 40,
+                }}
+              />
+              {/* Sidebar panel */}
+              <motion.div
+                key="income-sidebar"
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "100%" }}
+                transition={{ type: "tween", duration: 0.25 }}
+                style={{
+                  position: "fixed",
+                  top: 0,
+                  right: 0,
+                  width: "420px",
+                  height: "100%",
+                  backgroundColor: "white",
+                  zIndex: 50,
+                  display: "flex",
+                  flexDirection: "column",
+                  boxShadow: "-4px 0 24px rgba(0,0,0,0.12)",
+                }}
+              >
+                {/* Header */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "20px 24px",
+                    borderBottom: `1px solid ${colors.border}`,
+                  }}
                 >
-                  Source
-                </label>
-                <select
-                  style={inputStyle}
-                  value={newIncome.source}
-                  onChange={(e) =>
-                    setNewIncome((p) => ({
-                      ...p,
-                      source: e.target.value as BudgetIncome["source"],
-                    }))
-                  }
+                  <p
+                    className="text-base font-semibold"
+                    style={{ color: colors.textPrimary }}
+                  >
+                    New Income Entry
+                  </p>
+                  <button
+                    onClick={() => setShowAdd(false)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      fontSize: "20px",
+                      cursor: "pointer",
+                      color: colors.textSecondary,
+                      lineHeight: 1,
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+
+                {/* Body */}
+                <div style={{ flex: 1, overflowY: "auto", padding: "24px" }}>
+                  <div className="space-y-4">
+                    <div>
+                      <label
+                        className="text-xs mb-1 block"
+                        style={{ color: colors.textSecondary }}
+                      >
+                        Source
+                      </label>
+                      <select
+                        style={inputStyle}
+                        value={newIncome.source}
+                        onChange={(e) =>
+                          setNewIncome((p) => ({
+                            ...p,
+                            source: e.target.value as BudgetIncome["source"],
+                          }))
+                        }
+                      >
+                        {Object.entries(SOURCE_LABELS).map(([val, label]) => (
+                          <option key={val} value={val}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label
+                        className="text-xs mb-1 block"
+                        style={{ color: colors.textSecondary }}
+                      >
+                        Student
+                      </label>
+                      <select
+                        style={inputStyle}
+                        value={newIncome.student_id ?? ""}
+                        onChange={(e) =>
+                          setNewIncome((p) => ({
+                            ...p,
+                            student_id: e.target.value || null,
+                          }))
+                        }
+                      >
+                        <option value="">— None —</option>
+                        {students.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.child_legal_name ?? s.id}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label
+                        className="text-xs mb-1 block"
+                        style={{ color: colors.textSecondary }}
+                      >
+                        Parent
+                      </label>
+                      <select
+                        style={inputStyle}
+                        value={newIncome.parent_id ?? ""}
+                        onChange={(e) =>
+                          setNewIncome((p) => ({
+                            ...p,
+                            parent_id: e.target.value || null,
+                          }))
+                        }
+                      >
+                        <option value="">— None —</option>
+                        {parents.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.full_name ?? p.email}{p.g1_cell_phone ? ` · ${p.g1_cell_phone}` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label
+                        className="text-xs mb-1 block"
+                        style={{ color: colors.textSecondary }}
+                      >
+                        Amount ($)
+                      </label>
+                      <input
+                        style={inputStyle}
+                        type="number"
+                        placeholder="0.00"
+                        value={newIncome.amount}
+                        onChange={(e) =>
+                          setNewIncome((p) => ({ ...p, amount: e.target.value }))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label
+                        className="text-xs mb-1 block"
+                        style={{ color: colors.textSecondary }}
+                      >
+                        Date
+                      </label>
+                      <input
+                        style={inputStyle}
+                        type="date"
+                        value={newIncome.income_date}
+                        onChange={(e) =>
+                          setNewIncome((p) => ({
+                            ...p,
+                            income_date: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label
+                        className="text-xs mb-1 block"
+                        style={{ color: colors.textSecondary }}
+                      >
+                        Description
+                      </label>
+                      <input
+                        style={inputStyle}
+                        placeholder="Optional"
+                        value={newIncome.description}
+                        onChange={(e) =>
+                          setNewIncome((p) => ({
+                            ...p,
+                            description: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div
+                  style={{
+                    padding: "16px 24px",
+                    borderTop: `1px solid ${colors.border}`,
+                    display: "flex",
+                    gap: "8px",
+                  }}
                 >
-                  {Object.entries(SOURCE_LABELS).map(([val, label]) => (
-                    <option key={val} value={val}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label
-                  className="text-xs mb-1 block"
-                  style={{ color: colors.textSecondary }}
-                >
-                  Student Name
-                </label>
-                <input
-                  style={inputStyle}
-                  placeholder="Optional"
-                  value={newIncome.student_name}
-                  onChange={(e) =>
-                    setNewIncome((p) => ({
-                      ...p,
-                      student_name: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <label
-                  className="text-xs mb-1 block"
-                  style={{ color: colors.textSecondary }}
-                >
-                  Amount ($)
-                </label>
-                <input
-                  style={inputStyle}
-                  type="number"
-                  placeholder="0.00"
-                  value={newIncome.amount}
-                  onChange={(e) =>
-                    setNewIncome((p) => ({ ...p, amount: e.target.value }))
-                  }
-                />
-              </div>
-              <div>
-                <label
-                  className="text-xs mb-1 block"
-                  style={{ color: colors.textSecondary }}
-                >
-                  Date
-                </label>
-                <input
-                  style={inputStyle}
-                  type="date"
-                  value={newIncome.income_date}
-                  onChange={(e) =>
-                    setNewIncome((p) => ({ ...p, income_date: e.target.value }))
-                  }
-                />
-              </div>
-              <div>
-                <label
-                  className="text-xs mb-1 block"
-                  style={{ color: colors.textSecondary }}
-                >
-                  Description
-                </label>
-                <input
-                  style={inputStyle}
-                  placeholder="Optional"
-                  value={newIncome.description}
-                  onChange={(e) =>
-                    setNewIncome((p) => ({ ...p, description: e.target.value }))
-                  }
-                />
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button style={btnPrimary} onClick={addIncome} disabled={saving}>
-                {saving ? "Saving…" : "Save"}
-              </button>
-              <button style={btnGhost} onClick={() => setShowAdd(false)}>
-                Cancel
-              </button>
-            </div>
-          </motion.div>
-        )}
+                  <button
+                    style={btnPrimary}
+                    onClick={addIncome}
+                    disabled={saving}
+                  >
+                    {saving ? "Saving…" : "Save Income"}
+                  </button>
+                  <button style={btnGhost} onClick={() => setShowAdd(false)}>
+                    Cancel
+                  </button>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
 
         <Table
           headers={["Date", "Source", "Student", "Description", "Amount", ""]}
@@ -3228,7 +3370,11 @@ function RevenueTab({
                     {SOURCE_LABELS[inc.source]}
                   </span>
                 </TableCell>
-                <TableCell>{inc.student_name ?? "—"}</TableCell>
+                <TableCell>
+                  {inc.student_id
+                    ? (students.find((s) => s.id === inc.student_id)?.child_legal_name ?? inc.student_id)
+                    : "—"}
+                </TableCell>
                 <TableCell>{inc.description ?? "—"}</TableCell>
                 <TableCell
                   className="font-semibold"

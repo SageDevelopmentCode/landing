@@ -6,6 +6,7 @@ const schema = z.object({
   parentId: z.string(),
   parentEmail: z.string().email("Valid email required"),
   coverFees: z.boolean().optional().default(false),
+  paymentMethod: z.enum(["card", "ach"]).optional().default("card"),
   children: z.array(
     z.object({
       studentId: z.string(),
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validated = schema.parse(body);
 
-    const { parentId, parentEmail, coverFees, children } = validated;
+    const { parentId, parentEmail, coverFees, paymentMethod, children } = validated;
 
     const totalBaseCents = children.reduce(
       (sum, c) => sum + programCents(c.program),
@@ -98,13 +99,20 @@ export async function POST(request: NextRequest) {
 
     if (coverFees) {
       const feeCents =
-        Math.round((totalBaseCents + 30) / (1 - 0.029)) - totalBaseCents;
+        paymentMethod === "ach"
+          ? Math.min(Math.round(totalBaseCents * 0.008), 500)
+          : Math.round((totalBaseCents + 30) / (1 - 0.029)) - totalBaseCents;
       lineItems.push({
         quantity: 1,
         price_data: {
           currency: "usd",
           unit_amount: feeCents,
-          product_data: { name: "Registration fee processing fee" },
+          product_data: {
+            name:
+              paymentMethod === "ach"
+                ? "ACH processing fee"
+                : "Registration fee processing fee",
+          },
         },
       });
     }
@@ -122,6 +130,7 @@ export async function POST(request: NextRequest) {
         application_ids: applicationIds.join(","),
         parent_id: parentId,
         cover_fees: String(coverFees),
+        payment_method: paymentMethod,
         intended_amount_cents: String(totalBaseCents),
       },
       success_url: `${baseUrl}/parent/dashboard/registration-success?session_id={CHECKOUT_SESSION_ID}`,

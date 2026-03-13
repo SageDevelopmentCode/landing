@@ -220,6 +220,7 @@ function CombinedRegistrationFeeModal({
   onPayIndividually: () => void;
 }) {
   const [coverFees, setCoverFees] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "ach">("card");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -252,6 +253,7 @@ function CombinedRegistrationFeeModal({
             parentId: apps[0].user_id,
             parentEmail,
             coverFees,
+            paymentMethod,
             children: apps.map((a) => ({
               studentId: a.student_id ?? "",
               applicationId: a.id,
@@ -322,14 +324,41 @@ function CombinedRegistrationFeeModal({
               ${combinedTotal.toFixed(2)}
             </span>
           </div>
-          <div className="flex justify-between text-xs text-gray-400 font-body">
-            <span>Card processing fee (est.)</span>
-            <span>~${cardFee.toFixed(2)}</span>
+        </div>
+
+        <div className="mb-4">
+          <p className="text-sm font-medium text-gray-700 font-body mb-2">
+            How will you be paying?
+          </p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setPaymentMethod("card")}
+              className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${
+                paymentMethod === "card"
+                  ? "border-emerald-600 bg-emerald-50 text-emerald-700"
+                  : "border-gray-200 text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              Credit/Debit Card
+            </button>
+            <button
+              type="button"
+              onClick={() => setPaymentMethod("ach")}
+              className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${
+                paymentMethod === "ach"
+                  ? "border-emerald-600 bg-emerald-50 text-emerald-700"
+                  : "border-gray-200 text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              ACH / Bank Transfer
+            </button>
           </div>
-          <div className="flex justify-between text-xs text-gray-400 font-body">
-            <span>ACH / bank transfer fee (est.)</span>
-            <span>~${achFee.toFixed(2)}</span>
-          </div>
+          <p className="text-xs text-gray-400 font-body mt-1.5">
+            {paymentMethod === "card"
+              ? `Processing fee (est.): ~$${cardFee.toFixed(2)}`
+              : `Processing fee (est.): ~$${achFee.toFixed(2)} (0.8%, max $5.00)`}
+          </p>
         </div>
 
         <label className="flex items-start gap-3 mb-5 cursor-pointer group">
@@ -345,8 +374,7 @@ function CombinedRegistrationFeeModal({
         </label>
 
         <p className="text-xs text-gray-400 font-body mb-2">
-          Pay by card or bank transfer (ACH) — ACH has a lower processing fee
-          (0.8%, max $5).
+          ACH / bank transfer has a lower processing fee (0.8%, max $5).
         </p>
         <p className="text-xs text-gray-400 font-body mb-5">
           Prefer to pay by check? Email us at{" "}
@@ -410,6 +438,7 @@ function RegistrationFeeModal({
   onPaid: () => void;
 }) {
   const [coverFees, setCoverFees] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "ach">("card");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -434,6 +463,7 @@ function RegistrationFeeModal({
           studentId: app.student_id,
           applicationId: app.id,
           coverFees,
+          paymentMethod,
           program: app.program,
         }),
       });
@@ -504,14 +534,41 @@ function RegistrationFeeModal({
               </span>
             </div>
           )}
-          <div className="flex justify-between text-xs text-gray-400 font-body">
-            <span>Card processing fee (est.)</span>
-            <span>~${cardFee.toFixed(2)}</span>
+        </div>
+
+        <div className="mb-4">
+          <p className="text-sm font-medium text-gray-700 font-body mb-2">
+            How will you be paying?
+          </p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setPaymentMethod("card")}
+              className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${
+                paymentMethod === "card"
+                  ? "border-emerald-600 bg-emerald-50 text-emerald-700"
+                  : "border-gray-200 text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              Credit/Debit Card
+            </button>
+            <button
+              type="button"
+              onClick={() => setPaymentMethod("ach")}
+              className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${
+                paymentMethod === "ach"
+                  ? "border-emerald-600 bg-emerald-50 text-emerald-700"
+                  : "border-gray-200 text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              ACH / Bank Transfer
+            </button>
           </div>
-          <div className="flex justify-between text-xs text-gray-400 font-body">
-            <span>ACH / bank transfer fee (est.)</span>
-            <span>~${achFee.toFixed(2)}</span>
-          </div>
+          <p className="text-xs text-gray-400 font-body mt-1.5">
+            {paymentMethod === "card"
+              ? `Processing fee (est.): ~$${cardFee.toFixed(2)}`
+              : `Processing fee (est.): ~$${achFee.toFixed(2)} (0.8%, max $5.00)`}
+          </p>
         </div>
 
         <label className="flex items-start gap-3 mb-5 cursor-pointer group">
@@ -527,8 +584,7 @@ function RegistrationFeeModal({
         </label>
 
         <p className="text-xs text-gray-400 font-body mb-2">
-          Pay by card or bank transfer (ACH) — ACH has a lower processing fee
-          (0.8%, max $5).
+          ACH / bank transfer has a lower processing fee (0.8%, max $5).
         </p>
         <p className="text-xs text-gray-400 font-body mb-5">
           Prefer to pay by check? Email us at{" "}

@@ -1142,7 +1142,11 @@ export interface BudgetExpense {
 export interface BudgetIncome {
   id: string
   source: 'tuition' | 'aftercare' | 'fun_friday' | 'summer' | 'other'
-  student_name: string | null
+    | 'registration_fee' | 'supply_fee' | 'late_fee' | 'donation'
+    | 'fundraiser' | 'grant' | 'field_trip_fee' | 'uniform_fee'
+    | 'extended_care' | 'event'
+  student_id: string | null
+  parent_id: string | null
   description: string | null
   amount: number
   income_date: string

@@ -8,6 +8,7 @@ const schema = z.object({
   studentId: z.string(),
   applicationId: z.string(),
   coverFees: z.boolean().optional().default(false),
+  paymentMethod: z.enum(["card", "ach"]).optional().default("card"),
   program: z
     .enum(["summer_26", "school_year_26_27", "both"])
     .default("summer_26"),
@@ -24,6 +25,7 @@ export async function POST(request: NextRequest) {
       studentId,
       applicationId,
       coverFees,
+      paymentMethod,
       program,
     } = validated;
 
@@ -49,7 +51,9 @@ export async function POST(request: NextRequest) {
 
     if (program === "both") {
       const feeCents = coverFees
-        ? Math.round((totalBaseCents + 30) / (1 - 0.029)) - totalBaseCents
+        ? paymentMethod === "ach"
+          ? Math.min(Math.round(totalBaseCents * 0.008), 500)
+          : Math.round((totalBaseCents + 30) / (1 - 0.029)) - totalBaseCents
         : 0;
       lineItems = [
         {
@@ -83,16 +87,18 @@ export async function POST(request: NextRequest) {
                 price_data: {
                   currency: "usd",
                   unit_amount: feeCents,
-                  product_data: { name: "Registration fee processing fee" },
+                  product_data: {
+                    name:
+                      paymentMethod === "ach"
+                        ? "ACH processing fee"
+                        : "Registration fee processing fee",
+                  },
                 },
               } as const,
             ]
           : []),
       ];
     } else {
-      const finalAmountCents = coverFees
-        ? Math.round((totalBaseCents + 30) / (1 - 0.029))
-        : totalBaseCents;
       const productName =
         program === "school_year_26_27"
           ? "School Year 2026–27 Registration Fee"
@@ -101,19 +107,63 @@ export async function POST(request: NextRequest) {
         program === "school_year_26_27"
           ? "Sage Field Private School — 2026–27 school year registration"
           : "Sage Field Private School — Summer 2026 program registration";
-      lineItems = [
-        {
-          quantity: 1,
-          price_data: {
-            currency: "usd",
-            unit_amount: finalAmountCents,
-            product_data: {
-              name: productName,
-              description: productDescription,
+
+      if (coverFees && paymentMethod === "ach") {
+        const feeCents = Math.min(Math.round(totalBaseCents * 0.008), 500);
+        lineItems = [
+          {
+            quantity: 1,
+            price_data: {
+              currency: "usd",
+              unit_amount: totalBaseCents,
+              product_data: { name: productName, description: productDescription },
             },
           },
-        },
-      ];
+          {
+            quantity: 1,
+            price_data: {
+              currency: "usd",
+              unit_amount: feeCents,
+              product_data: { name: "ACH processing fee" },
+            },
+          },
+        ];
+      } else if (coverFees && paymentMethod === "card") {
+        const feeCents =
+          Math.round((totalBaseCents + 30) / (1 - 0.029)) - totalBaseCents;
+        lineItems = [
+          {
+            quantity: 1,
+            price_data: {
+              currency: "usd",
+              unit_amount: totalBaseCents,
+              product_data: { name: productName, description: productDescription },
+            },
+          },
+          {
+            quantity: 1,
+            price_data: {
+              currency: "usd",
+              unit_amount: feeCents,
+              product_data: { name: "Card processing fee" },
+            },
+          },
+        ];
+      } else {
+        lineItems = [
+          {
+            quantity: 1,
+            price_data: {
+              currency: "usd",
+              unit_amount: totalBaseCents,
+              product_data: {
+                name: productName,
+                description: productDescription,
+              },
+            },
+          },
+        ];
+      }
     }
 
     const session = await getStripe().checkout.sessions.create({
@@ -132,6 +182,7 @@ export async function POST(request: NextRequest) {
         student_id: studentId,
         application_id: applicationId,
         cover_fees: String(coverFees),
+        payment_method: paymentMethod,
         intended_amount_cents: String(totalBaseCents),
       },
       success_url: `${baseUrl}/parent/dashboard/registration-success?session_id={CHECKOUT_SESSION_ID}`,
