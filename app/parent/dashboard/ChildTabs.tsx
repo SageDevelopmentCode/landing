@@ -206,6 +206,198 @@ const checklistItems: ChecklistItem[] = [
 
 const totalCount = checklistItems.length;
 
+function CombinedRegistrationFeeModal({
+  apps,
+  parentEmail,
+  onClose,
+  onAllPaid,
+  onPayIndividually,
+}: {
+  apps: Application[];
+  parentEmail: string;
+  onClose: () => void;
+  onAllPaid: () => void;
+  onPayIndividually: () => void;
+}) {
+  const [coverFees, setCoverFees] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function getBaseFee(program: string | null): number {
+    if (program === "both") return 575;
+    if (program === "school_year_26_27") return 500;
+    return 75;
+  }
+
+  function getProgramLineLabel(program: string | null): string {
+    if (program === "both") return "Summer 2026 + School Year 2026–27";
+    if (program === "school_year_26_27") return "School Year 2026–27";
+    return "Summer 2026";
+  }
+
+  const combinedTotal = apps.reduce((sum, a) => sum + getBaseFee(a.program), 0);
+  const cardFee = Math.round((combinedTotal * 0.029 + 0.3) * 100) / 100;
+  const achFee = Math.min(Math.round(combinedTotal * 0.008 * 100) / 100, 5.0);
+
+  const handlePayAll = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        "/api/stripe/create-combined-registration-checkout",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            parentId: apps[0].user_id,
+            parentEmail,
+            coverFees,
+            children: apps.map((a) => ({
+              studentId: a.student_id ?? "",
+              applicationId: a.id,
+              program: a.program ?? "summer_26",
+              childName:
+                a.preferred_name ?? a.child_legal_name ?? "Student",
+            })),
+          }),
+        },
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Something went wrong. Please try again.");
+        setLoading(false);
+        return;
+      }
+      onAllPaid();
+      window.location.href = data.url;
+    } catch {
+      setError("Network error. Please try again.");
+      setLoading(false);
+    }
+  };
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.15 }}
+    >
+      <motion.div
+        className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6"
+        initial={{ opacity: 0, scale: 0.95, y: 8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 8 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
+      >
+        <h2 className="text-lg font-bold font-heading text-gray-800 mb-1">
+          Pay Registration Fees
+        </h2>
+        <p className="text-sm text-gray-500 font-body mb-5">
+          You have {apps.length} children with unpaid registration fees. Save
+          on processing by paying together.
+        </p>
+
+        <div className="bg-gray-50 rounded-xl p-4 mb-4 space-y-2">
+          {apps.map((a) => {
+            const name = a.preferred_name ?? a.child_legal_name ?? "Student";
+            const fee = getBaseFee(a.program);
+            const programLine = getProgramLineLabel(a.program);
+            return (
+              <div key={a.id} className="flex justify-between text-sm font-body">
+                <span className="text-gray-600">
+                  {name}{" "}
+                  <span className="text-gray-400">({programLine})</span>
+                </span>
+                <span className="font-semibold text-gray-800">
+                  ${fee.toFixed(2)}
+                </span>
+              </div>
+            );
+          })}
+          <div className="flex justify-between text-sm font-body border-t border-gray-200 pt-2 mt-1">
+            <span className="text-gray-700 font-medium">Combined Total</span>
+            <span className="font-semibold text-gray-800">
+              ${combinedTotal.toFixed(2)}
+            </span>
+          </div>
+          <div className="flex justify-between text-xs text-gray-400 font-body">
+            <span>Card processing fee (est.)</span>
+            <span>~${cardFee.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-xs text-gray-400 font-body">
+            <span>ACH / bank transfer fee (est.)</span>
+            <span>~${achFee.toFixed(2)}</span>
+          </div>
+        </div>
+
+        <label className="flex items-start gap-3 mb-5 cursor-pointer group">
+          <input
+            type="checkbox"
+            checked={coverFees}
+            onChange={(e) => setCoverFees(e.target.checked)}
+            className="mt-0.5 w-4 h-4 rounded accent-emerald-600 cursor-pointer"
+          />
+          <span className="text-sm text-gray-600 font-body group-hover:text-gray-800 transition-colors">
+            I agree to pay the processing fee
+          </span>
+        </label>
+
+        <p className="text-xs text-gray-400 font-body mb-2">
+          Pay by card or bank transfer (ACH) — ACH has a lower processing fee
+          (0.8%, max $5).
+        </p>
+        <p className="text-xs text-gray-400 font-body mb-5">
+          Prefer to pay by check? Email us at{" "}
+          <a
+            href="mailto:sabrina@sagefield.co"
+            className="underline hover:text-gray-600 transition-colors"
+          >
+            sabrina@sagefield.co
+          </a>{" "}
+          and we&apos;ll send you instructions.
+        </p>
+
+        {error && (
+          <p className="text-sm text-red-600 font-body mb-4">{error}</p>
+        )}
+
+        <div className="flex gap-3 mb-3">
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold font-body border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50 cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handlePayAll}
+            disabled={loading || !coverFees}
+            className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold font-body bg-emerald-600 text-white hover:bg-emerald-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+          >
+            {loading ? (
+              <>
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Redirecting…
+              </>
+            ) : (
+              "Pay All Together"
+            )}
+          </button>
+        </div>
+        <button
+          onClick={onPayIndividually}
+          disabled={loading}
+          className="w-full px-4 py-2 rounded-xl text-sm font-semibold font-body text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 cursor-pointer"
+        >
+          Pay individually instead
+        </button>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 function RegistrationFeeModal({
   app,
   parentEmail,
@@ -795,6 +987,7 @@ export default function ChildTabs({
     >
   >(authorizedPickupByStudent);
   const [registrationFeeOpen, setRegistrationFeeOpen] = useState(false);
+  const [combinedFeePromptOpen, setCombinedFeePromptOpen] = useState(false);
   const [localRegistrationFeePaid, setLocalRegistrationFeePaid] = useState<
     Record<string, boolean>
   >(registrationFeePaidByStudent);
@@ -990,7 +1183,14 @@ export default function ChildTabs({
   };
 
   const handleRegistrationFeeClick = () => {
-    setRegistrationFeeOpen(true);
+    const unpaidApps = apps.filter(
+      (a) => !(localRegistrationFeePaid[a.student_id ?? ""] ?? false),
+    );
+    if (unpaidApps.length >= 2) {
+      setCombinedFeePromptOpen(true);
+    } else {
+      setRegistrationFeeOpen(true);
+    }
   };
 
   const handleRegistrationFeePaid = () => {
@@ -998,6 +1198,14 @@ export default function ChildTabs({
       ...prev,
       [activeStudentId]: true,
     }));
+  };
+
+  const handleAllRegistrationFeesPaid = () => {
+    const updated: Record<string, boolean> = {};
+    for (const app of apps) {
+      if (app.student_id) updated[app.student_id] = true;
+    }
+    setLocalRegistrationFeePaid((prev) => ({ ...prev, ...updated }));
   };
 
   const checklist = (
@@ -1284,6 +1492,23 @@ export default function ChildTabs({
           onUploadComplete={handleImmunizationUploadComplete}
         />
       )}
+
+      <AnimatePresence>
+        {combinedFeePromptOpen && (
+          <CombinedRegistrationFeeModal
+            apps={apps.filter(
+              (a) => !(localRegistrationFeePaid[a.student_id ?? ""] ?? false),
+            )}
+            parentEmail={parentEmail}
+            onClose={() => setCombinedFeePromptOpen(false)}
+            onAllPaid={handleAllRegistrationFeesPaid}
+            onPayIndividually={() => {
+              setCombinedFeePromptOpen(false);
+              setRegistrationFeeOpen(true);
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {registrationFeeOpen && (

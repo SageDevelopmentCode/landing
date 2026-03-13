@@ -40,8 +40,124 @@ export async function POST(request: NextRequest) {
     const supabase = createAdminClient();
 
     if (session.metadata?.payment_type === "registration_fee") {
-      const applicationId = session.metadata?.application_id;
-      if (applicationId) {
+      const applicationIdsStr = session.metadata?.application_ids; // combined
+      const applicationId = session.metadata?.application_id; // individual
+
+      if (applicationIdsStr) {
+        // Combined payment: update all application IDs
+        const ids = applicationIdsStr
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+
+        for (const appId of ids) {
+          const { error } = await supabase
+            .schema("parent_app")
+            .from("applications")
+            .update({ registration_fee_paid: true })
+            .eq("id", appId);
+
+          if (error) {
+            console.error(
+              `Failed to update registration fee for app ${appId}:`,
+              error,
+            );
+          }
+        }
+
+        // Fetch first application for parent name/email
+        const { data: firstApplication } = await supabase
+          .schema("parent_app")
+          .from("applications")
+          .select("g1_full_name, g1_email, child_legal_name, program")
+          .eq("id", ids[0])
+          .single();
+
+        // Fetch all applications for child name list
+        const { data: allApplications } = await supabase
+          .schema("parent_app")
+          .from("applications")
+          .select("child_legal_name, preferred_name, program")
+          .in("id", ids);
+
+        const programMap: Record<string, string> = {
+          summer_26: "Summer 2026",
+          school_year_26_27: "School Year 2026-27",
+          both: "Summer 2026 & School Year 2026-27",
+        };
+
+        const childSummary = (allApplications ?? [])
+          .map((a) => {
+            const name = a.preferred_name ?? a.child_legal_name ?? "Student";
+            const prog = programMap[a.program ?? ""] ?? a.program ?? "N/A";
+            return `${name} (${prog})`;
+          })
+          .join(", ");
+
+        const amountCents = session.amount_total ?? 0;
+        const amountDollars = (amountCents / 100).toFixed(2);
+
+        // Discord notification (non-blocking)
+        sendDiscordNotification(
+          createRegistrationFeeEmbed({
+            parentName: firstApplication?.g1_full_name ?? "N/A",
+            parentEmail:
+              firstApplication?.g1_email ?? session.customer_email ?? "N/A",
+            childName: childSummary || "Multiple children",
+            program: "Combined payment",
+            amountCents,
+          }),
+        ).catch((err) =>
+          console.error("Discord notification failed:", err),
+        );
+
+        // Email notification (non-blocking, with error embed fallback)
+        (async () => {
+          try {
+            const toAddress =
+              firstApplication?.g1_email ?? session.customer_email ?? "";
+            if (!toAddress) return;
+
+            const { subject, content } =
+              await buildRegistrationFeeConfirmationEmail({
+                g1FullName: firstApplication?.g1_full_name ?? "Parent",
+                childLegalName: childSummary || "your children",
+                program: "all enrolled programs",
+                amountDollars,
+              });
+
+            const emailResult = await sendZohoEmail({
+              toAddress,
+              subject,
+              content,
+            });
+
+            if (emailResult.success) {
+              await supabase.schema("email_logs").from("sends").insert({
+                to_address: toAddress,
+                subject,
+                template: "registration_fee_confirmation",
+                application_id: null,
+                status: "success",
+              });
+            } else {
+              throw new Error(emailResult.error ?? "Unknown email error");
+            }
+          } catch (err) {
+            console.error(
+              "Combined registration fee confirmation email failed:",
+              err,
+            );
+            sendDiscordNotification(
+              createErrorEmbed({
+                context: "Combined registration fee confirmation email",
+                error: String(err),
+                details: { applicationIds: ids.join(",") },
+              }),
+            ).catch(() => {});
+          }
+        })();
+      } else if (applicationId) {
         const { error } = await supabase
           .schema("parent_app")
           .from("applications")

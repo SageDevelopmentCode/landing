@@ -21,13 +21,18 @@ export default async function RegistrationSuccessPage({ searchParams }: Props) {
         currency: "usd",
       }).format(cents / 100);
 
-      const program = session.metadata?.program ?? "summer_26";
-      programLabel =
-        program === "both"
-          ? "Summer 2026 and the 2026–27 School Year"
-          : program === "school_year_26_27"
-          ? "the 2026–27 School Year"
-          : "Summer 2026";
+      if (session.metadata?.application_ids) {
+        // Combined payment — generic label
+        programLabel = "all enrolled programs";
+      } else {
+        const program = session.metadata?.program ?? "summer_26";
+        programLabel =
+          program === "both"
+            ? "Summer 2026 and the 2026–27 School Year"
+            : program === "school_year_26_27"
+            ? "the 2026–27 School Year"
+            : "Summer 2026";
+      }
     } catch (err) {
       console.error("Failed to retrieve Stripe session:", err);
     }
