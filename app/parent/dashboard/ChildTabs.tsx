@@ -382,10 +382,17 @@ function RegistrationFeeModal({
 }
 
 function getProgramLabel(program: string | null): string {
-  if (program === "summer_26") return "Summer 2026";
-  if (program === "school_year_26_27") return "School Year 2026–27";
-  if (program === "both") return "Summer 2026 + School Year 2026–27";
+  if (program === "summer_26") return "Summer '26";
+  if (program === "school_year_26_27") return "School Yr '26–'27";
+  if (program === "both") return "Summer + School Yr '26–'27";
   return "the program";
+}
+
+function getProgramLabelWithEmoji(program: string | null): string | null {
+  if (program === "summer_26") return "Summer '26";
+  if (program === "school_year_26_27") return "School Yr '26–'27";
+  if (program === "both") return "Summer + School Yr '26–'27";
+  return null;
 }
 
 function computeIsEnrollmentComplete(
@@ -450,6 +457,7 @@ function Checklist({
   );
 
   const programLabel = getProgramLabel(program);
+  const programLabelWithEmoji = getProgramLabelWithEmoji(program);
   const progressPercent = Math.round((completedCount / totalCount) * 100);
 
   const firedRef = useRef(false);
@@ -537,13 +545,20 @@ function Checklist({
               {completedCount} of {totalCount} steps completed
             </p>
           </div>
-          <button
-            onClick={onViewApplication}
-            className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold font-body bg-white border border-gray-200 text-gray-500 hover:text-gray-800 hover:bg-gray-50 shadow-sm transition-colors cursor-pointer"
-          >
-            <FileText className="w-3.5 h-3.5" />
-            View Application
-          </button>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {programLabelWithEmoji && (
+              <span className="text-xs font-medium font-body text-gray-500 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1">
+                {programLabelWithEmoji}
+              </span>
+            )}
+            <button
+              onClick={onViewApplication}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold font-body bg-white border border-gray-200 text-gray-500 hover:text-gray-800 hover:bg-gray-50 shadow-sm transition-colors cursor-pointer"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              View Application
+            </button>
+          </div>
         </div>
         <div className="w-full bg-gray-100 rounded-full h-2">
           <div
@@ -1005,6 +1020,7 @@ export default function ChildTabs({
       <div className="flex gap-2 mb-6 flex-wrap items-center">
         {apps.map((app) => {
           const label = app.preferred_name ?? app.child_legal_name ?? "Student";
+          const programLabel = getProgramLabel(app.program ?? null);
           const isActive = app.id === activeTabId;
           const sid = app.student_id ?? "";
           const isComplete = computeIsEnrollmentComplete(
