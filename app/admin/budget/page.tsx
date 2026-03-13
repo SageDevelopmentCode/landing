@@ -3811,6 +3811,7 @@ function MixSummary({
   budget,
   targetProfit,
   onReset,
+  unit = "/mo",
 }: {
   mixTotal: number;
   goal: number;
@@ -3818,6 +3819,7 @@ function MixSummary({
   budget: number;
   targetProfit: number;
   onReset: () => void;
+  unit?: string;
 }) {
   const mixProfit = mixTotal - budget;
   const diff = mixTotal - goal;
@@ -3875,7 +3877,7 @@ function MixSummary({
             className="text-sm font-bold"
             style={{ color: colors.textPrimary }}
           >
-            {fmt(mixTotal)}/mo
+            {fmt(mixTotal)}{unit}
           </p>
         </div>
         <div>
@@ -3883,7 +3885,7 @@ function MixSummary({
             Projected profit
           </p>
           <p className="text-sm font-bold" style={{ color: profitColor }}>
-            {fmt(mixProfit)}/mo
+            {fmt(mixProfit)}{unit}
           </p>
         </div>
         <div>
@@ -3894,7 +3896,7 @@ function MixSummary({
             className="text-sm font-bold"
             style={{ color: colors.textPrimary }}
           >
-            {fmt(targetProfit)}/mo
+            {fmt(targetProfit)}{unit}
           </p>
         </div>
       </div>
@@ -3932,16 +3934,21 @@ function RevenueGoalHeader({
   budget,
   targetProfit,
   label = "School Year · 10 months · Mon–Thu",
+  fullSeasonMonthlyCredit,
+  unit = "/mo",
 }: {
   revenueGoal: number;
   mixTotal: number;
   budget: number;
   targetProfit: number;
   label?: string;
+  fullSeasonMonthlyCredit?: number;
+  unit?: string;
 }) {
-  const diff = mixTotal - revenueGoal;
+  const netGoal = Math.max(0, revenueGoal - (fullSeasonMonthlyCredit ?? 0));
+  const diff = mixTotal - netGoal;
   const surplus = diff >= 0;
-  const barPct = Math.min(mixTotal / revenueGoal, 1);
+  const barPct = netGoal === 0 ? 1 : Math.min(mixTotal / netGoal, 1);
   const barColor =
     barPct >= 1 ? "#5E7C68" : barPct >= 0.75 ? "#C07A4A" : "#C0524A";
   return (
@@ -3966,10 +3973,12 @@ function RevenueGoalHeader({
             className="text-xl font-bold"
             style={{ color: colors.mistyForest }}
           >
-            {fmt(revenueGoal)}/mo
+            {fmt(netGoal)}{unit}
           </p>
           <p className="text-xs mt-0.5" style={{ color: colors.textTertiary }}>
-            {fmt(budget)} budget + {fmt(targetProfit)} profit
+            {fullSeasonMonthlyCredit
+              ? `${fmt(budget)} budget + ${fmt(targetProfit)} profit − ${fmt(fullSeasonMonthlyCredit)} full season`
+              : `${fmt(budget)} budget + ${fmt(targetProfit)} profit`}
           </p>
         </div>
       </div>
@@ -4008,7 +4017,7 @@ function RevenueGoalHeader({
         <span className="text-xs" style={{ color: colors.textTertiary }}>
           Current mix:{" "}
           <strong style={{ color: colors.textPrimary }}>
-            {fmt(mixTotal)}/mo
+            {fmt(mixTotal)}{unit}
           </strong>
         </span>
         <span
@@ -4281,21 +4290,30 @@ function SummerAnalysisTab({
       ]),
     ),
   );
-  const [ssStudents, setSsStudents] = useState<Record<string, number>>(() =>
-    Object.fromEntries(
-      SUMMER_SEASON_RATES.map((r) => [
-        r.key,
-        Math.ceil(((totalBudget + 500) * 3) / r.totalPrice),
-      ]),
-    ),
+  const [ssStudents, setSsStudents] = useState<Record<string, number>>(
+    () => Object.fromEntries(SUMMER_SEASON_RATES.map((r) => [r.key, 0]))
   );
 
   const netProfitColor = netProfit >= 0 ? colors.successText : colors.errorText;
-  const swMultiplier = swWeeks * (4.33 / 12);
-  const swMixTotal = SUMMER_WEEKLY_RATES.reduce(
-    (s, { key, rate }) => s + (swStudents[key] ?? 0) * rate * swMultiplier,
+
+  const SEASON_WEEKS = 12;
+  const SEASON_MONTHS = SEASON_WEEKS / 4.33; // ≈ 2.77
+
+  const totalSeasonCost = totalBudget * SEASON_MONTHS;
+  const seasonProfitTarget = targetProfit * SEASON_MONTHS;
+  const totalSeasonGoal = totalSeasonCost + seasonProfitTarget;
+
+  const swSeasonTotal = SUMMER_WEEKLY_RATES.reduce(
+    (s, { key, rate }) => s + (swStudents[key] ?? 0) * rate * swWeeks,
     0,
   );
+
+  const ssSeasonTotal = SUMMER_SEASON_RATES.reduce(
+    (s, { key, totalPrice }) => s + (ssStudents[key] ?? 0) * totalPrice,
+    0,
+  );
+
+  const netSeasonGoal = Math.max(0, totalSeasonGoal - ssSeasonTotal);
 
   return (
     <div className="space-y-6">
@@ -4352,11 +4370,13 @@ function SummerAnalysisTab({
       {/* ── Weekly Enrollment ── */}
       <div style={{ ...cardStyle, padding: "24px" }}>
         <RevenueGoalHeader
-          revenueGoal={totalBudget + targetProfit}
-          mixTotal={swMixTotal}
-          budget={totalBudget}
-          targetProfit={targetProfit}
+          revenueGoal={totalSeasonGoal}
+          mixTotal={swSeasonTotal}
+          budget={totalSeasonCost}
+          targetProfit={seasonProfitTarget}
           label="Summer Program · 12 weeks · Mon–Thu"
+          fullSeasonMonthlyCredit={ssSeasonTotal}
+          unit=" for the season"
         />
 
         {/* Weeks attended slider */}
@@ -4391,17 +4411,15 @@ function SummerAnalysisTab({
         </p>
         <div className="space-y-6 mb-4">
           {SUMMER_WEEKLY_RATES.map(({ key, label, rate }) => {
-            const neededAlone = Math.ceil(
-              (totalBudget + targetProfit) / (rate * swMultiplier),
-            );
+            const neededAlone = Math.ceil(netSeasonGoal / (rate * swWeeks));
             const targetCount = swStudents[key] ?? 0;
-            const contribution = targetCount * rate * swMultiplier;
+            const contribution = targetCount * rate * swWeeks;
             return (
               <CoreSliderRow
                 key={key}
                 label={label}
                 rateLabel={`${fmt(rate)}/wk`}
-                contributionLabel={`${fmt(contribution)}/mo`}
+                contributionLabel={`${fmt(contribution)} total`}
                 neededAlone={neededAlone}
                 targetCount={targetCount}
                 onChange={(n) => setSwStudents((p) => ({ ...p, [key]: n }))}
@@ -4410,14 +4428,12 @@ function SummerAnalysisTab({
           })}
         </div>
         <MixSummary
-          mixTotal={SUMMER_WEEKLY_RATES.reduce(
-            (s, { key, rate }) => s + (swStudents[key] ?? 0) * rate * swMultiplier,
-            0,
-          )}
-          goal={totalBudget + targetProfit}
+          mixTotal={swSeasonTotal}
+          goal={totalSeasonGoal}
           label="Weekly"
-          budget={totalBudget}
-          targetProfit={targetProfit}
+          budget={totalSeasonCost}
+          targetProfit={seasonProfitTarget}
+          unit=" total"
           onReset={() =>
             setSwStudents(
               Object.fromEntries(SUMMER_WEEKLY_RATES.map((r) => [r.key, 0])),
@@ -4440,9 +4456,6 @@ function SummerAnalysisTab({
         </p>
         <div className="space-y-6">
           {SUMMER_SEASON_RATES.map(({ key, label, totalPrice }) => {
-            const neededAlone = Math.ceil(
-              ((totalBudget + targetProfit) * 3) / totalPrice,
-            );
             const targetCount = ssStudents[key] ?? 0;
             const contribution = targetCount * totalPrice;
             return (
@@ -4451,31 +4464,23 @@ function SummerAnalysisTab({
                 label={label}
                 rateLabel={`${fmt(totalPrice)} total`}
                 contributionLabel={`${fmt(contribution)} total`}
-                neededAlone={neededAlone}
+                neededAlone={0}
                 targetCount={targetCount}
                 onChange={(n) => setSsStudents((p) => ({ ...p, [key]: n }))}
               />
             );
           })}
         </div>
-        <MixSummary
-          mixTotal={
-            SUMMER_SEASON_RATES.reduce(
-              (s, { key, totalPrice }) =>
-                s + (ssStudents[key] ?? 0) * totalPrice,
-              0,
-            ) / 3
-          }
-          goal={totalBudget + targetProfit}
-          label="Full season (÷3 months)"
-          budget={totalBudget}
-          targetProfit={targetProfit}
-          onReset={() =>
-            setSsStudents(
-              Object.fromEntries(SUMMER_SEASON_RATES.map((r) => [r.key, 0])),
-            )
-          }
-        />
+        <div className="mt-4 pt-3" style={{ borderTop: `1px solid ${colors.border}` }}>
+          <div className="flex justify-between items-baseline">
+            <span className="text-xs" style={{ color: colors.textTertiary }}>
+              Full season total revenue
+            </span>
+            <span className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
+              {fmt(SUMMER_SEASON_RATES.reduce((s, { key, totalPrice }) => s + (ssStudents[key] ?? 0) * totalPrice, 0))} total
+            </span>
+          </div>
+        </div>
 
         <p
           className="text-xs mt-4"
