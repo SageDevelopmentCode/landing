@@ -352,7 +352,7 @@ function CombinedRegistrationFeeModal({
                   : "border-gray-200 text-gray-600 hover:bg-gray-50"
               }`}
             >
-              ACH / US Bank Transfer
+              ACH / US bank account
             </button>
           </div>
           <p className="text-xs text-gray-400 font-body mt-1.5">
@@ -558,7 +558,7 @@ function RegistrationFeeModal({
                   : "border-gray-200 text-gray-600 hover:bg-gray-50"
               }`}
             >
-              ACH / Bank Transfer
+              ACH / US bank account
             </button>
           </div>
           <p className="text-xs text-gray-400 font-body mt-1.5">
