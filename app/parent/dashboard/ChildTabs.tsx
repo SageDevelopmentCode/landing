@@ -258,8 +258,7 @@ function CombinedRegistrationFeeModal({
               studentId: a.student_id ?? "",
               applicationId: a.id,
               program: a.program ?? "summer_26",
-              childName:
-                a.preferred_name ?? a.child_legal_name ?? "Student",
+              childName: a.preferred_name ?? a.child_legal_name ?? "Student",
             })),
           }),
         },
@@ -297,8 +296,8 @@ function CombinedRegistrationFeeModal({
           Pay Registration Fees
         </h2>
         <p className="text-sm text-gray-500 font-body mb-5">
-          You have {apps.length} children with unpaid registration fees. Save
-          on processing by paying together.
+          You have {apps.length} children with unpaid registration fees. Save on
+          processing by paying together.
         </p>
 
         <div className="bg-gray-50 rounded-xl p-4 mb-4 space-y-2">
@@ -307,10 +306,12 @@ function CombinedRegistrationFeeModal({
             const fee = getBaseFee(a.program);
             const programLine = getProgramLineLabel(a.program);
             return (
-              <div key={a.id} className="flex justify-between text-sm font-body">
+              <div
+                key={a.id}
+                className="flex justify-between text-sm font-body"
+              >
                 <span className="text-gray-600">
-                  {name}{" "}
-                  <span className="text-gray-400">({programLine})</span>
+                  {name} <span className="text-gray-400">({programLine})</span>
                 </span>
                 <span className="font-semibold text-gray-800">
                   ${fee.toFixed(2)}
@@ -351,7 +352,7 @@ function CombinedRegistrationFeeModal({
                   : "border-gray-200 text-gray-600 hover:bg-gray-50"
               }`}
             >
-              ACH / Bank Transfer
+              ACH / US Bank Transfer
             </button>
           </div>
           <p className="text-xs text-gray-400 font-body mt-1.5">
@@ -372,10 +373,6 @@ function CombinedRegistrationFeeModal({
             I agree to pay the processing fee
           </span>
         </label>
-
-        <p className="text-xs text-gray-400 font-body mb-2">
-          ACH / bank transfer has a lower processing fee (0.8%, max $5).
-        </p>
         <p className="text-xs text-gray-400 font-body mb-5">
           Prefer to pay by check? Email us at{" "}
           <a
@@ -582,10 +579,6 @@ function RegistrationFeeModal({
             I agree to pay the processing fee
           </span>
         </label>
-
-        <p className="text-xs text-gray-400 font-body mb-2">
-          ACH / bank transfer has a lower processing fee (0.8%, max $5).
-        </p>
         <p className="text-xs text-gray-400 font-body mb-5">
           Prefer to pay by check? Email us at{" "}
           <a
