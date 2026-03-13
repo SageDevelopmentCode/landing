@@ -8,7 +8,7 @@ import Footer from "../components/Footer";
 import WaitlistDialog from "../components/WaitlistDialog";
 
 const details = [
-  { label: "Start Date", value: "September 8, 2026" },
+  { label: "Start Date", value: "August 17, 2026" },
   { label: "Ages", value: "4–11 years" },
   { label: "Schedule", value: "Up to 4 days/week" },
   { label: "Term", value: "6-month commitment" },
@@ -89,11 +89,11 @@ export default function SchoolYear20262027Page() {
             className="space-y-4 mb-10"
           >
             <p className="text-lg text-gray-600 font-body leading-relaxed">
-              Sage Field is a small outdoor learning microschool located in Round
-              Rock, TX. We blend elements of Montessori, Waldorf, and Reggio
-              Emilia philosophies with TEKS-aligned academics to create a
-              nurturing, nature-connected learning environment where children are
-              always wondering, exploring, and growing.
+              Sage Field is a small outdoor learning microschool located in
+              Round Rock, TX. We blend elements of Montessori, Waldorf, and
+              Reggio Emilia philosophies with TEKS-aligned academics to create a
+              nurturing, nature-connected learning environment where children
+              are always wondering, exploring, and growing.
             </p>
           </motion.div>
 
@@ -132,10 +132,10 @@ export default function SchoolYear20262027Page() {
           >
             <p className="text-lg text-gray-600 font-body leading-relaxed">
               The School Year 2026–2027 program runs as a six-month commitment,
-              offering up to four days per week of enriched learning for children
-              ages 4–11. Students receive individualized support in literacy and
-              numeracy alongside science, art, movement, and social-emotional
-              learning.
+              offering up to four days per week of enriched learning for
+              children ages 4–11. Students receive individualized support in
+              literacy and numeracy alongside science, art, movement, and
+              social-emotional learning.
             </p>
             <p className="text-lg text-gray-600 font-body leading-relaxed">
               Enrollment is limited to preserve the small-group environment that

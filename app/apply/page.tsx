@@ -220,7 +220,7 @@ const tabContent = {
       "Enrollment is limited to preserve the small-group environment that makes Sage Field special. Families begin with an application and a mutual-fit conversation to ensure the program is the right match for your child.",
     ],
     details: [
-      { label: "Start Date", value: "September 8, 2026" },
+      { label: "Start Date", value: "August 17, 2026" },
       { label: "Ages", value: "4-11 years" },
       { label: "Schedule", value: "Up to 4 days/week" },
       { label: "Term", value: "6-month commitment" },

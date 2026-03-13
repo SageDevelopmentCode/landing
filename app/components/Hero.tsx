@@ -30,7 +30,7 @@ export default function Hero() {
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold text-white drop-shadow-lg max-w-sm font-heading leading-tight">
               Welcome to Sage Field!
             </h1>
-            <motion.p
+            {/* <motion.p
               className="mt-4 text-lg md:text-xl text-white font-semibold italic drop-shadow-md font-body max-w-sm"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -38,7 +38,7 @@ export default function Hero() {
             >
               Children are not meant to rot in classrooms. Choose outdoor
               learning.
-            </motion.p>
+            </motion.p> */}
           </motion.div>
 
           {/* Right: Description and Buttons */}

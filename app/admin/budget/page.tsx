@@ -12,10 +12,11 @@ import type {
 } from "../../types/database.types";
 import { Table, TableRow, TableCell } from "../components/Table";
 import { DetailSidebar } from "../components/DetailSidebar";
-import { Upload, Trash2, FileText } from "lucide-react";
+import { Upload, Trash2, FileText, Eye, Download, X } from "lucide-react";
 import { uploadExpenseReceipt } from "@/app/actions/uploadExpenseReceipt";
 import { deleteExpenseReceipt } from "@/app/actions/deleteExpenseReceipt";
 import { listExpenseReceipts } from "@/app/actions/listExpenseReceipts";
+import { getExpenseReceiptUrl } from "@/app/actions/getExpenseReceiptUrl";
 import type { FileObject } from "@supabase/storage-js";
 
 const merriweather = Merriweather({
@@ -1229,6 +1230,9 @@ function ExpensesTab({
   const [isDraggingReceipt, setIsDraggingReceipt] = useState(false);
   const [deletingReceiptPath, setDeletingReceiptPath] = useState<string | null>(null);
   const [receiptError, setReceiptError] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewName, setPreviewName] = useState<string>('');
+  const [loadingPreviewPath, setLoadingPreviewPath] = useState<string | null>(null);
   const receiptInputRef = useRef<HTMLInputElement>(null);
   const hasFetchedReceipts = useRef<string | null>(null);
 
@@ -1259,6 +1263,15 @@ function ExpensesTab({
     hasFetchedReceipts.current = editingId;
     loadReceipts(editingId);
   }, [editingId]);
+
+  useEffect(() => {
+    if (!previewUrl) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setPreviewUrl(null);
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [previewUrl]);
 
   async function handleReceiptUpload(file: File) {
     if (!editingId) return;
@@ -1297,6 +1310,23 @@ function ExpensesTab({
       await loadReceipts(editingId);
     }
     setDeletingReceiptPath(null);
+  }
+
+  async function handleReceiptView(path: string, fileName: string) {
+    setLoadingPreviewPath(path);
+    const result = await getExpenseReceiptUrl(path);
+    if ('error' in result) {
+      setReceiptError(result.error ?? 'Unknown error');
+    } else {
+      const isImage = /\.(jpe?g|png|webp|heic)$/i.test(fileName);
+      if (isImage) {
+        setPreviewName(fileName);
+        setPreviewUrl(result.url);
+      } else {
+        window.open(result.url, '_blank');
+      }
+    }
+    setLoadingPreviewPath(null);
   }
 
   const filtered = expenses.filter((e) => {
@@ -2776,6 +2806,21 @@ function ExpensesTab({
                         {f.name.replace(/^\d+-/, '')}
                       </span>
                       <button
+                        onClick={() => handleReceiptView(filePath, f.name)}
+                        disabled={loadingPreviewPath === filePath}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: loadingPreviewPath === filePath ? 'not-allowed' : 'pointer',
+                          padding: 2,
+                          color: colors.textSecondary,
+                          opacity: loadingPreviewPath === filePath ? 0.4 : 1,
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Eye size={13} />
+                      </button>
+                      <button
                         onClick={() => handleReceiptDelete(filePath)}
                         disabled={deletingReceiptPath === filePath}
                         style={{
@@ -2847,6 +2892,90 @@ function ExpensesTab({
           </div>
         </div>
       </DetailSidebar>
+
+      {/* Image preview lightbox */}
+      <AnimatePresence>
+        {previewUrl && (
+          <motion.div
+            key="lightbox"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 9999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(0,0,0,0.8)',
+            }}
+            onClick={() => setPreviewUrl(null)}
+          >
+            {/* Top-right controls */}
+            <div
+              style={{
+                position: 'absolute',
+                top: 16,
+                right: 16,
+                display: 'flex',
+                gap: 8,
+                zIndex: 10000,
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <a
+                href={previewUrl}
+                download={previewName}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 36,
+                  height: 36,
+                  borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.15)',
+                  color: '#fff',
+                  textDecoration: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                <Download size={16} />
+              </a>
+              <button
+                onClick={() => setPreviewUrl(null)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 36,
+                  height: 36,
+                  borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.15)',
+                  border: 'none',
+                  color: '#fff',
+                  cursor: 'pointer',
+                }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Image */}
+            <img
+              src={previewUrl}
+              alt={previewName}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                maxWidth: '90vw',
+                maxHeight: '90vh',
+                objectFit: 'contain',
+                borderRadius: 4,
+              }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

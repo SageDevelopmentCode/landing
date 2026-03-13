@@ -46,7 +46,7 @@ export default function AboutPage() {
             behind Sage Field
           </motion.p>
 
-          <motion.blockquote
+          {/* <motion.blockquote
             className="text-center text-xl md:text-2xl font-semibold italic text-primary border-l-4 border-primary pl-6 mx-auto max-w-2xl mb-12 font-body text-left"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -54,7 +54,7 @@ export default function AboutPage() {
           >
             &ldquo;Children are not meant to rot in classrooms! Choose outdoor
             learning!&rdquo;
-          </motion.blockquote>
+          </motion.blockquote> */}
         </div>
       </section>
 
