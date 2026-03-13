@@ -699,6 +699,57 @@ export async function buildRegistrationFeeConfirmationEmail(opts: {
 }
 
 /**
+ * Build HTML approval email for an approved application
+ */
+export async function buildApprovalEmail(opts: {
+  g1FullName: string;
+  childLegalName: string;
+  program: string | null;
+}): Promise<{ subject: string; content: string }> {
+  const subject = "Your Application Has Been Approved — Next Steps to Complete Enrollment";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${opts.g1FullName},</p>
+
+  <p>We are thrilled to let you know that <strong>${opts.childLegalName}</strong>'s application${opts.program ? ` for the <strong>${opts.program}</strong> program` : ""} has been <strong>approved</strong>. Welcome to the Sage Field family!</p>
+
+  <p>To complete enrollment, please log in to your parent dashboard and work through the enrollment checklist:</p>
+
+  <p style="margin-bottom: 4px;"><a href="https://www.sagefield.co/parent/dashboard" style="color: #5a7a5a; font-weight: bold;">https://www.sagefield.co/parent/dashboard</a></p>
+
+  <p style="margin-top: 24px;"><strong>Required steps:</strong></p>
+  <ol style="padding-left: 20px;">
+    <li style="margin-bottom: 8px;"><strong>Program Description, Parent Responsibilities, and Key Policies</strong> — review and sign</li>
+    <li style="margin-bottom: 8px;"><strong>Community Agreement for Families and Staff</strong> — review and sign</li>
+    <li style="margin-bottom: 8px;"><strong>Emergency Contact, Health, and Immunization Form</strong> — complete and sign</li>
+    <li style="margin-bottom: 8px;"><strong>Submit Proof of Immunizations</strong> — upload your child's current immunization records</li>
+    <li style="margin-bottom: 8px;"><strong>Photo Release Form</strong> — review and sign</li>
+    <li style="margin-bottom: 8px;"><strong>Assumption of Risk and Liability Release</strong> — review and sign</li>
+    <li style="margin-bottom: 8px;"><strong>Health Information Form</strong> — complete and sign</li>
+    <li style="margin-bottom: 8px;"><strong>Pay Registration Fee</strong> — submit to secure your child's spot</li>
+  </ol>
+
+  <p style="margin-top: 24px;"><strong>Optional steps (if applicable):</strong></p>
+  <ul style="padding-left: 20px;">
+    <li style="margin-bottom: 8px;"><strong>Emergency Medication Plan on File</strong> — if your child requires emergency medication at school</li>
+    <li style="margin-bottom: 8px;"><strong>Additional Authorized Pickup Person</strong> — if someone other than a guardian will pick up your child</li>
+  </ul>
+
+  <p>Please complete all required steps as soon as possible to secure your child's enrollment. If you have any questions, don't hesitate to reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a>.</p>
+
+  <p style="margin-top: 32px;">With warmth and excitement,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
+/**
  * Send an email via Zoho Mail API
  */
 export async function sendZohoEmail(opts: {

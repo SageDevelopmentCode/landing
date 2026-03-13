@@ -1,5 +1,6 @@
 'use server'
 import { createAdminClient } from '@/app/lib/supabase-server'
+import { buildApprovalEmail, sendZohoEmail } from '@/app/lib/zoho'
 
 export async function approveApplication(id: string) {
   const adminClient = createAdminClient()
@@ -83,6 +84,21 @@ export async function approveApplication(id: string) {
     })
     .eq('id', id)
   if (appUpdateError) return { error: appUpdateError.message }
+
+  // 5. Send approval email (non-blocking — log error but don't fail)
+  const { data: authUser } = await adminClient.auth.admin.getUserById(app.user_id)
+  const parentEmail = authUser?.user?.email
+  if (parentEmail) {
+    const { subject, content } = await buildApprovalEmail({
+      g1FullName: app.g1_full_name ?? 'Parent',
+      childLegalName: app.child_legal_name ?? 'your child',
+      program: app.program ?? null,
+    })
+    const emailResult = await sendZohoEmail({ toAddress: parentEmail, subject, content })
+    if (!emailResult.success) {
+      console.error('Failed to send approval email:', emailResult.error)
+    }
+  }
 
   return { success: true }
 }
