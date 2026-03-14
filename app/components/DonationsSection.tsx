@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Calendar, Clock, PartyPopper, Sun } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import WaitlistDialog from "./WaitlistDialog";
 
 const DonationsSection = () => {
@@ -167,12 +168,20 @@ const DonationsSection = () => {
                       Summer school registration $75 · One-time fee
                     </p>
 
-                    <button
-                      onClick={() => setIsWaitlistOpen(true)}
-                      className="px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 font-body cursor-pointer text-sm"
-                    >
-                      Interested in joining?
-                    </button>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <button
+                        onClick={() => setIsWaitlistOpen(true)}
+                        className="px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 font-body cursor-pointer text-sm"
+                      >
+                        Interested in joining?
+                      </button>
+                      <Link
+                        href="/apply"
+                        className="px-6 py-3 bg-white text-primary border border-primary font-semibold rounded-lg hover:bg-primary/5 transition-colors duration-200 font-body text-sm"
+                      >
+                        Enroll Now →
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -255,12 +264,20 @@ const DonationsSection = () => {
                       Annual supply fee $300
                     </p>
 
-                    <button
-                      onClick={() => setIsWaitlistOpen(true)}
-                      className="px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 font-body cursor-pointer text-sm"
-                    >
-                      Interested in joining?
-                    </button>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <button
+                        onClick={() => setIsWaitlistOpen(true)}
+                        className="px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 font-body cursor-pointer text-sm"
+                      >
+                        Interested in joining?
+                      </button>
+                      <Link
+                        href="/apply"
+                        className="px-6 py-3 bg-white text-primary border border-primary font-semibold rounded-lg hover:bg-primary/5 transition-colors duration-200 font-body text-sm"
+                      >
+                        Enroll Now →
+                      </Link>
+                    </div>
 
                     <p className="text-xs text-text-gray italic font-body mt-3">
                       For drop-in options, please email us at{" "}

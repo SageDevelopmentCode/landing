@@ -123,7 +123,8 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
       pathname === "/tuition" ||
       pathname === "/academic-calendar" ||
       pathname === "/summer-2026" ||
-      pathname === "/school-year-2026-2027");
+      pathname === "/school-year-2026-2027" ||
+      pathname === "/open-house");
 
   // Close everything on route change
   useEffect(() => {

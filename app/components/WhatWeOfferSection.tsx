@@ -11,7 +11,13 @@ const programs = [
     badgeColor: "bg-badge-bg",
     title: "Summer 2026 Program",
     dates: "May 26 – Aug 13, 2026",
-    details: ["Ages 4–11", "Mon–Thu", "12 Weeks", "~6 hrs/day", "10 children"],
+    details: [
+      "Ages 4–11",
+      "Mon–Thu",
+      "12 Weeks",
+      "~10 children per class",
+      "Field Fridays",
+    ],
     description:
       "Twelve weeks of themed adventures, hands-on projects, nature play, art, and academic enrichment in a small, nurturing group.",
     href: "/summer-2026",
@@ -24,7 +30,14 @@ const programs = [
     badgeColor: "bg-primary/10",
     title: "School Year 2026–2027",
     dates: "August 17, 2026 – March 2027",
-    details: ["Ages 4–11", "Up to 4 days/week", "6-month commitment"],
+    details: [
+      "Ages 4–11",
+      "Mon-Thu",
+      "6-month commitment",
+      "~10 children per class",
+      "Field Fridays",
+      "Aftercare available",
+    ],
     description:
       "A full school-year microschool experience blending Montessori, Waldorf, and Reggio-inspired methods with TEKS-aligned academics.",
     href: "/school-year-2026-2027",
@@ -182,63 +195,75 @@ export default function WhatWeOfferSection() {
                   ease: "easeOut",
                 }}
               >
-                <Link href={program.href} className="block h-full">
-                  <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 group h-full flex flex-col">
-                    {/* Banner image */}
-                    <div className="relative h-48 w-full">
-                      <Image
-                        src={program.image}
-                        alt={program.title}
-                        fill
-                        className="object-cover"
-                      />
+                <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 h-full flex flex-col">
+                  {/* Banner image */}
+                  <div className="relative h-48 w-full">
+                    <Image
+                      src={program.image}
+                      alt={program.title}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+
+                  {/* Content area */}
+                  <div className="p-6 flex flex-col flex-1">
+                    {/* Enrollment badge */}
+                    <Link
+                      href="/apply"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full self-start mb-3 hover:bg-green-200 transition-colors"
+                    >
+                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                      Enrollment is now open
+                      <span>→</span>
+                    </Link>
+
+                    {/* Title */}
+                    <h3 className="text-xl font-bold text-black font-heading mb-3">
+                      {program.title}
+                    </h3>
+
+                    {/* Dates — highlighted pill */}
+                    <div
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ${program.dateBg} ${program.dateText} text-xs font-semibold mb-4 self-start`}
+                    >
+                      📅 {program.dates}
                     </div>
 
-                    {/* Content area */}
-                    <div className="p-6 flex flex-col flex-1">
-                      {/* Badge */}
-                      {/* <span
-                        className={`inline-block px-3 py-1 ${program.badgeColor} text-black text-xs font-semibold rounded-full mb-4 self-start`}
+                    {/* Detail chips */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {program.details.map((detail) => (
+                        <span
+                          key={detail}
+                          className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full"
+                        >
+                          {detail}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Description */}
+                    <p className="text-sm text-text-gray font-body leading-relaxed mb-4 flex-1">
+                      {program.description}
+                    </p>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-4">
+                      <Link
+                        href={program.href}
+                        className="text-primary font-semibold text-sm hover:underline"
                       >
-                        {program.badge}
-                      </span> */}
-
-                      {/* Title */}
-                      <h3 className="text-xl font-bold text-black font-heading mb-3">
-                        {program.title}
-                      </h3>
-
-                      {/* Dates — highlighted pill */}
-                      <div
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ${program.dateBg} ${program.dateText} text-xs font-semibold mb-4 self-start`}
+                        Learn More
+                      </Link>
+                      <Link
+                        href="/apply"
+                        className="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
                       >
-                        📅 {program.dates}
-                      </div>
-
-                      {/* Detail chips */}
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {program.details.map((detail) => (
-                          <span
-                            key={detail}
-                            className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full"
-                          >
-                            {detail}
-                          </span>
-                        ))}
-                      </div>
-
-                      {/* Description */}
-                      <p className="text-sm text-text-gray font-body leading-relaxed mb-6 flex-1">
-                        {program.description}
-                      </p>
-
-                      {/* Learn More */}
-                      <span className="text-primary font-semibold text-sm group-hover:underline">
-                        Learn More →
-                      </span>
+                        Enroll Now
+                      </Link>
                     </div>
                   </div>
-                </Link>
+                </div>
               </motion.div>
             ))}
           </div>
