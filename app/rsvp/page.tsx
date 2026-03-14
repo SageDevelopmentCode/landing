@@ -438,7 +438,7 @@ export default function OpenHousePage() {
 
           {/* Food & Drinks */}
           <motion.div
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+            className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -490,6 +490,41 @@ export default function OpenHousePage() {
             <p className="text-xs text-gray-400 font-body italic">
               Good food keeps families around longer — and we want you to stay.
             </p>
+          </motion.div>
+
+          {/* Photo Booth */}
+          <motion.div
+            className="bg-badge-bg rounded-xl p-6 shadow-sm mb-6"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: 0.5, ease: "easeOut" }}
+          >
+            <h3 className="text-base font-bold text-gray-800 font-heading mb-2">
+              📸 Photo Booth
+            </h3>
+            <p className="text-sm text-gray-600 font-body leading-relaxed">
+              Capture the moment! We&apos;ll have a fun photo booth set up for families to take home a memory from the day.
+            </p>
+          </motion.div>
+
+          {/* Free Shirts */}
+          <motion.div
+            className="bg-green-50 border border-green-200 rounded-xl p-6 shadow-sm flex items-start gap-4"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: 0.6, ease: "easeOut" }}
+          >
+            <span className="text-3xl flex-shrink-0">👕</span>
+            <div>
+              <h3 className="text-base font-bold text-gray-800 font-heading mb-1">
+                Free Sage Field Shirt — First 25 Families
+              </h3>
+              <p className="text-sm text-gray-600 font-body leading-relaxed">
+                The first 25 families to arrive get a free Sage Field shirt. Come early!
+              </p>
+            </div>
           </motion.div>
         </div>
       </section>
