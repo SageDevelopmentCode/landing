@@ -25,8 +25,8 @@ html {
   --color-sky-blue: #BAE1FF;
   --color-mint-cream: #BAFFC9;
   --font-heading: var(--font-merriweather);
-  --font-body: var(--font-open-sans);
-  --font-sans: var(--font-open-sans);
+  --font-body: var(--font-poppins);
+  --font-sans: var(--font-poppins);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -39,7 +39,7 @@ html {
 body {
   background: #FFF9F5;
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-poppins);
 }
 
 /* Tiptap HTML viewer styles */
