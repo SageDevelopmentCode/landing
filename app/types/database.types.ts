@@ -1140,3 +1140,34 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
+export interface BudgetLineItem {
+  id: string;
+  category: string;
+  item_name: string;
+  planned_amount: number | string;
+  notes: string | null;
+  sort_order: number;
+}
+
+export interface BudgetExpense {
+  id: string;
+  expense_name: string;
+  category: string | null;
+  amount: number | string;
+  payment_method: string | null;
+  expense_date: string;
+  notes: string | null;
+  tax_deductible: boolean;
+  is_deleted: boolean;
+}
+
+export interface BudgetIncome {
+  id: string;
+  source: string;
+  student_id: string | null;
+  parent_id: string | null;
+  description: string | null;
+  amount: number | string;
+  income_date: string;
+}

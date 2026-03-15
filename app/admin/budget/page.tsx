@@ -551,7 +551,8 @@ function BudgetVsActual({
 
   const actualByCategory = monthExpenses.reduce<Record<string, number>>(
     (acc, e) => {
-      acc[e.category] = (acc[e.category] ?? 0) + Number(e.amount);
+      const cat = e.category ?? 'Uncategorized';
+      acc[cat] = (acc[cat] ?? 0) + Number(e.amount);
       return acc;
     },
     {},

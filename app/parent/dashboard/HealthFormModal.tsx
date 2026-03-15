@@ -69,7 +69,7 @@ function initDraft(info: StudentHealthInfo | null): HealthDraft {
     emergencyMedicationRequired: info?.emergency_medication_required ?? false,
     emergencyMedicationDescription:
       info?.emergency_medication_description ?? "",
-    immunizationStatus: info?.immunization_status ?? null,
+    immunizationStatus: (info?.immunization_status ?? null) as "record" | "exemption" | null,
   };
 }
 
