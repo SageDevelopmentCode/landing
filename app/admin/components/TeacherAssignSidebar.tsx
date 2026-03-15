@@ -106,6 +106,11 @@ export function TeacherAssignSidebar({ student, onClose, onAssigned }: TeacherAs
       setEditingAssignment(null)
     }
     for (const teacherId of selectedTeacherIds) {
+      const isDuplicate = assignments.some(
+        a => a.teacher_id === teacherId && a.program === selectedProgram && a.id !== editingAssignment?.id
+      )
+      if (isDuplicate) continue
+
       const result = await assignTeacher({
         teacherId,
         studentId: student.id,
@@ -127,10 +132,14 @@ export function TeacherAssignSidebar({ student, onClose, onAssigned }: TeacherAs
     onAssigned?.()
   }
 
+  const isProgramTakenForAll = (program: string) =>
+    selectedTeacherIds.size > 0 &&
+    [...selectedTeacherIds].every(tid =>
+      assignments.some(a => a.teacher_id === tid && a.program === program && a.id !== editingAssignment?.id)
+    )
+
   const takenPrograms = new Set(
-    assignments
-      .filter(a => selectedTeacherIds.has(a.teacher_id) && a.id !== editingAssignment?.id)
-      .map(a => a.program)
+    Object.keys(PROGRAM_LABELS).filter(p => isProgramTakenForAll(p))
   )
 
   const title = student?.child_legal_name
@@ -223,12 +232,10 @@ export function TeacherAssignSidebar({ student, onClose, onAssigned }: TeacherAs
                           if (next.has(t.id)) next.delete(t.id); else next.add(t.id)
                           setSelectedTeacherIds(next)
                           if (selectedProgram) {
-                            const newTaken = new Set(
-                              assignments
-                                .filter(a => next.has(a.teacher_id) && a.id !== editingAssignment?.id)
-                                .map(a => a.program)
+                            const allTaken = next.size > 0 && [...next].every(tid =>
+                              assignments.some(a => a.teacher_id === tid && a.program === selectedProgram && a.id !== editingAssignment?.id)
                             )
-                            if (newTaken.has(selectedProgram)) setSelectedProgram('')
+                            if (allTaken) setSelectedProgram('')
                           }
                         }}
                         style={{

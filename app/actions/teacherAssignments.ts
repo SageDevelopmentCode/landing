@@ -74,6 +74,32 @@ export async function assignTeacher({
   classroom: string | null
 }): Promise<{ error?: string }> {
   const client = createAdminClient()
+
+  // Check for any existing row (including soft-deleted) to avoid unique constraint violation
+  const { data: existing } = await client
+    .schema('teachers')
+    .from('teacher_students')
+    .select('id')
+    .eq('teacher_id', teacherId)
+    .eq('student_id', studentId)
+    .eq('program', program)
+    .maybeSingle()
+
+  if (existing) {
+    // Reactivate the soft-deleted row (or no-op if already active)
+    const { error } = await client
+      .schema('teachers')
+      .from('teacher_students')
+      .update({ is_deleted: false, classroom })
+      .eq('id', existing.id)
+    if (error) {
+      console.error('Error reactivating assignment:', error)
+      return { error: error.message }
+    }
+    return {}
+  }
+
+  // No existing row — fresh insert
   const { error } = await client
     .schema('teachers')
     .from('teacher_students')
