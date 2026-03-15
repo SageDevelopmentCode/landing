@@ -127,6 +127,12 @@ export function TeacherAssignSidebar({ student, onClose, onAssigned }: TeacherAs
     onAssigned?.()
   }
 
+  const takenPrograms = new Set(
+    assignments
+      .filter(a => selectedTeacherIds.has(a.teacher_id) && a.id !== editingAssignment?.id)
+      .map(a => a.program)
+  )
+
   const title = student?.child_legal_name
     ? `Assign Teachers — ${student.child_legal_name}`
     : 'Assign Teachers'
@@ -183,7 +189,7 @@ export function TeacherAssignSidebar({ student, onClose, onAssigned }: TeacherAs
           )}
           {!showAssignForm && (
             <button
-              onClick={handleShowAssignForm}
+              onClick={() => handleShowAssignForm()}
               style={{ marginTop: 8, fontSize: 13, color: colors.mistyForest, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
             >
               + Assign Teacher
@@ -212,11 +218,19 @@ export function TeacherAssignSidebar({ student, onClose, onAssigned }: TeacherAs
                     return (
                       <button
                         key={t.id}
-                        onClick={() => setSelectedTeacherIds(prev => {
-                          const next = new Set(prev)
+                        onClick={() => {
+                          const next = new Set(selectedTeacherIds)
                           if (next.has(t.id)) next.delete(t.id); else next.add(t.id)
-                          return next
-                        })}
+                          setSelectedTeacherIds(next)
+                          if (selectedProgram) {
+                            const newTaken = new Set(
+                              assignments
+                                .filter(a => next.has(a.teacher_id) && a.id !== editingAssignment?.id)
+                                .map(a => a.program)
+                            )
+                            if (newTaken.has(selectedProgram)) setSelectedProgram('')
+                          }
+                        }}
                         style={{
                           padding: 12,
                           borderRadius: 12,
@@ -283,14 +297,20 @@ export function TeacherAssignSidebar({ student, onClose, onAssigned }: TeacherAs
                     { value: 'school_year_26_27', label: 'School Year 2026–2027' },
                   ].map(opt => {
                     const selected = selectedProgram === opt.value
+                    const isTaken = takenPrograms.has(opt.value)
                     return (
-                      <button key={opt.value} onClick={() => setSelectedProgram(prev => prev === opt.value ? '' : opt.value)}
+                      <button
+                        key={opt.value}
+                        disabled={isTaken}
+                        onClick={() => { if (!isTaken) setSelectedProgram(prev => prev === opt.value ? '' : opt.value) }}
                         style={{
                           padding: '5px 12px', borderRadius: 20, fontSize: 13,
                           border: selected ? '2px solid #4B6A4F' : '1px solid #D1D5DB',
                           backgroundColor: selected ? '#EEF3EE' : 'white',
-                          color: selected ? '#4B6A4F' : '#374151',
-                          fontWeight: selected ? 600 : 400, cursor: 'pointer',
+                          color: isTaken ? '#9CA3AF' : (selected ? '#4B6A4F' : '#374151'),
+                          fontWeight: selected ? 600 : 400,
+                          cursor: isTaken ? 'not-allowed' : 'pointer',
+                          opacity: isTaken ? 0.5 : 1,
                         }}
                       >{opt.label}</button>
                     )
