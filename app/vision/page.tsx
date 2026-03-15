@@ -62,12 +62,20 @@ const beforeImages = [
   { src: "/assets/Before1.jpg", alt: "Property before — view 1" },
   { src: "/assets/Before2.jpg", alt: "Property before — view 2" },
   { src: "/assets/Before3.jpg", alt: "Property before — view 3" },
+  { src: "/assets/Before4.JPEG", alt: "Property before — view 4" },
+  { src: "/assets/Before5.jpg", alt: "Property before — view 5" },
+  { src: "/assets/Before6.jpg", alt: "Property before — view 6" },
+  { src: "/assets/Before7.PNG", alt: "Property before — view 7" },
 ];
 
 const afterImages = [
   { src: "/assets/After1.png", alt: "Property after — rendering 1" },
   { src: "/assets/After2.png", alt: "Property after — rendering 2" },
   { src: "/assets/After3.png", alt: "Property after — rendering 3" },
+  { src: "/assets/After4.png", alt: "Property after — rendering 4" },
+  { src: "/assets/After5.PNG", alt: "Property after — rendering 5" },
+  { src: "/assets/After6.PNG", alt: "Property after — rendering 6" },
+  { src: "/assets/After7.PNG", alt: "Property after — rendering 7" },
 ];
 
 export default function VisionPage() {
