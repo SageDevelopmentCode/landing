@@ -99,7 +99,12 @@ export function StudentsClient({ students: initialStudents, fetchStudentDetail, 
                     style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer',
                              color: '#4B6A4F', fontSize: 'inherit', textDecoration: 'underline' }}
                   >
-                    {assignmentsByStudentId[student.id].map((a) => a.teacher_name ?? '—').join(', ')}
+                    {(() => {
+                      const assignments = assignmentsByStudentId[student.id]
+                      const first = assignments[0]?.teacher_name ?? '—'
+                      const remaining = assignments.length - 1
+                      return remaining > 0 ? `${first} +${remaining} more` : first
+                    })()}
                   </button>
                 ) : (
                   <button
