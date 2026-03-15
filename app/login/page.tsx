@@ -1,10 +1,15 @@
-import { createServerSupabaseClient, createAdminClient } from "@/app/lib/supabase-server";
+import {
+  createServerSupabaseClient,
+  createAdminClient,
+} from "@/app/lib/supabase-server";
 import { redirect } from "next/navigation";
 import LoginForm from "./LoginForm";
 
 export default async function LoginPage() {
   const supabase = await createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (user) {
     const adminClient = createAdminClient();

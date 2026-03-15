@@ -16,169 +16,174 @@ export type Database = {
     Tables: {
       students: {
         Row: {
-          id: string
-          parent_id: string
-          child_legal_name: string | null
-          child_grade: string | null
-          dob_month: string | null
-          dob_day: string | null
-          dob_year: string | null
-          special_interests: string | null
-          has_medical_conditions: string | null
-          medical_conditions_description: string | null
-          has_allergies: string | null
+          activities_to_avoid: string | null
           allergies_description: string | null
-          has_emergency_medications: string | null
+          child_grade: string | null
+          child_legal_name: string
+          created_at: string
+          current_challenges: string | null
+          dob_day: string
+          dob_month: string
+          dob_year: string
+          dysregulation_response: string | null
           emergency_medications_description: string | null
-          history_flags: string | null
+          has_allergies: string | null
+          has_emergency_medications: string | null
+          has_medical_conditions: string | null
           history_explanation: string | null
+          history_flags: string | null
+          id: string
+          is_deleted: boolean
+          learning_style: string | null
+          medical_conditions_description: string | null
           needs_aide: string | null
           needs_aide_description: string | null
-          learning_style: string | null
-          strengths_interests: string | null
-          current_challenges: string | null
-          dysregulation_response: string | null
+          parent_id: string
           regulation_strategies: string | null
-          activities_to_avoid: string | null
-          is_deleted: boolean
-          created_at: string | null
-          updated_at: string | null
+          special_interests: string | null
+          strengths_interests: string | null
         }
         Insert: {
-          id?: string
-          parent_id: string
-          child_legal_name?: string | null
-          child_grade?: string | null
-          dob_month?: string | null
-          dob_day?: string | null
-          dob_year?: string | null
-          special_interests?: string | null
-          has_medical_conditions?: string | null
-          medical_conditions_description?: string | null
-          has_allergies?: string | null
+          activities_to_avoid?: string | null
           allergies_description?: string | null
-          has_emergency_medications?: string | null
+          child_grade?: string | null
+          child_legal_name: string
+          created_at?: string
+          current_challenges?: string | null
+          dob_day: string
+          dob_month: string
+          dob_year: string
+          dysregulation_response?: string | null
           emergency_medications_description?: string | null
-          history_flags?: string | null
+          has_allergies?: string | null
+          has_emergency_medications?: string | null
+          has_medical_conditions?: string | null
           history_explanation?: string | null
+          history_flags?: string | null
+          id?: string
+          is_deleted?: boolean
+          learning_style?: string | null
+          medical_conditions_description?: string | null
           needs_aide?: string | null
           needs_aide_description?: string | null
-          learning_style?: string | null
-          strengths_interests?: string | null
-          current_challenges?: string | null
-          dysregulation_response?: string | null
+          parent_id: string
           regulation_strategies?: string | null
-          activities_to_avoid?: string | null
-          is_deleted?: boolean
-          created_at?: string | null
-          updated_at?: string | null
+          special_interests?: string | null
+          strengths_interests?: string | null
         }
         Update: {
-          id?: string
-          parent_id?: string
-          child_legal_name?: string | null
-          child_grade?: string | null
-          dob_month?: string | null
-          dob_day?: string | null
-          dob_year?: string | null
-          special_interests?: string | null
-          has_medical_conditions?: string | null
-          medical_conditions_description?: string | null
-          has_allergies?: string | null
+          activities_to_avoid?: string | null
           allergies_description?: string | null
-          has_emergency_medications?: string | null
+          child_grade?: string | null
+          child_legal_name?: string
+          created_at?: string
+          current_challenges?: string | null
+          dob_day?: string
+          dob_month?: string
+          dob_year?: string
+          dysregulation_response?: string | null
           emergency_medications_description?: string | null
-          history_flags?: string | null
+          has_allergies?: string | null
+          has_emergency_medications?: string | null
+          has_medical_conditions?: string | null
           history_explanation?: string | null
+          history_flags?: string | null
+          id?: string
+          is_deleted?: boolean
+          learning_style?: string | null
+          medical_conditions_description?: string | null
           needs_aide?: string | null
           needs_aide_description?: string | null
-          learning_style?: string | null
-          strengths_interests?: string | null
-          current_challenges?: string | null
-          dysregulation_response?: string | null
+          parent_id?: string
           regulation_strategies?: string | null
-          activities_to_avoid?: string | null
-          is_deleted?: boolean
-          created_at?: string | null
-          updated_at?: string | null
+          special_interests?: string | null
+          strengths_interests?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "students_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       users: {
         Row: {
           created_at: string | null
+          custody_orders_description: string | null
           email: string
           full_name: string | null
-          id: string
-          role: string | null
-          updated_at: string | null
           g1_cell_phone: string | null
-          g1_work_phone: string | null
-          g1_preferred_contact: string | null
-          g1_lives_with_child: string | null
           g1_has_custody: string | null
+          g1_lives_with_child: string | null
+          g1_preferred_contact: string | null
+          g1_work_phone: string | null
+          g2_cell_phone: string | null
+          g2_email: string | null
           g2_full_name: string | null
+          g2_has_custody: string | null
+          g2_lives_with_child: string | null
+          g2_preferred_contact: string | null
           g2_relationship: string | null
           g2_relationship_other: string | null
-          g2_email: string | null
-          g2_cell_phone: string | null
           g2_work_phone: string | null
-          g2_preferred_contact: string | null
-          g2_lives_with_child: string | null
-          g2_has_custody: string | null
           has_custody_orders: string | null
-          custody_orders_description: string | null
+          id: string
           is_deleted: boolean
+          role: string | null
+          updated_at: string | null
         }
         Insert: {
           created_at?: string | null
+          custody_orders_description?: string | null
           email: string
           full_name?: string | null
-          id: string
-          role?: string | null
-          updated_at?: string | null
           g1_cell_phone?: string | null
-          g1_work_phone?: string | null
-          g1_preferred_contact?: string | null
-          g1_lives_with_child?: string | null
           g1_has_custody?: string | null
+          g1_lives_with_child?: string | null
+          g1_preferred_contact?: string | null
+          g1_work_phone?: string | null
+          g2_cell_phone?: string | null
+          g2_email?: string | null
           g2_full_name?: string | null
+          g2_has_custody?: string | null
+          g2_lives_with_child?: string | null
+          g2_preferred_contact?: string | null
           g2_relationship?: string | null
           g2_relationship_other?: string | null
-          g2_email?: string | null
-          g2_cell_phone?: string | null
           g2_work_phone?: string | null
-          g2_preferred_contact?: string | null
-          g2_lives_with_child?: string | null
-          g2_has_custody?: string | null
           has_custody_orders?: string | null
-          custody_orders_description?: string | null
+          id: string
           is_deleted?: boolean
+          role?: string | null
+          updated_at?: string | null
         }
         Update: {
           created_at?: string | null
+          custody_orders_description?: string | null
           email?: string
           full_name?: string | null
-          id?: string
-          role?: string | null
-          updated_at?: string | null
           g1_cell_phone?: string | null
-          g1_work_phone?: string | null
-          g1_preferred_contact?: string | null
-          g1_lives_with_child?: string | null
           g1_has_custody?: string | null
+          g1_lives_with_child?: string | null
+          g1_preferred_contact?: string | null
+          g1_work_phone?: string | null
+          g2_cell_phone?: string | null
+          g2_email?: string | null
           g2_full_name?: string | null
+          g2_has_custody?: string | null
+          g2_lives_with_child?: string | null
+          g2_preferred_contact?: string | null
           g2_relationship?: string | null
           g2_relationship_other?: string | null
-          g2_email?: string | null
-          g2_cell_phone?: string | null
           g2_work_phone?: string | null
-          g2_preferred_contact?: string | null
-          g2_lives_with_child?: string | null
-          g2_has_custody?: string | null
           has_custody_orders?: string | null
-          custody_orders_description?: string | null
+          id?: string
           is_deleted?: boolean
+          role?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -298,6 +303,35 @@ export type Database = {
   }
   parent_app: {
     Tables: {
+      application_notes: {
+        Row: {
+          application_id: string
+          content: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          application_id: string
+          content: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          application_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_notes_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       applications: {
         Row: {
           activities_to_avoid: string | null
@@ -305,6 +339,7 @@ export type Database = {
           address_state: string | null
           address_street: string | null
           address_zip: string | null
+          admin_notes: string | null
           allergies_description: string | null
           approved: boolean
           approved_at: string | null
@@ -314,6 +349,9 @@ export type Database = {
           created_at: string | null
           current_challenges: string | null
           custody_orders_description: string | null
+          denied: boolean
+          denied_at: string | null
+          denied_reason: string | null
           dob_day: string | null
           dob_month: string | null
           dob_year: string | null
@@ -350,7 +388,9 @@ export type Database = {
           history_explanation: string | null
           history_flags: string | null
           homeschool_explanation: string | null
+          household_phone: string | null
           id: string
+          is_active: boolean
           is_homeschooled: string | null
           learning_style: string | null
           medical_conditions_description: string | null
@@ -375,6 +415,7 @@ export type Database = {
           address_state?: string | null
           address_street?: string | null
           address_zip?: string | null
+          admin_notes?: string | null
           allergies_description?: string | null
           approved?: boolean
           approved_at?: string | null
@@ -384,6 +425,9 @@ export type Database = {
           created_at?: string | null
           current_challenges?: string | null
           custody_orders_description?: string | null
+          denied?: boolean
+          denied_at?: string | null
+          denied_reason?: string | null
           dob_day?: string | null
           dob_month?: string | null
           dob_year?: string | null
@@ -420,7 +464,9 @@ export type Database = {
           history_explanation?: string | null
           history_flags?: string | null
           homeschool_explanation?: string | null
+          household_phone?: string | null
           id?: string
+          is_active?: boolean
           is_homeschooled?: string | null
           learning_style?: string | null
           medical_conditions_description?: string | null
@@ -445,6 +491,7 @@ export type Database = {
           address_state?: string | null
           address_street?: string | null
           address_zip?: string | null
+          admin_notes?: string | null
           allergies_description?: string | null
           approved?: boolean
           approved_at?: string | null
@@ -454,6 +501,9 @@ export type Database = {
           created_at?: string | null
           current_challenges?: string | null
           custody_orders_description?: string | null
+          denied?: boolean
+          denied_at?: string | null
+          denied_reason?: string | null
           dob_day?: string | null
           dob_month?: string | null
           dob_year?: string | null
@@ -490,7 +540,9 @@ export type Database = {
           history_explanation?: string | null
           history_flags?: string | null
           homeschool_explanation?: string | null
+          household_phone?: string | null
           id?: string
+          is_active?: boolean
           is_homeschooled?: string | null
           learning_style?: string | null
           medical_conditions_description?: string | null
@@ -511,264 +563,327 @@ export type Database = {
         }
         Relationships: []
       }
-      student_health_statement: {
+      enrollment_signatures: {
         Row: {
+          contract_id: number
+          created_at: string
           id: string
           parent_id: string
+          printed_name: string
+          section_id: number
+          signature: string
+          signed_at: string
           student_id: string
-          option_type: string
-          created_at: string | null
-          updated_at: string | null
         }
         Insert: {
+          contract_id: number
+          created_at?: string
           id?: string
           parent_id: string
+          printed_name: string
+          section_id: number
+          signature: string
+          signed_at?: string
           student_id: string
-          option_type: string
-          created_at?: string | null
-          updated_at?: string | null
         }
         Update: {
+          contract_id?: number
+          created_at?: string
           id?: string
           parent_id?: string
+          printed_name?: string
+          section_id?: number
+          signature?: string
+          signed_at?: string
           student_id?: string
-          option_type?: string
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      student_authorized_pickup_plan: {
-        Row: {
-          id: string
-          parent_id: string
-          student_id: string
-          date_of_request: string | null
-          effective_until: string | null
-          created_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          parent_id: string
-          student_id: string
-          date_of_request?: string | null
-          effective_until?: string | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          parent_id?: string
-          student_id?: string
-          date_of_request?: string | null
-          effective_until?: string | null
-          created_at?: string | null
-          updated_at?: string | null
         }
         Relationships: []
       }
       student_authorized_pickup_persons: {
         Row: {
+          created_at: string | null
+          dl_state_id_number: string | null
+          email: string | null
+          full_name: string
+          id: string
+          license_plate_state: string | null
+          parent_id: string
+          phone: string | null
+          relationship: string | null
+          sort_order: number | null
+          student_id: string
+          vehicle_info: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dl_state_id_number?: string | null
+          email?: string | null
+          full_name: string
+          id?: string
+          license_plate_state?: string | null
+          parent_id: string
+          phone?: string | null
+          relationship?: string | null
+          sort_order?: number | null
+          student_id: string
+          vehicle_info?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dl_state_id_number?: string | null
+          email?: string | null
+          full_name?: string
+          id?: string
+          license_plate_state?: string | null
+          parent_id?: string
+          phone?: string | null
+          relationship?: string | null
+          sort_order?: number | null
+          student_id?: string
+          vehicle_info?: string | null
+        }
+        Relationships: []
+      }
+      student_authorized_pickup_plan: {
+        Row: {
+          created_at: string | null
+          date_of_request: string | null
+          effective_until: string | null
           id: string
           parent_id: string
           student_id: string
-          sort_order: number | null
-          full_name: string
-          relationship: string | null
-          phone: string | null
-          email: string | null
-          dl_state_id_number: string | null
-          vehicle_info: string | null
-          license_plate_state: string | null
-          created_at: string | null
+          updated_at: string | null
         }
         Insert: {
+          created_at?: string | null
+          date_of_request?: string | null
+          effective_until?: string | null
           id?: string
           parent_id: string
           student_id: string
-          sort_order?: number | null
-          full_name: string
-          relationship?: string | null
-          phone?: string | null
-          email?: string | null
-          dl_state_id_number?: string | null
-          vehicle_info?: string | null
-          license_plate_state?: string | null
-          created_at?: string | null
+          updated_at?: string | null
         }
         Update: {
+          created_at?: string | null
+          date_of_request?: string | null
+          effective_until?: string | null
           id?: string
           parent_id?: string
           student_id?: string
-          sort_order?: number | null
-          full_name?: string
-          relationship?: string | null
-          phone?: string | null
-          email?: string | null
-          dl_state_id_number?: string | null
-          vehicle_info?: string | null
-          license_plate_state?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      student_health_info: {
+        Row: {
+          clinic_name: string | null
+          created_at: string | null
+          emergency_medication_description: string | null
+          emergency_medication_required: boolean | null
+          group_number: string | null
+          health_conditions: string | null
+          id: string
+          immunization_status: string | null
+          in_state_contact_name: string | null
+          in_state_contact_phone: string | null
+          in_state_contact_relation: string | null
+          insurance_provider: string | null
+          ongoing_care: boolean | null
+          ongoing_care_description: string | null
+          out_of_state_contact_name: string | null
+          out_of_state_contact_phone: string | null
+          out_of_state_contact_relation: string | null
+          parent_id: string
+          physician_name: string | null
+          physician_phone: string | null
+          policy_number: string | null
+          preferred_hospital: string | null
+          student_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          clinic_name?: string | null
           created_at?: string | null
+          emergency_medication_description?: string | null
+          emergency_medication_required?: boolean | null
+          group_number?: string | null
+          health_conditions?: string | null
+          id?: string
+          immunization_status?: string | null
+          in_state_contact_name?: string | null
+          in_state_contact_phone?: string | null
+          in_state_contact_relation?: string | null
+          insurance_provider?: string | null
+          ongoing_care?: boolean | null
+          ongoing_care_description?: string | null
+          out_of_state_contact_name?: string | null
+          out_of_state_contact_phone?: string | null
+          out_of_state_contact_relation?: string | null
+          parent_id: string
+          physician_name?: string | null
+          physician_phone?: string | null
+          policy_number?: string | null
+          preferred_hospital?: string | null
+          student_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          clinic_name?: string | null
+          created_at?: string | null
+          emergency_medication_description?: string | null
+          emergency_medication_required?: boolean | null
+          group_number?: string | null
+          health_conditions?: string | null
+          id?: string
+          immunization_status?: string | null
+          in_state_contact_name?: string | null
+          in_state_contact_phone?: string | null
+          in_state_contact_relation?: string | null
+          insurance_provider?: string | null
+          ongoing_care?: boolean | null
+          ongoing_care_description?: string | null
+          out_of_state_contact_name?: string | null
+          out_of_state_contact_phone?: string | null
+          out_of_state_contact_relation?: string | null
+          parent_id?: string
+          physician_name?: string | null
+          physician_phone?: string | null
+          policy_number?: string | null
+          preferred_hospital?: string | null
+          student_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      student_health_statement: {
+        Row: {
+          created_at: string | null
+          id: string
+          option_type: string
+          parent_id: string
+          student_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          option_type: string
+          parent_id: string
+          student_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          option_type?: string
+          parent_id?: string
+          student_id?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
       student_medication_plan: {
         Row: {
+          created_at: string | null
+          emergency_procedure: string | null
           id: string
           parent_id: string
-          student_id: string
-          emergency_procedure: string | null
           special_instructions: string | null
-          created_at: string | null
+          student_id: string
           updated_at: string | null
         }
         Insert: {
+          created_at?: string | null
+          emergency_procedure?: string | null
           id?: string
           parent_id: string
-          student_id: string
-          emergency_procedure?: string | null
           special_instructions?: string | null
-          created_at?: string | null
+          student_id: string
           updated_at?: string | null
         }
         Update: {
+          created_at?: string | null
+          emergency_procedure?: string | null
           id?: string
           parent_id?: string
-          student_id?: string
-          emergency_procedure?: string | null
           special_instructions?: string | null
-          created_at?: string | null
+          student_id?: string
           updated_at?: string | null
         }
         Relationships: []
       }
       student_medications: {
         Row: {
-          id: string
-          parent_id: string
-          student_id: string
-          medication_name: string
           condition_reason: string | null
+          created_at: string | null
           dosage_frequency: string | null
-          physician_name: string | null
-          physician_phone: string | null
           expiration_date: string | null
+          id: string
           is_daily: boolean | null
           is_emergency_only: boolean | null
+          medication_name: string
+          parent_id: string
+          physician_name: string | null
+          physician_phone: string | null
           sort_order: number | null
-          created_at: string | null
+          student_id: string
         }
         Insert: {
-          id?: string
-          parent_id: string
-          student_id: string
-          medication_name: string
           condition_reason?: string | null
+          created_at?: string | null
           dosage_frequency?: string | null
-          physician_name?: string | null
-          physician_phone?: string | null
           expiration_date?: string | null
+          id?: string
           is_daily?: boolean | null
           is_emergency_only?: boolean | null
+          medication_name: string
+          parent_id: string
+          physician_name?: string | null
+          physician_phone?: string | null
           sort_order?: number | null
-          created_at?: string | null
+          student_id: string
         }
         Update: {
-          id?: string
-          parent_id?: string
-          student_id?: string
-          medication_name?: string
           condition_reason?: string | null
+          created_at?: string | null
           dosage_frequency?: string | null
-          physician_name?: string | null
-          physician_phone?: string | null
           expiration_date?: string | null
+          id?: string
           is_daily?: boolean | null
           is_emergency_only?: boolean | null
+          medication_name?: string
+          parent_id?: string
+          physician_name?: string | null
+          physician_phone?: string | null
           sort_order?: number | null
-          created_at?: string | null
+          student_id?: string
         }
         Relationships: []
       }
-      student_health_info: {
+      student_photo_release_consent: {
         Row: {
+          consent_level: string
+          created_at: string
           id: string
           parent_id: string
           student_id: string
-          in_state_contact_name: string | null
-          in_state_contact_relation: string | null
-          in_state_contact_phone: string | null
-          out_of_state_contact_name: string | null
-          out_of_state_contact_relation: string | null
-          out_of_state_contact_phone: string | null
-          physician_name: string | null
-          clinic_name: string | null
-          physician_phone: string | null
-          insurance_provider: string | null
-          policy_number: string | null
-          group_number: string | null
-          preferred_hospital: string | null
-          health_conditions: string | null
-          ongoing_care: boolean | null
-          ongoing_care_description: string | null
-          emergency_medication_required: boolean | null
-          emergency_medication_description: string | null
-          immunization_status: 'record' | 'exemption' | null
-          created_at: string | null
-          updated_at: string | null
+          updated_at: string
         }
         Insert: {
+          consent_level: string
+          created_at?: string
           id?: string
           parent_id: string
           student_id: string
-          in_state_contact_name?: string | null
-          in_state_contact_relation?: string | null
-          in_state_contact_phone?: string | null
-          out_of_state_contact_name?: string | null
-          out_of_state_contact_relation?: string | null
-          out_of_state_contact_phone?: string | null
-          physician_name?: string | null
-          clinic_name?: string | null
-          physician_phone?: string | null
-          insurance_provider?: string | null
-          policy_number?: string | null
-          group_number?: string | null
-          preferred_hospital?: string | null
-          health_conditions?: string | null
-          ongoing_care?: boolean | null
-          ongoing_care_description?: string | null
-          emergency_medication_required?: boolean | null
-          emergency_medication_description?: string | null
-          immunization_status?: 'record' | 'exemption' | null
-          created_at?: string | null
-          updated_at?: string | null
+          updated_at?: string
         }
         Update: {
+          consent_level?: string
+          created_at?: string
           id?: string
           parent_id?: string
           student_id?: string
-          in_state_contact_name?: string | null
-          in_state_contact_relation?: string | null
-          in_state_contact_phone?: string | null
-          out_of_state_contact_name?: string | null
-          out_of_state_contact_relation?: string | null
-          out_of_state_contact_phone?: string | null
-          physician_name?: string | null
-          clinic_name?: string | null
-          physician_phone?: string | null
-          insurance_provider?: string | null
-          policy_number?: string | null
-          group_number?: string | null
-          preferred_hospital?: string | null
-          health_conditions?: string | null
-          ongoing_care?: boolean | null
-          ongoing_care_description?: string | null
-          emergency_medication_required?: boolean | null
-          emergency_medication_description?: string | null
-          immunization_status?: 'record' | 'exemption' | null
-          created_at?: string | null
-          updated_at?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -877,171 +992,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
-      }
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      [_ in never]: never
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
-  billing: {
-    Tables: {
-      stripe_transactions: {
-        Row: {
-          id: string
-          stripe_session_id: string
-          stripe_payment_intent_id: string | null
-          payment_type: string
-          status: string
-          amount_cents: number
-          intended_amount_cents: number | null
-          currency: string
-          cover_fees: boolean | null
-          payer_name: string | null
-          payer_email: string | null
-          description: string | null
-          student_id: string | null
-          application_id: string | null
-          parent_id: string | null
-          metadata: Json
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          stripe_session_id: string
-          stripe_payment_intent_id?: string | null
-          payment_type: string
-          status?: string
-          amount_cents: number
-          intended_amount_cents?: number | null
-          currency?: string
-          cover_fees?: boolean | null
-          payer_name?: string | null
-          payer_email?: string | null
-          description?: string | null
-          student_id?: string | null
-          application_id?: string | null
-          parent_id?: string | null
-          metadata?: Json
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          stripe_session_id?: string
-          stripe_payment_intent_id?: string | null
-          payment_type?: string
-          status?: string
-          amount_cents?: number
-          intended_amount_cents?: number | null
-          currency?: string
-          cover_fees?: boolean | null
-          payer_name?: string | null
-          payer_email?: string | null
-          description?: string | null
-          student_id?: string | null
-          application_id?: string | null
-          parent_id?: string | null
-          metadata?: Json
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "stripe_transactions_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "stripe_transactions_application_id_fkey"
-            columns: ["application_id"]
-            isOneToOne: false
-            referencedRelation: "applications"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "stripe_transactions_parent_id_fkey"
-            columns: ["parent_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      [_ in never]: never
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
-  teachers: {
-    Tables: {
-      teacher_students: {
-        Row: {
-          id: string
-          teacher_id: string
-          student_id: string
-          program: string
-          classroom: string | null
-          is_deleted: boolean
-          created_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          teacher_id: string
-          student_id: string
-          program: string
-          classroom?: string | null
-          is_deleted?: boolean
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          teacher_id?: string
-          student_id?: string
-          program?: string
-          classroom?: string | null
-          is_deleted?: boolean
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "teacher_students_teacher_id_fkey"
-            columns: ["teacher_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "teacher_students_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students"
-            referencedColumns: ["id"]
-          }
-        ]
       }
     }
     Views: {
@@ -1175,58 +1125,6 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
-
-// =====================================================
-// Budget schema interfaces
-// =====================================================
-
-export interface BudgetLineItem {
-  id: string
-  category: string
-  item_name: string
-  planned_amount: number
-  is_active: boolean
-  sort_order: number
-  notes: string | null
-  created_at: string | null
-  updated_at: string | null
-}
-
-export interface BudgetExpense {
-  id: string
-  expense_name: string
-  category: string
-  amount: number
-  payment_method: string | null
-  expense_date: string
-  notes: string | null
-  tax_deductible: boolean
-  is_deleted: boolean
-  created_at: string | null
-  updated_at: string | null
-}
-
-export interface BudgetIncome {
-  id: string
-  source: 'tuition' | 'aftercare' | 'fun_friday' | 'summer' | 'other'
-    | 'registration_fee' | 'supply_fee' | 'late_fee' | 'donation'
-    | 'fundraiser' | 'grant' | 'field_trip_fee' | 'uniform_fee'
-    | 'extended_care' | 'event'
-  student_id: string | null
-  parent_id: string | null
-  description: string | null
-  amount: number
-  income_date: string
-  created_at: string | null
-  updated_at: string | null
-}
-
-export interface BudgetSettings {
-  id: string
-  key: string
-  value: unknown
-  updated_at: string | null
-}
 
 export const Constants = {
   admin: {

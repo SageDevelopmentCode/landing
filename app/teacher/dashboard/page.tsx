@@ -5,6 +5,7 @@ import Image from 'next/image'
 import ProfileDropdown from '@/app/apply/dashboard/ProfileDropdown'
 import Footer from '@/app/components/Footer'
 import TeacherNav from './TeacherNav'
+import MyStudentsSection, { type StudentRow } from './MyStudentsSection'
 
 export default async function TeacherDashboard() {
   const supabase = await createServerSupabaseClient()
@@ -15,14 +16,42 @@ export default async function TeacherDashboard() {
   }
 
   const adminClient = createAdminClient()
-  const { data: adminUser } = await adminClient
-    .schema('admin')
-    .from('users')
-    .select('full_name')
-    .eq('id', user.id)
-    .single()
+
+  const [{ data: adminUser }, { data: teacherStudentRows }] = await Promise.all([
+    adminClient.schema('admin').from('users').select('full_name').eq('id', user.id).single(),
+    adminClient
+      .schema('teachers')
+      .from('teacher_students')
+      .select('id, student_id, program, classroom')
+      .eq('teacher_id', user.id)
+      .eq('is_deleted', false),
+  ])
 
   const fullName = adminUser?.full_name ?? null
+
+  let myStudents: StudentRow[] = []
+
+  if (teacherStudentRows && teacherStudentRows.length > 0) {
+    const studentIds = [...new Set(teacherStudentRows.map((r) => r.student_id))]
+    const { data: studentRecords } = await adminClient
+      .schema('admin')
+      .from('students')
+      .select('id, child_legal_name, child_grade')
+      .in('id', studentIds)
+
+    const studentMap = new Map(
+      (studentRecords ?? []).map((s) => [s.id, { name: s.child_legal_name, grade: s.child_grade }])
+    )
+
+    myStudents = teacherStudentRows.map((r) => ({
+      id: r.id,
+      student_id: r.student_id,
+      name: studentMap.get(r.student_id)?.name ?? null,
+      grade: studentMap.get(r.student_id)?.grade ?? null,
+      program: r.program,
+      classroom: r.classroom,
+    }))
+  }
 
   return (
     <div className="bg-welcome-bg">
@@ -50,30 +79,16 @@ export default async function TeacherDashboard() {
           </div>
         </header>
 
-        <main className="flex-1 max-w-4xl mx-auto px-6 py-12">
-          {/* Welcome */}
-          <div className="mb-10">
-            <h1 className="text-3xl font-bold font-heading text-gray-800 mb-2">
-              Welcome, {fullName ?? 'Teacher'}.
-            </h1>
-          </div>
+        <main className="flex-1 px-6 py-12">
+          <div className="max-w-3xl">
+            {/* Welcome */}
+            <div className="mb-10">
+              <h1 className="text-3xl font-bold font-heading text-gray-800 mb-2">
+                Welcome, {fullName ?? 'Teacher'}.
+              </h1>
+            </div>
 
-          {/* Placeholder sections */}
-          <div className="space-y-6">
-            <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-lg font-semibold text-gray-700 mb-2">My Students</h2>
-              <p className="text-sm text-gray-400">Your student roster will appear here.</p>
-            </section>
-
-            <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-lg font-semibold text-gray-700 mb-2">Schedule</h2>
-              <p className="text-sm text-gray-400">Your class schedule will appear here.</p>
-            </section>
-
-            <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-lg font-semibold text-gray-700 mb-2">Messages</h2>
-              <p className="text-sm text-gray-400">Your messages will appear here.</p>
-            </section>
+            <MyStudentsSection students={myStudents} />
           </div>
         </main>
       </div>
