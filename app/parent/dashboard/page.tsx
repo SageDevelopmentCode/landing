@@ -8,6 +8,7 @@ import Image from "next/image";
 import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import Footer from "@/app/components/Footer";
 import ChildTabs from "./ChildTabs";
+import DashboardNav from "./DashboardNav";
 import type { StudentSignatureMap } from "@/app/types/enrollment-signatures";
 import type { Database } from "@/app/types/database.types";
 
@@ -72,21 +73,23 @@ export default async function ParentDashboard() {
     .map((a) => a.student_id)
     .filter((id): id is string => id !== null);
 
-  let signaturesByStudent: StudentSignatureMap = {};
-  let healthInfoByStudent: Record<string, StudentHealthInfo> = {};
-  let medicationPlanByStudent: Record<
+  const signaturesByStudent: StudentSignatureMap = {};
+  const healthInfoByStudent: Record<string, StudentHealthInfo> = {};
+  const medicationPlanByStudent: Record<
     string,
     { plan: StudentMedicationPlan | null; medications: StudentMedication[] }
   > = {};
-  let immunizationFileCountByStudent: Record<string, number> = {};
-  let consentByStudent: Record<string, "FULL" | "LIMITED" | "NO"> = {};
-  let authorizedPickupByStudent: Record<
+  const immunizationFileCountByStudent: Record<string, number> = {};
+  const consentByStudent: Record<string, "FULL" | "LIMITED" | "NO"> = {};
+  const authorizedPickupByStudent: Record<
     string,
     { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] }
   > = {};
-  let healthStatementByStudent: Record<string, { option_type: string } | null> =
-    {};
-  let religiousExemptionCountByStudent: Record<string, number> = {};
+  const healthStatementByStudent: Record<
+    string,
+    { option_type: string } | null
+  > = {};
+  const religiousExemptionCountByStudent: Record<string, number> = {};
 
   if (studentIds.length > 0) {
     const [
@@ -234,19 +237,29 @@ export default async function ParentDashboard() {
     <div className="bg-welcome-bg">
       <div className="min-h-screen flex flex-col">
         {/* Header */}
-        <header className="bg-white border-b border-gray-100 px-5 py-3 flex items-center justify-between">
-          <Link href="/">
-            <Image
-              src="/assets/Logo.png"
-              alt="Sage Field"
-              width={50}
-              height={24}
-              className="object-contain"
-            />
-          </Link>
-          {user?.email && (
-            <ProfileDropdown email={user.email} fullName={fullName} />
-          )}
+        <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-3 items-center">
+          <div className="flex items-center">
+            <Link href="/">
+              <Image
+                src="/assets/Logo.png"
+                alt="Sage Field"
+                width={50}
+                height={24}
+                className="object-contain"
+              />
+            </Link>
+          </div>
+          <div className="flex items-center justify-center">
+            {user.id === "f5a4edbc-5683-40dc-9d9b-7cd0522736fd" ||
+              (user.id === "893f483e-2724-428f-a2f9-4333831501c7" && (
+                <DashboardNav />
+              ))}
+          </div>
+          <div className="flex items-center justify-end">
+            {user?.email && (
+              <ProfileDropdown email={user.email} fullName={fullName} />
+            )}
+          </div>
         </header>
 
         <main className="flex-1 max-w-4xl mx-auto px-6 py-12">

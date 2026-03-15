@@ -19,6 +19,7 @@ export type Database = {
           id: string
           parent_id: string
           child_legal_name: string | null
+          child_grade: string | null
           dob_month: string | null
           dob_day: string | null
           dob_year: string | null
@@ -47,6 +48,7 @@ export type Database = {
           id?: string
           parent_id: string
           child_legal_name?: string | null
+          child_grade?: string | null
           dob_month?: string | null
           dob_day?: string | null
           dob_year?: string | null
@@ -75,6 +77,7 @@ export type Database = {
           id?: string
           parent_id?: string
           child_legal_name?: string | null
+          child_grade?: string | null
           dob_month?: string | null
           dob_day?: string | null
           dob_year?: string | null
@@ -972,6 +975,70 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+  teachers: {
+    Tables: {
+      teacher_students: {
+        Row: {
+          id: string
+          teacher_id: string
+          student_id: string
+          program: string
+          classroom: string | null
+          is_deleted: boolean
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          teacher_id: string
+          student_id: string
+          program: string
+          classroom?: string | null
+          is_deleted?: boolean
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          teacher_id?: string
+          student_id?: string
+          program?: string
+          classroom?: string | null
+          is_deleted?: boolean
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_students_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_students_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
             referencedColumns: ["id"]
           }
         ]

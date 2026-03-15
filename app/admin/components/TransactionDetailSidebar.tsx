@@ -183,6 +183,7 @@ type FullStudent = {
   dysregulation_response: string | null
   regulation_strategies: string | null
   activities_to_avoid: string | null
+  child_grade: string | null
   parent_name?: string | null
 }
 

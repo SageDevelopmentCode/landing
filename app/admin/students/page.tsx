@@ -2,6 +2,7 @@ import { createAdminClient } from '@/app/lib/supabase-server'
 import { colors } from '../design-system'
 import { Merriweather } from 'next/font/google'
 import { StudentsClient } from './StudentsClient'
+import { getAllStudentAssignments } from '../../actions/teacherAssignments'
 
 const merriweather = Merriweather({
   weight: ['300', '400', '700', '900'],
@@ -32,6 +33,7 @@ type Student = {
   dysregulation_response: string | null
   regulation_strategies: string | null
   activities_to_avoid: string | null
+  child_grade: string | null
   parent_name?: string | null
 }
 
@@ -73,7 +75,17 @@ export default async function StudentsPage() {
     .eq('is_deleted', false)
     .order('child_legal_name')
 
-  const rows = (students ?? []) as Student[]
+  const { data: enrolledApps } = await client
+    .schema('parent_app')
+    .from('applications')
+    .select('student_id')
+    .eq('status', 'enrolled')
+
+  const enrolledStudentIds = new Set(
+    (enrolledApps ?? []).map((a) => a.student_id).filter(Boolean)
+  )
+
+  const rows = ((students ?? []) as Student[]).filter((s) => enrolledStudentIds.has(s.id))
 
   // Fetch parent names for all students
   const parentIds = [...new Set(rows.map((s) => s.parent_id).filter(Boolean))]
@@ -98,6 +110,8 @@ export default async function StudentsPage() {
     parent_name: parentMap[s.parent_id] ?? null,
   }))
 
+  const assignmentsByStudentId = await getAllStudentAssignments()
+
   return (
     <div className="space-y-6 pt-6">
       <div>
@@ -112,7 +126,11 @@ export default async function StudentsPage() {
         </p>
       </div>
 
-      <StudentsClient students={rowsWithParents} fetchStudentDetail={fetchStudentDetail} />
+      <StudentsClient
+        students={rowsWithParents}
+        fetchStudentDetail={fetchStudentDetail}
+        assignmentsByStudentId={assignmentsByStudentId}
+      />
     </div>
   )
 }

@@ -1,8 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Table, TableRow, TableCell } from '../components/Table'
 import { StudentDetailSidebar } from '../components/StudentDetailSidebar'
+import { TeacherAssignSidebar } from '../components/TeacherAssignSidebar'
+import type { TeacherAssignment } from '../../actions/teacherAssignments'
 
 type Student = {
   id: string
@@ -28,19 +31,23 @@ type Student = {
   dysregulation_response: string | null
   regulation_strategies: string | null
   activities_to_avoid: string | null
+  child_grade: string | null
   parent_name?: string | null
 }
 
 interface StudentsClientProps {
   students: Student[]
   fetchStudentDetail: (studentId: string) => Promise<Student>
+  assignmentsByStudentId: Record<string, TeacherAssignment[]>
 }
 
-export function StudentsClient({ students: initialStudents, fetchStudentDetail }: StudentsClientProps) {
+export function StudentsClient({ students: initialStudents, fetchStudentDetail, assignmentsByStudentId }: StudentsClientProps) {
+  const router = useRouter()
   const [students, setStudents] = useState<Student[]>(initialStudents)
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
   const [studentDetail, setStudentDetail] = useState<Student | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
+  const [assignStudent, setAssignStudent] = useState<Student | null>(null)
 
   const handleRowClick = async (student: Student) => {
     setSelectedStudent(student)
@@ -63,10 +70,14 @@ export function StudentsClient({ students: initialStudents, fetchStudentDetail }
     setStudents((prev) => prev.filter((s) => s.id !== id))
   }
 
+  const handleAssigned = () => {
+    router.refresh()
+  }
+
   return (
     <>
       <Table
-        headers={['Name', 'DOB', 'Parent', 'Medical', 'Allergies', 'Needs Aide']}
+        headers={['Name', 'Grade', 'DOB', 'Parent', 'Teacher']}
       >
         {students.map((student, index) => {
           const dob =
@@ -78,11 +89,29 @@ export function StudentsClient({ students: initialStudents, fetchStudentDetail }
               <TableCell>
                 <div className="font-medium">{student.child_legal_name ?? '—'}</div>
               </TableCell>
+              <TableCell>{student.child_grade ?? '—'}</TableCell>
               <TableCell>{dob}</TableCell>
               <TableCell>{student.parent_name ?? '—'}</TableCell>
-              <TableCell>{student.has_medical_conditions ?? '—'}</TableCell>
-              <TableCell>{student.has_allergies ?? '—'}</TableCell>
-              <TableCell>{student.needs_aide ?? '—'}</TableCell>
+              <TableCell>
+                {(assignmentsByStudentId[student.id]?.length ?? 0) > 0 ? (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setAssignStudent(student) }}
+                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+                             color: '#4B6A4F', fontSize: 'inherit', textDecoration: 'underline' }}
+                  >
+                    {assignmentsByStudentId[student.id].map((a) => a.teacher_name ?? '—').join(', ')}
+                  </button>
+                ) : (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setAssignStudent(student) }}
+                    style={{ fontSize: 12, padding: '3px 10px', borderRadius: 20,
+                             border: '1px solid #D1D5DB', color: '#4B6A4F', background: 'white',
+                             cursor: 'pointer', whiteSpace: 'nowrap' }}
+                  >
+                    Assign teacher(s)
+                  </button>
+                )}
+              </TableCell>
             </TableRow>
           )
         })}
@@ -93,6 +122,12 @@ export function StudentsClient({ students: initialStudents, fetchStudentDetail }
         loading={detailLoading}
         onClose={handleClose}
         onStudentDeleted={handleStudentDeleted}
+      />
+
+      <TeacherAssignSidebar
+        student={assignStudent}
+        onClose={() => setAssignStudent(null)}
+        onAssigned={handleAssigned}
       />
     </>
   )

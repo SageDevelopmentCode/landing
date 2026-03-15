@@ -17,6 +17,8 @@ export default async function LoginPage() {
 
     if (adminUser?.role === "super_admin") {
       redirect("/admin");
+    } else if (adminUser?.role === "teacher") {
+      redirect("/teacher/dashboard");
     } else {
       redirect("/apply/dashboard");
     }

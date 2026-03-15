@@ -30,6 +30,10 @@ export async function signInWithEmail(formData: FormData) {
     return { redirectTo: '/apply/dashboard' }
   }
 
+  if (adminUser?.role === 'teacher') {
+    return { redirectTo: '/teacher/dashboard' }
+  }
+
   return { redirectTo: '/admin' }
 }
 

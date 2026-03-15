@@ -67,6 +67,7 @@ export async function approveApplication(id: string) {
       dysregulation_response: app.dysregulation_response,
       regulation_strategies: app.regulation_strategies,
       activities_to_avoid: app.activities_to_avoid,
+      child_grade: app.child_grade,
     })
     .select('id')
     .single()

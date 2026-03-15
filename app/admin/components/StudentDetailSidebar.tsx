@@ -5,6 +5,9 @@ import { createPortal } from 'react-dom'
 import { DetailSidebar } from './DetailSidebar'
 import { SidebarField, SidebarSection } from '../../components/SidebarPrimitives'
 import { deleteStudent } from '../../actions/deleteStudent'
+const colors = {
+  error: '#DC2626',
+}
 
 type Student = {
   id: string
@@ -30,6 +33,7 @@ type Student = {
   dysregulation_response: string | null
   regulation_strategies: string | null
   activities_to_avoid: string | null
+  child_grade: string | null
   parent_name?: string | null
 }
 
@@ -182,6 +186,7 @@ export function StudentDetailSidebar({ student, loading, onClose, onStudentDelet
           <div className="space-y-4">
             <SidebarSection title="Student Info">
               <SidebarField label="Full Name" value={student?.child_legal_name} />
+              <SidebarField label="Grade" value={student?.child_grade} />
               <SidebarField label="Date of Birth" value={dob} />
               <SidebarField label="Parent" value={student?.parent_name} />
               <SidebarField label="Special Interests" value={student?.special_interests} />

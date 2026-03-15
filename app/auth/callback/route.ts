@@ -23,6 +23,10 @@ export async function GET(request: NextRequest) {
       if (adminUser?.role === 'parent') {
         return NextResponse.redirect(`${origin}/apply/dashboard`)
       }
+
+      if (adminUser?.role === 'teacher') {
+        return NextResponse.redirect(`${origin}/teacher/dashboard`)
+      }
     }
   }
 
