@@ -510,7 +510,7 @@ export default function OpenHousePage() {
 
           {/* Free Shirts */}
           <motion.div
-            className="bg-green-50 border border-green-200 rounded-xl p-6 shadow-sm flex items-start gap-4"
+            className="bg-blue-50 border border-blue-200 rounded-xl p-6 shadow-sm flex items-start gap-4"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -519,10 +519,10 @@ export default function OpenHousePage() {
             <span className="text-3xl flex-shrink-0">👕</span>
             <div>
               <h3 className="text-base font-bold text-gray-800 font-heading mb-1">
-                Free Sage Field Shirt — First 25 Families
+                Sage Field Shirts — Support Our School
               </h3>
               <p className="text-sm text-gray-600 font-body leading-relaxed">
-                The first 25 families to arrive get a free Sage Field shirt. Come early!
+                Show your Sage Field spirit and support our school! Shirts will be available for purchase at the event.
               </p>
             </div>
           </motion.div>
@@ -544,11 +544,16 @@ export default function OpenHousePage() {
             </h2>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               "/assets/After1.png",
               "/assets/After2.png",
               "/assets/After3.png",
+              "/assets/After4.png",
+              "/assets/After5.PNG",
+              "/assets/After6.PNG",
+              "/assets/After7.PNG",
+              "/assets/Interior.png",
             ].map((src, i) => (
               <motion.div
                 key={src}
