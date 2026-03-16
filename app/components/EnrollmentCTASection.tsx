@@ -1,11 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
-import WaitlistDialog from "./WaitlistDialog";
+import Link from "next/link";
 
 export default function EnrollmentCTASection() {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   return (
     <section className="bg-welcome-bg min-h-[80vh] py-16 px-8 sm:px-12 lg:px-16 flex items-center justify-center">
@@ -48,25 +46,23 @@ export default function EnrollmentCTASection() {
         </motion.p>
 
         {/* CTA Button */}
-        <motion.button
-          className="px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => setIsDialogOpen(true)}
+          className="inline-block"
         >
-          Enroll Your Child Today
-        </motion.button>
+          <Link
+            href="/apply"
+            className="inline-block px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
+          >
+            Enroll Your Child Today
+          </Link>
+        </motion.div>
       </div>
-
-      {/* Waitlist Dialog */}
-      <WaitlistDialog
-        isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-      />
     </section>
   );
 }

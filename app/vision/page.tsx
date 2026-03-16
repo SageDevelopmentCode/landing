@@ -363,7 +363,7 @@ export default function VisionPage() {
             transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
           >
             {/* Before Column */}
-            <div className="flex flex-col gap-4">
+            <div className="hidden md:flex flex-col gap-4">
               <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide font-body">
                 Before
               </p>
@@ -743,10 +743,15 @@ export default function VisionPage() {
               <Mail className="w-5 h-5" />
               <span>sabrina@sagefield.co</span>
             </a>
-            <div className="flex items-center gap-2 text-gray-500">
+            <a
+              href="https://www.google.com/maps/search/?api=1&query=2760+Gattis+School+Rd,+Round+Rock,+TX+78664"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-gray-500 hover:text-primary transition-colors"
+            >
               <MapPin className="w-5 h-5" />
               <span>2760 Gattis School Rd, Round Rock, TX 78664</span>
-            </div>
+            </a>
           </motion.div>
         </div>
       </section>

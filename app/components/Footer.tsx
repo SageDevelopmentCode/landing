@@ -170,20 +170,25 @@ export default function Footer() {
                 <Mail className="w-4 h-4 flex-shrink-0" />
                 <span>sabrina@sagefield.co</span>
               </a>
-              <div className="flex items-center gap-2 text-gray-400 font-body text-sm">
+              <a
+                href="https://www.google.com/maps/search/?api=1&query=2760+Gattis+School+Rd,+Round+Rock,+TX+78664"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-body text-sm"
+              >
                 <MapPin className="w-4 h-4 flex-shrink-0" />
                 <span>2760 Gattis School Rd, Round Rock, TX 78664</span>
-              </div>
+              </a>
             </div>
 
             {/* CTA Buttons */}
             <div className="space-y-3">
-              <button
-                onClick={() => setIsWaitlistDialogOpen(true)}
-                className="w-full px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 font-body cursor-pointer text-sm"
+              <Link
+                href="/apply"
+                className="block w-full px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 font-body cursor-pointer text-sm text-center"
               >
                 Enroll Now
-              </button>
+              </Link>
               <button
                 onClick={() => setIsContactDialogOpen(true)}
                 className="w-full px-4 py-2 border-2 border-gray-600 bg-transparent hover:bg-gray-800 text-white font-semibold rounded-lg transition-colors duration-200 font-body cursor-pointer text-sm"
@@ -223,9 +228,14 @@ export default function Footer() {
               </a>
             </div>
 
-            <p className="text-gray-400 text-sm font-body text-center md:text-right">
+            <a
+              href="https://www.google.com/maps/search/?api=1&query=2760+Gattis+School+Rd,+Round+Rock,+TX+78664"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-400 text-sm font-body text-center md:text-right hover:text-white transition-colors"
+            >
               2760 Gattis School Rd, Round Rock, TX 78664
-            </p>
+            </a>
           </div>
         </div>
       </div>

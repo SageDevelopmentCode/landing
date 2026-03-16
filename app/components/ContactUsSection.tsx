@@ -121,9 +121,14 @@ export default function ContactUsSection() {
                   <h4 className="text-sm font-semibold text-primary mb-1 font-heading">
                     Location
                   </h4>
-                  <p className="text-base text-text-gray font-body">
+                  <a
+                    href="https://www.google.com/maps/search/?api=1&query=2760+Gattis+School+Rd,+Round+Rock,+TX+78664"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-base text-text-gray font-body hover:text-primary transition-colors"
+                  >
                     2760 Gattis School Rd, Round Rock, TX 78664
-                  </p>
+                  </a>
                   <p className="text-xs text-text-gray mt-1 italic font-body">
                     For more information, please email us at{" "}
                     <a

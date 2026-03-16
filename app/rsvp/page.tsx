@@ -278,9 +278,14 @@ export default function OpenHousePage() {
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide font-body">
                   Location
                 </p>
-                <p className="text-sm font-bold text-gray-800 font-body">
+                <a
+                  href="https://www.google.com/maps/search/?api=1&query=2760+Gattis+School+Rd,+Round+Rock,+TX+78664"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-bold text-gray-800 font-body hover:text-primary transition-colors"
+                >
                   2760 Gattis School Rd, Round Rock, TX 78664
-                </p>
+                </a>
               </div>
             </div>
           </motion.div>
