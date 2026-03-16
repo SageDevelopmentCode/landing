@@ -14,6 +14,8 @@ import { Table, TableRow, TableCell } from "../components/Table";
 import { DetailSidebar } from "../components/DetailSidebar";
 import { MercuryDetailSidebar, type MercuryTransaction } from "../components/MercuryDetailSidebar";
 import { IncomeDetailSidebar } from "../components/IncomeDetailSidebar";
+import { TransactionDetailSidebar, formatPaymentType, formatCents } from "../components/TransactionDetailSidebar";
+import { getStripeTransactions } from "@/app/actions/getStripeTransactions";
 import { Upload, Trash2, FileText, Eye, Download, X } from "lucide-react";
 import { uploadExpenseReceipt } from "@/app/actions/uploadExpenseReceipt";
 import { deleteExpenseReceipt } from "@/app/actions/deleteExpenseReceipt";
@@ -22,6 +24,28 @@ import { getExpenseReceiptUrl } from "@/app/actions/getExpenseReceiptUrl";
 import { fetchBudgetStudents } from "@/app/actions/fetchBudgetStudents";
 import { fetchBudgetParents } from "@/app/actions/fetchBudgetParents";
 import type { FileObject } from "@supabase/storage-js";
+
+type StripeTransaction = {
+  id: string
+  stripe_session_id: string | null
+  stripe_payment_intent_id: string | null
+  payment_type: string
+  status: string
+  amount_cents: number
+  intended_amount_cents: number | null
+  currency: string
+  cover_fees: boolean | null
+  payer_name: string | null
+  payer_email: string | null
+  description: string | null
+  student_id: string | null
+  application_id: string | null
+  parent_id: string | null
+  metadata: Record<string, unknown> | null
+  created_at: string
+  updated_at: string | null
+  is_deleted: boolean
+}
 
 const merriweather = Merriweather({
   weight: ["300", "400", "700", "900"],
@@ -170,18 +194,21 @@ function MiniStat({
 function OverviewTab({
   lineItems,
   expenses,
-  income,
+  stripeTransactions,
 }: {
   lineItems: BudgetLineItem[];
   expenses: BudgetExpense[];
-  income: BudgetIncome[];
+  stripeTransactions: StripeTransaction[];
 }) {
   const totalBudget = lineItems.reduce(
     (s, i) => s + Number(i.planned_amount),
     0,
   );
   const totalExpenses = expenses.reduce((s, e) => s + Number(e.amount), 0);
-  const totalRevenue = income.reduce((s, i) => s + Number(i.amount), 0);
+  const totalRevenue = stripeTransactions.reduce((s, tx) => {
+    const net = tx.cover_fees ? (tx.intended_amount_cents ?? tx.amount_cents) : tx.amount_cents;
+    return s + net / 100;
+  }, 0);
   const netProfit = totalRevenue - totalExpenses;
   const profitColor = netProfit >= 0 ? colors.successText : colors.errorText;
 
@@ -3019,24 +3046,13 @@ const TUITION_RATES = {
 };
 
 function RevenueTab({
-  income,
+  transactions,
   onRefresh,
 }: {
-  income: BudgetIncome[];
+  transactions: StripeTransaction[];
   onRefresh: () => void;
 }) {
-  const db = supabase();
-  const [showAdd, setShowAdd] = useState(false);
-  const [selectedIncome, setSelectedIncome] = useState<BudgetIncome | null>(null);
-  const [newIncome, setNewIncome] = useState({
-    source: "tuition" as BudgetIncome["source"],
-    student_id: null as string | null,
-    parent_id: null as string | null,
-    description: "",
-    amount: "",
-    income_date: new Date().toISOString().slice(0, 10),
-  });
-  const [saving, setSaving] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<StripeTransaction | null>(null);
   const [students, setStudents] = useState<{ id: string; child_legal_name: string | null }[]>([]);
   const [parents, setParents] = useState<{ id: string; full_name: string | null; email: string; g1_cell_phone: string | null }[]>([]);
   const [enrollment, setEnrollment] = useState({
@@ -3059,7 +3075,10 @@ function RevenueTab({
     fetchLists();
   }, []);
 
-  const totalActual = income.reduce((s, i) => s + Number(i.amount), 0);
+  const totalActual = transactions.reduce((s, tx) => {
+    const net = tx.cover_fees ? (tx.intended_amount_cents ?? tx.amount_cents) : tx.amount_cents;
+    return s + net / 100;
+  }, 0);
 
   const projectedRevenue =
     enrollment.full_14 * TUITION_RATES.full_14 +
@@ -3068,299 +3087,37 @@ function RevenueTab({
     enrollment.fun_friday * TUITION_RATES.fun_friday +
     enrollment.summer * TUITION_RATES.summer_14_wk;
 
-  async function addIncome() {
-    if (!newIncome.amount) return;
-    setSaving(true);
-    await db
-      .schema("budget")
-      .from("income")
-      .insert({
-        source: newIncome.source,
-        student_id: newIncome.student_id || null,
-        parent_id: newIncome.parent_id || null,
-        description: newIncome.description || null,
-        amount: Number(newIncome.amount),
-        income_date: newIncome.income_date,
-      });
-    setSaving(false);
-    setShowAdd(false);
-    setNewIncome({
-      source: "tuition",
-      student_id: null,
-      parent_id: null,
-      description: "",
-      amount: "",
-      income_date: new Date().toISOString().slice(0, 10),
-    });
-    onRefresh();
-  }
-
-  async function deleteIncome(id: string) {
-    if (!confirm("Delete this income entry?")) return;
-    await db.schema("budget").from("income").delete().eq("id", id);
-    onRefresh();
-  }
-
   return (
     <div className="space-y-6">
-      {/* Income Log */}
+      {/* Transaction Log */}
       <div>
         <div className="flex items-center justify-between mb-4">
           <p
             className="text-sm font-semibold"
             style={{ color: colors.textPrimary }}
           >
-            Income Log
+            Revenue (Stripe Transactions)
           </p>
-          <button style={btnPrimary} onClick={() => setShowAdd(true)}>
-            + Add Income
-          </button>
         </div>
 
-        <AnimatePresence>
-          {showAdd && (
-            <>
-              {/* Backdrop */}
-              <motion.div
-                key="income-backdrop"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setShowAdd(false)}
-                style={{
-                  position: "fixed",
-                  inset: 0,
-                  backgroundColor: "rgba(0,0,0,0.35)",
-                  zIndex: 40,
-                }}
-              />
-              {/* Sidebar panel */}
-              <motion.div
-                key="income-sidebar"
-                initial={{ x: "100%" }}
-                animate={{ x: 0 }}
-                exit={{ x: "100%" }}
-                transition={{ type: "tween", duration: 0.25 }}
-                style={{
-                  position: "fixed",
-                  top: 0,
-                  right: 0,
-                  width: "420px",
-                  height: "100%",
-                  backgroundColor: "white",
-                  zIndex: 50,
-                  display: "flex",
-                  flexDirection: "column",
-                  boxShadow: "-4px 0 24px rgba(0,0,0,0.12)",
-                }}
-              >
-                {/* Header */}
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "20px 24px",
-                    borderBottom: `1px solid ${colors.border}`,
-                  }}
-                >
-                  <p
-                    className="text-base font-semibold"
-                    style={{ color: colors.textPrimary }}
-                  >
-                    New Income Entry
-                  </p>
-                  <button
-                    onClick={() => setShowAdd(false)}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      fontSize: "20px",
-                      cursor: "pointer",
-                      color: colors.textSecondary,
-                      lineHeight: 1,
-                    }}
-                  >
-                    ×
-                  </button>
-                </div>
-
-                {/* Body */}
-                <div style={{ flex: 1, overflowY: "auto", padding: "24px" }}>
-                  <div className="space-y-4">
-                    <div>
-                      <label
-                        className="text-xs mb-1 block"
-                        style={{ color: colors.textSecondary }}
-                      >
-                        Source
-                      </label>
-                      <select
-                        style={inputStyle}
-                        value={newIncome.source}
-                        onChange={(e) =>
-                          setNewIncome((p) => ({
-                            ...p,
-                            source: e.target.value as BudgetIncome["source"],
-                          }))
-                        }
-                      >
-                        {Object.entries(SOURCE_LABELS).map(([val, label]) => (
-                          <option key={val} value={val}>
-                            {label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label
-                        className="text-xs mb-1 block"
-                        style={{ color: colors.textSecondary }}
-                      >
-                        Student
-                      </label>
-                      <select
-                        style={inputStyle}
-                        value={newIncome.student_id ?? ""}
-                        onChange={(e) =>
-                          setNewIncome((p) => ({
-                            ...p,
-                            student_id: e.target.value || null,
-                          }))
-                        }
-                      >
-                        <option value="">— None —</option>
-                        {students.map((s) => (
-                          <option key={s.id} value={s.id}>
-                            {s.child_legal_name ?? s.id}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label
-                        className="text-xs mb-1 block"
-                        style={{ color: colors.textSecondary }}
-                      >
-                        Parent
-                      </label>
-                      <select
-                        style={inputStyle}
-                        value={newIncome.parent_id ?? ""}
-                        onChange={(e) =>
-                          setNewIncome((p) => ({
-                            ...p,
-                            parent_id: e.target.value || null,
-                          }))
-                        }
-                      >
-                        <option value="">— None —</option>
-                        {parents.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.full_name ?? p.email}{p.g1_cell_phone ? ` · ${p.g1_cell_phone}` : ""}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label
-                        className="text-xs mb-1 block"
-                        style={{ color: colors.textSecondary }}
-                      >
-                        Amount ($)
-                      </label>
-                      <input
-                        style={inputStyle}
-                        type="number"
-                        placeholder="0.00"
-                        value={newIncome.amount}
-                        onChange={(e) =>
-                          setNewIncome((p) => ({ ...p, amount: e.target.value }))
-                        }
-                      />
-                    </div>
-                    <div>
-                      <label
-                        className="text-xs mb-1 block"
-                        style={{ color: colors.textSecondary }}
-                      >
-                        Date
-                      </label>
-                      <input
-                        style={inputStyle}
-                        type="date"
-                        value={newIncome.income_date}
-                        onChange={(e) =>
-                          setNewIncome((p) => ({
-                            ...p,
-                            income_date: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                    <div>
-                      <label
-                        className="text-xs mb-1 block"
-                        style={{ color: colors.textSecondary }}
-                      >
-                        Description
-                      </label>
-                      <input
-                        style={inputStyle}
-                        placeholder="Optional"
-                        value={newIncome.description}
-                        onChange={(e) =>
-                          setNewIncome((p) => ({
-                            ...p,
-                            description: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Footer */}
-                <div
-                  style={{
-                    padding: "16px 24px",
-                    borderTop: `1px solid ${colors.border}`,
-                    display: "flex",
-                    gap: "8px",
-                  }}
-                >
-                  <button
-                    style={btnPrimary}
-                    onClick={addIncome}
-                    disabled={saving}
-                  >
-                    {saving ? "Saving…" : "Save Income"}
-                  </button>
-                  <button style={btnGhost} onClick={() => setShowAdd(false)}>
-                    Cancel
-                  </button>
-                </div>
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
-
         <Table
-          headers={["Date", "Source", "Student", "Description", "Amount", ""]}
+          headers={["Date", "Type", "Student", "Application", "Payer", "Net Amount"]}
         >
-          {income.length === 0 ? (
+          {transactions.length === 0 ? (
             <tr>
               <td
                 colSpan={6}
                 className="px-4 py-8 text-center text-sm text-gray-400"
               >
-                No income entries yet.
+                No transactions yet.
               </td>
             </tr>
           ) : (
-            income.map((inc, i) => (
-              <TableRow key={inc.id} index={i} onClick={() => setSelectedIncome(inc)} style={{ cursor: 'pointer' }}>
-                <TableCell>{inc.income_date}</TableCell>
+            transactions.map((tx, i) => (
+              <TableRow key={tx.id} index={i} onClick={() => setSelectedTransaction(tx)} style={{ cursor: 'pointer' }}>
+                <TableCell>
+                  {new Date(tx.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </TableCell>
                 <TableCell>
                   <span
                     style={{
@@ -3372,28 +3129,21 @@ function RevenueTab({
                       fontWeight: 600,
                     }}
                   >
-                    {SOURCE_LABELS[inc.source]}
+                    {formatPaymentType(tx.payment_type)}
                   </span>
                 </TableCell>
                 <TableCell>
-                  {inc.student_id
-                    ? (students.find((s) => s.id === inc.student_id)?.child_legal_name ?? inc.student_id)
+                  {tx.student_id
+                    ? (students.find((s) => s.id === tx.student_id)?.child_legal_name ?? tx.student_id)
                     : "—"}
                 </TableCell>
-                <TableCell>{inc.description ?? "—"}</TableCell>
+                <TableCell>{tx.application_id ? "✓" : "—"}</TableCell>
+                <TableCell>{tx.payer_name ?? tx.payer_email ?? "—"}</TableCell>
                 <TableCell
                   className="font-semibold"
                   style={{ color: colors.successText }}
                 >
-                  {fmt(Number(inc.amount))}
-                </TableCell>
-                <TableCell>
-                  <button
-                    style={btnDanger}
-                    onClick={() => deleteIncome(inc.id)}
-                  >
-                    Del
-                  </button>
+                  {formatCents(tx.cover_fees ? tx.intended_amount_cents : tx.amount_cents, tx.currency)}
                 </TableCell>
               </TableRow>
             ))
@@ -3406,7 +3156,7 @@ function RevenueTab({
             }}
           >
             <td
-              colSpan={4}
+              colSpan={5}
               className="px-4 py-3 text-sm font-bold"
               style={{ color: colors.textPrimary }}
             >
@@ -3418,7 +3168,6 @@ function RevenueTab({
             >
               {fmt(totalActual)}
             </td>
-            <td />
           </tr>
         </Table>
       </div>
@@ -3545,13 +3294,10 @@ function RevenueTab({
         </div>
       </div>
 
-      <IncomeDetailSidebar
-        income={selectedIncome}
-        isOpen={!!selectedIncome}
-        onClose={() => setSelectedIncome(null)}
-        onSaved={() => { setSelectedIncome(null); onRefresh(); }}
-        students={students}
-        parents={parents}
+      <TransactionDetailSidebar
+        transaction={selectedTransaction}
+        onClose={() => setSelectedTransaction(null)}
+        onDeleted={() => { setSelectedTransaction(null); onRefresh(); }}
       />
     </div>
   );
@@ -4941,6 +4687,7 @@ export default function BudgetPage() {
   const [lineItems, setLineItems] = useState<BudgetLineItem[]>([]);
   const [expenses, setExpenses] = useState<BudgetExpense[]>([]);
   const [income, setIncome] = useState<BudgetIncome[]>([]);
+  const [stripeTransactions, setStripeTransactions] = useState<StripeTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -4970,6 +4717,8 @@ export default function BudgetPage() {
       setExpenses((expRes.data as BudgetExpense[]) ?? []);
       setIncome((incRes.data as BudgetIncome[]) ?? []);
     }
+    const txData = await getStripeTransactions();
+    setStripeTransactions(txData as StripeTransaction[]);
     setLoading(false);
   }, []);
 
@@ -5068,7 +4817,7 @@ export default function BudgetPage() {
                 <OverviewTab
                   lineItems={lineItems}
                   expenses={expenses}
-                  income={income}
+                  stripeTransactions={stripeTransactions}
                 />
               )}
               {activeTab === "Budget" && (
@@ -5086,7 +4835,7 @@ export default function BudgetPage() {
                 />
               )}
               {activeTab === "Revenue" && (
-                <RevenueTab income={income} onRefresh={fetchAll} />
+                <RevenueTab transactions={stripeTransactions} onRefresh={fetchAll} />
               )}
               {activeTab === "Taxes" && (
                 <TaxesTab expenses={expenses} income={income} />
