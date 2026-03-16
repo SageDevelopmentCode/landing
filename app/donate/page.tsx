@@ -492,6 +492,38 @@ export default function DonatePage() {
                 className="object-cover hover:scale-[1.02] transition-transform duration-500"
               />
             </div>
+            <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-lg relative">
+              <Image
+                src="/assets/After4.png"
+                alt="Sage Field rendering 4"
+                fill
+                className="object-cover hover:scale-[1.02] transition-transform duration-500"
+              />
+            </div>
+            <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-lg relative">
+              <Image
+                src="/assets/After5.PNG"
+                alt="Sage Field rendering 5"
+                fill
+                className="object-cover hover:scale-[1.02] transition-transform duration-500"
+              />
+            </div>
+            <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-lg relative">
+              <Image
+                src="/assets/After6.PNG"
+                alt="Sage Field rendering 6"
+                fill
+                className="object-cover hover:scale-[1.02] transition-transform duration-500"
+              />
+            </div>
+            <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-lg relative">
+              <Image
+                src="/assets/After7.PNG"
+                alt="Sage Field rendering 7"
+                fill
+                className="object-cover hover:scale-[1.02] transition-transform duration-500"
+              />
+            </div>
           </motion.div>
         </div>
       </section>
