@@ -1,18 +1,53 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import WaitlistDialog from "./WaitlistDialog";
+
+const slides = [
+  "/assets/After1.png",
+  "/assets/After2.png",
+  "/assets/After3.png",
+  "/assets/After5.PNG",
+  "/assets/After7.PNG",
+  "/assets/ImageFive.jpg",
+  "/assets/ImageFour.jpg",
+  "/assets/ImageNine.jpg",
+  "/assets/ImageSeven.jpg",
+  "/assets/ImageTen.jpg",
+];
 
 export default function Hero() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startInterval = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % slides.length);
+    }, 7000);
+  };
+
+  useEffect(() => {
+    startInterval();
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, []);
   return (
     <section className="relative h-screen w-full overflow-hidden">
-      {/* Background Image with scale */}
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-110"
-        style={{ backgroundImage: "url(/assets/Hero.jpg)" }}
-      />
+      {/* Background Image Slideshow */}
+      <AnimatePresence mode="sync">
+        <motion.img
+          key={activeSlide}
+          src={slides[activeSlide]}
+          alt="Sage Field"
+          className="absolute inset-0 w-full h-full object-cover scale-110"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.8 }}
+        />
+      </AnimatePresence>
 
       {/* Dark Tint Overlay */}
       <div className="absolute inset-0 bg-black/20" />
