@@ -1,9 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { ChevronRight, ExternalLink } from 'lucide-react'
 import { DetailSidebar } from './DetailSidebar'
 import { getTransactionRelatedRecords } from '@/app/actions/getTransactionRelatedRecords'
+import { deleteTransaction } from '@/app/actions/deleteTransaction'
 import { getParentDetail } from '@/app/actions/getParentDetail'
 import { getStudentDetail } from '@/app/actions/getStudentDetail'
 import { SidebarField, SidebarSection } from '../../components/SidebarPrimitives'
@@ -31,6 +33,7 @@ type StripeTransaction = {
   metadata: Record<string, unknown> | null
   created_at: string
   updated_at: string | null
+  is_deleted: boolean
 }
 
 type StudentRecord = {
@@ -233,9 +236,10 @@ export function formatCents(cents: number | null, currency = 'USD'): string {
 interface TransactionDetailSidebarProps {
   transaction: StripeTransaction | null
   onClose: () => void
+  onDeleted?: (id: string) => void
 }
 
-export function TransactionDetailSidebar({ transaction, onClose }: TransactionDetailSidebarProps) {
+export function TransactionDetailSidebar({ transaction, onClose, onDeleted }: TransactionDetailSidebarProps) {
   const [studentRecord, setStudentRecord] = useState<StudentRecord | null>(null)
   const [applicationRecord, setApplicationRecord] = useState<ApplicationRecord | null>(null)
   const [userRecord, setUserRecord] = useState<UserRecord | null>(null)
@@ -253,6 +257,25 @@ export function TransactionDetailSidebar({ transaction, onClose }: TransactionDe
 
   const [showTransactionSidebar, setShowTransactionSidebar] = useState(true)
 
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  const handleDelete = async () => {
+    if (!transaction || isDeleting) return
+    setIsDeleting(true)
+    setDeleteError(null)
+    const result = await deleteTransaction(transaction.id)
+    setIsDeleting(false)
+    if (result.success) {
+      setShowDeleteConfirm(false)
+      onDeleted?.(transaction.id)
+      onClose()
+    } else {
+      setDeleteError(result.error ?? 'Failed to delete transaction')
+    }
+  }
+
   useEffect(() => {
     setStudentRecord(null)
     setApplicationRecord(null)
@@ -262,6 +285,9 @@ export function TransactionDetailSidebar({ transaction, onClose }: TransactionDe
     setOpenParentDetail(null)
     setOpenStudent(null)
     setShowTransactionSidebar(true)
+    setShowDeleteConfirm(false)
+    setIsDeleting(false)
+    setDeleteError(null)
 
     if (!transaction?.id) return
     if (transaction.payment_type === 'donation') return
@@ -343,9 +369,82 @@ export function TransactionDetailSidebar({ transaction, onClose }: TransactionDe
     !transaction?.metadata ||
     Object.keys(transaction.metadata).length === 0
 
+  const footer = (
+    <div className="flex items-center gap-3">
+      <button
+        onClick={() => setShowDeleteConfirm(true)}
+        className="px-3 py-1.5 text-sm font-semibold rounded-lg transition-colors hover:bg-red-50"
+        style={{
+          backgroundColor: 'transparent',
+          border: '1px solid #FECACA',
+          color: '#DC2626',
+          borderRadius: '8px',
+          cursor: 'pointer',
+        }}
+      >
+        Delete Transaction
+      </button>
+    </div>
+  )
+
   return (
     <>
-      <DetailSidebar isOpen={!!transaction && showTransactionSidebar} onClose={onClose} title={title}>
+      {showDeleteConfirm && createPortal(
+        <div
+          className="fixed inset-0 flex items-center justify-center"
+          style={{ zIndex: 60, backgroundColor: 'rgba(0,0,0,0.4)' }}
+          onClick={() => setShowDeleteConfirm(false)}
+        >
+          <div
+            className="p-6 w-80"
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              border: '1px solid #E5E7EB',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-base font-semibold mb-2 text-gray-800">
+              Delete this transaction?
+            </h2>
+            <p className="text-sm mb-5 text-gray-500">
+              This transaction will be hidden from the admin panel. The record is preserved and can be recovered from the database if needed.
+            </p>
+            {deleteError && (
+              <p className="text-sm mb-3 text-red-600">{deleteError}</p>
+            )}
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-3 py-1.5 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                style={{
+                  border: '1px solid #E5E7EB',
+                  color: '#374151',
+                  backgroundColor: 'transparent',
+                  cursor: 'pointer',
+                  borderRadius: '8px',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-red-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                style={{
+                  backgroundColor: '#DC2626',
+                  border: 'none',
+                  borderRadius: '8px',
+                }}
+              >
+                {isDeleting ? 'Deleting...' : 'Confirm Delete'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+      <DetailSidebar isOpen={!!transaction && showTransactionSidebar} onClose={onClose} title={title} footer={footer}>
         {transaction && (
           <div className="space-y-4">
             <SidebarSection title="Payment">
@@ -371,6 +470,7 @@ export function TransactionDetailSidebar({ transaction, onClose }: TransactionDe
               )}
               <SidebarField label="Currency" value={transaction.currency.toUpperCase()} />
               <SidebarField label="Description" value={transaction.description} />
+              <SidebarField label="Deleted" value={transaction.is_deleted ? 'Yes' : 'No'} />
             </SidebarSection>
 
             <SidebarSection title="Payer">

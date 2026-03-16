@@ -27,6 +27,7 @@ type StripeTransaction = {
   metadata: Record<string, unknown> | null
   created_at: string
   updated_at: string | null
+  is_deleted: boolean
 }
 
 export default async function TransactionsPage() {
@@ -36,6 +37,7 @@ export default async function TransactionsPage() {
     .schema('billing')
     .from('stripe_transactions')
     .select('*')
+    .eq('is_deleted', false)
     .order('created_at', { ascending: false })
 
   const rows = (transactions ?? []) as StripeTransaction[]

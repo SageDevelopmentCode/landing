@@ -25,6 +25,7 @@ type StripeTransaction = {
   metadata: Record<string, unknown> | null
   created_at: string
   updated_at: string | null
+  is_deleted: boolean
 }
 
 interface TransactionsClientProps {
@@ -48,11 +49,16 @@ function StatusBadge({ status }: { status: string }) {
 
 export function TransactionsClient({ transactions }: TransactionsClientProps) {
   const [selectedTransaction, setSelectedTransaction] = useState<StripeTransaction | null>(null)
+  const [localTransactions, setLocalTransactions] = useState(transactions)
+
+  const handleDeleted = (id: string) => {
+    setLocalTransactions(prev => prev.filter(tx => tx.id !== id))
+  }
 
   return (
     <>
       <Table headers={['Type', 'Status', 'Payer', 'Amount', 'Net Amount', 'Date']}>
-        {transactions.map((tx, index) => (
+        {localTransactions.map((tx, index) => (
           <TableRow key={tx.id} index={index} onClick={() => setSelectedTransaction(tx)}>
             <TableCell>
               <div className="flex items-center gap-2">
@@ -101,6 +107,7 @@ export function TransactionsClient({ transactions }: TransactionsClientProps) {
       <TransactionDetailSidebar
         transaction={selectedTransaction}
         onClose={() => setSelectedTransaction(null)}
+        onDeleted={handleDeleted}
       />
     </>
   )

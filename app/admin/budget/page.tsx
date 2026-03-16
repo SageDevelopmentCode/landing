@@ -12,6 +12,8 @@ import type {
 } from "../../types/database.types";
 import { Table, TableRow, TableCell } from "../components/Table";
 import { DetailSidebar } from "../components/DetailSidebar";
+import { MercuryDetailSidebar, type MercuryTransaction } from "../components/MercuryDetailSidebar";
+import { IncomeDetailSidebar } from "../components/IncomeDetailSidebar";
 import { Upload, Trash2, FileText, Eye, Download, X } from "lucide-react";
 import { uploadExpenseReceipt } from "@/app/actions/uploadExpenseReceipt";
 import { deleteExpenseReceipt } from "@/app/actions/deleteExpenseReceipt";
@@ -46,6 +48,7 @@ const TABS = [
   "Taxes",
   "Analysis",
   "Summer Program Analysis",
+  "Mercury",
 ] as const;
 type Tab = (typeof TABS)[number];
 
@@ -3024,6 +3027,7 @@ function RevenueTab({
 }) {
   const db = supabase();
   const [showAdd, setShowAdd] = useState(false);
+  const [selectedIncome, setSelectedIncome] = useState<BudgetIncome | null>(null);
   const [newIncome, setNewIncome] = useState({
     source: "tuition" as BudgetIncome["source"],
     student_id: null as string | null,
@@ -3355,7 +3359,7 @@ function RevenueTab({
             </tr>
           ) : (
             income.map((inc, i) => (
-              <TableRow key={inc.id} index={i}>
+              <TableRow key={inc.id} index={i} onClick={() => setSelectedIncome(inc)} style={{ cursor: 'pointer' }}>
                 <TableCell>{inc.income_date}</TableCell>
                 <TableCell>
                   <span
@@ -3540,6 +3544,15 @@ function RevenueTab({
           </div>
         </div>
       </div>
+
+      <IncomeDetailSidebar
+        income={selectedIncome}
+        isOpen={!!selectedIncome}
+        onClose={() => setSelectedIncome(null)}
+        onSaved={() => { setSelectedIncome(null); onRefresh(); }}
+        students={students}
+        parents={parents}
+      />
     </div>
   );
 }
@@ -4710,6 +4723,216 @@ function AnalysisTab({
   );
 }
 
+// ─── Mercury Tab ──────────────────────────────────────────────────────────────
+
+function MercuryTab() {
+  const [transactions, setTransactions] = useState<MercuryTransaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<MercuryTransaction | null>(null);
+
+  useEffect(() => {
+    fetch("/api/mercury/transactions")
+      .then((r) => r.json())
+      .then((data) => {
+        setTransactions(data.transactions ?? []);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError("Failed to load Mercury transactions");
+        setLoading(false);
+      });
+  }, []);
+
+  const fmtDate = (d: string | null | undefined) => {
+    if (!d) return "—";
+    const dt = new Date(d);
+    if (isNaN(dt.getTime())) return d;
+    return dt.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  if (loading) {
+    return (
+      <div
+        className="flex items-center justify-center py-24"
+        style={{ color: colors.textSecondary }}
+      >
+        <div className="text-center">
+          <div
+            className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin mx-auto mb-3"
+            style={{
+              borderColor: colors.mistyForest,
+              borderTopColor: "transparent",
+            }}
+          />
+          <p className="text-sm">Loading Mercury transactions…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div
+        className="p-6 rounded-xl text-sm"
+        style={{
+          backgroundColor: colors.error,
+          color: colors.errorText,
+          border: `1px solid ${colors.errorText}33`,
+        }}
+      >
+        {error}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div style={{ ...cardStyle, overflow: "hidden" }}>
+        <div
+          className="px-6 py-4 border-b"
+          style={{ borderColor: colors.border }}
+        >
+          <h2
+            className="text-base font-semibold"
+            style={{ color: colors.textPrimary }}
+          >
+            Mercury Bank Transactions
+          </h2>
+          <p className="text-xs mt-0.5" style={{ color: colors.textSecondary }}>
+            {transactions.length} transactions
+          </p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ borderBottom: `1px solid ${colors.border}` }}>
+                {["Date", "Counterparty", "Amount", "Type", "Status", "Account", "User"].map(
+                  (col) => (
+                    <th
+                      key={col}
+                      className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider"
+                      style={{ color: colors.textTertiary }}
+                    >
+                      {col}
+                    </th>
+                  )
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {transactions.map((tx) => {
+                const isCredit = tx.amount > 0;
+                const amountDisplay = `${isCredit ? "+" : ""}${new Intl.NumberFormat(
+                  "en-US",
+                  { style: "currency", currency: "USD" }
+                ).format(tx.amount)}`;
+                const desc =
+                  tx.counterpartyName ??
+                  tx.merchantName ??
+                  tx.bankDescription ??
+                  "—";
+                const COUNTERPARTY_USER: Record<string, string> = {
+                  'Capital One - Checking ••4567': 'Julius',
+                  'Wells Fargo - Checking ••0769': 'Sage',
+                }
+                const user = tx.counterpartyName ? (COUNTERPARTY_USER[tx.counterpartyName] ?? '—') : '—'
+                return (
+                  <tr
+                    key={tx.id}
+                    onClick={() => setSelected(tx)}
+                    className="cursor-pointer transition-colors"
+                    style={{ borderBottom: `1px solid ${colors.divider}` }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLTableRowElement).style.backgroundColor =
+                        colors.softCloud;
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLTableRowElement).style.backgroundColor =
+                        "transparent";
+                    }}
+                  >
+                    <td
+                      className="px-4 py-3"
+                      style={{ color: colors.textSecondary }}
+                    >
+                      {fmtDate(tx.postedAt ?? tx.createdAt)}
+                    </td>
+                    <td
+                      className="px-4 py-3 max-w-xs truncate"
+                      style={{ color: colors.textPrimary }}
+                    >
+                      {desc}
+                    </td>
+                    <td
+                      className="px-4 py-3 font-medium tabular-nums"
+                      style={{ color: isCredit ? colors.successText : colors.errorText }}
+                    >
+                      {amountDisplay}
+                    </td>
+                    <td
+                      className="px-4 py-3 capitalize"
+                      style={{ color: colors.textSecondary }}
+                    >
+                      {tx.kind}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
+                        style={{
+                          backgroundColor:
+                            tx.status === "sent" || tx.status === "posted"
+                              ? colors.success
+                              : tx.status === "pending"
+                              ? colors.warning
+                              : colors.info,
+                          color:
+                            tx.status === "sent" || tx.status === "posted"
+                              ? colors.successText
+                              : tx.status === "pending"
+                              ? colors.warningText
+                              : colors.infoText,
+                        }}
+                      >
+                        {tx.status}
+                      </span>
+                    </td>
+                    <td
+                      className="px-4 py-3"
+                      style={{ color: colors.textSecondary }}
+                    >
+                      {tx.accountName}
+                    </td>
+                    <td className="px-4 py-3" style={{ color: colors.textSecondary }}>
+                      {user}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {transactions.length === 0 && (
+            <div
+              className="py-16 text-center text-sm"
+              style={{ color: colors.textTertiary }}
+            >
+              No transactions found
+            </div>
+          )}
+        </div>
+      </div>
+      <MercuryDetailSidebar
+        transaction={selected}
+        onClose={() => setSelected(null)}
+      />
+    </>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function BudgetPage() {
@@ -4882,6 +5105,7 @@ export default function BudgetPage() {
                   income={income}
                 />
               )}
+              {activeTab === "Mercury" && <MercuryTab />}
             </motion.div>
           </AnimatePresence>
         )}
