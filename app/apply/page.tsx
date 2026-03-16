@@ -208,6 +208,10 @@ const tabContent = {
     ],
     images: [
       "/assets/After1.png",
+      "/assets/After4.png",
+      "/assets/After5.PNG",
+      "/assets/After6.PNG",
+      "/assets/After7.PNG",
       "/assets/ImageOne.jpg",
       "/assets/After2.png",
     ],
@@ -225,7 +229,15 @@ const tabContent = {
       { label: "Schedule", value: "Up to 4 days/week" },
       { label: "Term", value: "6-month commitment" },
     ],
-    images: ["/assets/After1.png", "/assets/After2.png", "/assets/After3.png"],
+    images: [
+      "/assets/After1.png",
+      "/assets/After4.png",
+      "/assets/After5.PNG",
+      "/assets/After6.PNG",
+      "/assets/After7.PNG",
+      "/assets/After2.png",
+      "/assets/After3.png",
+    ],
   },
 };
 
@@ -338,20 +350,15 @@ export default function ApplyPage() {
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="aspect-[4/3] rounded-xl overflow-hidden shadow-md">
-                      <img
-                        src={tabContent[activeTab].images[1]}
-                        alt="Program photo"
-                        className="w-full h-full object-cover hover:scale-[1.02] transition-transform duration-500"
-                      />
-                    </div>
-                    <div className="aspect-[4/3] rounded-xl overflow-hidden shadow-md">
-                      <img
-                        src={tabContent[activeTab].images[2]}
-                        alt="Program photo"
-                        className="w-full h-full object-cover hover:scale-[1.02] transition-transform duration-500"
-                      />
-                    </div>
+                    {tabContent[activeTab].images.slice(1).map((src, i) => (
+                      <div key={i} className="aspect-[4/3] rounded-xl overflow-hidden shadow-md">
+                        <img
+                          src={src}
+                          alt="Program photo"
+                          className="w-full h-full object-cover hover:scale-[1.02] transition-transform duration-500"
+                        />
+                      </div>
+                    ))}
                   </div>
                 </div>
 
