@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Card from "./Card";
 import { motion } from "framer-motion";
 
 export default function WelcomeSection() {
+  const [expanded, setExpanded] = useState(false);
   const cards = [
     {
       title: "Family Partnership",
@@ -102,19 +104,27 @@ export default function WelcomeSection() {
                 patience, and connection to turn that knowledge into true
                 wisdom.
               </p>
-              <br />
-              <p className="text-base md:text-lg text-text-gray leading-relaxed font-body">
-                In many traditional settings, education becomes a race to
-                memorize and repeat — a rhythm of tests and routines that fill
-                the mind but rarely touch the heart. We believe wisdom is what
-                transforms learning into living — it helps children connect
-                ideas to real experiences, build empathy, and make thoughtful
-                choices. Through our family partnership model, parents, mentors,
-                and students work together to nurture curiosity and reflection
-                both in and beyond the lesson. In this shared garden of growth,
-                knowledge takes root, and every child has the chance to blossom
-                into their fullest, wisest self.
-              </p>
+              <div className={`${expanded ? 'block' : 'hidden'} md:block`}>
+                <br />
+                <p className="text-base md:text-lg text-text-gray leading-relaxed font-body">
+                  In many traditional settings, education becomes a race to
+                  memorize and repeat — a rhythm of tests and routines that fill
+                  the mind but rarely touch the heart. We believe wisdom is what
+                  transforms learning into living — it helps children connect
+                  ideas to real experiences, build empathy, and make thoughtful
+                  choices. Through our family partnership model, parents, mentors,
+                  and students work together to nurture curiosity and reflection
+                  both in and beyond the lesson. In this shared garden of growth,
+                  knowledge takes root, and every child has the chance to blossom
+                  into their fullest, wisest self.
+                </p>
+              </div>
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className="mt-3 text-primary font-semibold text-sm md:hidden"
+              >
+                {expanded ? 'Read less' : 'Read more'}
+              </button>
             </motion.div>
 
             {/* Call to Action Button */}

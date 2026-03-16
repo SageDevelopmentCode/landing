@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Image as ImageIcon, MessageCircle, Mail, UserX } from "lucide-react";
+import { Image as ImageIcon, MessageCircle, Mail, UserX, Smartphone } from "lucide-react";
 import NextImage from "next/image";
 import type { Database } from "@/app/types/database.types";
 import type { TeacherAssignment } from "@/app/actions/teacherAssignments";
@@ -88,24 +88,6 @@ function SectionCard({
   );
 }
 
-function AttendanceBadge({
-  status,
-}: {
-  status: "Present" | "Absent" | "Late";
-}) {
-  const styles = {
-    Present: "bg-green-100 text-green-700",
-    Absent: "bg-red-100 text-red-700",
-    Late: "bg-amber-100 text-amber-700",
-  };
-  return (
-    <span
-      className={`px-2 py-0.5 rounded-full text-xs font-semibold ${styles[status]}`}
-    >
-      {status}
-    </span>
-  );
-}
 
 function EmptyStateCard({
   icon: Icon,
@@ -356,45 +338,30 @@ function TeacherTab({
 }
 
 function AttendanceTab() {
-  const records: { date: string; status: "Present" | "Absent" | "Late" }[] = [
-    { date: "Mar 13, 2026", status: "Present" },
-    { date: "Mar 12, 2026", status: "Present" },
-    { date: "Mar 11, 2026", status: "Late" },
-    { date: "Mar 10, 2026", status: "Present" },
-    { date: "Mar 7, 2026", status: "Absent" },
-  ];
   return (
-    <div className="space-y-4">
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {[
-          { label: "Days Present", value: "42" },
-          { label: "Days Absent", value: "3" },
-          { label: "Attendance Rate", value: "93%" },
-          { label: "Late Arrivals", value: "1" },
-        ].map((item) => (
-          <div key={item.label} className="text-center">
-            <p className="text-2xl font-bold font-heading text-[#4a7c59]">
-              {item.value}
-            </p>
-            <p className="text-xs font-body text-gray-400 mt-0.5">
-              {item.label}
-            </p>
-          </div>
-        ))}
+    <div className="flex flex-col items-center justify-center bg-white rounded-2xl border border-gray-100 p-12 text-center">
+      <div
+        className="flex items-center justify-center w-14 h-14 rounded-full mb-4"
+        style={{ backgroundColor: "#d4e6d0" }}
+      >
+        <Smartphone
+          className="w-6 h-6"
+          style={{ color: "#4a7c59" }}
+          strokeWidth={1.5}
+        />
       </div>
-      <SectionCard title="Recent Attendance">
-        <div className="space-y-2">
-          {records.map((r) => (
-            <div
-              key={r.date}
-              className="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0"
-            >
-              <span className="text-sm font-body text-gray-700">{r.date}</span>
-              <AttendanceBadge status={r.status} />
-            </div>
-          ))}
-        </div>
-      </SectionCard>
+      <p className="text-base font-semibold font-heading text-gray-700 mb-1">
+        Checking in/out your child is only available on the Sage Field App
+      </p>
+      <p className="text-sm font-body text-gray-400 mb-5">
+        Download the app to manage attendance.
+      </p>
+      <button
+        onClick={() => {}}
+        className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-[#4a7c59] text-white hover:bg-[#3d6b4a] transition-colors cursor-pointer"
+      >
+        Download the App
+      </button>
     </div>
   );
 }

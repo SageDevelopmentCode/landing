@@ -32,10 +32,10 @@ export default function ImageGridShowcase({ images }: ImageGridShowcaseProps) {
   return (
     <section className="bg-welcome-bg py-16 px-8 sm:px-12 lg:px-16">
       <motion.div
-        className={`max-w-7xl mx-auto grid gap-6 sm:gap-8 ${
+        className={`max-w-7xl mx-auto flex md:grid flex-row overflow-x-auto md:overflow-visible gap-4 md:gap-6 lg:gap-8 pb-4 md:pb-0 ${
           images.length === 2
-            ? 'grid-cols-1 md:grid-cols-2'
-            : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+            ? 'md:grid-cols-2'
+            : 'md:grid-cols-2 lg:grid-cols-3'
         }`}
         variants={containerVariants}
         initial="hidden"
@@ -48,7 +48,7 @@ export default function ImageGridShowcase({ images }: ImageGridShowcaseProps) {
             variants={itemVariants}
             whileHover={{ scale: 1.05 }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
-            className="relative h-[50vh] sm:h-[60vh] rounded-2xl overflow-hidden shadow-lg"
+            className="relative h-[50vh] sm:h-[60vh] w-[80vw] md:w-auto flex-shrink-0 rounded-2xl overflow-hidden shadow-lg"
           >
             <Image
               src={image.src}
@@ -57,8 +57,8 @@ export default function ImageGridShowcase({ images }: ImageGridShowcaseProps) {
               className="object-cover"
               sizes={
                 images.length === 2
-                  ? '(max-width: 768px) 100vw, 50vw'
-                  : '(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw'
+                  ? '(max-width: 768px) 80vw, 50vw'
+                  : '(max-width: 768px) 80vw, (max-width: 1024px) 50vw, 33vw'
               }
             />
           </motion.div>
