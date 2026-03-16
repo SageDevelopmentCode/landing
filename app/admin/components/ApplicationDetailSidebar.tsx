@@ -11,6 +11,7 @@ import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { getAdminEnrollmentData, type AdminEnrollmentData } from '../../actions/getAdminEnrollmentData'
 import { EnrollmentProgressCard, type ApprovedApplication } from './EnrollmentProgressCard'
+import { AdminEnrollmentItemDrawer } from './AdminEnrollmentItemDrawer'
 
 type CachedEnrollmentData = AdminEnrollmentData & {
   registrationFeePaidByStudent: Record<string, boolean>
@@ -127,6 +128,8 @@ export function ApplicationDetailSidebar({
   const [enrollmentData, setEnrollmentData] = useState<AdminEnrollmentData & { registrationFeePaidByStudent: Record<string, boolean> } | null>(null)
   const [enrollmentLoading, setEnrollmentLoading] = useState(false)
   const [siblingApps, setSiblingApps] = useState<ApprovedApplication[]>([])
+  const [selectedItemId, setSelectedItemId] = useState<number | null>(null)
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!application?.approved) {
@@ -169,6 +172,11 @@ export function ApplicationDetailSidebar({
             signaturesByStudent: {},
             immunizationFileCountByStudent: {},
             religiousExemptionCountByStudent: {},
+            healthInfoByStudent: {},
+            medicationPlanByStudent: {},
+            photoConsentByStudent: {},
+            authorizedPickupByStudent: {},
+            healthStatementByStudent: {},
             registrationFeePaidByStudent: {},
             siblingApps: validApps,
           }
@@ -331,6 +339,7 @@ export function ApplicationDetailSidebar({
   )
 
   return (
+    <>
     <DetailSidebar
       isOpen={true}
       onClose={onClose}
@@ -445,6 +454,10 @@ export function ApplicationDetailSidebar({
               immunizationFileCountByStudent={enrollmentData.immunizationFileCountByStudent}
               registrationFeePaidByStudent={enrollmentData.registrationFeePaidByStudent}
               initialActiveStudentId={application.student_id ?? undefined}
+              onItemClick={(itemId, studentId) => {
+                setSelectedItemId(itemId)
+                setSelectedStudentId(studentId)
+              }}
             />
           ) : null
         )}
@@ -499,5 +512,18 @@ export function ApplicationDetailSidebar({
         </div>
       </div>
     </DetailSidebar>
+
+    <AdminEnrollmentItemDrawer
+      itemId={selectedItemId}
+      studentId={selectedStudentId}
+      app={application}
+      enrollmentData={
+        enrollmentData
+          ? { ...enrollmentData, siblingApps }
+          : null
+      }
+      onClose={() => setSelectedItemId(null)}
+    />
+    </>
   )
 }

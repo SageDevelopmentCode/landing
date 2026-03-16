@@ -52,6 +52,7 @@ export interface EnrollmentProgressCardProps {
   immunizationFileCountByStudent: Record<string, number>
   registrationFeePaidByStudent: Record<string, boolean>
   initialActiveStudentId?: string
+  onItemClick?: (itemId: number, studentId: string) => void
 }
 
 interface ChecklistItem {
@@ -207,10 +208,14 @@ function StudentChecklist({
   signatureMap,
   immunizationFileCount,
   registrationFeePaid,
+  studentId,
+  onItemClick,
 }: {
   signatureMap: SignatureMap
   immunizationFileCount: number
   registrationFeePaid: boolean
+  studentId: string
+  onItemClick?: (itemId: number, studentId: string) => void
 }) {
   const completedCount = checklistItems.filter((item) => {
     if (item.id === 5) return immunizationFileCount > 0
@@ -291,13 +296,18 @@ function StudentChecklist({
           const isInProgress =
             item.isContract && item.contractId != null && signedCount > 0 && !isComplete
 
+          const clickable = !!onItemClick
           return (
             <div
               key={item.id}
-              className={`rounded-2xl px-5 py-4 shadow-sm flex items-center gap-4 border ${
+              onClick={clickable ? () => onItemClick(item.id, studentId) : undefined}
+              role={clickable ? 'button' : undefined}
+              tabIndex={clickable ? 0 : undefined}
+              onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') onItemClick(item.id, studentId) } : undefined}
+              className={`rounded-2xl px-5 py-4 shadow-sm flex items-center gap-4 border transition-colors ${
                 isComplete
-                  ? 'bg-emerald-50 border-emerald-200'
-                  : 'bg-white border-gray-200'
+                  ? `bg-emerald-50 border-emerald-200${clickable ? ' hover:bg-emerald-100 cursor-pointer' : ''}`
+                  : `bg-white border-gray-200${clickable ? ' hover:bg-gray-50 cursor-pointer' : ''}`
               }`}
             >
               <div
@@ -384,6 +394,7 @@ export function EnrollmentProgressCard({
   immunizationFileCountByStudent,
   registrationFeePaidByStudent,
   initialActiveStudentId,
+  onItemClick,
 }: EnrollmentProgressCardProps) {
   const initialIndex = initialActiveStudentId
     ? Math.max(apps.findIndex((a) => a.student_id === initialActiveStudentId), 0)
@@ -444,6 +455,8 @@ export function EnrollmentProgressCard({
         signatureMap={signatureMap}
         immunizationFileCount={immunizationFileCount}
         registrationFeePaid={registrationFeePaid}
+        studentId={activeStudentId}
+        onItemClick={onItemClick}
       />
     </div>
   )
