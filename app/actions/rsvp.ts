@@ -114,7 +114,7 @@ export async function submitRSVP(data: RSVPFormData): Promise<RSVPResponse> {
 
     return {
       success: true,
-      message: "You're on the list! We'll see you April 18.",
+      message: "You're on the list! We'll see you on April 25.",
     };
   } catch (error) {
     console.error("RSVP submission error:", error);

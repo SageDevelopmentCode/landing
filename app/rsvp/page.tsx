@@ -167,7 +167,7 @@ export default function OpenHousePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: "easeOut" }}
             >
-              Open House · April 18
+              Open House · April 25
             </motion.span>
 
             <motion.h1
@@ -257,7 +257,7 @@ export default function OpenHousePage() {
                   Date
                 </p>
                 <p className="text-sm font-bold text-gray-800 font-body">
-                  April 18, 2026
+                  April 25, 2026
                 </p>
               </div>
             </div>
@@ -504,7 +504,8 @@ export default function OpenHousePage() {
               📸 Photo Booth
             </h3>
             <p className="text-sm text-gray-600 font-body leading-relaxed">
-              Capture the moment! We&apos;ll have a fun photo booth set up for families to take home a memory from the day.
+              Capture the moment! We&apos;ll have a fun photo booth set up for
+              families to take home a memory from the day.
             </p>
           </motion.div>
 
@@ -522,7 +523,8 @@ export default function OpenHousePage() {
                 Sage Field Shirts — Support Our School
               </h3>
               <p className="text-sm text-gray-600 font-body leading-relaxed">
-                Show your Sage Field spirit and support our school! Shirts will be available for purchase at the event.
+                Show your Sage Field spirit and support our school! Shirts will
+                be available for purchase at the event.
               </p>
             </div>
           </motion.div>
@@ -617,7 +619,7 @@ export default function OpenHousePage() {
                   You&apos;re on the list!
                 </p>
                 <p className="text-gray-500 font-body">
-                  We&apos;ll see you April 18. 🌿
+                  We&apos;ll see you April 25. 🌿
                 </p>
               </motion.div>
             ) : (
@@ -748,7 +750,7 @@ export default function OpenHousePage() {
                       Submitting...
                     </>
                   ) : (
-                    "RSVP for April 18"
+                    "RSVP for April 25"
                   )}
                 </button>
               </form>

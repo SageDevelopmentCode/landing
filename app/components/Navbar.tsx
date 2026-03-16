@@ -109,8 +109,17 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
     null,
   );
 
+  const [scrolled, setScrolled] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+
+  useEffect(() => {
+    function onScroll() {
+      setScrolled(window.scrollY > 10);
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const useDarkStyle =
     darkStyle ??
@@ -250,19 +259,24 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
 
   // ── Trigger text color ───────────────────────────────────────────────────
 
-  const triggerClass = useDarkStyle
-    ? "text-gray-800/90 hover:text-gray-800"
-    : "text-white/90 hover:text-white";
+  const triggerClass =
+    useDarkStyle || scrolled
+      ? "text-gray-800/90 hover:text-gray-800"
+      : "text-white/90 hover:text-white";
 
   return (
     <motion.nav
-      className="absolute top-0 left-0 right-0 z-50"
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? "bg-white/95 backdrop-blur-sm shadow-sm rounded-b-[28px]"
+          : ""
+      }`}
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
       ref={navRef}
     >
-      <div className="px-12 mx-auto">
+      <div className="px-6 mx-auto">
         <div className="flex items-center justify-between h-20 relative">
           {/* Logo */}
           <motion.div
@@ -372,7 +386,7 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
           <div className="lg:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className={`${pathname === "/" ? "text-white" : "text-gray-900"} focus:outline-none cursor-pointer`}
+              className={`${pathname === "/" && !scrolled ? "text-white" : "text-gray-900"} focus:outline-none cursor-pointer`}
               aria-label="Toggle menu"
             >
               <svg
@@ -394,6 +408,24 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
           </div>
         </div>
       </div>
+
+      {/* Mobile CTA strip — only when scrolled */}
+      {scrolled && (
+        <div className="lg:hidden px-4 pb-3 flex gap-2">
+          <Link
+            href="/apply"
+            className="flex-1 flex items-center justify-center px-4 py-2.5 bg-sage-600 text-white text-sm font-semibold rounded-2xl"
+          >
+            Register Now!
+          </Link>
+          <Link
+            href="/rsvp"
+            className="flex-1 flex items-center justify-center px-3 py-2.5 bg-indigo-500 text-white text-sm font-semibold rounded-2xl"
+          >
+            Open House on 4/25
+          </Link>
+        </div>
+      )}
 
       {/* Mobile Menu */}
       <AnimatePresence>
