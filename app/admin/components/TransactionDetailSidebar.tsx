@@ -484,6 +484,7 @@ export function TransactionDetailSidebar({ transaction, onClose }: TransactionDe
           onApproved={() => {}}
           onDenied={() => {}}
           onDeactivated={() => {}}
+          onItemClick={() => {}}
         />
       )}
 

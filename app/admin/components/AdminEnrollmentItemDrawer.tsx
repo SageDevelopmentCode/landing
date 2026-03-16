@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { X, CheckCircle, XCircle, Mail, FileText, Download, Loader2 } from 'lucide-react'
 import { getAdminImmunizationFiles } from '@/app/actions/getAdminImmunizationFiles'
 import { getAdminImmunizationDownloadUrl } from '@/app/actions/getAdminImmunizationDownloadUrl'
@@ -1024,13 +1025,14 @@ export function AdminEnrollmentItemDrawer({
     return () => document.removeEventListener('keydown', handler)
   }, [onClose])
 
-  if (itemId === null || studentId === null) return null
+  const show = itemId !== null && studentId !== null
 
-  const signatureMap = enrollmentData?.signaturesByStudent[studentId] ?? {}
-  const title = ITEM_TITLES[itemId] ?? 'Enrollment Item'
+  const signatureMap = show ? (enrollmentData?.signaturesByStudent[studentId!] ?? {}) : {}
+  const title = show ? (ITEM_TITLES[itemId!] ?? 'Enrollment Item') : ''
 
   const renderContent = () => {
-    switch (itemId) {
+    if (!show) return null
+    switch (itemId!) {
       case 1:
         return <ContractContent contractId={CONTRACT_1_ID} signatureMap={signatureMap} />
       case 2:
@@ -1099,33 +1101,47 @@ export function AdminEnrollmentItemDrawer({
   }
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/30 z-[55]"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-      {/* Drawer */}
-      <div className={`${dancingScript.variable} fixed inset-y-0 right-0 w-full sm:w-[520px] bg-white shadow-2xl z-[60] flex flex-col`}>
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-sm font-semibold font-heading text-gray-900 leading-snug pr-4 line-clamp-2">
-            {title}
-          </h2>
-          <button
+    <AnimatePresence>
+      {show && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/30 z-[55]"
             onClick={onClose}
-            className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600"
-            aria-label="Close"
+            aria-hidden="true"
+          />
+          {/* Drawer */}
+          <motion.div
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className={`${dancingScript.variable} fixed inset-y-0 right-0 w-full sm:w-[520px] bg-white shadow-2xl z-[60] flex flex-col`}
           >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-5">
-          {renderContent()}
-        </div>
-      </div>
-    </>
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h2 className="text-sm font-semibold font-heading text-gray-900 leading-snug pr-4 line-clamp-2">
+                {title}
+              </h2>
+              <button
+                onClick={onClose}
+                className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto px-6 py-5">
+              {renderContent()}
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   )
 }

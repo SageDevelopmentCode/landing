@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { createBrowserClient } from '@supabase/ssr'
 import { Table, TableRow, TableCell } from '../components/Table'
 import { ApplicationDetailSidebar } from '../components/ApplicationDetailSidebar'
+import type { CachedEnrollmentData } from '../components/ApplicationDetailSidebar'
+import { AdminEnrollmentItemDrawer } from '../components/AdminEnrollmentItemDrawer'
 import { colors } from '../design-system'
 import { Merriweather } from 'next/font/google'
 import { approveApplication } from '../../actions/approveApplication'
@@ -124,6 +126,11 @@ export default function ApplicationsPage() {
   const [approvingId, setApprovingId] = useState<string | null>(null)
   const [view, setView] = useState<'table' | 'kanban'>('table')
   const [activeTab, setActiveTab] = useState<'active' | 'inactive'>('active')
+  const [selectedItemId, setSelectedItemId] = useState<number | null>(null)
+  const [selectedItemStudentId, setSelectedItemStudentId] = useState<string | null>(null)
+  const [drawerApp, setDrawerApp] = useState<Application | null>(null)
+  const [drawerEnrollmentData, setDrawerEnrollmentData] = useState<CachedEnrollmentData | null>(null)
+  const pendingApp = useRef<Application | null>(null)
 
   useEffect(() => {
     const supabase = createBrowserClient(
@@ -176,6 +183,28 @@ export default function ApplicationsPage() {
   const handleDeactivated = (id: string) => {
     setApplications((prev) => prev.filter((app) => app.id !== id))
     setSelectedApp((prev) => (prev?.id === id ? null : prev))
+  }
+
+  function handleItemClick(itemId: number, studentId: string, data: CachedEnrollmentData | null) {
+    pendingApp.current = selectedApp
+    setSelectedApp(null)
+    setTimeout(() => {
+      setDrawerApp(pendingApp.current)
+      setDrawerEnrollmentData(data)
+      setSelectedItemId(itemId)
+      setSelectedItemStudentId(studentId)
+    }, 350)
+  }
+
+  function handleItemDrawerClose() {
+    setSelectedItemId(null)
+    setSelectedItemStudentId(null)
+    setDrawerApp(null)
+    setDrawerEnrollmentData(null)
+    if (pendingApp.current) {
+      setSelectedApp(pendingApp.current)
+      pendingApp.current = null
+    }
   }
 
   const handleRowApprove = async (e: React.MouseEvent, app: Application) => {
@@ -451,8 +480,17 @@ export default function ApplicationsPage() {
           onApproved={handleApproved}
           onDenied={handleDenied}
           onDeactivated={handleDeactivated}
+          onItemClick={handleItemClick}
         />
       )}
+
+      <AdminEnrollmentItemDrawer
+        itemId={selectedItemId}
+        studentId={selectedItemStudentId}
+        app={drawerApp}
+        enrollmentData={drawerEnrollmentData}
+        onClose={handleItemDrawerClose}
+      />
     </div>
   )
 }

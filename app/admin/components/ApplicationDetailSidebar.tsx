@@ -11,9 +11,8 @@ import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { getAdminEnrollmentData, type AdminEnrollmentData } from '../../actions/getAdminEnrollmentData'
 import { EnrollmentProgressCard, type ApprovedApplication } from './EnrollmentProgressCard'
-import { AdminEnrollmentItemDrawer } from './AdminEnrollmentItemDrawer'
 
-type CachedEnrollmentData = AdminEnrollmentData & {
+export type CachedEnrollmentData = AdminEnrollmentData & {
   registrationFeePaidByStudent: Record<string, boolean>
   siblingApps: ApprovedApplication[]
 }
@@ -103,6 +102,7 @@ interface ApplicationDetailSidebarProps {
   onApproved: (id: string) => void
   onDenied: (id: string, reason: string) => void
   onDeactivated: (id: string) => void
+  onItemClick: (itemId: number, studentId: string, data: CachedEnrollmentData | null) => void
 }
 
 
@@ -113,6 +113,7 @@ export function ApplicationDetailSidebar({
   onApproved,
   onDenied,
   onDeactivated,
+  onItemClick,
 }: ApplicationDetailSidebarProps) {
   const [notes, setNotes] = useState<{ id: string; content: string; created_at: string }[]>([])
   const [newNote, setNewNote] = useState('')
@@ -128,8 +129,6 @@ export function ApplicationDetailSidebar({
   const [enrollmentData, setEnrollmentData] = useState<AdminEnrollmentData & { registrationFeePaidByStudent: Record<string, boolean> } | null>(null)
   const [enrollmentLoading, setEnrollmentLoading] = useState(false)
   const [siblingApps, setSiblingApps] = useState<ApprovedApplication[]>([])
-  const [selectedItemId, setSelectedItemId] = useState<number | null>(null)
-  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!application?.approved) {
@@ -339,7 +338,6 @@ export function ApplicationDetailSidebar({
   )
 
   return (
-    <>
     <DetailSidebar
       isOpen={true}
       onClose={onClose}
@@ -455,8 +453,7 @@ export function ApplicationDetailSidebar({
               registrationFeePaidByStudent={enrollmentData.registrationFeePaidByStudent}
               initialActiveStudentId={application.student_id ?? undefined}
               onItemClick={(itemId, studentId) => {
-                setSelectedItemId(itemId)
-                setSelectedStudentId(studentId)
+                onItemClick(itemId, studentId, enrollmentData ? { ...enrollmentData, siblingApps } : null)
               }}
             />
           ) : null
@@ -512,18 +509,5 @@ export function ApplicationDetailSidebar({
         </div>
       </div>
     </DetailSidebar>
-
-    <AdminEnrollmentItemDrawer
-      itemId={selectedItemId}
-      studentId={selectedStudentId}
-      app={application}
-      enrollmentData={
-        enrollmentData
-          ? { ...enrollmentData, siblingApps }
-          : null
-      }
-      onClose={() => setSelectedItemId(null)}
-    />
-    </>
   )
 }
