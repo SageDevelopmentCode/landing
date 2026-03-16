@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Image as ImageIcon, MessageCircle, Mail } from "lucide-react";
+import { Image as ImageIcon, MessageCircle, Mail, UserX } from "lucide-react";
 import NextImage from "next/image";
 import type { Database } from "@/app/types/database.types";
+import type { TeacherAssignment } from "@/app/actions/teacherAssignments";
 
 type Student = Database["admin"]["Tables"]["students"]["Row"];
 
@@ -17,6 +18,7 @@ type ContentTab =
 
 interface Props {
   children: Student[];
+  teachersByStudent: Record<string, TeacherAssignment[]>;
 }
 
 function getInitials(name: string | null): string {
@@ -134,19 +136,46 @@ function EmptyStateCard({
   );
 }
 
-function isLowerGrade(grade: string | null): boolean {
-  if (!grade) return true;
-  const normalized = grade.trim().toLowerCase();
-  return (
-    normalized === "pre-k" ||
-    normalized === "prek" ||
-    normalized === "pre k" ||
-    normalized === "k" ||
-    normalized === "kindergarten" ||
-    normalized === "1" ||
-    normalized === "1st"
-  );
-}
+const TEACHER_CARD_DATA: Record<
+  string,
+  { role: string; image: string; about: string; email: string }
+> = {
+  "Sabrina Obnamia": {
+    role: "Lead Teacher & Director",
+    image: "/assets/Headshot.jpeg",
+    email: "sabrina@sagefieldschool.com",
+    about:
+      "Ms. Sabrina brings a wealth of experience to SageField. She holds a Bachelor's degree in Elementary Education with a concentration in Early Childhood Development from Biola University and a Teaching Credential. Her background includes working with children in a wide range of roles both in the U.S. and internationally—spanning special education, preschool, homeschooling, tutoring, coaching, traditional schooling, nature school guide, and more.",
+  },
+  "Paige Wood": {
+    role: "Primary Lead Teacher",
+    image: "/assets/team/Paige.webp",
+    email: "paige@sagefieldschool.com",
+    about:
+      "Ms. Paige is the Lead Primary Teacher at Sage Field Private School. She has a passion for nature-based learning and creating environments where young children feel safe, curious, and inspired. With experience in Montessori-style education and outdoor learning, she brings creativity and intentionality to every lesson.",
+  },
+  "Zelinda Melo": {
+    role: "Teacher Aide",
+    image: "/assets/team/Zelinda.webp",
+    email: "zelinda@sagefieldschool.com",
+    about:
+      "Ms. Zelinda has a deep love for children and a heart for nurturing their growth in a safe and encouraging environment. She looks forward to supporting each child's learning journey and being a positive presence in their day.",
+  },
+  "Nicole Elias": {
+    role: "Summer Program Curriculum Coordinator",
+    image: "/assets/team/Nicole.jpg",
+    email: "",
+    about:
+      "My name is Nicole, and I am a teacher with a passion for hands-on, experiential learning. I believe every child deserves an education that sparks curiosity and joy. I am excited to bring creative, nature-inspired curriculum to our summer program.",
+  },
+  "Taylor Elias": {
+    role: "Summer Program Curriculum Coordinator",
+    image: "/assets/team/Taylor.jpg",
+    email: "",
+    about:
+      "My name is Taylor, and I recently completed my education studies with a focus on child development and outdoor learning. I am passionate about creating meaningful experiences for children that connect them to nature and inspire a love of learning.",
+  },
+};
 
 function TeacherCard({
   name,
@@ -159,20 +188,34 @@ function TeacherCard({
   name: string;
   role: string;
   about: string;
-  imageSrc: string;
+  imageSrc?: string;
   email: string;
   onMessage: () => void;
 }) {
   return (
     <div className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100">
-      <div className="relative w-full h-90">
-        <NextImage
-          src={imageSrc}
-          alt={name}
-          fill
-          className="object-cover object-top"
-        />
-      </div>
+      {imageSrc ? (
+        <div className="relative w-full h-90">
+          <NextImage
+            src={imageSrc}
+            alt={name}
+            fill
+            className="object-cover object-top"
+          />
+        </div>
+      ) : (
+        <div
+          className="flex items-center justify-center w-full h-48"
+          style={{ backgroundColor: "#d4e6d0" }}
+        >
+          <span
+            className="text-4xl font-bold font-heading"
+            style={{ color: "#4a7c59" }}
+          >
+            {getInitials(name)}
+          </span>
+        </div>
+      )}
       <div className="p-5 space-y-2">
         <p className="text-lg font-semibold font-heading text-gray-800">
           {name}
@@ -204,53 +247,109 @@ function TeacherCard({
   );
 }
 
+function formatProgramName(key: string): string {
+  const summerMatch = key.match(/^summer[_-]?(\d{2,4})$/i);
+  if (summerMatch) {
+    const yr = summerMatch[1];
+    const full = yr.length === 2 ? `20${yr}` : yr;
+    return `Summer ${full}`;
+  }
+  const syMatch = key.match(/^school[_-]year[_-](\d{2,4})[_-](\d{2,4})$/i);
+  if (syMatch) {
+    const [, a, b] = syMatch;
+    const fa = a.length === 2 ? `20${a}` : a;
+    const fb = b.length === 2 ? `20${b}` : b;
+    return `School Year ${fa}-${fb}`;
+  }
+  return key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 function TeacherTab({
-  grade,
+  teachers,
   onMessage,
 }: {
-  grade: string | null;
+  teachers: TeacherAssignment[];
   onMessage: () => void;
 }) {
-  if (isLowerGrade(grade)) {
+  const programMap = new Map<string, TeacherAssignment[]>();
+  for (const t of teachers) {
+    const key = t.program ?? "General";
+    if (!programMap.has(key)) programMap.set(key, []);
+    programMap.get(key)!.push(t);
+  }
+  const programs = [...programMap.keys()];
+
+  const [activeProgram, setActiveProgram] = useState<string>(programs[0] ?? "");
+
+  if (teachers.length === 0) {
     return (
       <div>
         <h3 className="text-sm font-semibold font-heading text-[#4a7c59] mb-4">
           Teacher Info
         </h3>
-        <TeacherCard
-          name="Paige Wood"
-          role="Primary Lead Teacher"
-          imageSrc="/assets/team/Paige.webp"
-          about="Ms. Paige is the Lead Primary Teacher at Sage Field Private School. She has a passion for nature-based learning and creating environments where young children feel safe, curious, and inspired."
-          email="paige@sagefieldschool.com"
-          onMessage={onMessage}
-        />
+        <div className="flex flex-col items-center justify-center bg-white rounded-2xl border border-gray-100 p-12 text-center">
+          <div
+            className="flex items-center justify-center w-14 h-14 rounded-full mb-4"
+            style={{ backgroundColor: "#d4e6d0" }}
+          >
+            <UserX
+              className="w-6 h-6"
+              style={{ color: "#4a7c59" }}
+              strokeWidth={1.5}
+            />
+          </div>
+          <p className="text-base font-semibold font-heading text-gray-700 mb-1">
+            No teacher assigned yet
+          </p>
+          <p className="text-sm font-body text-gray-400">
+            Teacher assignments will appear here once assigned.
+          </p>
+        </div>
       </div>
     );
   }
 
+  const seen = new Set<string>();
+  const uniqueTeachers = (programMap.get(activeProgram) ?? []).filter((t) => {
+    if (seen.has(t.teacher_id)) return false;
+    seen.add(t.teacher_id);
+    return true;
+  });
+
   return (
     <div>
-      <h3 className="text-sm font-semibold font-heading text-[#4a7c59] mb-4">
-        Teacher Info
-      </h3>
+      {programs.length > 1 && (
+        <div className="flex gap-4 border-b border-gray-200 mb-5">
+          {programs.map((p) => (
+            <button
+              key={p}
+              onClick={() => setActiveProgram(p)}
+              className={`pb-2 text-sm font-semibold transition-colors cursor-pointer border-b-2 -mb-px ${
+                activeProgram === p
+                  ? "border-[#4a7c59] text-[#4a7c59]"
+                  : "border-transparent text-gray-400 hover:text-[#4a7c59]"
+              }`}
+            >
+              {formatProgramName(p)}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        <TeacherCard
-          name="Sabrina Grace Obnamia"
-          role="Lead Teacher & Director"
-          imageSrc="/assets/Headshot.jpeg"
-          about="Ms. Sabrina holds a Bachelor's degree in Elementary Education with a concentration in Early Childhood Development from Biola University. Her background spans special education, preschool, homeschooling, tutoring, and nature school guiding both in the U.S. and internationally."
-          email="sabrina@sagefieldschool.com"
-          onMessage={onMessage}
-        />
-        <TeacherCard
-          name="Zelinda Melo"
-          role="Teacher Aide"
-          imageSrc="/assets/team/Zelinda.webp"
-          about="Ms. Zelinda has a deep love for children and a heart for nurturing their growth in a safe and encouraging environment. She looks forward to supporting each child's learning journey."
-          email="zelinda@sagefieldschool.com"
-          onMessage={onMessage}
-        />
+        {uniqueTeachers.map((t) => {
+          const card = TEACHER_CARD_DATA[t.teacher_name ?? ""];
+          return (
+            <TeacherCard
+              key={t.id}
+              name={t.teacher_name ?? "Unknown Teacher"}
+              role={card?.role ?? "Teacher"}
+              imageSrc={card?.image}
+              about={card?.about ?? ""}
+              email={card?.email ?? ""}
+              onMessage={onMessage}
+            />
+          );
+        })}
       </div>
     </div>
   );
@@ -330,7 +429,13 @@ function LearningTab() {
   );
 }
 
-function ChildProfile({ child }: { child: Student }) {
+function ChildProfile({
+  child,
+  teachers,
+}: {
+  child: Student;
+  teachers: TeacherAssignment[];
+}) {
   const [activeTab, setActiveTab] = useState<ContentTab>("teacher");
 
   const age = computeAge(child.dob_month, child.dob_day, child.dob_year);
@@ -403,7 +508,7 @@ function ChildProfile({ child }: { child: Student }) {
       {/* Tab content */}
       {activeTab === "teacher" && (
         <TeacherTab
-          grade={child.child_grade}
+          teachers={teachers}
           onMessage={() => setActiveTab("messages")}
         />
       )}
@@ -503,7 +608,7 @@ function ChildProfile({ child }: { child: Student }) {
   );
 }
 
-export default function ChildrenPage({ children }: Props) {
+export default function ChildrenPage({ children, teachersByStudent }: Props) {
   const [activeIndex, setActiveIndex] = useState(0);
 
   if (children.length === 0) {
@@ -542,7 +647,11 @@ export default function ChildrenPage({ children }: Props) {
         </div>
       )}
 
-      <ChildProfile key={activeChild.id} child={activeChild} />
+      <ChildProfile
+        key={activeChild.id}
+        child={activeChild}
+        teachers={teachersByStudent[activeChild.id] ?? []}
+      />
     </div>
   );
 }

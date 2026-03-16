@@ -10,6 +10,8 @@ import Footer from "@/app/components/Footer";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import ChildrenPage from "./ChildrenPage";
 import type { Database } from "@/app/types/database.types";
+import { getAllStudentAssignments } from "@/app/actions/teacherAssignments";
+import type { TeacherAssignment } from "@/app/actions/teacherAssignments";
 
 type Student = Database["admin"]["Tables"]["students"]["Row"];
 
@@ -43,6 +45,15 @@ export default async function ChildrenRoute() {
   const children: Student[] = studentsData ?? [];
   const fullName = adminUser?.full_name ?? null;
 
+  const studentIds = children.map((s) => s.id);
+  const teachersByStudent: Record<string, TeacherAssignment[]> = {};
+  if (studentIds.length > 0) {
+    const allAssignments = await getAllStudentAssignments();
+    for (const sid of studentIds) {
+      teachersByStudent[sid] = allAssignments[sid] ?? [];
+    }
+  }
+
   return (
     <div className="bg-welcome-bg">
       <div className="min-h-screen flex flex-col">
@@ -74,7 +85,7 @@ export default async function ChildrenRoute() {
               My Children
             </h1>
           </div>
-          <ChildrenPage children={children} />
+          <ChildrenPage children={children} teachersByStudent={teachersByStudent} />
         </main>
       </div>
       <Footer />

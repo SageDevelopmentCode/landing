@@ -14,11 +14,13 @@ import {
   BookOpen,
   FileText,
   UserCircle,
+  Users,
 } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 
 const primaryNavItems: { label: string; icon: LucideIcon; href: string }[] = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/teacher/dashboard" },
+  { label: "My Students", icon: Users, href: "/teacher/dashboard/students" },
   { label: "Attendance", icon: ClipboardCheck, href: "#" },
   { label: "My Hours", icon: Clock, href: "#" },
   { label: "Messages", icon: MessageCircle, href: "#" },

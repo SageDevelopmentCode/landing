@@ -24,6 +24,16 @@ html {
   --color-lavender: #E0BBE4;
   --color-sky-blue: #BAE1FF;
   --color-mint-cream: #BAFFC9;
+  --color-sage-50:  #F2F7F3;
+  --color-sage-100: #E0EDE2;
+  --color-sage-200: #C8DFCB;
+  --color-sage-300: #BFD8C0;
+  --color-sage-400: #97C09B;
+  --color-sage-500: #7FA888;
+  --color-sage-600: #6B9474;
+  --color-sage-700: #5E7C68;
+  --color-sage-800: #4A6354;
+  --color-sage-900: #374B3F;
   --font-heading: var(--font-merriweather);
   --font-body: var(--font-poppins);
   --font-sans: var(--font-poppins);

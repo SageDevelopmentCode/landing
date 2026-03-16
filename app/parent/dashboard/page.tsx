@@ -11,6 +11,8 @@ import ChildTabs from "./ChildTabs";
 import DashboardNav from "./DashboardNav";
 import type { StudentSignatureMap } from "@/app/types/enrollment-signatures";
 import type { Database } from "@/app/types/database.types";
+import { getAllStudentAssignments } from "@/app/actions/teacherAssignments";
+import type { TeacherAssignment } from "@/app/actions/teacherAssignments";
 
 type StudentHealthInfo =
   Database["parent_app"]["Tables"]["student_health_info"]["Row"];
@@ -90,6 +92,14 @@ export default async function ParentDashboard() {
     { option_type: string } | null
   > = {};
   const religiousExemptionCountByStudent: Record<string, number> = {};
+
+  const teachersByStudent: Record<string, TeacherAssignment[]> = {};
+  if (studentIds.length > 0) {
+    const allAssignments = await getAllStudentAssignments();
+    for (const sid of studentIds) {
+      teachersByStudent[sid] = allAssignments[sid] ?? [];
+    }
+  }
 
   if (studentIds.length > 0) {
     const [

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import EnrollmentCodeEntry from "@/app/apply/dashboard/EnrollmentCodeEntry";
@@ -946,6 +947,7 @@ function Checklist({
   );
 }
 
+
 interface ChildTabsProps {
   apps: Application[];
   pendingApps: Application[];
@@ -1406,6 +1408,7 @@ export default function ChildTabs({
             );
           })()
         : checklist}
+
 
       {openContractId !== null && openStudentId !== null && (
         <ContractModal
