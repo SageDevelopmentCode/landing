@@ -18,6 +18,7 @@ import {
 import { useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import FloatingSMSButton from "../components/FloatingSMSButton";
 
 const impactCards = [
   {
@@ -927,6 +928,7 @@ export default function DonatePage() {
       </section>
 
       <Footer />
+      <FloatingSMSButton />
     </div>
   );
 }

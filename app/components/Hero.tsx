@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import WaitlistDialog from "./WaitlistDialog";
 
 const slides = [
@@ -31,7 +32,9 @@ export default function Hero() {
 
   useEffect(() => {
     startInterval();
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
   }, []);
   return (
     <section className="relative h-screen w-full overflow-hidden">
@@ -106,6 +109,12 @@ export default function Hero() {
               >
                 Interested in joining?
               </button>
+              <Link
+                href="/apply"
+                className="px-6 py-3 border-2 border-white bg-white text-primary font-semibold rounded-lg hover:bg-gray-100 transition-all duration-200 font-body cursor-pointer"
+              >
+                Join Our Summer Program!
+              </Link>
             </motion.div>
           </div>
         </div>

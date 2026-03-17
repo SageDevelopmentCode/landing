@@ -324,6 +324,17 @@ export default function ApplyPage() {
                   ))}
                 </div>
 
+                {activeTab === "summer" && (
+                  <div className="lg:hidden mb-10">
+                    <button
+                      onClick={() => router.push("/apply/start")}
+                      className="w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
+                    >
+                      Start Application
+                    </button>
+                  </div>
+                )}
+
                 {/* Key Details */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
                   {tabContent[activeTab].details.map((detail) => (
@@ -796,8 +807,8 @@ export default function ApplyPage() {
                   </motion.div>
                 )}
 
-                {/* Mobile CTA — visible only below lg */}
-                <div className="lg:hidden">
+                {/* Mobile CTA — hidden (covered by early button and right-column card) */}
+                <div className="hidden">
                   <button
                     onClick={() => router.push("/apply/start")}
                     className="w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"

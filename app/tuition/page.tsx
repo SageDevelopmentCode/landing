@@ -7,6 +7,7 @@ import Image from "next/image";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import WaitlistDialog from "../components/WaitlistDialog";
+import FloatingSMSButton from "../components/FloatingSMSButton";
 
 export default function TuitionPage() {
   const [isWaitlistOpen, setIsWaitlistOpen] = useState(false);
@@ -464,6 +465,7 @@ export default function TuitionPage() {
         isOpen={isWaitlistOpen}
         onClose={() => setIsWaitlistOpen(false)}
       />
+      <FloatingSMSButton />
     </div>
   );
 }

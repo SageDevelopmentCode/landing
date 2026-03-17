@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 export default function FloatingSMSButton() {
   return (
     <motion.a
-      href={`sms:+15126775872?body=${encodeURIComponent("Hi! I'm interested in learning more about Sage Field for my child—could I ask a few quick questions?")}`}
+      href={`sms:+15126775872?body=${encodeURIComponent("Hi! I'm interested in learning more about Sage Field for my child and I have a few quick questions.")}`}
       className="fixed bottom-6 right-6 z-40 flex flex-col overflow-hidden rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
