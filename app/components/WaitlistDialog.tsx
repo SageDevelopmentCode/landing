@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { submitWaitlist } from "@/app/actions/waitlist";
@@ -101,7 +102,9 @@ export default function WaitlistDialog({
       }));
     }
   };
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <>
@@ -348,6 +351,7 @@ export default function WaitlistDialog({
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

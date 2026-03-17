@@ -416,7 +416,7 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
             href="/apply"
             className="flex-1 flex items-center justify-center px-4 py-2.5 bg-sage-600 text-white text-sm font-semibold rounded-2xl"
           >
-            Register Now!
+            Join Today!
           </Link>
           <Link
             href="/rsvp"
