@@ -312,7 +312,7 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
       ref={navRef}
     >
       {/* Announcement Bar */}
-      <div className="w-full bg-[#4a7c59] text-white text-sm py-1.5 px-4 overflow-hidden">
+      <div className="hidden sm:block w-full bg-[#4a7c59] text-white text-sm py-1.5 px-4 overflow-hidden">
         <AnimatePresence mode="wait" custom={announcementDirection}>
           <motion.div
             key={announcementIndex}
