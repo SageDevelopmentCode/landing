@@ -74,7 +74,7 @@ export default function SchoolYear20262027Page() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
           >
-            September 2026 – March 2027 · Up to 4 Days/Week · Ages 4–11
+            August 2026 – May 2027 · Up to 4 Days/Week · Ages 4–11
           </motion.p>
         </div>
       </section>

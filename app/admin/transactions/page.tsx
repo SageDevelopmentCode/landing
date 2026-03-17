@@ -42,6 +42,20 @@ export default async function TransactionsPage() {
 
   const rows = (transactions ?? []) as StripeTransaction[]
 
+  const studentIds = [...new Set(rows.map(t => t.student_id).filter(Boolean))] as string[]
+  const { data: students } = studentIds.length > 0
+    ? await client
+        .schema('admin')
+        .from('students')
+        .select('id, child_legal_name')
+        .in('id', studentIds)
+    : { data: [] }
+
+  const studentMap: Record<string, string> = {}
+  for (const s of students ?? []) {
+    studentMap[s.id] = s.child_legal_name
+  }
+
   return (
     <div className="space-y-6 pt-6">
       <div>
@@ -56,7 +70,7 @@ export default async function TransactionsPage() {
         </p>
       </div>
 
-      <TransactionsClient transactions={rows} />
+      <TransactionsClient transactions={rows} studentMap={studentMap} />
     </div>
   )
 }
