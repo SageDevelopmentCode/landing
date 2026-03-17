@@ -183,6 +183,7 @@ function SignatureGate({
   parentName,
   existingSig,
   onSectionSaved,
+  readOnly,
 }: {
   healthInfoReady: boolean;
   sectionId: number;
@@ -190,8 +191,9 @@ function SignatureGate({
   parentName: string;
   existingSig?: EnrollmentSignature;
   onSectionSaved: (sectionId: number, sig: EnrollmentSignature) => void;
+  readOnly?: boolean;
 }) {
-  if (!healthInfoReady) {
+  if (!readOnly && !healthInfoReady) {
     return (
       <div className="mt-4 border border-dashed border-amber-200 rounded-xl px-4 py-3 bg-amber-50">
         <p className="text-xs text-amber-700 font-body">
@@ -208,6 +210,7 @@ function SignatureGate({
       parentName={parentName}
       existingSig={existingSig}
       onSectionSaved={onSectionSaved}
+      readOnly={readOnly}
     />
   );
 }
@@ -222,6 +225,7 @@ interface HealthFormModalProps {
   existingHealthInfo: StudentHealthInfo | null;
   onSignaturesSaved: (updatedMap: SignatureMap) => void;
   onHealthInfoSaved: (info: StudentHealthInfo) => void;
+  readOnly?: boolean;
 }
 
 export default function HealthFormModal({
@@ -234,6 +238,7 @@ export default function HealthFormModal({
   existingHealthInfo,
   onSignaturesSaved,
   onHealthInfoSaved,
+  readOnly,
 }: HealthFormModalProps) {
   const [draft, setDraft] = useState<HealthDraft>(() =>
     initDraft(existingHealthInfo),
@@ -335,7 +340,7 @@ export default function HealthFormModal({
 
             {/* Scrollable body */}
             <div className="flex-1 overflow-y-auto px-6 py-6">
-              <div className="flex flex-col gap-10">
+              <fieldset disabled={readOnly} className="flex flex-col gap-10 border-0 p-0 m-0 min-w-0">
                 {/* Section 1: Student Information (read-only) */}
                 <div className="flex flex-col gap-4">
                   <SectionHeader number="1" title="Student Information" />
@@ -797,42 +802,44 @@ export default function HealthFormModal({
                 </div>
 
                 {/* Save Health Form CTA */}
-                <div className="flex flex-col gap-3 bg-gray-50 rounded-2xl px-5 py-5 border border-gray-100">
-                  <div>
-                    <p className="text-sm font-bold font-heading text-gray-800">
-                      Save Health Form
-                    </p>
-                    <p className="text-xs text-gray-500 font-body mt-0.5">
-                      Save all the information above before signing the sections
-                      below. You can return to update this information at any
-                      time.
-                    </p>
+                {!readOnly && (
+                  <div className="flex flex-col gap-3 bg-gray-50 rounded-2xl px-5 py-5 border border-gray-100">
+                    <div>
+                      <p className="text-sm font-bold font-heading text-gray-800">
+                        Save Health Form
+                      </p>
+                      <p className="text-xs text-gray-500 font-body mt-0.5">
+                        Save all the information above before signing the sections
+                        below. You can return to update this information at any
+                        time.
+                      </p>
+                    </div>
+                    {healthSaveError && (
+                      <p className="text-xs text-red-500 font-body">
+                        {healthSaveError}
+                      </p>
+                    )}
+                    {healthSaveSuccess && !healthSaveError && (
+                      <p className="text-xs text-emerald-600 font-body flex items-center gap-1.5">
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        Health form saved — you may now sign the sections below.
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleSaveHealthInfo}
+                      disabled={isSavingHealth}
+                      className="cursor-pointer inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-semibold font-body rounded-xl hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed self-start"
+                    >
+                      <Save className="w-4 h-4" />
+                      {isSavingHealth
+                        ? "Saving..."
+                        : healthInfoReady
+                          ? "Update Health Form"
+                          : "Save Health Form"}
+                    </button>
                   </div>
-                  {healthSaveError && (
-                    <p className="text-xs text-red-500 font-body">
-                      {healthSaveError}
-                    </p>
-                  )}
-                  {healthSaveSuccess && !healthSaveError && (
-                    <p className="text-xs text-emerald-600 font-body flex items-center gap-1.5">
-                      <CheckCircle className="w-3.5 h-3.5" />
-                      Health form saved — you may now sign the sections below.
-                    </p>
-                  )}
-                  <button
-                    type="button"
-                    onClick={handleSaveHealthInfo}
-                    disabled={isSavingHealth}
-                    className="cursor-pointer inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-semibold font-body rounded-xl hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed self-start"
-                  >
-                    <Save className="w-4 h-4" />
-                    {isSavingHealth
-                      ? "Saving..."
-                      : healthInfoReady
-                        ? "Update Health Form"
-                        : "Save Health Form"}
-                  </button>
-                </div>
+                )}
 
                 {/* Section 8: OTC Medications Policy + Signature 3 */}
                 <div className="flex flex-col gap-4">
@@ -854,6 +861,7 @@ export default function HealthFormModal({
                     parentName={parentName}
                     existingSig={localSigs[`${CONTRACT_3_ID}-1`]}
                     onSectionSaved={handleSectionSaved}
+                    readOnly={readOnly}
                   />
                 </div>
 
@@ -876,6 +884,7 @@ export default function HealthFormModal({
                     parentName={parentName}
                     existingSig={localSigs[`${CONTRACT_3_ID}-2`]}
                     onSectionSaved={handleSectionSaved}
+                    readOnly={readOnly}
                   />
                 </div>
 
@@ -945,9 +954,10 @@ export default function HealthFormModal({
                     parentName={parentName}
                     existingSig={localSigs[`${CONTRACT_3_ID}-3`]}
                     onSectionSaved={handleSectionSaved}
+                    readOnly={readOnly}
                   />
                 </div>
-              </div>
+              </fieldset>
             </div>
 
             {/* Sticky Footer */}

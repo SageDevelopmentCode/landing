@@ -28,6 +28,7 @@ interface AssumptionOfRiskModalProps {
   app: Application;
   signatures: SignatureMap;
   onSectionSaved: (sig: EnrollmentSignature) => void;
+  readOnly?: boolean;
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {
@@ -57,6 +58,7 @@ export default function AssumptionOfRiskModal({
   app,
   signatures,
   onSectionSaved,
+  readOnly,
 }: AssumptionOfRiskModalProps) {
   const [localSigs, setLocalSigs] = useState<SignatureMap>(signatures);
 
@@ -264,6 +266,7 @@ export default function AssumptionOfRiskModal({
                     parentName={parentName}
                     existingSig={localSigs[`${CONTRACT_6_ID}-1`]}
                     onSectionSaved={handleSectionSaved}
+                    readOnly={readOnly}
                   />
                 </div>
               </div>

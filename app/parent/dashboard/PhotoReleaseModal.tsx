@@ -26,6 +26,7 @@ interface PhotoReleaseModalProps {
   onSectionSaved: (sig: EnrollmentSignature) => void;
   existingConsent: "FULL" | "LIMITED" | "NO" | null;
   onConsentSaved: (level: "FULL" | "LIMITED" | "NO") => void;
+  readOnly?: boolean;
 }
 
 const CONSENT_OPTIONS: { value: "FULL" | "LIMITED" | "NO"; label: string; description: string }[] = [
@@ -67,6 +68,7 @@ export default function PhotoReleaseModal({
   onSectionSaved,
   existingConsent,
   onConsentSaved,
+  readOnly,
 }: PhotoReleaseModalProps) {
   const [localSigs, setLocalSigs] = useState<SignatureMap>(signatures);
   const [selectedConsent, setSelectedConsent] = useState<"FULL" | "LIMITED" | "NO" | null>(existingConsent);
@@ -179,80 +181,92 @@ export default function PhotoReleaseModal({
                         {sec5.paragraphs[0]}
                       </p>
 
-                      <div className="flex flex-col gap-3">
-                        {CONSENT_OPTIONS.map((opt) => (
-                          <label
-                            key={opt.value}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition-all ${
-                              selectedConsent === opt.value
-                                ? "border-primary bg-primary/5"
-                                : "border-gray-200 bg-white hover:border-gray-300"
-                            }`}
-                          >
-                            <input
-                              type="radio"
-                              name="consentLevel"
-                              value={opt.value}
-                              checked={selectedConsent === opt.value}
-                              onChange={() => setSelectedConsent(opt.value)}
-                              className="sr-only"
-                            />
-                            <span
-                              className={`flex-shrink-0 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                selectedConsent === opt.value
-                                  ? "border-primary"
-                                  : "border-gray-300"
-                              }`}
-                            >
-                              {selectedConsent === opt.value && (
-                                <span className="w-2 h-2 rounded-full bg-primary" />
-                              )}
+                      {readOnly ? (
+                        savedConsent && (
+                          <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-gray-50 border border-gray-100">
+                            <span className="text-sm font-semibold font-body text-gray-700">
+                              Consent level: {savedConsent}
                             </span>
-                            <div>
-                              <p className="text-sm font-semibold font-heading text-gray-800">
-                                {opt.label}
+                          </div>
+                        )
+                      ) : (
+                        <>
+                          <div className="flex flex-col gap-3">
+                            {CONSENT_OPTIONS.map((opt) => (
+                              <label
+                                key={opt.value}
+                                className={`flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition-all ${
+                                  selectedConsent === opt.value
+                                    ? "border-primary bg-primary/5"
+                                    : "border-gray-200 bg-white hover:border-gray-300"
+                                }`}
+                              >
+                                <input
+                                  type="radio"
+                                  name="consentLevel"
+                                  value={opt.value}
+                                  checked={selectedConsent === opt.value}
+                                  onChange={() => setSelectedConsent(opt.value)}
+                                  className="sr-only"
+                                />
+                                <span
+                                  className={`flex-shrink-0 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                    selectedConsent === opt.value
+                                      ? "border-primary"
+                                      : "border-gray-300"
+                                  }`}
+                                >
+                                  {selectedConsent === opt.value && (
+                                    <span className="w-2 h-2 rounded-full bg-primary" />
+                                  )}
+                                </span>
+                                <div>
+                                  <p className="text-sm font-semibold font-heading text-gray-800">
+                                    {opt.label}
+                                  </p>
+                                  <p className="text-xs text-gray-500 font-body mt-0.5 leading-relaxed">
+                                    {opt.description}
+                                  </p>
+                                </div>
+                              </label>
+                            ))}
+                          </div>
+
+                          {consentError && (
+                            <p className="text-xs text-red-500 font-body">{consentError}</p>
+                          )}
+
+                          {savedConsent ? (
+                            <div className="flex items-center gap-3">
+                              <p className="text-xs text-emerald-600 font-body">
+                                Consent level saved: <strong>{savedConsent}</strong>
                               </p>
-                              <p className="text-xs text-gray-500 font-body mt-0.5 leading-relaxed">
-                                {opt.description}
-                              </p>
+                              {selectedConsent !== savedConsent && (
+                                <button
+                                  type="button"
+                                  onClick={handleSaveConsent}
+                                  disabled={isSavingConsent}
+                                  className="px-3 py-1.5 bg-primary text-white text-xs font-semibold font-body rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                >
+                                  {isSavingConsent ? "Saving..." : "Update selection"}
+                                </button>
+                              )}
                             </div>
-                          </label>
-                        ))}
-                      </div>
-
-                      {consentError && (
-                        <p className="text-xs text-red-500 font-body">{consentError}</p>
-                      )}
-
-                      {savedConsent ? (
-                        <div className="flex items-center gap-3">
-                          <p className="text-xs text-emerald-600 font-body">
-                            Consent level saved: <strong>{savedConsent}</strong>
-                          </p>
-                          {selectedConsent !== savedConsent && (
+                          ) : (
                             <button
                               type="button"
                               onClick={handleSaveConsent}
-                              disabled={isSavingConsent}
-                              className="px-3 py-1.5 bg-primary text-white text-xs font-semibold font-body rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                              disabled={isSavingConsent || !selectedConsent}
+                              className="w-fit px-4 py-2 bg-primary text-white text-sm font-semibold font-body rounded-xl hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                             >
-                              {isSavingConsent ? "Saving..." : "Update selection"}
+                              {isSavingConsent ? "Saving..." : "Save selection"}
                             </button>
                           )}
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={handleSaveConsent}
-                          disabled={isSavingConsent || !selectedConsent}
-                          className="w-fit px-4 py-2 bg-primary text-white text-sm font-semibold font-body rounded-xl hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                        >
-                          {isSavingConsent ? "Saving..." : "Save selection"}
-                        </button>
+                        </>
                       )}
 
                       {/* Section 5 initials block — unlocks after consent is saved */}
-                      {!savedConsent ? (
+                      {!readOnly && !savedConsent ? (
                         <div className="mt-2 border border-dashed border-amber-200 rounded-xl px-4 py-3 bg-amber-50">
                           <p className="text-xs text-amber-700 font-body">
                             Save your consent selection above before completing this section.
@@ -266,6 +280,7 @@ export default function PhotoReleaseModal({
                           parentName={parentName}
                           existingSig={localSigs[`${CONTRACT_5_ID}-1`]}
                           onSectionSaved={handleSectionSaved}
+                          readOnly={readOnly}
                         />
                       )}
                     </div>
@@ -293,6 +308,7 @@ export default function PhotoReleaseModal({
                     parentName={parentName}
                     existingSig={localSigs[`${CONTRACT_5_ID}-2`]}
                     onSectionSaved={handleSectionSaved}
+                    readOnly={readOnly}
                   />
                 </div>
               </div>

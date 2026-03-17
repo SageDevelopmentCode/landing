@@ -375,7 +375,7 @@ export function TransactionsClient({
   parentNameMap,
   pendingRequests,
 }: TransactionsClientProps) {
-  const [activeTab, setActiveTab] = useState<"list" | "by-parent">("list");
+  const [activeTab, setActiveTab] = useState<"list" | "by-parent">("by-parent");
   const [selectedTransaction, setSelectedTransaction] =
     useState<StripeTransaction | null>(null);
   const [localTransactions, setLocalTransactions] = useState(transactions);
@@ -460,7 +460,7 @@ export function TransactionsClient({
     <>
       {/* Tab switcher */}
       <div className="flex gap-2 mb-4">
-        {(["list", "by-parent"] as const).map((tab) => (
+        {(["by-parent", "list"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -595,18 +595,21 @@ export function TransactionsClient({
                       </div>
                     )}
                   </div>
-                  {/* Count badge — program tx count */}
-                  <span
-                    className="flex-shrink-0 text-xs font-semibold px-1.5 py-0.5 rounded-full"
-                    style={{
-                      backgroundColor: isActive
-                        ? colors.mistyForest
-                        : colors.border,
-                      color: isActive ? "#ffffff" : colors.textSecondary,
-                    }}
-                  >
-                    {group.txs.length}
-                  </span>
+                  {/* Payment status badge */}
+                  {(() => {
+                    const hasAwaiting = pendingRequests.some(r => r.parent_id === group.key);
+                    return (
+                      <span
+                        className="flex-shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap"
+                        style={{
+                          backgroundColor: hasAwaiting ? colors.paleMarigold : "#d1fae5",
+                          color: hasAwaiting ? colors.warningText : "#065f46",
+                        }}
+                      >
+                        {hasAwaiting ? "Awaiting" : "Up to date"}
+                      </span>
+                    );
+                  })()}
                 </button>
               );
             })}

@@ -17,7 +17,8 @@ export interface SectionSignatureBlockProps {
   studentId: string;
   parentName: string;
   existingSig?: EnrollmentSignature;
-  onSectionSaved: (sectionId: number, sig: EnrollmentSignature) => void;
+  onSectionSaved?: (sectionId: number, sig: EnrollmentSignature) => void;
+  readOnly?: boolean;
 }
 
 export default function SectionSignatureBlock({
@@ -27,6 +28,7 @@ export default function SectionSignatureBlock({
   parentName,
   existingSig,
   onSectionSaved,
+  readOnly,
 }: SectionSignatureBlockProps) {
   const [printedName, setPrintedName] = useState(
     existingSig?.printed_name ?? parentName ?? ""
@@ -35,6 +37,8 @@ export default function SectionSignatureBlock({
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  if (readOnly && !existingSig) return null;
 
   const isSaved = !!existingSig && !isEditing;
 
@@ -60,7 +64,7 @@ export default function SectionSignatureBlock({
         setError(result.error);
       } else if (result.data) {
         setIsEditing(false);
-        onSectionSaved(sectionId, result.data as EnrollmentSignature);
+        onSectionSaved?.(sectionId, result.data as EnrollmentSignature);
       }
     });
   };
@@ -77,13 +81,15 @@ export default function SectionSignatureBlock({
             {existingSig.signature}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setIsEditing(true)}
-          className="text-xs text-gray-400 hover:text-gray-600 font-body underline shrink-0"
-        >
-          Edit
-        </button>
+        {!readOnly && (
+          <button
+            type="button"
+            onClick={() => setIsEditing(true)}
+            className="text-xs text-gray-400 hover:text-gray-600 font-body underline shrink-0"
+          >
+            Edit
+          </button>
+        )}
       </div>
     );
   }

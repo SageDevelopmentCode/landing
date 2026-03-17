@@ -25,6 +25,7 @@ interface ContractModalProps {
   parentName: string;
   existingSignatures: SignatureMap;
   onSignaturesSaved: (updatedMap: SignatureMap) => void;
+  readOnly?: boolean;
 }
 
 export default function ContractModal({
@@ -35,6 +36,7 @@ export default function ContractModal({
   parentName,
   existingSignatures,
   onSignaturesSaved,
+  readOnly,
 }: ContractModalProps) {
   const [localSigs, setLocalSigs] = useState<SignatureMap>(existingSignatures);
 
@@ -149,6 +151,7 @@ export default function ContractModal({
                         parentName={parentName}
                         existingSig={existingSig}
                         onSectionSaved={handleSectionSaved}
+                        readOnly={readOnly}
                       />
                     </div>
                   );

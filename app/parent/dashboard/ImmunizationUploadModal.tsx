@@ -28,6 +28,7 @@ interface Props {
   studentId: string;
   studentName: string;
   onUploadComplete: (studentId: string) => void;
+  readOnly?: boolean;
 }
 
 function formatFileName(name: string): string {
@@ -42,6 +43,7 @@ export default function ImmunizationUploadModal({
   studentId,
   studentName,
   onUploadComplete,
+  readOnly,
 }: Props) {
   const [files, setFiles] = useState<StorageFile[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -235,17 +237,19 @@ export default function ImmunizationUploadModal({
                         <p className="flex-1 text-sm font-body text-gray-700 truncate">
                           {formatFileName(file.name)}
                         </p>
-                        <button
-                          onClick={() => handleDelete(file.name)}
-                          disabled={isDeleting}
-                          className="p-1 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors cursor-pointer disabled:opacity-50"
-                        >
-                          {isDeleting ? (
-                            <div className="w-4 h-4 border-2 border-gray-200 border-t-red-400 rounded-full animate-spin" />
-                          ) : (
-                            <Trash2 className="w-4 h-4" />
-                          )}
-                        </button>
+                        {!readOnly && (
+                          <button
+                            onClick={() => handleDelete(file.name)}
+                            disabled={isDeleting}
+                            className="p-1 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors cursor-pointer disabled:opacity-50"
+                          >
+                            {isDeleting ? (
+                              <div className="w-4 h-4 border-2 border-gray-200 border-t-red-400 rounded-full animate-spin" />
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
+                          </button>
+                        )}
                       </div>
                     );
                   })}
@@ -253,7 +257,7 @@ export default function ImmunizationUploadModal({
               )}
 
               {/* Upload zone */}
-              {files.length < MAX_FILES && (
+              {!readOnly && files.length < MAX_FILES && (
                 <div
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}

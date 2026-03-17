@@ -38,6 +38,7 @@ interface HealthStatementModalProps {
   existingSig: EnrollmentSignature | undefined;
   onSectionSaved: (sig: EnrollmentSignature) => void;
   onClose: () => void;
+  readOnly?: boolean;
 }
 
 const MAX_FILES = 3;
@@ -69,6 +70,7 @@ export default function HealthStatementModal({
   existingSig,
   onSectionSaved,
   onClose,
+  readOnly,
 }: HealthStatementModalProps) {
   const studentId = app.student_id ?? "";
   const studentName = app.preferred_name ?? app.child_legal_name ?? "Student";
@@ -259,49 +261,61 @@ export default function HealthStatementModal({
               </div>
 
               {/* Option selection */}
-              <div className="flex flex-col gap-3">
-                <p className="text-sm font-semibold font-heading text-gray-800">
-                  Select one of the following:
-                </p>
-                <label
-                  className={`flex items-center gap-3 cursor-pointer rounded-xl border px-4 py-3 transition-colors ${
-                    selectedOption === "professional"
-                      ? "border-teal-500 bg-teal-50/60"
-                      : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="health-option"
-                    value="professional"
-                    checked={selectedOption === "professional"}
-                    onChange={() => handleOptionChange("professional")}
-                    className="accent-teal-600 cursor-pointer flex-shrink-0"
-                  />
-                  <span className="flex-1 text-sm font-body text-gray-700">
-                    <span className="font-semibold">Option A:</span> My child has been examined by a health care professional within the past year
-                  </span>
-                </label>
-                <label
-                  className={`flex items-center gap-3 cursor-pointer rounded-xl border px-4 py-3 transition-colors ${
-                    selectedOption === "religious"
-                      ? "border-purple-400 bg-purple-50/40"
-                      : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="health-option"
-                    value="religious"
-                    checked={selectedOption === "religious"}
-                    onChange={() => handleOptionChange("religious")}
-                    className="accent-teal-600 cursor-pointer flex-shrink-0"
-                  />
-                  <span className="flex-1 text-sm font-body text-gray-700">
-                    <span className="font-semibold">Option B:</span> Religious exemption — I object to physical examination of my child on religious grounds
-                  </span>
-                </label>
-              </div>
+              {readOnly ? (
+                selectedOption && (
+                  <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-gray-50 border border-gray-100">
+                    <span className="text-sm font-semibold font-body text-gray-700">
+                      {selectedOption === "professional"
+                        ? "Option A: Health Care Professional Examination"
+                        : "Option B: Religious Exemption Affidavit"}
+                    </span>
+                  </div>
+                )
+              ) : (
+                <div className="flex flex-col gap-3">
+                  <p className="text-sm font-semibold font-heading text-gray-800">
+                    Select one of the following:
+                  </p>
+                  <label
+                    className={`flex items-center gap-3 cursor-pointer rounded-xl border px-4 py-3 transition-colors ${
+                      selectedOption === "professional"
+                        ? "border-teal-500 bg-teal-50/60"
+                        : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="health-option"
+                      value="professional"
+                      checked={selectedOption === "professional"}
+                      onChange={() => handleOptionChange("professional")}
+                      className="accent-teal-600 cursor-pointer flex-shrink-0"
+                    />
+                    <span className="flex-1 text-sm font-body text-gray-700">
+                      <span className="font-semibold">Option A:</span> My child has been examined by a health care professional within the past year
+                    </span>
+                  </label>
+                  <label
+                    className={`flex items-center gap-3 cursor-pointer rounded-xl border px-4 py-3 transition-colors ${
+                      selectedOption === "religious"
+                        ? "border-purple-400 bg-purple-50/40"
+                        : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="health-option"
+                      value="religious"
+                      checked={selectedOption === "religious"}
+                      onChange={() => handleOptionChange("religious")}
+                      className="accent-teal-600 cursor-pointer flex-shrink-0"
+                    />
+                    <span className="flex-1 text-sm font-body text-gray-700">
+                      <span className="font-semibold">Option B:</span> Religious exemption — I object to physical examination of my child on religious grounds
+                    </span>
+                  </label>
+                </div>
+              )}
 
               {/* Option A section */}
               {selectedOption === "professional" && (
@@ -386,17 +400,19 @@ export default function HealthStatementModal({
                             <p className="flex-1 text-sm font-body text-gray-700 truncate">
                               {formatFileName(file.name)}
                             </p>
-                            <button
-                              onClick={() => handleDelete(file.name)}
-                              disabled={isDeleting}
-                              className="p-1 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors cursor-pointer disabled:opacity-50"
-                            >
-                              {isDeleting ? (
-                                <div className="w-4 h-4 border-2 border-gray-200 border-t-red-400 rounded-full animate-spin" />
-                              ) : (
-                                <Trash2 className="w-4 h-4" />
-                              )}
-                            </button>
+                            {!readOnly && (
+                              <button
+                                onClick={() => handleDelete(file.name)}
+                                disabled={isDeleting}
+                                className="p-1 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors cursor-pointer disabled:opacity-50"
+                              >
+                                {isDeleting ? (
+                                  <div className="w-4 h-4 border-2 border-gray-200 border-t-red-400 rounded-full animate-spin" />
+                                ) : (
+                                  <Trash2 className="w-4 h-4" />
+                                )}
+                              </button>
+                            )}
                           </div>
                         );
                       })}
@@ -404,7 +420,7 @@ export default function HealthStatementModal({
                   )}
 
                   {/* Upload zone */}
-                  {uploadedFiles.length < MAX_FILES && (
+                  {!readOnly && uploadedFiles.length < MAX_FILES && (
                     <div
                       onDragOver={handleDragOver}
                       onDragLeave={handleDragLeave}
@@ -457,7 +473,17 @@ export default function HealthStatementModal({
                   <p className="text-sm text-gray-600 font-body leading-relaxed">
                     By signing below, I certify that the information provided is accurate and complete to the best of my knowledge, and I authorize Sage Field Private School to maintain this health information on file for my child.
                   </p>
-                  {sigEnabled ? (
+                  {readOnly ? (
+                    <SectionSignatureBlock
+                      sectionId={1}
+                      contractId={CONTRACT_8_ID}
+                      studentId={studentId}
+                      parentName={parentName}
+                      existingSig={localSig}
+                      onSectionSaved={handleSectionSaved}
+                      readOnly
+                    />
+                  ) : sigEnabled ? (
                     <SectionSignatureBlock
                       sectionId={1}
                       contractId={CONTRACT_8_ID}

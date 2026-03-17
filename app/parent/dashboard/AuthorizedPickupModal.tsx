@@ -104,6 +104,7 @@ interface AuthorizedPickupModalProps {
   onSectionSaved: (sig: EnrollmentSignature) => void;
   existingPlan: { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] };
   onPlanSaved: (plan: AuthorizedPickupPlan) => void;
+  readOnly?: boolean;
 }
 
 export default function AuthorizedPickupModal({
@@ -116,6 +117,7 @@ export default function AuthorizedPickupModal({
   onSectionSaved,
   existingPlan,
   onPlanSaved,
+  readOnly,
 }: AuthorizedPickupModalProps) {
   const [localSigs, setLocalSigs] = useState<SignatureMap>(signatures);
   const [dateOfRequest, setDateOfRequest] = useState(
@@ -257,7 +259,7 @@ export default function AuthorizedPickupModal({
 
             {/* Scrollable body */}
             <div className="flex-1 overflow-y-auto px-6 py-6">
-              <div className="flex flex-col gap-10">
+              <fieldset disabled={readOnly} className="flex flex-col gap-10 border-0 p-0 m-0 min-w-0">
 
                 {/* School header */}
                 <div className="flex flex-col gap-1">
@@ -394,24 +396,26 @@ export default function AuthorizedPickupModal({
                 </div>
 
                 {/* Save button */}
-                <div className="flex flex-col gap-3">
-                  {saveError && (
-                    <p className="text-xs text-red-500 font-body">{saveError}</p>
-                  )}
-                  {saveSuccess && (
-                    <p className="text-xs text-emerald-600 font-body">
-                      Authorized pickup list saved successfully.
-                    </p>
-                  )}
-                  <button
-                    type="button"
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    className="w-fit px-5 py-2.5 bg-primary text-white text-sm font-semibold font-body rounded-xl hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                  >
-                    {isSaving ? "Saving..." : "Save Authorized Pickup List"}
-                  </button>
-                </div>
+                {!readOnly && (
+                  <div className="flex flex-col gap-3">
+                    {saveError && (
+                      <p className="text-xs text-red-500 font-body">{saveError}</p>
+                    )}
+                    {saveSuccess && (
+                      <p className="text-xs text-emerald-600 font-body">
+                        Authorized pickup list saved successfully.
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleSave}
+                      disabled={isSaving}
+                      className="w-fit px-5 py-2.5 bg-primary text-white text-sm font-semibold font-body rounded-xl hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      {isSaving ? "Saving..." : "Save Authorized Pickup List"}
+                    </button>
+                  </div>
+                )}
 
                 {/* Authorization text + signature */}
                 <div className="flex flex-col gap-4">
@@ -430,7 +434,7 @@ export default function AuthorizedPickupModal({
                     I provide explicit written or verbal authorization at the time of pickup.
                   </p>
 
-                  {!planSaved ? (
+                  {!readOnly && !planSaved ? (
                     <div className="mt-4 border border-dashed border-amber-200 rounded-xl px-4 py-3 bg-amber-50">
                       <p className="text-xs text-amber-700 font-body">
                         Complete and save the authorized pickup list above before signing this section.
@@ -444,11 +448,12 @@ export default function AuthorizedPickupModal({
                       parentName={parentName}
                       existingSig={localSigs[`${CONTRACT_7_ID}-1`]}
                       onSectionSaved={handleSectionSaved}
+                      readOnly={readOnly}
                     />
                   )}
                 </div>
 
-              </div>
+              </fieldset>
             </div>
           </motion.div>
         </div>

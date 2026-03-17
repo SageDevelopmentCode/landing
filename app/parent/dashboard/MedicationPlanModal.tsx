@@ -148,6 +148,7 @@ interface MedicationPlanModalProps {
   };
   onSignaturesSaved: (updated: SignatureMap) => void;
   onPlanSaved: (plan: StudentMedicationPlan) => void;
+  readOnly?: boolean;
 }
 
 export default function MedicationPlanModal({
@@ -160,6 +161,7 @@ export default function MedicationPlanModal({
   existingPlan,
   onSignaturesSaved,
   onPlanSaved,
+  readOnly,
 }: MedicationPlanModalProps) {
   const [medications, setMedications] = useState<MedicationEntry[]>(() =>
     initMedications(existingPlan.medications),
@@ -285,7 +287,7 @@ export default function MedicationPlanModal({
 
             {/* Scrollable body */}
             <div className="flex-1 overflow-y-auto px-6 py-6">
-              <div className="flex flex-col gap-10">
+              <fieldset disabled={readOnly} className="flex flex-col gap-10 border-0 p-0 m-0 min-w-0">
                 {/* Section 1: Student Information */}
                 <div className="flex flex-col gap-4">
                   <SectionHeader number="1" title="Student Information" />
@@ -520,26 +522,28 @@ export default function MedicationPlanModal({
                 </div>
 
                 {/* Save Button */}
-                <div className="flex flex-col gap-3">
-                  {saveError && (
-                    <p className="text-xs text-red-500 font-body">
-                      {saveError}
-                    </p>
-                  )}
-                  {saveSuccess && (
-                    <p className="text-xs text-emerald-600 font-body">
-                      Medication plan saved successfully.
-                    </p>
-                  )}
-                  <button
-                    type="button"
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    className="w-fit px-5 py-2.5 bg-primary text-white text-sm font-semibold font-body rounded-xl hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                  >
-                    {isSaving ? "Saving..." : "Save Medication Plan"}
-                  </button>
-                </div>
+                {!readOnly && (
+                  <div className="flex flex-col gap-3">
+                    {saveError && (
+                      <p className="text-xs text-red-500 font-body">
+                        {saveError}
+                      </p>
+                    )}
+                    {saveSuccess && (
+                      <p className="text-xs text-emerald-600 font-body">
+                        Medication plan saved successfully.
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleSave}
+                      disabled={isSaving}
+                      className="w-fit px-5 py-2.5 bg-primary text-white text-sm font-semibold font-body rounded-xl hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      {isSaving ? "Saving..." : "Save Medication Plan"}
+                    </button>
+                  </div>
+                )}
 
                 {/* Section 7: Authorization and Release */}
                 <div className="flex flex-col gap-4">
@@ -560,7 +564,7 @@ export default function MedicationPlanModal({
                     medication information changes.
                   </p>
 
-                  {!planReady ? (
+                  {!readOnly && !planReady ? (
                     <div className="mt-4 border border-dashed border-amber-200 rounded-xl px-4 py-3 bg-amber-50">
                       <p className="text-xs text-amber-700 font-body">
                         Complete and save the medication plan above before
@@ -575,10 +579,11 @@ export default function MedicationPlanModal({
                       parentName={parentName}
                       existingSig={localSigs[`${CONTRACT_4_ID}-1`]}
                       onSectionSaved={handleSectionSaved}
+                      readOnly={readOnly}
                     />
                   )}
                 </div>
-              </div>
+              </fieldset>
             </div>
           </motion.div>
         </div>
