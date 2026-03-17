@@ -20,6 +20,7 @@ import Footer from "../components/Footer";
 import WaitlistDialog from "../components/WaitlistDialog";
 import { submitWaitlist } from "@/app/actions/waitlist";
 import DonationsSection from "../components/DonationsSection";
+import FloatingSMSButton from "../components/FloatingSMSButton";
 import ImageGridShowcase from "../components/ImageGridShowcase";
 
 const formatPhoneNumber = (value: string) => {
@@ -762,6 +763,7 @@ export default function VisionPage() {
         isOpen={waitlistOpen}
         onClose={() => setWaitlistOpen(false)}
       />
+      <FloatingSMSButton />
     </div>
   );
 }

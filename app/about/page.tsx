@@ -7,6 +7,7 @@ import DonationsSection from "../components/DonationsSection";
 import MeetTheTeamSection from "../components/MeetTheTeamSection";
 import ContactUsSection from "../components/ContactUsSection";
 import Footer from "../components/Footer";
+import FloatingSMSButton from "../components/FloatingSMSButton";
 
 export default function AboutPage() {
   return (
@@ -64,6 +65,7 @@ export default function AboutPage() {
       <MeetTheTeamSection />
       <ContactUsSection />
       <Footer />
+      <FloatingSMSButton />
     </div>
   );
 }

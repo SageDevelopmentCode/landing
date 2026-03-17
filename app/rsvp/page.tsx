@@ -14,6 +14,7 @@ import {
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
 import { submitRSVP } from "@/app/actions/rsvp";
+import FloatingSMSButton from "@/app/components/FloatingSMSButton";
 import { formatPhone } from "@/app/utils/formatPhone";
 
 const whoCards = [
@@ -765,6 +766,7 @@ export default function OpenHousePage() {
       </section>
 
       <Footer />
+      <FloatingSMSButton />
     </div>
   );
 }

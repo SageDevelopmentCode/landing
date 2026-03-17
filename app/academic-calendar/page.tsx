@@ -6,6 +6,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import ContactDialog from "../components/ContactDialog";
 import WaitlistDialog from "../components/WaitlistDialog";
+import FloatingSMSButton from "../components/FloatingSMSButton";
 
 // ── Season pill colors ────────────────────────────────────────────────────────
 
@@ -305,6 +306,7 @@ export default function AcademicCalendarPage() {
         isOpen={isWaitlistDialogOpen}
         onClose={() => setIsWaitlistDialogOpen(false)}
       />
+      <FloatingSMSButton />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import Navbar from "../components/Navbar";
 import MeetTheTeamSection from "../components/MeetTheTeamSection";
 import ContactUsSection from "../components/ContactUsSection";
 import Footer from "../components/Footer";
+import FloatingSMSButton from "../components/FloatingSMSButton";
 
 export default function TeamPage() {
   return (
@@ -49,6 +50,7 @@ export default function TeamPage() {
       <MeetTheTeamSection />
       <ContactUsSection />
       <Footer />
+      <FloatingSMSButton />
     </div>
   );
 }

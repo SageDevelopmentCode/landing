@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import ContactDialog from "../components/ContactDialog";
+import FloatingSMSButton from "../components/FloatingSMSButton";
 
 type Tab = "summer" | "school-year";
 
@@ -836,6 +837,7 @@ export default function ApplyPage() {
         isOpen={contactOpen}
         onClose={() => setContactOpen(false)}
       />
+      <FloatingSMSButton />
     </div>
   );
 }

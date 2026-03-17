@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import WaitlistDialog from "../components/WaitlistDialog";
+import FloatingSMSButton from "../components/FloatingSMSButton";
 
 const details = [
   { label: "Dates", value: "May 26 – Aug 13, 2026" },
@@ -465,6 +466,7 @@ export default function Summer2026Page() {
         isOpen={waitlistOpen}
         onClose={() => setWaitlistOpen(false)}
       />
+      <FloatingSMSButton />
     </div>
   );
 }

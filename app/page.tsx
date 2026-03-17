@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Search } from "lucide-react";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
@@ -19,11 +19,19 @@ import ContactUsSection from "./components/ContactUsSection";
 import FAQAccordion from "./components/FAQAccordion";
 import Footer from "./components/Footer";
 import WaitlistDialog from "./components/WaitlistDialog";
+import FloatingSMSButton from "./components/FloatingSMSButton";
 import EnrollmentAnnouncementPopup from "./components/EnrollmentAnnouncementPopup";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isWaitlistDialogOpen, setIsWaitlistDialogOpen] = useState(false);
+  const [pastHero, setPastHero] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setPastHero(window.scrollY > window.innerHeight * 0.8);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const aboutSageFieldFAQs = [
     {
@@ -275,6 +283,9 @@ export default function Home() {
         isOpen={isWaitlistDialogOpen}
         onClose={() => setIsWaitlistDialogOpen(false)}
       />
+      <AnimatePresence>
+        {pastHero && <FloatingSMSButton />}
+      </AnimatePresence>
     </div>
   );
 }

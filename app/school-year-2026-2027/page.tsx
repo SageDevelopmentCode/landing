@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import WaitlistDialog from "../components/WaitlistDialog";
+import FloatingSMSButton from "../components/FloatingSMSButton";
 
 const details = [
   { label: "Start Date", value: "August 17, 2026" },
@@ -292,6 +293,7 @@ export default function SchoolYear20262027Page() {
         isOpen={waitlistOpen}
         onClose={() => setWaitlistOpen(false)}
       />
+      <FloatingSMSButton />
     </div>
   );
 }
