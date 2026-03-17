@@ -99,10 +99,35 @@ const NAV_TABS: NavTab[] = [
   },
 ];
 
+// ─── Announcement data ───────────────────────────────────────────────────────
+
+const ANNOUNCEMENTS = [
+  {
+    short: "🎉 Open House on April 25!",
+    full: "🎉 We are hosting an Open House on April 25!",
+    buttonLabel: "Join Us!",
+    href: "/rsvp",
+  },
+  {
+    short: "☀️ Join our Summer Program!",
+    full: "☀️ Join us for our 12-week Summer Program!",
+    buttonLabel: "Apply Today!",
+    href: "/apply",
+  },
+  {
+    short: "📚 Enroll for School Year '26-'27!",
+    full: "📚 Enroll for the upcoming 2026–2027 school year!",
+    buttonLabel: "Apply Today!",
+    href: "/apply",
+  },
+];
+
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [announcementIndex, setAnnouncementIndex] = useState(0);
+  const [announcementDirection, setAnnouncementDirection] = useState(1);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [waitlistDialogOpen, setWaitlistDialogOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -120,6 +145,14 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
     }
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setAnnouncementDirection(1);
+      setAnnouncementIndex((i) => (i + 1) % ANNOUNCEMENTS.length);
+    }, 7000);
+    return () => clearInterval(id);
   }, []);
 
   const useDarkStyle =
@@ -279,17 +312,36 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
       ref={navRef}
     >
       {/* Announcement Bar */}
-      <div className="w-full bg-[#4a7c59] text-white text-sm py-1.5 px-4 flex items-center justify-center gap-3">
-        <span className="sm:hidden">🎉 Open House on April 25!</span>
-        <span className="hidden sm:inline">
-          🎉 We are hosting an Open House on April 25!
-        </span>
-        <Link
-          href="/rsvp"
-          className="bg-white text-[#4a7c59] font-semibold text-xs px-3 py-1 rounded-full hover:bg-[#FFF9F5] transition-colors"
-        >
-          RSVP Now
-        </Link>
+      <div className="w-full bg-[#4a7c59] text-white text-sm py-1.5 px-4 overflow-hidden">
+        <AnimatePresence mode="wait" custom={announcementDirection}>
+          <motion.div
+            key={announcementIndex}
+            custom={announcementDirection}
+            variants={{
+              enter: (dir: number) => ({ opacity: 0, y: dir * 16 }),
+              center: { opacity: 1, y: 0 },
+              exit: (dir: number) => ({ opacity: 0, y: dir * -16 }),
+            }}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="flex items-center justify-center gap-3"
+          >
+            <span className="sm:hidden">
+              {ANNOUNCEMENTS[announcementIndex].short}
+            </span>
+            <span className="hidden sm:inline">
+              {ANNOUNCEMENTS[announcementIndex].full}
+            </span>
+            <Link
+              href={ANNOUNCEMENTS[announcementIndex].href}
+              className="shrink-0 bg-white text-[#4a7c59] font-semibold text-xs px-3 py-1 rounded-full hover:bg-welcome-bg transition-colors"
+            >
+              {ANNOUNCEMENTS[announcementIndex].buttonLabel}
+            </Link>
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       <div className="px-6 mx-auto">
