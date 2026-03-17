@@ -38,11 +38,11 @@ const NAV_TABS: NavTab[] = [
       { label: "Our Vision", action: { kind: "link", href: "/vision" } },
       {
         label: "What We Offer",
-        action: { kind: "smooth-scroll", href: "/#what-we-offer" },
+        action: { kind: "link", href: "/what-we-offer" },
       },
       {
         label: "Educational Philosophy",
-        action: { kind: "smooth-scroll", href: "/#educational-philosophy" },
+        action: { kind: "link", href: "/educational-philosophy" },
       },
     ],
   },
@@ -168,7 +168,9 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
       pathname === "/summer-2026" ||
       pathname === "/school-year-2026-2027" ||
       pathname === "/rsvp" ||
-      pathname === "/our-story");
+      pathname === "/our-story" ||
+      pathname === "/what-we-offer" ||
+      pathname === "/educational-philosophy");
 
   // Close everything on route change
   useEffect(() => {

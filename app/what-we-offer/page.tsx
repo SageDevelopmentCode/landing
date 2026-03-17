@@ -2,16 +2,12 @@
 
 import { motion } from "framer-motion";
 import Navbar from "../components/Navbar";
-import WelcomeSection from "../components/WelcomeSection";
 import WhatWeOfferSection from "../components/WhatWeOfferSection";
-import EducationalPhilosophySection from "../components/EducationalPhilosophySection";
-import DonationsSection from "../components/DonationsSection";
-import MeetTheTeamSection from "../components/MeetTheTeamSection";
 import ContactUsSection from "../components/ContactUsSection";
 import Footer from "../components/Footer";
 import FloatingSMSButton from "../components/FloatingSMSButton";
 
-export default function AboutPage() {
+export default function WhatWeOfferPage() {
   return (
     <div className="min-h-screen bg-welcome-bg">
       <Navbar />
@@ -26,7 +22,7 @@ export default function AboutPage() {
             transition={{ duration: 0.6, ease: "easeOut" }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
-              About Us
+              What We Offer
             </span>
           </motion.div>
 
@@ -36,7 +32,7 @@ export default function AboutPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
           >
-            About Sage Field Private School
+            What We Offer at Sage Field
           </motion.h1>
 
           <motion.p
@@ -45,28 +41,13 @@ export default function AboutPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
           >
-            Learn more about our private microschool, our mission, and the team
-            behind Sage Field
+            Discover the programs, experiences, and opportunities we provide for
+            every child at Sage Field Private School.
           </motion.p>
-
-          {/* <motion.blockquote
-            className="text-center text-xl md:text-2xl font-semibold italic text-primary border-l-4 border-primary pl-6 mx-auto max-w-2xl mb-12 font-body text-left"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-          >
-            &ldquo;Children are not meant to rot in classrooms! Choose outdoor
-            learning!&rdquo;
-          </motion.blockquote> */}
         </div>
       </section>
 
-      {/* Content Sections */}
-      <WelcomeSection />
       <WhatWeOfferSection />
-      <EducationalPhilosophySection />
-      <DonationsSection />
-      <MeetTheTeamSection />
       <ContactUsSection />
       <Footer />
       <FloatingSMSButton />

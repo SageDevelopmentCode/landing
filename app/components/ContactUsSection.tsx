@@ -100,6 +100,34 @@ export default function ContactUsSection() {
                 </div>
               </motion.a>
 
+              {/* Phone */}
+              <motion.a
+                href="tel:+15126775872"
+                onMouseEnter={() => setHoveredItem("phone")}
+                onMouseLeave={() => setHoveredItem(null)}
+                whileHover={{ x: 5 }}
+                transition={{ duration: 0.2 }}
+                className="flex items-start gap-4 p-4 rounded-lg hover:bg-primary/5 transition-colors duration-200 cursor-pointer"
+              >
+                <div
+                  className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-all duration-200 ${
+                    hoveredItem === "phone"
+                      ? "bg-primary/20 scale-110"
+                      : "bg-primary/10"
+                  }`}
+                >
+                  📞
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-sm font-semibold text-primary mb-1 font-heading">
+                    Phone
+                  </h4>
+                  <p className="text-base text-text-gray font-body">
+                    (512) 677-5872
+                  </p>
+                </div>
+              </motion.a>
+
               {/* Location */}
               <motion.div
                 onMouseEnter={() => setHoveredItem("location")}

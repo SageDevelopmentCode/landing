@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Mail, MapPin, Instagram, Facebook } from "lucide-react";
+import { Mail, MapPin, Phone, Instagram, Facebook } from "lucide-react";
 import ContactDialog from "./ContactDialog";
 import WaitlistDialog from "./WaitlistDialog";
 
@@ -169,6 +169,13 @@ export default function Footer() {
               >
                 <Mail className="w-4 h-4 flex-shrink-0" />
                 <span>sabrina@sagefield.co</span>
+              </a>
+              <a
+                href="tel:+15126775872"
+                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-body text-sm"
+              >
+                <Phone className="w-4 h-4 flex-shrink-0" />
+                <span>(512) 677-5872</span>
               </a>
               <a
                 href="https://www.google.com/maps/search/?api=1&query=2760+Gattis+School+Rd,+Round+Rock,+TX+78664"
