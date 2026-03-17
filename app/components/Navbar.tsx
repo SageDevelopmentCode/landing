@@ -32,6 +32,7 @@ const NAV_TABS: NavTab[] = [
     label: "About Us",
     items: [
       { label: "About Us", action: { kind: "link", href: "/about" } },
+      { label: "Our Story", action: { kind: "link", href: "/our-story" } },
       { label: "Our Team", action: { kind: "link", href: "/team" } },
       { label: "FAQ", action: { kind: "link", href: "/faq" } },
       { label: "Our Vision", action: { kind: "link", href: "/vision" } },
@@ -133,7 +134,8 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
       pathname === "/academic-calendar" ||
       pathname === "/summer-2026" ||
       pathname === "/school-year-2026-2027" ||
-      pathname === "/rsvp");
+      pathname === "/rsvp" ||
+      pathname === "/our-story");
 
   // Close everything on route change
   useEffect(() => {
@@ -276,6 +278,20 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
       transition={{ duration: 0.6, ease: "easeOut" }}
       ref={navRef}
     >
+      {/* Announcement Bar */}
+      <div className="w-full bg-[#4a7c59] text-white text-sm py-1.5 px-4 flex items-center justify-center gap-3">
+        <span className="sm:hidden">🎉 Open House on April 25!</span>
+        <span className="hidden sm:inline">
+          🎉 We are hosting an Open House on April 25!
+        </span>
+        <Link
+          href="/rsvp"
+          className="bg-white text-[#4a7c59] font-semibold text-xs px-3 py-1 rounded-full hover:bg-[#FFF9F5] transition-colors"
+        >
+          RSVP Now
+        </Link>
+      </div>
+
       <div className="px-6 mx-auto">
         <div className="flex items-center justify-between h-20 relative">
           {/* Logo */}
@@ -378,7 +394,7 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
               onClick={() => setWaitlistDialogOpen(true)}
               className="border-2 border-white bg-primary hover:bg-primary-hover text-white font-semibold px-6 py-2 rounded-lg transition-all duration-250 cursor-pointer shadow-lg"
             >
-              Now Open for Enrollment
+              Open for Enrollment!
             </button>
           </motion.div>
 
@@ -416,7 +432,7 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
             href="/apply"
             className="flex-1 flex items-center justify-center px-4 py-2.5 bg-sage-600 text-white text-sm font-semibold rounded-2xl"
           >
-            Join Today!
+            Enroll Today!
           </Link>
           <Link
             href="/rsvp"
@@ -532,7 +548,23 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
                   onClick={() => setMobileMenuOpen(false)}
                   className="block w-full border-2 border-white bg-primary hover:bg-primary-hover text-white font-semibold px-6 py-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-250 text-center"
                 >
-                  Now Open for Enrollment
+                  Open for Enrollment!
+                </Link>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                transition={{ duration: 0.3, delay: 0.12 }}
+                className="mb-2"
+              >
+                <Link
+                  href="/rsvp"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block w-full border-2 border-white bg-indigo-500 hover:bg-indigo-600 text-white font-semibold px-6 py-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-250 text-center"
+                >
+                  Join us on April 25th!
                 </Link>
               </motion.div>
 
