@@ -1,95 +1,116 @@
-'use client'
+"use client";
 
-import { useState, useMemo } from 'react'
-import { ExternalLink, CheckCircle2, Circle } from 'lucide-react'
-import { Table, TableRow, TableCell } from '../components/Table'
-import { TransactionDetailSidebar, formatCents, formatPaymentType, stripeUrl } from '../components/TransactionDetailSidebar'
-import { colors } from '../design-system'
+import { useState, useMemo } from "react";
+import { ExternalLink, CheckCircle2, Circle } from "lucide-react";
+import { Table, TableRow, TableCell } from "../components/Table";
+import {
+  TransactionDetailSidebar,
+  formatCents,
+  formatPaymentType,
+  stripeUrl,
+} from "../components/TransactionDetailSidebar";
+import { colors } from "../design-system";
 
 type StripeTransaction = {
-  id: string
-  stripe_session_id: string | null
-  stripe_payment_intent_id: string | null
-  payment_type: string
-  status: string
-  amount_cents: number
-  intended_amount_cents: number | null
-  currency: string
-  cover_fees: boolean | null
-  payer_name: string | null
-  payer_email: string | null
-  description: string | null
-  student_id: string | null
-  application_id: string | null
-  parent_id: string | null
-  metadata: Record<string, unknown> | null
-  created_at: string
-  updated_at: string | null
-  is_deleted: boolean
-}
+  id: string;
+  stripe_session_id: string | null;
+  stripe_payment_intent_id: string | null;
+  payment_type: string;
+  status: string;
+  amount_cents: number;
+  intended_amount_cents: number | null;
+  currency: string;
+  cover_fees: boolean | null;
+  payer_name: string | null;
+  payer_email: string | null;
+  description: string | null;
+  student_id: string | null;
+  application_id: string | null;
+  parent_id: string | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string | null;
+  is_deleted: boolean;
+};
 
 interface TransactionsClientProps {
-  transactions: StripeTransaction[]
-  studentMap: Record<string, string>
+  transactions: StripeTransaction[];
+  studentMap: Record<string, string>;
+  parentNameMap: Record<string, string>;
 }
 
 type ChildGroup = {
-  key: string
-  name: string
-  txs: StripeTransaction[]
-}
+  key: string;
+  name: string;
+  txs: StripeTransaction[];
+};
 
 // --- Checklist data structures ---
 
 type ChecklistItem = {
-  id: string
-  label: string
-  payment_type: string
-  week?: string
-  month?: string
-}
+  id: string;
+  label: string;
+  payment_type: string;
+  week?: string;
+  month?: string;
+};
 
 const SUMMER_ITEMS: ChecklistItem[] = [
-  { id: 'reg', label: 'Registration Fee', payment_type: 'registration_fee' },
+  { id: "reg", label: "Registration Fee", payment_type: "registration_fee" },
   ...Array.from({ length: 12 }, (_, i) => ({
     id: `week_${i + 1}`,
     label: `Week ${i + 1}`,
-    payment_type: 'tuition',
+    payment_type: "tuition",
     week: String(i + 1),
   })),
-]
+];
 
 const SCHOOL_YEAR_ITEMS: ChecklistItem[] = [
-  { id: 'reg', label: 'Registration Fee ($500)', payment_type: 'registration_fee' },
-  { id: 'supply', label: 'Supply Fee ($300)', payment_type: 'supply_fee' },
+  {
+    id: "reg",
+    label: "Registration Fee ($500)",
+    payment_type: "registration_fee",
+  },
+  { id: "supply", label: "Supply Fee ($300)", payment_type: "supply_fee" },
   ...[
-    'august', 'september', 'october', 'november', 'december',
-    'january', 'february', 'march', 'april', 'may',
-  ].map(m => ({
+    "august",
+    "september",
+    "october",
+    "november",
+    "december",
+    "january",
+    "february",
+    "march",
+    "april",
+    "may",
+  ].map((m) => ({
     id: m,
     label: m.charAt(0).toUpperCase() + m.slice(1),
-    payment_type: 'tuition',
+    payment_type: "tuition",
     month: m,
   })),
-]
+];
 
 function isTxMatch(
   tx: StripeTransaction,
   item: ChecklistItem,
-  program: 'summer_26' | 'school_year_26_27'
+  program: "summer_26" | "school_year_26_27",
 ): boolean {
-  if (tx.payment_type !== item.payment_type) return false
-  const prog = tx.metadata?.program as string | undefined
-  if (prog !== program && prog !== 'both') return false
-  if (item.week && (tx.metadata?.week as string | undefined) !== item.week) return false
-  if (item.month && (tx.metadata?.month as string | undefined) !== item.month) return false
-  return true
+  if (tx.payment_type !== item.payment_type) return false;
+  const prog = tx.metadata?.program as string | undefined;
+  if (prog !== program && prog !== "both") return false;
+  if (item.week && (tx.metadata?.week as string | undefined) !== item.week)
+    return false;
+  if (item.month && (tx.metadata?.month as string | undefined) !== item.month)
+    return false;
+  return true;
 }
 
 // --- Sub-components ---
 
 function StatusBadge({ status }: { status: string }) {
-  const isSuccess = status === 'complete' || status === 'paid' || status === 'succeeded'
+  const isSuccess =
+    status === "complete" || status === "paid" || status === "succeeded";
   return (
     <span
       className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold"
@@ -100,17 +121,18 @@ function StatusBadge({ status }: { status: string }) {
     >
       {status}
     </span>
-  )
+  );
 }
 
 function getInitials(name: string | null, email: string | null): string {
   if (name) {
-    const parts = name.trim().split(/\s+/)
-    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-    return parts[0][0].toUpperCase()
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2)
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    return parts[0][0].toUpperCase();
   }
-  if (email) return email[0].toUpperCase()
-  return '?'
+  if (email) return email[0].toUpperCase();
+  return "?";
 }
 
 function ProgramChecklist({
@@ -120,31 +142,40 @@ function ProgramChecklist({
   program,
   onSelectTx,
 }: {
-  title: string
-  items: ChecklistItem[]
-  txs: StripeTransaction[]
-  program: 'summer_26' | 'school_year_26_27'
-  onSelectTx: (tx: StripeTransaction) => void
+  title: string;
+  items: ChecklistItem[];
+  txs: StripeTransaction[];
+  program: "summer_26" | "school_year_26_27";
+  onSelectTx: (tx: StripeTransaction) => void;
 }) {
-  const resolved = items.map(item => ({
+  const resolved = items.map((item) => ({
     item,
-    match: txs.find(tx => isTxMatch(tx, item, program)) ?? null,
-  }))
+    match: txs.find((tx) => isTxMatch(tx, item, program)) ?? null,
+  }));
 
-  const paidCount = resolved.filter(r => r.match !== null).length
-  const total = items.length
+  const paidCount = resolved.filter((r) => r.match !== null).length;
+  const total = items.length;
 
   return (
     <div
       className="rounded-xl overflow-hidden flex-1 min-w-0"
-      style={{ border: `1px solid ${colors.border}`, backgroundColor: colors.softCloud }}
+      style={{
+        border: `1px solid ${colors.border}`,
+        backgroundColor: colors.softCloud,
+      }}
     >
       {/* Header */}
       <div
         className="px-4 py-3 border-b"
-        style={{ borderColor: colors.divider, backgroundColor: colors.softCloud }}
+        style={{
+          borderColor: colors.divider,
+          backgroundColor: colors.softCloud,
+        }}
       >
-        <div className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
+        <div
+          className="text-sm font-semibold"
+          style={{ color: colors.textPrimary }}
+        >
           {title}
         </div>
         <div className="text-xs mt-0.5" style={{ color: colors.textTertiary }}>
@@ -155,14 +186,14 @@ function ProgramChecklist({
       {/* Items */}
       <div className="divide-y" style={{ borderColor: colors.divider }}>
         {resolved.map(({ item, match }) => {
-          const isPaid = match !== null
+          const isPaid = match !== null;
           const dateStr = isPaid
-            ? new Date(match!.created_at).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
+            ? new Date(match!.created_at).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
               })
-            : null
+            : null;
 
           return (
             <div
@@ -170,15 +201,20 @@ function ProgramChecklist({
               onClick={() => isPaid && onSelectTx(match!)}
               className="flex items-center gap-3 px-4 py-2.5 transition-colors"
               style={{
-                cursor: isPaid ? 'pointer' : 'default',
+                cursor: isPaid ? "pointer" : "default",
                 opacity: isPaid ? 1 : 0.45,
-                backgroundColor: isPaid ? 'rgba(232, 240, 233, 0.4)' : 'transparent',
+                backgroundColor: isPaid
+                  ? "rgba(232, 240, 233, 0.4)"
+                  : "transparent",
               }}
-              onMouseEnter={e => {
-                if (isPaid) (e.currentTarget as HTMLDivElement).style.backgroundColor = colors.pastelSage
+              onMouseEnter={(e) => {
+                if (isPaid)
+                  (e.currentTarget as HTMLDivElement).style.backgroundColor =
+                    colors.pastelSage;
               }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent'
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLDivElement).style.backgroundColor =
+                  "transparent";
               }}
             >
               {isPaid ? (
@@ -215,94 +251,133 @@ function ProgramChecklist({
                 </span>
               )}
             </div>
-          )
+          );
         })}
       </div>
     </div>
-  )
+  );
 }
 
 // --- Main component ---
 
-export function TransactionsClient({ transactions, studentMap }: TransactionsClientProps) {
-  const [activeTab, setActiveTab] = useState<'list' | 'by-parent'>('list')
-  const [selectedTransaction, setSelectedTransaction] = useState<StripeTransaction | null>(null)
-  const [localTransactions, setLocalTransactions] = useState(transactions)
-  const [selectedParentKey, setSelectedParentKey] = useState<string | null>(null)
-  const [selectedChildKey, setSelectedChildKey] = useState<string | null>(null)
+export function TransactionsClient({
+  transactions,
+  studentMap,
+  parentNameMap,
+}: TransactionsClientProps) {
+  const [activeTab, setActiveTab] = useState<"list" | "by-parent">("list");
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<StripeTransaction | null>(null);
+  const [localTransactions, setLocalTransactions] = useState(transactions);
+  const [selectedParentKey, setSelectedParentKey] = useState<string | null>(
+    null,
+  );
+  const [selectedChildKey, setSelectedChildKey] = useState<string | null>(null);
 
   const handleDeleted = (id: string) => {
-    setLocalTransactions(prev => prev.filter(tx => tx.id !== id))
-  }
+    setLocalTransactions((prev) => prev.filter((tx) => tx.id !== id));
+  };
 
   const parentGroups = useMemo(() => {
-    const map = new Map<string, { key: string; name: string | null; email: string | null; txs: StripeTransaction[] }>()
+    const map = new Map<
+      string,
+      {
+        key: string;
+        name: string | null;
+        email: string | null;
+        txs: StripeTransaction[];
+      }
+    >();
     for (const tx of localTransactions) {
-      if (!tx.metadata?.program) continue
-      const key = tx.parent_id ?? tx.payer_email ?? 'unknown'
-      if (!map.has(key)) map.set(key, { key, name: tx.payer_name, email: tx.payer_email, txs: [] })
-      map.get(key)!.txs.push(tx)
+      if (!tx.metadata?.program) continue;
+      const key = tx.parent_id ?? tx.payer_email ?? "unknown";
+      if (!map.has(key)) {
+        const resolvedName = tx.parent_id
+          ? (parentNameMap[tx.parent_id] ?? tx.payer_name ?? tx.payer_email ?? "Unknown")
+          : (tx.payer_name ?? tx.payer_email ?? "Unknown");
+        map.set(key, {
+          key,
+          name: resolvedName,
+          email: tx.payer_email,
+          txs: [],
+        });
+      }
+      map.get(key)!.txs.push(tx);
     }
-    return Array.from(map.values()).sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
-  }, [localTransactions])
+    return Array.from(map.values()).sort((a, b) =>
+      (a.name ?? "").localeCompare(b.name ?? ""),
+    );
+  }, [localTransactions, parentNameMap]);
 
-  const selectedGroup = selectedParentKey ? parentGroups.find(g => g.key === selectedParentKey) ?? null : null
+  const selectedGroup = selectedParentKey
+    ? (parentGroups.find((g) => g.key === selectedParentKey) ?? null)
+    : null;
 
   const childGroups = useMemo((): ChildGroup[] => {
-    if (!selectedGroup) return []
-    const map = new Map<string, ChildGroup>()
+    if (!selectedGroup) return [];
+    const map = new Map<string, ChildGroup>();
     for (const tx of selectedGroup.txs) {
-      const key = tx.student_id ?? 'unknown'
+      const key = tx.student_id ?? "unknown";
       if (!map.has(key)) {
         const name = tx.student_id
           ? (studentMap[tx.student_id] ?? tx.student_id.slice(0, 8))
-          : 'Unknown'
-        map.set(key, { key, name, txs: [] })
+          : "Unknown";
+        map.set(key, { key, name, txs: [] });
       }
-      map.get(key)!.txs.push(tx)
+      map.get(key)!.txs.push(tx);
     }
-    return Array.from(map.values())
-  }, [selectedGroup, studentMap])
+    return Array.from(map.values());
+  }, [selectedGroup, studentMap]);
 
-  const effectiveChildKey = selectedChildKey ?? childGroups[0]?.key ?? null
-  const selectedChildGroup = childGroups.find(c => c.key === effectiveChildKey) ?? null
+  const effectiveChildKey = selectedChildKey ?? childGroups[0]?.key ?? null;
+  const selectedChildGroup =
+    childGroups.find((c) => c.key === effectiveChildKey) ?? null;
 
   // Determine which programs the selected child has
-  const hasSummer = selectedChildGroup?.txs.some(tx => {
-    const prog = tx.metadata?.program as string | undefined
-    return prog === 'summer_26' || prog === 'both'
-  }) ?? false
+  const hasSummer =
+    selectedChildGroup?.txs.some((tx) => {
+      const prog = tx.metadata?.program as string | undefined;
+      return prog === "summer_26" || prog === "both";
+    }) ?? false;
 
-  const hasSchoolYear = selectedChildGroup?.txs.some(tx => {
-    const prog = tx.metadata?.program as string | undefined
-    return prog === 'school_year_26_27' || prog === 'both'
-  }) ?? false
+  const hasSchoolYear =
+    selectedChildGroup?.txs.some((tx) => {
+      const prog = tx.metadata?.program as string | undefined;
+      return prog === "school_year_26_27" || prog === "both";
+    }) ?? false;
 
   return (
     <>
       {/* Tab switcher */}
       <div className="flex gap-2 mb-4">
-        {(['list', 'by-parent'] as const).map(tab => (
+        {(["list", "by-parent"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
+            className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors cursor-pointer"
             style={{
-              backgroundColor: activeTab === tab ? colors.mistyForest : 'transparent',
-              color: activeTab === tab ? '#ffffff' : colors.textSecondary,
+              backgroundColor:
+                activeTab === tab ? colors.mistyForest : "transparent",
+              color: activeTab === tab ? "#ffffff" : colors.textSecondary,
               border: `1px solid ${activeTab === tab ? colors.mistyForest : colors.border}`,
             }}
           >
-            {tab === 'list' ? 'All Transactions' : 'By Parent'}
+            {tab === "list" ? "All Transactions" : "Parent Tuition Checklist"}
           </button>
         ))}
       </div>
 
       {/* Tab 1 — All Transactions */}
-      {activeTab === 'list' && (
-        <Table headers={['Type', 'Status', 'Payer', 'Amount', 'Net Amount', 'Date']}>
+      {activeTab === "list" && (
+        <Table
+          headers={["Type", "Status", "Payer", "Amount", "Net Amount", "Date"]}
+        >
           {localTransactions.map((tx, index) => (
-            <TableRow key={tx.id} index={index} onClick={() => setSelectedTransaction(tx)}>
+            <TableRow
+              key={tx.id}
+              index={index}
+              onClick={() => setSelectedTransaction(tx)}
+            >
               <TableCell>
                 <div className="flex items-center gap-2">
                   {formatPaymentType(tx.payment_type)}
@@ -326,21 +401,27 @@ export function TransactionsClient({ transactions, studentMap }: TransactionsCli
               </TableCell>
               <TableCell>
                 <div>
-                  {tx.payment_type !== 'donation' && tx.payer_name && (
-                    <div className="font-medium text-gray-800">{tx.payer_name}</div>
+                  {tx.payment_type !== "donation" && tx.payer_name && (
+                    <div className="font-medium text-gray-800">
+                      {tx.payer_name}
+                    </div>
                   )}
-                  <div className="text-gray-500 text-xs">{tx.payer_email ?? '—'}</div>
+                  <div className="text-gray-500 text-xs">
+                    {tx.payer_email ?? "—"}
+                  </div>
                 </div>
               </TableCell>
               <TableCell>{formatCents(tx.amount_cents, tx.currency)}</TableCell>
               <TableCell>
-                {tx.cover_fees ? formatCents(tx.intended_amount_cents, tx.currency) : '—'}
+                {tx.cover_fees
+                  ? formatCents(tx.intended_amount_cents, tx.currency)
+                  : "—"}
               </TableCell>
               <TableCell>
-                {new Date(tx.created_at).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'short',
-                  day: 'numeric',
+                {new Date(tx.created_at).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
                 })}
               </TableCell>
             </TableRow>
@@ -349,26 +430,31 @@ export function TransactionsClient({ transactions, studentMap }: TransactionsCli
       )}
 
       {/* Tab 2 — By Parent */}
-      {activeTab === 'by-parent' && (
-        <div className="flex gap-4" style={{ minHeight: '400px' }}>
+      {activeTab === "by-parent" && (
+        <div className="flex gap-4" style={{ minHeight: "400px" }}>
           {/* Left panel — parent list */}
           <div
             className="flex-shrink-0 overflow-y-auto rounded-xl"
             style={{
-              width: '280px',
+              width: "280px",
               border: `1px solid ${colors.border}`,
               backgroundColor: colors.softCloud,
             }}
           >
-            {parentGroups.map(group => {
-              const isActive = group.key === selectedParentKey
+            {parentGroups.map((group) => {
+              const isActive = group.key === selectedParentKey;
               return (
                 <button
                   key={group.key}
-                  onClick={() => { setSelectedParentKey(group.key); setSelectedChildKey(null) }}
+                  onClick={() => {
+                    setSelectedParentKey(group.key);
+                    setSelectedChildKey(null);
+                  }}
                   className="w-full text-left px-4 py-3 flex items-center gap-3 transition-colors"
                   style={{
-                    backgroundColor: isActive ? colors.pastelSage : 'transparent',
+                    backgroundColor: isActive
+                      ? colors.pastelSage
+                      : "transparent",
                     borderBottom: `1px solid ${colors.divider}`,
                   }}
                 >
@@ -388,14 +474,14 @@ export function TransactionsClient({ transactions, studentMap }: TransactionsCli
                       className="text-sm font-medium truncate"
                       style={{ color: colors.textPrimary }}
                     >
-                      {group.name ?? group.email ?? 'Unknown'}
+                      {group.name ?? group.email ?? "Unknown"}
                     </div>
                     {group.name && (
                       <div
                         className="text-xs truncate"
                         style={{ color: colors.textTertiary }}
                       >
-                        {group.email ?? ''}
+                        {group.email ?? ""}
                       </div>
                     )}
                   </div>
@@ -403,14 +489,16 @@ export function TransactionsClient({ transactions, studentMap }: TransactionsCli
                   <span
                     className="flex-shrink-0 text-xs font-semibold px-1.5 py-0.5 rounded-full"
                     style={{
-                      backgroundColor: isActive ? colors.mistyForest : colors.border,
-                      color: isActive ? '#ffffff' : colors.textSecondary,
+                      backgroundColor: isActive
+                        ? colors.mistyForest
+                        : colors.border,
+                      color: isActive ? "#ffffff" : colors.textSecondary,
                     }}
                   >
                     {group.txs.length}
                   </span>
                 </button>
-              )
+              );
             })}
           </div>
 
@@ -419,19 +507,30 @@ export function TransactionsClient({ transactions, studentMap }: TransactionsCli
             {!selectedGroup ? (
               <div
                 className="h-full flex items-center justify-center rounded-xl"
-                style={{ border: `1px dashed ${colors.border}`, color: colors.textTertiary }}
+                style={{
+                  border: `1px dashed ${colors.border}`,
+                  color: colors.textTertiary,
+                }}
               >
-                <p className="text-sm">Select a parent to view their payment checklist</p>
+                <p className="text-sm">
+                  Select a parent to view their payment checklist
+                </p>
               </div>
             ) : (
               <div className="flex flex-col gap-4 h-full">
                 {/* Parent header */}
                 <div>
-                  <div className="text-base font-semibold" style={{ color: colors.textPrimary }}>
-                    {selectedGroup.name ?? selectedGroup.email ?? 'Unknown'}
+                  <div
+                    className="text-base font-semibold"
+                    style={{ color: colors.textPrimary }}
+                  >
+                    {selectedGroup.name ?? selectedGroup.email ?? "Unknown"}
                   </div>
                   {selectedGroup.name && (
-                    <div className="text-sm" style={{ color: colors.textSecondary }}>
+                    <div
+                      className="text-sm"
+                      style={{ color: colors.textSecondary }}
+                    >
                       {selectedGroup.email}
                     </div>
                   )}
@@ -439,22 +538,24 @@ export function TransactionsClient({ transactions, studentMap }: TransactionsCli
 
                 {/* Child tabs */}
                 <div className="flex gap-2 flex-wrap">
-                  {childGroups.map(child => {
-                    const isActive = child.key === effectiveChildKey
+                  {childGroups.map((child) => {
+                    const isActive = child.key === effectiveChildKey;
                     return (
                       <button
                         key={child.key}
                         onClick={() => setSelectedChildKey(child.key)}
                         className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
                         style={{
-                          backgroundColor: isActive ? colors.mistyForest : 'transparent',
-                          color: isActive ? '#ffffff' : colors.textSecondary,
+                          backgroundColor: isActive
+                            ? colors.mistyForest
+                            : "transparent",
+                          color: isActive ? "#ffffff" : colors.textSecondary,
                           border: `1px solid ${isActive ? colors.mistyForest : colors.border}`,
                         }}
                       >
                         {child.name}
                       </button>
-                    )
+                    );
                   })}
                 </div>
 
@@ -481,7 +582,10 @@ export function TransactionsClient({ transactions, studentMap }: TransactionsCli
                   {!hasSummer && !hasSchoolYear && (
                     <div
                       className="flex-1 flex items-center justify-center rounded-xl py-12"
-                      style={{ border: `1px dashed ${colors.border}`, color: colors.textTertiary }}
+                      style={{
+                        border: `1px dashed ${colors.border}`,
+                        color: colors.textTertiary,
+                      }}
                     >
                       <p className="text-sm">No program transactions found</p>
                     </div>
@@ -499,5 +603,5 @@ export function TransactionsClient({ transactions, studentMap }: TransactionsCli
         onDeleted={handleDeleted}
       />
     </>
-  )
+  );
 }

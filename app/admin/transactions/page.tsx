@@ -56,6 +56,20 @@ export default async function TransactionsPage() {
     studentMap[s.id] = s.child_legal_name
   }
 
+  const parentIds = [...new Set(rows.map(t => t.parent_id).filter(Boolean))] as string[]
+  const { data: parentUsers } = parentIds.length > 0
+    ? await client
+        .schema('admin')
+        .from('users')
+        .select('id, full_name')
+        .in('id', parentIds)
+    : { data: [] }
+
+  const parentNameMap: Record<string, string> = {}
+  for (const p of parentUsers ?? []) {
+    if (p.full_name) parentNameMap[p.id] = p.full_name
+  }
+
   return (
     <div className="space-y-6 pt-6">
       <div>
@@ -70,7 +84,7 @@ export default async function TransactionsPage() {
         </p>
       </div>
 
-      <TransactionsClient transactions={rows} studentMap={studentMap} />
+      <TransactionsClient transactions={rows} studentMap={studentMap} parentNameMap={parentNameMap} />
     </div>
   )
 }
