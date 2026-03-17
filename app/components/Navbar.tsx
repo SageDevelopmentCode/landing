@@ -520,19 +520,21 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
               </div>
 
               {/* Mobile action buttons */}
-              <motion.button
-                onClick={() => {
-                  setWaitlistDialogOpen(true);
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full border-2 border-white bg-primary hover:bg-primary-hover text-white font-semibold px-6 py-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-250 cursor-pointer mb-2"
+              <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
                 transition={{ duration: 0.3, delay: 0.1 }}
+                className="mb-2"
               >
-                Now Open for Enrollment
-              </motion.button>
+                <Link
+                  href="/apply"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block w-full border-2 border-white bg-primary hover:bg-primary-hover text-white font-semibold px-6 py-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-250 text-center"
+                >
+                  Now Open for Enrollment
+                </Link>
+              </motion.div>
 
               <motion.button
                 onClick={() => {
