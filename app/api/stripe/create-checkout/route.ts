@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     const session = await getStripe().checkout.sessions.create({
       mode: "payment",
       submit_type: "donate",
-      payment_method_types: ["card"],
+      payment_method_types: ["card", "us_bank_account"],
       customer_email: donorEmail,
       line_items: [
         {
