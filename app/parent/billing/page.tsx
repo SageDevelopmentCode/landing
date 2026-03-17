@@ -10,6 +10,18 @@ import Footer from "@/app/components/Footer";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import BillingPage from "./BillingPage";
 
+export type PendingPaymentRequest = {
+  id: string;
+  student_id: string | null;
+  program: string;
+  payment_type: string;
+  week: string | null;
+  month: string | null;
+  label: string;
+  amount_cents: number | null;
+  created_at: string;
+};
+
 export type StripeTransaction = {
   id: string;
   stripe_session_id: string | null;
@@ -44,7 +56,7 @@ export default async function BillingRoute() {
 
   const adminClient = createAdminClient();
 
-  const [{ data: txData }, { data: adminUser }] = await Promise.all([
+  const [{ data: txData }, { data: adminUser }, { data: pendingData }] = await Promise.all([
     adminClient
       .schema("billing")
       .from("stripe_transactions")
@@ -58,13 +70,24 @@ export default async function BillingRoute() {
       .select("full_name")
       .eq("id", user.id)
       .single(),
+    adminClient
+      .schema("billing")
+      .from("pending_payment_requests")
+      .select("id, student_id, program, payment_type, week, month, label, amount_cents, created_at")
+      .eq("parent_id", user.id)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false }),
   ]);
 
   const transactions = (txData ?? []) as StripeTransaction[];
+  const pendingRequests = (pendingData ?? []) as PendingPaymentRequest[];
   const fullName = adminUser?.full_name ?? null;
 
   const studentIds = [
-    ...new Set(transactions.map((t) => t.student_id).filter(Boolean)),
+    ...new Set([
+      ...transactions.map((t) => t.student_id),
+      ...pendingRequests.map((p) => p.student_id),
+    ].filter(Boolean)),
   ] as string[];
 
   let studentMap: Record<string, string> = {};
@@ -110,7 +133,7 @@ export default async function BillingRoute() {
               Tuition &amp; Billing
             </h1>
           </div>
-          <BillingPage transactions={transactions} studentMap={studentMap} />
+          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} />
         </main>
       </div>
       <Footer />

@@ -2,16 +2,28 @@
 
 import { useState } from "react";
 import { Receipt, CheckCircle2 } from "lucide-react";
+
+function getInitials(name: string | null): string {
+  if (!name) return "?";
+  return name
+    .trim()
+    .split(/\s+/)
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
 import { DetailSidebar } from "@/app/admin/components/DetailSidebar";
 import {
   SidebarField,
   SidebarSection,
 } from "@/app/components/SidebarPrimitives";
-import type { StripeTransaction } from "./page";
+import type { StripeTransaction, PendingPaymentRequest } from "./page";
 
 interface Props {
   transactions: StripeTransaction[];
   studentMap: Record<string, string>;
+  pendingRequests: PendingPaymentRequest[];
 }
 
 function formatCents(cents: number): string {
@@ -51,6 +63,59 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+function formatProgram(program: string): string {
+  if (program === "summer_26") return "Summer 2026";
+  if (program === "school_year_26_27") return "School Year 2026\u20132027";
+  return program;
+}
+
+function PendingPaymentCard({
+  request,
+  studentName,
+  onClick,
+}: {
+  request: PendingPaymentRequest;
+  studentName: string | null;
+  onClick: () => void;
+}) {
+  return (
+    <div
+      className="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 px-5 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
+      onClick={onClick}
+    >
+      <div
+        className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full text-sm font-semibold"
+        style={{ backgroundColor: "#d4e6d0", color: "#4a7c59" }}
+      >
+        {getInitials(studentName)}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm font-semibold text-gray-800">
+            {request.label}
+          </span>
+          <span className="text-xs text-gray-400">&mdash;</span>
+          <span className="text-xs text-gray-500">{formatProgram(request.program)}</span>
+        </div>
+        {studentName && (
+          <div className="text-xs text-gray-400 mt-0.5">
+            Student: {studentName}
+          </div>
+        )}
+      </div>
+      <div className="flex-shrink-0 text-right">
+        {request.amount_cents != null ? (
+          <span className="text-sm font-semibold text-gray-800">
+            {formatCents(request.amount_cents)}
+          </span>
+        ) : (
+          <span className="text-sm text-gray-400">&mdash;</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function AllCaughtUpCard() {
   return (
     <div className="flex flex-col items-center justify-center bg-white rounded-2xl border border-gray-100 p-8 text-center">
@@ -74,17 +139,73 @@ function AllCaughtUpCard() {
   );
 }
 
-export default function BillingPage({ transactions, studentMap }: Props) {
+function PendingDetailSidebar({
+  pending,
+  studentName,
+  onClose,
+}: {
+  pending: PendingPaymentRequest | null;
+  studentName: string | null;
+  onClose: () => void;
+}) {
+  return (
+    <DetailSidebar
+      isOpen={!!pending}
+      onClose={onClose}
+      title={studentName ?? "Payment Request"}
+    >
+      {pending && (
+        <div className="space-y-4">
+          <button
+            className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-colors"
+            style={{ backgroundColor: "#4a7c59" }}
+            onClick={() => {}}
+          >
+            Pay Now
+          </button>
+          <SidebarSection title="Payment Details">
+            <SidebarField label="Label" value={pending.label} />
+            <SidebarField label="Program" value={formatProgram(pending.program)} />
+            <SidebarField label="Payment Type" value={formatPaymentType(pending.payment_type)} />
+            <SidebarField
+              label="Amount"
+              value={pending.amount_cents != null ? formatCents(pending.amount_cents) : "—"}
+            />
+            <SidebarField label="Requested On" value={formatDate(pending.created_at)} />
+            {studentName && <SidebarField label="Student" value={studentName} />}
+          </SidebarSection>
+        </div>
+      )}
+    </DetailSidebar>
+  );
+}
+
+export default function BillingPage({ transactions, studentMap, pendingRequests }: Props) {
   const [selectedTx, setSelectedTx] = useState<StripeTransaction | null>(null);
+  const [selectedPending, setSelectedPending] = useState<PendingPaymentRequest | null>(null);
 
   if (transactions.length === 0) {
     return (
+      <>
       <div className="space-y-8">
         <div>
           <h2 className="text-lg font-semibold font-heading text-gray-700 mb-4">
             Pending Payments
           </h2>
-          <AllCaughtUpCard />
+          {pendingRequests.length === 0 ? (
+            <AllCaughtUpCard />
+          ) : (
+            <div className="space-y-3">
+              {pendingRequests.map((req) => (
+                <PendingPaymentCard
+                  key={req.id}
+                  request={req}
+                  studentName={req.student_id ? (studentMap[req.student_id] ?? null) : null}
+                  onClick={() => setSelectedPending(req)}
+                />
+              ))}
+            </div>
+          )}
         </div>
         <div>
           <h2 className="text-lg font-semibold font-heading text-gray-700 mb-4">
@@ -110,6 +231,13 @@ export default function BillingPage({ transactions, studentMap }: Props) {
           </div>
         </div>
       </div>
+
+      <PendingDetailSidebar
+        pending={selectedPending}
+        studentName={selectedPending?.student_id ? (studentMap[selectedPending.student_id] ?? null) : null}
+        onClose={() => setSelectedPending(null)}
+      />
+      </>
     );
   }
 
@@ -120,7 +248,20 @@ export default function BillingPage({ transactions, studentMap }: Props) {
           <h2 className="text-lg font-semibold font-heading text-gray-700 mb-4">
             Pending Payments
           </h2>
-          <AllCaughtUpCard />
+          {pendingRequests.length === 0 ? (
+            <AllCaughtUpCard />
+          ) : (
+            <div className="space-y-3">
+              {pendingRequests.map((req) => (
+                <PendingPaymentCard
+                  key={req.id}
+                  request={req}
+                  studentName={req.student_id ? (studentMap[req.student_id] ?? null) : null}
+                  onClick={() => setSelectedPending(req)}
+                />
+              ))}
+            </div>
+          )}
         </div>
         <div>
           <h2 className="text-lg font-semibold font-heading text-gray-700 mb-4">
@@ -182,6 +323,12 @@ export default function BillingPage({ transactions, studentMap }: Props) {
       </div>
         </div>
       </div>
+
+      <PendingDetailSidebar
+        pending={selectedPending}
+        studentName={selectedPending?.student_id ? (studentMap[selectedPending.student_id] ?? null) : null}
+        onClose={() => setSelectedPending(null)}
+      />
 
       <DetailSidebar
         isOpen={!!selectedTx}

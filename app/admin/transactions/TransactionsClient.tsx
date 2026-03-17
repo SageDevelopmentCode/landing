@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { ExternalLink, CheckCircle2, Circle } from "lucide-react";
+import { ExternalLink, CheckCircle2, Circle, Send } from "lucide-react";
 import { Table, TableRow, TableCell } from "../components/Table";
 import {
   TransactionDetailSidebar,
@@ -33,10 +33,24 @@ type StripeTransaction = {
   is_deleted: boolean;
 };
 
+type PendingPaymentRequest = {
+  id: string;
+  parent_id: string;
+  student_id: string | null;
+  program: string;
+  payment_type: string;
+  week: string | null;
+  month: string | null;
+  label: string;
+  amount_cents: number | null;
+  created_at: string;
+};
+
 interface TransactionsClientProps {
   transactions: StripeTransaction[];
   studentMap: Record<string, string>;
   parentNameMap: Record<string, string>;
+  pendingRequests: PendingPaymentRequest[];
 }
 
 type ChildGroup = {
@@ -141,13 +155,36 @@ function ProgramChecklist({
   txs,
   program,
   onSelectTx,
+  parentId,
+  studentId,
+  pendingRequests,
 }: {
   title: string;
   items: ChecklistItem[];
   txs: StripeTransaction[];
   program: "summer_26" | "school_year_26_27";
   onSelectTx: (tx: StripeTransaction) => void;
+  parentId: string | null;
+  studentId: string | null;
+  pendingRequests: PendingPaymentRequest[];
 }) {
+  const [sentItems, setSentItems] = useState<Set<string>>(() =>
+    new Set(
+      items
+        .filter((item) =>
+          pendingRequests.some(
+            (r) =>
+              r.program === program &&
+              r.payment_type === item.payment_type &&
+              (item.week != null ? (r.week === item.week || r.week == null) : r.week == null) &&
+              (item.month != null ? (r.month === item.month || r.month == null) : r.month == null)
+          )
+        )
+        .map((item) => item.id)
+    )
+  );
+  const [loadingItems, setLoadingItems] = useState<Set<string>>(new Set());
+
   const resolved = items.map((item) => ({
     item,
     match: txs.find((tx) => isTxMatch(tx, item, program)) ?? null,
@@ -155,6 +192,36 @@ function ProgramChecklist({
 
   const paidCount = resolved.filter((r) => r.match !== null).length;
   const total = items.length;
+
+  async function handleSendToParent(item: ChecklistItem) {
+    if (!parentId || sentItems.has(item.id) || loadingItems.has(item.id)) return;
+
+    setLoadingItems((prev) => new Set(prev).add(item.id));
+    try {
+      const res = await fetch("/api/admin/pending-payment-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          parent_id: parentId,
+          student_id: studentId,
+          program,
+          payment_type: item.payment_type,
+          week: item.week ?? null,
+          month: item.month ?? null,
+          label: item.label,
+        }),
+      });
+      if (res.ok) {
+        setSentItems((prev) => new Set(prev).add(item.id));
+      }
+    } finally {
+      setLoadingItems((prev) => {
+        const next = new Set(prev);
+        next.delete(item.id);
+        return next;
+      });
+    }
+  }
 
   return (
     <div
@@ -187,6 +254,8 @@ function ProgramChecklist({
       <div className="divide-y" style={{ borderColor: colors.divider }}>
         {resolved.map(({ item, match }) => {
           const isPaid = match !== null;
+          const isSent = sentItems.has(item.id);
+          const isLoading = loadingItems.has(item.id);
           const dateStr = isPaid
             ? new Date(match!.created_at).toLocaleDateString("en-US", {
                 month: "short",
@@ -199,12 +268,13 @@ function ProgramChecklist({
             <div
               key={item.id}
               onClick={() => isPaid && onSelectTx(match!)}
-              className="flex items-center gap-3 px-4 py-2.5 transition-colors"
+              className="flex items-center gap-3 px-4 py-2.5 transition-colors group"
               style={{
                 cursor: isPaid ? "pointer" : "default",
-                opacity: isPaid ? 1 : 0.45,
                 backgroundColor: isPaid
                   ? "rgba(232, 240, 233, 0.4)"
+                  : isSent
+                  ? "rgba(249, 115, 22, 0.06)"
                   : "transparent",
               }}
               onMouseEnter={(e) => {
@@ -214,13 +284,22 @@ function ProgramChecklist({
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLDivElement).style.backgroundColor =
-                  "transparent";
+                  isPaid
+                    ? "rgba(232, 240, 233, 0.4)"
+                    : isSent
+                    ? "rgba(249, 115, 22, 0.06)"
+                    : "transparent";
               }}
             >
               {isPaid ? (
                 <CheckCircle2
                   className="flex-shrink-0 w-4 h-4"
                   style={{ color: colors.mistyForest }}
+                />
+              ) : isSent ? (
+                <div
+                  className="flex-shrink-0 w-4 h-4 rounded-full"
+                  style={{ backgroundColor: "#f97316" }}
                 />
               ) : (
                 <Circle
@@ -232,7 +311,7 @@ function ProgramChecklist({
               <span
                 className="flex-1 text-sm"
                 style={{
-                  color: isPaid ? colors.mistyForest : colors.textTertiary,
+                  color: isPaid ? colors.mistyForest : colors.textSecondary,
                   fontWeight: isPaid ? 600 : 400,
                 }}
               >
@@ -250,6 +329,36 @@ function ProgramChecklist({
                   {dateStr}
                 </span>
               )}
+
+              {!isPaid && parentId && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSendToParent(item);
+                  }}
+                  disabled={isSent || isLoading}
+                  className="flex-shrink-0 flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium transition-all"
+                  style={{
+                    backgroundColor: isSent ? "#fff7ed" : "transparent",
+                    color: isSent ? "#f97316" : colors.textTertiary,
+                    border: `1px solid ${isSent ? "#f97316" : colors.border}`,
+                    cursor: isSent ? "default" : isLoading ? "wait" : "pointer",
+                    opacity: isLoading ? 0.6 : 1,
+                  }}
+                >
+                  {isSent ? (
+                    <>
+                      <CheckCircle2 className="w-3 h-3" />
+                      Sent
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-3 h-3" />
+                      {isLoading ? "Sending…" : "Send to Parent"}
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           );
         })}
@@ -264,6 +373,7 @@ export function TransactionsClient({
   transactions,
   studentMap,
   parentNameMap,
+  pendingRequests,
 }: TransactionsClientProps) {
   const [activeTab, setActiveTab] = useState<"list" | "by-parent">("list");
   const [selectedTransaction, setSelectedTransaction] =
@@ -563,20 +673,36 @@ export function TransactionsClient({
                 <div className="flex gap-4 flex-1 items-start">
                   {hasSummer && (
                     <ProgramChecklist
+                      key={`summer-${effectiveChildKey}`}
                       title="Summer 2026"
                       items={SUMMER_ITEMS}
                       txs={selectedChildGroup?.txs ?? []}
                       program="summer_26"
                       onSelectTx={setSelectedTransaction}
+                      parentId={selectedGroup?.key ?? null}
+                      studentId={effectiveChildKey !== "unknown" ? effectiveChildKey : null}
+                      pendingRequests={pendingRequests.filter(
+                        (r) =>
+                          r.parent_id === selectedGroup?.key &&
+                          r.student_id === (effectiveChildKey !== "unknown" ? effectiveChildKey : null)
+                      )}
                     />
                   )}
                   {hasSchoolYear && (
                     <ProgramChecklist
+                      key={`school-${effectiveChildKey}`}
                       title="School Year 2026–2027"
                       items={SCHOOL_YEAR_ITEMS}
                       txs={selectedChildGroup?.txs ?? []}
                       program="school_year_26_27"
                       onSelectTx={setSelectedTransaction}
+                      parentId={selectedGroup?.key ?? null}
+                      studentId={effectiveChildKey !== "unknown" ? effectiveChildKey : null}
+                      pendingRequests={pendingRequests.filter(
+                        (r) =>
+                          r.parent_id === selectedGroup?.key &&
+                          r.student_id === (effectiveChildKey !== "unknown" ? effectiveChildKey : null)
+                      )}
                     />
                   )}
                   {!hasSummer && !hasSchoolYear && (

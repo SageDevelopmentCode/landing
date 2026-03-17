@@ -8,6 +8,19 @@ const merriweather = Merriweather({
   subsets: ['latin'],
 })
 
+type PendingPaymentRequest = {
+  id: string
+  parent_id: string
+  student_id: string | null
+  program: string
+  payment_type: string
+  week: string | null
+  month: string | null
+  label: string
+  amount_cents: number | null
+  created_at: string
+}
+
 type StripeTransaction = {
   id: string
   stripe_session_id: string | null
@@ -70,6 +83,16 @@ export default async function TransactionsPage() {
     if (p.full_name) parentNameMap[p.id] = p.full_name
   }
 
+  const { data: pendingData } = parentIds.length > 0
+    ? await client
+        .schema('billing')
+        .from('pending_payment_requests')
+        .select('id, parent_id, student_id, program, payment_type, week, month, label, amount_cents, created_at')
+        .in('parent_id', parentIds)
+        .eq('status', 'pending')
+    : { data: [] }
+  const pendingRequests = (pendingData ?? []) as PendingPaymentRequest[]
+
   return (
     <div className="space-y-6 pt-6">
       <div>
@@ -84,7 +107,7 @@ export default async function TransactionsPage() {
         </p>
       </div>
 
-      <TransactionsClient transactions={rows} studentMap={studentMap} parentNameMap={parentNameMap} />
+      <TransactionsClient transactions={rows} studentMap={studentMap} parentNameMap={parentNameMap} pendingRequests={pendingRequests} />
     </div>
   )
 }
