@@ -167,6 +167,13 @@ export default function ContactDialog({ isOpen, onClose }: ContactDialogProps) {
                     <Mail className="w-4 h-4 flex-shrink-0" />
                     <span>sabrina@sagefield.co</span>
                   </a>
+                  <a
+                    href="tel:+15126775872"
+                    className="flex items-center gap-2 text-sm text-primary hover:text-primary-hover transition-colors font-body"
+                  >
+                    <Phone className="w-4 h-4 flex-shrink-0" />
+                    <span>(512) 677-5872</span>
+                  </a>
                 </div>
               </div>
 
