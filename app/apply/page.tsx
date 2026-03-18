@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import ContactDialog from "../components/ContactDialog";
+import WaitlistDialog from "../components/WaitlistDialog";
 import FloatingSMSButton from "../components/FloatingSMSButton";
 
 type Tab = "summer" | "school-year";
@@ -245,6 +246,7 @@ const tabContent = {
 export default function ApplyPage() {
   const [activeTab, setActiveTab] = useState<Tab>("summer");
   const [contactOpen, setContactOpen] = useState(false);
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
   const router = useRouter();
 
   return (
@@ -324,16 +326,14 @@ export default function ApplyPage() {
                   ))}
                 </div>
 
-                {activeTab === "summer" && (
-                  <div className="lg:hidden mb-10">
-                    <button
-                      onClick={() => router.push("/apply/start")}
-                      className="w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
-                    >
-                      Start Application
-                    </button>
-                  </div>
-                )}
+                <div className="lg:hidden mb-10">
+                  <button
+                    onClick={() => setWaitlistOpen(true)}
+                    className="w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
+                  >
+                    Fill out Interest Form
+                  </button>
+                </div>
 
                 {/* Key Details */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
@@ -765,47 +765,45 @@ export default function ApplyPage() {
                   </motion.div>
                 )}
 
-                {/* Have any questions? — Summer only */}
-                {activeTab === "summer" && (
-                  <motion.div
-                    className="mb-10 bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center"
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.6, ease: "easeOut" }}
+                {/* Have any questions? */}
+                <motion.div
+                  className="mb-10 bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
+                >
+                  <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4">
+                    Questions?
+                  </span>
+                  <h2 className="text-2xl font-bold text-gray-800 font-heading mb-2">
+                    Have any questions?
+                  </h2>
+                  <p className="text-gray-500 font-body text-sm mb-6 max-w-md mx-auto">
+                    We&apos;d love to hear from you. Reach out directly or
+                    send us a message.
+                  </p>
+                  <a
+                    href="mailto:sabrina@sagefield.co"
+                    className="inline-flex items-center gap-2 text-primary font-semibold font-body text-sm mb-6 hover:underline"
                   >
-                    <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4">
-                      Questions?
-                    </span>
-                    <h2 className="text-2xl font-bold text-gray-800 font-heading mb-2">
-                      Have any questions?
-                    </h2>
-                    <p className="text-gray-500 font-body text-sm mb-6 max-w-md mx-auto">
-                      We&apos;d love to hear from you. Reach out directly or
-                      send us a message.
-                    </p>
-                    <a
-                      href="mailto:sabrina@sagefield.co"
-                      className="inline-flex items-center gap-2 text-primary font-semibold font-body text-sm mb-6 hover:underline"
+                    sabrina@sagefield.co
+                  </a>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center mt-2">
+                    <button
+                      onClick={() => setContactOpen(true)}
+                      className="px-8 py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:border-primary hover:text-primary transition-colors duration-200 font-body cursor-pointer"
                     >
-                      sabrina@sagefield.co
-                    </a>
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center mt-2">
-                      <button
-                        onClick={() => setContactOpen(true)}
-                        className="px-8 py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:border-primary hover:text-primary transition-colors duration-200 font-body cursor-pointer"
-                      >
-                        Contact Us
-                      </button>
-                      <button
-                        onClick={() => router.push("/apply/start")}
-                        className="px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
-                      >
-                        Start Application
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
+                      Contact Us
+                    </button>
+                    <button
+                      onClick={() => setWaitlistOpen(true)}
+                      className="px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
+                    >
+                      Fill out Interest Form
+                    </button>
+                  </div>
+                </motion.div>
 
                 {/* Mobile CTA — hidden (covered by early button and right-column card) */}
                 <div className="hidden">
@@ -831,9 +829,21 @@ export default function ApplyPage() {
                   </p>
                   <button
                     onClick={() => router.push("/apply/start")}
-                    className="w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
+                    className="hidden lg:block w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
                   >
                     Start Application
+                  </button>
+                  <button
+                    onClick={() => setWaitlistOpen(true)}
+                    className="hidden lg:block w-full mt-3 px-8 py-3 text-sm text-gray-500 font-body font-semibold hover:text-primary transition-colors duration-200 cursor-pointer"
+                  >
+                    Have any questions?
+                  </button>
+                  <button
+                    onClick={() => setWaitlistOpen(true)}
+                    className="lg:hidden w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
+                  >
+                    Fill out Interest Form
                   </button>
                 </div>
               </div>
@@ -847,6 +857,10 @@ export default function ApplyPage() {
       <ContactDialog
         isOpen={contactOpen}
         onClose={() => setContactOpen(false)}
+      />
+      <WaitlistDialog
+        isOpen={waitlistOpen}
+        onClose={() => setWaitlistOpen(false)}
       />
       <FloatingSMSButton />
     </div>
