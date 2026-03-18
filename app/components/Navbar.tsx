@@ -58,6 +58,10 @@ const NAV_TABS: NavTab[] = [
         label: "School Year 2026-2027",
         action: { kind: "link", href: "/school-year-2026-2027" },
       },
+      {
+        label: "Homeschool Drop-In",
+        action: { kind: "link", href: "/homeschool" },
+      },
       { label: "Tuition", action: { kind: "link", href: "/tuition" } },
     ],
   },
@@ -167,6 +171,7 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
       pathname === "/academic-calendar" ||
       pathname === "/summer-2026" ||
       pathname === "/school-year-2026-2027" ||
+      pathname === "/homeschool" ||
       pathname === "/rsvp" ||
       pathname === "/our-story" ||
       pathname === "/what-we-offer" ||

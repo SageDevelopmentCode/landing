@@ -51,6 +51,10 @@ const FOOTER_COLUMNS: NavColumn[] = [
         label: "School Year 2026-2027",
         action: { kind: "link", href: "/school-year-2026-2027" },
       },
+      {
+        label: "Homeschool Drop-In",
+        action: { kind: "link", href: "/homeschool" },
+      },
       { label: "Tuition", action: { kind: "link", href: "/tuition" } },
     ],
   },
