@@ -38,6 +38,11 @@ const whoCards = [
     description:
       "Learn about enrollment options and find the right fit for your family.",
   },
+  {
+    title: "Homeschool families looking for enrichment",
+    description:
+      "Drop-in options for art, music, homesteading, and more — more consistent and affordable than piecing together separate extracurricular programs.",
+  },
 ];
 
 const expectations = [
@@ -330,9 +335,9 @@ export default function OpenHousePage() {
         </div>
       </section>
 
-      {/* ── What to Expect ── */}
+      {/* ── Our Approach ── */}
       <section className="pb-16 px-6 sm:px-12 lg:px-16">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <motion.div
             className="text-center mb-10"
             initial={{ opacity: 0, y: 20 }}
@@ -341,31 +346,69 @@ export default function OpenHousePage() {
             transition={{ duration: 0.6, ease: "easeOut" }}
           >
             <h2 className="text-3xl md:text-4xl font-bold font-heading text-gray-800">
-              What to Expect
+              Our Approach
             </h2>
           </motion.div>
 
-          <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 space-y-4">
-            {expectations.map((item, i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {[
+              {
+                image: "/assets/ImageFive.jpg",
+                emoji: "📅",
+                title: "4 Days a Week, Plus Optional Fridays",
+                body: "Core learning runs Monday through Thursday. Fridays are optional Field Days — all-fun, no-pressure activities for families who want more.",
+              },
+              {
+                image: "/assets/ImageNine.jpg",
+                emoji: "🌿",
+                title: "Learning Happens Outside",
+                body: "Lessons are primarily outdoors — movement, hands-on activities, and play are core to how we teach, not extras tacked on at the end of the day.",
+              },
+              {
+                image: "/assets/ImageSeven.jpg",
+                emoji: "🌱",
+                title: "Inspired by Montessori, Waldorf & Reggio",
+                body: "We blend proven methods — hands-on experiential learning, emotional regulation, and artistic and musical creativity — alongside TEKS-aligned academics.",
+              },
+              {
+                image: "/assets/ImageTen.jpg",
+                emoji: "❤️",
+                title: "Whole-Child Focus",
+                body: "We prioritize emotional regulation, social development, and project-based learning in small groups of ~10 kids — so every child feels seen and connected, not just educated.",
+              },
+            ].map((card, i) => (
               <motion.div
-                key={item.text}
-                className="flex items-start gap-4"
+                key={card.title}
+                className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: i * 0.1, ease: "easeOut" }}
               >
-                <span className="text-2xl flex-shrink-0">{item.emoji}</span>
-                <p className="text-base text-gray-700 font-body leading-relaxed pt-0.5">
-                  {item.text}
-                </p>
+                <div className="relative h-40 w-full">
+                  <Image
+                    src={card.image}
+                    alt={card.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="p-6">
+                  <div className="text-3xl mb-3">{card.emoji}</div>
+                  <h3 className="text-base font-bold text-gray-800 font-heading mb-2">
+                    {card.title}
+                  </h3>
+                  <p className="text-sm text-gray-600 font-body leading-relaxed">
+                    {card.body}
+                  </p>
+                </div>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── What's Happening That Day ── */}
+      {/* ── What to Expect ── */}
       <section className="pb-16 px-6 sm:px-12 lg:px-16">
         <div className="max-w-5xl mx-auto">
           <motion.div
@@ -376,12 +419,30 @@ export default function OpenHousePage() {
             transition={{ duration: 0.6, ease: "easeOut" }}
           >
             <h2 className="text-3xl md:text-4xl font-bold font-heading text-gray-800 mb-3">
-              What&apos;s Happening That Day
+              What to Expect on April 25th
             </h2>
             <p className="text-gray-500 font-body">
               While kids explore, you get to breathe.
             </p>
           </motion.div>
+
+          <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 space-y-4 mb-6">
+            {expectations.map((item, i) => (
+              <motion.div
+                key={item.text}
+                className="flex items-start gap-4"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: i * 0.1, ease: "easeOut" }}
+              >
+                <span className="text-2xl shrink-0">{item.emoji}</span>
+                <p className="text-base text-gray-700 font-body leading-relaxed pt-0.5">
+                  {item.text}
+                </p>
+              </motion.div>
+            ))}
+          </div>
 
           {/* Kids Activity Stations */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
@@ -415,7 +476,7 @@ export default function OpenHousePage() {
 
           {/* Parent Lounge */}
           <motion.div
-            className="bg-badge-bg rounded-xl p-6 shadow-sm mb-6"
+            className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -433,7 +494,7 @@ export default function OpenHousePage() {
                 (item) => (
                   <li
                     key={item}
-                    className="text-xs font-body bg-white/60 text-gray-700 px-3 py-1 rounded-full"
+                    className="text-xs font-body bg-gray-100 text-gray-700 px-3 py-1 rounded-full"
                   >
                     {item}
                   </li>
@@ -500,7 +561,7 @@ export default function OpenHousePage() {
 
           {/* Photo Booth */}
           <motion.div
-            className="bg-badge-bg rounded-xl p-6 shadow-sm mb-6"
+            className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
