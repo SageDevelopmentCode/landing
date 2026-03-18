@@ -714,7 +714,8 @@ export async function buildApprovalEmail(opts: {
     return program;
   }
 
-  const subject = "Your Application Has Been Approved — Next Steps to Complete Enrollment";
+  const subject =
+    "Your Application Has Been Approved — Next Steps to Complete Enrollment";
   const content = `
 <!DOCTYPE html>
 <html>
@@ -785,7 +786,7 @@ export async function buildRSVPConfirmationEmail(opts: {
   <ul style="padding-left: 20px;">
     <li style="margin-bottom: 8px;">Tour our outdoor learning space and farm property</li>
     <li style="margin-bottom: 8px;">Meet Sabrina and our educators in person</li>
-    <li style="margin-bottom: 8px;">See our curriculum and nature-based approach in action</li>
+    <li style="margin-bottom: 8px;">See our curriculum and outdoor-based approach in action</li>
     <li style="margin-bottom: 8px;">Connect with other families exploring Sage Field</li>
     <li style="margin-bottom: 8px;">Learn about enrollment for Summer 2026 &amp; School Year 2026–2027</li>
   </ul>
@@ -795,13 +796,13 @@ export async function buildRSVPConfirmationEmail(opts: {
   <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin-bottom: 16px;">
     <p style="margin: 0 0 6px 0; font-weight: bold; font-size: 15px;">Summer 2026</p>
     <p style="margin: 4px 0; color: #555; font-size: 14px;">May 26 – Aug 20 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Mon–Thu, ~6 hrs/day &nbsp;·&nbsp; Group of ~10</p>
-    <p style="margin: 10px 0 0 0; font-size: 14px;">An immersive summer of nature-based learning — gardening, animal care, outdoor exploration, and hands-on projects in a small, intentional community.</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;">An immersive summer of outdoor-based learning — gardening, animal care, outdoor exploration, and hands-on projects in a small, intentional community.</p>
   </div>
 
   <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin-bottom: 28px;">
     <p style="margin: 0 0 6px 0; font-weight: bold; font-size: 15px;">School Year 2026–2027</p>
     <p style="margin: 4px 0; color: #555; font-size: 14px;">Starts Aug 17 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Up to 4 days/week &nbsp;·&nbsp; 6-month commitment</p>
-    <p style="margin: 10px 0 0 0; font-size: 14px;">A full-year nature-based education grounded in Montessori principles, outdoor learning, and deep connection to the living world — with flexible scheduling for families.</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;">A full-year outdoor-based education grounded in Montessori principles, outdoor learning, and deep connection to the living world — with flexible scheduling for families.</p>
   </div>
 
   <p style="text-align: center; margin: 32px 0;">
