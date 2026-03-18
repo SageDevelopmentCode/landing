@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
+import WaitlistDialog from "@/app/components/WaitlistDialog";
 import { submitRSVP } from "@/app/actions/rsvp";
 import FloatingSMSButton from "@/app/components/FloatingSMSButton";
 import { formatPhone } from "@/app/utils/formatPhone";
@@ -100,6 +101,7 @@ export default function OpenHousePage() {
     });
   };
 
+  const [contactOpen, setContactOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<{
     type: "success" | "error" | null;
@@ -826,6 +828,46 @@ export default function OpenHousePage() {
         </div>
       </section>
 
+      {/* ── Apply CTA ── */}
+      <section className="pb-20 px-6 sm:px-12 lg:px-16">
+        <div className="max-w-2xl mx-auto">
+          <motion.div
+            className="bg-primary/5 border border-primary/20 rounded-2xl p-8 text-center"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+          >
+            <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4">
+              Enrollment Open
+            </span>
+            <h2 className="text-2xl md:text-3xl font-bold font-heading text-gray-800 mb-3">
+              Interested in your child attending Sage Field?
+            </h2>
+            <p className="text-gray-500 font-body mb-8 max-w-md mx-auto">
+              We offer Summer 2026 and School Year 2026–2027 programs for
+              curious learners ages 4–11. Apply today to secure your child&apos;s
+              spot.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <a
+                href="/apply"
+                className="px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 font-body"
+              >
+                Apply for a Program
+              </a>
+              <button
+                onClick={() => setContactOpen(true)}
+                className="px-8 py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:border-primary hover:text-primary transition-colors duration-200 font-body cursor-pointer"
+              >
+                Have Questions?
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      <WaitlistDialog isOpen={contactOpen} onClose={() => setContactOpen(false)} />
       <Footer />
       <FloatingSMSButton />
     </div>
