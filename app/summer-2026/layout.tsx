@@ -9,6 +9,8 @@ export const metadata: Metadata = {
     "summer program Round Rock TX",
     "outdoor summer camp Texas",
     "nature-based summer program",
+    "outdoor-based summer program",
+    "outdoor-based summer camp",
     "kids summer camp ages 4-11",
     "Sage Field summer",
     "educational summer camp",

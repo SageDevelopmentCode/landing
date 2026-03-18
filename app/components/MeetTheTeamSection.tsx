@@ -9,7 +9,7 @@ const TEAM_MEMBERS = [
     role: "Primary Lead Teacher",
     image: "/assets/team/Paige.webp",
     description:
-      "Ms. Paige is the Lead Primary Teacher at Sage Field Private School. She has a passion for nature-based learning and creating environments where young children feel safe, curious, and inspired. With experience in Montessori-style education and outdoor learning, she brings creativity and intentionality to every lesson.",
+      "Ms. Paige is the Lead Primary Teacher at Sage Field Private School. She has a passion for outdoor-based learning and creating environments where young children feel safe, curious, and inspired. With experience in Montessori-style education and outdoor learning, she brings creativity and intentionality to every lesson.",
   },
   {
     name: "Zelinda Melo",

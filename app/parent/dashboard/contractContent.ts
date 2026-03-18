@@ -131,7 +131,7 @@ export const CONTRACT_1_SECTIONS: ContractSection[] = [
     id: 1,
     title: "1. What Sage Field Is",
     paragraphs: [
-      "Sage Field Private School is a nature-based micro-school offering small-group, project-driven learning for children ages 4-11. Our program integrates academic instruction with hands-on exploration, outdoor education, and community-centered learning.",
+      "Sage Field Private School is a outdoor-based micro-school offering small-group, project-driven learning for children ages 4-11. Our program integrates academic instruction with hands-on exploration, outdoor education, and community-centered learning.",
       "Sage Field is not a daycare or a traditional school. We operate as a private school. Parents who enroll their children agree to embrace our philosophy, structure, and community expectations as described in this document.",
     ],
   },

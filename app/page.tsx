@@ -28,7 +28,8 @@ export default function Home() {
   const [pastHero, setPastHero] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => setPastHero(window.scrollY > window.innerHeight * 0.8);
+    const handleScroll = () =>
+      setPastHero(window.scrollY > window.innerHeight * 0.8);
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -47,7 +48,7 @@ export default function Home() {
     {
       question: "What is a microschool?",
       answer:
-        "A microschool is a small, independent private school — typically serving no more than 10-12 students — that offers a more personalized, flexible alternative to traditional schooling. Microschools prioritize small class sizes, individualized pacing, and innovative approaches to learning. Sage Field fits this model: we are a licensed private school with intentional, nature-based education at our core.",
+        "A microschool is a small, independent private school — typically serving no more than 10-12 students — that offers a more personalized, flexible alternative to traditional schooling. Microschools prioritize small class sizes, individualized pacing, and innovative approaches to learning. Sage Field fits this model: we are a licensed private school with intentional, outdoor-based education at our core.",
     },
     {
       question: "What is the Family Partnership model?",
@@ -283,9 +284,7 @@ export default function Home() {
         isOpen={isWaitlistDialogOpen}
         onClose={() => setIsWaitlistDialogOpen(false)}
       />
-      <AnimatePresence>
-        {pastHero && <FloatingSMSButton />}
-      </AnimatePresence>
+      <AnimatePresence>{pastHero && <FloatingSMSButton />}</AnimatePresence>
     </div>
   );
 }

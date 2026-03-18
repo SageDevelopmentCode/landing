@@ -13,12 +13,30 @@ const merriweather = Merriweather({
 type SchoolId = "good-earth" | "acres-grove" | "inside-outside";
 
 const schools: { id: SchoolId; name: string; location: string }[] = [
-  { id: "good-earth", name: "Good Earth Farm School", location: "Sebastopol, CA" },
-  { id: "acres-grove", name: "Acres Grove Nature School", location: "Round Rock, TX" },
-  { id: "inside-outside", name: "The Inside Outside School", location: "Pflugerville, TX" },
+  {
+    id: "good-earth",
+    name: "Good Earth Farm School",
+    location: "Sebastopol, CA",
+  },
+  {
+    id: "acres-grove",
+    name: "Acres Grove Nature School",
+    location: "Round Rock, TX",
+  },
+  {
+    id: "inside-outside",
+    name: "The Inside Outside School",
+    location: "Pflugerville, TX",
+  },
 ];
 
-function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+function SectionCard({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <div
       style={{
@@ -48,7 +66,15 @@ function SectionCard({ title, children }: { title: string; children: React.React
   );
 }
 
-function Tag({ label, color = colors.pastelSage, textColor = colors.mistyForest }: { label: string; color?: string; textColor?: string }) {
+function Tag({
+  label,
+  color = colors.pastelSage,
+  textColor = colors.mistyForest,
+}: {
+  label: string;
+  color?: string;
+  textColor?: string;
+}) {
   return (
     <span
       style={{
@@ -70,21 +96,73 @@ function Tag({ label, color = colors.pastelSage, textColor = colors.mistyForest 
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ display: "flex", gap: "12px", marginBottom: "8px", fontSize: "13px" }}>
-      <span style={{ color: colors.textSecondary, minWidth: "160px", flexShrink: 0 }}>{label}</span>
-      <span style={{ color: colors.textPrimary, fontWeight: 500 }}>{value}</span>
+    <div
+      style={{
+        display: "flex",
+        gap: "12px",
+        marginBottom: "8px",
+        fontSize: "13px",
+      }}
+    >
+      <span
+        style={{
+          color: colors.textSecondary,
+          minWidth: "160px",
+          flexShrink: 0,
+        }}
+      >
+        {label}
+      </span>
+      <span style={{ color: colors.textPrimary, fontWeight: 500 }}>
+        {value}
+      </span>
     </div>
   );
 }
 
 const goodEarthPrograms = [
-  { name: "Young Sprouts", age: "2–3 yrs", schedule: "2 days/week", tuition: "$525–$575/mo" },
-  { name: "Little Seedlings", age: "2.5–4 yrs", schedule: "3 days/week", tuition: "$735–$815/mo" },
-  { name: "Fledgling Forest", age: "3–5 yrs", schedule: "3 days/week", tuition: "$735–$815/mo" },
-  { name: "Growing Roots", age: "3–5 yrs", schedule: "4 days/week", tuition: "$925–$1,025/mo" },
-  { name: "Full Week Forest", age: "3–5 yrs", schedule: "5 days/week", tuition: "$1,100–$1,220/mo" },
-  { name: "Extended Day", age: "3–5 yrs", schedule: "After-program care", tuition: "$215–$325/mo" },
-  { name: "Summer Camp", age: "3–6 yrs", schedule: "Seasonal", tuition: "$275–$375/wk" },
+  {
+    name: "Young Sprouts",
+    age: "2–3 yrs",
+    schedule: "2 days/week",
+    tuition: "$525–$575/mo",
+  },
+  {
+    name: "Little Seedlings",
+    age: "2.5–4 yrs",
+    schedule: "3 days/week",
+    tuition: "$735–$815/mo",
+  },
+  {
+    name: "Fledgling Forest",
+    age: "3–5 yrs",
+    schedule: "3 days/week",
+    tuition: "$735–$815/mo",
+  },
+  {
+    name: "Growing Roots",
+    age: "3–5 yrs",
+    schedule: "4 days/week",
+    tuition: "$925–$1,025/mo",
+  },
+  {
+    name: "Full Week Forest",
+    age: "3–5 yrs",
+    schedule: "5 days/week",
+    tuition: "$1,100–$1,220/mo",
+  },
+  {
+    name: "Extended Day",
+    age: "3–5 yrs",
+    schedule: "After-program care",
+    tuition: "$215–$325/mo",
+  },
+  {
+    name: "Summer Camp",
+    age: "3–6 yrs",
+    schedule: "Seasonal",
+    tuition: "$275–$375/wk",
+  },
 ];
 
 const goodEarthPages = [
@@ -110,7 +188,8 @@ const goodEarthPages = [
     name: "Tuition & Fees",
     url: "https://goodearthfarmschool.com/tuition",
     sageStatus: "missing" as const,
-    sageNote: "No dedicated pricing page — add a Tuition page with full breakdown",
+    sageNote:
+      "No dedicated pricing page — add a Tuition page with full breakdown",
   },
   {
     name: "Enrollment / Apply",
@@ -158,7 +237,8 @@ const goodEarthPages = [
     name: "Blog",
     url: "https://goodearthfarmschool.com/blog",
     sageStatus: "missing" as const,
-    sageNote: "Neither school has active blog — huge SEO opportunity for Sagefield to lead",
+    sageNote:
+      "Neither school has active blog — huge SEO opportunity for Sagefield to lead",
   },
 ];
 
@@ -188,14 +268,23 @@ function GoodEarthAnalysis() {
         <Row label="Full Name" value="Good Earth Farm School" />
         <Row label="Location" value="Sebastopol, CA (Sonoma County)" />
         <Row label="Founded" value="~2002 (20+ years operating)" />
-        <Row label="Hours" value="Mon–Fri, 8:30am–12:30pm (extended care available)" />
+        <Row
+          label="Hours"
+          value="Mon–Fri, 8:30am–12:30pm (extended care available)"
+        />
         <Row label="Website" value="goodearthfarmschool.com" />
         <Row label="Phone" value="(707) 823-xxxx" />
       </SectionCard>
 
       <SectionCard title="Programs & Pricing">
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              fontSize: "13px",
+            }}
+          >
             <thead>
               <tr style={{ borderBottom: `1px solid ${colors.border}` }}>
                 {["Program", "Age", "Schedule", "Tuition"].map((h) => (
@@ -216,11 +305,44 @@ function GoodEarthAnalysis() {
             </thead>
             <tbody>
               {goodEarthPrograms.map((p, i) => (
-                <tr key={i} style={{ borderBottom: `1px solid ${colors.divider}` }}>
-                  <td style={{ padding: "8px 12px 8px 0", color: colors.textPrimary, fontWeight: 500 }}>{p.name}</td>
-                  <td style={{ padding: "8px 12px 8px 0", color: colors.textSecondary }}>{p.age}</td>
-                  <td style={{ padding: "8px 12px 8px 0", color: colors.textSecondary }}>{p.schedule}</td>
-                  <td style={{ padding: "8px 0 8px 0", color: colors.mistyForest, fontWeight: 600 }}>{p.tuition}</td>
+                <tr
+                  key={i}
+                  style={{ borderBottom: `1px solid ${colors.divider}` }}
+                >
+                  <td
+                    style={{
+                      padding: "8px 12px 8px 0",
+                      color: colors.textPrimary,
+                      fontWeight: 500,
+                    }}
+                  >
+                    {p.name}
+                  </td>
+                  <td
+                    style={{
+                      padding: "8px 12px 8px 0",
+                      color: colors.textSecondary,
+                    }}
+                  >
+                    {p.age}
+                  </td>
+                  <td
+                    style={{
+                      padding: "8px 12px 8px 0",
+                      color: colors.textSecondary,
+                    }}
+                  >
+                    {p.schedule}
+                  </td>
+                  <td
+                    style={{
+                      padding: "8px 0 8px 0",
+                      color: colors.mistyForest,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {p.tuition}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -242,40 +364,76 @@ function GoodEarthAnalysis() {
         >
           <span style={{ fontSize: "20px" }}>⏳</span>
           <div>
-            <p style={{ fontSize: "14px", fontWeight: 700, color: colors.warningText }}>18-Month Waitlist</p>
-            <p style={{ fontSize: "12px", color: colors.warningText, marginTop: "2px" }}>
-              Near 100% capacity year-round. Families routinely wait 1.5+ years for a spot.
+            <p
+              style={{
+                fontSize: "14px",
+                fontWeight: 700,
+                color: colors.warningText,
+              }}
+            >
+              18-Month Waitlist
+            </p>
+            <p
+              style={{
+                fontSize: "12px",
+                color: colors.warningText,
+                marginTop: "2px",
+              }}
+            >
+              Near 100% capacity year-round. Families routinely wait 1.5+ years
+              for a spot.
             </p>
           </div>
         </div>
-        <p style={{ fontSize: "13px", color: colors.textSecondary, lineHeight: 1.6 }}>
-          Applications open in October for the following fall. Siblings receive priority. Limited openings
-          appear mid-year when families relocate. No public waitlist numbers are shared.
+        <p
+          style={{
+            fontSize: "13px",
+            color: colors.textSecondary,
+            lineHeight: 1.6,
+          }}
+        >
+          Applications open in October for the following fall. Siblings receive
+          priority. Limited openings appear mid-year when families relocate. No
+          public waitlist numbers are shared.
         </p>
       </SectionCard>
 
       <SectionCard title="Website Pages">
-        <p style={{ fontSize: "12px", color: colors.textSecondary, marginBottom: "12px" }}>
+        <p
+          style={{
+            fontSize: "12px",
+            color: colors.textSecondary,
+            marginBottom: "12px",
+          }}
+        >
           Pages Good Earth has — compared against Sagefield&apos;s current site:
         </p>
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              fontSize: "13px",
+            }}
+          >
             <thead>
               <tr style={{ borderBottom: `1px solid ${colors.border}` }}>
-                {["Page", "Good Earth", "Sagefield", "Sagefield Action"].map((h) => (
-                  <th
-                    key={h}
-                    style={{
-                      textAlign: "left",
-                      padding: "6px 12px 8px 0",
-                      color: colors.textSecondary,
-                      fontWeight: 600,
-                      fontSize: "12px",
-                    }}
-                  >
-                    {h}
-                  </th>
-                ))}
+                {["Page", "Good Earth", "Sagefield", "Sagefield Action"].map(
+                  (h) => (
+                    <th
+                      key={h}
+                      style={{
+                        textAlign: "left",
+                        padding: "6px 12px 8px 0",
+                        color: colors.textSecondary,
+                        fontWeight: 600,
+                        fontSize: "12px",
+                      }}
+                    >
+                      {h}
+                    </th>
+                  ),
+                )}
               </tr>
             </thead>
             <tbody>
@@ -284,18 +442,25 @@ function GoodEarthAnalysis() {
                   page.sageStatus === "has"
                     ? colors.success
                     : page.sageStatus === "partial"
-                    ? colors.warning
-                    : colors.error;
+                      ? colors.warning
+                      : colors.error;
                 const badgeText =
                   page.sageStatus === "has"
                     ? colors.successText
                     : page.sageStatus === "partial"
-                    ? colors.warningText
-                    : colors.errorText;
+                      ? colors.warningText
+                      : colors.errorText;
                 const badgeLabel =
-                  page.sageStatus === "has" ? "Has it" : page.sageStatus === "partial" ? "Partial" : "Missing";
+                  page.sageStatus === "has"
+                    ? "Has it"
+                    : page.sageStatus === "partial"
+                      ? "Partial"
+                      : "Missing";
                 return (
-                  <tr key={i} style={{ borderBottom: `1px solid ${colors.divider}` }}>
+                  <tr
+                    key={i}
+                    style={{ borderBottom: `1px solid ${colors.divider}` }}
+                  >
                     <td style={{ padding: "9px 12px 9px 0" }}>
                       <a
                         href={page.url}
@@ -309,14 +474,30 @@ function GoodEarthAnalysis() {
                           alignItems: "center",
                           gap: "4px",
                         }}
-                        onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.textDecoration = "underline")}
-                        onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.textDecoration = "none")}
+                        onMouseEnter={(e) =>
+                          ((
+                            e.currentTarget as HTMLAnchorElement
+                          ).style.textDecoration = "underline")
+                        }
+                        onMouseLeave={(e) =>
+                          ((
+                            e.currentTarget as HTMLAnchorElement
+                          ).style.textDecoration = "none")
+                        }
                       >
                         {page.name}
                         <ExternalLink size={12} style={{ flexShrink: 0 }} />
                       </a>
                     </td>
-                    <td style={{ padding: "9px 12px 9px 0", color: colors.successText, fontWeight: 600 }}>✅</td>
+                    <td
+                      style={{
+                        padding: "9px 12px 9px 0",
+                        color: colors.successText,
+                        fontWeight: 600,
+                      }}
+                    >
+                      ✅
+                    </td>
                     <td style={{ padding: "9px 12px 9px 0" }}>
                       <span
                         style={{
@@ -333,7 +514,14 @@ function GoodEarthAnalysis() {
                         {badgeLabel}
                       </span>
                     </td>
-                    <td style={{ padding: "9px 0 9px 0", color: colors.textSecondary, fontSize: "12px", lineHeight: 1.5 }}>
+                    <td
+                      style={{
+                        padding: "9px 0 9px 0",
+                        color: colors.textSecondary,
+                        fontSize: "12px",
+                        lineHeight: 1.5,
+                      }}
+                    >
                       {page.sageNote}
                     </td>
                   </tr>
@@ -344,12 +532,29 @@ function GoodEarthAnalysis() {
         </div>
       </SectionCard>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: spacing.md }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: spacing.md,
+        }}
+      >
         <SectionCard title="Strengths">
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
             {goodEarthStrengths.map((s, i) => (
-              <li key={i} style={{ display: "flex", gap: "8px", marginBottom: "8px", fontSize: "13px", lineHeight: 1.5 }}>
-                <span style={{ color: colors.mistyForest, flexShrink: 0 }}>✓</span>
+              <li
+                key={i}
+                style={{
+                  display: "flex",
+                  gap: "8px",
+                  marginBottom: "8px",
+                  fontSize: "13px",
+                  lineHeight: 1.5,
+                }}
+              >
+                <span style={{ color: colors.mistyForest, flexShrink: 0 }}>
+                  ✓
+                </span>
                 <span style={{ color: colors.textPrimary }}>{s}</span>
               </li>
             ))}
@@ -359,8 +564,19 @@ function GoodEarthAnalysis() {
         <SectionCard title="Weaknesses">
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
             {goodEarthWeaknesses.map((w, i) => (
-              <li key={i} style={{ display: "flex", gap: "8px", marginBottom: "8px", fontSize: "13px", lineHeight: 1.5 }}>
-                <span style={{ color: colors.errorText, flexShrink: 0 }}>✗</span>
+              <li
+                key={i}
+                style={{
+                  display: "flex",
+                  gap: "8px",
+                  marginBottom: "8px",
+                  fontSize: "13px",
+                  lineHeight: 1.5,
+                }}
+              >
+                <span style={{ color: colors.errorText, flexShrink: 0 }}>
+                  ✗
+                </span>
                 <span style={{ color: colors.textPrimary }}>{w}</span>
               </li>
             ))}
@@ -369,11 +585,32 @@ function GoodEarthAnalysis() {
       </div>
 
       <SectionCard title="Social Media Presence">
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: spacing.sm }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: spacing.sm,
+          }}
+        >
           {[
-            { platform: "Instagram", detail1: "1,383 followers", detail2: "2,348 posts", icon: "📸" },
-            { platform: "Facebook", detail1: "100% recommended", detail2: "15 reviews", icon: "👍" },
-            { platform: "Yelp", detail1: "19 reviews", detail2: "~4.5 avg", icon: "⭐" },
+            {
+              platform: "Instagram",
+              detail1: "1,383 followers",
+              detail2: "2,348 posts",
+              icon: "📸",
+            },
+            {
+              platform: "Facebook",
+              detail1: "100% recommended",
+              detail2: "15 reviews",
+              icon: "👍",
+            },
+            {
+              platform: "Yelp",
+              detail1: "19 reviews",
+              detail2: "~4.5 avg",
+              icon: "⭐",
+            },
           ].map((s) => (
             <div
               key={s.platform}
@@ -384,28 +621,61 @@ function GoodEarthAnalysis() {
                 textAlign: "center",
               }}
             >
-              <div style={{ fontSize: "24px", marginBottom: "6px" }}>{s.icon}</div>
-              <p style={{ fontSize: "13px", fontWeight: 700, color: colors.textPrimary, marginBottom: "4px" }}>{s.platform}</p>
-              <p style={{ fontSize: "12px", color: colors.textSecondary }}>{s.detail1}</p>
-              <p style={{ fontSize: "12px", color: colors.textSecondary }}>{s.detail2}</p>
+              <div style={{ fontSize: "24px", marginBottom: "6px" }}>
+                {s.icon}
+              </div>
+              <p
+                style={{
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  color: colors.textPrimary,
+                  marginBottom: "4px",
+                }}
+              >
+                {s.platform}
+              </p>
+              <p style={{ fontSize: "12px", color: colors.textSecondary }}>
+                {s.detail1}
+              </p>
+              <p style={{ fontSize: "12px", color: colors.textSecondary }}>
+                {s.detail2}
+              </p>
             </div>
           ))}
         </div>
       </SectionCard>
 
       <SectionCard title="Marketing Strategy">
-        <div style={{ display: "flex", flexWrap: "wrap", marginBottom: "12px" }}>
+        <div
+          style={{ display: "flex", flexWrap: "wrap", marginBottom: "12px" }}
+        >
           {[
-            "Word-of-mouth primary", "Monthly open houses", "Virtual tours offered",
-            "School store / merch", "Parent testimonials", "Social media (Instagram + Facebook)",
+            "Word-of-mouth primary",
+            "Monthly open houses",
+            "Virtual tours offered",
+            "School store / merch",
+            "Parent testimonials",
+            "Social media (Instagram + Facebook)",
           ].map((m) => (
-            <Tag key={m} label={m} color={colors.pastelSage} textColor={colors.mistyForest} />
+            <Tag
+              key={m}
+              label={m}
+              color={colors.pastelSage}
+              textColor={colors.mistyForest}
+            />
           ))}
         </div>
-        <p style={{ fontSize: "13px", color: colors.textSecondary, lineHeight: 1.6 }}>
-          No paid advertising detected. Relies heavily on community reputation built over 20 years.
-          Email marketing is not publicly visible — no newsletter signup found on site.
-          Blog has not been updated since 2017 despite strong SEO opportunity.
+        <p
+          style={{
+            fontSize: "13px",
+            color: colors.textSecondary,
+            lineHeight: 1.6,
+          }}
+        >
+          No paid advertising detected. Relies heavily on community reputation
+          built over 20 years. Email marketing is not publicly visible — no
+          newsletter signup found on site. Blog has not been updated since 2017
+          despite strong SEO opportunity.
         </p>
       </SectionCard>
 
@@ -418,27 +688,51 @@ function GoodEarthAnalysis() {
             marginBottom: "14px",
           }}
         >
-          <p style={{ fontSize: "14px", fontWeight: 700, color: colors.successText, marginBottom: "4px" }}>
+          <p
+            style={{
+              fontSize: "14px",
+              fontWeight: 700,
+              color: colors.successText,
+              marginBottom: "4px",
+            }}
+          >
             High-Value Partnership Target
           </p>
-          <p style={{ fontSize: "13px", color: colors.successText, lineHeight: 1.6 }}>
-            An 18-month waitlist means hundreds of families annually cannot enroll. These families are pre-qualified —
-            they already value nature-based, Waldorf-aligned early childhood education. Sagefield&apos;s aligned philosophy
-            makes a referral partnership natural and credible.
+          <p
+            style={{
+              fontSize: "13px",
+              color: colors.successText,
+              lineHeight: 1.6,
+            }}
+          >
+            An 18-month waitlist means hundreds of families annually cannot
+            enroll. These families are pre-qualified — they already value
+            outdoor-based, Waldorf-aligned early childhood education.
+            Sagefield&apos;s aligned philosophy makes a referral partnership
+            natural and credible.
           </p>
         </div>
-        <div style={{ fontSize: "13px", color: colors.textPrimary, lineHeight: 1.7 }}>
+        <div
+          style={{
+            fontSize: "13px",
+            color: colors.textPrimary,
+            lineHeight: 1.7,
+          }}
+        >
           <p style={{ marginBottom: "8px" }}>
-            <strong>Strategy:</strong> Reach out to the school director directly (not email form) — frame as a
-            collaborative resource for families they cannot serve, not as competition.
+            <strong>Strategy:</strong> Reach out to the school director directly
+            (not email form) — frame as a collaborative resource for families
+            they cannot serve, not as competition.
           </p>
           <p style={{ marginBottom: "8px" }}>
-            <strong>Offer:</strong> Formal referral arrangement — they send waitlisted families to Sagefield,
-            we acknowledge Good Earth as the gold standard in the region.
+            <strong>Offer:</strong> Formal referral arrangement — they send
+            waitlisted families to Sagefield, we acknowledge Good Earth as the
+            gold standard in the region.
           </p>
           <p>
-            <strong>Talking points:</strong> Same philosophy, different geography/capacity. We fill a gap they
-            genuinely cannot fill. Parents win, both schools win.
+            <strong>Talking points:</strong> Same philosophy, different
+            geography/capacity. We fill a gap they genuinely cannot fill.
+            Parents win, both schools win.
           </p>
         </div>
       </SectionCard>
@@ -448,25 +742,114 @@ function GoodEarthAnalysis() {
 
 const acresGrovePrograms = [
   { name: "Infant", age: "Infants", classSize: "8", ratio: "4:1" },
-  { name: "Toddler", age: "Toddlers", classSize: "14 per class (×2)", ratio: "7:1" },
-  { name: "Primary", age: "3–6 yrs", classSize: "16 per class (×3)", ratio: "8:1" },
+  {
+    name: "Toddler",
+    age: "Toddlers",
+    classSize: "14 per class (×2)",
+    ratio: "7:1",
+  },
+  {
+    name: "Primary",
+    age: "3–6 yrs",
+    classSize: "16 per class (×3)",
+    ratio: "8:1",
+  },
   { name: "Lower Elementary", age: "~6–9 yrs", classSize: "18", ratio: "9:1" },
 ];
 
 const acresGrovePages = [
-  { name: "Home", url: "https://acresgrove.com", acresStatus: "has" as const, sageStatus: "has" as const, sageNote: "Hero + welcome sections cover this well" },
-  { name: "About / Our Mission", url: "https://acresgrove.com/about", acresStatus: "has" as const, sageStatus: "has" as const, sageNote: "WelcomeSection + EducationalPhilosophySection" },
-  { name: "Programs / Classrooms", url: "https://acresgrove.com/programs", acresStatus: "has" as const, sageStatus: "has" as const, sageNote: "WhatWeOfferSection covers programs" },
-  { name: "Tuition & Fees", url: "https://acresgrove.com/tuition", acresStatus: "missing" as const, sageStatus: "missing" as const, sageNote: "Both schools are missing this — high priority to add" },
-  { name: "Enrollment / Apply", url: "https://acresgrove.com/enrollment", acresStatus: "partial" as const, sageStatus: "partial" as const, sageNote: "Only a popup dialog — consider a dedicated /enroll page" },
-  { name: "Academic Calendar", url: "https://acresgrove.com/calendar", acresStatus: "has" as const, sageStatus: "missing" as const, sageNote: "Families need to know important dates — add this" },
-  { name: "School Store / Shop", url: "https://acresgrove.com/store", acresStatus: "has" as const, sageStatus: "missing" as const, sageNote: "Community identity builder — low priority for now" },
-  { name: "Testimonials", url: "https://acresgrove.com/testimonials", acresStatus: "missing" as const, sageStatus: "missing" as const, sageNote: "Both schools are missing this — high-converting page to add" },
-  { name: "Virtual Tour", url: "https://acresgrove.com/virtual-tour", acresStatus: "missing" as const, sageStatus: "missing" as const, sageNote: "Video/photo tour builds trust before visit" },
-  { name: "Contact", url: "https://acresgrove.com/contact", acresStatus: "has" as const, sageStatus: "has" as const, sageNote: "ContactUsSection covers this" },
-  { name: "Parent Documents / Resources", url: "https://acresgrove.com/parent-resources", acresStatus: "has" as const, sageStatus: "missing" as const, sageNote: "Families need this — add a parent resources section" },
-  { name: "Careers", url: "https://acresgrove.com/careers", acresStatus: "has" as const, sageStatus: "missing" as const, sageNote: "Helps with staffing as we grow" },
-  { name: "Blog", url: "https://acresgrove.com/blog", acresStatus: "missing" as const, sageStatus: "missing" as const, sageNote: "Neither school has this — huge SEO opportunity for Sagefield to lead" },
+  {
+    name: "Home",
+    url: "https://acresgrove.com",
+    acresStatus: "has" as const,
+    sageStatus: "has" as const,
+    sageNote: "Hero + welcome sections cover this well",
+  },
+  {
+    name: "About / Our Mission",
+    url: "https://acresgrove.com/about",
+    acresStatus: "has" as const,
+    sageStatus: "has" as const,
+    sageNote: "WelcomeSection + EducationalPhilosophySection",
+  },
+  {
+    name: "Programs / Classrooms",
+    url: "https://acresgrove.com/programs",
+    acresStatus: "has" as const,
+    sageStatus: "has" as const,
+    sageNote: "WhatWeOfferSection covers programs",
+  },
+  {
+    name: "Tuition & Fees",
+    url: "https://acresgrove.com/tuition",
+    acresStatus: "missing" as const,
+    sageStatus: "missing" as const,
+    sageNote: "Both schools are missing this — high priority to add",
+  },
+  {
+    name: "Enrollment / Apply",
+    url: "https://acresgrove.com/enrollment",
+    acresStatus: "partial" as const,
+    sageStatus: "partial" as const,
+    sageNote: "Only a popup dialog — consider a dedicated /enroll page",
+  },
+  {
+    name: "Academic Calendar",
+    url: "https://acresgrove.com/calendar",
+    acresStatus: "has" as const,
+    sageStatus: "missing" as const,
+    sageNote: "Families need to know important dates — add this",
+  },
+  {
+    name: "School Store / Shop",
+    url: "https://acresgrove.com/store",
+    acresStatus: "has" as const,
+    sageStatus: "missing" as const,
+    sageNote: "Community identity builder — low priority for now",
+  },
+  {
+    name: "Testimonials",
+    url: "https://acresgrove.com/testimonials",
+    acresStatus: "missing" as const,
+    sageStatus: "missing" as const,
+    sageNote: "Both schools are missing this — high-converting page to add",
+  },
+  {
+    name: "Virtual Tour",
+    url: "https://acresgrove.com/virtual-tour",
+    acresStatus: "missing" as const,
+    sageStatus: "missing" as const,
+    sageNote: "Video/photo tour builds trust before visit",
+  },
+  {
+    name: "Contact",
+    url: "https://acresgrove.com/contact",
+    acresStatus: "has" as const,
+    sageStatus: "has" as const,
+    sageNote: "ContactUsSection covers this",
+  },
+  {
+    name: "Parent Documents / Resources",
+    url: "https://acresgrove.com/parent-resources",
+    acresStatus: "has" as const,
+    sageStatus: "missing" as const,
+    sageNote: "Families need this — add a parent resources section",
+  },
+  {
+    name: "Careers",
+    url: "https://acresgrove.com/careers",
+    acresStatus: "has" as const,
+    sageStatus: "missing" as const,
+    sageNote: "Helps with staffing as we grow",
+  },
+  {
+    name: "Blog",
+    url: "https://acresgrove.com/blog",
+    acresStatus: "missing" as const,
+    sageStatus: "missing" as const,
+    sageNote:
+      "Neither school has this — huge SEO opportunity for Sagefield to lead",
+  },
 ];
 
 const acresGroveStrengths = [
@@ -475,7 +858,7 @@ const acresGroveStrengths = [
   "Industry-leading student-to-teacher ratios (4:1 infant → 9:1 lower elementary)",
   "Full-day program (7:30 AM – 5 PM) — working-family friendly",
   "Serves infant through lower elementary — broadest age range under one philosophy",
-  "Jr. Master Gardener program — credentialed enrichment, not just \"outdoor play\"",
+  'Jr. Master Gardener program — credentialed enrichment, not just "outdoor play"',
   "Strong employee benefits (401k, medical/dental/vision, 50% tuition discount) — attracts quality staff",
 ];
 
@@ -483,34 +866,144 @@ const acresGroveWeaknesses = [
   "Only 9 months old — no established reputation or long-term parent testimonials",
   "Tuition not publicly listed — creates friction and loses interest before first contact",
   "Fewer than 5 public parent reviews total — trust gap for new enrolling families",
-  "\"Montessori-inspired\" with no AMS/AMI accreditation — credibility gap vs 53+ certified competitors in Round Rock",
+  '"Montessori-inspired" with no AMS/AMI accreditation — credibility gap vs 53+ certified competitors in Round Rock',
   "Employee reviews flag unclear onboarding and one termination via email — early staff culture risk",
   "Low social media presence (329 Facebook likes) for a school with $1.85M in funding",
 ];
 
 const insideOutsidePrograms = [
-  { name: "Primary Class", age: "K–1st grade", schedule: "Mon–Fri, thematic + nature Fridays", tuition: "$10,500/yr" },
-  { name: "Intermediate Class", age: "2nd–3rd grade", schedule: "Mon–Fri, thematic + nature Fridays", tuition: "$10,500/yr" },
-  { name: "Upper Class", age: "4th–6th grade", schedule: "Mon–Fri, thematic + community stewardship Fri", tuition: "$10,500/yr" },
-  { name: "Summer Camp", age: "Ages 5–12", schedule: "Seasonal", tuition: "Not listed" },
+  {
+    name: "Primary Class",
+    age: "K–1st grade",
+    schedule: "Mon–Fri, thematic + nature Fridays",
+    tuition: "$10,500/yr",
+  },
+  {
+    name: "Intermediate Class",
+    age: "2nd–3rd grade",
+    schedule: "Mon–Fri, thematic + nature Fridays",
+    tuition: "$10,500/yr",
+  },
+  {
+    name: "Upper Class",
+    age: "4th–6th grade",
+    schedule: "Mon–Fri, thematic + community stewardship Fri",
+    tuition: "$10,500/yr",
+  },
+  {
+    name: "Summer Camp",
+    age: "Ages 5–12",
+    schedule: "Seasonal",
+    tuition: "Not listed",
+  },
 ];
 
 const insideOutsidePages = [
-  { name: "Home", url: "https://insideoutsideschool.org", iosStatus: "has" as const, sageStatus: "has" as const, sageNote: "Hero + welcome sections cover this well" },
-  { name: "About / Philosophy", url: "https://insideoutsideschool.org/about", iosStatus: "has" as const, sageStatus: "has" as const, sageNote: "WelcomeSection + EducationalPhilosophySection" },
-  { name: "Programs / Academics", url: "https://insideoutsideschool.org/programs", iosStatus: "has" as const, sageStatus: "has" as const, sageNote: "WhatWeOfferSection covers programs" },
-  { name: "Tuition & Fees", url: "https://insideoutsideschool.org/tuition", iosStatus: "has" as const, sageStatus: "missing" as const, sageNote: "Inside Outside leads here — Sagefield needs this urgently" },
-  { name: "Enrollment / Apply", url: "https://insideoutsideschool.org/enrollment", iosStatus: "has" as const, sageStatus: "partial" as const, sageNote: "Only a popup dialog — consider a dedicated /enroll page" },
-  { name: "Daily Schedule", url: "https://insideoutsideschool.org/schedule", iosStatus: "has" as const, sageStatus: "missing" as const, sageNote: "Builds transparency and answers parent FAQs" },
-  { name: "Academic Calendar", url: "https://insideoutsideschool.org/calendar", iosStatus: "has" as const, sageStatus: "missing" as const, sageNote: "Families need to know important dates" },
-  { name: "Blog", url: "https://insideoutsideschool.org/blog", iosStatus: "has" as const, sageStatus: "missing" as const, sageNote: "Sagefield should lead here — SEO goldmine" },
-  { name: "Testimonials", url: "https://insideoutsideschool.org/testimonials", iosStatus: "has" as const, sageStatus: "missing" as const, sageNote: "High-converting — add parent quotes" },
-  { name: "Meet the Staff", url: "https://insideoutsideschool.org/staff", iosStatus: "has" as const, sageStatus: "missing" as const, sageNote: "Trust builder before families even tour" },
-  { name: "Virtual Tour", url: "https://insideoutsideschool.org/tour", iosStatus: "missing" as const, sageStatus: "missing" as const, sageNote: "Both lack this" },
-  { name: "School Store / Shop", url: "https://insideoutsideschool.org/store", iosStatus: "missing" as const, sageStatus: "missing" as const, sageNote: "—" },
-  { name: "Parent Resources", url: "https://insideoutsideschool.org/parent-resources", iosStatus: "missing" as const, sageStatus: "missing" as const, sageNote: "—" },
-  { name: "Contact", url: "https://insideoutsideschool.org/contact", iosStatus: "has" as const, sageStatus: "has" as const, sageNote: "ContactUsSection covers this" },
-  { name: "Careers", url: "https://insideoutsideschool.org/careers", iosStatus: "missing" as const, sageStatus: "missing" as const, sageNote: "—" },
+  {
+    name: "Home",
+    url: "https://insideoutsideschool.org",
+    iosStatus: "has" as const,
+    sageStatus: "has" as const,
+    sageNote: "Hero + welcome sections cover this well",
+  },
+  {
+    name: "About / Philosophy",
+    url: "https://insideoutsideschool.org/about",
+    iosStatus: "has" as const,
+    sageStatus: "has" as const,
+    sageNote: "WelcomeSection + EducationalPhilosophySection",
+  },
+  {
+    name: "Programs / Academics",
+    url: "https://insideoutsideschool.org/programs",
+    iosStatus: "has" as const,
+    sageStatus: "has" as const,
+    sageNote: "WhatWeOfferSection covers programs",
+  },
+  {
+    name: "Tuition & Fees",
+    url: "https://insideoutsideschool.org/tuition",
+    iosStatus: "has" as const,
+    sageStatus: "missing" as const,
+    sageNote: "Inside Outside leads here — Sagefield needs this urgently",
+  },
+  {
+    name: "Enrollment / Apply",
+    url: "https://insideoutsideschool.org/enrollment",
+    iosStatus: "has" as const,
+    sageStatus: "partial" as const,
+    sageNote: "Only a popup dialog — consider a dedicated /enroll page",
+  },
+  {
+    name: "Daily Schedule",
+    url: "https://insideoutsideschool.org/schedule",
+    iosStatus: "has" as const,
+    sageStatus: "missing" as const,
+    sageNote: "Builds transparency and answers parent FAQs",
+  },
+  {
+    name: "Academic Calendar",
+    url: "https://insideoutsideschool.org/calendar",
+    iosStatus: "has" as const,
+    sageStatus: "missing" as const,
+    sageNote: "Families need to know important dates",
+  },
+  {
+    name: "Blog",
+    url: "https://insideoutsideschool.org/blog",
+    iosStatus: "has" as const,
+    sageStatus: "missing" as const,
+    sageNote: "Sagefield should lead here — SEO goldmine",
+  },
+  {
+    name: "Testimonials",
+    url: "https://insideoutsideschool.org/testimonials",
+    iosStatus: "has" as const,
+    sageStatus: "missing" as const,
+    sageNote: "High-converting — add parent quotes",
+  },
+  {
+    name: "Meet the Staff",
+    url: "https://insideoutsideschool.org/staff",
+    iosStatus: "has" as const,
+    sageStatus: "missing" as const,
+    sageNote: "Trust builder before families even tour",
+  },
+  {
+    name: "Virtual Tour",
+    url: "https://insideoutsideschool.org/tour",
+    iosStatus: "missing" as const,
+    sageStatus: "missing" as const,
+    sageNote: "Both lack this",
+  },
+  {
+    name: "School Store / Shop",
+    url: "https://insideoutsideschool.org/store",
+    iosStatus: "missing" as const,
+    sageStatus: "missing" as const,
+    sageNote: "—",
+  },
+  {
+    name: "Parent Resources",
+    url: "https://insideoutsideschool.org/parent-resources",
+    iosStatus: "missing" as const,
+    sageStatus: "missing" as const,
+    sageNote: "—",
+  },
+  {
+    name: "Contact",
+    url: "https://insideoutsideschool.org/contact",
+    iosStatus: "has" as const,
+    sageStatus: "has" as const,
+    sageNote: "ContactUsSection covers this",
+  },
+  {
+    name: "Careers",
+    url: "https://insideoutsideschool.org/careers",
+    iosStatus: "missing" as const,
+    sageStatus: "missing" as const,
+    sageNote: "—",
+  },
 ];
 
 const insideOutsideStrengths = [
@@ -518,8 +1011,8 @@ const insideOutsideStrengths = [
   "Tuition publicly listed ($10,500/yr) — full transparency that builds parent trust before first contact",
   "40 years of experience led by founder-director Deborah — deepest credibility of any competitor researched",
   "Active blog with educational content — the only competitor actively using content marketing for SEO",
-  "Dedicated \"Parents Say...\" testimonials page + 100% Facebook recommendation rate — strongest social proof of any competitor",
-  "Unique \"Seven Dimensions of Human Greatness\" framework — distinctive, memorable philosophy families can rally around",
+  'Dedicated "Parents Say..." testimonials page + 100% Facebook recommendation rate — strongest social proof of any competitor',
+  'Unique "Seven Dimensions of Human Greatness" framework — distinctive, memorable philosophy families can rally around',
   "No grades, no standardized testing — rare, principled stance that resonates with the right families",
   "Multi-age classrooms K–6 — students build community continuity across years",
 ];
@@ -539,23 +1032,46 @@ function AcresGroveAnalysis() {
       <SectionCard title="Overview">
         <Row label="Full Name" value="Acres Grove Nature School" />
         <Row label="Location" value="13 Lake Drive, Round Rock, TX 78665" />
-        <Row label="Founded" value="June 2024 (~9 months old as of March 2026)" />
+        <Row
+          label="Founded"
+          value="June 2024 (~9 months old as of March 2026)"
+        />
         <Row label="Owner / Director" value="Lauren Horn" />
-        <Row label="Hours" value="Mon–Fri, 7:30 AM – 5:00 PM (educational program starts 9 AM)" />
+        <Row
+          label="Hours"
+          value="Mon–Fri, 7:30 AM – 5:00 PM (educational program starts 9 AM)"
+        />
         <Row label="Website" value="acresgrove.com" />
         <Row label="Phone" value="(512) 381-1940" />
         <Row label="Funding Raised" value="$1.85M" />
       </SectionCard>
 
       <SectionCard title="Programs & Ratios">
-        <p style={{ fontSize: "12px", color: colors.textSecondary, marginBottom: "12px" }}>
+        <p
+          style={{
+            fontSize: "12px",
+            color: colors.textSecondary,
+            marginBottom: "12px",
+          }}
+        >
           Tuition is not publicly listed — contact required for pricing.
         </p>
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              fontSize: "13px",
+            }}
+          >
             <thead>
               <tr style={{ borderBottom: `1px solid ${colors.border}` }}>
-                {["Program", "Age Range", "Class Size", "Student-Teacher Ratio"].map((h) => (
+                {[
+                  "Program",
+                  "Age Range",
+                  "Class Size",
+                  "Student-Teacher Ratio",
+                ].map((h) => (
                   <th
                     key={h}
                     style={{
@@ -573,11 +1089,44 @@ function AcresGroveAnalysis() {
             </thead>
             <tbody>
               {acresGrovePrograms.map((p, i) => (
-                <tr key={i} style={{ borderBottom: `1px solid ${colors.divider}` }}>
-                  <td style={{ padding: "8px 12px 8px 0", color: colors.textPrimary, fontWeight: 500 }}>{p.name}</td>
-                  <td style={{ padding: "8px 12px 8px 0", color: colors.textSecondary }}>{p.age}</td>
-                  <td style={{ padding: "8px 12px 8px 0", color: colors.textSecondary }}>{p.classSize}</td>
-                  <td style={{ padding: "8px 0 8px 0", color: colors.mistyForest, fontWeight: 600 }}>{p.ratio}</td>
+                <tr
+                  key={i}
+                  style={{ borderBottom: `1px solid ${colors.divider}` }}
+                >
+                  <td
+                    style={{
+                      padding: "8px 12px 8px 0",
+                      color: colors.textPrimary,
+                      fontWeight: 500,
+                    }}
+                  >
+                    {p.name}
+                  </td>
+                  <td
+                    style={{
+                      padding: "8px 12px 8px 0",
+                      color: colors.textSecondary,
+                    }}
+                  >
+                    {p.age}
+                  </td>
+                  <td
+                    style={{
+                      padding: "8px 12px 8px 0",
+                      color: colors.textSecondary,
+                    }}
+                  >
+                    {p.classSize}
+                  </td>
+                  <td
+                    style={{
+                      padding: "8px 0 8px 0",
+                      color: colors.mistyForest,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {p.ratio}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -599,62 +1148,111 @@ function AcresGroveAnalysis() {
         >
           <span style={{ fontSize: "20px" }}>🌱</span>
           <div>
-            <p style={{ fontSize: "14px", fontWeight: 700, color: colors.infoText }}>Limited Spots Available</p>
-            <p style={{ fontSize: "12px", color: colors.infoText, marginTop: "2px" }}>
-              New school actively filling seats — growth phase with immediate availability.
+            <p
+              style={{
+                fontSize: "14px",
+                fontWeight: 700,
+                color: colors.infoText,
+              }}
+            >
+              Limited Spots Available
+            </p>
+            <p
+              style={{
+                fontSize: "12px",
+                color: colors.infoText,
+                marginTop: "2px",
+              }}
+            >
+              New school actively filling seats — growth phase with immediate
+              availability.
             </p>
           </div>
         </div>
-        <p style={{ fontSize: "13px", color: colors.textSecondary, lineHeight: 1.6 }}>
-          Opened June 2024 and still building enrollment across all programs. Families can typically
-          enroll now without a waitlist. A referral bonus program ($200) and sibling discounts (10%)
-          are in place to accelerate word-of-mouth growth.
+        <p
+          style={{
+            fontSize: "13px",
+            color: colors.textSecondary,
+            lineHeight: 1.6,
+          }}
+        >
+          Opened June 2024 and still building enrollment across all programs.
+          Families can typically enroll now without a waitlist. A referral bonus
+          program ($200) and sibling discounts (10%) are in place to accelerate
+          word-of-mouth growth.
         </p>
       </SectionCard>
 
       <SectionCard title="Website Pages">
-        <p style={{ fontSize: "12px", color: colors.textSecondary, marginBottom: "12px" }}>
-          Pages Acres Grove has — compared against Sagefield&apos;s current site:
+        <p
+          style={{
+            fontSize: "12px",
+            color: colors.textSecondary,
+            marginBottom: "12px",
+          }}
+        >
+          Pages Acres Grove has — compared against Sagefield&apos;s current
+          site:
         </p>
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              fontSize: "13px",
+            }}
+          >
             <thead>
               <tr style={{ borderBottom: `1px solid ${colors.border}` }}>
-                {["Page", "Acres Grove", "Sagefield", "Sagefield Action"].map((h) => (
-                  <th
-                    key={h}
-                    style={{
-                      textAlign: "left",
-                      padding: "6px 12px 8px 0",
-                      color: colors.textSecondary,
-                      fontWeight: 600,
-                      fontSize: "12px",
-                    }}
-                  >
-                    {h}
-                  </th>
-                ))}
+                {["Page", "Acres Grove", "Sagefield", "Sagefield Action"].map(
+                  (h) => (
+                    <th
+                      key={h}
+                      style={{
+                        textAlign: "left",
+                        padding: "6px 12px 8px 0",
+                        color: colors.textSecondary,
+                        fontWeight: 600,
+                        fontSize: "12px",
+                      }}
+                    >
+                      {h}
+                    </th>
+                  ),
+                )}
               </tr>
             </thead>
             <tbody>
               {acresGrovePages.map((page, i) => {
-                const acresBadge = page.acresStatus === "has" ? "✅" : page.acresStatus === "partial" ? "🟡" : "❌";
+                const acresBadge =
+                  page.acresStatus === "has"
+                    ? "✅"
+                    : page.acresStatus === "partial"
+                      ? "🟡"
+                      : "❌";
                 const sageBadgeBg =
                   page.sageStatus === "has"
                     ? colors.success
                     : page.sageStatus === "partial"
-                    ? colors.warning
-                    : colors.error;
+                      ? colors.warning
+                      : colors.error;
                 const sageBadgeText =
                   page.sageStatus === "has"
                     ? colors.successText
                     : page.sageStatus === "partial"
-                    ? colors.warningText
-                    : colors.errorText;
+                      ? colors.warningText
+                      : colors.errorText;
                 const sageBadgeLabel =
-                  page.sageStatus === "has" ? "Has it" : page.sageStatus === "partial" ? "Partial" : "Missing";
+                  page.sageStatus === "has"
+                    ? "Has it"
+                    : page.sageStatus === "partial"
+                      ? "Partial"
+                      : "Missing";
                 return (
-                  <tr key={i} style={{ borderBottom: `1px solid ${colors.divider}` }}>
+                  <tr
+                    key={i}
+                    style={{ borderBottom: `1px solid ${colors.divider}` }}
+                  >
                     <td style={{ padding: "9px 12px 9px 0" }}>
                       <a
                         href={page.url}
@@ -668,14 +1266,24 @@ function AcresGroveAnalysis() {
                           alignItems: "center",
                           gap: "4px",
                         }}
-                        onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.textDecoration = "underline")}
-                        onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.textDecoration = "none")}
+                        onMouseEnter={(e) =>
+                          ((
+                            e.currentTarget as HTMLAnchorElement
+                          ).style.textDecoration = "underline")
+                        }
+                        onMouseLeave={(e) =>
+                          ((
+                            e.currentTarget as HTMLAnchorElement
+                          ).style.textDecoration = "none")
+                        }
                       >
                         {page.name}
                         <ExternalLink size={12} style={{ flexShrink: 0 }} />
                       </a>
                     </td>
-                    <td style={{ padding: "9px 12px 9px 0", fontSize: "16px" }}>{acresBadge}</td>
+                    <td style={{ padding: "9px 12px 9px 0", fontSize: "16px" }}>
+                      {acresBadge}
+                    </td>
                     <td style={{ padding: "9px 12px 9px 0" }}>
                       <span
                         style={{
@@ -692,7 +1300,14 @@ function AcresGroveAnalysis() {
                         {sageBadgeLabel}
                       </span>
                     </td>
-                    <td style={{ padding: "9px 0 9px 0", color: colors.textSecondary, fontSize: "12px", lineHeight: 1.5 }}>
+                    <td
+                      style={{
+                        padding: "9px 0 9px 0",
+                        color: colors.textSecondary,
+                        fontSize: "12px",
+                        lineHeight: 1.5,
+                      }}
+                    >
                       {page.sageNote}
                     </td>
                   </tr>
@@ -703,12 +1318,29 @@ function AcresGroveAnalysis() {
         </div>
       </SectionCard>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: spacing.md }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: spacing.md,
+        }}
+      >
         <SectionCard title="Strengths">
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
             {acresGroveStrengths.map((s, i) => (
-              <li key={i} style={{ display: "flex", gap: "8px", marginBottom: "8px", fontSize: "13px", lineHeight: 1.5 }}>
-                <span style={{ color: colors.mistyForest, flexShrink: 0 }}>✓</span>
+              <li
+                key={i}
+                style={{
+                  display: "flex",
+                  gap: "8px",
+                  marginBottom: "8px",
+                  fontSize: "13px",
+                  lineHeight: 1.5,
+                }}
+              >
+                <span style={{ color: colors.mistyForest, flexShrink: 0 }}>
+                  ✓
+                </span>
                 <span style={{ color: colors.textPrimary }}>{s}</span>
               </li>
             ))}
@@ -718,8 +1350,19 @@ function AcresGroveAnalysis() {
         <SectionCard title="Weaknesses">
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
             {acresGroveWeaknesses.map((w, i) => (
-              <li key={i} style={{ display: "flex", gap: "8px", marginBottom: "8px", fontSize: "13px", lineHeight: 1.5 }}>
-                <span style={{ color: colors.errorText, flexShrink: 0 }}>✗</span>
+              <li
+                key={i}
+                style={{
+                  display: "flex",
+                  gap: "8px",
+                  marginBottom: "8px",
+                  fontSize: "13px",
+                  lineHeight: 1.5,
+                }}
+              >
+                <span style={{ color: colors.errorText, flexShrink: 0 }}>
+                  ✗
+                </span>
                 <span style={{ color: colors.textPrimary }}>{w}</span>
               </li>
             ))}
@@ -728,11 +1371,32 @@ function AcresGroveAnalysis() {
       </div>
 
       <SectionCard title="Social Media Presence">
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: spacing.sm }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: spacing.sm,
+          }}
+        >
           {[
-            { platform: "Instagram", detail1: "@acresgrovenatureschool", detail2: "Follower count not public", icon: "📸" },
-            { platform: "Facebook", detail1: "~329 likes", detail2: "3 reviews (new school)", icon: "👍" },
-            { platform: "LinkedIn", detail1: "66 followers", detail2: "Active for hiring", icon: "💼" },
+            {
+              platform: "Instagram",
+              detail1: "@acresgrovenatureschool",
+              detail2: "Follower count not public",
+              icon: "📸",
+            },
+            {
+              platform: "Facebook",
+              detail1: "~329 likes",
+              detail2: "3 reviews (new school)",
+              icon: "👍",
+            },
+            {
+              platform: "LinkedIn",
+              detail1: "66 followers",
+              detail2: "Active for hiring",
+              icon: "💼",
+            },
           ].map((s) => (
             <div
               key={s.platform}
@@ -743,29 +1407,63 @@ function AcresGroveAnalysis() {
                 textAlign: "center",
               }}
             >
-              <div style={{ fontSize: "24px", marginBottom: "6px" }}>{s.icon}</div>
-              <p style={{ fontSize: "13px", fontWeight: 700, color: colors.textPrimary, marginBottom: "4px" }}>{s.platform}</p>
-              <p style={{ fontSize: "12px", color: colors.textSecondary }}>{s.detail1}</p>
-              <p style={{ fontSize: "12px", color: colors.textSecondary }}>{s.detail2}</p>
+              <div style={{ fontSize: "24px", marginBottom: "6px" }}>
+                {s.icon}
+              </div>
+              <p
+                style={{
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  color: colors.textPrimary,
+                  marginBottom: "4px",
+                }}
+              >
+                {s.platform}
+              </p>
+              <p style={{ fontSize: "12px", color: colors.textSecondary }}>
+                {s.detail1}
+              </p>
+              <p style={{ fontSize: "12px", color: colors.textSecondary }}>
+                {s.detail2}
+              </p>
             </div>
           ))}
         </div>
       </SectionCard>
 
       <SectionCard title="Marketing Strategy">
-        <div style={{ display: "flex", flexWrap: "wrap", marginBottom: "12px" }}>
+        <div
+          style={{ display: "flex", flexWrap: "wrap", marginBottom: "12px" }}
+        >
           {[
-            "Word-of-mouth building", "Referral bonus program ($200)", "Sibling discounts (10%)",
-            "Annual prepayment discount", "Tour-first approach", "LinkedIn for hiring",
+            "Word-of-mouth building",
+            "Referral bonus program ($200)",
+            "Sibling discounts (10%)",
+            "Annual prepayment discount",
+            "Tour-first approach",
+            "LinkedIn for hiring",
           ].map((m) => (
-            <Tag key={m} label={m} color={colors.pastelSage} textColor={colors.mistyForest} />
+            <Tag
+              key={m}
+              label={m}
+              color={colors.pastelSage}
+              textColor={colors.mistyForest}
+            />
           ))}
         </div>
-        <p style={{ fontSize: "13px", color: colors.textSecondary, lineHeight: 1.6 }}>
-          No paid advertising detected. Actively building word-of-mouth with referral and sibling incentives.
-          Tuition is hidden behind a contact form — likely a deliberate tour-first sales strategy.
-          LinkedIn is used primarily for hiring, not parent outreach. Social media volume is low relative
-          to their $1.85M funding, suggesting marketing investment is still early-stage.
+        <p
+          style={{
+            fontSize: "13px",
+            color: colors.textSecondary,
+            lineHeight: 1.6,
+          }}
+        >
+          No paid advertising detected. Actively building word-of-mouth with
+          referral and sibling incentives. Tuition is hidden behind a contact
+          form — likely a deliberate tour-first sales strategy. LinkedIn is used
+          primarily for hiring, not parent outreach. Social media volume is low
+          relative to their $1.85M funding, suggesting marketing investment is
+          still early-stage.
         </p>
       </SectionCard>
 
@@ -778,27 +1476,51 @@ function AcresGroveAnalysis() {
             marginBottom: "14px",
           }}
         >
-          <p style={{ fontSize: "14px", fontWeight: 700, color: colors.successText, marginBottom: "4px" }}>
+          <p
+            style={{
+              fontSize: "14px",
+              fontWeight: 700,
+              color: colors.successText,
+              marginBottom: "4px",
+            }}
+          >
             Mission-Aligned Partnership Target
           </p>
-          <p style={{ fontSize: "13px", color: colors.successText, lineHeight: 1.6 }}>
-            Both schools are new, nature-based, and actively building enrollment. Acres Grove serves Round Rock;
-            Sagefield serves a different area. A partnership framed around shared expertise — not competition —
-            builds goodwill before either school reaches capacity.
+          <p
+            style={{
+              fontSize: "13px",
+              color: colors.successText,
+              lineHeight: 1.6,
+            }}
+          >
+            Both schools are new, nature-based, and actively building
+            enrollment. Acres Grove serves Round Rock; Sagefield serves a
+            different area. A partnership framed around shared expertise — not
+            competition — builds goodwill before either school reaches capacity.
           </p>
         </div>
-        <div style={{ fontSize: "13px", color: colors.textPrimary, lineHeight: 1.7 }}>
+        <div
+          style={{
+            fontSize: "13px",
+            color: colors.textPrimary,
+            lineHeight: 1.7,
+          }}
+        >
           <p style={{ marginBottom: "8px" }}>
-            <strong>Strategy:</strong> Reach out to Lauren Horn directly — frame as a collaborative resource
-            for families outside each other&apos;s service area, not as competition.
+            <strong>Strategy:</strong> Reach out to Lauren Horn directly — frame
+            as a collaborative resource for families outside each other&apos;s
+            service area, not as competition.
           </p>
           <p style={{ marginBottom: "8px" }}>
-            <strong>Offer:</strong> Cross-refer families who live closer to the other school, co-host nature
-            education events, and share curriculum resources. They&apos;re not saturated — they&apos;re actively filling seats.
+            <strong>Offer:</strong> Cross-refer families who live closer to the
+            other school, co-host nature education events, and share curriculum
+            resources. They&apos;re not saturated — they&apos;re actively
+            filling seats.
           </p>
           <p>
-            <strong>Talking points:</strong> Same philosophy, complementary geography. A relationship now builds
-            goodwill before either school is at capacity. Parents win, both schools win.
+            <strong>Talking points:</strong> Same philosophy, complementary
+            geography. A relationship now builds goodwill before either school
+            is at capacity. Parents win, both schools win.
           </p>
         </div>
       </SectionCard>
@@ -811,17 +1533,35 @@ function InsideOutsideAnalysis() {
     <div>
       <SectionCard title="Overview">
         <Row label="Full Name" value="The Inside Outside School" />
-        <Row label="Location" value="5530 Killingsworth Lane, Pflugerville, TX 78660" />
-        <Row label="Campus" value="7+ acres of wooded land on Gilleland Creek with farm animals (donkey, goats, chickens)" />
-        <Row label="Director / Founder" value="Deborah — B.S. Education (North Texas State), M.S. Curriculum & Instruction (Texas State), 40 years teaching experience" />
-        <Row label="Hours" value="Mon–Fri, 8:00 AM – 4:00 PM (no extended care)" />
+        <Row
+          label="Location"
+          value="5530 Killingsworth Lane, Pflugerville, TX 78660"
+        />
+        <Row
+          label="Campus"
+          value="7+ acres of wooded land on Gilleland Creek with farm animals (donkey, goats, chickens)"
+        />
+        <Row
+          label="Director / Founder"
+          value="Deborah — B.S. Education (North Texas State), M.S. Curriculum & Instruction (Texas State), 40 years teaching experience"
+        />
+        <Row
+          label="Hours"
+          value="Mon–Fri, 8:00 AM – 4:00 PM (no extended care)"
+        />
         <Row label="Website" value="insideoutsideschool.org" />
         <Row label="Phone" value="(512) 251-1109" />
       </SectionCard>
 
       <SectionCard title="Programs & Pricing">
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              fontSize: "13px",
+            }}
+          >
             <thead>
               <tr style={{ borderBottom: `1px solid ${colors.border}` }}>
                 {["Program", "Age Range", "Schedule", "Tuition"].map((h) => (
@@ -842,11 +1582,44 @@ function InsideOutsideAnalysis() {
             </thead>
             <tbody>
               {insideOutsidePrograms.map((p, i) => (
-                <tr key={i} style={{ borderBottom: `1px solid ${colors.divider}` }}>
-                  <td style={{ padding: "8px 12px 8px 0", color: colors.textPrimary, fontWeight: 500 }}>{p.name}</td>
-                  <td style={{ padding: "8px 12px 8px 0", color: colors.textSecondary }}>{p.age}</td>
-                  <td style={{ padding: "8px 12px 8px 0", color: colors.textSecondary }}>{p.schedule}</td>
-                  <td style={{ padding: "8px 0 8px 0", color: colors.mistyForest, fontWeight: 600 }}>{p.tuition}</td>
+                <tr
+                  key={i}
+                  style={{ borderBottom: `1px solid ${colors.divider}` }}
+                >
+                  <td
+                    style={{
+                      padding: "8px 12px 8px 0",
+                      color: colors.textPrimary,
+                      fontWeight: 500,
+                    }}
+                  >
+                    {p.name}
+                  </td>
+                  <td
+                    style={{
+                      padding: "8px 12px 8px 0",
+                      color: colors.textSecondary,
+                    }}
+                  >
+                    {p.age}
+                  </td>
+                  <td
+                    style={{
+                      padding: "8px 12px 8px 0",
+                      color: colors.textSecondary,
+                    }}
+                  >
+                    {p.schedule}
+                  </td>
+                  <td
+                    style={{
+                      padding: "8px 0 8px 0",
+                      color: colors.mistyForest,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {p.tuition}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -868,27 +1641,68 @@ function InsideOutsideAnalysis() {
         >
           <span style={{ fontSize: "20px" }}>🌳</span>
           <div>
-            <p style={{ fontSize: "14px", fontWeight: 700, color: colors.successText }}>Open & Actively Enrolling</p>
-            <p style={{ fontSize: "12px", color: colors.successText, marginTop: "2px" }}>
-              Established school with strong reputation — families contact directly to inquire about available spots.
+            <p
+              style={{
+                fontSize: "14px",
+                fontWeight: 700,
+                color: colors.successText,
+              }}
+            >
+              Open & Actively Enrolling
+            </p>
+            <p
+              style={{
+                fontSize: "12px",
+                color: colors.successText,
+                marginTop: "2px",
+              }}
+            >
+              Established school with strong reputation — families contact
+              directly to inquire about available spots.
             </p>
           </div>
         </div>
-        <p style={{ fontSize: "13px", color: colors.textSecondary, lineHeight: 1.6 }}>
-          Contact admissions director Cristine (cristine@insideoutsideschool.org) for enrollment inquiries.
-          Tuition is publicly posted at $10,500/yr for all three K–6 programs. Summer camp availability is seasonal.
+        <p
+          style={{
+            fontSize: "13px",
+            color: colors.textSecondary,
+            lineHeight: 1.6,
+          }}
+        >
+          Contact admissions director Cristine
+          (cristine@insideoutsideschool.org) for enrollment inquiries. Tuition
+          is publicly posted at $10,500/yr for all three K–6 programs. Summer
+          camp availability is seasonal.
         </p>
       </SectionCard>
 
       <SectionCard title="Website Pages">
-        <p style={{ fontSize: "12px", color: colors.textSecondary, marginBottom: "12px" }}>
-          Pages Inside Outside has — compared against Sagefield&apos;s current site:
+        <p
+          style={{
+            fontSize: "12px",
+            color: colors.textSecondary,
+            marginBottom: "12px",
+          }}
+        >
+          Pages Inside Outside has — compared against Sagefield&apos;s current
+          site:
         </p>
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              fontSize: "13px",
+            }}
+          >
             <thead>
               <tr style={{ borderBottom: `1px solid ${colors.border}` }}>
-                {["Page", "Inside Outside", "Sagefield", "Sagefield Action"].map((h) => (
+                {[
+                  "Page",
+                  "Inside Outside",
+                  "Sagefield",
+                  "Sagefield Action",
+                ].map((h) => (
                   <th
                     key={h}
                     style={{
@@ -911,18 +1725,25 @@ function InsideOutsideAnalysis() {
                   page.sageStatus === "has"
                     ? colors.success
                     : page.sageStatus === "partial"
-                    ? colors.warning
-                    : colors.error;
+                      ? colors.warning
+                      : colors.error;
                 const sageBadgeText =
                   page.sageStatus === "has"
                     ? colors.successText
                     : page.sageStatus === "partial"
-                    ? colors.warningText
-                    : colors.errorText;
+                      ? colors.warningText
+                      : colors.errorText;
                 const sageBadgeLabel =
-                  page.sageStatus === "has" ? "Has it" : page.sageStatus === "partial" ? "Partial" : "Missing";
+                  page.sageStatus === "has"
+                    ? "Has it"
+                    : page.sageStatus === "partial"
+                      ? "Partial"
+                      : "Missing";
                 return (
-                  <tr key={i} style={{ borderBottom: `1px solid ${colors.divider}` }}>
+                  <tr
+                    key={i}
+                    style={{ borderBottom: `1px solid ${colors.divider}` }}
+                  >
                     <td style={{ padding: "9px 12px 9px 0" }}>
                       <a
                         href={page.url}
@@ -936,14 +1757,24 @@ function InsideOutsideAnalysis() {
                           alignItems: "center",
                           gap: "4px",
                         }}
-                        onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.textDecoration = "underline")}
-                        onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.textDecoration = "none")}
+                        onMouseEnter={(e) =>
+                          ((
+                            e.currentTarget as HTMLAnchorElement
+                          ).style.textDecoration = "underline")
+                        }
+                        onMouseLeave={(e) =>
+                          ((
+                            e.currentTarget as HTMLAnchorElement
+                          ).style.textDecoration = "none")
+                        }
                       >
                         {page.name}
                         <ExternalLink size={12} style={{ flexShrink: 0 }} />
                       </a>
                     </td>
-                    <td style={{ padding: "9px 12px 9px 0", fontSize: "16px" }}>{iosBadge}</td>
+                    <td style={{ padding: "9px 12px 9px 0", fontSize: "16px" }}>
+                      {iosBadge}
+                    </td>
                     <td style={{ padding: "9px 12px 9px 0" }}>
                       <span
                         style={{
@@ -960,7 +1791,14 @@ function InsideOutsideAnalysis() {
                         {sageBadgeLabel}
                       </span>
                     </td>
-                    <td style={{ padding: "9px 0 9px 0", color: colors.textSecondary, fontSize: "12px", lineHeight: 1.5 }}>
+                    <td
+                      style={{
+                        padding: "9px 0 9px 0",
+                        color: colors.textSecondary,
+                        fontSize: "12px",
+                        lineHeight: 1.5,
+                      }}
+                    >
                       {page.sageNote}
                     </td>
                   </tr>
@@ -971,12 +1809,29 @@ function InsideOutsideAnalysis() {
         </div>
       </SectionCard>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: spacing.md }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: spacing.md,
+        }}
+      >
         <SectionCard title="Strengths">
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
             {insideOutsideStrengths.map((s, i) => (
-              <li key={i} style={{ display: "flex", gap: "8px", marginBottom: "8px", fontSize: "13px", lineHeight: 1.5 }}>
-                <span style={{ color: colors.mistyForest, flexShrink: 0 }}>✓</span>
+              <li
+                key={i}
+                style={{
+                  display: "flex",
+                  gap: "8px",
+                  marginBottom: "8px",
+                  fontSize: "13px",
+                  lineHeight: 1.5,
+                }}
+              >
+                <span style={{ color: colors.mistyForest, flexShrink: 0 }}>
+                  ✓
+                </span>
                 <span style={{ color: colors.textPrimary }}>{s}</span>
               </li>
             ))}
@@ -986,8 +1841,19 @@ function InsideOutsideAnalysis() {
         <SectionCard title="Weaknesses">
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
             {insideOutsideWeaknesses.map((w, i) => (
-              <li key={i} style={{ display: "flex", gap: "8px", marginBottom: "8px", fontSize: "13px", lineHeight: 1.5 }}>
-                <span style={{ color: colors.errorText, flexShrink: 0 }}>✗</span>
+              <li
+                key={i}
+                style={{
+                  display: "flex",
+                  gap: "8px",
+                  marginBottom: "8px",
+                  fontSize: "13px",
+                  lineHeight: 1.5,
+                }}
+              >
+                <span style={{ color: colors.errorText, flexShrink: 0 }}>
+                  ✗
+                </span>
                 <span style={{ color: colors.textPrimary }}>{w}</span>
               </li>
             ))}
@@ -996,11 +1862,32 @@ function InsideOutsideAnalysis() {
       </div>
 
       <SectionCard title="Social Media Presence">
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: spacing.sm }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: spacing.sm,
+          }}
+        >
           {[
-            { platform: "Facebook", detail1: "~835 likes", detail2: "100% recommendation rate · 204 check-ins", icon: "👍" },
-            { platform: "Yelp", detail1: "13 reviews", detail2: "~4.7+ avg rating", icon: "⭐" },
-            { platform: "Instagram", detail1: "No account", detail2: "Significant gap Sagefield can exploit", icon: "📸" },
+            {
+              platform: "Facebook",
+              detail1: "~835 likes",
+              detail2: "100% recommendation rate · 204 check-ins",
+              icon: "👍",
+            },
+            {
+              platform: "Yelp",
+              detail1: "13 reviews",
+              detail2: "~4.7+ avg rating",
+              icon: "⭐",
+            },
+            {
+              platform: "Instagram",
+              detail1: "No account",
+              detail2: "Significant gap Sagefield can exploit",
+              icon: "📸",
+            },
           ].map((s) => (
             <div
               key={s.platform}
@@ -1011,28 +1898,63 @@ function InsideOutsideAnalysis() {
                 textAlign: "center",
               }}
             >
-              <div style={{ fontSize: "24px", marginBottom: "6px" }}>{s.icon}</div>
-              <p style={{ fontSize: "13px", fontWeight: 700, color: colors.textPrimary, marginBottom: "4px" }}>{s.platform}</p>
-              <p style={{ fontSize: "12px", color: colors.textSecondary }}>{s.detail1}</p>
-              <p style={{ fontSize: "12px", color: colors.textSecondary }}>{s.detail2}</p>
+              <div style={{ fontSize: "24px", marginBottom: "6px" }}>
+                {s.icon}
+              </div>
+              <p
+                style={{
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  color: colors.textPrimary,
+                  marginBottom: "4px",
+                }}
+              >
+                {s.platform}
+              </p>
+              <p style={{ fontSize: "12px", color: colors.textSecondary }}>
+                {s.detail1}
+              </p>
+              <p style={{ fontSize: "12px", color: colors.textSecondary }}>
+                {s.detail2}
+              </p>
             </div>
           ))}
         </div>
       </SectionCard>
 
       <SectionCard title="Marketing Strategy">
-        <div style={{ display: "flex", flexWrap: "wrap", marginBottom: "12px" }}>
+        <div
+          style={{ display: "flex", flexWrap: "wrap", marginBottom: "12px" }}
+        >
           {[
-            "Tour-first approach", "Blog / content marketing", "Testimonials page",
-            "Word-of-mouth", "Facebook only", "Alt Ed Austin directory", "Open houses / orientation events",
+            "Tour-first approach",
+            "Blog / content marketing",
+            "Testimonials page",
+            "Word-of-mouth",
+            "Facebook only",
+            "Alt Ed Austin directory",
+            "Open houses / orientation events",
           ].map((m) => (
-            <Tag key={m} label={m} color={colors.pastelSage} textColor={colors.mistyForest} />
+            <Tag
+              key={m}
+              label={m}
+              color={colors.pastelSage}
+              textColor={colors.mistyForest}
+            />
           ))}
         </div>
-        <p style={{ fontSize: "13px", color: colors.textSecondary, lineHeight: 1.6 }}>
-          No paid advertising detected. Relies on a 40-year community reputation, an active blog, and a dedicated
-          testimonials page. Facebook-only social presence limits reach to parents 35+. Listed in Alt Ed Austin
-          directory — a curated resource families already trust when searching for alternative education options.
+        <p
+          style={{
+            fontSize: "13px",
+            color: colors.textSecondary,
+            lineHeight: 1.6,
+          }}
+        >
+          No paid advertising detected. Relies on a 40-year community
+          reputation, an active blog, and a dedicated testimonials page.
+          Facebook-only social presence limits reach to parents 35+. Listed in
+          Alt Ed Austin directory — a curated resource families already trust
+          when searching for alternative education options.
         </p>
       </SectionCard>
 
@@ -1045,27 +1967,51 @@ function InsideOutsideAnalysis() {
             marginBottom: "14px",
           }}
         >
-          <p style={{ fontSize: "14px", fontWeight: 700, color: colors.successText, marginBottom: "4px" }}>
+          <p
+            style={{
+              fontSize: "14px",
+              fontWeight: 700,
+              color: colors.successText,
+              marginBottom: "4px",
+            }}
+          >
             Zero-Overlap Referral Target
           </p>
-          <p style={{ fontSize: "13px", color: colors.successText, lineHeight: 1.6 }}>
-            Inside Outside serves K–6 only — no infant, toddler, or Pre-K programs. Families with a child at Inside
-            Outside who have a new baby or toddler have no in-network option for early childhood nature-based education.
-            Sagefield is that option.
+          <p
+            style={{
+              fontSize: "13px",
+              color: colors.successText,
+              lineHeight: 1.6,
+            }}
+          >
+            Inside Outside serves K–6 only — no infant, toddler, or Pre-K
+            programs. Families with a child at Inside Outside who have a new
+            baby or toddler have no in-network option for early childhood
+            outdoor-based education. Sagefield is that option.
           </p>
         </div>
-        <div style={{ fontSize: "13px", color: colors.textPrimary, lineHeight: 1.7 }}>
+        <div
+          style={{
+            fontSize: "13px",
+            color: colors.textPrimary,
+            lineHeight: 1.7,
+          }}
+        >
           <p style={{ marginBottom: "8px" }}>
-            <strong>Strategy:</strong> Reach out to director Deborah or admissions director Cristine directly —
-            frame as a resource for their families who have younger children, not as competition.
+            <strong>Strategy:</strong> Reach out to director Deborah or
+            admissions director Cristine directly — frame as a resource for
+            their families who have younger children, not as competition.
           </p>
           <p style={{ marginBottom: "8px" }}>
-            <strong>Offer:</strong> A formal referral relationship that gives Inside Outside families a trusted
-            early childhood option that shares their philosophy — no competitive overlap at any age.
+            <strong>Offer:</strong> A formal referral relationship that gives
+            Inside Outside families a trusted early childhood option that shares
+            their philosophy — no competitive overlap at any age.
           </p>
           <p>
-            <strong>Talking points:</strong> Same nature-based, progressive values. Inside Outside families who enroll
-            at Sagefield may transition into Inside Outside for K and beyond — a pipeline that benefits both schools.
+            <strong>Talking points:</strong> Same nature-based, progressive
+            values. Inside Outside families who enroll at Sagefield may
+            transition into Inside Outside for K and beyond — a pipeline that
+            benefits both schools.
           </p>
         </div>
       </SectionCard>
@@ -1093,11 +2039,23 @@ function PlaceholderAnalysis({ name }: { name: string }) {
       <div style={{ fontSize: "48px", marginBottom: "16px" }}>🔭</div>
       <h3
         className={merriweather.className}
-        style={{ fontSize: "18px", fontWeight: 700, color: colors.textPrimary, marginBottom: "8px" }}
+        style={{
+          fontSize: "18px",
+          fontWeight: 700,
+          color: colors.textPrimary,
+          marginBottom: "8px",
+        }}
       >
         {name}
       </h3>
-      <p style={{ fontSize: "14px", color: colors.textSecondary, maxWidth: "320px", lineHeight: 1.6 }}>
+      <p
+        style={{
+          fontSize: "14px",
+          color: colors.textSecondary,
+          maxWidth: "320px",
+          lineHeight: 1.6,
+        }}
+      >
         Analysis coming soon. Scrape data and fill in this tab when ready.
       </p>
       <div
@@ -1202,12 +2160,18 @@ export default function CompetitorsPage() {
         <div style={{ marginBottom: "28px" }}>
           <h1
             className={merriweather.className}
-            style={{ fontSize: "22px", fontWeight: 900, color: colors.textPrimary, marginBottom: "6px" }}
+            style={{
+              fontSize: "22px",
+              fontWeight: 900,
+              color: colors.textPrimary,
+              marginBottom: "6px",
+            }}
           >
             {schools.find((s) => s.id === activeSchool)?.name}
           </h1>
           <p style={{ fontSize: "13px", color: colors.textSecondary }}>
-            Competitor & partnership analysis · {schools.find((s) => s.id === activeSchool)?.location}
+            Competitor & partnership analysis ·{" "}
+            {schools.find((s) => s.id === activeSchool)?.location}
           </p>
         </div>
 

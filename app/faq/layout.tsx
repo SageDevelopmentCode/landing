@@ -3,11 +3,11 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "FAQ - Sage Field Private School | Texas Microschool",
   description:
-    "Frequently asked questions about Sage Field Private School, a nature-based private microschool in Round Rock, Texas. Learn about our program, enrollment, and approach to small-group, outdoor-centered education for children ages 4-11.",
+    "Frequently asked questions about Sage Field Private School, a outdoor-based private microschool in Round Rock, Texas. Learn about our program, enrollment, and approach to small-group, outdoor-centered education for children ages 4-11.",
   openGraph: {
     title: "FAQ - Sage Field Private School | Texas Microschool",
     description:
-      "Get answers to common questions about Sage Field Private School in Round Rock, Texas. Learn about our microschool model, enrollment process, and nature-based education approach.",
+      "Get answers to common questions about Sage Field Private School in Round Rock, Texas. Learn about our microschool model, enrollment process, and outdoor-based education approach.",
     url: "https://sagefield.co/faq",
     siteName: "Sage Field Private School",
     images: [
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "FAQ - Sage Field Private School | Texas Microschool",
     description:
-      "Common questions about Sage Field Private School in Round Rock, Texas. Learn about enrollment, program details, and our nature-based microschool approach.",
+      "Common questions about Sage Field Private School in Round Rock, Texas. Learn about enrollment, program details, and our outdoor-based microschool approach.",
     images: ["/assets/social-preview.jpg"],
   },
   alternates: {
@@ -52,7 +52,7 @@ export default function FAQLayout({ children }: { children: React.ReactNode }) {
         name: "What is a microschool?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "A microschool is a small, independent private school — typically serving no more than 10 - 12 students — that offers a more personalized, flexible alternative to traditional schooling. Microschools prioritize small class sizes, individualized pacing, and innovative approaches to learning. Sage Field fits this model: we are a licensed private school with intentional, nature-based education at our core.",
+          text: "A microschool is a small, independent private school — typically serving no more than 10 - 12 students — that offers a more personalized, flexible alternative to traditional schooling. Microschools prioritize small class sizes, individualized pacing, and innovative approaches to learning. Sage Field fits this model: we are a licensed private school with intentional, outdoor-based education at our core.",
         },
       },
       {

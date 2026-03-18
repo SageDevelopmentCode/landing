@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Academic Calendar 2026-2027 - Sage Field Private School | Texas Microschool",
+  title:
+    "Academic Calendar 2026-2027 - Sage Field Private School | Texas Microschool",
   description:
-    "View the 2026-2027 academic calendar for Sage Field Private School in Round Rock, Texas. Key dates, holiday schedule, summer program, and important school year information for our nature-based microschool.",
+    "View the 2026-2027 academic calendar for Sage Field Private School in Round Rock, Texas. Key dates, holiday schedule, summer program, and important school year information for our outdoor-based microschool.",
   openGraph: {
     title: "Academic Calendar 2026-2027 - Sage Field Private School",
     description:

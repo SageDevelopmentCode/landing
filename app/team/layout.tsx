@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Our Team - Sage Field Private School",
   description:
-    "Meet the dedicated educators and staff behind Sage Field Private School, a nature-based private microschool in Round Rock, Texas.",
+    "Meet the dedicated educators and staff behind Sage Field Private School, a outdoor-based private microschool in Round Rock, Texas.",
   openGraph: {
     title: "Our Team - Sage Field Private School",
     description:

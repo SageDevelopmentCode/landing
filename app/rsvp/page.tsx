@@ -29,7 +29,7 @@ const whoCards = [
       "If you've been searching for something different, come see what we've built.",
   },
   {
-    title: "Families curious about nature-based education",
+    title: "Families curious about outdoor-based education",
     description:
       "Outdoor, hands-on microschool learning at the heart of everything we do.",
   },

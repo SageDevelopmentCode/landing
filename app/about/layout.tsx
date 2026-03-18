@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title:
-    "About Sage Field Private School - Nature-Based Microschool Round Rock TX",
+    "About Sage Field Private School - Outdoor-Based Microschool Round Rock TX",
   description:
-    "Learn about Sage Field Private School, a nature-based private microschool for children ages 4-11 in Round Rock, Texas. Discover our philosophy of outdoor, hands-on education and our small-group approach.",
+    "Learn about Sage Field Private School, a outdoor-based private microschool for children ages 4-11 in Round Rock, Texas. Discover our philosophy of outdoor, hands-on education and our small-group approach.",
   openGraph: {
     title:
-      "About Sage Field Private School - Nature-Based Microschool Round Rock TX",
+      "About Sage Field Private School - Outdoor-Based Microschool Round Rock TX",
     description:
-      "Learn about Sage Field Private School, a nature-based private microschool for children ages 4-11 in Round Rock, Texas.",
+      "Learn about Sage Field Private School, a outdoor-based private microschool for children ages 4-11 in Round Rock, Texas.",
     url: "https://sagefield.co/about",
     siteName: "Sage Field Private School",
     images: [
@@ -26,9 +26,9 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title:
-      "About Sage Field Private School - Nature-Based Microschool Round Rock TX",
+      "About Sage Field Private School - Outdoor-Based Microschool Round Rock TX",
     description:
-      "Learn about our nature-based private microschool in Round Rock, Texas offering outdoor, hands-on education for children ages 4-11.",
+      "Learn about our outdoor-based private microschool in Round Rock, Texas offering outdoor, hands-on education for children ages 4-11.",
     images: ["/assets/social-preview.jpg"],
   },
   alternates: {

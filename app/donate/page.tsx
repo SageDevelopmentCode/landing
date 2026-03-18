@@ -31,7 +31,7 @@ const impactCards = [
     icon: TreePine,
     title: "Outdoor Learning",
     description:
-      "Help us create nature-based spaces — gardens, trails, and outdoor classrooms — that spark curiosity and connect children to the world around them.",
+      "Help us create outdoor-based spaces — gardens, trails, and outdoor classrooms — that spark curiosity and connect children to the world around them.",
   },
   {
     icon: Users,
