@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { createAdminClient } from "@/app/lib/supabase-server";
 import { sendDiscordNotification, createErrorEmbed } from "@/app/lib/discord";
+import { sendZohoEmail, buildRSVPConfirmationEmail } from "@/app/lib/zoho";
 
 const rsvpSchema = z.object({
   name: z.string().min(1, "Full name is required").max(100, "Name is too long"),
@@ -70,6 +71,31 @@ export async function submitRSVP(data: RSVPFormData): Promise<RSVPResponse> {
         message: "Failed to submit RSVP. Please try again.",
         error: error.message,
       };
+    }
+
+    // Send RSVP confirmation email (non-blocking)
+    try {
+      const { subject, content } = await buildRSVPConfirmationEmail({ name: validated.name });
+      const emailResult = await sendZohoEmail({ toAddress: validated.email, subject, content });
+      if (!emailResult.success) {
+        console.error("Failed to send RSVP confirmation email:", emailResult.error);
+        void sendDiscordNotification(
+          createErrorEmbed({
+            context: "Open House RSVP – Confirmation Email",
+            error: emailResult.error ?? "Unknown error",
+            details: { email: validated.email },
+          }),
+        ).catch(() => {});
+      }
+    } catch (emailError) {
+      console.error("RSVP confirmation email error:", emailError);
+      void sendDiscordNotification(
+        createErrorEmbed({
+          context: "Open House RSVP – Confirmation Email",
+          error: emailError instanceof Error ? emailError.message : String(emailError),
+          details: { email: validated.email },
+        }),
+      ).catch(() => {});
     }
 
     // Send Discord notification (non-blocking)

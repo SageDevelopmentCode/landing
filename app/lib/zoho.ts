@@ -758,6 +758,68 @@ export async function buildApprovalEmail(opts: {
 }
 
 /**
+ * Build HTML confirmation email for an Open House RSVP
+ */
+export async function buildRSVPConfirmationEmail(opts: {
+  name: string;
+}): Promise<{ subject: string; content: string }> {
+  const firstName = opts.name.split(" ")[0] || opts.name;
+  const subject = "You're on the list — Sage Field Open House, April 25";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${firstName},</p>
+
+  <p>You're registered for the Sage Field Open House — we're so glad you'll be joining us. This is a wonderful chance to see the space, meet our educators, and get a feel for what learning at Sage Field really looks like.</p>
+
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; margin: 28px 0;">
+    <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 15px;">Event Details</p>
+    <p style="margin: 4px 0;"><strong>Date:</strong> Saturday, April 25, 2026</p>
+    <p style="margin: 4px 0;"><strong>Time:</strong> 2:00 PM – 4:00 PM</p>
+    <p style="margin: 4px 0;"><strong>Location:</strong> <a href="https://maps.google.com/?q=2760+Gattis+School+Rd,+Round+Rock,+TX+78664" style="color: #5a7a5a;">2760 Gattis School Rd, Round Rock, TX 78664</a></p>
+  </div>
+
+  <h2 style="font-size: 18px; margin-top: 32px; margin-bottom: 8px; color: #2c2c2c;">What to Expect</h2>
+  <ul style="padding-left: 20px;">
+    <li style="margin-bottom: 8px;">Tour our outdoor learning space and farm property</li>
+    <li style="margin-bottom: 8px;">Meet Sabrina and our educators in person</li>
+    <li style="margin-bottom: 8px;">See our curriculum and nature-based approach in action</li>
+    <li style="margin-bottom: 8px;">Connect with other families exploring Sage Field</li>
+    <li style="margin-bottom: 8px;">Learn about enrollment for Summer 2026 &amp; School Year 2026–2027</li>
+  </ul>
+
+  <h2 style="font-size: 18px; margin-top: 32px; margin-bottom: 12px; color: #2c2c2c;">Our Programs</h2>
+
+  <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin-bottom: 16px;">
+    <p style="margin: 0 0 6px 0; font-weight: bold; font-size: 15px;">Summer 2026</p>
+    <p style="margin: 4px 0; color: #555; font-size: 14px;">May 26 – Aug 20 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Mon–Thu, ~6 hrs/day &nbsp;·&nbsp; Group of ~10</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;">An immersive summer of nature-based learning — gardening, animal care, outdoor exploration, and hands-on projects in a small, intentional community.</p>
+  </div>
+
+  <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin-bottom: 28px;">
+    <p style="margin: 0 0 6px 0; font-weight: bold; font-size: 15px;">School Year 2026–2027</p>
+    <p style="margin: 4px 0; color: #555; font-size: 14px;">Starts Aug 17 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Up to 4 days/week &nbsp;·&nbsp; 6-month commitment</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;">A full-year nature-based education grounded in Montessori principles, outdoor learning, and deep connection to the living world — with flexible scheduling for families.</p>
+  </div>
+
+  <p style="text-align: center; margin: 32px 0;">
+    <a href="https://www.sagefield.co/apply" style="display: inline-block; background: #5a7a5a; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 4px; font-family: Georgia, serif; font-size: 15px;">Apply for a Program</a>
+  </p>
+
+  <p>We look forward to meeting you and your family on April 25. If you have any questions before then, don't hesitate to reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a>.</p>
+
+  <p style="margin-top: 32px;">With warmth,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
+/**
  * Send an email via Zoho Mail API
  */
 export async function sendZohoEmail(opts: {
