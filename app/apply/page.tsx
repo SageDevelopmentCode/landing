@@ -328,10 +328,16 @@ export default function ApplyPage() {
 
                 <div className="lg:hidden mb-10">
                   <button
-                    onClick={() => setWaitlistOpen(true)}
+                    onClick={() => router.push("/apply/start")}
                     className="w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
                   >
-                    Fill out Interest Form
+                    Apply Now
+                  </button>
+                  <button
+                    onClick={() => setWaitlistOpen(true)}
+                    className="w-full mt-3 px-8 py-3 text-sm text-gray-500 font-body font-semibold hover:text-primary transition-colors duration-200 cursor-pointer"
+                  >
+                    Have any questions?
                   </button>
                 </div>
 
@@ -840,10 +846,16 @@ export default function ApplyPage() {
                     Have any questions?
                   </button>
                   <button
-                    onClick={() => setWaitlistOpen(true)}
+                    onClick={() => router.push("/apply/start")}
                     className="lg:hidden w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
                   >
-                    Fill out Interest Form
+                    Apply Now
+                  </button>
+                  <button
+                    onClick={() => setWaitlistOpen(true)}
+                    className="lg:hidden w-full mt-3 px-8 py-3 text-sm text-gray-500 font-body font-semibold hover:text-primary transition-colors duration-200 cursor-pointer"
+                  >
+                    Have any questions?
                   </button>
                 </div>
               </div>
