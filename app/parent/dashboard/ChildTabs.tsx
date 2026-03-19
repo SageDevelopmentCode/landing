@@ -389,6 +389,9 @@ function CombinedRegistrationFeeModal({
           <p className="text-sm text-red-600 font-body mb-4">{error}</p>
         )}
 
+        <p className="text-xs text-gray-400 font-body mb-4">
+          Registration fees are non-refundable.
+        </p>
         <div className="flex gap-3 mb-3">
           <button
             onClick={onClose}
@@ -595,6 +598,9 @@ function RegistrationFeeModal({
           <p className="text-sm text-red-600 font-body mb-4">{error}</p>
         )}
 
+        <p className="text-xs text-gray-400 font-body mb-4">
+          Registration fees are non-refundable.
+        </p>
         <div className="flex gap-3">
           <button
             onClick={onClose}
