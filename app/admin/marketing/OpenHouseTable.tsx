@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { colors, radius, shadows } from '../design-system'
 import { Table, TableRow, TableCell } from '../components/Table'
 import type { OpenHouseRsvp } from './page'
+import { AddRsvpSidebar } from './AddRsvpSidebar'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -17,33 +18,57 @@ function formatDate(iso: string) {
 }
 
 export function OpenHouseTable({ rsvps }: { rsvps: OpenHouseRsvp[] }) {
+  const [localRsvps, setLocalRsvps] = useState(rsvps)
   const [showSubmitted, setShowSubmitted] = useState(false)
   const [selectedRsvp, setSelectedRsvp] = useState<OpenHouseRsvp | null>(null)
-  const totalAdults = rsvps.reduce((sum, r) => sum + (r.adults_attending ?? 0), 0)
-  const totalChildren = rsvps.reduce((sum, r) => sum + (r.children_attending ?? 0), 0)
+  const [showAddSidebar, setShowAddSidebar] = useState(false)
+  const totalAdults = localRsvps.reduce((sum, r) => sum + (r.adults_attending ?? 0), 0)
+  const totalChildren = localRsvps.reduce((sum, r) => sum + (r.children_attending ?? 0), 0)
   const totalAttendees = totalAdults + totalChildren
 
-  if (rsvps.length === 0) {
+  if (localRsvps.length === 0) {
     return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '240px',
-          backgroundColor: 'white',
-          borderRadius: radius.lg,
-          boxShadow: shadows.soft,
-          border: `1px solid ${colors.border}`,
-          padding: '32px',
-          textAlign: 'center',
-        }}
-      >
-        <p style={{ fontSize: '14px', color: colors.textSecondary }}>
-          No RSVPs yet.
-        </p>
-      </div>
+      <>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '240px',
+            backgroundColor: 'white',
+            borderRadius: radius.lg,
+            boxShadow: shadows.soft,
+            border: `1px solid ${colors.border}`,
+            padding: '32px',
+            textAlign: 'center',
+          }}
+        >
+          <p style={{ fontSize: '14px', color: colors.textSecondary, marginBottom: '16px' }}>
+            No RSVPs yet.
+          </p>
+          <button
+            onClick={() => setShowAddSidebar(true)}
+            style={{
+              backgroundColor: colors.mistyForest,
+              color: 'white',
+              border: 'none',
+              borderRadius: radius.md,
+              padding: '8px 16px',
+              fontSize: '13px',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            Add RSVP
+          </button>
+        </div>
+        <AddRsvpSidebar
+          isOpen={showAddSidebar}
+          onClose={() => setShowAddSidebar(false)}
+          onRsvpAdded={(rsvp) => setLocalRsvps(prev => [rsvp, ...prev])}
+        />
+      </>
     )
   }
 
@@ -59,7 +84,7 @@ export function OpenHouseTable({ rsvps }: { rsvps: OpenHouseRsvp[] }) {
         }}
       >
         {[
-          { label: 'RSVPs', value: rsvps.length },
+          { label: 'RSVPs', value: localRsvps.length },
           { label: 'Adults', value: totalAdults },
           { label: 'Children', value: totalChildren },
           { label: 'Total Attendees', value: totalAttendees },
@@ -93,8 +118,8 @@ export function OpenHouseTable({ rsvps }: { rsvps: OpenHouseRsvp[] }) {
         ))}
       </div>
 
-      {/* Toggle submitted column */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
+      {/* Toolbar */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginBottom: '8px' }}>
         <button
           onClick={() => setShowSubmitted((v) => !v)}
           style={{
@@ -109,12 +134,27 @@ export function OpenHouseTable({ rsvps }: { rsvps: OpenHouseRsvp[] }) {
         >
           {showSubmitted ? 'Hide submitted' : 'Show submitted'}
         </button>
+        <button
+          onClick={() => setShowAddSidebar(true)}
+          style={{
+            fontSize: '12px',
+            color: 'white',
+            backgroundColor: colors.mistyForest,
+            border: 'none',
+            borderRadius: radius.sm,
+            padding: '4px 10px',
+            cursor: 'pointer',
+            fontWeight: 600,
+          }}
+        >
+          Add RSVP
+        </button>
       </div>
 
       <Table
         headers={['Name', 'Email', 'Phone', 'Adults', 'Children', 'Notes', ...(showSubmitted ? ['Submitted'] : [])]}
       >
-        {rsvps.map((rsvp, i) => (
+        {localRsvps.map((rsvp, i) => (
           <TableRow key={rsvp.id} index={i} onClick={() => setSelectedRsvp(rsvp)} style={{ cursor: 'pointer' }}>
             <TableCell>
               <span style={{ fontWeight: 500, color: colors.textPrimary }}>
@@ -159,6 +199,12 @@ export function OpenHouseTable({ rsvps }: { rsvps: OpenHouseRsvp[] }) {
           </TableRow>
         ))}
       </Table>
+
+      <AddRsvpSidebar
+        isOpen={showAddSidebar}
+        onClose={() => setShowAddSidebar(false)}
+        onRsvpAdded={(rsvp) => setLocalRsvps(prev => [rsvp, ...prev])}
+      />
 
       <AnimatePresence>
         {selectedRsvp && (
