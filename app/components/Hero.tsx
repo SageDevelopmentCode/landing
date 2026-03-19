@@ -6,16 +6,86 @@ import Link from "next/link";
 import WaitlistDialog from "./WaitlistDialog";
 
 const slides = [
-  "/assets/After1.png",
-  "/assets/After2.png",
-  "/assets/After3.png",
-  "/assets/After5.PNG",
-  "/assets/After7.PNG",
-  "/assets/ImageFive.jpg",
-  "/assets/ImageFour.jpg",
-  "/assets/ImageNine.jpg",
-  "/assets/ImageSeven.jpg",
-  "/assets/ImageTen.jpg",
+  {
+    image: "/assets/After1.png",
+    title: "Welcome to Sage Field!",
+    description:
+      "A small, outdoor-focused private microschool in Round Rock, Texas.",
+    buttonLabel: "Interested in Joining?",
+    buttonAction: "waitlist" as const,
+  },
+  {
+    image: "/assets/After2.png",
+    title: "Learning Happens Outside",
+    description:
+      "Outdoor exploration, hands-on academics, and child-led inquiry — every single day.",
+    buttonLabel: "Our Vision",
+    buttonHref: "/vision",
+  },
+  {
+    image: "/assets/After5.PNG",
+    title: "Summer 2026 Program",
+    description:
+      "12 weeks of themed adventures, nature play, art, and academic enrichment — May 26 to August 13.",
+    buttonLabel: "Explore Summer 2026",
+    buttonHref: "/summer-2026",
+  },
+  {
+    image: "/assets/After7.PNG",
+    title: "School Year 2026–2027",
+    description:
+      "Up to 4 days a week of enriched, Montessori-inspired learning for ages 4–11 starting August 17.",
+    buttonLabel: "See the School Year",
+    buttonHref: "/school-year-2026-2027",
+  },
+  {
+    image: "/assets/After3.png",
+    title: "Apply to Sage Field",
+    description:
+      "Spots are limited. Apply early to secure your child's place in our Summer or School Year program.",
+    buttonLabel: "Apply Now",
+    buttonHref: "/apply",
+  },
+  {
+    image: "/assets/ImageSeven.jpg",
+    title: "Open House — April 25",
+    description:
+      "Tour our space, meet our educators, and see Sage Field in person. Bring the whole family.",
+    buttonLabel: "RSVP for April 25",
+    buttonHref: "/rsvp",
+  },
+  {
+    image: "/assets/ImageTen.jpg",
+    title: "Homeschool Drop-In",
+    description:
+      "1 to 5 days a week of flexible enrichment — academics, art, music, and Friday Field Days.",
+    buttonLabel: "Learn More",
+    buttonHref: "/homeschool",
+  },
+  {
+    image: "/assets/ImageFour.jpg",
+    title: "Our Educational Philosophy",
+    description:
+      "Montessori, Waldorf, and Reggio Emilia methods woven together with TEKS-aligned academics.",
+    buttonLabel: "Our Philosophy",
+    buttonHref: "/educational-philosophy",
+  },
+  {
+    image: "/assets/After4.png",
+    title: "Our Vision",
+    description:
+      "We've secured our LLC and our property. Come see what we're building for the children of Round Rock.",
+    buttonLabel: "See Our Vision",
+    buttonHref: "/vision",
+  },
+  {
+    image: "/assets/ImageNine.jpg",
+    title: "Our Story",
+    description:
+      "Sage Field was born from a belief that children deserve to learn through movement, wonder, and joy.",
+    buttonLabel: "Read Our Story",
+    buttonHref: "/our-story",
+  },
 ];
 
 export default function Hero() {
@@ -36,13 +106,26 @@ export default function Hero() {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, []);
+
+  const prevSlide = () => {
+    setActiveSlide((prev) => (prev - 1 + slides.length) % slides.length);
+    startInterval();
+  };
+
+  const nextSlide = () => {
+    setActiveSlide((prev) => (prev + 1) % slides.length);
+    startInterval();
+  };
+
+  const currentSlide = slides[activeSlide];
+
   return (
     <section className="relative h-screen w-full overflow-hidden">
       {/* Background Image Slideshow */}
       <AnimatePresence mode="sync">
         <motion.img
           key={activeSlide}
-          src={slides[activeSlide]}
+          src={currentSlide.image}
           alt="Sage Field"
           className="absolute inset-0 w-full h-full object-cover scale-110"
           initial={{ opacity: 0 }}
@@ -52,71 +135,77 @@ export default function Hero() {
         />
       </AnimatePresence>
 
-      {/* Dark Tint Overlay */}
-      <div className="absolute inset-0 bg-black/20" />
+      {/* Gradient Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
-      {/* Content Container */}
-      <div className="relative h-full w-full mx-auto px-8 sm:px-12 lg:px-12 flex items-center md:items-end pb-12 md:pb-16 lg:pb-16">
-        <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-          {/* Left: Large Slogan */}
+      {/* Left Arrow */}
+      <button
+        onClick={prevSlide}
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-white/30 backdrop-blur-sm text-white text-2xl font-bold hover:bg-white/50 transition-all duration-200 cursor-pointer"
+        aria-label="Previous slide"
+      >
+        ‹
+      </button>
+
+      {/* Right Arrow */}
+      <button
+        onClick={nextSlide}
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-white/30 backdrop-blur-sm text-white text-2xl font-bold hover:bg-white/50 transition-all duration-200 cursor-pointer"
+        aria-label="Next slide"
+      >
+        ›
+      </button>
+
+      {/* Bottom Content Bar */}
+      <div className="absolute bottom-0 left-0 right-0 pb-12 px-8 sm:px-12 lg:px-16 z-10">
+        <AnimatePresence mode="wait">
           <motion.div
-            className="text-center md:text-left"
-            initial={{ opacity: 0, y: 30 }}
+            key={activeSlide}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="max-w-2xl"
           >
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold text-white drop-shadow-lg max-w-sm font-heading leading-tight">
-              Welcome to Sage Field!
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold text-white drop-shadow-lg font-heading leading-tight mb-3">
+              {currentSlide.title}
             </h1>
-            {/* <motion.p
-              className="mt-4 text-lg md:text-xl text-white font-semibold italic drop-shadow-md font-body max-w-sm"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
-            >
-              Children are not meant to rot in classrooms. Choose outdoor
-              learning.
-            </motion.p> */}
-          </motion.div>
-
-          {/* Right: Description and Buttons */}
-          <div className="text-center md:text-right flex flex-col justify-end space-y-6 max-w-2xl md:ml-auto">
-            <motion.p
-              className="text-base md:text-lg text-white font-semibold drop-shadow-md max-w-2xl font-body"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
-            >
-              Sage Field Private School is an outdoor-focused private
-              microschool in Round Rock, Texas. We are a small, intentional
-              learning community where outdoor exploration, hands-on academics,
-              and child-led inquiry come together.
-            </motion.p>
-
-            {/* Action Buttons */}
-            <motion.div
-              className="flex flex-col sm:flex-row gap-4 justify-center md:justify-end"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.7, ease: "easeOut" }}
-            >
-              {/* <button className="px-6 py-3 border-2 border-white bg-primary/20 backdrop-blur-md text-white font-semibold rounded-lg hover:bg-primary/30 transition-all duration-200 font-body">
-                View Curriculum
-              </button> */}
+            <p className="text-base md:text-lg text-white/90 font-semibold drop-shadow-md font-body mb-6">
+              {currentSlide.description}
+            </p>
+            {currentSlide.buttonAction === "waitlist" ? (
               <button
                 onClick={() => setIsDialogOpen(true)}
                 className="px-6 py-3 border-2 border-white bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-all duration-200 font-body cursor-pointer"
               >
-                Interested in joining?
+                {currentSlide.buttonLabel}
               </button>
+            ) : (
               <Link
-                href="/apply"
-                className="px-6 py-3 border-2 border-white bg-white text-primary font-semibold rounded-lg hover:bg-gray-100 transition-all duration-200 font-body cursor-pointer"
+                href={currentSlide.buttonHref!}
+                className="inline-block px-6 py-3 border-2 border-white bg-white text-primary font-semibold rounded-lg hover:bg-gray-100 transition-all duration-200 font-body cursor-pointer"
               >
-                Join Our Summer Program!
+                {currentSlide.buttonLabel}
               </Link>
-            </motion.div>
-          </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Dot Indicators */}
+        <div className="flex gap-2 mt-6">
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => {
+                setActiveSlide(i);
+                startInterval();
+              }}
+              className={`w-2 h-2 rounded-full transition-all duration-200 cursor-pointer ${
+                i === activeSlide ? "bg-white w-6" : "bg-white/50"
+              }`}
+              aria-label={`Go to slide ${i + 1}`}
+            />
+          ))}
         </div>
       </div>
 
