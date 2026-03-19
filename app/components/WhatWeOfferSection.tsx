@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import WeeklySchedule from "./WeeklySchedule";
+import WaitlistDialog from "./WaitlistDialog";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
@@ -36,7 +38,7 @@ const programs = [
       "6-month commitment",
       "~10 children per class",
       "Field Fridays",
-      "Aftercare available",
+      "Aftercare",
     ],
     description:
       "A full school-year microschool experience blending Montessori, Waldorf, and Reggio-inspired methods with TEKS-aligned academics.",
@@ -45,9 +47,30 @@ const programs = [
     dateBg: "bg-lavender/40",
     dateText: "text-purple-700",
   },
+  {
+    badge: "Homeschool",
+    badgeColor: "bg-emerald-100",
+    title: "Homeschool Drop-In",
+    dates: "Available for Both Programs",
+    details: [
+      "Ages 4–11",
+      "1–5 Days/Week",
+      "Field Fridays",
+      "Flexible Scheduling",
+    ],
+    description:
+      "Flexible drop-in program for homeschool families — choose 1 to 5 days per week with ability-based learning, enrichments, and Friday Field Days.",
+    href: "/homeschool",
+    image: "/assets/After1.png",
+    dateBg: "bg-emerald-50",
+    dateText: "text-emerald-700",
+    ctaLabel: "Request Info",
+  },
 ];
 
 export default function WhatWeOfferSection() {
+  const [isWaitlistOpen, setIsWaitlistOpen] = useState(false);
+
   return (
     <section
       id="what-we-offer"
@@ -182,7 +205,7 @@ export default function WhatWeOfferSection() {
           </motion.h2>
 
           {/* Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {programs.map((program, index) => (
               <motion.div
                 key={program.href}
@@ -255,12 +278,21 @@ export default function WhatWeOfferSection() {
                       >
                         Learn More
                       </Link>
-                      <Link
-                        href="/apply"
-                        className="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
-                      >
-                        Enroll Now
-                      </Link>
+                      {program.ctaLabel ? (
+                        <button
+                          onClick={() => setIsWaitlistOpen(true)}
+                          className="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+                        >
+                          {program.ctaLabel}
+                        </button>
+                      ) : (
+                        <Link
+                          href="/apply"
+                          className="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+                        >
+                          Enroll Now
+                        </Link>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -269,6 +301,11 @@ export default function WhatWeOfferSection() {
           </div>
         </div>
       </div>
+
+      <WaitlistDialog
+        isOpen={isWaitlistOpen}
+        onClose={() => setIsWaitlistOpen(false)}
+      />
     </section>
   );
 }

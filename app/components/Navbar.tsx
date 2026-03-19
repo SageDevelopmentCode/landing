@@ -23,7 +23,7 @@ interface NavLeaf {
 }
 
 type NavTab =
-  | { kind: "single"; label: string; action: NavAction }
+  | { kind: "single"; label: string; action: NavAction; highlight?: boolean }
   | { kind: "dropdown"; label: string; items: NavLeaf[] };
 
 const NAV_TABS: NavTab[] = [
@@ -101,6 +101,12 @@ const NAV_TABS: NavTab[] = [
     label: "Contact",
     action: { kind: "dialog", target: "contact" },
   },
+  // {
+  //   kind: "single",
+  //   label: "Join Us 4/25",
+  //   action: { kind: "link", href: "/rsvp" },
+  //   highlight: true,
+  // },
 ];
 
 // ─── Announcement data ───────────────────────────────────────────────────────
@@ -123,6 +129,12 @@ const ANNOUNCEMENTS = [
     full: "📚 Enroll for the upcoming 2026–2027 school year!",
     buttonLabel: "Apply Today!",
     href: "/apply",
+  },
+  {
+    short: "🏠 Homeschool Drop-Ins Available!",
+    full: "🏠 Homeschool families — flexible drop-ins available for all programs!",
+    buttonLabel: "Learn More",
+    href: "/homeschool",
   },
 ];
 
@@ -389,6 +401,17 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
                     </span>
                   );
                 }
+                if (tab.highlight && tab.action.kind === "link") {
+                  return (
+                    <Link
+                      key={tab.label}
+                      href={tab.action.href}
+                      className="bg-indigo-500 text-white px-4 py-1.5 rounded-full text-sm font-semibold hover:bg-indigo-600 transition-colors duration-200 focus:outline-none shadow-md"
+                    >
+                      {tab.label}
+                    </Link>
+                  );
+                }
                 return (
                   <button
                     key={tab.label}
@@ -532,6 +555,19 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
                           <span className="block font-semibold text-sm text-gray-400/60 cursor-not-allowed select-none">
                             {tab.label}
                           </span>
+                        </div>
+                      );
+                    }
+                    if (tab.highlight && tab.action.kind === "link") {
+                      return (
+                        <div key={tab.label} className="py-2">
+                          <Link
+                            href={tab.action.href}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="block w-full bg-indigo-500 text-white text-center font-semibold text-sm py-3 px-4 rounded-full hover:bg-indigo-600 transition-colors duration-200 shadow-md"
+                          >
+                            {tab.label}
+                          </Link>
                         </div>
                       );
                     }
