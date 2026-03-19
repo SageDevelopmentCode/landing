@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { LayoutDashboard, TrendingUp, Users, ClipboardList, DollarSign, GraduationCap, CreditCard, Mail, Telescope, BookOpen } from "lucide-react";
+import { LayoutDashboard, TrendingUp, Users, ClipboardList, DollarSign, GraduationCap, CreditCard, Mail, Telescope, BookOpen, Megaphone } from "lucide-react";
 import { colors, radius, shadows, spacing } from "../design-system";
 import { Tooltip } from "./Tooltip";
 import { Merriweather } from "next/font/google";
@@ -72,6 +72,11 @@ const navItems: NavItem[] = [
     name: "Competitors",
     href: "/admin/competitors",
     icon: <Telescope className="w-5 h-5" />,
+  },
+  {
+    name: "Marketing",
+    href: "/admin/marketing",
+    icon: <Megaphone className="w-5 h-5" />,
   },
 ];
 
