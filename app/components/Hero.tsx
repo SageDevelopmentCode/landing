@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import WaitlistDialog from "./WaitlistDialog";
 
 const slides = [
@@ -144,7 +145,7 @@ export default function Hero() {
         className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-white/30 backdrop-blur-sm text-white text-2xl font-bold hover:bg-white/50 transition-all duration-200 cursor-pointer"
         aria-label="Previous slide"
       >
-        ‹
+        <ChevronLeft className="w-6 h-6" />
       </button>
 
       {/* Right Arrow */}
@@ -153,7 +154,7 @@ export default function Hero() {
         className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-white/30 backdrop-blur-sm text-white text-2xl font-bold hover:bg-white/50 transition-all duration-200 cursor-pointer"
         aria-label="Next slide"
       >
-        ›
+        <ChevronRight className="w-6 h-6" />
       </button>
 
       {/* Bottom Content Bar */}

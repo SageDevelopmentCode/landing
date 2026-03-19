@@ -93,7 +93,7 @@ function cleanEmailAddress(rawEmail: string): string {
   if (!rawEmail) return "";
 
   // Decode HTML entities
-  let cleaned = rawEmail
+  const cleaned = rawEmail
     .replace(/&quot;/g, '"')
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")

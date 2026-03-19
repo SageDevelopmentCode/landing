@@ -1,41 +1,43 @@
 "use client";
 
-import { useState } from "react";
 import Card from "./Card";
 import { motion } from "framer-motion";
 
 export default function WelcomeSection() {
-  const [expanded, setExpanded] = useState(false);
   const cards = [
     {
       title: "Family Partnership",
       description:
         "We stay in close communication with families and invite parents to support the learning journey at home — while Sage Field handles the full in-school program.",
       icon: "🤝",
+      image: "/assets/foto-dial-mrTd-QXJqK0-unsplash.jpg",
     },
     {
       title: "Hands-on Learning",
       description:
         "Hands-on outdoor and movement-based experiences that connect children to the world around them and foster real-world wisdom.",
       icon: "🌿",
+      image: "/assets/ImageEleven.jpg",
     },
     {
       title: "Small Groups",
       description:
         "Personalized attention in intimate learning environments designed for learning and growth.",
       icon: "👥",
+      image: "/assets/ImageFive.jpg",
     },
     {
       title: "Wisdom Focus",
       description:
         "Beyond memorization - transforming knowledge into living wisdom through curiosity, reflection, and experience.",
       icon: "💡",
+      image: "/assets/ImageSeven.jpg",
     },
   ];
 
   return (
-    <section className="bg-welcome-bg min-h-[80vh] py-16 px-8 sm:px-12 lg:px-16 flex items-center justify-center">
-      <div className="max-w-7xl mx-auto w-full">
+    <section className="bg-welcome-bg min-h-[80vh] py-16 flex items-center justify-center overflow-hidden">
+      <div className="max-w-7xl mx-auto w-full px-8 sm:px-12 lg:px-16">
         {/* Welcome Badge */}
         <motion.div
           className="flex justify-start mb-8"
@@ -49,130 +51,57 @@ export default function WelcomeSection() {
           </span>
         </motion.div>
 
-        {/* Two Column Layout */}
-        <div className="flex flex-col lg:flex-row lg:justify-between items-center gap-16 w-full">
-          {/* Left Column: Text Content */}
-          <div className="text-left max-w-2xl">
-            {/* Title */}
-            <motion.h2
-              className="text-4xl md:text-5xl font-bold text-black font-heading mb-6"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
-            >
-              What is Sage Field?
-            </motion.h2>
-
-            {/* Introduction Paragraph */}
-            <motion.p
-              className="text-base md:text-lg text-text-gray mb-16 leading-relaxed font-body"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-            >
-              Sage Field Private School is an outdoor-focused private
-              microschool in Round Rock, Texas. for children ages 4-11. We offer
-              small-group, outdoor-centered education that fosters curiosity,
-              confidence, and wisdom through personalised, hands-on learning —
-              without the rigid structure of traditional school.
-            </motion.p>
-
-            {/* Wisdom vs. Knowledge Section */}
-            <motion.div
-              className="mb-8"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
-            >
-              <h3 className="text-2xl md:text-3xl font-bold text-black font-heading mb-6">
-                Wisdom vs. Knowledge
-              </h3>
-              <p className="text-base md:text-lg text-text-gray leading-relaxed font-body">
-                The name Sage Field carries two meanings.{" "}
-                <span className="text-primary font-semibold">
-                  Sage represents wisdom — the kind of understanding that comes
-                  from curiosity, reflection, and experiences. Field reminds us
-                  of the open ground where growth happens — a place to plant,
-                  tend, and eventually harvest the rich potential within every
-                  child.
-                </span>{" "}
-                At Sage Field, we see children as seeds of endless possibility.
-                They each hold knowledge waiting to sprout, but it takes care,
-                patience, and connection to turn that knowledge into true
-                wisdom.
-              </p>
-              <div className={`${expanded ? 'block' : 'hidden'} md:block`}>
-                <br />
-                <p className="text-base md:text-lg text-text-gray leading-relaxed font-body">
-                  In many traditional settings, education becomes a race to
-                  memorize and repeat — a rhythm of tests and routines that fill
-                  the mind but rarely touch the heart. We believe wisdom is what
-                  transforms learning into living — it helps children connect
-                  ideas to real experiences, build empathy, and make thoughtful
-                  choices. Through our family partnership model, parents, mentors,
-                  and students work together to nurture curiosity and reflection
-                  both in and beyond the lesson. In this shared garden of growth,
-                  knowledge takes root, and every child has the chance to blossom
-                  into their fullest, wisest self.
-                </p>
-              </div>
-              <button
-                onClick={() => setExpanded(!expanded)}
-                className="mt-3 text-primary font-semibold text-sm md:hidden"
-              >
-                {expanded ? 'Read less' : 'Read more'}
-              </button>
-            </motion.div>
-
-            {/* Call to Action Button */}
-            <motion.button
-              className="px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
-              onClick={() => {
-                document
-                  .getElementById("educational-philosophy")
-                  ?.scrollIntoView({ behavior: "smooth" });
-              }}
-            >
-              Learn More About Our Program
-            </motion.button>
-          </div>
-
-          {/* Right Column: 2x2 Cards Grid */}
-          <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 gap-6"
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
+        {/* Text Block */}
+        <div className="text-left max-w-2xl mb-12">
+          {/* Title */}
+          <motion.h2
+            className="text-4xl md:text-5xl font-bold text-black font-heading mb-6"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
           >
-            {cards.map((card, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{
-                  duration: 0.5,
-                  delay: 0.3 + index * 0.1,
-                  ease: "easeOut",
-                }}
-              >
-                <Card
-                  title={card.title}
-                  description={card.description}
-                  iconPlaceholder={card.icon}
-                />
-              </motion.div>
-            ))}
-          </motion.div>
+            What is Sage Field?
+          </motion.h2>
+
+          {/* Introduction Paragraph */}
+          <motion.p
+            className="text-base md:text-lg text-text-gray leading-relaxed font-body"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+          >
+            Sage Field Private School is an outdoor-focused private
+            microschool in Round Rock, Texas. for children ages 4-11. We offer
+            small-group, outdoor-centered education that fosters curiosity,
+            confidence, and wisdom through personalised, hands-on learning —
+            without the rigid structure of traditional school.
+          </motion.p>
         </div>
+
+        {/* Horizontal Scroll Row */}
+        <motion.div
+          className="overflow-x-auto flex snap-x snap-mandatory gap-4 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] lg:overflow-visible lg:grid lg:grid-cols-2"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+        >
+          {cards.map((card, index) => (
+            <div
+              key={index}
+              className="w-[80%] flex-shrink-0 snap-start h-full lg:w-full"
+            >
+              <Card
+                title={card.title}
+                description={card.description}
+                iconPlaceholder={card.icon}
+                image={card.image}
+              />
+            </div>
+          ))}
+        </motion.div>
       </div>
     </section>
   );
