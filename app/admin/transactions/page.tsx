@@ -41,6 +41,7 @@ type StripeTransaction = {
   created_at: string
   updated_at: string | null
   is_deleted: boolean
+  exclude_from_revenue: boolean
 }
 
 export default async function TransactionsPage() {

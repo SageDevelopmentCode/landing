@@ -6,6 +6,7 @@ import { ChevronRight, ExternalLink } from 'lucide-react'
 import { DetailSidebar } from './DetailSidebar'
 import { getTransactionRelatedRecords } from '@/app/actions/getTransactionRelatedRecords'
 import { deleteTransaction } from '@/app/actions/deleteTransaction'
+import { toggleTransactionExclusion } from '@/app/actions/toggleTransactionExclusion'
 import { getParentDetail } from '@/app/actions/getParentDetail'
 import { getStudentDetail } from '@/app/actions/getStudentDetail'
 import { SidebarField, SidebarSection } from '../../components/SidebarPrimitives'
@@ -34,6 +35,7 @@ type StripeTransaction = {
   created_at: string
   updated_at: string | null
   is_deleted: boolean
+  exclude_from_revenue: boolean
 }
 
 type StudentRecord = {
@@ -237,9 +239,10 @@ interface TransactionDetailSidebarProps {
   transaction: StripeTransaction | null
   onClose: () => void
   onDeleted?: (id: string) => void
+  onExclusionToggled?: (id: string, excluded: boolean) => void
 }
 
-export function TransactionDetailSidebar({ transaction, onClose, onDeleted }: TransactionDetailSidebarProps) {
+export function TransactionDetailSidebar({ transaction, onClose, onDeleted, onExclusionToggled }: TransactionDetailSidebarProps) {
   const [studentRecord, setStudentRecord] = useState<StudentRecord | null>(null)
   const [applicationRecord, setApplicationRecord] = useState<ApplicationRecord | null>(null)
   const [userRecord, setUserRecord] = useState<UserRecord | null>(null)
@@ -261,6 +264,9 @@ export function TransactionDetailSidebar({ transaction, onClose, onDeleted }: Tr
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
+  const [isExcluded, setIsExcluded] = useState(false)
+  const [isTogglingExclusion, setIsTogglingExclusion] = useState(false)
+
   const handleDelete = async () => {
     if (!transaction || isDeleting) return
     setIsDeleting(true)
@@ -276,6 +282,18 @@ export function TransactionDetailSidebar({ transaction, onClose, onDeleted }: Tr
     }
   }
 
+  const handleToggleExclusion = async () => {
+    if (!transaction || isTogglingExclusion) return
+    setIsTogglingExclusion(true)
+    const newExcluded = !isExcluded
+    const result = await toggleTransactionExclusion(transaction.id, newExcluded)
+    setIsTogglingExclusion(false)
+    if (result.success) {
+      setIsExcluded(newExcluded)
+      onExclusionToggled?.(transaction.id, newExcluded)
+    }
+  }
+
   useEffect(() => {
     setStudentRecord(null)
     setApplicationRecord(null)
@@ -288,6 +306,8 @@ export function TransactionDetailSidebar({ transaction, onClose, onDeleted }: Tr
     setShowDeleteConfirm(false)
     setIsDeleting(false)
     setDeleteError(null)
+    setIsExcluded(transaction?.exclude_from_revenue ?? false)
+    setIsTogglingExclusion(false)
 
     if (!transaction?.id) return
     if (transaction.payment_type === 'donation') return
@@ -371,6 +391,20 @@ export function TransactionDetailSidebar({ transaction, onClose, onDeleted }: Tr
 
   const footer = (
     <div className="flex items-center gap-3">
+      <button
+        onClick={handleToggleExclusion}
+        disabled={isTogglingExclusion}
+        className="px-3 py-1.5 text-sm font-semibold rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+        style={{
+          backgroundColor: 'transparent',
+          border: isExcluded ? '1px solid #BBF7D0' : '1px solid #FED7AA',
+          color: isExcluded ? '#16A34A' : '#D97706',
+          borderRadius: '8px',
+          cursor: isTogglingExclusion ? 'not-allowed' : 'pointer',
+        }}
+      >
+        {isTogglingExclusion ? '...' : isExcluded ? 'Include in Revenue' : 'Exclude from Revenue'}
+      </button>
       <button
         onClick={() => setShowDeleteConfirm(true)}
         className="px-3 py-1.5 text-sm font-semibold rounded-lg transition-colors hover:bg-red-50"

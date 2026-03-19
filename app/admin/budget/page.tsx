@@ -45,6 +45,7 @@ type StripeTransaction = {
   created_at: string
   updated_at: string | null
   is_deleted: boolean
+  exclude_from_revenue: boolean
 }
 
 const merriweather = Merriweather({
@@ -205,10 +206,12 @@ function OverviewTab({
     0,
   );
   const totalExpenses = expenses.reduce((s, e) => s + Number(e.amount), 0);
-  const totalRevenue = stripeTransactions.reduce((s, tx) => {
-    const net = tx.cover_fees ? (tx.intended_amount_cents ?? tx.amount_cents) : tx.amount_cents;
-    return s + net / 100;
-  }, 0);
+  const totalRevenue = stripeTransactions
+    .filter(tx => !tx.exclude_from_revenue)
+    .reduce((s, tx) => {
+      const net = tx.cover_fees ? (tx.intended_amount_cents ?? tx.amount_cents) : tx.amount_cents;
+      return s + net / 100;
+    }, 0);
   const netProfit = totalRevenue - totalExpenses;
   const profitColor = netProfit >= 0 ? colors.successText : colors.errorText;
 
@@ -3075,10 +3078,12 @@ function RevenueTab({
     fetchLists();
   }, []);
 
-  const totalActual = transactions.reduce((s, tx) => {
-    const net = tx.cover_fees ? (tx.intended_amount_cents ?? tx.amount_cents) : tx.amount_cents;
-    return s + net / 100;
-  }, 0);
+  const totalActual = transactions
+    .filter(tx => !tx.exclude_from_revenue)
+    .reduce((s, tx) => {
+      const net = tx.cover_fees ? (tx.intended_amount_cents ?? tx.amount_cents) : tx.amount_cents;
+      return s + net / 100;
+    }, 0);
 
   const projectedRevenue =
     enrollment.full_14 * TUITION_RATES.full_14 +
@@ -3114,7 +3119,12 @@ function RevenueTab({
             </tr>
           ) : (
             transactions.map((tx, i) => (
-              <TableRow key={tx.id} index={i} onClick={() => setSelectedTransaction(tx)} style={{ cursor: 'pointer' }}>
+              <TableRow
+                key={tx.id}
+                index={i}
+                onClick={() => setSelectedTransaction(tx)}
+                style={{ cursor: 'pointer', opacity: tx.exclude_from_revenue ? 0.5 : 1 }}
+              >
                 <TableCell>
                   {new Date(tx.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                 </TableCell>
@@ -3141,9 +3151,23 @@ function RevenueTab({
                 <TableCell>{tx.payer_name ?? tx.payer_email ?? "—"}</TableCell>
                 <TableCell
                   className="font-semibold"
-                  style={{ color: colors.successText }}
+                  style={{ color: tx.exclude_from_revenue ? '#9CA3AF' : colors.successText }}
                 >
-                  {formatCents(tx.cover_fees ? tx.intended_amount_cents : tx.amount_cents, tx.currency)}
+                  <span className="flex items-center gap-2">
+                    {formatCents(tx.cover_fees ? tx.intended_amount_cents : tx.amount_cents, tx.currency)}
+                    {tx.exclude_from_revenue && (
+                      <span style={{
+                        backgroundColor: '#FEF3C7',
+                        color: '#D97706',
+                        borderRadius: '99px',
+                        padding: '1px 6px',
+                        fontSize: '10px',
+                        fontWeight: 600,
+                      }}>
+                        Excluded
+                      </span>
+                    )}
+                  </span>
                 </TableCell>
               </TableRow>
             ))
@@ -3298,6 +3322,7 @@ function RevenueTab({
         transaction={selectedTransaction}
         onClose={() => setSelectedTransaction(null)}
         onDeleted={() => { setSelectedTransaction(null); onRefresh(); }}
+        onExclusionToggled={() => onRefresh()}
       />
     </div>
   );
