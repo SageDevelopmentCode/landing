@@ -18,14 +18,14 @@ export default function CoCreationSection() {
       id: "student",
       label: "Student",
       icon: "🌱",
-      position: { bottom: "0%", left: "0%", transform: "translateX(-50%)" },
+      position: { bottom: "0%", left: "-5%", transform: "translateX(-50%)" },
       description: "Growth & Curiosity",
     },
     {
       id: "family",
       label: "Family",
       icon: "🏠",
-      position: { bottom: "0%", left: "60%", transform: "translateX(-50%)" },
+      position: { bottom: "0%", left: "65%", transform: "translateX(-50%)" },
       description: "Home Extension",
     },
   ];
@@ -91,9 +91,9 @@ export default function CoCreationSection() {
 
               {/* Triangle connections */}
               <motion.line
-                x1="40%"
+                x1="50%"
                 y1="13%"
-                x2="10%"
+                x2="15%"
                 y2="87%"
                 stroke="url(#lineGradient)"
                 strokeWidth={
@@ -119,9 +119,9 @@ export default function CoCreationSection() {
               </motion.line>
 
               <motion.line
-                x1="40%"
+                x1="50%"
                 y1="13%"
-                x2="70%"
+                x2="85%"
                 y2="87%"
                 stroke="url(#lineGradient)"
                 strokeWidth={
@@ -145,10 +145,10 @@ export default function CoCreationSection() {
               </motion.line>
 
               <motion.line
-                x1="10%"
-                y1="93%"
-                x2="70%"
-                y2="93%"
+                x1="15%"
+                y1="87%"
+                x2="85%"
+                y2="87%"
                 stroke="url(#lineGradient)"
                 strokeWidth={
                   hoveredNode === "student" || hoveredNode === "family" ? 4 : 2
@@ -274,9 +274,9 @@ export default function CoCreationSection() {
                 We handle the full in-school program — curriculum, instruction,
                 and daily learning are our responsibility. We do ask that
                 families stay engaged and communicative: share important updates
-                about your child, attend check-ins when scheduled, and support
-                a culture of curiosity at home. Together, we create the
-                conditions for every child to thrive.
+                about your child, attend check-ins when scheduled, and support a
+                culture of curiosity at home. Together, we create the conditions
+                for every child to thrive.
               </p>
             </div>
 
@@ -285,21 +285,21 @@ export default function CoCreationSection() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.5 }}
               viewport={{ once: true }}
-              className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4"
+              className="overflow-x-auto flex snap-x snap-mandatory gap-3 pt-4 pb-2 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] sm:overflow-visible sm:grid sm:grid-cols-3"
             >
-              <div className="text-center p-4 bg-white rounded-lg shadow-sm border border-primary/10 hover:shadow-md transition-shadow duration-200">
+              <div className="w-[70%] flex-shrink-0 snap-start sm:w-full text-center p-4 bg-white rounded-lg shadow-sm border border-primary/10 hover:shadow-md transition-shadow duration-200">
                 <div className="text-3xl mb-2">📚</div>
                 <div className="text-sm font-semibold text-black font-heading">
                   Track Progress
                 </div>
               </div>
-              <div className="text-center p-4 bg-white rounded-lg shadow-sm border border-primary/10 hover:shadow-md transition-shadow duration-200">
+              <div className="w-[70%] flex-shrink-0 snap-start sm:w-full text-center p-4 bg-white rounded-lg shadow-sm border border-primary/10 hover:shadow-md transition-shadow duration-200">
                 <div className="text-3xl mb-2">🤝</div>
                 <div className="text-sm font-semibold text-black font-heading">
                   Collaborate Daily
                 </div>
               </div>
-              <div className="text-center p-4 bg-white rounded-lg shadow-sm border border-primary/10 hover:shadow-md transition-shadow duration-200">
+              <div className="w-[70%] flex-shrink-0 snap-start sm:w-full text-center p-4 bg-white rounded-lg shadow-sm border border-primary/10 hover:shadow-md transition-shadow duration-200">
                 <div className="text-3xl mb-2">🌟</div>
                 <div className="text-sm font-semibold text-black font-heading">
                   Grow Together

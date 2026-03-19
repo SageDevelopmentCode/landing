@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 export default function ContinuitySection() {
   const [hoveredRoot, setHoveredRoot] = useState<string | null>(null);
@@ -10,6 +11,7 @@ export default function ContinuitySection() {
     {
       id: "structure",
       icon: "🏫",
+      image: "/assets/juliane-liebermann-hGNMJB7A33Q-unsplash.jpg",
       title: "Familiar Structure",
       description: "Same daily rhythm & routines",
       outcome: "lower-stress",
@@ -17,6 +19,7 @@ export default function ContinuitySection() {
     {
       id: "friendships",
       icon: "👥",
+      image: "/assets/serap-butun-QpWDK7D2Q4Q-unsplash.jpg",
       title: "Consistent Friendships",
       description: "Same peer community",
       outcome: "social-bonds",
@@ -24,6 +27,7 @@ export default function ContinuitySection() {
     {
       id: "educators",
       icon: "👨‍🏫",
+      image: "/assets/team/Paige.webp",
       title: "Trusted Educators",
       description: "Same caring teachers",
       outcome: "emotional-safety",
@@ -31,6 +35,7 @@ export default function ContinuitySection() {
     {
       id: "rhythm",
       icon: "📚",
+      image: "/assets/vitolda-klein-OD1_HupXwxI-unsplash.jpg",
       title: "Same Learning Flow",
       description: "Familiar learning approach",
       outcome: "confidence",
@@ -147,13 +152,13 @@ export default function ContinuitySection() {
 
             {/* Root Cards (Bottom) */}
             <div className="w-full">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="overflow-x-auto flex snap-x snap-mandatory gap-4 pb-4 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] lg:overflow-visible lg:grid lg:grid-cols-2">
                 {roots.map((root, index) => (
                   <motion.div
                     key={root.id}
                     onMouseEnter={() => setHoveredRoot(root.id)}
                     onMouseLeave={() => setHoveredRoot(null)}
-                    className={`bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105 cursor-pointer group ${
+                    className={`w-[80%] flex-shrink-0 snap-start lg:w-full bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105 cursor-pointer group overflow-hidden ${
                       hoveredRoot === root.id ? "ring-2 ring-primary" : ""
                     }`}
                     initial={{ opacity: 0, y: 20 }}
@@ -161,20 +166,23 @@ export default function ContinuitySection() {
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: 0.4 + index * 0.1, ease: "easeOut" }}
                   >
-                    {/* Icon Container */}
-                    <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mb-4 group-hover:bg-primary/30 transition-colors duration-200">
-                      <span className="text-3xl">{root.icon}</span>
+                    {/* Image Header */}
+                    <div className="relative w-full h-40 overflow-hidden">
+                      <Image src={root.image} alt={root.title} fill className="object-cover" />
                     </div>
 
-                    {/* Title */}
-                    <h3 className="text-lg font-bold text-black mb-2 font-heading">
-                      {root.title}
-                    </h3>
+                    {/* Card Body */}
+                    <div className="p-6">
+                      {/* Title */}
+                      <h3 className="text-lg font-bold text-black mb-2 font-heading">
+                        {root.title}
+                      </h3>
 
-                    {/* Description */}
-                    <p className="text-sm text-gray-700 font-body font-medium">
-                      {root.description}
-                    </p>
+                      {/* Description */}
+                      <p className="text-sm text-gray-700 font-body font-medium">
+                        {root.description}
+                      </p>
+                    </div>
                   </motion.div>
                 ))}
               </div>

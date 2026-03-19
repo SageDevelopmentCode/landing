@@ -134,30 +134,36 @@ export default function Home() {
       <Hero />
       <WelcomeSection />
       <WhatWeOfferSection />
-      <ImageGridShowcase
-        images={[
-          { src: "/assets/ImageOne.jpg", alt: "School environment" },
-          { src: "/assets/ImageTwo.jpg", alt: "Students learning" },
-          { src: "/assets/ImageThree.jpg", alt: "Classroom activities" },
-        ]}
-      />
+      {/* <div className="hidden md:block">
+        <ImageGridShowcase
+          images={[
+            { src: "/assets/ImageOne.jpg", alt: "School environment" },
+            { src: "/assets/ImageTwo.jpg", alt: "Students learning" },
+            { src: "/assets/ImageThree.jpg", alt: "Classroom activities" },
+          ]}
+        />
+      </div> */}
       <EducationalPhilosophySection />
       <ContinuitySection />
-      <ImageGridShowcase
-        images={[
-          { src: "/assets/ImageFour.jpg", alt: "Children developing skills" },
-          { src: "/assets/ImageFive.jpg", alt: "School community" },
-        ]}
-      />
+      {/* <div className="hidden md:block">
+        <ImageGridShowcase
+          images={[
+            { src: "/assets/ImageFour.jpg", alt: "Children developing skills" },
+            { src: "/assets/ImageFive.jpg", alt: "School community" },
+          ]}
+        />
+      </div> */}
       <CoCreationSection />
       <DonationsSection />
-      <ImageGridShowcase
-        images={[
-          { src: "/assets/ImageNine.jpg", alt: "Sage Field community" },
-          { src: "/assets/ImageTen.jpg", alt: "Learning environment" },
-          { src: "/assets/ImageEleven.jpg", alt: "Student activities" },
-        ]}
-      />
+      {/* <div className="hidden md:block">
+        <ImageGridShowcase
+          images={[
+            { src: "/assets/ImageNine.jpg", alt: "Sage Field community" },
+            { src: "/assets/ImageTen.jpg", alt: "Learning environment" },
+            { src: "/assets/ImageEleven.jpg", alt: "Student activities" },
+          ]}
+        />
+      </div> */}
       <MeetTheTeamSection />
       <EnrollmentCTASection />
       <SocialMediaSection />

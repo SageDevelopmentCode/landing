@@ -1,27 +1,32 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 export default function EducationalPhilosophySection() {
   const pillars = [
     {
       icon: "🌱",
       title: "Hands-on Learning",
+      image: "/assets/ImageOne.jpg",
       description: "Experiential activities that engage curiosity",
     },
     {
       icon: "🧘",
       title: "Emotional Regulation",
+      image: "/assets/kelly-sikkema-_4WVngcGz5Q-unsplash.jpg",
       description: "Mindfulness practices for students & educators",
     },
     {
       icon: "🎨",
       title: "Creative Expression",
+      image: "/assets/ImageEleven.jpg",
       description: "Artistic and musical creativity flourish",
     },
     {
       icon: "🌳",
       title: "Movement & Nature",
+      image: "/assets/ImageSeven.jpg",
       description: "Movement-based and outdoor education",
     },
   ];
@@ -104,37 +109,6 @@ export default function EducationalPhilosophySection() {
               , both for students and educators. A calm, connected teacher
               creates a community where children thrive.
             </motion.p>
-
-            {/* Key Pillars Callout */}
-            <motion.div
-              className="mt-8 p-4 bg-primary/10 rounded-lg border-l-4 border-primary"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
-            >
-              <h3 className="text-lg font-semibold text-black mb-3 font-heading">
-                Our Key Pillars
-              </h3>
-              <ul className="space-y-2 text-base md:text-lg text-text-gray font-body">
-                <li className="flex items-start">
-                  <span className="text-primary mr-2">•</span>
-                  <span>Hands-on, experiential learning</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-primary mr-2">•</span>
-                  <span>Emotional regulation & mindfulness practices</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-primary mr-2">•</span>
-                  <span>Artistic and musical creativity</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-primary mr-2">•</span>
-                  <span>Movement-based and outdoor education</span>
-                </li>
-              </ul>
-            </motion.div>
           </div>
 
           {/* Right Column: Interactive Pillar Cards */}
@@ -145,30 +119,38 @@ export default function EducationalPhilosophySection() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="overflow-x-auto flex snap-x snap-mandatory gap-4 pb-4 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] lg:overflow-visible lg:grid lg:grid-cols-2">
               {pillars.map((pillar, index) => (
                 <motion.div
                   key={index}
-                  className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105 cursor-pointer group"
+                  className="w-[80%] flex-shrink-0 snap-start lg:w-full bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105 cursor-pointer group overflow-hidden"
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: 0.3 + index * 0.1, ease: "easeOut" }}
                 >
-                  {/* Icon Container */}
-                  <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mb-4 group-hover:bg-primary/30 transition-colors duration-200">
-                    <span className="text-3xl">{pillar.icon}</span>
+                  {/* Image */}
+                  <div className="relative w-full h-40 rounded-t-lg overflow-hidden">
+                    <Image
+                      src={pillar.image}
+                      alt={pillar.title}
+                      fill
+                      className="object-cover"
+                    />
                   </div>
 
-                  {/* Title */}
-                  <h3 className="text-lg font-semibold text-black mb-2 font-heading">
-                    {pillar.title}
-                  </h3>
+                  {/* Card Body */}
+                  <div className="p-6">
+                    {/* Title */}
+                    <h3 className="text-lg font-semibold text-black mb-2 font-heading">
+                      {pillar.title}
+                    </h3>
 
-                  {/* Description */}
-                  <p className="text-sm text-text-gray font-body">
-                    {pillar.description}
-                  </p>
+                    {/* Description */}
+                    <p className="text-sm text-text-gray font-body">
+                      {pillar.description}
+                    </p>
+                  </div>
                 </motion.div>
               ))}
             </div>
