@@ -1,7 +1,10 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { createPortal } from "react-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import { X } from "lucide-react";
 
 const TEAM_MEMBERS = [
   {
@@ -20,14 +23,14 @@ const TEAM_MEMBERS = [
   },
   {
     name: "Nicole Elias",
-    role: "Summer Program Curriculum Coordinator",
+    role: "Summer Program Coordinator",
     image: "/assets/team/Nicole.jpg",
     description:
       "My name is Nicole, and I am a teacher with a passion for hands-on, experiential learning. I believe every child deserves an education that sparks curiosity and joy. I am excited to bring creative, nature-inspired curriculum to our summer program and help children discover the world around them.",
   },
   {
     name: "Taylor Elias",
-    role: "Summer Program Curriculum Coordinator",
+    role: "Summer Program Coordinator",
     image: "/assets/team/Taylor.jpg",
     description:
       "My name is Taylor, and I recently completed my education studies with a focus on child development and outdoor learning. I am passionate about creating meaningful experiences for children that connect them to nature and inspire a love of learning. I am thrilled to join the Sage Field team this summer.",
@@ -42,6 +45,10 @@ const TEAM_MEMBERS = [
 ];
 
 export default function MeetTheTeamSection() {
+  const [selectedMember, setSelectedMember] = useState<
+    (typeof TEAM_MEMBERS)[0] | null
+  >(null);
+
   return (
     <section className="bg-welcome-bg py-16 px-8 sm:px-12 lg:px-16 min-h-[80vh] flex items-center">
       <div className="max-w-7xl mx-auto w-full">
@@ -146,7 +153,7 @@ export default function MeetTheTeamSection() {
         </div>
 
         {/* Team Grid: 4 members in 2×2 */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+        <div className="flex overflow-x-auto gap-4 pb-4 sm:grid sm:grid-cols-2 sm:gap-8 sm:overflow-visible sm:pb-0">
           {TEAM_MEMBERS.map((member, i) => (
             <motion.div
               key={member.name}
@@ -154,15 +161,15 @@ export default function MeetTheTeamSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.1 * i, ease: "easeOut" }}
-              className="bg-white rounded-2xl shadow-md overflow-hidden"
+              className="w-[68vw] shrink-0 sm:w-auto sm:shrink bg-white rounded-2xl shadow-md overflow-hidden"
             >
-              <div className="relative w-full aspect-[4/5]">
+              <div className="relative w-full aspect-[4/3] sm:aspect-[4/5]">
                 <Image
                   src={member.image}
                   alt={member.name}
                   fill
-                  className="object-cover object-top"
-                  sizes="(max-width: 640px) 100vw, 50vw"
+                  className="object-cover object-[center_20%]"
+                  sizes="(max-width: 640px) 68vw, 50vw"
                 />
               </div>
               <div className="p-6 space-y-3">
@@ -172,14 +179,79 @@ export default function MeetTheTeamSection() {
                 <span className="inline-block bg-primary/10 text-primary text-xs font-semibold px-3 py-1 rounded-full">
                   {member.role}
                 </span>
-                <p className="text-sm text-text-gray leading-relaxed font-body">
+                {/* Description: hidden on mobile, visible on sm+ */}
+                <p className="hidden sm:block text-sm text-text-gray leading-relaxed font-body">
                   {member.description}
                 </p>
+                {/* "View Bio" button: own row, mobile only */}
+                <div className="sm:hidden">
+                  <button
+                    onClick={() => setSelectedMember(member)}
+                    className="w-full py-2 rounded-lg text-xs font-semibold border border-primary text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                  >
+                    View Bio
+                  </button>
+                </div>
               </div>
             </motion.div>
           ))}
         </div>
       </div>
+
+      {typeof document !== "undefined" &&
+        createPortal(
+          <AnimatePresence>
+            {selectedMember && (
+              <>
+                {/* Backdrop */}
+                <motion.div
+                  className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setSelectedMember(null)}
+                />
+
+                {/* Bottom Sheet */}
+                <motion.div
+                  className="fixed z-[70] bg-white rounded-t-2xl shadow-2xl bottom-0 left-0 right-0 max-h-[80vh] overflow-y-auto"
+                  initial={{ y: "100%", opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: "100%", opacity: 0 }}
+                  transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="p-6">
+                    {/* Header */}
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <p className="text-xl font-semibold text-text-gray font-heading">
+                          {selectedMember.name}
+                        </p>
+                        <span className="inline-block bg-primary/10 text-primary text-xs font-semibold px-3 py-1 rounded-full mt-2">
+                          {selectedMember.role}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => setSelectedMember(null)}
+                        className="p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0 cursor-pointer"
+                        aria-label="Close"
+                      >
+                        <X className="w-5 h-5 text-gray-500" />
+                      </button>
+                    </div>
+
+                    {/* Bio */}
+                    <p className="text-sm text-text-gray leading-relaxed font-body">
+                      {selectedMember.description}
+                    </p>
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>,
+          document.body,
+        )}
     </section>
   );
 }
