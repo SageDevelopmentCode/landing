@@ -16,14 +16,6 @@ const slides = [
     buttonAction: "waitlist" as const,
   },
   {
-    image: "/assets/After2.png",
-    title: "Learning Happens Outside",
-    description:
-      "Outdoor exploration, hands-on academics, and child-led inquiry — every single day.",
-    buttonLabel: "Our Vision",
-    buttonHref: "/vision",
-  },
-  {
     image: "/assets/After5.PNG",
     title: "Summer 2026 Program",
     description:
@@ -48,7 +40,7 @@ const slides = [
     buttonHref: "/apply",
   },
   {
-    image: "/assets/ImageSeven.jpg",
+    image: "/assets/After2.png",
     title: "Open House — April 25",
     description:
       "Tour our space, meet our educators, and see Sage Field in person. Bring the whole family.",
