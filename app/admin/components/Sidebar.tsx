@@ -171,7 +171,7 @@ export function Sidebar({
 
       {/* Desktop Sidebar - Icon Only */}
       <aside
-        className="hidden lg:flex flex-col w-20 h-screen sticky top-0 py-6"
+        className="hidden lg:flex flex-col w-20 h-screen sticky top-0 py-6 z-10"
         style={{
           backgroundColor: colors.warmLinen,
           borderRight: `1px solid ${colors.border}`,
