@@ -203,7 +203,7 @@ const tabContent = {
       "This is an ideal way to experience Sage Field before committing to a full school year. Families who complete the summer program and wish to continue will have priority consideration for School Year 2026–2027 enrollment.",
     ],
     details: [
-      { label: "Dates", value: "May 26 – August 20, 2026" },
+      { label: "Dates", value: "May 26 – August 13, 2026" },
       { label: "Ages", value: "4–11 years" },
       { label: "Schedule", value: "Mon–Thu, ~6 hrs/day" },
       { label: "Group Size", value: "~10 children" },

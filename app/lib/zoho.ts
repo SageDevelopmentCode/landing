@@ -795,7 +795,7 @@ export async function buildRSVPConfirmationEmail(opts: {
 
   <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin-bottom: 16px;">
     <p style="margin: 0 0 6px 0; font-weight: bold; font-size: 15px;">Summer 2026</p>
-    <p style="margin: 4px 0; color: #555; font-size: 14px;">May 26 – Aug 20 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Mon–Thu, ~6 hrs/day &nbsp;·&nbsp; Group of ~10</p>
+    <p style="margin: 4px 0; color: #555; font-size: 14px;">May 26 – Aug 13 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Mon–Thu, ~6 hrs/day &nbsp;·&nbsp; Group of ~10</p>
     <p style="margin: 10px 0 0 0; font-size: 14px;">An immersive summer of outdoor-based learning — gardening, animal care, outdoor exploration, and hands-on projects in a small, intentional community.</p>
   </div>
 
