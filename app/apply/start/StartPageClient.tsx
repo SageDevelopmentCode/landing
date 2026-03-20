@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, User, LogIn, Eye, EyeOff } from "lucide-react";
 import { signUpParent } from "@/app/actions/signUpParent";
 import { loginParent } from "@/app/actions/loginParent";
+import { sendPasswordResetEmail } from "@/app/actions/auth";
 
 type Mode = "choose" | "create" | "login";
 
@@ -176,8 +177,20 @@ export default function StartPageClient() {
         <div className="w-full max-w-md">
           <AnimatePresence mode="wait">
             {mode === "choose" && <ChooseMode key="choose" setMode={setMode} />}
-            {mode === "create" && <CreateMode key="create" setMode={setMode} onSwitchToLogin={handleSwitchToLogin} />}
-            {mode === "login" && <LoginMode key={`login-${sharedEmail}`} setMode={setMode} defaultEmail={sharedEmail} />}
+            {mode === "create" && (
+              <CreateMode
+                key="create"
+                setMode={setMode}
+                onSwitchToLogin={handleSwitchToLogin}
+              />
+            )}
+            {mode === "login" && (
+              <LoginMode
+                key={`login-${sharedEmail}`}
+                setMode={setMode}
+                defaultEmail={sharedEmail}
+              />
+            )}
           </AnimatePresence>
         </div>
       </motion.div>
@@ -243,9 +256,12 @@ function ChooseMode({ setMode }: { setMode: (m: Mode) => void }) {
 }
 
 /* ── Mode: Create ── */
-function CreateMode({ setMode, onSwitchToLogin }: {
-  setMode: (m: Mode) => void
-  onSwitchToLogin: (email: string) => void
+function CreateMode({
+  setMode,
+  onSwitchToLogin,
+}: {
+  setMode: (m: Mode) => void;
+  onSwitchToLogin: (email: string) => void;
 }) {
   const router = useRouter();
   const [fullName, setFullName] = useState("");
@@ -270,7 +286,7 @@ function CreateMode({ setMode, onSwitchToLogin }: {
     setLoading(true);
 
     const result = await signUpParent(fullName, email, password);
-    if (result?.error === 'EMAIL_EXISTS') {
+    if (result?.error === "EMAIL_EXISTS") {
       setEmailExists(true);
       setLoading(false);
     } else if (result?.error) {
@@ -377,7 +393,9 @@ function CreateMode({ setMode, onSwitchToLogin }: {
 
         {emailExists && (
           <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 flex flex-col gap-2">
-            <p className="text-sm text-amber-800 font-body font-semibold">An account with this email already exists.</p>
+            <p className="text-sm text-amber-800 font-body font-semibold">
+              An account with this email already exists.
+            </p>
             <button
               type="button"
               onClick={() => onSwitchToLogin(email)}
@@ -388,9 +406,7 @@ function CreateMode({ setMode, onSwitchToLogin }: {
           </div>
         )}
 
-        {error && (
-          <p className="text-sm text-red-600 font-body">{error}</p>
-        )}
+        {error && <p className="text-sm text-red-600 font-body">{error}</p>}
 
         <button
           type="submit"
@@ -415,13 +431,21 @@ function CreateMode({ setMode, onSwitchToLogin }: {
 }
 
 /* ── Mode: Login ── */
-function LoginMode({ setMode, defaultEmail = "" }: { setMode: (m: Mode) => void; defaultEmail?: string }) {
+function LoginMode({
+  setMode,
+  defaultEmail = "",
+}: {
+  setMode: (m: Mode) => void;
+  defaultEmail?: string;
+}) {
   const router = useRouter();
   const [email, setEmail] = useState(defaultEmail);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showForgot, setShowForgot] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -435,6 +459,20 @@ function LoginMode({ setMode, defaultEmail = "" }: { setMode: (m: Mode) => void;
     } else if (result?.redirectTo) {
       router.push(result.redirectTo);
     }
+  };
+
+  const handleForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setMessage(null);
+    setLoading(true);
+    const result = await sendPasswordResetEmail(email);
+    if (result?.error) {
+      setError(result.error);
+    } else if (result?.message) {
+      setMessage(result.message);
+    }
+    setLoading(false);
   };
 
   return (
@@ -453,71 +491,148 @@ function LoginMode({ setMode, defaultEmail = "" }: { setMode: (m: Mode) => void;
       </button>
 
       <span className="inline-block px-4 py-1.5 bg-badge-bg text-black text-xs font-semibold rounded-full mb-4 font-body">
-        Welcome Back
+        {showForgot ? "Reset Password" : "Welcome Back"}
       </span>
       <h1 className="text-3xl font-bold font-heading text-gray-800 mb-8">
-        Continue your application
+        {showForgot ? "Reset your password" : "Continue your application"}
       </h1>
 
-      <form className="flex flex-col gap-4 mb-6" onSubmit={handleSubmit}>
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 font-body mb-1.5">
-            Email
-          </label>
-          <input
-            type="email"
-            placeholder="jane@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 font-body mb-1.5">
-            Password
-          </label>
-          <div className="relative">
+      {error && (
+        <p
+          className="px-4 py-3 mb-6 rounded-xl text-sm font-body"
+          style={{
+            backgroundColor: "#F2C6C6",
+            border: "1px solid #E6B7B2",
+            color: "#A55858",
+          }}
+        >
+          {error}
+        </p>
+      )}
+
+      {message && (
+        <p
+          className="px-4 py-3 mb-6 rounded-xl text-sm font-body"
+          style={{
+            backgroundColor: "#CDE8D0",
+            border: "1px solid #BFD8C0",
+            color: "#4A7C59",
+          }}
+        >
+          {message}
+        </p>
+      )}
+
+      {!showForgot ? (
+        <form className="flex flex-col gap-4 mb-6" onSubmit={handleSubmit}>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 font-body mb-1.5">
+              Email
+            </label>
             <input
-              type={showPassword ? "text" : "password"}
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              type="email"
+              placeholder="jane@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-3 pr-11 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
+              className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
             />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 font-body mb-1.5">
+              Password
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full px-4 py-3 pr-11 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
             <button
               type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              onClick={() => {
+                setShowForgot(true);
+                setError(null);
+                setMessage(null);
+              }}
+              className="cursor-pointer mt-1.5 text-xs font-body text-primary hover:text-primary-hover transition-colors"
             >
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              Forgot password?
             </button>
           </div>
-        </div>
 
-        {error && (
-          <p className="text-sm text-red-600 font-body">{error}</p>
-        )}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {loading ? "Logging in…" : "Log In & View Application"}
+          </button>
+        </form>
+      ) : (
+        <form
+          className="flex flex-col gap-4 mb-6"
+          onSubmit={handleForgotSubmit}
         >
-          {loading ? "Logging in…" : "Log In & View Application"}
-        </button>
-      </form>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 font-body mb-1.5">
+              Email address
+            </label>
+            <input
+              type="email"
+              placeholder="jane@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
+            />
+          </div>
 
-      <p className="text-sm text-center font-body text-gray-500">
-        Don&apos;t have an account?{" "}
-        <button
-          onClick={() => setMode("create")}
-          className="text-primary hover:underline cursor-pointer font-semibold"
-        >
-          Create one
-        </button>
-      </p>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {loading ? "Sending…" : "Send reset link"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setShowForgot(false);
+              setError(null);
+              setMessage(null);
+            }}
+            className="inline-flex items-center gap-1.5 text-sm font-medium font-body text-primary hover:text-primary-hover transition-colors justify-center"
+          >
+            <ArrowLeft size={14} />
+            Back to sign in
+          </button>
+        </form>
+      )}
+
+      {!showForgot && (
+        <p className="text-sm text-center font-body text-gray-500">
+          Don&apos;t have an account?{" "}
+          <button
+            onClick={() => setMode("create")}
+            className="text-primary hover:underline cursor-pointer font-semibold"
+          >
+            Create one
+          </button>
+        </p>
+      )}
     </motion.div>
   );
 }

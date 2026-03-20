@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import {
   signInWithEmail,
   signInWithGoogle,
+  sendPasswordResetEmail,
 } from "@/app/actions/auth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -22,6 +23,7 @@ const slides = [
 
 export default function LoginForm() {
   const router = useRouter();
+  const [view, setView] = useState<"login" | "forgot">("login");
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -64,6 +66,22 @@ export default function LoginForm() {
     } else if (result?.redirectTo) {
       router.push(result.redirectTo);
     }
+  }
+
+  async function handleForgotPassword(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setMessage(null);
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("reset-email") as string;
+    const result = await sendPasswordResetEmail(email);
+    if (result?.error) {
+      setError(result.error);
+    } else if (result?.message) {
+      setMessage(result.message);
+    }
+    setLoading(false);
   }
 
   async function handleGoogleSignIn() {
@@ -115,7 +133,7 @@ export default function LoginForm() {
           </div>
 
           <h1 className="text-3xl font-bold font-heading text-gray-800 mb-8">
-            Welcome back
+            {view === "login" ? "Welcome back" : "Reset your password"}
           </h1>
 
           {/* Error / Message */}
@@ -149,65 +167,126 @@ export default function LoginForm() {
             </motion.div>
           )}
 
-          {/* Password form */}
-          <form
-            onSubmit={handleEmailPasswordSubmit}
-            className="flex flex-col gap-4"
-          >
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-semibold text-gray-700 font-body mb-1.5"
-              >
-                Email address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                placeholder="you@example.com"
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-semibold text-gray-700 font-body mb-1.5"
-              >
-                Password
-              </label>
-              <div className="relative">
+          {view === "login" ? (
+            /* ── Login form ── */
+            <form
+              onSubmit={handleEmailPasswordSubmit}
+              className="flex flex-col gap-4"
+            >
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-semibold text-gray-700 font-body mb-1.5"
+                >
+                  Email address
+                </label>
                 <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
                   required
-                  placeholder="Enter your password"
-                  className="w-full px-4 py-3 pr-11 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
+                  placeholder="you@example.com"
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
                 />
+              </div>
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-semibold text-gray-700 font-body mb-1.5"
+                >
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    required
+                    placeholder="Enter your password"
+                    className="w-full px-4 py-3 pr-11 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
                 <button
                   type="button"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  onClick={() => {
+                    setView("forgot");
+                    setError(null);
+                    setMessage(null);
+                  }}
+                  className="cursor-pointer mt-1.5 text-xs font-body text-primary hover:text-primary-hover transition-colors"
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  Forgot password?
                 </button>
               </div>
-            </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full flex justify-center items-center gap-2 py-4 px-4 bg-primary text-white font-semibold font-body rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg cursor-pointer mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex justify-center items-center gap-2 py-4 px-4 bg-primary text-white font-semibold font-body rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg cursor-pointer mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {loading && <Spinner />}
+                {loading ? "Signing in..." : "Sign in with Email"}
+              </button>
+            </form>
+          ) : (
+            /* ── Forgot password form ── */
+            <form
+              onSubmit={handleForgotPassword}
+              className="flex flex-col gap-4"
             >
-              {loading && <Spinner />}
-              {loading ? "Signing in..." : "Sign in with Email"}
-            </button>
-          </form>
+              <div>
+                <label
+                  htmlFor="reset-email"
+                  className="block text-sm font-semibold text-gray-700 font-body mb-1.5"
+                >
+                  Email address
+                </label>
+                <input
+                  id="reset-email"
+                  name="reset-email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  placeholder="you@example.com"
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex justify-center items-center gap-2 py-4 px-4 bg-primary text-white font-semibold font-body rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg cursor-pointer mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {loading && <Spinner />}
+                {loading ? "Sending..." : "Send reset link"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setView("login");
+                  setError(null);
+                  setMessage(null);
+                }}
+                className="inline-flex items-center gap-1.5 text-sm font-medium font-body text-primary hover:text-primary-hover transition-colors justify-center"
+              >
+                <ArrowLeft size={14} />
+                Back to sign in
+              </button>
+            </form>
+          )}
 
           {/* Divider
           <div className="relative my-6">
@@ -258,15 +337,17 @@ export default function LoginForm() {
           </button> */}
 
           {/* Back to home */}
-          <div className="text-center mt-8">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1.5 text-sm font-medium font-body text-primary hover:text-primary-hover transition-colors"
-            >
-              <ArrowLeft size={14} />
-              Back to home
-            </Link>
-          </div>
+          {view === "login" && (
+            <div className="text-center mt-8">
+              <Link
+                href="/"
+                className="inline-flex items-center gap-1.5 text-sm font-medium font-body text-primary hover:text-primary-hover transition-colors"
+              >
+                <ArrowLeft size={14} />
+                Back to home
+              </Link>
+            </div>
+          )}
         </div>
       </motion.div>
 

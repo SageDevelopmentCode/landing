@@ -99,6 +99,33 @@ export async function signInWithGoogle() {
   }
 }
 
+export async function sendPasswordResetEmail(email: string) {
+  const supabase = await createServerSupabaseClient()
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${siteUrl}/auth/callback?next=/login/reset-password`,
+  })
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  return { message: 'Check your email for a password reset link' }
+}
+
+export async function updatePassword(password: string) {
+  const supabase = await createServerSupabaseClient()
+
+  const { error } = await supabase.auth.updateUser({ password })
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  return { success: true }
+}
+
 export async function signOut() {
   const supabase = await createServerSupabaseClient()
   await supabase.auth.signOut()
