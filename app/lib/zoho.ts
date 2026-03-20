@@ -727,6 +727,10 @@ export async function buildApprovalEmail(opts: {
 
   <p>To complete enrollment, please log in to your parent dashboard and work through the enrollment checklist:</p>
 
+  <p style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 12px 16px; margin: 20px 0; font-size: 14px;">
+    <strong>Tip:</strong> We highly recommend completing your enrollment on a laptop or desktop computer for the best experience. Some steps (document signing, file uploads) may be difficult on a mobile device.
+  </p>
+
   <p style="margin-bottom: 4px;"><a href="https://www.sagefield.co/parent/dashboard" style="color: #5a7a5a; font-weight: bold;">https://www.sagefield.co/parent/dashboard</a></p>
 
   <p style="margin-top: 24px;"><strong>Required steps:</strong></p>
