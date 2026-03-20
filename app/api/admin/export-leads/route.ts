@@ -54,6 +54,7 @@ export async function GET(request: NextRequest) {
       'Preferred Start',
       'Message',
       'Status',
+      'Tags',
       'Created At',
     ]
 
@@ -70,6 +71,7 @@ export async function GET(request: NextRequest) {
       item.preferred_start_date || '',
       item.notes || '', // any additional notes
       item.status || 'new_inquiry',
+      (item.tags || []).join(';'),
       new Date(item.created_at).toISOString(),
     ])
 
@@ -86,16 +88,17 @@ export async function GET(request: NextRequest) {
       '', // preferred_start_date (waitlist only)
       item.message || '',
       item.status || 'new_inquiry',
+      (item.tags || []).join(';'),
       new Date(item.created_at).toISOString(),
     ])
 
     // Combine all rows
     const allRows = [...waitlistRows, ...contactRows]
 
-    // Sort by created_at (column index 11)
+    // Sort by created_at (column index 12)
     allRows.sort((a, b) => {
-      const dateA = new Date(a[11] as string).getTime()
-      const dateB = new Date(b[11] as string).getTime()
+      const dateA = new Date(a[12] as string).getTime()
+      const dateB = new Date(b[12] as string).getTime()
       return dateB - dateA // descending order (newest first)
     })
 

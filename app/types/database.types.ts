@@ -213,6 +213,7 @@ export type Database = {
           name: string
           notes: string | null
           phone: string | null
+          tags: string[] | null
           status:
             | "new_inquiry"
             | "not_contacted"
@@ -240,6 +241,7 @@ export type Database = {
           name: string
           notes?: string | null
           phone?: string | null
+          tags?: string[] | null
           status?:
             | "new_inquiry"
             | "not_contacted"
@@ -267,6 +269,7 @@ export type Database = {
           name?: string
           notes?: string | null
           phone?: string | null
+          tags?: string[] | null
           status?:
             | "new_inquiry"
             | "not_contacted"
@@ -916,6 +919,7 @@ export type Database = {
           phone: string | null
           program_interest: string
           special_interests: string | null
+          tags: string[] | null
           status:
             | "new_inquiry"
             | "not_contacted"
@@ -945,6 +949,7 @@ export type Database = {
           phone?: string | null
           program_interest: string
           special_interests?: string | null
+          tags?: string[] | null
           status?:
             | "new_inquiry"
             | "not_contacted"
@@ -974,6 +979,7 @@ export type Database = {
           phone?: string | null
           program_interest?: string
           special_interests?: string | null
+          tags?: string[] | null
           status?:
             | "new_inquiry"
             | "not_contacted"

@@ -1,14 +1,27 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { Table, TableRow, TableCell } from '../components/Table'
 import { InlineStatusEditor } from '../components/InlineStatusEditor'
+import { TagEditor } from '../components/TagEditor'
 import { LeadsDetailSidebar } from '../components/LeadsDetailSidebar'
 import { AddLeadSidebar } from '../components/AddLeadSidebar'
 import { colors, radius, shadows } from '../design-system'
 import { Merriweather } from 'next/font/google'
 import { LeadStatus, allLeadStatuses, leadStatusLabels, leadStatusStyles } from '../../types/lead-status'
+
+const COLUMNS = [
+  { key: 'type',       label: 'Type' },
+  { key: 'name',       label: 'Name/Parent' },
+  { key: 'contact',    label: 'Contact' },
+  { key: 'child',      label: 'Child Info' },
+  { key: 'message',    label: 'Message' },
+  { key: 'start_date', label: 'Start Date' },
+  { key: 'status',     label: 'Status' },
+  { key: 'tags',       label: 'Tags' },
+  { key: 'submitted',  label: 'Submitted' },
+]
 
 const merriweather = Merriweather({
   weight: ['300', '400', '700', '900'],
@@ -27,6 +40,7 @@ type WaitlistLead = {
   created_at: string
   notes?: string | null
   preferred_start_date?: string | null
+  tags?: string[]
 }
 
 type ContactLead = {
@@ -38,6 +52,7 @@ type ContactLead = {
   message: string
   status: LeadStatus
   created_at: string
+  tags?: string[]
 }
 
 type Lead = WaitlistLead | ContactLead
@@ -48,6 +63,9 @@ export default function LeadsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isAddLeadOpen, setIsAddLeadOpen] = useState(false)
   const [statusFilter, setStatusFilter] = useState<LeadStatus | 'all'>('all')
+  const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(new Set(['start_date']))
+  const [columnsDropdownOpen, setColumnsDropdownOpen] = useState(false)
+  const columnsDropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const supabase = createBrowserClient(
@@ -96,10 +114,30 @@ export default function LeadsPage() {
     fetchLeads()
   }, [])
 
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (columnsDropdownRef.current && !columnsDropdownRef.current.contains(e.target as Node)) {
+        setColumnsDropdownOpen(false)
+      }
+    }
+    if (columnsDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [columnsDropdownOpen])
+
   const handleLeadUpdate = (leadId: string, newStatus: LeadStatus) => {
     setLeads((prevLeads) =>
       prevLeads.map((lead) =>
         lead.id === leadId ? { ...lead, status: newStatus } : lead
+      )
+    )
+  }
+
+  const handleTagsUpdate = (leadId: string, newTags: string[]) => {
+    setLeads((prevLeads) =>
+      prevLeads.map((lead) =>
+        lead.id === leadId ? { ...lead, tags: newTags } : lead
       )
     )
   }
@@ -155,6 +193,59 @@ export default function LeadsPage() {
           </p>
         </div>
         <div className="flex gap-3">
+          <div className="relative" ref={columnsDropdownRef}>
+            <button
+              onClick={() => setColumnsDropdownOpen((o) => !o)}
+              className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-all duration-200 hover:scale-105 active:scale-95"
+              style={{
+                backgroundColor: colors.warmLinen,
+                color: colors.textSecondary,
+                borderRadius: radius.md,
+                boxShadow: shadows.soft,
+                border: `1px solid ${colors.border}`,
+                cursor: 'pointer',
+              }}
+            >
+              <svg className="-ml-1 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7" />
+              </svg>
+              Columns
+            </button>
+            {columnsDropdownOpen && (
+              <div
+                className="absolute right-0 top-full mt-1 z-50 bg-white py-1"
+                style={{
+                  borderRadius: radius.md,
+                  border: `1px solid ${colors.border}`,
+                  boxShadow: shadows.soft,
+                  minWidth: '160px',
+                }}
+              >
+                {COLUMNS.map((col) => (
+                  <label
+                    key={col.key}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm cursor-pointer hover:bg-gray-50"
+                    style={{ color: colors.textPrimary }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={!hiddenColumns.has(col.key)}
+                      onChange={() => {
+                        setHiddenColumns((prev) => {
+                          const next = new Set(prev)
+                          if (next.has(col.key)) next.delete(col.key)
+                          else next.add(col.key)
+                          return next
+                        })
+                      }}
+                      className="rounded"
+                    />
+                    {col.label}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
           <button
             onClick={() => setIsAddLeadOpen(true)}
             className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:scale-105 active:scale-95"
@@ -273,16 +364,7 @@ export default function LeadsPage() {
         </div>
       ) : (
         <Table
-          headers={[
-            'Type',
-            'Name/Parent',
-            'Contact',
-            'Child Info',
-            'Message',
-            'Start Date',
-            'Status',
-            'Submitted',
-          ]}
+          headers={COLUMNS.filter((c) => !hiddenColumns.has(c.key)).map((c) => c.label)}
         >
           {filteredLeads.map((lead, index) => {
             const isWaitlist = lead.type === 'waitlist'
@@ -294,69 +376,95 @@ export default function LeadsPage() {
                 index={index}
                 onClick={() => setSelectedLead(lead)}
               >
-                <TableCell>
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full border ${
-                      isWaitlist
-                        ? 'bg-amber-50 text-amber-700 border-amber-200'
-                        : 'bg-blue-50 text-blue-700 border-blue-200'
-                    }`}
-                  >
-                    {isWaitlist ? 'Waitlist' : 'Contact'}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <div className="font-medium">
-                    {isWaitlist ? lead.parent_name : lead.name}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div>{lead.email}</div>
-                  <div className="text-xs text-gray-400 font-body">
-                    {lead.phone}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  {isWaitlist ? (
-                    <>
-                      <div>{lead.child_name}</div>
-                      <div className="text-xs text-gray-400 font-body">
-                        Age: {lead.child_age || 'N/A'}
-                      </div>
-                    </>
-                  ) : (
-                    <div className="text-gray-400">—</div>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {isContact ? (
-                    <div className="max-w-xs truncate" title={lead.message}>
-                      {lead.message}
+                {!hiddenColumns.has('type') && (
+                  <TableCell>
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full border ${
+                        isWaitlist
+                          ? 'bg-amber-50 text-amber-700 border-amber-200'
+                          : 'bg-blue-50 text-blue-700 border-blue-200'
+                      }`}
+                    >
+                      {isWaitlist ? 'Waitlist' : 'Contact'}
+                    </span>
+                  </TableCell>
+                )}
+                {!hiddenColumns.has('name') && (
+                  <TableCell>
+                    <div className="font-medium">
+                      {isWaitlist ? lead.parent_name : lead.name}
                     </div>
-                  ) : (
-                    <div className="text-gray-400">—</div>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <div className="text-gray-600">
-                    {isWaitlist && lead.preferred_start_date
-                      ? lead.preferred_start_date
-                      : '—'}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <InlineStatusEditor
-                    status={lead.status}
-                    leadId={lead.id}
-                    leadType={lead.type}
-                    onStatusChange={handleLeadUpdate}
-                  />
-                </TableCell>
-                <TableCell>
-                  <div className="text-gray-600">
-                    {new Date(lead.created_at).toLocaleDateString()}
-                  </div>
-                </TableCell>
+                  </TableCell>
+                )}
+                {!hiddenColumns.has('contact') && (
+                  <TableCell>
+                    <div>{lead.email}</div>
+                    <div className="text-xs text-gray-400 font-body">
+                      {lead.phone}
+                    </div>
+                  </TableCell>
+                )}
+                {!hiddenColumns.has('child') && (
+                  <TableCell>
+                    {isWaitlist ? (
+                      <>
+                        <div>{lead.child_name}</div>
+                        <div className="text-xs text-gray-400 font-body">
+                          Age: {lead.child_age || 'N/A'}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-gray-400">—</div>
+                    )}
+                  </TableCell>
+                )}
+                {!hiddenColumns.has('message') && (
+                  <TableCell>
+                    {isContact ? (
+                      <div className="max-w-xs truncate" title={lead.message}>
+                        {lead.message}
+                      </div>
+                    ) : (
+                      <div className="text-gray-400">—</div>
+                    )}
+                  </TableCell>
+                )}
+                {!hiddenColumns.has('start_date') && (
+                  <TableCell>
+                    <div className="text-gray-600">
+                      {isWaitlist && lead.preferred_start_date
+                        ? lead.preferred_start_date
+                        : '—'}
+                    </div>
+                  </TableCell>
+                )}
+                {!hiddenColumns.has('status') && (
+                  <TableCell>
+                    <InlineStatusEditor
+                      status={lead.status}
+                      leadId={lead.id}
+                      leadType={lead.type}
+                      onStatusChange={handleLeadUpdate}
+                    />
+                  </TableCell>
+                )}
+                {!hiddenColumns.has('tags') && (
+                  <TableCell>
+                    <TagEditor
+                      tags={lead.tags ?? []}
+                      leadId={lead.id}
+                      leadType={lead.type}
+                      onTagsChange={handleTagsUpdate}
+                    />
+                  </TableCell>
+                )}
+                {!hiddenColumns.has('submitted') && (
+                  <TableCell>
+                    <div className="text-gray-600">
+                      {new Date(lead.created_at).toLocaleDateString()}
+                    </div>
+                  </TableCell>
+                )}
               </TableRow>
             )
           })}
@@ -369,6 +477,7 @@ export default function LeadsPage() {
         onLeadUpdate={handleLeadUpdate}
         onLeadFieldsUpdate={handleLeadFieldsUpdate}
         onLeadDeleted={handleLeadDeleted}
+        onTagsUpdate={handleTagsUpdate}
       />
 
       <AddLeadSidebar

@@ -8,6 +8,7 @@ import { LeadStatus } from '../../types/lead-status'
 import { updateWaitlistStatus, updateContactStatus } from '../../actions/updateLeadStatus'
 import { updateWaitlistLead, updateContactLead } from '../../actions/updateLeadFields'
 import { deleteWaitlistLead, deleteContactLead } from '../../actions/deleteLead'
+import { TagEditor } from './TagEditor'
 import { useState, useEffect } from 'react'
 
 type WaitlistLead = {
@@ -21,6 +22,7 @@ type WaitlistLead = {
   status: LeadStatus
   created_at: string
   notes?: string | null
+  tags?: string[]
 }
 
 type ContactLead = {
@@ -32,6 +34,7 @@ type ContactLead = {
   message: string
   status: LeadStatus
   created_at: string
+  tags?: string[]
 }
 
 type Lead = WaitlistLead | ContactLead
@@ -42,6 +45,7 @@ interface LeadsDetailSidebarProps {
   onLeadUpdate?: (leadId: string, newStatus: LeadStatus) => void
   onLeadFieldsUpdate?: (updatedLead: Lead) => void
   onLeadDeleted?: (leadId: string) => void
+  onTagsUpdate?: (leadId: string, newTags: string[]) => void
 }
 
 const inputStyle = {
@@ -90,6 +94,7 @@ export function LeadsDetailSidebar({
   onLeadUpdate,
   onLeadFieldsUpdate,
   onLeadDeleted,
+  onTagsUpdate,
 }: LeadsDetailSidebarProps) {
   const [currentSubmission, setCurrentSubmission] = useState<Lead | null>(submission)
   const [draft, setDraft] = useState<Record<string, string>>(() =>
@@ -339,6 +344,22 @@ export function LeadsDetailSidebar({
             submissionId={currentSubmission.id}
             onStatusChange={isWaitlist ? updateWaitlistStatus : updateContactStatus}
             onUpdate={handleStatusUpdate}
+          />
+        </div>
+
+        {/* Tags */}
+        <div className="mb-6">
+          <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-3 border-b border-gray-100 pb-2">
+            Tags
+          </h3>
+          <TagEditor
+            tags={currentSubmission.tags ?? []}
+            leadId={currentSubmission.id}
+            leadType={currentSubmission.type}
+            onTagsChange={(leadId, newTags) => {
+              setCurrentSubmission({ ...currentSubmission, tags: newTags })
+              if (onTagsUpdate) onTagsUpdate(leadId, newTags)
+            }}
           />
         </div>
 
