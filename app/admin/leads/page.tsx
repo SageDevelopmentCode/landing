@@ -8,7 +8,7 @@ import { LeadsDetailSidebar } from '../components/LeadsDetailSidebar'
 import { AddLeadSidebar } from '../components/AddLeadSidebar'
 import { colors, radius, shadows } from '../design-system'
 import { Merriweather } from 'next/font/google'
-import { LeadStatus } from '../../types/lead-status'
+import { LeadStatus, allLeadStatuses, leadStatusLabels, leadStatusStyles } from '../../types/lead-status'
 
 const merriweather = Merriweather({
   weight: ['300', '400', '700', '900'],
@@ -47,6 +47,7 @@ export default function LeadsPage() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isAddLeadOpen, setIsAddLeadOpen] = useState(false)
+  const [statusFilter, setStatusFilter] = useState<LeadStatus | 'all'>('all')
 
   useEffect(() => {
     const supabase = createBrowserClient(
@@ -118,6 +119,15 @@ export default function LeadsPage() {
     setIsAddLeadOpen(false)
   }
 
+  const filteredLeads = statusFilter === 'all'
+    ? leads
+    : leads.filter((l) => l.status === statusFilter)
+
+  const statusCounts = leads.reduce((acc, lead) => {
+    acc[lead.status] = (acc[lead.status] || 0) + 1
+    return acc
+  }, {} as Record<LeadStatus, number>)
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -139,7 +149,9 @@ export default function LeadsPage() {
             Leads
           </h1>
           <p className="mt-2" style={{ color: colors.textSecondary }}>
-            {leads.length} total submissions
+            {statusFilter === 'all'
+              ? `${leads.length} total submissions`
+              : `${filteredLeads.length} of ${leads.length} submissions`}
           </p>
         </div>
         <div className="flex gap-3">
@@ -197,7 +209,69 @@ export default function LeadsPage() {
         </div>
       </div>
 
-      {leads && leads.length > 0 ? (
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        <button
+          onClick={() => setStatusFilter('all')}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-all duration-150 hover:scale-105 active:scale-95"
+          style={{
+            borderRadius: radius.full,
+            backgroundColor: statusFilter === 'all' ? colors.mistyForest : colors.warmLinen,
+            color: statusFilter === 'all' ? '#ffffff' : colors.textSecondary,
+            border: `1px solid ${statusFilter === 'all' ? colors.mistyForest : colors.border}`,
+            cursor: 'pointer',
+          }}
+        >
+          All
+          <span
+            className="inline-flex items-center justify-center w-4 h-4 text-xs font-semibold rounded-full"
+            style={{
+              backgroundColor: statusFilter === 'all' ? 'rgba(255,255,255,0.25)' : colors.border,
+              color: statusFilter === 'all' ? '#ffffff' : colors.textSecondary,
+            }}
+          >
+            {leads.length}
+          </span>
+        </button>
+        {allLeadStatuses.filter((s) => (statusCounts[s] || 0) > 0).map((status) => {
+          const isActive = statusFilter === status
+          const style = leadStatusStyles[status]
+          return (
+            <button
+              key={status}
+              onClick={() => setStatusFilter(isActive ? 'all' : status)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-all duration-150 hover:scale-105 active:scale-95"
+              style={{
+                borderRadius: radius.full,
+                backgroundColor: isActive ? style.bg : colors.warmLinen,
+                color: isActive ? style.text : colors.textSecondary,
+                border: `1px solid ${isActive ? style.bg : colors.border}`,
+                cursor: 'pointer',
+              }}
+            >
+              {leadStatusLabels[status]}
+              <span
+                className="inline-flex items-center justify-center w-4 h-4 text-xs font-semibold rounded-full"
+                style={{
+                  backgroundColor: isActive ? 'rgba(0,0,0,0.12)' : colors.border,
+                  color: isActive ? style.text : colors.textSecondary,
+                }}
+              >
+                {statusCounts[status]}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+
+      {leads.length === 0 ? (
+        <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm text-center">
+          <p className="text-gray-500">No submissions yet</p>
+        </div>
+      ) : filteredLeads.length === 0 ? (
+        <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm text-center">
+          <p className="text-gray-500">No leads match this filter</p>
+        </div>
+      ) : (
         <Table
           headers={[
             'Type',
@@ -210,7 +284,7 @@ export default function LeadsPage() {
             'Submitted',
           ]}
         >
-          {leads.map((lead, index) => {
+          {filteredLeads.map((lead, index) => {
             const isWaitlist = lead.type === 'waitlist'
             const isContact = lead.type === 'contact'
 
@@ -287,10 +361,6 @@ export default function LeadsPage() {
             )
           })}
         </Table>
-      ) : (
-        <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm text-center">
-          <p className="text-gray-500">No submissions yet</p>
-        </div>
       )}
 
       <LeadsDetailSidebar
