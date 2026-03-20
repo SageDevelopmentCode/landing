@@ -773,7 +773,7 @@ export async function buildRSVPConfirmationEmail(opts: {
 <body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
   <p style="margin-bottom: 24px;">Dear ${firstName},</p>
 
-  <p>You're registered for the Sage Field Open House — we're so glad you'll be joining us. This is a wonderful chance to see the space, meet our educators, and get a feel for what learning at Sage Field really looks like.</p>
+  <p>You're registered for our Sage Field Open House — we're so glad you'll be joining us. This is a wonderful chance to see the space, meet our educators, and get a feel for what learning at Sage Field really looks like.</p>
 
   <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; margin: 28px 0;">
     <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 15px;">Event Details</p>
