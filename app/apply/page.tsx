@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import ContactDialog from "../components/ContactDialog";
 import WaitlistDialog from "../components/WaitlistDialog";
 import FloatingSMSButton from "../components/FloatingSMSButton";
+import MeetTheTeamSection from "../components/MeetTheTeamSection";
 
 type Tab = "summer" | "school-year";
 
@@ -555,35 +557,35 @@ export default function ApplyPage() {
                     </div>
 
                     {/* Pillar Cards 2×2 */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="overflow-x-auto flex snap-x snap-mandatory gap-4 pb-4 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] sm:overflow-visible sm:grid sm:grid-cols-2">
                       {[
                         {
-                          icon: "🌱",
                           title: "Hands-on Learning",
+                          image: "/assets/ImageOne.jpg",
                           description:
                             "Experiential activities that engage curiosity",
                         },
                         {
-                          icon: "🧘",
                           title: "Emotional Regulation",
+                          image: "/assets/kelly-sikkema-_4WVngcGz5Q-unsplash.jpg",
                           description:
                             "Mindfulness practices for students & educators",
                         },
                         {
-                          icon: "🎨",
                           title: "Creative Expression",
+                          image: "/assets/ImageEleven.jpg",
                           description:
                             "Artistic and musical creativity flourish",
                         },
                         {
-                          icon: "🌳",
                           title: "Movement & Nature",
+                          image: "/assets/ImageSeven.jpg",
                           description: "Movement-based and outdoor education",
                         },
                       ].map((pillar, index) => (
                         <motion.div
                           key={index}
-                          className="bg-white p-5 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02] cursor-pointer group"
+                          className="w-[80%] flex-shrink-0 snap-start sm:w-full bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105 cursor-pointer group overflow-hidden"
                           initial={{ opacity: 0, y: 20 }}
                           whileInView={{ opacity: 1, y: 0 }}
                           viewport={{ once: true }}
@@ -593,15 +595,17 @@ export default function ApplyPage() {
                             ease: "easeOut",
                           }}
                         >
-                          <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mb-3 group-hover:bg-primary/30 transition-colors duration-200">
-                            <span className="text-2xl">{pillar.icon}</span>
+                          <div className="relative w-full h-40 rounded-t-lg overflow-hidden">
+                            <Image src={pillar.image} alt={pillar.title} fill className="object-cover" />
                           </div>
-                          <h3 className="text-base font-semibold text-black mb-1 font-heading">
-                            {pillar.title}
-                          </h3>
-                          <p className="text-sm text-text-gray font-body">
-                            {pillar.description}
-                          </p>
+                          <div className="p-5">
+                            <h3 className="text-base font-semibold text-black mb-1 font-heading">
+                              {pillar.title}
+                            </h3>
+                            <p className="text-sm text-text-gray font-body">
+                              {pillar.description}
+                            </p>
+                          </div>
                         </motion.div>
                       ))}
                     </div>
@@ -728,11 +732,11 @@ export default function ApplyPage() {
                       <h2 className="text-2xl md:text-3xl font-bold text-black font-heading mb-6">
                         12 Weeks of Adventure
                       </h2>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="overflow-x-auto flex snap-x snap-mandatory gap-4 pb-4 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] sm:overflow-visible sm:grid sm:grid-cols-2">
                         {weeks.map((w, i) => (
                           <motion.div
                             key={w.week}
-                            className="bg-white rounded-xl p-5 shadow-sm border border-gray-100"
+                            className="w-[80%] flex-shrink-0 snap-start sm:w-full bg-white rounded-xl p-5 shadow-sm border border-gray-100"
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
@@ -768,7 +772,21 @@ export default function ApplyPage() {
                         ))}
                       </div>
                     </div>
+                    {/* Meet the Team — Summer only */}
+                    <div className="-mx-8 sm:-mx-12 lg:-mx-16">
+                      <MeetTheTeamSection featured={false} />
+                    </div>
                   </motion.div>
+                )}
+
+                {/* Meet the Team — School Year only */}
+                {activeTab === "school-year" && (
+                  <div className="-mx-8 sm:-mx-12 lg:-mx-16 mb-10">
+                    <MeetTheTeamSection
+                      featured={false}
+                      exclude={["Nicole Elias", "Taylor Elias"]}
+                    />
+                  </div>
                 )}
 
                 {/* Have any questions? */}

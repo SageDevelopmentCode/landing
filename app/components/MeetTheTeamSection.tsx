@@ -6,6 +6,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { X } from "lucide-react";
 
+const SABRINA = {
+  name: "Sabrina Grace Obnamia",
+  role: "Lead Teacher & Director",
+  image: "/assets/Headshot.jpeg",
+  description:
+    "Ms. Sabrina brings a wealth of experience to SageField. She holds a Bachelor's degree in Elementary Education with a concentration in Early Childhood Development from Biola University and a Teaching Credential. Her background includes working with children in a wide range of roles both in the U.S. and internationally—spanning special education, preschool, homeschooling, tutoring, coaching, traditional schooling, nature school guide, and more. She values movement, outdoor learning, and most importantly, the joy of slowing down to be present, intentional, and thankful.",
+};
+
 const TEAM_MEMBERS = [
   {
     name: "Paige Wood",
@@ -44,10 +52,19 @@ const TEAM_MEMBERS = [
   },
 ];
 
-export default function MeetTheTeamSection() {
+export default function MeetTheTeamSection({
+  featured = true,
+  exclude = [],
+}: {
+  featured?: boolean;
+  exclude?: string[];
+}) {
   const [selectedMember, setSelectedMember] = useState<
     (typeof TEAM_MEMBERS)[0] | null
   >(null);
+
+  const gridMembers = (featured ? TEAM_MEMBERS : [SABRINA, ...TEAM_MEMBERS])
+    .filter((m) => !exclude.includes(m.name));
 
   return (
     <section className="bg-welcome-bg py-16 px-8 sm:px-12 lg:px-16 min-h-[80vh] flex items-center">
@@ -79,7 +96,7 @@ export default function MeetTheTeamSection() {
         </motion.h2>
 
         {/* Featured: Sabrina — Two-column layout */}
-        <div className="flex flex-col lg:flex-row lg:justify-between items-center gap-16 mb-20">
+        {featured && <div className="flex flex-col lg:flex-row lg:justify-between items-center gap-16 mb-20">
           {/* Left: Headshot Image */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
@@ -150,11 +167,11 @@ export default function MeetTheTeamSection() {
               </p>
             </motion.div>
           </motion.div>
-        </div>
+        </div>}
 
         {/* Team Grid: 4 members in 2×2 */}
         <div className="flex overflow-x-auto gap-4 pb-4 sm:grid sm:grid-cols-2 sm:gap-8 sm:overflow-visible sm:pb-0">
-          {TEAM_MEMBERS.map((member, i) => (
+          {gridMembers.map((member, i) => (
             <motion.div
               key={member.name}
               initial={{ opacity: 0, y: 30 }}
