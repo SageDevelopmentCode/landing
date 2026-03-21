@@ -11,6 +11,10 @@ import { deleteWaitlistLead, deleteContactLead } from '../../actions/deleteLead'
 import { TagEditor } from './TagEditor'
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { useEditor, EditorContent } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import Highlight from '@tiptap/extension-highlight'
+import { TextStyle } from '@tiptap/extension-text-style'
 
 type WaitlistLead = {
   id: string
@@ -112,10 +116,24 @@ export function LeadsDetailSidebar({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
-  const [callNotes, setCallNotes] = useState(submission?.call_notes ?? '')
   const [callNotesSaving, setCallNotesSaving] = useState(false)
   const [callNotesSaved, setCallNotesSaved] = useState(false)
   const [callNotesOpen, setCallNotesOpen] = useState(true)
+
+  const callNotesEditor = useEditor({
+    extensions: [StarterKit, Highlight, TextStyle],
+    immediatelyRender: false,
+    content: submission?.call_notes ?? '',
+    editorProps: {
+      attributes: {
+        class: 'outline-none text-sm text-gray-700 leading-relaxed min-h-[400px] font-body [&::-webkit-scrollbar]:hidden',
+          'data-placeholder': 'Paste your call notes here…',
+      },
+    },
+    onBlur: () => {
+      if (callNotesEditor) handleCallNotesSave()
+    },
+  })
 
   // Reset draft when a different lead is selected
   useEffect(() => {
@@ -125,7 +143,7 @@ export function LeadsDetailSidebar({
       setIsDirty(false)
       setSaveError(null)
       setSaveSuccess(false)
-      setCallNotes(submission?.call_notes ?? '')
+      callNotesEditor?.commands.setContent(submission?.call_notes ?? '')
       setCallNotesSaved(false)
     }
   }, [submission?.id])
@@ -248,9 +266,10 @@ export function LeadsDetailSidebar({
   }
 
   const handleCallNotesSave = async () => {
-    if (!currentSubmission || callNotesSaving) return
+    if (!currentSubmission || callNotesSaving || !callNotesEditor) return
     setCallNotesSaving(true)
-    const result = await updateCallNotes(currentSubmission.id, currentSubmission.type, callNotes || null)
+    const html = callNotesEditor.getHTML()
+    const result = await updateCallNotes(currentSubmission.id, currentSubmission.type, html === '<p></p>' ? null : html)
     setCallNotesSaving(false)
     if (result.success) {
       setCallNotesSaved(true)
@@ -297,7 +316,7 @@ export function LeadsDetailSidebar({
     {/* Call Notes Panel — hidden on mobile, slides in left of the detail sidebar */}
     <motion.div
       initial={{ x: '100%' }}
-      animate={{ x: 0, width: callNotesOpen ? 440 : 48 }}
+      animate={{ x: 0, width: callNotesOpen ? 520 : 48 }}
       exit={{ x: '100%' }}
       transition={{ type: 'spring', damping: 25, stiffness: 300 }}
       className="hidden sm:flex fixed z-50 flex-col bg-white overflow-hidden"
@@ -331,15 +350,75 @@ export function LeadsDetailSidebar({
             </div>
           </div>
 
-          {/* Textarea */}
+          {/* Toolbar */}
+          <div className="flex items-center gap-1 px-4 py-2 border-b border-gray-100 flex-shrink-0">
+            <button
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); callNotesEditor?.chain().focus().toggleBold().run() }}
+              className="inline-flex items-center justify-center w-7 h-7 rounded transition-colors text-xs font-bold"
+              style={{ backgroundColor: callNotesEditor?.isActive('bold') ? '#E8F0E9' : 'transparent', color: callNotesEditor?.isActive('bold') ? '#2C5F2E' : '#6B7280' }}
+              title="Bold"
+            >B</button>
+            <button
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); callNotesEditor?.chain().focus().toggleItalic().run() }}
+              className="inline-flex items-center justify-center w-7 h-7 rounded transition-colors text-xs italic"
+              style={{ backgroundColor: callNotesEditor?.isActive('italic') ? '#E8F0E9' : 'transparent', color: callNotesEditor?.isActive('italic') ? '#2C5F2E' : '#6B7280' }}
+              title="Italic"
+            >I</button>
+            <button
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); callNotesEditor?.chain().focus().toggleHighlight().run() }}
+              className="inline-flex items-center justify-center w-7 h-7 rounded transition-colors text-xs"
+              style={{ backgroundColor: callNotesEditor?.isActive('highlight') ? '#FEF08A' : 'transparent', color: callNotesEditor?.isActive('highlight') ? '#713F12' : '#6B7280' }}
+              title="Highlight"
+            >
+              <span style={{ background: 'linear-gradient(transparent 50%, #FEF08A 50%)', fontWeight: 600 }}>H</span>
+            </button>
+            <div className="w-px h-4 bg-gray-200 mx-1" />
+            <button
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); callNotesEditor?.chain().focus().toggleHeading({ level: 2 }).run() }}
+              className="inline-flex items-center justify-center w-7 h-7 rounded transition-colors text-xs font-semibold"
+              style={{ backgroundColor: callNotesEditor?.isActive('heading', { level: 2 }) ? '#E8F0E9' : 'transparent', color: callNotesEditor?.isActive('heading', { level: 2 }) ? '#2C5F2E' : '#6B7280' }}
+              title="Heading"
+            >H2</button>
+            <button
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); callNotesEditor?.chain().focus().toggleHeading({ level: 3 }).run() }}
+              className="inline-flex items-center justify-center w-7 h-7 rounded transition-colors text-xs font-semibold"
+              style={{ backgroundColor: callNotesEditor?.isActive('heading', { level: 3 }) ? '#E8F0E9' : 'transparent', color: callNotesEditor?.isActive('heading', { level: 3 }) ? '#2C5F2E' : '#6B7280' }}
+              title="Subheading"
+            >H3</button>
+            <div className="w-px h-4 bg-gray-200 mx-1" />
+            <button
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); callNotesEditor?.chain().focus().toggleBulletList().run() }}
+              className="inline-flex items-center justify-center w-7 h-7 rounded transition-colors"
+              style={{ backgroundColor: callNotesEditor?.isActive('bulletList') ? '#E8F0E9' : 'transparent', color: callNotesEditor?.isActive('bulletList') ? '#2C5F2E' : '#6B7280' }}
+              title="Bullet list"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Editor */}
           <div className="flex-1 p-6 overflow-y-auto [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
-            <textarea
-              className="w-full h-full min-h-[400px] text-sm text-gray-700 font-body leading-relaxed resize-none outline-none placeholder-gray-300 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
-              placeholder="Paste your call notes here…"
-              value={callNotes ?? ''}
-              onChange={(e) => setCallNotes(e.target.value)}
-              onBlur={handleCallNotesSave}
-            />
+            <style>{`
+              .call-notes-editor h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; color: #1F2937; }
+              .call-notes-editor h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 0.25rem; color: #374151; }
+              .call-notes-editor strong { font-weight: 700; }
+              .call-notes-editor em { font-style: italic; }
+              .call-notes-editor mark { background-color: #FEF08A; border-radius: 2px; padding: 0 2px; }
+              .call-notes-editor p { margin-bottom: 0.5rem; }
+              .call-notes-editor p:last-child { margin-bottom: 0; }
+              .call-notes-editor p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: #D1D5DB; pointer-events: none; float: left; height: 0; }
+              .call-notes-editor ul { list-style-type: disc; padding-left: 1.25rem; margin-bottom: 0.5rem; }
+              .call-notes-editor ul li { margin-bottom: 0.125rem; }
+            `}</style>
+            <EditorContent editor={callNotesEditor} className="call-notes-editor h-full" />
           </div>
         </>
       ) : (
