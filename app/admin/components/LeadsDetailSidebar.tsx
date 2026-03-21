@@ -9,7 +9,7 @@ import { updateWaitlistStatus, updateContactStatus } from '../../actions/updateL
 import { updateWaitlistLead, updateContactLead, updateCallNotes } from '../../actions/updateLeadFields'
 import { deleteWaitlistLead, deleteContactLead } from '../../actions/deleteLead'
 import { TagEditor } from './TagEditor'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
@@ -118,9 +118,8 @@ export function LeadsDetailSidebar({
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [callNotesSaving, setCallNotesSaving] = useState(false)
   const [callNotesSaved, setCallNotesSaved] = useState(false)
+  const [callNotesDirty, setCallNotesDirty] = useState(false)
   const [callNotesOpen, setCallNotesOpen] = useState(true)
-  const callNotesDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const handleCallNotesSaveRef = useRef<() => void>(() => {})
 
   const callNotesEditor = useEditor({
     extensions: [StarterKit, Highlight, TextStyle],
@@ -133,14 +132,7 @@ export function LeadsDetailSidebar({
       },
     },
     onUpdate: () => {
-      if (callNotesDebounceRef.current) clearTimeout(callNotesDebounceRef.current)
-      callNotesDebounceRef.current = setTimeout(() => {
-        handleCallNotesSaveRef.current()
-      }, 3000)
-    },
-    onBlur: () => {
-      if (callNotesDebounceRef.current) clearTimeout(callNotesDebounceRef.current)
-      handleCallNotesSaveRef.current()
+      setCallNotesDirty(true)
     },
   })
 
@@ -154,6 +146,7 @@ export function LeadsDetailSidebar({
       setSaveSuccess(false)
       callNotesEditor?.commands.setContent(submission?.call_notes ?? '')
       setCallNotesSaved(false)
+      setCallNotesDirty(false)
     }
   }, [submission?.id])
 
@@ -284,11 +277,11 @@ export function LeadsDetailSidebar({
       const savedHtml = html === '<p></p>' ? null : html
       setCurrentSubmission({ ...currentSubmission, call_notes: savedHtml })
       if (onLeadFieldsUpdate) onLeadFieldsUpdate({ ...currentSubmission, call_notes: savedHtml })
+      setCallNotesDirty(false)
       setCallNotesSaved(true)
       setTimeout(() => setCallNotesSaved(false), 2000)
     }
   }
-  handleCallNotesSaveRef.current = handleCallNotesSave
 
   const footer = (
     <div className="flex items-center gap-3">
@@ -347,9 +340,17 @@ export function LeadsDetailSidebar({
           {/* Header — expanded */}
           <div className="px-6 py-5 flex items-center justify-between border-b border-gray-100 flex-shrink-0">
             <h2 className="text-lg font-bold font-heading text-gray-800 whitespace-nowrap">Call Notes</h2>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               {callNotesSaving && <span className="text-xs text-gray-400">Saving…</span>}
               {callNotesSaved && !callNotesSaving && <span className="text-xs text-green-600">Saved</span>}
+              <button
+                onClick={handleCallNotesSave}
+                disabled={!callNotesDirty || callNotesSaving}
+                className="px-2.5 py-1 text-xs font-semibold text-white rounded-md transition-colors hover:bg-[#234d25] disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ backgroundColor: '#2C5F2E', border: 'none' }}
+              >
+                {callNotesSaving ? 'Saving...' : 'Save'}
+              </button>
               <button
                 onClick={() => setCallNotesOpen(false)}
                 className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
