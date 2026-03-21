@@ -40,6 +40,7 @@ type WaitlistLead = {
   created_at: string
   notes?: string | null
   preferred_start_date?: string | null
+  special_interests?: string | null
   tags?: string[]
 }
 
@@ -423,6 +424,10 @@ export default function LeadsPage() {
                     {isContact ? (
                       <div className="max-w-xs truncate" title={lead.message}>
                         {lead.message}
+                      </div>
+                    ) : isWaitlist && lead.special_interests ? (
+                      <div className="max-w-xs truncate" title={lead.special_interests}>
+                        {lead.special_interests}
                       </div>
                     ) : (
                       <div className="text-gray-400">—</div>

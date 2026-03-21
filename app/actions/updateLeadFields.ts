@@ -13,6 +13,7 @@ export async function updateWaitlistLead(
     child_name: string;
     child_age: number | null;
     notes: string | null;
+    special_interests: string | null;
   }
 ): Promise<UpdateLeadFieldsResponse> {
   try {

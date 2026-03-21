@@ -22,6 +22,7 @@ type WaitlistLead = {
   status: LeadStatus
   created_at: string
   notes?: string | null
+  special_interests?: string | null
   tags?: string[]
 }
 
@@ -77,6 +78,7 @@ function buildDraft(sub: Lead): Record<string, string> {
       child_name: sub.child_name ?? '',
       child_age: sub.child_age != null ? String(sub.child_age) : '',
       notes: sub.notes ?? '',
+      special_interests: sub.special_interests ?? '',
     }
   } else {
     return {
@@ -172,6 +174,7 @@ export function LeadsDetailSidebar({
         child_name: draft.child_name,
         child_age: draft.child_age !== '' ? Number(draft.child_age) : null,
         notes: draft.notes || null,
+        special_interests: draft.special_interests || null,
       })
       updatedLead = {
         ...currentSubmission,
@@ -181,6 +184,7 @@ export function LeadsDetailSidebar({
         child_name: draft.child_name,
         child_age: draft.child_age !== '' ? Number(draft.child_age) : null,
         notes: draft.notes || null,
+        special_interests: draft.special_interests || null,
       }
     } else if (isContact && currentSubmission.type === 'contact') {
       result = await updateContactLead(currentSubmission.id, {
@@ -422,6 +426,14 @@ export function LeadsDetailSidebar({
                   style={inputStyle}
                   value={draft.child_age}
                   onChange={(e) => updateDraft('child_age', e.target.value)}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Special Interests</label>
+                <textarea
+                  style={{ ...inputStyle, resize: 'vertical', minHeight: '80px' }}
+                  value={draft.special_interests}
+                  onChange={(e) => updateDraft('special_interests', e.target.value)}
                 />
               </div>
             </div>
