@@ -120,6 +120,7 @@ export function LeadsDetailSidebar({
   const [callNotesSaved, setCallNotesSaved] = useState(false)
   const [callNotesOpen, setCallNotesOpen] = useState(true)
   const callNotesDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const handleCallNotesSaveRef = useRef<() => void>(() => {})
 
   const callNotesEditor = useEditor({
     extensions: [StarterKit, Highlight, TextStyle],
@@ -134,12 +135,12 @@ export function LeadsDetailSidebar({
     onUpdate: () => {
       if (callNotesDebounceRef.current) clearTimeout(callNotesDebounceRef.current)
       callNotesDebounceRef.current = setTimeout(() => {
-        handleCallNotesSave()
+        handleCallNotesSaveRef.current()
       }, 3000)
     },
     onBlur: () => {
       if (callNotesDebounceRef.current) clearTimeout(callNotesDebounceRef.current)
-      handleCallNotesSave()
+      handleCallNotesSaveRef.current()
     },
   })
 
@@ -287,6 +288,7 @@ export function LeadsDetailSidebar({
       setTimeout(() => setCallNotesSaved(false), 2000)
     }
   }
+  handleCallNotesSaveRef.current = handleCallNotesSave
 
   const footer = (
     <div className="flex items-center gap-3">
