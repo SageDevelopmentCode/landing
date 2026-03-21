@@ -9,7 +9,7 @@ import { updateWaitlistStatus, updateContactStatus } from '../../actions/updateL
 import { updateWaitlistLead, updateContactLead, updateCallNotes } from '../../actions/updateLeadFields'
 import { deleteWaitlistLead, deleteContactLead } from '../../actions/deleteLead'
 import { TagEditor } from './TagEditor'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
@@ -119,6 +119,7 @@ export function LeadsDetailSidebar({
   const [callNotesSaving, setCallNotesSaving] = useState(false)
   const [callNotesSaved, setCallNotesSaved] = useState(false)
   const [callNotesOpen, setCallNotesOpen] = useState(true)
+  const callNotesDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const callNotesEditor = useEditor({
     extensions: [StarterKit, Highlight, TextStyle],
@@ -130,8 +131,15 @@ export function LeadsDetailSidebar({
           'data-placeholder': 'Paste your call notes here…',
       },
     },
+    onUpdate: () => {
+      if (callNotesDebounceRef.current) clearTimeout(callNotesDebounceRef.current)
+      callNotesDebounceRef.current = setTimeout(() => {
+        handleCallNotesSave()
+      }, 3000)
+    },
     onBlur: () => {
-      if (callNotesEditor) handleCallNotesSave()
+      if (callNotesDebounceRef.current) clearTimeout(callNotesDebounceRef.current)
+      handleCallNotesSave()
     },
   })
 
@@ -272,6 +280,9 @@ export function LeadsDetailSidebar({
     const result = await updateCallNotes(currentSubmission.id, currentSubmission.type, html === '<p></p>' ? null : html)
     setCallNotesSaving(false)
     if (result.success) {
+      const savedHtml = html === '<p></p>' ? null : html
+      setCurrentSubmission({ ...currentSubmission, call_notes: savedHtml })
+      if (onLeadFieldsUpdate) onLeadFieldsUpdate({ ...currentSubmission, call_notes: savedHtml })
       setCallNotesSaved(true)
       setTimeout(() => setCallNotesSaved(false), 2000)
     }
