@@ -509,157 +509,162 @@ export default function OpenHousePage() {
             ))}
           </div>
 
-          {/* Kids Activity Stations */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            {kidsStations.map((station, i) => (
-              <motion.div
-                key={station.title}
-                className="bg-white rounded-xl p-5 shadow-sm border border-gray-100"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.1, ease: "easeOut" }}
-              >
-                <div className="text-3xl mb-3">{station.emoji}</div>
-                <h3 className="text-base font-bold text-gray-800 font-heading mb-3">
-                  {station.title}
-                </h3>
-                <ul className="space-y-1">
-                  {station.items.map((item) => (
-                    <li
-                      key={item}
-                      className="text-sm text-gray-500 font-body flex items-start gap-2"
-                    >
-                      <span className="text-primary mt-0.5">·</span>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </motion.div>
-            ))}
-          </div>
+          {/* Cards: horizontal scroll on mobile, stacked on sm+ */}
+          <div className="overflow-x-auto flex snap-x snap-mandatory gap-4 pb-4 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] sm:overflow-visible sm:block sm:space-y-4">
 
-          {/* Parent Lounge */}
-          <motion.div
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4, delay: 0.3, ease: "easeOut" }}
-          >
-            <h3 className="text-base font-bold text-gray-800 font-heading mb-2">
-              ☕ Parent Lounge
-            </h3>
-            <p className="text-sm text-gray-600 font-body leading-relaxed mb-3">
-              Chairs, picnic tables, and shaded seating — a relaxed spot to
-              connect with other families, ask questions, and just... be.
-            </p>
-            <ul className="flex flex-wrap gap-2">
-              {["Shaded seating", "Picnic tables", "Comfortable chairs"].map(
-                (item) => (
-                  <li
-                    key={item}
-                    className="text-xs font-body bg-gray-100 text-gray-700 px-3 py-1 rounded-full"
-                  >
-                    {item}
-                  </li>
-                ),
-              )}
-            </ul>
-          </motion.div>
-
-          {/* Food & Drinks */}
-          <motion.div
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4, delay: 0.4, ease: "easeOut" }}
-          >
-            <h3 className="text-base font-bold text-gray-800 font-heading mb-4">
-              🍋 Food &amp; Drinks
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-4">
-              <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide font-body mb-2">
-                  For Parents
-                </p>
-                <ul className="space-y-1">
-                  {[
-                    "Lemonade",
-                    "Iced tea",
-                    "Fresh fruit",
-                    "Granola bars",
-                    "Trail mix",
-                  ].map((item) => (
-                    <li
-                      key={item}
-                      className="text-sm text-gray-600 font-body flex items-start gap-2"
-                    >
-                      <span className="text-primary mt-0.5">·</span>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide font-body mb-2">
-                  For Kids
-                </p>
-                <ul className="space-y-1">
-                  {["Apple slices", "Fruit snacks"].map((item) => (
-                    <li
-                      key={item}
-                      className="text-sm text-gray-600 font-body flex items-start gap-2"
-                    >
-                      <span className="text-primary mt-0.5">·</span>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+            {/* Kids Activity Stations — display:contents on mobile so cards are direct flex children */}
+            <div className="contents sm:grid sm:grid-cols-3 sm:gap-4">
+              {kidsStations.map((station, i) => (
+                <motion.div
+                  key={station.title}
+                  className="w-[80%] flex-shrink-0 snap-start sm:w-auto bg-white rounded-xl p-5 shadow-sm border border-gray-100"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: i * 0.1, ease: "easeOut" }}
+                >
+                  <div className="text-3xl mb-3">{station.emoji}</div>
+                  <h3 className="text-base font-bold text-gray-800 font-heading mb-3">
+                    {station.title}
+                  </h3>
+                  <ul className="space-y-1">
+                    {station.items.map((item) => (
+                      <li
+                        key={item}
+                        className="text-sm text-gray-500 font-body flex items-start gap-2"
+                      >
+                        <span className="text-primary mt-0.5">·</span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </motion.div>
+              ))}
             </div>
-            <p className="text-xs text-gray-400 font-body italic">
-              Good food keeps families around longer — and we want you to stay.
-            </p>
-          </motion.div>
 
-          {/* Photo Booth */}
-          <motion.div
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4, delay: 0.5, ease: "easeOut" }}
-          >
-            <h3 className="text-base font-bold text-gray-800 font-heading mb-2">
-              📸 Photo Booth
-            </h3>
-            <p className="text-sm text-gray-600 font-body leading-relaxed">
-              Capture the moment! We&apos;ll have a fun photo booth set up for
-              families to take home a memory from the day.
-            </p>
-          </motion.div>
+            {/* Parent Lounge */}
+            <motion.div
+              className="w-[80%] flex-shrink-0 snap-start sm:w-auto bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: 0.3, ease: "easeOut" }}
+            >
+              <h3 className="text-base font-bold text-gray-800 font-heading mb-2">
+                ☕ Parent Lounge
+              </h3>
+              <p className="text-sm text-gray-600 font-body leading-relaxed mb-3">
+                Chairs, picnic tables, and shaded seating — a relaxed spot to
+                connect with other families, ask questions, and just... be.
+              </p>
+              <ul className="flex flex-wrap gap-2">
+                {["Shaded seating", "Picnic tables", "Comfortable chairs"].map(
+                  (item) => (
+                    <li
+                      key={item}
+                      className="text-xs font-body bg-gray-100 text-gray-700 px-3 py-1 rounded-full"
+                    >
+                      {item}
+                    </li>
+                  ),
+                )}
+              </ul>
+            </motion.div>
 
-          {/* Free Shirts */}
-          <motion.div
-            className="bg-blue-50 border border-blue-200 rounded-xl p-6 shadow-sm flex items-start gap-4"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4, delay: 0.6, ease: "easeOut" }}
-          >
-            <span className="text-3xl flex-shrink-0">👕</span>
-            <div>
-              <h3 className="text-base font-bold text-gray-800 font-heading mb-1">
-                Sage Field Shirts — Support Our School
+            {/* Food & Drinks */}
+            <motion.div
+              className="w-[80%] flex-shrink-0 snap-start sm:w-auto bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: 0.4, ease: "easeOut" }}
+            >
+              <h3 className="text-base font-bold text-gray-800 font-heading mb-4">
+                🍋 Food &amp; Drinks
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-4">
+                <div>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide font-body mb-2">
+                    For Parents
+                  </p>
+                  <ul className="space-y-1">
+                    {[
+                      "Lemonade",
+                      "Iced tea",
+                      "Fresh fruit",
+                      "Granola bars",
+                      "Trail mix",
+                    ].map((item) => (
+                      <li
+                        key={item}
+                        className="text-sm text-gray-600 font-body flex items-start gap-2"
+                      >
+                        <span className="text-primary mt-0.5">·</span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide font-body mb-2">
+                    For Kids
+                  </p>
+                  <ul className="space-y-1">
+                    {["Apple slices", "Fruit snacks"].map((item) => (
+                      <li
+                        key={item}
+                        className="text-sm text-gray-600 font-body flex items-start gap-2"
+                      >
+                        <span className="text-primary mt-0.5">·</span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+              <p className="text-xs text-gray-400 font-body italic">
+                Good food keeps families around longer — and we want you to stay.
+              </p>
+            </motion.div>
+
+            {/* Photo Booth */}
+            <motion.div
+              className="w-[80%] flex-shrink-0 snap-start sm:w-auto bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: 0.5, ease: "easeOut" }}
+            >
+              <h3 className="text-base font-bold text-gray-800 font-heading mb-2">
+                📸 Photo Booth
               </h3>
               <p className="text-sm text-gray-600 font-body leading-relaxed">
-                Show your Sage Field spirit and support our school! Shirts will
-                be available for purchase at the event.
+                Capture the moment! We&apos;ll have a fun photo booth set up for
+                families to take home a memory from the day.
               </p>
-            </div>
-          </motion.div>
+            </motion.div>
+
+            {/* Free Shirts */}
+            <motion.div
+              className="w-[80%] flex-shrink-0 snap-start sm:w-auto bg-blue-50 border border-blue-200 rounded-xl p-6 shadow-sm flex items-start gap-4"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: 0.6, ease: "easeOut" }}
+            >
+              <span className="text-3xl flex-shrink-0">👕</span>
+              <div>
+                <h3 className="text-base font-bold text-gray-800 font-heading mb-1">
+                  Sage Field Shirts — Support Our School
+                </h3>
+                <p className="text-sm text-gray-600 font-body leading-relaxed">
+                  Show your Sage Field spirit and support our school! Shirts will
+                  be available for purchase at the event.
+                </p>
+              </div>
+            </motion.div>
+
+          </div>
         </div>
       </section>
 
