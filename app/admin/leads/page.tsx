@@ -41,6 +41,7 @@ type WaitlistLead = {
   notes?: string | null
   preferred_start_date?: string | null
   special_interests?: string | null
+  call_notes?: string | null
   tags?: string[]
 }
 
@@ -53,6 +54,7 @@ type ContactLead = {
   message: string
   status: LeadStatus
   created_at: string
+  call_notes?: string | null
   tags?: string[]
 }
 

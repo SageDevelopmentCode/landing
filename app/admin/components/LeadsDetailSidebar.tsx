@@ -6,10 +6,11 @@ import { StatusDropdown } from './StatusDropdown'
 import { EmailThread } from './EmailThread'
 import { LeadStatus } from '../../types/lead-status'
 import { updateWaitlistStatus, updateContactStatus } from '../../actions/updateLeadStatus'
-import { updateWaitlistLead, updateContactLead } from '../../actions/updateLeadFields'
+import { updateWaitlistLead, updateContactLead, updateCallNotes } from '../../actions/updateLeadFields'
 import { deleteWaitlistLead, deleteContactLead } from '../../actions/deleteLead'
 import { TagEditor } from './TagEditor'
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 
 type WaitlistLead = {
   id: string
@@ -23,6 +24,7 @@ type WaitlistLead = {
   created_at: string
   notes?: string | null
   special_interests?: string | null
+  call_notes?: string | null
   tags?: string[]
 }
 
@@ -35,6 +37,7 @@ type ContactLead = {
   message: string
   status: LeadStatus
   created_at: string
+  call_notes?: string | null
   tags?: string[]
 }
 
@@ -109,6 +112,10 @@ export function LeadsDetailSidebar({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [callNotes, setCallNotes] = useState(submission?.call_notes ?? '')
+  const [callNotesSaving, setCallNotesSaving] = useState(false)
+  const [callNotesSaved, setCallNotesSaved] = useState(false)
+  const [callNotesOpen, setCallNotesOpen] = useState(true)
 
   // Reset draft when a different lead is selected
   useEffect(() => {
@@ -118,6 +125,8 @@ export function LeadsDetailSidebar({
       setIsDirty(false)
       setSaveError(null)
       setSaveSuccess(false)
+      setCallNotes(submission?.call_notes ?? '')
+      setCallNotesSaved(false)
     }
   }, [submission?.id])
 
@@ -238,6 +247,17 @@ export function LeadsDetailSidebar({
     }
   }
 
+  const handleCallNotesSave = async () => {
+    if (!currentSubmission || callNotesSaving) return
+    setCallNotesSaving(true)
+    const result = await updateCallNotes(currentSubmission.id, currentSubmission.type, callNotes || null)
+    setCallNotesSaving(false)
+    if (result.success) {
+      setCallNotesSaved(true)
+      setTimeout(() => setCallNotesSaved(false), 2000)
+    }
+  }
+
   const footer = (
     <div className="flex items-center gap-3">
       <button
@@ -274,6 +294,80 @@ export function LeadsDetailSidebar({
 
   return (
     <>
+    {/* Call Notes Panel — hidden on mobile, slides in left of the detail sidebar */}
+    <motion.div
+      initial={{ x: '100%' }}
+      animate={{ x: 0, width: callNotesOpen ? 440 : 48 }}
+      exit={{ x: '100%' }}
+      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+      className="hidden sm:flex fixed z-50 flex-col bg-white overflow-hidden"
+      style={{
+        top: 0,
+        right: '500px',
+        height: '100dvh',
+        borderLeft: '1px solid #E5E7EB',
+        borderRight: '1px solid #E5E7EB',
+        boxShadow: '-4px 0 16px rgba(0,0,0,0.06)',
+      }}
+    >
+      {callNotesOpen ? (
+        <>
+          {/* Header — expanded */}
+          <div className="px-6 py-5 flex items-center justify-between border-b border-gray-100 flex-shrink-0">
+            <h2 className="text-lg font-bold font-heading text-gray-800 whitespace-nowrap">Call Notes</h2>
+            <div className="flex items-center gap-3">
+              {callNotesSaving && <span className="text-xs text-gray-400">Saving…</span>}
+              {callNotesSaved && !callNotesSaving && <span className="text-xs text-green-600">Saved</span>}
+              <button
+                onClick={() => setCallNotesOpen(false)}
+                className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                aria-label="Collapse call notes"
+              >
+                {/* Chevron right — collapses toward right */}
+                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Textarea */}
+          <div className="flex-1 p-6 overflow-y-auto [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
+            <textarea
+              className="w-full h-full min-h-[400px] text-sm text-gray-700 font-body leading-relaxed resize-none outline-none placeholder-gray-300 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
+              placeholder="Paste your call notes here…"
+              value={callNotes ?? ''}
+              onChange={(e) => setCallNotes(e.target.value)}
+              onBlur={handleCallNotesSave}
+            />
+          </div>
+        </>
+      ) : (
+        /* Collapsed tab */
+        <button
+          onClick={() => setCallNotesOpen(true)}
+          className="flex flex-col items-center justify-between w-full h-full py-5 hover:bg-gray-50 transition-colors cursor-pointer"
+          aria-label="Expand call notes"
+        >
+          {/* Phone icon */}
+          <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+          </svg>
+          {/* Rotated label */}
+          <span
+            className="text-xs font-semibold text-gray-400 font-body tracking-wide"
+            style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+          >
+            Call Notes
+          </span>
+          {/* Chevron left — expand */}
+          <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+      )}
+    </motion.div>
+
     {showDeleteConfirm && (
       <div
         className="fixed inset-0 flex items-center justify-center"

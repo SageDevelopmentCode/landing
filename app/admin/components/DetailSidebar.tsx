@@ -66,7 +66,6 @@ export function DetailSidebar({
             className="fixed top-0 right-0 bottom-0 w-full sm:w-[500px] z-50 bg-white flex flex-col overflow-hidden"
             style={{
               boxShadow: shadows.large,
-              borderLeft: `1px solid ${colors.border}`,
             }}
           >
             {/* Header */}

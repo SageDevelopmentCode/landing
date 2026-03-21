@@ -40,6 +40,35 @@ export async function updateWaitlistLead(
   }
 }
 
+export async function updateCallNotes(
+  id: string,
+  type: 'waitlist' | 'contact',
+  callNotes: string | null
+): Promise<UpdateLeadFieldsResponse> {
+  try {
+    const supabase = await createServerSupabaseClient();
+
+    const { error } = await supabase
+      .schema(type)
+      .from("submissions")
+      .update({ call_notes: callNotes })
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error updating call notes:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Unexpected error updating call notes:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}
+
 export async function updateContactLead(
   id: string,
   data: {
