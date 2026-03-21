@@ -120,6 +120,7 @@ export function LeadsDetailSidebar({
   const [callNotesSaved, setCallNotesSaved] = useState(false)
   const [callNotesDirty, setCallNotesDirty] = useState(false)
   const [callNotesOpen, setCallNotesOpen] = useState(true)
+  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false)
 
   const callNotesEditor = useEditor({
     extensions: [StarterKit, Highlight, TextStyle],
@@ -280,6 +281,14 @@ export function LeadsDetailSidebar({
       setCallNotesDirty(false)
       setCallNotesSaved(true)
       setTimeout(() => setCallNotesSaved(false), 2000)
+    }
+  }
+
+  const handleClose = () => {
+    if (callNotesDirty) {
+      setShowUnsavedWarning(true)
+    } else {
+      onClose()
     }
   }
 
@@ -515,9 +524,58 @@ export function LeadsDetailSidebar({
         </div>
       </div>
     )}
+    {showUnsavedWarning && (
+      <div
+        className="fixed inset-0 flex items-center justify-center"
+        style={{ zIndex: 70, backgroundColor: 'rgba(0,0,0,0.4)' }}
+        onClick={() => setShowUnsavedWarning(false)}
+      >
+        <div
+          className="p-6 w-80"
+          style={{
+            backgroundColor: 'white',
+            borderRadius: '16px',
+            border: '1px solid #E5E7EB',
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h2 className="text-base font-semibold mb-2 text-gray-800">Unsaved call notes</h2>
+          <p className="text-sm mb-5 text-gray-500">
+            You have unsaved changes in your call notes. Close anyway and discard them?
+          </p>
+          <div className="flex gap-3 justify-end">
+            <button
+              onClick={() => setShowUnsavedWarning(false)}
+              className="px-3 py-1.5 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+              style={{
+                border: '1px solid #E5E7EB',
+                color: '#374151',
+                backgroundColor: 'transparent',
+                cursor: 'pointer',
+                borderRadius: '8px',
+              }}
+            >
+              Keep Editing
+            </button>
+            <button
+              onClick={() => { setShowUnsavedWarning(false); onClose() }}
+              className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-red-700"
+              style={{
+                backgroundColor: '#DC2626',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+              }}
+            >
+              Discard & Close
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     <DetailSidebar
       isOpen={true}
-      onClose={onClose}
+      onClose={handleClose}
       title={isWaitlist ? 'Waitlist Submission Details' : 'Contact Submission Details'}
       footer={footer}
     >
