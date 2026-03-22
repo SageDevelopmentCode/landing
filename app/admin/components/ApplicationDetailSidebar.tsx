@@ -41,6 +41,7 @@ type Application = {
   child_age: number | null
   child_grade: string | null
   program: string | null
+  drop_in_program: string | null
   address_street: string | null
   address_city: string | null
   address_state: string | null
@@ -365,6 +366,9 @@ export function ApplicationDetailSidebar({
           <SidebarField label="Age" value={application.child_age} />
           <SidebarField label="Grade" value={application.child_grade} />
           <SidebarField label="Program" value={formatProgram(application.program)} />
+          {application.program === 'homeschool_drop_in' && (
+            <SidebarField label="Drop-In Program" value={formatProgram(application.drop_in_program)} />
+          )}
         </SidebarSection>
 
         <SidebarSection title="Address">

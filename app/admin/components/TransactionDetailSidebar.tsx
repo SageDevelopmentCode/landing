@@ -74,6 +74,7 @@ type FullApplication = {
   child_age: number | null
   child_grade: string | null
   program: string | null
+  drop_in_program: string | null
   address_street: string | null
   address_city: string | null
   address_state: string | null

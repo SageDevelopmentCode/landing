@@ -40,7 +40,7 @@ export async function saveQuickApplyStep4(formData: {
   const { data: app } = await adminClient
     .schema('parent_app')
     .from('applications')
-    .select('g1_full_name, g1_email, g1_cell_phone, g2_full_name, g2_email, child_legal_name, child_age, child_grade, program, special_interests')
+    .select('g1_full_name, g1_email, g1_cell_phone, g2_full_name, g2_email, child_legal_name, child_age, child_grade, program, drop_in_program, special_interests')
     .eq('id', formData.applicationId)
     .single()
 
