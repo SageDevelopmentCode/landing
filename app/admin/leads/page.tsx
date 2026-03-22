@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { Table, TableRow, TableCell } from '../components/Table'
 import { InlineStatusEditor } from '../components/InlineStatusEditor'
-import { TagEditor } from '../components/TagEditor'
+import { TagEditor, PREDEFINED_TAGS, getTagColor } from '../components/TagEditor'
 import { LeadsDetailSidebar } from '../components/LeadsDetailSidebar'
 import { AddLeadSidebar } from '../components/AddLeadSidebar'
 import { colors, radius, shadows } from '../design-system'
@@ -66,6 +66,7 @@ export default function LeadsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isAddLeadOpen, setIsAddLeadOpen] = useState(false)
   const [statusFilter, setStatusFilter] = useState<LeadStatus | 'all'>('all')
+  const [tagFilters, setTagFilters] = useState<Set<string>>(new Set())
   const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(new Set(['start_date']))
   const [columnsDropdownOpen, setColumnsDropdownOpen] = useState(false)
   const columnsDropdownRef = useRef<HTMLDivElement>(null)
@@ -160,14 +161,30 @@ export default function LeadsPage() {
     setIsAddLeadOpen(false)
   }
 
-  const filteredLeads = statusFilter === 'all'
-    ? leads
-    : leads.filter((l) => l.status === statusFilter)
+  const filteredLeads = leads
+    .filter((l) => statusFilter === 'all' || l.status === statusFilter)
+    .filter((l) => tagFilters.size === 0 || [...tagFilters].every((t) => (l.tags ?? []).includes(t)))
 
   const statusCounts = leads.reduce((acc, lead) => {
     acc[lead.status] = (acc[lead.status] || 0) + 1
     return acc
   }, {} as Record<LeadStatus, number>)
+
+  const tagCounts = leads.reduce((acc, lead) => {
+    ;(lead.tags ?? []).forEach((tag) => {
+      acc[tag] = (acc[tag] || 0) + 1
+    })
+    return acc
+  }, {} as Record<string, number>)
+
+  const toggleTag = (tag: string) => {
+    setTagFilters((prev) => {
+      const next = new Set(prev)
+      if (next.has(tag)) next.delete(tag)
+      else next.add(tag)
+      return next
+    })
+  }
 
   if (isLoading) {
     return (
@@ -356,6 +373,45 @@ export default function LeadsPage() {
           )
         })}
       </div>
+
+      {PREDEFINED_TAGS.filter((t) => (tagCounts[t] || 0) > 0).length > 0 && (
+        <div>
+          <p className="text-xs font-medium mb-1.5" style={{ color: colors.textSecondary }}>
+            Filter by tag
+          </p>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+          {PREDEFINED_TAGS.filter((t) => (tagCounts[t] || 0) > 0).map((tag) => {
+            const isActive = tagFilters.has(tag)
+            const color = getTagColor(tag)
+            return (
+              <button
+                key={tag}
+                onClick={() => toggleTag(tag)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-all duration-150 hover:scale-105 active:scale-95"
+                style={{
+                  borderRadius: radius.full,
+                  backgroundColor: isActive ? color.bg : colors.warmLinen,
+                  color: isActive ? color.text : colors.textSecondary,
+                  border: `1px solid ${isActive ? color.border : colors.border}`,
+                  cursor: 'pointer',
+                }}
+              >
+                {tag}
+                <span
+                  className="inline-flex items-center justify-center w-4 h-4 text-xs font-semibold rounded-full"
+                  style={{
+                    backgroundColor: isActive ? 'rgba(0,0,0,0.08)' : colors.border,
+                    color: isActive ? color.text : colors.textSecondary,
+                  }}
+                >
+                  {tagCounts[tag]}
+                </span>
+              </button>
+            )
+          })}
+          </div>
+        </div>
+      )}
 
       {leads.length === 0 ? (
         <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm text-center">
