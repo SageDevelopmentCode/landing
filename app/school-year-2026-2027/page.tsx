@@ -7,6 +7,9 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import WaitlistDialog from "../components/WaitlistDialog";
 import FloatingSMSButton from "../components/FloatingSMSButton";
+import FullEnrollmentCard from "../components/FullEnrollmentCard";
+import AfterCareCard from "../components/AfterCareCard";
+import FieldDayFridayCard from "../components/FieldDayFridayCard";
 
 const details = [
   { label: "Start Date", value: "August 17, 2026" },
@@ -249,6 +252,35 @@ export default function SchoolYear20262027Page() {
                 </p>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Full Enrollment Tuition */}
+      <section className="pb-16 px-8 sm:px-12 lg:px-16">
+        <div className="max-w-7xl mx-auto w-full">
+          <motion.div
+            className="text-center mb-10"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+          >
+            <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6">
+              Tuition &amp; Pricing
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 font-heading">
+              School Year Pricing
+            </h2>
+          </motion.div>
+
+          <div className="mb-8">
+            <FullEnrollmentCard onCtaClick={() => setWaitlistOpen(true)} />
+          </div>
+
+          {/* After Care + Field Day Friday */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <AfterCareCard />
+            <FieldDayFridayCard />
           </div>
         </div>
       </section>

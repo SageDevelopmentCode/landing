@@ -7,6 +7,9 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import WaitlistDialog from "../components/WaitlistDialog";
 import FloatingSMSButton from "../components/FloatingSMSButton";
+import SummerProgramCard from "../components/SummerProgramCard";
+import AfterCareCard from "../components/AfterCareCard";
+import FieldDayFridayCard from "../components/FieldDayFridayCard";
 
 const details = [
   { label: "Dates", value: "May 26 – Aug 13, 2026" },
@@ -423,6 +426,35 @@ export default function Summer2026Page() {
               transition smoothly into the new school year.
             </p>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Summer Tuition */}
+      <section className="pb-16 px-8 sm:px-12 lg:px-16">
+        <div className="max-w-7xl mx-auto w-full">
+          <motion.div
+            className="text-center mb-10"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+          >
+            <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6">
+              Tuition &amp; Pricing
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 font-heading">
+              Summer Program Pricing
+            </h2>
+          </motion.div>
+
+          <div className="mb-8">
+            <SummerProgramCard onCtaClick={() => setWaitlistOpen(true)} />
+          </div>
+
+          {/* After Care + Field Day Friday */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <AfterCareCard />
+            <FieldDayFridayCard />
+          </div>
         </div>
       </section>
 
