@@ -274,7 +274,7 @@ export default function SchoolYear20262027Page() {
           </motion.div>
 
           <div className="mb-8">
-            <FullEnrollmentCard onCtaClick={() => setWaitlistOpen(true)} />
+            <FullEnrollmentCard onQuestionsClick={() => setWaitlistOpen(true)} />
           </div>
 
           {/* After Care + Field Day Friday */}

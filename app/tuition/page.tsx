@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -14,6 +15,7 @@ import FieldDayFridayCard from "../components/FieldDayFridayCard";
 export default function TuitionPage() {
   const [isWaitlistOpen, setIsWaitlistOpen] = useState(false);
   const [activePricingTab, setActivePricingTab] = useState<"summer" | "school-year">("summer");
+  const router = useRouter();
 
   return (
     <div className="min-h-screen bg-welcome-bg">
@@ -70,14 +72,14 @@ export default function TuitionPage() {
       {/* 2. Summer Program Section */}
       <section className="bg-white py-16 px-8 sm:px-12 lg:px-16">
         <div className="max-w-7xl mx-auto w-full">
-          <SummerProgramCard onCtaClick={() => setIsWaitlistOpen(true)} />
+          <SummerProgramCard onQuestionsClick={() => setIsWaitlistOpen(true)} />
         </div>
       </section>
 
       {/* 3. Full Enrollment Section */}
       <section className="bg-welcome-bg py-16 px-8 sm:px-12 lg:px-16">
         <div className="max-w-7xl mx-auto w-full">
-          <FullEnrollmentCard onCtaClick={() => setIsWaitlistOpen(true)} />
+          <FullEnrollmentCard onQuestionsClick={() => setIsWaitlistOpen(true)} />
         </div>
       </section>
 
@@ -280,6 +282,27 @@ export default function TuitionPage() {
               )}
             </motion.div>
           </div>
+
+          <motion.div
+            className="flex flex-col sm:flex-row gap-3 justify-center mt-10"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.4, ease: "easeOut" }}
+          >
+            <button
+              onClick={() => router.push("/apply")}
+              className="px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
+            >
+              Get Started
+            </button>
+            <button
+              onClick={() => router.push("/homeschool")}
+              className="px-8 py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:border-primary hover:text-primary transition-colors duration-200 font-body cursor-pointer"
+            >
+              Learn More
+            </button>
+          </motion.div>
         </div>
       </section>
 

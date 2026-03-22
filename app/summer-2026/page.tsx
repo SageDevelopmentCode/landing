@@ -447,7 +447,7 @@ export default function Summer2026Page() {
           </motion.div>
 
           <div className="mb-8">
-            <SummerProgramCard onCtaClick={() => setWaitlistOpen(true)} />
+            <SummerProgramCard onQuestionsClick={() => setWaitlistOpen(true)} />
           </div>
 
           {/* After Care + Field Day Friday */}

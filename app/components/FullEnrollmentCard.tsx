@@ -1,14 +1,16 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { Calendar } from "lucide-react";
 
 interface FullEnrollmentCardProps {
-  onCtaClick: () => void;
+  onQuestionsClick: () => void;
 }
 
-export default function FullEnrollmentCard({ onCtaClick }: FullEnrollmentCardProps) {
+export default function FullEnrollmentCard({ onQuestionsClick }: FullEnrollmentCardProps) {
+  const router = useRouter();
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -75,12 +77,20 @@ export default function FullEnrollmentCard({ onCtaClick }: FullEnrollmentCardPro
               First-time registration $500 · Re-registration $300 · Annual
               supply fee $300
             </p>
-            <button
-              onClick={onCtaClick}
-              className="px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 font-body cursor-pointer text-sm"
-            >
-              Interested in joining?
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => router.push("/apply")}
+                className="px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 font-body cursor-pointer text-sm"
+              >
+                Interested in joining?
+              </button>
+              <button
+                onClick={onQuestionsClick}
+                className="px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:border-primary hover:text-primary transition-colors duration-200 font-body cursor-pointer text-sm"
+              >
+                Have any questions?
+              </button>
+            </div>
             <p className="text-xs text-text-gray italic font-body mt-3">
               For drop-in options, please email us at{" "}
               <a
