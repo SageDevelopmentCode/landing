@@ -125,7 +125,8 @@ export default function VisionPage() {
         programInterest: formData.programInterest as
           | "summer-2026"
           | "school-year-2026"
-          | "both",
+          | "both"
+          | "homeschool_drop_in",
         specialInterests: formData.specialInterests || undefined,
       });
 
@@ -639,6 +640,7 @@ export default function VisionPage() {
                           School Year 2026-2027
                         </option>
                         <option value="both">Both Programs</option>
+                        <option value="homeschool_drop_in">Homeschool Drop-In</option>
                       </select>
                     </div>
 
