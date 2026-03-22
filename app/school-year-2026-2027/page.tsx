@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import WaitlistDialog from "../components/WaitlistDialog";
@@ -253,6 +254,64 @@ export default function SchoolYear20262027Page() {
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Homeschool Drop-In */}
+      <section className="pb-16 px-8 sm:px-12 lg:px-16">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+          >
+            <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4">
+              Homeschool Friendly
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 font-heading mb-4">
+              Homeschool <span className="text-primary">Drop-In</span> Available
+            </h2>
+            <p className="text-gray-500 font-body text-base mb-8 max-w-xl mx-auto">
+              Homeschool families can join the School Year program on a flexible
+              schedule — 1 to 5 days per week. Every child gets full access to
+              all enrichments, no matter how many days they attend.
+            </p>
+
+            <div className="flex flex-wrap justify-center gap-4 mb-8">
+              <div className="flex items-center gap-2 px-5 py-3 bg-primary/10 rounded-full">
+                <span>📅</span>
+                <span className="text-sm font-semibold text-primary font-body">
+                  1–5 Days/Week
+                </span>
+              </div>
+              <div className="flex items-center gap-2 px-5 py-3 bg-primary/10 rounded-full">
+                <span>🎯</span>
+                <span className="text-sm font-semibold text-primary font-body">
+                  Ability-Based Learning
+                </span>
+              </div>
+              <div className="flex items-center gap-2 px-5 py-3 bg-primary/10 rounded-full">
+                <span>🎨</span>
+                <span className="text-sm font-semibold text-primary font-body">
+                  All Enrichments Included
+                </span>
+              </div>
+              <div className="flex items-center gap-2 px-5 py-3 bg-primary/10 rounded-full">
+                <span>👥</span>
+                <span className="text-sm font-semibold text-primary font-body">
+                  ~10 Kids Per Class
+                </span>
+              </div>
+            </div>
+
+            <Link
+              href="/homeschool"
+              className="inline-block px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body"
+            >
+              Learn More About Drop-In
+            </Link>
+          </motion.div>
         </div>
       </section>
 

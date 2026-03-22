@@ -11,7 +11,7 @@ import WaitlistDialog from "../components/WaitlistDialog";
 import FloatingSMSButton from "../components/FloatingSMSButton";
 import MeetTheTeamSection from "../components/MeetTheTeamSection";
 
-type Tab = "summer" | "school-year";
+type Tab = "summer" | "school-year" | "homeschool";
 
 const weeks = [
   {
@@ -196,6 +196,66 @@ const weeks = [
   },
 ];
 
+const scheduleTiers = [
+  {
+    days: "1x/week",
+    title: "Light Touch",
+    description:
+      "Perfect for families who want a taste of microschool enrichment without disrupting your home rhythm.",
+  },
+  {
+    days: "2x/week",
+    title: "Balanced Rhythm",
+    description:
+      "Two structured days create a consistent routine while leaving plenty of flexibility for family-led learning.",
+  },
+  {
+    days: "3x/week",
+    title: "Regular Learner",
+    description:
+      "Three days offers deep engagement with academics, enrichments, and peer connection each week.",
+  },
+  {
+    days: "4x/week",
+    title: "Deep Immersion",
+    description:
+      "Near-full-week immersion with the freedom and control of homeschooling still fully intact.",
+  },
+  {
+    days: "5x/week",
+    title: "Full Experience",
+    description:
+      "The complete Sage Field experience — every day, every enrichment, including Friday Field Days.",
+  },
+];
+
+const homeschoolPillars = [
+  {
+    icon: "🎯",
+    title: "Ability-Based Learning",
+    description:
+      "We group by ability and interest, not grade. Each child progresses at their own pace.",
+  },
+  {
+    icon: "👥",
+    title: "Tiny Class Sizes",
+    description:
+      "With ~10 kids per class, every child gets real attention and a genuine community.",
+  },
+  {
+    icon: "🌱",
+    title: "Interest-Led Academics",
+    description:
+      "Curiosity drives the curriculum. Kids learn more when they care about the subject.",
+  },
+  {
+    icon: "🤝",
+    title: "Real Socialization",
+    description:
+      "Mixed-age groups and collaborative projects build authentic friendships and social skills.",
+  },
+];
+
 const tabContent = {
   summer: {
     badge: "Summer 2026",
@@ -241,6 +301,25 @@ const tabContent = {
       "/assets/After7.PNG",
       "/assets/After2.png",
       "/assets/After3.png",
+    ],
+  },
+  homeschool: {
+    badge: "Homeschool Drop-In",
+    title: "Homeschool Drop-In Program",
+    description: [
+      "Sage Field's Homeschool Drop-In Program is built for families who want flexible, enriching academic support without a long-term commitment. Choose 1 to 5 days per week — and adjust as your family's schedule evolves.",
+      "Unlike traditional schools that group children by grade, Sage Field uses ability-based and interest-led grouping. Every child gets individualized academic support in literacy and numeracy — exactly where they are, not where their birthday says they should be.",
+    ],
+    details: [
+      { label: "Schedule", value: "1–5 Days/Week" },
+      { label: "Ages", value: "4–11 Years" },
+      { label: "Fridays", value: "Field Days" },
+      { label: "Class Size", value: "~10 Kids" },
+    ],
+    images: [
+      "/assets/Homeschool.jpg",
+      "/assets/Homeschool2.jpg",
+      "/assets/Homeschool3.jpg",
     ],
   },
 };
@@ -296,7 +375,7 @@ export default function ApplyPage() {
               <div className="lg:col-span-7">
                 {/* Tab Switcher */}
                 <div className="flex gap-3 flex-wrap mb-6">
-                  {(["summer", "school-year"] as Tab[]).map((tab) => (
+                  {(["summer", "school-year", "homeschool"] as Tab[]).map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
@@ -306,7 +385,7 @@ export default function ApplyPage() {
                           : "border-2 border-gray-300 text-gray-600 bg-white hover:border-primary"
                       }`}
                     >
-                      {tab === "summer" ? "Summer 2026" : "School Year 2026"}
+                      {tab === "summer" ? "Summer 2026" : tab === "school-year" ? "School Year 2026" : "Homeschool Drop-In"}
                     </button>
                   ))}
                 </div>
@@ -787,6 +866,136 @@ export default function ApplyPage() {
                       exclude={["Nicole Elias", "Taylor Elias"]}
                     />
                   </div>
+                )}
+
+                {/* Homeschool-specific content */}
+                {activeTab === "homeschool" && (
+                  <motion.div
+                    className="mb-10"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6, ease: "easeOut" }}
+                  >
+                    {/* Flexible Scheduling */}
+                    <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6">
+                      Flexible Scheduling
+                    </span>
+                    <h2 className="text-2xl md:text-3xl font-bold text-black font-heading mb-3">
+                      Choose Your Schedule
+                    </h2>
+                    <p className="text-lg font-semibold text-primary font-heading mb-8">
+                      From one day a week to five — you decide
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-14">
+                      {scheduleTiers.map((tier, index) => (
+                        <motion.div
+                          key={index}
+                          className="bg-white p-5 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02] cursor-pointer group"
+                          initial={{ opacity: 0, y: 20 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true }}
+                          transition={{
+                            duration: 0.5,
+                            delay: 0.1 + index * 0.1,
+                            ease: "easeOut",
+                          }}
+                        >
+                          <div className="inline-block px-3 py-1 bg-primary/10 rounded-full mb-3">
+                            <span className="text-xs font-bold text-primary font-body">
+                              {tier.days}
+                            </span>
+                          </div>
+                          <h3 className="text-base font-semibold text-black mb-1 font-heading">
+                            {tier.title}
+                          </h3>
+                          <p className="text-sm text-text-gray font-body">
+                            {tier.description}
+                          </p>
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    {/* Friday Field Days */}
+                    <div className="text-center mb-14">
+                      <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4">
+                        Every Friday
+                      </span>
+                      <h2 className="text-3xl md:text-4xl font-bold text-gray-800 font-heading mb-4">
+                        <span className="text-primary">Field Day</span> Fridays
+                      </h2>
+                      <p className="text-gray-500 font-body text-base mb-8 max-w-xl mx-auto">
+                        Every Friday is a unique, themed adventure — included for all
+                        families who attend on Fridays. No two Fridays are ever the same.
+                      </p>
+                      <div className="flex flex-wrap justify-center gap-4">
+                        {[
+                          { emoji: "🌿", label: "Outdoor & Nature" },
+                          { emoji: "🎉", label: "Unique Every Friday" },
+                          { emoji: "🧒", label: "All Ages Welcome" },
+                          { emoji: "🎨", label: "Themed Adventures" },
+                        ].map((item) => (
+                          <div
+                            key={item.label}
+                            className="flex items-center gap-2 px-5 py-3 bg-primary/10 rounded-full"
+                          >
+                            <span>{item.emoji}</span>
+                            <span className="text-sm font-semibold text-primary font-body">
+                              {item.label}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Why Microschool Pillars */}
+                    <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6">
+                      Why Sage Field?
+                    </span>
+                    <h2 className="text-2xl md:text-3xl font-bold text-black font-heading mb-3">
+                      Why Microschool for Homeschoolers?
+                    </h2>
+                    <p className="text-lg font-semibold text-primary font-heading mb-6">
+                      The best of both worlds
+                    </p>
+                    <p className="text-base text-text-gray mb-8 leading-relaxed font-body">
+                      Sage Field is a microschool built specifically for flexibility.
+                      With tiny class sizes and a family-centered approach, you get the
+                      structure and socialization of school — while your family keeps
+                      full control of the learning journey.
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
+                      {homeschoolPillars.map((pillar, index) => (
+                        <motion.div
+                          key={index}
+                          className="bg-white p-5 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02] cursor-pointer group"
+                          initial={{ opacity: 0, y: 20 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true }}
+                          transition={{
+                            duration: 0.5,
+                            delay: 0.1 + index * 0.1,
+                            ease: "easeOut",
+                          }}
+                        >
+                          <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mb-3 group-hover:bg-primary/30 transition-colors duration-200">
+                            <span className="text-2xl">{pillar.icon}</span>
+                          </div>
+                          <h3 className="text-base font-semibold text-black mb-1 font-heading">
+                            {pillar.title}
+                          </h3>
+                          <p className="text-sm text-text-gray font-body">
+                            {pillar.description}
+                          </p>
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    {/* Meet the Team */}
+                    <div className="-mx-8 sm:-mx-12 lg:-mx-16">
+                      <MeetTheTeamSection featured={false} />
+                    </div>
+                  </motion.div>
                 )}
 
                 {/* Have any questions? */}
