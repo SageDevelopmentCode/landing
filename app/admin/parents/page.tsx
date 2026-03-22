@@ -38,7 +38,7 @@ async function fetchParentDetail(parentId: string) {
     client
       .schema('parent_app')
       .from('applications')
-      .select('id, child_legal_name, program, status, approved, approved_at, updated_at')
+      .select('id, child_legal_name, program, drop_in_program, status, approved, approved_at, updated_at')
       .eq('user_id', parentId),
   ])
 
@@ -54,6 +54,7 @@ async function fetchParentDetail(parentId: string) {
       id: string
       child_legal_name: string | null
       program: string | null
+      drop_in_program: string | null
       status: string
       approved: boolean
       approved_at: string | null

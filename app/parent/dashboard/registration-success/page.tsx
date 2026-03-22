@@ -31,6 +31,8 @@ export default async function RegistrationSuccessPage({ searchParams }: Props) {
             ? "Summer 2026 and the 2026–27 School Year"
             : program === "school_year_26_27"
             ? "the 2026–27 School Year"
+            : program === "homeschool_drop_in"
+            ? "Homeschool Drop-In"
             : "Summer 2026";
       }
     } catch (err) {

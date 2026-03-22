@@ -711,6 +711,7 @@ export async function buildApprovalEmail(opts: {
     if (program === "both") return "Summer 2026 and School Year 2026-2027";
     if (program === "summer_2026") return "Summer 2026";
     if (program === "school_year_26_27") return "School Year 2026-2027";
+    if (program === "homeschool_drop_in") return "Homeschool Drop-In";
     return program;
   }
 

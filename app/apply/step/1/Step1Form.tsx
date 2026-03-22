@@ -33,6 +33,7 @@ type InitialData = {
   dob_year?: string | null;
   child_age?: number | null;
   child_grade?: string | null;
+  drop_in_program?: string | null;
   address_street?: string | null;
   address_city?: string | null;
   address_state?: string | null;
@@ -53,8 +54,11 @@ export default function Step1Form({
 }) {
   const d = initialData;
   const [program, setProgram] = useState<
+    "summer_26" | "school_year_26_27" | "both" | "homeschool_drop_in" | ""
+  >((d?.program as "summer_26" | "school_year_26_27" | "both" | "homeschool_drop_in") ?? "");
+  const [dropInProgram, setDropInProgram] = useState<
     "summer_26" | "school_year_26_27" | "both" | ""
-  >((d?.program as "summer_26" | "school_year_26_27" | "both") ?? "");
+  >((d?.drop_in_program as "summer_26" | "school_year_26_27" | "both") ?? "");
   const [childLegalName, setChildLegalName] = useState(
     d?.child_legal_name ?? "",
   );
@@ -108,6 +112,7 @@ export default function Step1Form({
         previousSchools,
         previousSchoolsList,
         specialInterests,
+        dropInProgram,
         applicationId,
       });
       if (result?.error) setError(result.error);
@@ -221,6 +226,7 @@ export default function Step1Form({
                     label: "School Year 2026-2027",
                   },
                   { value: "both", label: "Both" },
+                  { value: "homeschool_drop_in", label: "Homeschool Drop-In" },
                 ].map((option) => (
                   <button
                     key={option.value}
@@ -243,6 +249,47 @@ export default function Step1Form({
                   </button>
                 ))}
               </div>
+              {program === "homeschool_drop_in" && (
+                <div className="mt-3">
+                  <label className="block text-sm font-semibold text-gray-700 font-body mb-2">
+                    Which program(s) are you interested in dropping in for?
+                  </label>
+                  <div className="flex flex-col gap-2">
+                    {[
+                      { value: "summer_26", label: "Summer 2026" },
+                      {
+                        value: "school_year_26_27",
+                        label: "School Year 2026-2027",
+                      },
+                      { value: "both", label: "Both" },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() =>
+                          setDropInProgram(
+                            option.value as typeof dropInProgram,
+                          )
+                        }
+                        className={`flex items-center gap-3 px-4 py-3 rounded-lg border text-sm font-body text-left transition-all cursor-pointer ${
+                          dropInProgram === option.value
+                            ? "border-primary bg-primary/5 text-gray-800"
+                            : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                        }`}
+                      >
+                        <span
+                          className={`w-4 h-4 rounded-full border-2 flex-shrink-0 transition-colors ${
+                            dropInProgram === option.value
+                              ? "border-primary bg-primary"
+                              : "border-gray-300"
+                          }`}
+                        />
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Child's Full Legal Name */}

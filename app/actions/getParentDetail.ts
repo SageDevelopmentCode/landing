@@ -22,7 +22,7 @@ export async function getParentDetail(parentId: string) {
       .select('id, child_legal_name, dob_month, dob_day, dob_year')
       .eq('parent_id', parentId),
     adminClient.schema('parent_app').from('applications')
-      .select('id, child_legal_name, program, status, approved, approved_at, updated_at')
+      .select('id, child_legal_name, program, drop_in_program, status, approved, approved_at, updated_at')
       .eq('user_id', parentId),
   ])
 

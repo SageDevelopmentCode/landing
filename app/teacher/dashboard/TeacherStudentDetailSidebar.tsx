@@ -8,6 +8,7 @@ import { type StudentRow } from './MyStudentsSection'
 const PROGRAM_LABELS: Record<string, string> = {
   summer_26: 'Summer 2026',
   school_year_26_27: 'School Year 2026–2027',
+  homeschool_drop_in: 'Homeschool Drop-In',
 }
 
 function SkeletonBlock({ className }: { className?: string }) {

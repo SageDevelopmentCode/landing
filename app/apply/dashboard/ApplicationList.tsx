@@ -12,6 +12,7 @@ const PROGRAM_LABELS: Record<string, string> = {
   summer_26: "Summer 2026",
   school_year_26_27: "School Year 2026-2027",
   both: "Both",
+  homeschool_drop_in: "Homeschool Drop-In",
 };
 
 function formatProgram(value: string | null | boolean | undefined) {
@@ -259,8 +260,30 @@ function SlideOver({
                       School Year 2026-2027
                     </option>
                     <option value="both">Both</option>
+                    <option value="homeschool_drop_in">Homeschool Drop-In</option>
                   </select>
                 </div>
+                {String(draft["program"]) === "homeschool_drop_in" && (
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-xs text-gray-400 font-body">
+                      Drop-In Program
+                    </label>
+                    <select
+                      value={draft["drop_in_program"] == null ? "" : String(draft["drop_in_program"])}
+                      onChange={(e) => handleChange("drop_in_program", e.target.value)}
+                      className="w-full text-sm text-gray-800 font-body border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#2C5F2E]/30 focus:border-[#2C5F2E] bg-gray-50"
+                    >
+                      <option value="" disabled>
+                        Select drop-in program
+                      </option>
+                      <option value="summer_26">Summer 2026</option>
+                      <option value="school_year_26_27">
+                        School Year 2026-2027
+                      </option>
+                      <option value="both">Both</option>
+                    </select>
+                  </div>
+                )}
                 {ef("Legal Name", "child_legal_name")}
                 {ef("Preferred Name", "preferred_name")}
                 {ef("Birth Month", "dob_month")}
@@ -335,6 +358,7 @@ function SlideOver({
             <>
               <Section title="Child's Details">
                 {field("Program", formatProgram(app.program))}
+                {app.program === "homeschool_drop_in" && field("Drop-In Program", formatProgram(app.drop_in_program))}
                 {field("Legal Name", app.child_legal_name)}
                 {field("Preferred Name", app.preferred_name)}
                 {field("Date of Birth", app.child_dob)}

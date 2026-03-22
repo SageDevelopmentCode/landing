@@ -15,9 +15,10 @@ export type StudentRow = {
 const PROGRAM_LABELS: Record<string, string> = {
   summer_26: 'Summer 2026',
   school_year_26_27: 'School Year 2026–2027',
+  homeschool_drop_in: 'Homeschool Drop-In',
 }
 
-const PROGRAM_ORDER = ['summer_26', 'school_year_26_27']
+const PROGRAM_ORDER = ['summer_26', 'school_year_26_27', 'homeschool_drop_in']
 
 export default function MyStudentsSection({ students }: { students: StudentRow[] }) {
   const programs = PROGRAM_ORDER.filter((p) => students.some((s) => s.program === p))

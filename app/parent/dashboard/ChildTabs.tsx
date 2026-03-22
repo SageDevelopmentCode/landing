@@ -225,19 +225,26 @@ function CombinedRegistrationFeeModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function getBaseFee(program: string | null): number {
-    if (program === "both") return 575;
-    if (program === "school_year_26_27") return 500;
+  function getBaseFee(program: string | null, dropInProgram?: string | null): number {
+    const billing = program === "homeschool_drop_in" ? (dropInProgram ?? "summer_26") : program;
+    if (billing === "both") return 575;
+    if (billing === "school_year_26_27") return 500;
     return 75;
   }
 
-  function getProgramLineLabel(program: string | null): string {
+  function getProgramLineLabel(program: string | null, dropInProgram?: string | null): string {
+    if (program === "homeschool_drop_in") {
+      const billing = dropInProgram ?? "summer_26";
+      if (billing === "both") return "Homeschool Drop-In — Summer 2026 + School Year 2026–27";
+      if (billing === "school_year_26_27") return "Homeschool Drop-In — School Year 2026–27";
+      return "Homeschool Drop-In — Summer 2026";
+    }
     if (program === "both") return "Summer 2026 + School Year 2026–27";
     if (program === "school_year_26_27") return "School Year 2026–27";
     return "Summer 2026";
   }
 
-  const combinedTotal = apps.reduce((sum, a) => sum + getBaseFee(a.program), 0);
+  const combinedTotal = apps.reduce((sum, a) => sum + getBaseFee(a.program, (a as Record<string, unknown>).drop_in_program as string | null), 0);
   const cardFee = Math.round((combinedTotal * 0.029 + 0.3) * 100) / 100;
   const achFee = Math.min(Math.round(combinedTotal * 0.008 * 100) / 100, 5.0);
 
@@ -259,6 +266,7 @@ function CombinedRegistrationFeeModal({
               studentId: a.student_id ?? "",
               applicationId: a.id,
               program: a.program ?? "summer_26",
+              dropInProgram: (a as Record<string, unknown>).drop_in_program as string | undefined,
               childName: a.preferred_name ?? a.child_legal_name ?? "Student",
             })),
           }),
@@ -304,8 +312,8 @@ function CombinedRegistrationFeeModal({
         <div className="bg-gray-50 rounded-xl p-4 mb-4 space-y-2">
           {apps.map((a) => {
             const name = a.preferred_name ?? a.child_legal_name ?? "Student";
-            const fee = getBaseFee(a.program);
-            const programLine = getProgramLineLabel(a.program);
+            const fee = getBaseFee(a.program, (a as Record<string, unknown>).drop_in_program as string | null);
+            const programLine = getProgramLineLabel(a.program, (a as Record<string, unknown>).drop_in_program as string | null);
             return (
               <div
                 key={a.id}
@@ -444,9 +452,11 @@ function RegistrationFeeModal({
   const [error, setError] = useState<string | null>(null);
 
   const childName = app.preferred_name ?? app.child_legal_name ?? "Student";
-  const isSummer = app.program === "summer_26";
-  const isSchool = app.program === "school_year_26_27";
-  const isBoth = app.program === "both";
+  const dropIn = app.drop_in_program as string | null;
+  const billingProgram = app.program === "homeschool_drop_in" ? (dropIn ?? "summer_26") : app.program;
+  const isSummer = billingProgram === "summer_26";
+  const isSchool = billingProgram === "school_year_26_27";
+  const isBoth = billingProgram === "both";
   const totalBase = isBoth ? 575 : isSummer ? 75 : 500;
   const cardFee = Math.round((totalBase * 0.029 + 0.3) * 100) / 100;
   const achFee = Math.min(Math.round(totalBase * 0.008 * 100) / 100, 5.0);
@@ -466,6 +476,7 @@ function RegistrationFeeModal({
           coverFees,
           paymentMethod,
           program: app.program,
+          dropInProgram: dropIn,
         }),
       });
       const data = await res.json();
@@ -633,6 +644,7 @@ function getProgramLabel(program: string | null): string {
   if (program === "summer_26") return "Summer '26";
   if (program === "school_year_26_27") return "School Yr '26–'27";
   if (program === "both") return "Summer + School Yr '26–'27";
+  if (program === "homeschool_drop_in") return "Homeschool Drop-In";
   return "the program";
 }
 
@@ -640,6 +652,7 @@ function getProgramLabelWithEmoji(program: string | null): string | null {
   if (program === "summer_26") return "Summer '26";
   if (program === "school_year_26_27") return "School Yr '26–'27";
   if (program === "both") return "Summer + School Yr '26–'27";
+  if (program === "homeschool_drop_in") return "Homeschool Drop-In";
   return null;
 }
 
@@ -1352,7 +1365,9 @@ export default function ChildTabs({
                   ? "School Year 2026–27"
                   : app.program === "both"
                     ? "Summer 2026 + School Year 2026–27"
-                    : null;
+                    : app.program === "homeschool_drop_in"
+                      ? "Homeschool Drop-In"
+                      : null;
 
             function getContinueStep(): number {
               if (!app.g1_full_name) return 2;

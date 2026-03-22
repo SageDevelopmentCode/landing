@@ -84,6 +84,7 @@ export async function POST(request: NextRequest) {
           summer_26: "Summer 2026",
           school_year_26_27: "School Year 2026-27",
           both: "Summer 2026 & School Year 2026-27",
+          homeschool_drop_in: "Homeschool Drop-In",
         };
 
         const childSummary = (allApplications ?? [])
@@ -184,6 +185,7 @@ export async function POST(request: NextRequest) {
           summer_26: "Summer 2026",
           school_year_26_27: "School Year 2026-27",
           both: "Summer 2026 & School Year 2026-27",
+          homeschool_drop_in: "Homeschool Drop-In",
         };
         const programLabel =
           programMap[session.metadata?.program ?? ""] ||

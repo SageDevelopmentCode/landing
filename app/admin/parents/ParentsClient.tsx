@@ -32,6 +32,7 @@ type ParentDetail = {
     id: string
     child_legal_name: string | null
     program: string | null
+    drop_in_program: string | null
     status: string
     approved: boolean
     approved_at: string | null

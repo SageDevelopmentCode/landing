@@ -21,6 +21,7 @@ export async function saveApplicationStep1(formData: {
   previousSchools: string
   previousSchoolsList: string
   specialInterests: string
+  dropInProgram: string
   applicationId?: string | null
 }) {
   const supabase = await createServerSupabaseClient()
@@ -48,6 +49,7 @@ export async function saveApplicationStep1(formData: {
     previous_schools: formData.previousSchools || null,
     previous_schools_list: formData.previousSchoolsList || null,
     special_interests: formData.specialInterests || null,
+    drop_in_program: formData.program === 'homeschool_drop_in' ? (formData.dropInProgram || null) : null,
     updated_at: new Date().toISOString(),
   }
 

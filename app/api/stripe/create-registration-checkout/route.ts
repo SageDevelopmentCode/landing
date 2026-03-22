@@ -10,8 +10,11 @@ const schema = z.object({
   coverFees: z.boolean().optional().default(false),
   paymentMethod: z.enum(["card", "ach"]).optional().default("card"),
   program: z
-    .enum(["summer_26", "school_year_26_27", "both"])
+    .enum(["summer_26", "school_year_26_27", "both", "homeschool_drop_in"])
     .default("summer_26"),
+  dropInProgram: z
+    .enum(["summer_26", "school_year_26_27", "both"])
+    .optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -27,21 +30,24 @@ export async function POST(request: NextRequest) {
       coverFees,
       paymentMethod,
       program,
+      dropInProgram,
     } = validated;
+
+    const billingProgram = program === "homeschool_drop_in" ? (dropInProgram ?? "summer_26") : program;
 
     const summerCents = 7500;
     const schoolCents = 50000;
     const totalBaseCents =
-      program === "both"
+      billingProgram === "both"
         ? summerCents + schoolCents
-        : program === "school_year_26_27"
+        : billingProgram === "school_year_26_27"
           ? schoolCents
           : summerCents;
 
     const description =
-      program === "both"
+      billingProgram === "both"
         ? "Summer 2026 + School Year 2026–27 Registration Fees"
-        : program === "school_year_26_27"
+        : billingProgram === "school_year_26_27"
           ? "School Year 2026–27 Registration Fee"
           : "Summer 2026 Registration Fee";
 
@@ -49,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     let lineItems;
 
-    if (program === "both") {
+    if (billingProgram === "both") {
       const feeCents = coverFees
         ? paymentMethod === "ach"
           ? Math.min(Math.round(totalBaseCents * 0.008), 500)
@@ -100,11 +106,11 @@ export async function POST(request: NextRequest) {
       ];
     } else {
       const productName =
-        program === "school_year_26_27"
+        billingProgram === "school_year_26_27"
           ? "School Year 2026–27 Registration Fee"
           : "Summer 2026 Registration Fee";
       const productDescription =
-        program === "school_year_26_27"
+        billingProgram === "school_year_26_27"
           ? "Sage Field Private School — 2026–27 school year registration"
           : "Sage Field Private School — Summer 2026 program registration";
 

@@ -403,6 +403,7 @@ export type Database = {
           previous_schools: string | null
           previous_schools_list: string | null
           program: string | null
+          drop_in_program: string | null
           registration_fee_paid: boolean | null
           regulation_strategies: string | null
           special_interests: string | null
@@ -479,6 +480,7 @@ export type Database = {
           previous_schools?: string | null
           previous_schools_list?: string | null
           program?: string | null
+          drop_in_program?: string | null
           registration_fee_paid?: boolean | null
           regulation_strategies?: string | null
           special_interests?: string | null
@@ -555,6 +557,7 @@ export type Database = {
           previous_schools?: string | null
           previous_schools_list?: string | null
           program?: string | null
+          drop_in_program?: string | null
           registration_fee_paid?: boolean | null
           regulation_strategies?: string | null
           special_interests?: string | null

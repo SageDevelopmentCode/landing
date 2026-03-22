@@ -66,6 +66,7 @@ function StatusBadge({ status }: { status: string }) {
 function formatProgram(program: string): string {
   if (program === "summer_26") return "Summer 2026";
   if (program === "school_year_26_27") return "School Year 2026\u20132027";
+  if (program === "homeschool_drop_in") return "Homeschool Drop-In";
   return program;
 }
 

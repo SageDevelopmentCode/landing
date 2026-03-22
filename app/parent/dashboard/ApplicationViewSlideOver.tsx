@@ -9,6 +9,7 @@ const PROGRAM_LABELS: Record<string, string> = {
   summer_26: "Summer 2026",
   school_year_26_27: "School Year 2026-2027",
   both: "Both",
+  homeschool_drop_in: "Homeschool Drop-In",
 };
 
 function formatProgram(value: string | null | undefined) {
@@ -96,6 +97,7 @@ export default function ApplicationViewSlideOver({
         <div className="flex-1 overflow-y-auto px-6 py-6">
           <Section title="Child's Details">
             {field("Program", formatProgram(app.program))}
+            {app.program === "homeschool_drop_in" && field("Drop-In Program", formatProgram(app.drop_in_program))}
             {field("Legal Name", app.child_legal_name)}
             {field("Preferred Name", app.preferred_name)}
             {field("Date of Birth", app.dob_month && app.dob_day && app.dob_year ? `${app.dob_month}/${app.dob_day}/${app.dob_year}` : null)}

@@ -15,6 +15,7 @@ type TeacherOption = { id: string; full_name: string | null; role: string | null
 const PROGRAM_LABELS: Record<string, string> = {
   summer_26: 'Summer 2026',
   school_year_26_27: 'School Year 2026–2027',
+  homeschool_drop_in: 'Homeschool Drop-In',
 }
 const CLASSROOM_LABELS: Record<string, string> = {
   prek_1st: 'Pre-K – 1st',
@@ -302,6 +303,7 @@ export function TeacherAssignSidebar({ student, onClose, onAssigned }: TeacherAs
                   {[
                     { value: 'summer_26', label: 'Summer 2026' },
                     { value: 'school_year_26_27', label: 'School Year 2026–2027' },
+                    { value: 'homeschool_drop_in', label: 'Homeschool Drop-In' },
                   ].map(opt => {
                     const selected = selectedProgram === opt.value
                     const isTaken = takenPrograms.has(opt.value)

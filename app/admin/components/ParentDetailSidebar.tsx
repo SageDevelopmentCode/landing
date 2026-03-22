@@ -11,6 +11,7 @@ const PROGRAM_LABELS: Record<string, string> = {
   summer_26: 'Summer 2026',
   school_year_26_27: 'School Year 2026-2027',
   both: 'Both',
+  homeschool_drop_in: 'Homeschool Drop-In',
 }
 
 function getInitials(name: string | null): string {
@@ -51,6 +52,7 @@ type ParentDetail = {
     id: string
     child_legal_name: string | null
     program: string | null
+    drop_in_program: string | null
     status: string
     approved: boolean
     approved_at: string | null
@@ -281,6 +283,9 @@ export function ParentDetailSidebar({ parent, detail, loading, onClose, onParent
                             {app.child_legal_name ?? '—'}
                           </p>
                           <p className="text-xs text-gray-500 font-body">{formatProgram(app.program)}</p>
+                          {app.program === 'homeschool_drop_in' && app.drop_in_program && (
+                            <p className="text-xs text-gray-500 font-body">Drop-In: {formatProgram(app.drop_in_program)}</p>
+                          )}
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200">
                               {app.status}

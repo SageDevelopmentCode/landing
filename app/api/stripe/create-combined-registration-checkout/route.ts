@@ -11,7 +11,8 @@ const schema = z.object({
     z.object({
       studentId: z.string(),
       applicationId: z.string(),
-      program: z.enum(["summer_26", "school_year_26_27", "both"]),
+      program: z.enum(["summer_26", "school_year_26_27", "both", "homeschool_drop_in"]),
+      dropInProgram: z.enum(["summer_26", "school_year_26_27", "both"]).optional(),
       childName: z.string(),
     }),
   ),
@@ -20,9 +21,10 @@ const schema = z.object({
 const summerCents = 7500;
 const schoolCents = 50000;
 
-function programCents(program: string): number {
-  if (program === "both") return summerCents + schoolCents;
-  if (program === "school_year_26_27") return schoolCents;
+function programCents(program: string, dropInProgram?: string): number {
+  const billing = program === "homeschool_drop_in" ? (dropInProgram ?? "summer_26") : program;
+  if (billing === "both") return summerCents + schoolCents;
+  if (billing === "school_year_26_27") return schoolCents;
   return summerCents;
 }
 
@@ -34,7 +36,7 @@ export async function POST(request: NextRequest) {
     const { parentId, parentEmail, coverFees, paymentMethod, children } = validated;
 
     const totalBaseCents = children.reduce(
-      (sum, c) => sum + programCents(c.program),
+      (sum, c) => sum + programCents(c.program, c.dropInProgram),
       0,
     );
 
@@ -52,7 +54,8 @@ export async function POST(request: NextRequest) {
     }[] = [];
 
     for (const child of children) {
-      if (child.program === "both") {
+      const billing = child.program === "homeschool_drop_in" ? (child.dropInProgram ?? "summer_26") : child.program;
+      if (billing === "both") {
         lineItems.push({
           quantity: 1,
           price_data: {
@@ -79,18 +82,18 @@ export async function POST(request: NextRequest) {
         });
       } else {
         const name =
-          child.program === "school_year_26_27"
+          billing === "school_year_26_27"
             ? `${child.childName} — School Year 2026–27 Registration Fee`
             : `${child.childName} — Summer 2026 Registration Fee`;
         const description =
-          child.program === "school_year_26_27"
+          billing === "school_year_26_27"
             ? "Sage Field Private School — 2026–27 school year registration"
             : "Sage Field Private School — Summer 2026 program registration";
         lineItems.push({
           quantity: 1,
           price_data: {
             currency: "usd",
-            unit_amount: programCents(child.program),
+            unit_amount: programCents(child.program, child.dropInProgram),
             product_data: { name, description },
           },
         });

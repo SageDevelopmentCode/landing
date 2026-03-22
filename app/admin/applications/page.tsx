@@ -24,12 +24,14 @@ const KANBAN_COLUMNS = [
   { key: 'enrolled',          label: 'Enrolled',              accent: '#22c55e', filter: (apps: Application[]) => apps.filter(a => a.status === 'enrolled') },
   { key: 'summer_26',         label: 'Summer 2026',           accent: '#f59e0b', filter: (apps: Application[]) => apps.filter(a => a.status === 'enrolled' && (a.program === 'summer_26' || a.program === 'both')) },
   { key: 'school_year_26_27', label: 'School Year 2026–2027', accent: '#6366f1', filter: (apps: Application[]) => apps.filter(a => a.status === 'enrolled' && (a.program === 'school_year_26_27' || a.program === 'both')) },
+  { key: 'homeschool_drop_in', label: 'Homeschool Drop-In', accent: '#10b981', filter: (apps: Application[]) => apps.filter(a => a.status === 'enrolled' && a.program === 'homeschool_drop_in') },
 ]
 
 const PROGRAM_LABELS: Record<string, string> = {
   summer_26: 'Summer 2026',
   school_year_26_27: 'School Year 2026-2027',
   both: 'Both',
+  homeschool_drop_in: 'Homeschool Drop-In',
 }
 
 function formatProgram(value: string | null): string {

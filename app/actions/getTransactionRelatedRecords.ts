@@ -20,7 +20,7 @@ export async function getTransactionRelatedRecords({
       : Promise.resolve({ data: null }),
     applicationId
       ? client.schema('parent_app').from('applications')
-          .select('id, child_legal_name, g1_full_name, g1_email, program, status')
+          .select('id, child_legal_name, g1_full_name, g1_email, program, drop_in_program, status')
           .eq('id', applicationId).single()
       : Promise.resolve({ data: null }),
     parentId

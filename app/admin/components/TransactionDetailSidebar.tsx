@@ -52,6 +52,7 @@ type ApplicationRecord = {
   g1_full_name: string | null
   g1_email: string | null
   program: string | null
+  drop_in_program: string | null
   status: string
 }
 
@@ -157,6 +158,7 @@ type ParentDetail = {
     id: string
     child_legal_name: string | null
     program: string | null
+    drop_in_program: string | null
     status: string
     approved: boolean
     approved_at: string | null
@@ -196,6 +198,7 @@ const PROGRAM_LABELS: Record<string, string> = {
   summer_26: 'Summer 2026',
   school_year_26_27: 'School Year 2026–2027',
   both: 'Both',
+  homeschool_drop_in: 'Homeschool Drop-In',
 }
 
 function formatProgram(value: string | null): string {
@@ -568,7 +571,7 @@ export function TransactionDetailSidebar({ transaction, onClose, onDeleted, onEx
                 >
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-800">{applicationRecord.child_legal_name ?? '—'}</p>
-                    <p className="text-xs text-gray-500">{formatProgram(applicationRecord.program)} · {applicationRecord.status}</p>
+                    <p className="text-xs text-gray-500">{formatProgram(applicationRecord.program)}{applicationRecord.program === 'homeschool_drop_in' && applicationRecord.drop_in_program ? ` · Drop-In: ${formatProgram(applicationRecord.drop_in_program)}` : ''} · {applicationRecord.status}</p>
                   </div>
                   <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: colors.infoText }} />
                 </button>
