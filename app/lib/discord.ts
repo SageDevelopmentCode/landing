@@ -85,6 +85,7 @@ export function createWaitlistEmbed(data: {
     "summer-2026": "Summer 2026",
     "school-year-2026": "School Year 2026-2027",
     both: "Both Programs",
+    homeschool_drop_in: "Homeschool Drop-in",
   };
 
   const fields: DiscordEmbedField[] = [

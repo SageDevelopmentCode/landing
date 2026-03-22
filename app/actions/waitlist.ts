@@ -11,6 +11,10 @@ import {
   createTrelloCard,
   createWaitlistCard,
 } from "@/app/lib/trello";
+import {
+  buildWaitlistConfirmationEmail,
+  sendZohoEmail,
+} from "@/app/lib/zoho";
 
 // Validation schema for waitlist form
 const waitlistSchema = z.object({
@@ -32,7 +36,7 @@ const waitlistSchema = z.object({
     .int()
     .min(1, "Age must be at least 1")
     .max(18, "Age must be 18 or less"),
-  programInterest: z.enum(["summer-2026", "school-year-2026", "both"], {
+  programInterest: z.enum(["summer-2026", "school-year-2026", "both", "homeschool_drop_in"], {
     message: "Please select a program",
   }),
   specialInterests: z
@@ -96,6 +100,17 @@ export async function submitWaitlist(
         message: "Failed to submit to waitlist. Please try again.",
         error: error.message,
       };
+    }
+
+    // Send confirmation email to parent (non-blocking)
+    try {
+      const { subject, content } = await buildWaitlistConfirmationEmail({
+        parentName: validated.parentName,
+        programInterest: validated.programInterest,
+      });
+      await sendZohoEmail({ toAddress: validated.email, subject, content });
+    } catch (emailError) {
+      console.error("Failed to send waitlist confirmation email:", emailError);
     }
 
     // Send Discord notification (non-blocking)

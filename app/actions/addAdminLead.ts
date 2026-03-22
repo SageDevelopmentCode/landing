@@ -20,7 +20,7 @@ const addAdminLeadSchema = z.object({
     .int()
     .min(1, "Age must be at least 1")
     .max(18, "Age must be 18 or less"),
-  programInterest: z.enum(["summer-2026", "school-year-2026", "both"], {
+  programInterest: z.enum(["summer-2026", "school-year-2026", "both", "homeschool_drop_in"], {
     message: "Please select a program",
   }),
   specialInterests: z
