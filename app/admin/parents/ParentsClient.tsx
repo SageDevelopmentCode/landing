@@ -6,6 +6,7 @@ import { ParentDetailSidebar } from '../components/ParentDetailSidebar'
 
 type Parent = {
   id: string
+  email: string | null
   full_name: string | null
   g1_cell_phone: string | null
   g1_work_phone: string | null
