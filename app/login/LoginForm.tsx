@@ -5,6 +5,8 @@ import {
   signInWithEmail,
   signInWithGoogle,
   sendPasswordResetEmail,
+  sendEmailOtp,
+  verifyEmailOtp,
 } from "@/app/actions/auth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -23,11 +25,56 @@ const slides = [
 
 export default function LoginForm() {
   const router = useRouter();
-  const [view, setView] = useState<"login" | "forgot">("login");
+  const [view, setView] = useState<
+    "otp-email" | "otp-code" | "login" | "forgot"
+  >("otp-email");
+  const [otpEmail, setOtpEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [otpDigits, setOtpDigits] = useState<string[]>(Array(6).fill(""));
+  const otpRefs = useRef<(HTMLInputElement | null)[]>(Array(6).fill(null));
+  const otpFormRef = useRef<HTMLFormElement | null>(null);
+
+  function handleOtpChange(index: number, value: string) {
+    if (value && !/^\d$/.test(value)) return;
+    const next = [...otpDigits];
+    next[index] = value;
+    setOtpDigits(next);
+    if (value && index < 5) {
+      otpRefs.current[index + 1]?.focus();
+    }
+  }
+
+  function handleOtpKeyDown(
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ) {
+    if (e.key === "Backspace" && !otpDigits[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus();
+    }
+  }
+
+  function handleOtpPaste(e: React.ClipboardEvent<HTMLInputElement>) {
+    e.preventDefault();
+    const pasted = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, 6);
+    if (!pasted) return;
+    const next = [...otpDigits];
+    for (let i = 0; i < 6; i++) {
+      next[i] = pasted[i] || "";
+    }
+    setOtpDigits(next);
+    if (pasted.length === 6) {
+      setTimeout(() => otpFormRef.current?.requestSubmit(), 0);
+    } else {
+      const focusIndex = Math.min(pasted.length, 5);
+      otpRefs.current[focusIndex]?.focus();
+    }
+  }
 
   const [activeSlide, setActiveSlide] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -97,7 +144,44 @@ export default function LoginForm() {
     }
   }
 
-  if (loading) {
+  async function handleSendOtp(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setMessage(null);
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const result = await sendEmailOtp(formData);
+    if (result?.error) {
+      setError(result.error);
+      setLoading(false);
+    } else {
+      setOtpEmail(email);
+      setView("otp-code");
+      setLoading(false);
+    }
+  }
+
+  async function handleVerifyOtp(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (otpDigits.some((d) => !d)) {
+      setError("Please enter all 6 digits");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    setMessage(null);
+    const formData = new FormData(e.currentTarget);
+    const result = await verifyEmailOtp(formData);
+    if (result?.error) {
+      setError(result.error);
+      setLoading(false);
+    } else if (result?.redirectTo) {
+      router.push(result.redirectTo);
+    }
+  }
+
+  if (loading && view !== "otp-email" && view !== "otp-code") {
     return (
       <div className="min-h-screen bg-welcome-bg flex items-center justify-center">
         <img
@@ -133,7 +217,11 @@ export default function LoginForm() {
           </div>
 
           <h1 className="text-3xl font-bold font-heading text-gray-800 mb-8">
-            {view === "login" ? "Welcome back" : "Reset your password"}
+            {view === "otp-email" || view === "otp-code"
+              ? "Welcome back"
+              : view === "login"
+                ? "Sign in with password"
+                : "Reset your password"}
           </h1>
 
           {/* Error / Message */}
@@ -167,8 +255,116 @@ export default function LoginForm() {
             </motion.div>
           )}
 
-          {view === "login" ? (
-            /* ── Login form ── */
+          {view === "otp-email" ? (
+            /* ── OTP: enter email ── */
+            <form onSubmit={handleSendOtp} className="flex flex-col gap-4">
+              <p className="text-sm font-body text-gray-500 -mt-4">
+                Enter your email and we&apos;ll send a 6-digit code — no
+                password needed.
+              </p>
+              <div>
+                <label
+                  htmlFor="otp-email"
+                  className="block text-sm font-semibold text-gray-700 font-body mb-1.5"
+                >
+                  Email address
+                </label>
+                <input
+                  id="otp-email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  placeholder="you@example.com"
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex justify-center items-center gap-2 py-4 px-4 bg-primary text-white font-semibold font-body rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg cursor-pointer mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {loading && <Spinner />}
+                {loading ? "Sending..." : "Send code"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setView("login");
+                  setError(null);
+                  setMessage(null);
+                }}
+                className="cursor-pointer text-xs font-body text-gray-400 hover:text-gray-600 transition-colors text-center"
+              >
+                Sign in with password instead
+              </button>
+            </form>
+          ) : view === "otp-code" ? (
+            /* ── OTP: enter code ── */
+            <form
+              ref={otpFormRef}
+              onSubmit={handleVerifyOtp}
+              className="flex flex-col gap-4"
+            >
+              <p className="text-sm font-body text-gray-500 -mt-4">
+                We sent a 6-digit code to{" "}
+                <span className="font-semibold text-gray-700">{otpEmail}</span>.
+                Check your inbox and enter it below.
+              </p>
+              <input type="hidden" name="email" value={otpEmail} />
+              <input type="hidden" name="token" value={otpDigits.join("")} />
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 font-body mb-3">
+                  Verification code
+                </label>
+                <div className="flex justify-center gap-2.5">
+                  {otpDigits.map((digit, i) => (
+                    <input
+                      key={i}
+                      ref={(el) => {
+                        otpRefs.current[i] = el;
+                      }}
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete={i === 0 ? "one-time-code" : "off"}
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleOtpChange(i, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                      onPaste={i === 0 ? handleOtpPaste : undefined}
+                      className="w-11 h-13 text-center text-lg font-semibold font-body rounded-lg border border-gray-200 text-gray-800 outline-none focus:border-primary transition-colors"
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex justify-center items-center gap-2 py-4 px-4 bg-primary text-white font-semibold font-body rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg cursor-pointer mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {loading && <Spinner />}
+                {loading ? "Verifying..." : "Verify code"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setView("otp-email");
+                  setOtpDigits(Array(6).fill(""));
+                  setError(null);
+                  setMessage(null);
+                }}
+                className="inline-flex items-center gap-1.5 text-sm font-medium font-body text-primary hover:text-primary-hover transition-colors justify-center"
+              >
+                <ArrowLeft size={14} />
+                Use a different email
+              </button>
+            </form>
+          ) : view === "login" ? (
+            /* ── Password login form ── */
             <form
               onSubmit={handleEmailPasswordSubmit}
               className="flex flex-col gap-4"
@@ -237,7 +433,19 @@ export default function LoginForm() {
                 className="w-full flex justify-center items-center gap-2 py-4 px-4 bg-primary text-white font-semibold font-body rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg cursor-pointer mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {loading && <Spinner />}
-                {loading ? "Signing in..." : "Sign in with Email"}
+                {loading ? "Signing in..." : "Sign in"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setView("otp-email");
+                  setError(null);
+                  setMessage(null);
+                }}
+                className="cursor-pointer text-xs font-body text-gray-400 hover:text-gray-600 transition-colors text-center"
+              >
+                Sign in without password
               </button>
             </form>
           ) : (
@@ -337,7 +545,7 @@ export default function LoginForm() {
           </button> */}
 
           {/* Back to home */}
-          {view === "login" && (
+          {(view === "otp-email" || view === "login") && (
             <div className="text-center mt-8">
               <Link
                 href="/"

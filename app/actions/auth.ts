@@ -78,6 +78,46 @@ export async function signInWithMagicLink(formData: FormData) {
   return { message: 'Check your email for the magic link' }
 }
 
+export async function sendEmailOtp(formData: FormData) {
+  const email = formData.get('email') as string
+  const supabase = await createServerSupabaseClient()
+
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: { shouldCreateUser: false },
+  })
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  return { success: true }
+}
+
+export async function verifyEmailOtp(formData: FormData) {
+  const email = formData.get('email') as string
+  const token = formData.get('token') as string
+
+  const supabase = await createServerSupabaseClient()
+
+  const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'email' })
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  const { data: adminUser } = await supabase
+    .schema('admin')
+    .from('users')
+    .select('role')
+    .eq('id', data.user!.id)
+    .single()
+
+  if (adminUser?.role === 'teacher') return { redirectTo: '/teacher/dashboard' }
+  if (adminUser?.role === 'super_admin') return { redirectTo: '/admin' }
+  return { redirectTo: '/apply/dashboard' }
+}
+
 export async function signInWithGoogle() {
   const supabase = await createServerSupabaseClient()
   const headersList = await headers()
