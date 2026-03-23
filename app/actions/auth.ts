@@ -105,6 +105,7 @@ export async function sendSignupOtp(formData: FormData) {
   })
 
   if (error) {
+    void sendDiscordNotification(createErrorEmbed({ context: 'sendSignupOtp – OTP Send', error: error.message, details: { email } })).catch(() => {})
     return { error: error.message }
   }
 
@@ -121,6 +122,7 @@ export async function verifyEmailOtp(formData: FormData) {
   const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'email' })
 
   if (error) {
+    void sendDiscordNotification(createErrorEmbed({ context: 'verifyEmailOtp – OTP Verify', error: error.message, details: { email } })).catch(() => {})
     return { error: error.message }
   }
 
