@@ -6,11 +6,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, User, LogIn, Eye, EyeOff } from "lucide-react";
-import { signUpParent } from "@/app/actions/signUpParent";
 import { loginParent } from "@/app/actions/loginParent";
 import {
   sendPasswordResetEmail,
   sendEmailOtp,
+  sendSignupOtp,
   verifyEmailOtp,
 } from "@/app/actions/auth";
 
@@ -260,6 +260,8 @@ function ChooseMode({ setMode }: { setMode: (m: Mode) => void }) {
 }
 
 /* ── Mode: Create ── */
+type CreateView = "otp-email" | "otp-code";
+
 function CreateMode({
   setMode,
   onSwitchToLogin,
@@ -268,32 +270,77 @@ function CreateMode({
   onSwitchToLogin: (email: string) => void;
 }) {
   const router = useRouter();
+  const [view, setView] = useState<CreateView>("otp-email");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [otpEmail, setOtpEmail] = useState("");
+  const [otpDigits, setOtpDigits] = useState<string[]>(Array(6).fill(""));
+  const otpRefs = useRef<(HTMLInputElement | null)[]>(Array(6).fill(null));
+  const otpFormRef = useRef<HTMLFormElement | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [emailExists, setEmailExists] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  function handleOtpChange(index: number, value: string) {
+    if (value && !/^\d$/.test(value)) return;
+    const next = [...otpDigits];
+    next[index] = value;
+    setOtpDigits(next);
+    if (value && index < 5) {
+      otpRefs.current[index + 1]?.focus();
+    }
+  }
+
+  function handleOtpKeyDown(index: number, e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Backspace" && !otpDigits[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus();
+    }
+  }
+
+  function handleOtpPaste(e: React.ClipboardEvent<HTMLInputElement>) {
     e.preventDefault();
-    setError(null);
-    setEmailExists(false);
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!pasted) return;
+    const next = [...otpDigits];
+    for (let i = 0; i < 6; i++) next[i] = pasted[i] || "";
+    setOtpDigits(next);
+    if (pasted.length === 6) {
+      setTimeout(() => otpFormRef.current?.requestSubmit(), 0);
+    } else {
+      otpRefs.current[Math.min(pasted.length, 5)]?.focus();
+    }
+  }
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    const fd = new FormData();
+    fd.set("email", email);
+    const result = await sendSignupOtp(fd);
+    if (result?.error) {
+      setError(result.error);
+      setLoading(false);
+    } else {
+      setOtpEmail(email);
+      setView("otp-code");
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otpDigits.some((d) => !d)) {
+      setError("Please enter all 6 digits");
       return;
     }
-
     setLoading(true);
-
-    const result = await signUpParent(fullName, email, password);
-    if (result?.error === "EMAIL_EXISTS") {
-      setEmailExists(true);
-      setLoading(false);
-    } else if (result?.error) {
+    setError(null);
+    const fd = new FormData();
+    fd.set("email", otpEmail);
+    fd.set("token", otpDigits.join(""));
+    fd.set("fullName", fullName);
+    const result = await verifyEmailOtp(fd);
+    if (result?.error) {
       setError(result.error);
       setLoading(false);
     } else if (result?.redirectTo) {
@@ -309,7 +356,7 @@ function CreateMode({
       transition={{ duration: 0.3 }}
     >
       <button
-        onClick={() => setMode("choose")}
+        onClick={() => view === "otp-code" ? (setView("otp-email"), setOtpDigits(Array(6).fill("")), setError(null)) : setMode("choose")}
         className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 font-body mb-6 cursor-pointer transition-colors"
       >
         <ArrowLeft size={14} />
@@ -320,111 +367,108 @@ function CreateMode({
         Create Account
       </span>
       <h1 className="text-3xl font-bold font-heading text-gray-800 mb-8">
-        Let&apos;s get you set up
+        {view === "otp-email" ? "Let\u2019s get you set up" : "Check your inbox"}
       </h1>
 
-      <form className="flex flex-col gap-4 mb-6" onSubmit={handleSubmit}>
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 font-body mb-1.5">
-            Full Name
-          </label>
-          <input
-            type="text"
-            placeholder="Jane Smith"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            required
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 font-body mb-1.5">
-            Email
-          </label>
-          <input
-            type="email"
-            placeholder="jane@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 font-body mb-1.5">
-            Password
-          </label>
-          <div className="relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full px-4 py-3 pr-11 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          </div>
-        </div>
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 font-body mb-1.5">
-            Confirm Password
-          </label>
-          <div className="relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="••••••••"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              className="w-full px-4 py-3 pr-11 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          </div>
-        </div>
-
-        {emailExists && (
-          <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 flex flex-col gap-2">
-            <p className="text-sm text-amber-800 font-body font-semibold">
-              An account with this email already exists.
-            </p>
-            <button
-              type="button"
-              onClick={() => onSwitchToLogin(email)}
-              className="self-start text-sm text-primary font-semibold font-body hover:underline cursor-pointer"
-            >
-              Log in instead →
-            </button>
-          </div>
-        )}
-
-        {error && <p className="text-sm text-red-600 font-body">{error}</p>}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+      {error && (
+        <p
+          className="px-4 py-3 mb-6 rounded-xl text-sm font-body"
+          style={{ backgroundColor: "#F2C6C6", border: "1px solid #E6B7B2", color: "#A55858" }}
         >
-          {loading ? "Creating account…" : "Create Account & Begin Application"}
-        </button>
-      </form>
+          {error}
+        </p>
+      )}
+
+      {view === "otp-email" ? (
+        <form className="flex flex-col gap-4 mb-6" onSubmit={handleSendOtp}>
+          <p className="text-sm font-body text-gray-500 -mt-4">
+            We&apos;ll send a 6-digit code to verify your email — no password needed.
+          </p>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 font-body mb-1.5">
+              Full Name
+            </label>
+            <input
+              type="text"
+              placeholder="Jane Smith"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
+              className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 font-body mb-1.5">
+              Email
+            </label>
+            <input
+              type="email"
+              placeholder="jane@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full px-4 py-3 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full flex justify-center items-center gap-2 px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {loading && <Spinner />}
+            {loading ? "Sending…" : "Send verification code"}
+          </button>
+        </form>
+      ) : (
+        <form
+          ref={otpFormRef}
+          className="flex flex-col gap-4 mb-6"
+          onSubmit={handleVerifyOtp}
+        >
+          <p className="text-sm font-body text-gray-500 -mt-4">
+            We sent a 6-digit code to{" "}
+            <span className="font-semibold text-gray-700">{otpEmail}</span>.
+            Check your inbox and enter it below.
+          </p>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 font-body mb-3">
+              Verification code
+            </label>
+            <div className="flex justify-center gap-2.5">
+              {otpDigits.map((digit, i) => (
+                <input
+                  key={i}
+                  ref={(el) => { otpRefs.current[i] = el; }}
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete={i === 0 ? "one-time-code" : "off"}
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => handleOtpChange(i, e.target.value)}
+                  onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                  onPaste={i === 0 ? handleOtpPaste : undefined}
+                  className="w-11 h-13 text-center text-lg font-semibold font-body rounded-lg border border-gray-200 text-gray-800 outline-none focus:border-primary transition-colors"
+                />
+              ))}
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full flex justify-center items-center gap-2 px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {loading && <Spinner />}
+            {loading ? "Verifying…" : "Verify & Create Account"}
+          </button>
+        </form>
+      )}
 
       <p className="text-sm text-center font-body text-gray-500">
         Already have an account?{" "}
         <button
-          onClick={() => setMode("login")}
+          onClick={() => onSwitchToLogin(email)}
           className="text-primary hover:underline cursor-pointer font-semibold"
         >
           Log in

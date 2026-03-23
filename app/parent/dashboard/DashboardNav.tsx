@@ -21,6 +21,7 @@ import {
 import { LucideIcon } from "lucide-react";
 
 const primaryNavItems: { label: string; icon: LucideIcon; href: string }[] = [
+  { label: "Enrollment", icon: ClipboardCheck, href: "/parent/dashboard" },
   { label: "My Children", icon: Users, href: "/parent/children" },
   { label: "Tuition & Billing", icon: CreditCard, href: "/parent/billing" },
   { label: "Messages", icon: MessageCircle, href: "#" },

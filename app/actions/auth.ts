@@ -1,6 +1,7 @@
 'use server'
 
-import { createServerSupabaseClient } from '@/app/lib/supabase-server'
+import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
+import { sendDiscordNotification, createParentSignupEmbed, createErrorEmbed } from '@/app/lib/discord'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 
@@ -94,9 +95,26 @@ export async function sendEmailOtp(formData: FormData) {
   return { success: true }
 }
 
+export async function sendSignupOtp(formData: FormData) {
+  const email = formData.get('email') as string
+  const supabase = await createServerSupabaseClient()
+
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: { shouldCreateUser: true },
+  })
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  return { success: true }
+}
+
 export async function verifyEmailOtp(formData: FormData) {
   const email = formData.get('email') as string
   const token = formData.get('token') as string
+  const fullName = formData.get('fullName') as string | null
 
   const supabase = await createServerSupabaseClient()
 
@@ -106,15 +124,32 @@ export async function verifyEmailOtp(formData: FormData) {
     return { error: error.message }
   }
 
+  const userId = data.user!.id
+
   const { data: adminUser } = await supabase
     .schema('admin')
     .from('users')
     .select('role')
-    .eq('id', data.user!.id)
+    .eq('id', userId)
     .single()
 
-  if (adminUser?.role === 'teacher') return { redirectTo: '/teacher/dashboard' }
-  if (adminUser?.role === 'super_admin') return { redirectTo: '/admin' }
+  // New user — create their admin.users record
+  if (!adminUser) {
+    const adminClient = createAdminClient()
+    const { error: insertError } = await adminClient
+      .schema('admin')
+      .from('users')
+      .insert({ id: userId, email, full_name: fullName ?? '', role: 'parent' })
+    if (insertError) {
+      void sendDiscordNotification(createErrorEmbed({ context: 'verifyEmailOtp – DB Insert user', error: insertError.message, details: { email, userId } })).catch(() => {})
+      return { error: `Account setup failed: ${insertError.message}` }
+    }
+    void sendDiscordNotification(createParentSignupEmbed({ fullName: fullName ?? '', email })).catch(() => {})
+    return { redirectTo: '/apply/step/1' }
+  }
+
+  if (adminUser.role === 'teacher') return { redirectTo: '/teacher/dashboard' }
+  if (adminUser.role === 'super_admin') return { redirectTo: '/admin' }
   return { redirectTo: '/apply/dashboard' }
 }
 
