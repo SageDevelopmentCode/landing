@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronRight } from 'lucide-react'
 import { DetailSidebar } from './DetailSidebar'
+import { EmailThread } from './EmailThread'
 import { SidebarField, SidebarSection } from '../../components/SidebarPrimitives'
 import { deleteParent } from '../../actions/deleteParent'
 
@@ -26,6 +27,7 @@ function formatProgram(value: string | null): string {
 
 type Parent = {
   id: string
+  email: string | null
   full_name: string | null
   g1_cell_phone: string | null
   g1_work_phone: string | null
@@ -311,6 +313,13 @@ export function ParentDetailSidebar({ parent, detail, loading, onClose, onParent
                 </>
               )}
             </SidebarSection>
+
+            {/* Email History */}
+            {parent?.email && (
+              <SidebarSection title="Email History">
+                <EmailThread emailAddress={parent.email} />
+              </SidebarSection>
+            )}
           </div>
         )}
       </DetailSidebar>

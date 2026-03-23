@@ -16,7 +16,7 @@ export async function getParentDetail(parentId: string) {
 
   const [parentRes, childrenRes, appsRes] = await Promise.all([
     adminClient.schema('admin').from('users')
-      .select('id, full_name, g1_cell_phone, g1_work_phone, g1_preferred_contact, g1_lives_with_child, g1_has_custody, g2_full_name, g2_relationship, g2_email, g2_cell_phone, g2_work_phone')
+      .select('id, email, full_name, g1_cell_phone, g1_work_phone, g1_preferred_contact, g1_lives_with_child, g1_has_custody, g2_full_name, g2_relationship, g2_email, g2_cell_phone, g2_work_phone')
       .eq('id', parentId).single(),
     adminClient.schema('admin').from('students')
       .select('id, child_legal_name, dob_month, dob_day, dob_year')
