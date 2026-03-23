@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getStripe } from "@/app/lib/stripe";
+import { getOrCreateStripeCustomer } from "@/app/lib/stripe-customer";
 
 const schema = z.object({
   parentId: z.string(),
@@ -12,7 +13,7 @@ const schema = z.object({
       studentId: z.string(),
       applicationId: z.string(),
       program: z.enum(["summer_26", "school_year_26_27", "both", "homeschool_drop_in"]),
-      dropInProgram: z.enum(["summer_26", "school_year_26_27", "both"]).optional(),
+      dropInProgram: z.enum(["summer_26", "school_year_26_27", "both"]).nullable().optional(),
       childName: z.string(),
     }),
   ),
@@ -21,7 +22,7 @@ const schema = z.object({
 const summerCents = 7500;
 const schoolCents = 50000;
 
-function programCents(program: string, dropInProgram?: string): number {
+function programCents(program: string, dropInProgram?: string | null): number {
   const billing = program === "homeschool_drop_in" ? (dropInProgram ?? "summer_26") : program;
   if (billing === "both") return summerCents + schoolCents;
   if (billing === "school_year_26_27") return schoolCents;
@@ -120,12 +121,19 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    const stripeCustomerId = await getOrCreateStripeCustomer(parentId, parentEmail);
+
     const session = await getStripe().checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card", "us_bank_account"],
-      customer_email: parentEmail,
+      customer: stripeCustomerId,
+      saved_payment_method_options: {
+        allow_redisplay_filters: ["always", "limited"],
+        payment_method_save: "enabled",
+      },
       payment_intent_data: {
         receipt_email: parentEmail,
+        setup_future_usage: "off_session",
       },
       line_items: lineItems,
       metadata: {

@@ -215,7 +215,7 @@ export default function LoginForm() {
               priority
             />
           </div>
-
+          /
           <h1 className="text-3xl font-bold font-heading text-gray-800 mb-8">
             {view === "otp-email" || view === "otp-code"
               ? "Welcome back"
@@ -223,7 +223,6 @@ export default function LoginForm() {
                 ? "Sign in with password"
                 : "Reset your password"}
           </h1>
-
           {/* Error / Message */}
           {error && (
             <motion.div
@@ -239,7 +238,6 @@ export default function LoginForm() {
               {error}
             </motion.div>
           )}
-
           {message && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
@@ -254,7 +252,6 @@ export default function LoginForm() {
               {message}
             </motion.div>
           )}
-
           {view === "otp-email" ? (
             /* ── OTP: enter email ── */
             <form onSubmit={handleSendOtp} className="flex flex-col gap-4">
@@ -495,7 +492,6 @@ export default function LoginForm() {
               </button>
             </form>
           )}
-
           {/* Divider
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
@@ -507,7 +503,6 @@ export default function LoginForm() {
               </span>
             </div>
           </div> */}
-
           {/* Google */}
           {/* <button
             type="button"
@@ -543,7 +538,6 @@ export default function LoginForm() {
             )}
             {loading ? "Connecting..." : "Sign in with Google"}
           </button> */}
-
           {/* Back to home */}
           {(view === "otp-email" || view === "login") && (
             <div className="text-center mt-8">

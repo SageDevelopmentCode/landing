@@ -39,6 +39,22 @@ export async function POST(request: NextRequest) {
 
     const supabase = createAdminClient();
 
+    // Backfill stripe_customer_id if missing (safety net for helper failures)
+    const parentIdForCustomer = session.metadata?.parent_id;
+    const stripeCustomerId =
+      typeof session.customer === "string"
+        ? session.customer
+        : session.customer?.id ?? null;
+
+    if (parentIdForCustomer && stripeCustomerId) {
+      await supabase
+        .schema("admin")
+        .from("users")
+        .update({ stripe_customer_id: stripeCustomerId })
+        .eq("id", parentIdForCustomer)
+        .is("stripe_customer_id", null);
+    }
+
     if (session.metadata?.payment_type === "registration_fee") {
       const applicationIdsStr = session.metadata?.application_ids; // combined
       const applicationId = session.metadata?.application_id; // individual
