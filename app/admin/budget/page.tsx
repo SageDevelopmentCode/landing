@@ -3056,6 +3056,7 @@ function RevenueTab({
   onRefresh: () => void;
 }) {
   const [selectedTransaction, setSelectedTransaction] = useState<StripeTransaction | null>(null);
+  const [hideExcluded, setHideExcluded] = useState(false);
   const [students, setStudents] = useState<{ id: string; child_legal_name: string | null }[]>([]);
   const [parents, setParents] = useState<{ id: string; full_name: string | null; email: string; g1_cell_phone: string | null }[]>([]);
   const [enrollment, setEnrollment] = useState({
@@ -3103,22 +3104,42 @@ function RevenueTab({
           >
             Revenue (Stripe Transactions)
           </p>
+          <button
+            onClick={() => setHideExcluded(!hideExcluded)}
+            style={{
+              backgroundColor: hideExcluded ? colors.mistyForest : 'transparent',
+              color: hideExcluded ? '#fff' : colors.textSecondary,
+              border: `1px solid ${hideExcluded ? colors.mistyForest : colors.border}`,
+              borderRadius: '99px',
+              padding: '4px 12px',
+              fontSize: '12px',
+              fontWeight: 500,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            {hideExcluded ? 'Show Excluded' : 'Hide Excluded'}
+          </button>
         </div>
 
         <Table
           headers={["Date", "Type", "Student", "Application", "Payer", "Net Amount"]}
         >
-          {transactions.length === 0 ? (
+          {(() => {
+            const visibleTransactions = hideExcluded
+              ? transactions.filter(tx => !tx.exclude_from_revenue)
+              : transactions;
+            return visibleTransactions.length === 0 ? (
             <tr>
               <td
                 colSpan={6}
                 className="px-4 py-8 text-center text-sm text-gray-400"
               >
-                No transactions yet.
+                {hideExcluded ? 'All transactions are excluded.' : 'No transactions yet.'}
               </td>
             </tr>
           ) : (
-            transactions.map((tx, i) => (
+            visibleTransactions.map((tx, i) => (
               <TableRow
                 key={tx.id}
                 index={i}
@@ -3171,7 +3192,8 @@ function RevenueTab({
                 </TableCell>
               </TableRow>
             ))
-          )}
+          );
+          })()}
           {/* Total row */}
           <tr
             style={{
@@ -4561,8 +4583,61 @@ function MercuryTab() {
     );
   }
 
+  const COUNTERPARTY_USER: Record<string, string> = {
+    'Capital One - Checking ••4567': 'Julius',
+    'Wells Fargo - Checking ••0769': 'Sage',
+  };
+
+  const userTotals = transactions.reduce<Record<string, number>>((acc, tx) => {
+    const user = tx.counterpartyName ? (COUNTERPARTY_USER[tx.counterpartyName] ?? 'Other') : 'Other';
+    acc[user] = (acc[user] ?? 0) + tx.amount;
+    return acc;
+  }, {});
+
+  const overallTotal = transactions.reduce((s, tx) => s + tx.amount, 0);
+
+  const fmtCurrency = (v: number) =>
+    `${v >= 0 ? '+' : ''}${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v)}`;
+
   return (
     <>
+      {/* User Total Cards */}
+      <div className="grid gap-4 mb-6" style={{ gridTemplateColumns: `repeat(${Object.keys(userTotals).length + 1}, minmax(0, 1fr))` }}>
+        {Object.entries(userTotals).map(([user, total]) => (
+          <div key={user} style={{ ...cardStyle, padding: '20px 24px' }}>
+            <p className="text-xs font-medium uppercase tracking-wider" style={{ color: colors.textTertiary }}>
+              {user}
+            </p>
+            <p
+              className="text-xl font-semibold mt-1 tabular-nums"
+              style={{ color: total >= 0 ? colors.successText : colors.errorText }}
+            >
+              {fmtCurrency(total)}
+            </p>
+            <p className="text-xs mt-1" style={{ color: colors.textSecondary }}>
+              {transactions.filter(tx => {
+                const u = tx.counterpartyName ? (COUNTERPARTY_USER[tx.counterpartyName] ?? 'Other') : 'Other';
+                return u === user;
+              }).length} transactions
+            </p>
+          </div>
+        ))}
+        <div style={{ ...cardStyle, padding: '20px 24px' }}>
+          <p className="text-xs font-medium uppercase tracking-wider" style={{ color: colors.textTertiary }}>
+            Total
+          </p>
+          <p
+            className="text-xl font-semibold mt-1 tabular-nums"
+            style={{ color: overallTotal >= 0 ? colors.successText : colors.errorText }}
+          >
+            {fmtCurrency(overallTotal)}
+          </p>
+          <p className="text-xs mt-1" style={{ color: colors.textSecondary }}>
+            {transactions.length} transactions
+          </p>
+        </div>
+      </div>
+
       <div style={{ ...cardStyle, overflow: "hidden" }}>
         <div
           className="px-6 py-4 border-b"
@@ -4607,10 +4682,6 @@ function MercuryTab() {
                   tx.merchantName ??
                   tx.bankDescription ??
                   "—";
-                const COUNTERPARTY_USER: Record<string, string> = {
-                  'Capital One - Checking ••4567': 'Julius',
-                  'Wells Fargo - Checking ••0769': 'Sage',
-                }
                 const user = tx.counterpartyName ? (COUNTERPARTY_USER[tx.counterpartyName] ?? '—') : '—'
                 return (
                   <tr
