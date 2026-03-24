@@ -11,6 +11,8 @@ import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { getAdminEnrollmentData, type AdminEnrollmentData } from '../../actions/getAdminEnrollmentData'
 import { EnrollmentProgressCard, type ApprovedApplication } from './EnrollmentProgressCard'
+import { EmailThread } from './EmailThread'
+import { sendEnrollmentReminderEmail } from '../../actions/sendEnrollmentReminderEmail'
 
 export type CachedEnrollmentData = AdminEnrollmentData & {
   registrationFeePaidByStudent: Record<string, boolean>
@@ -128,6 +130,9 @@ export function ApplicationDetailSidebar({
   const [isDenying, setIsDenying] = useState(false)
   const [denyError, setDenyError] = useState<string | null>(null)
   const [isDeactivating, setIsDeactivating] = useState(false)
+  const [reminderSending, setReminderSending] = useState(false)
+  const [reminderSent, setReminderSent] = useState(false)
+  const [reminderError, setReminderError] = useState<string | null>(null)
   const [enrollmentData, setEnrollmentData] = useState<AdminEnrollmentData & { registrationFeePaidByStudent: Record<string, boolean> } | null>(null)
   const [enrollmentLoading, setEnrollmentLoading] = useState(false)
   const [siblingApps, setSiblingApps] = useState<ApprovedApplication[]>([])
@@ -272,6 +277,25 @@ export function ApplicationDetailSidebar({
       setDenyReason('')
     } else {
       setDenyError(result.error ?? 'Failed to deny')
+    }
+  }
+
+  const handleSendEnrollmentReminder = async () => {
+    if (reminderSending || !application.g1_email) return
+    setReminderSending(true)
+    setReminderError(null)
+    const result = await sendEnrollmentReminderEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      program: application.program,
+      email: application.g1_email,
+    })
+    setReminderSending(false)
+    if (result.success) {
+      setReminderSent(true)
+      setTimeout(() => setReminderSent(false), 3000)
+    } else {
+      setReminderError(result.error ?? 'Failed to send')
     }
   }
 
@@ -464,6 +488,22 @@ export function ApplicationDetailSidebar({
           ) : null
         )}
 
+        {application.approved && application.g1_email && (
+          <SidebarSection title="Outreach">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleSendEnrollmentReminder}
+                disabled={reminderSending || reminderSent}
+                className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+              >
+                {reminderSending ? 'Sending…' : reminderSent ? '✓ Sent!' : 'Send Enrollment Reminder'}
+              </button>
+              {reminderError && <span className="text-xs text-red-600">{reminderError}</span>}
+            </div>
+          </SidebarSection>
+        )}
+
         <SidebarSection title="Admin Notes">
           {notes.length > 0 && (
             <div className="space-y-2 mb-3 max-h-48 overflow-y-auto">
@@ -497,6 +537,12 @@ export function ApplicationDetailSidebar({
             </button>
           </div>
         </SidebarSection>
+
+        {application.g1_email && (
+          <SidebarSection title="Email History">
+            <EmailThread emailAddress={application.g1_email} />
+          </SidebarSection>
+        )}
 
         <div className="pt-2 border-t border-gray-100">
           <p className="text-xs text-gray-400 font-body">

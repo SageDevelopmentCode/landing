@@ -709,7 +709,7 @@ export async function buildApprovalEmail(opts: {
   function formatProgram(program: string | null): string | null {
     if (!program) return null;
     if (program === "both") return "Summer 2026 and School Year 2026-2027";
-    if (program === "summer_2026") return "Summer 2026";
+    if (program === "summer_26") return "Summer 2026";
     if (program === "school_year_26_27") return "School Year 2026-2027";
     if (program === "homeschool_drop_in") return "Homeschool Drop-In";
     return program;
@@ -755,6 +755,70 @@ export async function buildApprovalEmail(opts: {
   <p>Please complete all required steps as soon as possible to secure your child's enrollment. If you have any questions, don't hesitate to reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a>.</p>
 
   <p style="margin-top: 32px;">With warmth and excitement,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
+/**
+ * Build HTML enrollment reminder email for approved applicants who haven't completed the checklist
+ */
+export async function buildEnrollmentReminderEmail(opts: {
+  g1FullName: string;
+  childLegalName: string;
+  program: string | null;
+}): Promise<{ subject: string; content: string }> {
+  function formatProgram(program: string | null): string | null {
+    if (!program) return null;
+    if (program === "both") return "Summer 2026 and School Year 2026-2027";
+    if (program === "summer_26") return "Summer 2026";
+    if (program === "school_year_26_27") return "School Year 2026-2027";
+    if (program === "homeschool_drop_in") return "Homeschool Drop-In";
+    return program;
+  }
+
+  const subject = `A reminder to complete ${opts.childLegalName}'s enrollment at Sage Field`;
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${opts.g1FullName},</p>
+
+  <p>Just a friendly reminder that <strong>${opts.childLegalName}</strong>'s application${formatProgram(opts.program) ? ` for the <strong>${formatProgram(opts.program)}</strong> program` : ""} has been approved — but the enrollment checklist still needs to be completed to secure their spot.</p>
+
+  <p>To continue, log back in to your parent dashboard:</p>
+
+  <p style="margin-bottom: 4px;"><a href="https://www.sagefield.co/parent/dashboard" style="color: #5a7a5a; font-weight: bold;">https://www.sagefield.co/parent/dashboard</a></p>
+
+  <p style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 12px 16px; margin: 20px 0; font-size: 14px;">
+    <strong>Tip:</strong> We highly recommend completing your enrollment on a laptop or desktop computer for the best experience. Some steps (document signing, file uploads) may be difficult on a mobile device.
+  </p>
+
+  <p style="margin-top: 24px;"><strong>Required steps:</strong></p>
+  <ol style="padding-left: 20px;">
+    <li style="margin-bottom: 8px;"><strong>Program Description, Parent Responsibilities, and Key Policies</strong> — review and sign</li>
+    <li style="margin-bottom: 8px;"><strong>Community Agreement for Families and Staff</strong> — review and sign</li>
+    <li style="margin-bottom: 8px;"><strong>Emergency Contact, Health, and Immunization Form</strong> — complete and sign</li>
+    <li style="margin-bottom: 8px;"><strong>Submit Proof of Immunizations</strong> — upload your child's current immunization records</li>
+    <li style="margin-bottom: 8px;"><strong>Photo Release Form</strong> — review and sign</li>
+    <li style="margin-bottom: 8px;"><strong>Assumption of Risk and Liability Release</strong> — review and sign</li>
+    <li style="margin-bottom: 8px;"><strong>Health Information Form</strong> — complete and sign</li>
+    <li style="margin-bottom: 8px;"><strong>Pay Registration Fee</strong> — submit to secure your child's spot</li>
+  </ol>
+
+  <p style="margin-top: 24px;"><strong>Optional steps (if applicable):</strong></p>
+  <ul style="padding-left: 20px;">
+    <li style="margin-bottom: 8px;"><strong>Emergency Medication Plan on File</strong> — if your child requires emergency medication at school</li>
+    <li style="margin-bottom: 8px;"><strong>Additional Authorized Pickup Person</strong> — if someone other than a guardian will pick up your child</li>
+  </ul>
+
+  <p>Please complete all required steps as soon as possible to secure your child's enrollment. If you have any questions, don't hesitate to reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a>.</p>
+
+  <p style="margin-top: 32px;">With warmth,</p>
   <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
 </body>
 </html>
