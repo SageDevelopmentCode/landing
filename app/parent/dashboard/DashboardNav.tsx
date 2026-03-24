@@ -24,7 +24,7 @@ const primaryNavItems: { label: string; icon: LucideIcon; href: string }[] = [
   { label: "Enrollment", icon: ClipboardCheck, href: "/parent/dashboard" },
   { label: "My Children", icon: Users, href: "/parent/children" },
   { label: "Tuition & Billing", icon: CreditCard, href: "/parent/billing" },
-  { label: "Messages", icon: MessageCircle, href: "#" },
+  { label: "Messages", icon: MessageCircle, href: "/parent/messages" },
   { label: "Calendar", icon: Calendar, href: "#" },
   { label: "Forms & Documents", icon: FileText, href: "/parent/forms" },
 ];
