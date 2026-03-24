@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Receipt, CheckCircle2 } from "lucide-react";
+import { Receipt, CheckCircle2, Sun, X, Check } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 function getInitials(name: string | null): string {
   if (!name) return "?";
@@ -18,12 +19,45 @@ import {
   SidebarField,
   SidebarSection,
 } from "@/app/components/SidebarPrimitives";
-import type { StripeTransaction, PendingPaymentRequest } from "./page";
+import type { StripeTransaction, PendingPaymentRequest, SummerEnrollment } from "./page";
 
 interface Props {
   transactions: StripeTransaction[];
   studentMap: Record<string, string>;
   pendingRequests: PendingPaymentRequest[];
+  summerEnrollments: SummerEnrollment[];
+}
+
+// --- Summer pricing ---
+const SUMMER_WEEKLY_CENTS = { primary: 37500, upper: 35000 };
+const SUMMER_FULL_CENTS = { primary: 405000, upper: 378000 };
+const SUMMER_FULL_ORIGINAL_CENTS = { primary: 450000, upper: 420000 };
+const TOTAL_WEEKS = 12;
+
+const SUMMER_WEEKS = [
+  { week: 1, dates: "May 26\u201329", theme: "Welcome to Camp" },
+  { week: 2, dates: "Jun 1\u20134", theme: "Mystery Camp Escape Challenge" },
+  { week: 3, dates: "Jun 8\u201311", theme: "Beach Day Bash" },
+  { week: 4, dates: "Jun 15\u201318", theme: "Scientist and Space Engineering Lab" },
+  { week: 5, dates: "Jun 22\u201325", theme: "Safari Escape" },
+  { week: 6, dates: "Jun 29\u2013Jul 2", theme: "Splash Into Summer" },
+  { week: 7, dates: "Jul 6\u20139", theme: "Dino Hunt" },
+  { week: 8, dates: "Jul 13\u201316", theme: "Pirate Adventure" },
+  { week: 9, dates: "Jul 20\u201323", theme: "You are a Superhero!" },
+  { week: 10, dates: "Jul 27\u201330", theme: "Space Explorers: Mission to the Stars" },
+  { week: 11, dates: "Aug 3\u20136", theme: "Down on the Farm" },
+  { week: 12, dates: "Aug 10\u201313", theme: "Finale of Camp" },
+];
+
+function getGradeTier(grade: string | null): "primary" | "upper" {
+  if (!grade) return "upper";
+  const g = grade.toLowerCase().trim();
+  if (["pre-k", "prek", "pre k", "kindergarten", "k", "1st", "1", "1st grade"].includes(g)) return "primary";
+  return "upper";
+}
+
+function gradeTierLabel(tier: "primary" | "upper"): string {
+  return tier === "primary" ? "Primary (Pre-K\u20131st)" : "2nd\u20134th Grade";
 }
 
 function formatCents(cents: number): string {
@@ -117,6 +151,320 @@ function PendingPaymentCard({
   );
 }
 
+function SummerTuitionCard({
+  studentName,
+  onClick,
+}: {
+  studentName: string | null;
+  onClick: () => void;
+}) {
+  return (
+    <div
+      className="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 px-5 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
+      onClick={onClick}
+    >
+      <div
+        className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full text-sm font-semibold"
+        style={{ backgroundColor: "#d4e6d0", color: "#4a7c59" }}
+      >
+        {getInitials(studentName)}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm font-semibold text-gray-800">Summer Program Tuition</span>
+          <span className="text-xs text-gray-400">&mdash;</span>
+          <span className="text-xs text-gray-500">Summer 2026</span>
+        </div>
+      </div>
+      <div className="flex-shrink-0 text-right">
+        <span className="text-sm font-semibold" style={{ color: "#e07a3a" }}>
+          Select payment plan
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function SummerPaymentModal({
+  enrollment,
+  studentName,
+  onClose,
+}: {
+  enrollment: SummerEnrollment;
+  studentName: string | null;
+  onClose: () => void;
+}) {
+  const [tab, setTab] = useState<"weekly" | "full">("weekly");
+  const [selectedWeeks, setSelectedWeeks] = useState<Set<number>>(new Set());
+
+  const tier = getGradeTier(enrollment.child_grade);
+  const weeklyRate = SUMMER_WEEKLY_CENTS[tier];
+  const fullRate = SUMMER_FULL_CENTS[tier];
+  const fullOriginal = SUMMER_FULL_ORIGINAL_CENTS[tier];
+  const savings = fullOriginal - fullRate;
+  const weeklyTotal = selectedWeeks.size * weeklyRate;
+  const canContinue = tab === "full" || selectedWeeks.size > 0;
+
+  function toggleWeek(week: number) {
+    setSelectedWeeks((prev) => {
+      const next = new Set(prev);
+      if (next.has(week)) next.delete(week);
+      else next.add(week);
+      return next;
+    });
+  }
+
+  const continueLabel =
+    tab === "weekly"
+      ? selectedWeeks.size > 0
+        ? `Continue · ${formatCents(weeklyTotal)}`
+        : "Select weeks to continue"
+      : `Continue · ${formatCents(fullRate)}`;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <motion.div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        onClick={onClose}
+      />
+
+      {/* Modal card */}
+      <motion.div
+        className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+        transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+      >
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 border-b border-gray-100">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <div
+                  className="flex items-center justify-center w-7 h-7 rounded-full"
+                  style={{ backgroundColor: "#fde8d8" }}
+                >
+                  <Sun className="w-3.5 h-3.5" style={{ color: "#e07a3a" }} strokeWidth={2} />
+                </div>
+                <h2 className="text-lg font-bold font-heading text-gray-800">
+                  Summer 2026 Tuition
+                </h2>
+              </div>
+              {studentName && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500 font-body">{studentName}</span>
+                  {enrollment.child_grade && (
+                    <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
+                      {enrollment.child_grade}
+                    </span>
+                  )}
+                  <span className="text-xs text-gray-400">· {gradeTierLabel(tier)}</span>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={onClose}
+              className="flex-shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Tab switcher */}
+          <div className="flex gap-2 mt-4">
+            <button
+              onClick={() => setTab("weekly")}
+              className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
+                tab === "weekly"
+                  ? "text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+              style={tab === "weekly" ? { backgroundColor: "#4a7c59" } : {}}
+            >
+              Pay Weekly
+            </button>
+            <button
+              onClick={() => setTab("full")}
+              className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
+                tab === "full"
+                  ? "text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+              style={tab === "full" ? { backgroundColor: "#4a7c59" } : {}}
+            >
+              Full Summer
+            </button>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto px-6 py-5">
+          <AnimatePresence mode="wait">
+          {tab === "weekly" ? (
+            <motion.div
+              key="weekly"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 10 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm text-gray-500 font-body">
+                  Select the weeks you&apos;d like to pay for
+                </p>
+                <button
+                  onClick={() => {
+                    if (selectedWeeks.size === TOTAL_WEEKS) {
+                      setSelectedWeeks(new Set());
+                    } else {
+                      setSelectedWeeks(new Set(SUMMER_WEEKS.map((w) => w.week)));
+                    }
+                  }}
+                  className="text-xs font-semibold cursor-pointer transition-colors"
+                  style={{ color: "#4a7c59" }}
+                >
+                  {selectedWeeks.size === TOTAL_WEEKS ? "Deselect All" : "Select All"}
+                </button>
+              </div>
+
+              {/* Week list */}
+              <div className="space-y-2 mb-4">
+                {SUMMER_WEEKS.map((w) => {
+                  const selected = selectedWeeks.has(w.week);
+                  return (
+                    <motion.button
+                      key={w.week}
+                      onClick={() => toggleWeek(w.week)}
+                      className="w-full flex items-center gap-3 rounded-xl px-3.5 py-3 text-left cursor-pointer transition-colors"
+                      animate={{
+                        backgroundColor: selected ? "#f0f7f1" : "#f9fafb",
+                      }}
+                      whileTap={{ scale: 0.99 }}
+                      transition={{ duration: 0.15 }}
+                      style={selected ? { boxShadow: "inset 3px 0 0 #4a7c59" } : {}}
+                    >
+                      {/* Checkbox */}
+                      <div
+                        className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-colors"
+                        style={
+                          selected
+                            ? { backgroundColor: "#4a7c59" }
+                            : { backgroundColor: "transparent", border: "2px solid #d1d5db" }
+                        }
+                      >
+                        {selected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                      </div>
+
+                      {/* Week info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-gray-800 font-heading">
+                            Week {w.week}
+                          </span>
+                          <span className="text-xs text-gray-400 font-body">
+                            {w.dates}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 font-body truncate">
+                          {w.theme}
+                        </p>
+                      </div>
+
+                      {/* Price */}
+                      <span className="flex-shrink-0 text-sm font-semibold text-gray-700 font-body">
+                        {formatCents(weeklyRate)}
+                      </span>
+                    </motion.button>
+                  );
+                })}
+              </div>
+
+              {/* Running total */}
+              <motion.div
+                className="rounded-xl px-4 py-3 flex items-center justify-between"
+                style={{ backgroundColor: "#f6faf7" }}
+                layout
+                transition={{ duration: 0.2 }}
+              >
+                <span className="text-sm text-gray-500 font-body">
+                  {selectedWeeks.size === 0
+                    ? "No weeks selected"
+                    : `${selectedWeeks.size} week${selectedWeeks.size !== 1 ? "s" : ""} \u00d7 ${formatCents(weeklyRate)}/wk`}
+                </span>
+                <span
+                  className="text-base font-bold font-heading"
+                  style={{ color: "#4a7c59" }}
+                >
+                  {selectedWeeks.size > 0 ? formatCents(weeklyTotal) : "\u2014"}
+                </span>
+              </motion.div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="full"
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+            >
+              <p className="text-sm text-gray-500 font-body mb-4">
+                Pay for all 12 weeks at once and save 10%.
+              </p>
+
+              {/* Full summer card */}
+              <div
+                className="relative rounded-2xl p-6 text-white overflow-hidden"
+                style={{ background: "linear-gradient(135deg, #e8816a 0%, #d4614a 100%)" }}
+              >
+                {/* Save badge */}
+                <span className="absolute top-4 right-4 px-2.5 py-1 bg-white/20 border border-white/30 rounded-full text-xs font-semibold text-white">
+                  Save 10%
+                </span>
+
+                <p className="text-xs font-semibold uppercase tracking-widest text-white/70 mb-3">
+                  Full Summer · 12 Weeks
+                </p>
+
+                <p className="text-xs text-white/70 font-body mb-0.5">{gradeTierLabel(tier)}</p>
+                <p className="text-4xl font-bold font-heading mb-1">
+                  {formatCents(fullRate)}
+                </p>
+                <p className="text-sm text-white/60 font-body">
+                  <span className="line-through">{formatCents(fullOriginal)}</span>
+                  <span className="ml-2 text-white/80">· {formatCents(savings)} off</span>
+                </p>
+
+                <p className="text-xs text-white/60 font-body mt-4">
+                  Covers all 12 weeks of the summer program · Monday–Thursday, 9am–3pm
+                </p>
+              </div>
+            </motion.div>
+          )}
+          </AnimatePresence>
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-gray-100">
+          <button
+            disabled={!canContinue}
+            className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ backgroundColor: "#4a7c59" }}
+            onClick={() => {}}
+          >
+            {continueLabel}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 function AllCaughtUpCard() {
   return (
     <div className="flex flex-col items-center justify-center bg-white rounded-2xl border border-gray-100 p-8 text-center">
@@ -136,6 +484,145 @@ function AllCaughtUpCard() {
       <p className="text-sm font-body text-gray-400">
         You have no outstanding payments at this time.
       </p>
+    </div>
+  );
+}
+
+function PendingPaymentsSection({
+  summerEnrollments,
+  pendingRequests,
+  studentMap,
+  onSelectSummer,
+  onSelectPending,
+}: {
+  summerEnrollments: SummerEnrollment[];
+  pendingRequests: PendingPaymentRequest[];
+  studentMap: Record<string, string>;
+  onSelectSummer: (e: SummerEnrollment) => void;
+  onSelectPending: (r: PendingPaymentRequest) => void;
+}) {
+  // Collect all unique student IDs
+  const studentIds = [
+    ...new Set([
+      ...summerEnrollments.map((e) => e.student_id),
+      ...pendingRequests.map((r) => r.student_id).filter(Boolean) as string[],
+    ]),
+  ];
+
+  const [activeStudentId, setActiveStudentId] = useState<string | null>(
+    studentIds[0] ?? null
+  );
+
+  if (summerEnrollments.length === 0 && pendingRequests.length === 0) {
+    return <AllCaughtUpCard />;
+  }
+
+  // Items with no student_id
+  const orphanRequests = pendingRequests.filter((r) => !r.student_id);
+  const hasOrphans = orphanRequests.length > 0;
+
+  // Items for the active student
+  const activeSummerEnrollments = summerEnrollments.filter(
+    (e) => e.student_id === activeStudentId
+  );
+  const activePendingRequests = pendingRequests.filter(
+    (r) => r.student_id === activeStudentId
+  );
+
+  // Total owed (only pending requests with known amounts)
+  const totalCents = (activeStudentId === "__other__" ? orphanRequests : activePendingRequests)
+    .reduce((sum, r) => sum + (r.amount_cents ?? 0), 0);
+
+  const isOtherTab = activeStudentId === "__other__";
+  const currentItems = isOtherTab ? orphanRequests : activePendingRequests;
+  const currentSummer = isOtherTab ? [] : activeSummerEnrollments;
+
+  return (
+    <div>
+      {/* Child tabs */}
+      <div className="flex gap-2 mb-4 flex-wrap">
+        {studentIds.map((id) => {
+          const name = studentMap[id] ?? "Unknown";
+          const isActive = activeStudentId === id;
+          return (
+            <button
+              key={id}
+              onClick={() => setActiveStudentId(id)}
+              className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
+                isActive
+                  ? "text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+              style={isActive ? { backgroundColor: "#4a7c59" } : {}}
+            >
+              {name}
+            </button>
+          );
+        })}
+        {hasOrphans && (
+          <button
+            onClick={() => setActiveStudentId("__other__")}
+            className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
+              isOtherTab
+                ? "text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+            style={isOtherTab ? { backgroundColor: "#4a7c59" } : {}}
+          >
+            Other
+          </button>
+        )}
+      </div>
+
+      {/* Items for active child */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeStudentId}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.15, ease: "easeInOut" }}
+          className="space-y-3"
+        >
+          {currentSummer.length === 0 && currentItems.length === 0 ? (
+            <AllCaughtUpCard />
+          ) : (
+            <>
+              {currentSummer.map((enrollment) => (
+                <SummerTuitionCard
+                  key={enrollment.student_id}
+                  studentName={studentMap[enrollment.student_id] ?? null}
+                  onClick={() => onSelectSummer(enrollment)}
+                />
+              ))}
+              {currentItems.map((req) => (
+                <PendingPaymentCard
+                  key={req.id}
+                  request={req}
+                  studentName={req.student_id ? (studentMap[req.student_id] ?? null) : null}
+                  onClick={() => onSelectPending(req)}
+                />
+              ))}
+
+              {/* Total bar */}
+              {totalCents > 0 && (
+                <div
+                  className="rounded-xl px-4 py-3 flex items-center justify-between"
+                  style={{ backgroundColor: "#f6faf7" }}
+                >
+                  <span className="text-sm text-gray-500 font-body">Total owed</span>
+                  <span
+                    className="text-base font-bold font-heading"
+                    style={{ color: "#4a7c59" }}
+                  >
+                    {formatCents(totalCents)}
+                  </span>
+                </div>
+              )}
+            </>
+          )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
@@ -181,9 +668,10 @@ function PendingDetailSidebar({
   );
 }
 
-export default function BillingPage({ transactions, studentMap, pendingRequests }: Props) {
+export default function BillingPage({ transactions, studentMap, pendingRequests, summerEnrollments }: Props) {
   const [selectedTx, setSelectedTx] = useState<StripeTransaction | null>(null);
   const [selectedPending, setSelectedPending] = useState<PendingPaymentRequest | null>(null);
+  const [selectedSummerEnrollment, setSelectedSummerEnrollment] = useState<SummerEnrollment | null>(null);
 
   if (transactions.length === 0) {
     return (
@@ -193,20 +681,13 @@ export default function BillingPage({ transactions, studentMap, pendingRequests 
           <h2 className="text-lg font-semibold font-heading text-gray-700 mb-4">
             Pending Payments
           </h2>
-          {pendingRequests.length === 0 ? (
-            <AllCaughtUpCard />
-          ) : (
-            <div className="space-y-3">
-              {pendingRequests.map((req) => (
-                <PendingPaymentCard
-                  key={req.id}
-                  request={req}
-                  studentName={req.student_id ? (studentMap[req.student_id] ?? null) : null}
-                  onClick={() => setSelectedPending(req)}
-                />
-              ))}
-            </div>
-          )}
+          <PendingPaymentsSection
+            summerEnrollments={summerEnrollments}
+            pendingRequests={pendingRequests}
+            studentMap={studentMap}
+            onSelectSummer={setSelectedSummerEnrollment}
+            onSelectPending={setSelectedPending}
+          />
         </div>
         <div>
           <h2 className="text-lg font-semibold font-heading text-gray-700 mb-4">
@@ -238,6 +719,15 @@ export default function BillingPage({ transactions, studentMap, pendingRequests 
         studentName={selectedPending?.student_id ? (studentMap[selectedPending.student_id] ?? null) : null}
         onClose={() => setSelectedPending(null)}
       />
+      <AnimatePresence>
+        {selectedSummerEnrollment && (
+          <SummerPaymentModal
+            enrollment={selectedSummerEnrollment}
+            studentName={studentMap[selectedSummerEnrollment.student_id] ?? null}
+            onClose={() => setSelectedSummerEnrollment(null)}
+          />
+        )}
+      </AnimatePresence>
       </>
     );
   }
@@ -249,20 +739,13 @@ export default function BillingPage({ transactions, studentMap, pendingRequests 
           <h2 className="text-lg font-semibold font-heading text-gray-700 mb-4">
             Pending Payments
           </h2>
-          {pendingRequests.length === 0 ? (
-            <AllCaughtUpCard />
-          ) : (
-            <div className="space-y-3">
-              {pendingRequests.map((req) => (
-                <PendingPaymentCard
-                  key={req.id}
-                  request={req}
-                  studentName={req.student_id ? (studentMap[req.student_id] ?? null) : null}
-                  onClick={() => setSelectedPending(req)}
-                />
-              ))}
-            </div>
-          )}
+          <PendingPaymentsSection
+            summerEnrollments={summerEnrollments}
+            pendingRequests={pendingRequests}
+            studentMap={studentMap}
+            onSelectSummer={setSelectedSummerEnrollment}
+            onSelectPending={setSelectedPending}
+          />
         </div>
         <div>
           <h2 className="text-lg font-semibold font-heading text-gray-700 mb-4">
@@ -394,6 +877,16 @@ export default function BillingPage({ transactions, studentMap, pendingRequests 
           </div>
         )}
       </DetailSidebar>
+
+      <AnimatePresence>
+        {selectedSummerEnrollment && (
+          <SummerPaymentModal
+            enrollment={selectedSummerEnrollment}
+            studentName={studentMap[selectedSummerEnrollment.student_id] ?? null}
+            onClose={() => setSelectedSummerEnrollment(null)}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }

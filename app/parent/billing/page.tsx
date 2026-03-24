@@ -22,6 +22,11 @@ export type PendingPaymentRequest = {
   created_at: string;
 };
 
+export type SummerEnrollment = {
+  student_id: string;
+  child_grade: string | null;
+};
+
 export type StripeTransaction = {
   id: string;
   stripe_session_id: string | null;
@@ -56,7 +61,7 @@ export default async function BillingRoute() {
 
   const adminClient = createAdminClient();
 
-  const [{ data: txData }, { data: adminUser }, { data: pendingData }] = await Promise.all([
+  const [{ data: txData }, { data: adminUser }, { data: pendingData }, { data: summerData }] = await Promise.all([
     adminClient
       .schema("billing")
       .from("stripe_transactions")
@@ -77,11 +82,20 @@ export default async function BillingRoute() {
       .eq("parent_id", user.id)
       .eq("status", "pending")
       .order("created_at", { ascending: false }),
+    adminClient
+      .schema("parent_app")
+      .from("applications")
+      .select("student_id, child_grade")
+      .eq("user_id", user.id)
+      .eq("approved", true)
+      .in("program", ["summer_26", "both"]),
   ]);
 
   const transactions = (txData ?? []) as StripeTransaction[];
   const pendingRequests = (pendingData ?? []) as PendingPaymentRequest[];
   const fullName = adminUser?.full_name ?? null;
+  const summerEnrollments = ((summerData ?? []) as { student_id: string | null; child_grade: string | null }[])
+    .filter((e): e is SummerEnrollment => !!e.student_id);
 
   const studentIds = [
     ...new Set([
@@ -133,7 +147,7 @@ export default async function BillingRoute() {
               Tuition &amp; Billing
             </h1>
           </div>
-          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} />
+          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} />
         </main>
       </div>
       <Footer />
