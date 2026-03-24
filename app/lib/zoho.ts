@@ -918,6 +918,73 @@ export async function buildWaitlistConfirmationEmail(opts: {
 }
 
 /**
+ * Build HTML outreach email for a Facebook lead (name, email, phone only — no child info)
+ */
+export async function buildFacebookLeadEmail(opts: {
+  name: string;
+}): Promise<{ subject: string; content: string }> {
+  const firstName = opts.name.split(" ")[0] || opts.name;
+
+  const subject = "Thank you for your interest in Sage Field!";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${firstName},</p>
+
+  <p>Thank you so much for your interest in Sage Field! We're thrilled you reached out and would love to share more about what we offer. Below you'll find everything you need to get a feel for our school — our programs, our approach to learning, and how to connect with us.</p>
+
+  <h2 style="font-size: 18px; margin-top: 36px; margin-bottom: 12px; color: #2c2c2c;">Our Programs</h2>
+
+  <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin-bottom: 12px;">
+    <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;">Summer 2026</p>
+    <p style="margin: 4px 0; color: #555; font-size: 14px;">May 26 – Aug 13 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Mon–Thu, ~6 hrs/day &nbsp;·&nbsp; Group of ~10</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;">Twelve weeks of themed adventures, hands-on projects, nature play, art, music, and academic enrichment in a small, nurturing group setting.</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;"><a href="https://www.sagefield.co/summer-2026" style="color: #5a7a5a;">Learn more about Summer 2026 →</a></p>
+  </div>
+
+  <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin-bottom: 12px;">
+    <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;">School Year 2026–2027</p>
+    <p style="margin: 4px 0; color: #555; font-size: 14px;">Starts Aug 17, 2026 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Up to 4 days/week &nbsp;·&nbsp; 6-month commitment</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;">A full-year microschool experience blending Montessori, Waldorf, and Reggio Emilia philosophies with TEKS-aligned academics — in a small, nature-connected environment.</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;"><a href="https://www.sagefield.co/school-year-2026-2027" style="color: #5a7a5a;">Learn more about the School Year →</a></p>
+  </div>
+
+  <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin-bottom: 28px;">
+    <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;">Homeschool Drop-In</p>
+    <p style="margin: 4px 0; color: #555; font-size: 14px;">1–5 Days/Week &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Fridays Are Field Days</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;">Flexible enriching support for homeschooling families — choose 1 to 5 days per week with ability-based grouping and all enrichments included every day.</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;"><a href="https://www.sagefield.co/homeschool" style="color: #5a7a5a;">Learn more about Homeschool Drop-In →</a></p>
+  </div>
+
+  <h2 style="font-size: 18px; margin-top: 36px; margin-bottom: 8px; color: #2c2c2c;">How We Learn</h2>
+  <p style="font-size: 14px; margin-bottom: 8px;">Sage Field integrates elements of <strong>Montessori</strong>, <strong>Waldorf</strong>, and <strong>Reggio Emilia</strong> methods with <strong>TEKS-aligned academics</strong>. We enrich every day with social-emotional education, arts, music, movement, and creative problem-solving — all in a small outdoor setting where children feel seen and supported.</p>
+  <p style="font-size: 14px; margin-bottom: 8px;">We value emotional regulation for both students and educators. A calm, connected teacher creates a community where children truly thrive.</p>
+  <p style="font-size: 14px;"><a href="https://www.sagefield.co/about" style="color: #5a7a5a;">Learn more about our philosophy →</a></p>
+
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; margin: 28px 0;">
+    <p style="margin: 0 0 6px 0; font-weight: bold; font-size: 15px;">Join Us at Our Open House</p>
+    <p style="margin: 4px 0; color: #555; font-size: 14px;">Saturday, April 25, 2026 &nbsp;·&nbsp; 2:00 PM – 4:00 PM</p>
+    <p style="margin: 4px 0; color: #555; font-size: 14px;">2760 Gattis School Rd, Round Rock, TX 78664</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;">Come tour the space, meet Sabrina and our educators, and see the outdoor learning environment in person. It's a wonderful chance to get a real feel for what Sage Field is all about.</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;"><a href="https://www.sagefield.co/rsvp" style="color: #5a7a5a; font-weight: bold;">RSVP for the Open House →</a></p>
+  </div>
+
+  <p style="margin-top: 8px; font-size: 14px;">Ready to take the next step? <a href="https://www.sagefield.co/apply" style="color: #5a7a5a; font-weight: bold;">Start your application →</a></p>
+
+  <p>If you have any questions, we'd love to hear from you — reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> or call/text us at <a href="tel:5126775872" style="color: #5a7a5a;">(512) 677-5872</a>. We're happy to chat!</p>
+
+  <p style="margin-top: 32px;">With warmth,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a><br /><a href="tel:5126775872" style="color: #5a7a5a;">(512) 677-5872</a> — call or text</p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
+/**
  * Send an email via Zoho Mail API
  */
 export async function sendZohoEmail(opts: {

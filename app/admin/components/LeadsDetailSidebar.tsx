@@ -8,6 +8,7 @@ import { LeadStatus } from '../../types/lead-status'
 import { updateWaitlistStatus, updateContactStatus } from '../../actions/updateLeadStatus'
 import { updateWaitlistLead, updateContactLead, updateCallNotes } from '../../actions/updateLeadFields'
 import { deleteWaitlistLead, deleteContactLead } from '../../actions/deleteLead'
+import { sendFacebookLeadEmail } from '../../actions/sendFacebookLeadEmail'
 import { TagEditor } from './TagEditor'
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
@@ -121,6 +122,9 @@ export function LeadsDetailSidebar({
   const [callNotesDirty, setCallNotesDirty] = useState(false)
   const [callNotesOpen, setCallNotesOpen] = useState(true)
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false)
+  const [fbEmailSending, setFbEmailSending] = useState(false)
+  const [fbEmailSent, setFbEmailSent] = useState(false)
+  const [fbEmailError, setFbEmailError] = useState<string | null>(null)
 
   const callNotesEditor = useEditor({
     extensions: [StarterKit, Highlight, TextStyle],
@@ -148,6 +152,8 @@ export function LeadsDetailSidebar({
       callNotesEditor?.commands.setContent(submission?.call_notes ?? '')
       setCallNotesSaved(false)
       setCallNotesDirty(false)
+      setFbEmailSent(false)
+      setFbEmailError(null)
     }
   }, [submission?.id])
 
@@ -281,6 +287,21 @@ export function LeadsDetailSidebar({
       setCallNotesDirty(false)
       setCallNotesSaved(true)
       setTimeout(() => setCallNotesSaved(false), 2000)
+    }
+  }
+
+  const handleSendFacebookLeadEmail = async () => {
+    if (fbEmailSending) return
+    setFbEmailSending(true)
+    setFbEmailError(null)
+    const name = isWaitlist ? (currentSubmission as WaitlistLead).parent_name : (currentSubmission as ContactLead).name
+    const result = await sendFacebookLeadEmail({ name, email: currentSubmission.email })
+    setFbEmailSending(false)
+    if (result.success) {
+      setFbEmailSent(true)
+      setTimeout(() => setFbEmailSent(false), 3000)
+    } else {
+      setFbEmailError(result.error ?? 'Failed to send email')
     }
   }
 
@@ -698,6 +719,24 @@ export function LeadsDetailSidebar({
             />
           </div>
         )}
+
+        {/* Outreach */}
+        <div className="mb-6">
+          <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-3 border-b border-gray-100 pb-2">
+            Outreach
+          </h3>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleSendFacebookLeadEmail}
+              disabled={fbEmailSending || fbEmailSent}
+              className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+            >
+              {fbEmailSending ? 'Sending…' : fbEmailSent ? '✓ Sent!' : 'Send Facebook Lead Email'}
+            </button>
+            {fbEmailError && <span className="text-xs text-red-600">{fbEmailError}</span>}
+          </div>
+        </div>
 
         {/* Email Thread Section */}
         <div className="mb-6">
