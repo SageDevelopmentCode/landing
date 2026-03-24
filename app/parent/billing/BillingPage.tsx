@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Receipt, CheckCircle2, Sun, X, Check } from "lucide-react";
+import { Receipt, CheckCircle2, Sun, X, Check, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 function getInitials(name: string | null): string {
@@ -138,14 +138,14 @@ function PendingPaymentCard({
           </div>
         )}
       </div>
-      <div className="flex-shrink-0 text-right">
-        {request.amount_cents != null ? (
-          <span className="text-sm font-semibold text-gray-800">
-            {formatCents(request.amount_cents)}
-          </span>
-        ) : (
-          <span className="text-sm text-gray-400">&mdash;</span>
-        )}
+      <div className="flex-shrink-0 flex items-center gap-1.5">
+        <span
+          className="text-sm font-semibold"
+          style={{ color: "#4a7c59" }}
+        >
+          {request.amount_cents != null ? `Pay ${formatCents(request.amount_cents)}` : "Pay Now"}
+        </span>
+        <ChevronRight className="w-4 h-4" style={{ color: "#4a7c59" }} strokeWidth={2} />
       </div>
     </div>
   );
@@ -176,10 +176,11 @@ function SummerTuitionCard({
           <span className="text-xs text-gray-500">Summer 2026</span>
         </div>
       </div>
-      <div className="flex-shrink-0 text-right">
+      <div className="flex-shrink-0 flex items-center gap-1.5">
         <span className="text-sm font-semibold" style={{ color: "#e07a3a" }}>
-          Select payment plan
+          Select plan
         </span>
+        <ChevronRight className="w-4 h-4" style={{ color: "#e07a3a" }} strokeWidth={2} />
       </div>
     </div>
   );
@@ -413,36 +414,63 @@ function SummerPaymentModal({
               exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.2, ease: "easeInOut" }}
             >
-              <p className="text-sm text-gray-500 font-body mb-4">
-                Pay for all 12 weeks at once and save 10%.
-              </p>
-
-              {/* Full summer card */}
-              <div
-                className="relative rounded-2xl p-6 text-white overflow-hidden"
-                style={{ background: "linear-gradient(135deg, #e8816a 0%, #d4614a 100%)" }}
-              >
-                {/* Save badge */}
-                <span className="absolute top-4 right-4 px-2.5 py-1 bg-white/20 border border-white/30 rounded-full text-xs font-semibold text-white">
+              {/* Pricing summary card */}
+              <div className="relative rounded-xl border border-gray-200 bg-white p-5 mb-4">
+                <span
+                  className="absolute top-3.5 right-3.5 px-2.5 py-0.5 rounded-full text-xs font-semibold text-white"
+                  style={{ backgroundColor: "#4a7c59" }}
+                >
                   Save 10%
                 </span>
 
-                <p className="text-xs font-semibold uppercase tracking-widest text-white/70 mb-3">
-                  Full Summer · 12 Weeks
+                <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">
+                  Full Summer &middot; 12 Weeks
                 </p>
-
-                <p className="text-xs text-white/70 font-body mb-0.5">{gradeTierLabel(tier)}</p>
-                <p className="text-4xl font-bold font-heading mb-1">
+                <p className="text-xs text-gray-500 font-body mb-0.5">{gradeTierLabel(tier)}</p>
+                <p className="text-3xl font-bold font-heading text-gray-800 mb-1">
                   {formatCents(fullRate)}
                 </p>
-                <p className="text-sm text-white/60 font-body">
+                <p className="text-sm text-gray-400 font-body">
                   <span className="line-through">{formatCents(fullOriginal)}</span>
-                  <span className="ml-2 text-white/80">· {formatCents(savings)} off</span>
+                  <span className="ml-1.5 text-gray-500">&middot; {formatCents(savings)} off</span>
                 </p>
+                <p className="text-xs text-gray-400 font-body mt-3">
+                  Monday&ndash;Thursday, 9am&ndash;3pm &middot; May 26 &ndash; Aug 13, 2026
+                </p>
+              </div>
 
-                <p className="text-xs text-white/60 font-body mt-4">
-                  Covers all 12 weeks of the summer program · Monday–Thursday, 9am–3pm
-                </p>
+              {/* Week breakdown */}
+              <p className="text-sm text-gray-500 font-body mb-3">
+                Your child will experience all 12 weeks of adventure:
+              </p>
+              <div className="space-y-1.5">
+                {SUMMER_WEEKS.map((w) => (
+                  <div
+                    key={w.week}
+                    className="flex items-center gap-3 rounded-lg px-3 py-2"
+                    style={{ backgroundColor: "#f9fafb" }}
+                  >
+                    <span
+                      className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: "#d4e6d0" }}
+                    >
+                      <Check className="w-3 h-3" style={{ color: "#4a7c59" }} strokeWidth={3} />
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-gray-700 font-heading">
+                          Week {w.week}
+                        </span>
+                        <span className="text-xs text-gray-400 font-body">
+                          {w.dates}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 font-body truncate">
+                        {w.theme}
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </motion.div>
           )}
