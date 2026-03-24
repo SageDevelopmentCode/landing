@@ -5,7 +5,20 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { LayoutDashboard, TrendingUp, Users, ClipboardList, DollarSign, GraduationCap, CreditCard, Mail, BookOpen, Megaphone, TreePine, MessageSquare } from "lucide-react";
+import {
+  LayoutDashboard,
+  TrendingUp,
+  Users,
+  ClipboardList,
+  DollarSign,
+  GraduationCap,
+  CreditCard,
+  Mail,
+  BookOpen,
+  Megaphone,
+  TreePine,
+  MessageSquare,
+} from "lucide-react";
 import { colors, radius, shadows, spacing } from "../design-system";
 import { Tooltip } from "./Tooltip";
 import { Merriweather } from "next/font/google";
@@ -26,63 +39,63 @@ const navItems: NavItem[] = [
   {
     name: "Dashboard",
     href: "/admin",
-    icon: <LayoutDashboard className="w-5 h-5" />,
+    icon: <LayoutDashboard className="w-4 h-4" />,
   },
   {
     name: "Leads",
     href: "/admin/leads",
-    icon: <TrendingUp className="w-5 h-5" />,
+    icon: <TrendingUp className="w-4 h-4" />,
   },
   {
     name: "Parents",
     href: "/admin/parents",
-    icon: <Users className="w-5 h-5" />,
+    icon: <Users className="w-4 h-4" />,
   },
   {
     name: "Students",
     href: "/admin/students",
-    icon: <GraduationCap className="w-5 h-5" />,
+    icon: <GraduationCap className="w-4 h-4" />,
   },
   {
     name: "Programs",
     href: "/admin/programs",
-    icon: <BookOpen className="w-5 h-5" />,
+    icon: <BookOpen className="w-4 h-4" />,
   },
   {
     name: "Applications",
     href: "/admin/applications",
-    icon: <ClipboardList className="w-5 h-5" />,
+    icon: <ClipboardList className="w-4 h-4" />,
   },
   {
     name: "Transactions",
     href: "/admin/transactions",
-    icon: <CreditCard className="w-5 h-5" />,
+    icon: <CreditCard className="w-4 h-4" />,
   },
   {
     name: "Budget",
     href: "/admin/budget",
-    icon: <DollarSign className="w-5 h-5" />,
+    icon: <DollarSign className="w-4 h-4" />,
   },
   {
     name: "Messages",
     href: "/admin/messages",
-    icon: <MessageSquare className="w-5 h-5" />,
+    icon: <MessageSquare className="w-4 h-4" />,
   },
   {
     name: "Emails",
     href: "/admin/emails",
-    icon: <Mail className="w-5 h-5" />,
+    icon: <Mail className="w-4 h-4" />,
   },
   {
     name: "Marketing",
     href: "/admin/marketing",
-    icon: <Megaphone className="w-5 h-5" />,
+    icon: <Megaphone className="w-4 h-4" />,
   },
-  {
-    name: "Property",
-    href: "/admin/property",
-    icon: <TreePine className="w-5 h-5" />,
-  },
+  // {
+  //   name: "Property",
+  //   href: "/admin/property",
+  //   icon: <TreePine className="w-4 h-4" />,
+  // },
 ];
 
 export function Sidebar({
@@ -181,7 +194,7 @@ export function Sidebar({
 
       {/* Desktop Sidebar - Icon Only */}
       <aside
-        className="hidden lg:flex flex-col w-20 h-screen sticky top-0 py-6 z-10"
+        className="hidden lg:flex flex-col w-16 h-screen sticky top-0 py-6 z-10"
         style={{
           backgroundColor: colors.warmLinen,
           borderRight: `1px solid ${colors.border}`,
@@ -197,14 +210,14 @@ export function Sidebar({
           />
         </div>
 
-        <nav className="flex-1 flex flex-col items-center justify-center space-y-2">
+        <nav className="flex-1 flex flex-col items-center space-y-2">
           {navItems.map((item) => {
             const active = isActive(item.href);
             return (
               <Tooltip key={item.href} content={item.name} side="right">
                 <Link
                   href={item.href}
-                  className="relative flex items-center justify-center p-3 transition-all duration-200"
+                  className="relative flex items-center justify-center p-2 transition-all duration-200"
                   style={{
                     backgroundColor: active ? colors.pastelSage : "transparent",
                     color: active ? colors.mistyForest : colors.textSecondary,
@@ -240,7 +253,7 @@ export function Sidebar({
           {/* Notification Bell */}
           <Tooltip content="Notifications" side="right">
             <button
-              className="p-2.5 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95"
+              className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95"
               style={{
                 backgroundColor: "white",
                 border: `1px solid ${colors.border}`,
@@ -251,7 +264,7 @@ export function Sidebar({
               aria-label="Notifications"
             >
               <svg
-                className="w-5 h-5"
+                className="w-4 h-4"
                 style={{ color: colors.textSecondary }}
                 fill="none"
                 stroke="currentColor"

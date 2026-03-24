@@ -1149,68 +1149,7 @@ export const Constants = {
     Enums: {},
   },
   messaging: {
-    Tables: {
-      conversations: {
-        Row: {
-          id: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      conversation_participants: {
-        Row: {
-          conversation_id: string
-          user_id: string
-        }
-        Insert: {
-          conversation_id: string
-          user_id: string
-        }
-        Update: {
-          conversation_id?: string
-          user_id?: string
-        }
-      }
-      messages: {
-        Row: {
-          id: string
-          conversation_id: string
-          sender_id: string
-          body: string
-          created_at: string
-          read_at: string | null
-        }
-        Insert: {
-          id?: string
-          conversation_id: string
-          sender_id: string
-          body: string
-          created_at?: string
-          read_at?: string | null
-        }
-        Update: {
-          id?: string
-          conversation_id?: string
-          sender_id?: string
-          body?: string
-          created_at?: string
-          read_at?: string | null
-        }
-      }
-    }
-    Views: {}
-    Functions: {}
-    Enums: {}
+    Enums: {},
   },
 } as const
 
