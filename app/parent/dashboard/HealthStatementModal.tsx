@@ -324,7 +324,7 @@ export default function HealthStatementModal({
                     Option A: Health Care Professional Examination
                   </p>
                   <p className="text-sm text-gray-600 font-body leading-relaxed">
-                    I hereby certify that my child, {app.child_legal_name ?? studentName}, has been examined by a licensed health care professional within the past year and is in satisfactory health to attend school. I understand that the health care professional must review and sign the Health Care Statement form provided by Sage Field Private School.
+                    I hereby certify that my child, {app.child_legal_name ?? studentName}, has been examined by a licensed health care professional within the past year and is in satisfactory health to attend school. By signing below, I agree to have the Health Care Statement form signed by my child&apos;s health care professional and email the completed form to sabrina@sagefield.co within the current school year.
                   </p>
                   <div className="flex flex-col gap-2">
                     <a
@@ -350,7 +350,7 @@ export default function HealthStatementModal({
                     </div>
                     {hasDownloaded && (
                       <p className="text-xs text-teal-700 font-body font-semibold">
-                        ✓ PDF downloaded — you may now sign below.
+                        ✓ PDF downloaded — you may sign below. Please email the completed form to sabrina@sagefield.co within the school year.
                       </p>
                     )}
                   </div>
