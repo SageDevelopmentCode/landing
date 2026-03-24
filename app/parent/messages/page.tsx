@@ -53,7 +53,7 @@ export default async function MessagesRoute() {
         </header>
 
         <main className="flex-1 flex flex-col">
-          <MessagesPage />
+          <MessagesPage userId={user.id} />
         </main>
       </div>
     </div>
