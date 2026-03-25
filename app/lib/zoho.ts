@@ -828,6 +828,67 @@ export async function buildEnrollmentReminderEmail(opts: {
 }
 
 /**
+ * Build HTML confirmation email for a completed enrollment
+ */
+export async function buildEnrollmentConfirmationEmail(opts: {
+  g1FullName: string;
+  childLegalName: string;
+  program: string | null;
+}): Promise<{ subject: string; content: string }> {
+  function formatProgram(program: string | null): string | null {
+    if (!program) return null;
+    if (program === "both") return "Summer 2026 and School Year 2026-2027";
+    if (program === "summer_26") return "Summer 2026";
+    if (program === "school_year_26_27") return "School Year 2026-2027";
+    if (program === "homeschool_drop_in") return "Homeschool Drop-In";
+    return program;
+  }
+
+  const programLabel = formatProgram(opts.program);
+  const subject = `${opts.childLegalName} is enrolled at Sage Field!`;
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${opts.g1FullName},</p>
+
+  <p>We are so glad to have <strong>${opts.childLegalName}</strong> joining us${programLabel ? ` for the <strong>${programLabel}</strong> program` : ""}. Their enrollment is complete and their spot is secured — welcome to the Sage Field family.</p>
+
+  <p style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 12px 16px; margin: 20px 0; font-size: 14px;">
+    <strong>Enrollment complete</strong> — ${opts.childLegalName} is officially enrolled${programLabel ? ` in the <strong>${programLabel}</strong> program` : ""} at Sage Field School.
+  </p>
+
+  <p style="margin-top: 24px;"><strong>What's coming next:</strong></p>
+  <ol style="padding-left: 20px;">
+    <li style="margin-bottom: 12px;">
+      <strong>Tuition</strong> — We will be reaching out soon with tuition details and payment information. Keep an eye on your inbox.
+    </li>
+    <li style="margin-bottom: 12px;">
+      <strong>Parent Dashboard</strong> — Your parent dashboard at <a href="https://www.sagefield.co/parent/dashboard" style="color: #5a7a5a; font-weight: bold;">sagefield.co/parent/dashboard</a> is your central hub. Bookmark it — we will use it to share updates, documents, and important information throughout the year.
+    </li>
+    <li style="margin-bottom: 12px;">
+      <strong>Sage Field Mobile App</strong> — We have a mobile app in the works that will make staying connected even easier. We will let you know as soon as it is available.
+    </li>
+    <li style="margin-bottom: 12px;">
+      <strong>Preparing for the Program</strong> — Closer to the start date, we will send a detailed guide on what to expect, what to bring, and how to prepare ${opts.childLegalName} for their first day.
+    </li>
+  </ol>
+
+  <p>In the meantime, if you have any questions at all, please don't hesitate to reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a>. We are always happy to help.</p>
+
+  <p>We cannot wait to see ${opts.childLegalName} thrive at Sage Field.</p>
+
+  <p style="margin-top: 32px;">With warmth,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
+/**
  * Build HTML confirmation email for an Open House RSVP
  */
 export async function buildRSVPConfirmationEmail(opts: {

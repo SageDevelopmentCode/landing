@@ -13,6 +13,7 @@ import { getAdminEnrollmentData, type AdminEnrollmentData } from '../../actions/
 import { EnrollmentProgressCard, type ApprovedApplication } from './EnrollmentProgressCard'
 import { EmailThread } from './EmailThread'
 import { sendEnrollmentReminderEmail } from '../../actions/sendEnrollmentReminderEmail'
+import { sendEnrollmentConfirmationEmail } from '../../actions/sendEnrollmentConfirmationEmail'
 
 export type CachedEnrollmentData = AdminEnrollmentData & {
   registrationFeePaidByStudent: Record<string, boolean>
@@ -133,6 +134,9 @@ export function ApplicationDetailSidebar({
   const [reminderSending, setReminderSending] = useState(false)
   const [reminderSent, setReminderSent] = useState(false)
   const [reminderError, setReminderError] = useState<string | null>(null)
+  const [confirmationSending, setConfirmationSending] = useState(false)
+  const [confirmationSent, setConfirmationSent] = useState(false)
+  const [confirmationError, setConfirmationError] = useState<string | null>(null)
   const [enrollmentData, setEnrollmentData] = useState<AdminEnrollmentData & { registrationFeePaidByStudent: Record<string, boolean> } | null>(null)
   const [enrollmentLoading, setEnrollmentLoading] = useState(false)
   const [siblingApps, setSiblingApps] = useState<ApprovedApplication[]>([])
@@ -277,6 +281,25 @@ export function ApplicationDetailSidebar({
       setDenyReason('')
     } else {
       setDenyError(result.error ?? 'Failed to deny')
+    }
+  }
+
+  const handleSendEnrollmentConfirmation = async () => {
+    if (confirmationSending || !application.g1_email) return
+    setConfirmationSending(true)
+    setConfirmationError(null)
+    const result = await sendEnrollmentConfirmationEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      program: application.program,
+      email: application.g1_email,
+    })
+    setConfirmationSending(false)
+    if (result.success) {
+      setConfirmationSent(true)
+      setTimeout(() => setConfirmationSent(false), 3000)
+    } else {
+      setConfirmationError(result.error ?? 'Failed to send')
     }
   }
 
@@ -490,16 +513,29 @@ export function ApplicationDetailSidebar({
 
         {application.approved && application.g1_email && (
           <SidebarSection title="Outreach">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleSendEnrollmentReminder}
-                disabled={reminderSending || reminderSent}
-                className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
-              >
-                {reminderSending ? 'Sending…' : reminderSent ? '✓ Sent!' : 'Send Enrollment Reminder'}
-              </button>
-              {reminderError && <span className="text-xs text-red-600">{reminderError}</span>}
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleSendEnrollmentReminder}
+                  disabled={reminderSending || reminderSent}
+                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                >
+                  {reminderSending ? 'Sending…' : reminderSent ? '✓ Sent!' : 'Send Enrollment Reminder'}
+                </button>
+                {reminderError && <span className="text-xs text-red-600">{reminderError}</span>}
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleSendEnrollmentConfirmation}
+                  disabled={confirmationSending || confirmationSent}
+                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                >
+                  {confirmationSending ? 'Sending…' : confirmationSent ? '✓ Sent!' : 'Send Enrollment Confirmation'}
+                </button>
+                {confirmationError && <span className="text-xs text-red-600">{confirmationError}</span>}
+              </div>
             </div>
           </SidebarSection>
         )}
