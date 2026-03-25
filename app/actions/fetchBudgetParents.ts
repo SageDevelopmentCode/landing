@@ -6,7 +6,6 @@ export async function fetchBudgetParents() {
     .schema('admin')
     .from('users')
     .select('id, full_name, email, g1_cell_phone')
-    .eq('role', 'parent')
     .eq('is_deleted', false)
     .order('full_name')
   if (error) return []

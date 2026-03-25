@@ -3056,7 +3056,7 @@ function RevenueTab({
   onRefresh: () => void;
 }) {
   const [selectedTransaction, setSelectedTransaction] = useState<StripeTransaction | null>(null);
-  const [hideExcluded, setHideExcluded] = useState(false);
+  const [hideExcluded, setHideExcluded] = useState(true);
   const [students, setStudents] = useState<{ id: string; child_legal_name: string | null }[]>([]);
   const [parents, setParents] = useState<{ id: string; full_name: string | null; email: string; g1_cell_phone: string | null }[]>([]);
   const [enrollment, setEnrollment] = useState({
@@ -3169,7 +3169,12 @@ function RevenueTab({
                     : "—"}
                 </TableCell>
                 <TableCell>{tx.application_id ? "✓" : "—"}</TableCell>
-                <TableCell>{tx.payer_name ?? tx.payer_email ?? "—"}</TableCell>
+                <TableCell>
+                  {(() => {
+                    const effectiveParentId = tx.parent_id ?? (tx.metadata?.parent_id as string | null) ?? null
+                    return tx.payer_name || tx.payer_email || (effectiveParentId ? (parents.find(p => p.id === effectiveParentId)?.email ?? "—") : "—")
+                  })()}
+                </TableCell>
                 <TableCell
                   className="font-semibold"
                   style={{ color: tx.exclude_from_revenue ? '#9CA3AF' : colors.successText }}
