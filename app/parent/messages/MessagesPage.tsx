@@ -31,6 +31,12 @@ function colorForId(id: string): string {
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
+function roleLabel(role: string | null): string {
+  if (role === "teacher" || role === "super_admin") return "Teacher";
+  if (role === "parent") return "Parent";
+  return "";
+}
+
 function initialsFor(name: string): string {
   return name
     .split(" ")
@@ -352,6 +358,11 @@ export default function MessagesPage({ userId }: { userId: string }) {
                       </span>
                     )}
                   </div>
+                  {roleLabel(convo.otherUser.role) && (
+                    <p className="text-[11px] text-gray-400 font-body">
+                      {roleLabel(convo.otherUser.role)}
+                    </p>
+                  )}
                   <div className="flex items-center gap-2 mt-0.5">
                     <p className="text-xs text-gray-500 font-body truncate flex-1">
                       {convo.lastMessage?.body ?? "No messages yet"}
@@ -392,6 +403,11 @@ export default function MessagesPage({ userId }: { userId: string }) {
                 <p className="text-sm font-semibold font-body text-gray-800">
                   {active.otherUser.full_name}
                 </p>
+                {roleLabel(active.otherUser.role) && (
+                  <p className="text-[11px] text-gray-400 font-body">
+                    {roleLabel(active.otherUser.role)}
+                  </p>
+                )}
               </div>
             </div>
 

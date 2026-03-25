@@ -9,6 +9,7 @@ export type ConversationWithMeta = {
   otherUser: {
     id: string;
     full_name: string;
+    role: string | null;
   };
   lastMessage: {
     body: string;
@@ -75,7 +76,7 @@ export async function getConversations(userId: string): Promise<ConversationWith
   const { data: adminUsers } = await adminClient
     .schema("admin")
     .from("users")
-    .select("id, full_name")
+    .select("id, full_name, role")
     .in("id", otherUserIds);
 
   const userMap = new Map((adminUsers ?? []).map((u) => [u.id, u]));
@@ -114,6 +115,7 @@ export async function getConversations(userId: string): Promise<ConversationWith
         otherUser: {
           id: otherUser?.id ?? otherParticipant?.user_id ?? "",
           full_name: otherUser?.full_name ?? "Unknown",
+          role: otherUser?.role ?? null,
         },
         lastMessage: lastMessage
           ? {
