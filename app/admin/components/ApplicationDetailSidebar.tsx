@@ -140,6 +140,7 @@ export function ApplicationDetailSidebar({
   const [enrollmentData, setEnrollmentData] = useState<AdminEnrollmentData & { registrationFeePaidByStudent: Record<string, boolean> } | null>(null)
   const [enrollmentLoading, setEnrollmentLoading] = useState(false)
   const [siblingApps, setSiblingApps] = useState<ApprovedApplication[]>([])
+  const [emailThreadKey, setEmailThreadKey] = useState(0)
 
   useEffect(() => {
     if (!application?.approved) {
@@ -297,6 +298,7 @@ export function ApplicationDetailSidebar({
     setConfirmationSending(false)
     if (result.success) {
       setConfirmationSent(true)
+      setEmailThreadKey(k => k + 1)
       setTimeout(() => setConfirmationSent(false), 3000)
     } else {
       setConfirmationError(result.error ?? 'Failed to send')
@@ -316,6 +318,7 @@ export function ApplicationDetailSidebar({
     setReminderSending(false)
     if (result.success) {
       setReminderSent(true)
+      setEmailThreadKey(k => k + 1)
       setTimeout(() => setReminderSent(false), 3000)
     } else {
       setReminderError(result.error ?? 'Failed to send')
@@ -576,7 +579,7 @@ export function ApplicationDetailSidebar({
 
         {application.g1_email && (
           <SidebarSection title="Email History">
-            <EmailThread emailAddress={application.g1_email} />
+            <EmailThread key={emailThreadKey} emailAddress={application.g1_email} />
           </SidebarSection>
         )}
 

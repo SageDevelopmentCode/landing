@@ -5,8 +5,8 @@ export const colors = {
   // Primary Palette - Soft Pastels
   pastelSage: '#BFD8C0',
   mistyForest: '#5E7C68',
-  warmLinen: '#F6F1E8',
-  softCloud: '#FBFAF7',
+  warmLinen: '#F3F4F6',
+  softCloud: '#F9FAFB',
 
   // Secondary / Accent Pastels
   dustyRose: '#E6B7B2',
@@ -28,15 +28,15 @@ export const colors = {
   textPrimary: '#3D3D3D',
   textSecondary: '#6B6B6B',
   textTertiary: '#9B9B9B',
-  border: '#E8E4DF',
-  divider: '#F0EDE8',
+  border: '#E5E7EB',
+  divider: '#F3F4F6',
 } as const
 
 export const shadows = {
-  soft: '0 2px 8px rgba(94, 124, 104, 0.08)',
-  medium: '0 4px 16px rgba(94, 124, 104, 0.12)',
-  large: '0 8px 24px rgba(94, 124, 104, 0.15)',
-  inner: 'inset 0 2px 4px rgba(94, 124, 104, 0.06)',
+  soft: '0 2px 8px rgba(0, 0, 0, 0.06)',
+  medium: '0 4px 16px rgba(0, 0, 0, 0.08)',
+  large: '0 8px 24px rgba(0, 0, 0, 0.10)',
+  inner: 'inset 0 2px 4px rgba(0, 0, 0, 0.04)',
 } as const
 
 export const radius = {
