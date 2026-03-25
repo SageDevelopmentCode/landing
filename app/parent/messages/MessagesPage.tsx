@@ -290,11 +290,11 @@ export default function MessagesPage({ userId }: { userId: string }) {
   );
 
   return (
-    <div className="flex flex-1 bg-white overflow-hidden">
+    <div className="flex flex-1 min-h-0 bg-white overflow-hidden">
       {/* Conversation list */}
-      <div className={`w-full md:w-80 md:min-w-[320px] border-r border-gray-100 flex flex-col ${mobileShowChat ? "hidden md:flex" : "flex"}`}>
+      <div className={`w-full md:w-80 md:min-w-[320px] border-r border-gray-100 flex flex-col min-h-0 overflow-hidden ${mobileShowChat ? "hidden md:flex" : "flex"}`}>
         {/* Search + New Message */}
-        <div className="p-3 border-b border-gray-100">
+        <div className="p-3 border-b border-gray-100 shrink-0">
           <div className="relative mb-2">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
@@ -370,7 +370,7 @@ export default function MessagesPage({ userId }: { userId: string }) {
       </div>
 
       {/* Chat area */}
-      <div className={`flex-1 flex flex-col ${mobileShowChat ? "flex" : "hidden md:flex"}`}>
+      <div className={`flex-1 min-h-0 flex flex-col overflow-hidden ${mobileShowChat ? "flex" : "hidden md:flex"}`}>
         {!active ? (
           <div className="flex-1 flex items-center justify-center">
             <p className="text-sm text-gray-400 font-body">Select a conversation or start a new one</p>
@@ -378,7 +378,7 @@ export default function MessagesPage({ userId }: { userId: string }) {
         ) : (
           <>
             {/* Chat header */}
-            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-gray-100">
+            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-gray-100 shrink-0">
               <button
                 onClick={() => setMobileShowChat(false)}
                 className="md:hidden text-gray-500 hover:text-gray-700 cursor-pointer"
@@ -439,7 +439,7 @@ export default function MessagesPage({ userId }: { userId: string }) {
             </div>
 
             {/* Input */}
-            <div className="border-t border-gray-100">
+            <div className="border-t border-gray-100 shrink-0">
               {sendError && (
                 <p className="px-4 pt-2 text-xs text-red-500">{sendError}</p>
               )}

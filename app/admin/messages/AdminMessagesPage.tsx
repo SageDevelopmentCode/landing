@@ -256,11 +256,11 @@ export default function AdminMessagesPage({ userId }: { userId: string }) {
       <div className="flex flex-1 overflow-hidden bg-white">
         {/* Conversation list */}
         <div
-          className={`w-full md:w-80 md:min-w-[300px] flex flex-col border-r ${mobileShowChat ? "hidden md:flex" : "flex"}`}
+          className={`w-full md:w-80 md:min-w-[300px] flex flex-col min-h-0 border-r overflow-hidden ${mobileShowChat ? "hidden md:flex" : "flex"}`}
           style={{ borderColor: colors.border }}
         >
           {/* Search */}
-          <div className="p-3 border-b" style={{ borderColor: colors.border }}>
+          <div className="p-3 border-b shrink-0" style={{ borderColor: colors.border }}>
             <div className="relative">
               <Search
                 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
@@ -340,7 +340,7 @@ export default function AdminMessagesPage({ userId }: { userId: string }) {
         </div>
 
         {/* Chat area */}
-        <div className={`flex-1 flex flex-col ${mobileShowChat ? "flex" : "hidden md:flex"}`}>
+        <div className={`flex-1 min-h-0 flex flex-col overflow-hidden ${mobileShowChat ? "flex" : "hidden md:flex"}`}>
           {!active ? (
             <div className="flex-1 flex items-center justify-center">
               <p className="text-sm" style={{ color: colors.textTertiary }}>

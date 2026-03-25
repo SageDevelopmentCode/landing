@@ -28,8 +28,8 @@ export default async function MessagesRoute() {
   const fullName = adminUser?.full_name ?? null;
 
   return (
-    <div className="bg-welcome-bg">
-      <div className="min-h-screen flex flex-col">
+    <div className="bg-welcome-bg h-screen overflow-hidden">
+      <div className="h-full flex flex-col">
         <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-3 items-center">
           <div className="flex items-center">
             <Link href="/">
@@ -52,7 +52,7 @@ export default async function MessagesRoute() {
           </div>
         </header>
 
-        <main className="flex-1 flex flex-col">
+        <main className="flex-1 min-h-0 flex flex-col">
           <MessagesPage userId={user.id} />
         </main>
       </div>
