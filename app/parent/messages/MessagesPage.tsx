@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Search, Send, ChevronLeft, SquarePen, X, Loader2 } from "lucide-react";
+import { Search, Send, ChevronLeft, SquarePen, X, Loader2, ImageIcon } from "lucide-react";
 import { createClient } from "@/app/lib/supabase-browser";
 import {
   getConversations,
@@ -10,6 +10,7 @@ import {
   createConversation,
   searchUsers,
   markMessagesRead,
+  uploadMessageImage,
   type ConversationWithMeta,
   type MessageRow,
 } from "./actions";
@@ -61,6 +62,10 @@ export default function MessagesPage({ userId }: { userId: string }) {
   const [loadingConvos, setLoadingConvos] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // New message modal
   const [showNewModal, setShowNewModal] = useState(false);
@@ -184,11 +189,60 @@ export default function MessagesPage({ userId }: { userId: string }) {
     setCreatingConvo(false);
   };
 
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    let file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+
+    // Convert HEIC/HEIF → JPEG (browsers can't display HEIC natively)
+    const isHeic =
+      file.type === "image/heic" ||
+      file.type === "image/heif" ||
+      file.name.toLowerCase().endsWith(".heic") ||
+      file.name.toLowerCase().endsWith(".heif");
+    if (isHeic) {
+      try {
+        const heic2any = (await import("heic2any")).default;
+        const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.85 });
+        const blob = Array.isArray(converted) ? converted[0] : converted;
+        const jpegName = file.name.replace(/\.(heic|heif)$/i, ".jpg");
+        file = new File([blob], jpegName, { type: "image/jpeg" });
+      } catch (err) {
+        console.error("[handleImageSelect] HEIC conversion failed:", err);
+        setSendError("Failed to convert HEIC image. Please try a JPEG or PNG.");
+        return;
+      }
+    }
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
   const handleSend = async () => {
-    if (!draft.trim() || !activeId || sending) return;
+    if ((!draft.trim() && !imageFile) || !activeId || sending) return;
     const body = draft.trim();
     setDraft("");
+    setSendError(null);
     setSending(true);
+
+    // Upload image first if selected
+    let imageUrl: string | undefined;
+    if (imageFile) {
+      const fd = new FormData();
+      fd.append("file", imageFile);
+      fd.append("conversationId", activeId);
+      const result = await uploadMessageImage(fd);
+      if ("url" in result) {
+        imageUrl = result.url;
+      } else {
+        console.error("[handleSend] image upload failed:", result.error);
+        setSendError(`Image upload failed: ${result.error}`);
+        setSending(false);
+        return;
+      }
+      setImageFile(null);
+      setImagePreview(null);
+    }
 
     // Optimistic message
     const tempId = `temp-${Date.now()}`;
@@ -199,14 +253,18 @@ export default function MessagesPage({ userId }: { userId: string }) {
       body,
       created_at: new Date().toISOString(),
       read_at: null,
+      image_url: imageUrl ?? null,
     };
     setMessages((prev) => [...prev, optimistic]);
 
-    const saved = await sendMessage(activeId, body);
+    const saved = await sendMessage(activeId, body, imageUrl);
 
     // Replace optimistic with real row
     if (saved) {
-      setMessages((prev) => prev.map((m) => (m.id === tempId ? saved : m)));
+      setMessages((prev) => {
+        const deduped = prev.filter((m) => m.id !== saved.id);
+        return deduped.map((m) => (m.id === tempId ? saved : m));
+      });
       setConversations((prev) =>
         prev.map((c) =>
           c.id === activeId
@@ -219,7 +277,8 @@ export default function MessagesPage({ userId }: { userId: string }) {
         )
       );
     } else {
-      // Remove optimistic on failure
+      console.error("[handleSend] sendMessage returned null");
+      setSendError("Failed to send message. Please try again.");
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
     }
     setSending(false);
@@ -243,7 +302,7 @@ export default function MessagesPage({ userId }: { userId: string }) {
               placeholder="Search conversations..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-sm font-body bg-gray-50 border border-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59]/40"
+              className="w-full pl-9 pr-3 py-2 text-sm font-body bg-gray-50 border border-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59]/40 text-gray-800 placeholder:text-gray-400"
             />
           </div>
           <button
@@ -358,7 +417,16 @@ export default function MessagesPage({ userId }: { userId: string }) {
                             : "bg-gray-100 text-gray-800 rounded-bl-md"
                         }`}
                       >
-                        <p>{msg.body}</p>
+                        {msg.image_url && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={msg.image_url}
+                            alt="attachment"
+                            className="rounded-xl max-w-full max-h-60 object-cover cursor-pointer mb-1"
+                            onClick={() => window.open(msg.image_url!, "_blank")}
+                          />
+                        )}
+                        {msg.body && <p>{msg.body}</p>}
                         <p className={`text-[10px] mt-1 ${fromMe ? "text-white/60" : "text-gray-400"}`}>
                           {formatTime(msg.created_at)}
                         </p>
@@ -371,8 +439,38 @@ export default function MessagesPage({ userId }: { userId: string }) {
             </div>
 
             {/* Input */}
-            <div className="px-4 py-3 border-t border-gray-100">
-              <div className="flex items-center gap-2">
+            <div className="border-t border-gray-100">
+              {sendError && (
+                <p className="px-4 pt-2 text-xs text-red-500">{sendError}</p>
+              )}
+              {imagePreview && (
+                <div className="px-4 pt-2 flex items-center gap-2">
+                  <div className="relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={imagePreview} alt="preview" className="h-16 w-16 object-cover rounded-lg border border-gray-200" />
+                    <button
+                      onClick={() => { setImageFile(null); setImagePreview(null); }}
+                      className="absolute -top-1.5 -right-1.5 bg-white rounded-full shadow p-0.5 cursor-pointer"
+                    >
+                      <X className="w-3 h-3 text-gray-500" />
+                    </button>
+                  </div>
+                </div>
+              )}
+              <div className="px-4 py-3 flex items-center gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*,.heic,.heif"
+                  className="hidden"
+                  onChange={handleImageSelect}
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-[#4a7c59] transition-colors cursor-pointer shrink-0"
+                >
+                  <ImageIcon className="w-5 h-5" />
+                </button>
                 <input
                   type="text"
                   placeholder="Type a message..."
@@ -384,11 +482,11 @@ export default function MessagesPage({ userId }: { userId: string }) {
                       handleSend();
                     }
                   }}
-                  className="flex-1 px-4 py-2.5 text-sm font-body bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59]/40"
+                  className="flex-1 px-4 py-2.5 text-sm font-body bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59]/40 text-gray-800 placeholder:text-gray-400"
                 />
                 <button
                   onClick={handleSend}
-                  disabled={!draft.trim() || sending}
+                  disabled={(!draft.trim() && !imageFile) || sending}
                   className="w-10 h-10 rounded-xl bg-[#4a7c59] hover:bg-[#3d6849] disabled:opacity-50 text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
                 >
                   <Send className="w-4 h-4" />
@@ -425,7 +523,7 @@ export default function MessagesPage({ userId }: { userId: string }) {
                   placeholder="Search by name..."
                   value={recipientSearch}
                   onChange={(e) => handleRecipientSearch(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-sm font-body bg-gray-50 border border-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59]/40"
+                  className="w-full pl-9 pr-3 py-2 text-sm font-body bg-gray-50 border border-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59]/40 text-gray-800 placeholder:text-gray-400"
                 />
               </div>
               <div className="mt-2 max-h-60 overflow-y-auto">

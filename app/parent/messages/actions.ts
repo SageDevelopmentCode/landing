@@ -25,6 +25,7 @@ export type MessageRow = {
   body: string;
   created_at: string;
   read_at: string | null;
+  image_url: string | null;
 };
 
 export async function getConversations(userId: string): Promise<ConversationWithMeta[]> {
@@ -135,7 +136,7 @@ export async function getMessages(conversationId: string): Promise<MessageRow[]>
   const { data, error } = await supabase
     .schema("messaging")
     .from("messages")
-    .select("id, conversation_id, sender_id, body, created_at, read_at")
+    .select("id, conversation_id, sender_id, body, created_at, read_at, image_url")
     .eq("conversation_id", conversationId)
     .order("created_at", { ascending: true });
 
@@ -143,7 +144,7 @@ export async function getMessages(conversationId: string): Promise<MessageRow[]>
   return data ?? [];
 }
 
-export async function sendMessage(conversationId: string, body: string): Promise<MessageRow | null> {
+export async function sendMessage(conversationId: string, body: string, imageUrl?: string): Promise<MessageRow | null> {
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
@@ -151,7 +152,12 @@ export async function sendMessage(conversationId: string, body: string): Promise
   const { data, error } = await supabase
     .schema("messaging")
     .from("messages")
-    .insert({ conversation_id: conversationId, sender_id: user.id, body })
+    .insert({
+      conversation_id: conversationId,
+      sender_id: user.id,
+      body,
+      ...(imageUrl ? { image_url: imageUrl } : {}),
+    })
     .select()
     .single();
 
@@ -248,6 +254,46 @@ export async function searchUsers(query: string): Promise<{ id: string; full_nam
 
   if (error) return [];
   return data ?? [];
+}
+
+export async function uploadMessageImage(
+  formData: FormData
+): Promise<{ url: string } | { error: string }> {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    console.error("[uploadMessageImage] auth error:", authError);
+    return { error: "Not authenticated" };
+  }
+
+  const file = formData.get("file") as File;
+  const conversationId = formData.get("conversationId") as string;
+  if (!file || !conversationId) {
+    console.error("[uploadMessageImage] missing file or conversationId");
+    return { error: "Missing fields" };
+  }
+
+  const timestamp = Date.now();
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const path = `${user.id}/${conversationId}/${timestamp}-${safeName}`;
+
+  // Use admin client to bypass RLS (same pattern as markMessagesRead)
+  const adminClient = createAdminClient();
+  const { error: uploadError } = await adminClient.storage
+    .from("message-images")
+    .upload(path, file, { contentType: file.type, upsert: false });
+
+  if (uploadError) {
+    console.error("[uploadMessageImage] storage upload error:", uploadError);
+    return { error: uploadError.message };
+  }
+
+  const { data: { publicUrl } } = adminClient.storage
+    .from("message-images")
+    .getPublicUrl(path);
+
+  console.log("[uploadMessageImage] success:", publicUrl);
+  return { url: publicUrl };
 }
 
 export async function markMessagesRead(conversationId: string, userId: string): Promise<void> {

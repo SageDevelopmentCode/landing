@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Search, Send, ChevronLeft, Loader2 } from "lucide-react";
+import { Search, Send, ChevronLeft, Loader2, ImageIcon, X } from "lucide-react";
 import { Merriweather } from "next/font/google";
 import { createClient } from "@/app/lib/supabase-browser";
 import { colors, shadows } from "@/app/admin/design-system";
@@ -10,6 +10,7 @@ import {
   getMessages,
   sendMessage,
   markMessagesRead,
+  uploadMessageImage,
   type ConversationWithMeta,
   type MessageRow,
 } from "@/app/parent/messages/actions";
@@ -55,6 +56,10 @@ export default function AdminMessagesPage({ userId }: { userId: string }) {
   const [loadingConvos, setLoadingConvos] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const active = conversations.find((c) => c.id === activeId) ?? null;
@@ -127,11 +132,58 @@ export default function AdminMessagesPage({ userId }: { userId: string }) {
     return () => { supabase.removeChannel(channel); };
   }, [activeId, userId]);
 
+  const handleImageSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    let file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+
+    const isHeic =
+      file.type === "image/heic" ||
+      file.type === "image/heif" ||
+      file.name.toLowerCase().endsWith(".heic") ||
+      file.name.toLowerCase().endsWith(".heif");
+    if (isHeic) {
+      try {
+        const heic2any = (await import("heic2any")).default;
+        const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.85 });
+        const blob = Array.isArray(converted) ? converted[0] : converted;
+        const jpegName = file.name.replace(/\.(heic|heif)$/i, ".jpg");
+        file = new File([blob], jpegName, { type: "image/jpeg" });
+      } catch (err) {
+        console.error("[handleImageSelect] HEIC conversion failed:", err);
+        setSendError("Failed to convert HEIC image. Please try a JPEG or PNG.");
+        return;
+      }
+    }
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  }, []);
+
   const handleSend = useCallback(async () => {
-    if (!draft.trim() || !activeId || sending) return;
+    if ((!draft.trim() && !imageFile) || !activeId || sending) return;
     const body = draft.trim();
     setDraft("");
+    setSendError(null);
     setSending(true);
+
+    let imageUrl: string | undefined;
+    if (imageFile) {
+      const fd = new FormData();
+      fd.append("file", imageFile);
+      fd.append("conversationId", activeId);
+      const result = await uploadMessageImage(fd);
+      if ("url" in result) {
+        imageUrl = result.url;
+      } else {
+        console.error("[handleSend] image upload failed:", result.error);
+        setSendError(`Image upload failed: ${result.error}`);
+        setSending(false);
+        return;
+      }
+      setImageFile(null);
+      setImagePreview(null);
+    }
 
     const tempId = `temp-${Date.now()}`;
     const optimistic: MessageRow = {
@@ -141,12 +193,16 @@ export default function AdminMessagesPage({ userId }: { userId: string }) {
       body,
       created_at: new Date().toISOString(),
       read_at: null,
+      image_url: imageUrl ?? null,
     };
     setMessages((prev) => [...prev, optimistic]);
 
-    const saved = await sendMessage(activeId, body);
+    const saved = await sendMessage(activeId, body, imageUrl);
     if (saved) {
-      setMessages((prev) => prev.map((m) => (m.id === tempId ? saved : m)));
+      setMessages((prev) => {
+        const deduped = prev.filter((m) => m.id !== saved.id);
+        return deduped.map((m) => (m.id === tempId ? saved : m));
+      });
       setConversations((prev) =>
         prev.map((c) =>
           c.id === activeId
@@ -159,10 +215,12 @@ export default function AdminMessagesPage({ userId }: { userId: string }) {
         )
       );
     } else {
+      console.error("[handleSend] sendMessage returned null");
+      setSendError("Failed to send message. Please try again.");
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
     }
     setSending(false);
-  }, [draft, activeId, sending, userId]);
+  }, [draft, imageFile, activeId, sending, userId]);
 
   const filtered = conversations.filter((c) =>
     c.otherUser.full_name.toLowerCase().includes(search.toLowerCase())
@@ -213,7 +271,7 @@ export default function AdminMessagesPage({ userId }: { userId: string }) {
                 placeholder="Search conversations..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2"
+                className="w-full pl-9 pr-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 placeholder:text-gray-400"
                 style={{
                   backgroundColor: colors.warmLinen,
                   border: `1px solid ${colors.border}`,
@@ -338,7 +396,16 @@ export default function AdminMessagesPage({ userId }: { userId: string }) {
                             borderBottomLeftRadius: fromMe ? undefined : "4px",
                           }}
                         >
-                          <p>{msg.body}</p>
+                          {msg.image_url && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={msg.image_url}
+                              alt="attachment"
+                              className="rounded-xl max-w-full max-h-60 object-cover cursor-pointer mb-1"
+                              onClick={() => window.open(msg.image_url!, "_blank")}
+                            />
+                          )}
+                          {msg.body && <p>{msg.body}</p>}
                           <p
                             className="text-[10px] mt-1"
                             style={{ color: fromMe ? "rgba(255,255,255,0.6)" : colors.textTertiary }}
@@ -354,8 +421,39 @@ export default function AdminMessagesPage({ userId }: { userId: string }) {
               </div>
 
               {/* Input */}
-              <div className="px-4 py-3 border-t shrink-0" style={{ borderColor: colors.border }}>
-                <div className="flex items-center gap-2">
+              <div className="border-t shrink-0" style={{ borderColor: colors.border }}>
+                {sendError && (
+                  <p className="px-4 pt-2 text-xs text-red-500">{sendError}</p>
+                )}
+                {imagePreview && (
+                  <div className="px-4 pt-2 flex items-center gap-2">
+                    <div className="relative">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={imagePreview} alt="preview" className="h-16 w-16 object-cover rounded-lg border" style={{ borderColor: colors.border }} />
+                      <button
+                        onClick={() => { setImageFile(null); setImagePreview(null); }}
+                        className="absolute -top-1.5 -right-1.5 bg-white rounded-full shadow p-0.5 cursor-pointer"
+                      >
+                        <X className="w-3 h-3" style={{ color: colors.textSecondary }} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+                <div className="px-4 py-3 flex items-center gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*,.heic,.heif"
+                    className="hidden"
+                    onChange={handleImageSelect}
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                    style={{ color: colors.textTertiary }}
+                  >
+                    <ImageIcon className="w-5 h-5" />
+                  </button>
                   <input
                     type="text"
                     placeholder="Type a reply..."
@@ -367,7 +465,7 @@ export default function AdminMessagesPage({ userId }: { userId: string }) {
                         handleSend();
                       }
                     }}
-                    className="flex-1 px-4 py-2.5 text-sm rounded-xl focus:outline-none focus:ring-2"
+                    className="flex-1 px-4 py-2.5 text-sm rounded-xl focus:outline-none focus:ring-2 placeholder:text-gray-400"
                     style={{
                       backgroundColor: colors.warmLinen,
                       border: `1px solid ${colors.border}`,
@@ -376,7 +474,7 @@ export default function AdminMessagesPage({ userId }: { userId: string }) {
                   />
                   <button
                     onClick={handleSend}
-                    disabled={!draft.trim() || sending}
+                    disabled={(!draft.trim() && !imageFile) || sending}
                     className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors cursor-pointer shrink-0 disabled:opacity-50"
                     style={{ backgroundColor: colors.mistyForest, color: "white" }}
                   >
