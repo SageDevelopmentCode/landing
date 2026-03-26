@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ChevronLeft, ChevronRight, ChevronDown, Plus, X, Link2, Upload } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, Plus, X, Link2, Upload, Pencil, MapPin, Users, RefreshCw, Bell, StickyNote } from "lucide-react";
 import { Merriweather } from "next/font/google";
 import { motion, AnimatePresence } from "framer-motion";
 import { colors, radius, shadows } from "../design-system";
 import { saveCalendarEvent } from "@/app/actions/saveCalendarEvent";
+import { updateCalendarEvent } from "@/app/actions/updateCalendarEvent";
 
 const merriweather = Merriweather({
   weight: ["300", "400", "700", "900"],
@@ -24,6 +25,19 @@ type CalendarEvent = {
   end_time: string | null;
   color: string;
   category: string | null;
+  shared_with: string[];
+  programs: string[];
+  description: string | null;
+  location: string | null;
+  recurrence: string | null;
+  recurrence_end_date: string | null;
+  attachment_links: string[];
+  rsvp_enabled: boolean;
+  reminder_email: boolean;
+  reminder_in_app: boolean;
+  reminder_timing: string | null;
+  internal_notes: string | null;
+  created_by: string | null;
 };
 
 const SHARE_GROUPS = ["Teachers", "Parents"];
@@ -199,44 +213,51 @@ function ToggleSwitch({
 function AddEventPanel({
   onClose,
   onSave,
+  onUpdate,
   initialDate,
   initialHour,
   currentUser,
+  eventToEdit,
 }: {
   onClose: () => void;
-  onSave: (event: CalendarEvent) => void;
+  onSave?: (event: CalendarEvent) => void;
+  onUpdate?: (event: CalendarEvent) => void;
   initialDate?: Date | null;
   initialHour?: number | null;
   currentUser?: { full_name: string; role: string; id: string } | null;
+  eventToEdit?: CalendarEvent | null;
 }) {
-  const [eventName, setEventName] = useState("");
-  const [eventDate, setEventDate] = useState(initialDate ? formatDateInput(initialDate) : "");
-  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
-  const [isAllDay, setIsAllDay] = useState(false);
+  const isEditMode = !!eventToEdit;
+  const [eventName, setEventName] = useState(eventToEdit?.title ?? "");
+  const [eventDate, setEventDate] = useState(
+    eventToEdit?.event_date ?? (initialDate ? formatDateInput(initialDate) : "")
+  );
+  const [selectedGroups, setSelectedGroups] = useState<string[]>(eventToEdit?.shared_with ?? []);
+  const [isAllDay, setIsAllDay] = useState(eventToEdit?.is_all_day ?? false);
   const [startTime, setStartTime] = useState(
-    initialHour != null ? `${String(initialHour).padStart(2, "0")}:00` : ""
+    eventToEdit?.start_time ?? (initialHour != null ? `${String(initialHour).padStart(2, "0")}:00` : "")
   );
   const [endTime, setEndTime] = useState(
-    initialHour != null ? `${String(initialHour + 1).padStart(2, "0")}:00` : ""
+    eventToEdit?.end_time ?? (initialHour != null ? `${String(initialHour + 1).padStart(2, "0")}:00` : "")
   );
-  const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
-  const [eventCategory, setEventCategory] = useState("");
-  const [eventColor, setEventColor] = useState(EVENT_COLORS[0].value);
+  const [selectedPrograms, setSelectedPrograms] = useState<string[]>(eventToEdit?.programs ?? []);
+  const [eventCategory, setEventCategory] = useState(eventToEdit?.category ?? "");
+  const [eventColor, setEventColor] = useState(eventToEdit?.color ?? EVENT_COLORS[0].value);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
-  const [recurrence, setRecurrence] = useState("None");
-  const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
-  const [description, setDescription] = useState("");
-  const [location, setLocation] = useState("");
+  const [recurrence, setRecurrence] = useState(eventToEdit?.recurrence ?? "None");
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState(eventToEdit?.recurrence_end_date ?? "");
+  const [description, setDescription] = useState(eventToEdit?.description ?? "");
+  const [location, setLocation] = useState(eventToEdit?.location ?? "");
   const [attachmentTab, setAttachmentTab] = useState<"link" | "file">("link");
-  const [attachmentLinks, setAttachmentLinks] = useState<string[]>([]);
+  const [attachmentLinks, setAttachmentLinks] = useState<string[]>(eventToEdit?.attachment_links ?? []);
   const [attachmentLinkInput, setAttachmentLinkInput] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachedFiles, setAttachedFiles] = useState<string[]>([]);
-  const [rsvpEnabled, setRsvpEnabled] = useState(false);
-  const [reminderEmail, setReminderEmail] = useState(false);
-  const [reminderInApp, setReminderInApp] = useState(false);
-  const [reminderTiming, setReminderTiming] = useState("30 min before");
-  const [internalNotes, setInternalNotes] = useState("");
+  const [rsvpEnabled, setRsvpEnabled] = useState(eventToEdit?.rsvp_enabled ?? false);
+  const [reminderEmail, setReminderEmail] = useState(eventToEdit?.reminder_email ?? false);
+  const [reminderInApp, setReminderInApp] = useState(eventToEdit?.reminder_in_app ?? false);
+  const [reminderTiming, setReminderTiming] = useState(eventToEdit?.reminder_timing ?? "30 min before");
+  const [internalNotes, setInternalNotes] = useState(eventToEdit?.internal_notes ?? "");
   const [saving, setSaving] = useState(false);
   const [titleError, setTitleError] = useState("");
   const [dateError, setDateError] = useState("");
@@ -277,8 +298,7 @@ function AddEventPanel({
     }
     if (!valid) return;
 
-    setSaving(true);
-    const result = await saveCalendarEvent({
+    const payload = {
       title: eventName.trim(),
       event_date: eventDate,
       is_all_day: isAllDay,
@@ -298,15 +318,28 @@ function AddEventPanel({
       reminder_in_app: reminderInApp,
       reminder_timing: reminderTiming,
       internal_notes: internalNotes || undefined,
-      created_by: currentUser?.id,
-    });
-    setSaving(false);
+    };
 
-    if (result.success && result.event) {
-      onSave(result.event);
-      onClose();
+    setSaving(true);
+
+    if (isEditMode && eventToEdit) {
+      const result = await updateCalendarEvent({ ...payload, id: eventToEdit.id });
+      setSaving(false);
+      if (result.success && result.event) {
+        onUpdate?.(result.event);
+        onClose();
+      } else {
+        setTitleError(result.message || "Failed to update event");
+      }
     } else {
-      setTitleError(result.message || "Failed to save event");
+      const result = await saveCalendarEvent({ ...payload, created_by: currentUser?.id });
+      setSaving(false);
+      if (result.success && result.event) {
+        onSave?.(result.event);
+        onClose();
+      } else {
+        setTitleError(result.message || "Failed to save event");
+      }
     }
   }
 
@@ -347,7 +380,7 @@ function AddEventPanel({
               className={`text-base font-bold leading-none ${merriweather.className}`}
               style={{ color: colors.mistyForest }}
             >
-              New Event
+              {isEditMode ? "Edit Event" : "New Event"}
             </h2>
             {initialDate && (
               <p className="text-xs mt-1" style={{ color: colors.textTertiary }}>
@@ -1000,7 +1033,7 @@ function AddEventPanel({
               opacity: saving ? 0.7 : 1,
             }}
           >
-            {saving ? "Saving…" : "Add Event"}
+            {saving ? "Saving…" : isEditMode ? "Save Changes" : "Add Event"}
           </button>
         </div>
       </motion.div>
@@ -1036,16 +1069,331 @@ function Field({
   );
 }
 
+// ─── Event Detail Panel ────────────────────────────────────────────────────────
+
+function formatTime(t: string): string {
+  const [h, m] = t.split(":").map(Number);
+  const period = h >= 12 ? "pm" : "am";
+  const hour = h % 12 || 12;
+  return `${hour}:${String(m).padStart(2, "0")} ${period}`;
+}
+
+function EventDetailPanel({
+  event,
+  usersMap,
+  onClose,
+  onEdit,
+}: {
+  event: CalendarEvent;
+  usersMap: Record<string, string>;
+  onClose: () => void;
+  onEdit: () => void;
+}) {
+  const [eventDate] = event.event_date.split("T");
+  const [year, month, day] = eventDate.split("-").map(Number);
+  const dateLabel = `${MONTHS[month - 1]} ${day}, ${year}`;
+
+  const timeLabel = event.is_all_day
+    ? "All day"
+    : event.start_time
+    ? `${formatTime(event.start_time)}${event.end_time ? ` – ${formatTime(event.end_time)}` : ""}`
+    : null;
+
+  const creatorName = event.created_by ? usersMap[event.created_by] : null;
+
+  return (
+    <>
+      <motion.div
+        className="fixed inset-0 z-40"
+        style={{ backgroundColor: "rgba(0,0,0,0.10)" }}
+        onClick={onClose}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+      />
+      <motion.div
+        className="fixed top-0 right-0 h-full z-50 flex flex-col"
+        style={{
+          width: "420px",
+          backgroundColor: "white",
+          borderLeft: `1px solid ${colors.border}`,
+          boxShadow: "-12px 0 40px rgba(0,0,0,0.07)",
+        }}
+        initial={{ x: "100%" }}
+        animate={{ x: 0 }}
+        exit={{ x: "100%" }}
+        transition={{ type: "spring", stiffness: 320, damping: 32, mass: 0.8 }}
+      >
+        {/* Color bar + header */}
+        <div
+          className="flex items-start justify-between px-6 py-5 flex-shrink-0"
+          style={{ borderBottom: `1px solid ${colors.divider}` }}
+        >
+          <div className="flex items-start gap-3 min-w-0">
+            <div
+              className="flex-shrink-0 mt-0.5"
+              style={{
+                width: "10px",
+                height: "10px",
+                borderRadius: radius.full,
+                backgroundColor: event.color,
+                marginTop: "5px",
+              }}
+            />
+            <div className="min-w-0">
+              <h2
+                className={`text-base font-bold leading-snug ${merriweather.className}`}
+                style={{ color: colors.textPrimary }}
+              >
+                {event.title}
+              </h2>
+              <p className="text-xs mt-0.5" style={{ color: colors.textTertiary }}>
+                {dateLabel}
+                {timeLabel ? ` · ${timeLabel}` : ""}
+              </p>
+              {event.category && (
+                <span
+                  className="inline-block mt-1.5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+                  style={{
+                    backgroundColor: `${event.color}22`,
+                    color: event.color,
+                    borderRadius: radius.full,
+                    border: `1px solid ${event.color}44`,
+                  }}
+                >
+                  {event.category}
+                </span>
+              )}
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg transition-opacity hover:opacity-60 flex-shrink-0"
+            style={{
+              backgroundColor: colors.warmLinen,
+              border: `1px solid ${colors.border}`,
+              cursor: "pointer",
+            }}
+          >
+            <X className="w-3.5 h-3.5" style={{ color: colors.textSecondary }} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-auto px-6 py-5 space-y-4">
+          {event.description && (
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide mb-1" style={{ color: colors.textTertiary }}>
+                Description
+              </p>
+              <p className="text-sm leading-relaxed" style={{ color: colors.textPrimary }}>
+                {event.description}
+              </p>
+            </div>
+          )}
+
+          {event.location && (
+            <div className="flex items-start gap-2">
+              <MapPin className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: colors.textTertiary }} />
+              <p className="text-sm" style={{ color: colors.textPrimary }}>{event.location}</p>
+            </div>
+          )}
+
+          {(event.shared_with ?? []).length > 0 && (
+            <div>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Users className="w-3.5 h-3.5" style={{ color: colors.textTertiary }} />
+                <p className="text-xs font-medium uppercase tracking-wide" style={{ color: colors.textTertiary }}>
+                  Shared with
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {(event.shared_with ?? []).map((g) => (
+                  <span
+                    key={g}
+                    className="px-2.5 py-1 text-xs font-medium"
+                    style={{
+                      backgroundColor: colors.pastelSage,
+                      color: colors.mistyForest,
+                      borderRadius: radius.full,
+                    }}
+                  >
+                    {g}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {(event.programs ?? []).length > 0 && (
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide mb-1.5" style={{ color: colors.textTertiary }}>
+                Program
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {(event.programs ?? []).map((p) => (
+                  <span
+                    key={p}
+                    className="px-2.5 py-1 text-xs font-medium"
+                    style={{
+                      backgroundColor: colors.softCloud,
+                      color: colors.textSecondary,
+                      borderRadius: radius.full,
+                      border: `1px solid ${colors.border}`,
+                    }}
+                  >
+                    {p}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {event.recurrence && event.recurrence !== "None" && (
+            <div className="flex items-center gap-2">
+              <RefreshCw className="w-3.5 h-3.5 flex-shrink-0" style={{ color: colors.textTertiary }} />
+              <p className="text-sm" style={{ color: colors.textPrimary }}>
+                Repeats {event.recurrence.toLowerCase()}
+                {event.recurrence_end_date ? ` until ${event.recurrence_end_date}` : ""}
+              </p>
+            </div>
+          )}
+
+          {(event.attachment_links ?? []).length > 0 && (
+            <div>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Link2 className="w-3.5 h-3.5" style={{ color: colors.textTertiary }} />
+                <p className="text-xs font-medium uppercase tracking-wide" style={{ color: colors.textTertiary }}>
+                  Attachments
+                </p>
+              </div>
+              <div className="flex flex-col gap-1">
+                {(event.attachment_links ?? []).map((link, i) => (
+                  <a
+                    key={i}
+                    href={link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs truncate hover:underline"
+                    style={{ color: colors.mistyForest }}
+                  >
+                    {link}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {(event.reminder_email || event.reminder_in_app) && (
+            <div className="flex items-start gap-2">
+              <Bell className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: colors.textTertiary }} />
+              <p className="text-sm" style={{ color: colors.textPrimary }}>
+                Reminder {event.reminder_timing ?? "30 min before"}
+                {event.reminder_email && event.reminder_in_app
+                  ? " (email + in-app)"
+                  : event.reminder_email
+                  ? " (email)"
+                  : " (in-app)"}
+              </p>
+            </div>
+          )}
+
+          {event.rsvp_enabled && (
+            <div
+              className="flex items-center gap-2 px-3 py-2"
+              style={{
+                backgroundColor: colors.pastelSage,
+                borderRadius: radius.md,
+              }}
+            >
+              <Users className="w-3.5 h-3.5" style={{ color: colors.mistyForest }} />
+              <p className="text-xs font-medium" style={{ color: colors.mistyForest }}>
+                RSVP enabled for parents
+              </p>
+            </div>
+          )}
+
+          {event.internal_notes && (
+            <div>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <StickyNote className="w-3.5 h-3.5" style={{ color: colors.textTertiary }} />
+                <p className="text-xs font-medium uppercase tracking-wide" style={{ color: colors.textTertiary }}>
+                  Internal notes
+                </p>
+              </div>
+              <p
+                className="text-xs leading-relaxed px-3 py-2"
+                style={{
+                  color: colors.textSecondary,
+                  backgroundColor: colors.warmLinen,
+                  borderRadius: radius.md,
+                  border: `1px solid ${colors.border}`,
+                }}
+              >
+                {event.internal_notes}
+              </p>
+            </div>
+          )}
+
+          {creatorName && (
+            <div className="flex items-center gap-2.5 pt-1">
+              <div
+                className="flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0"
+                style={{
+                  width: "24px",
+                  height: "24px",
+                  borderRadius: radius.full,
+                  backgroundColor: colorForId(event.created_by!),
+                }}
+              >
+                {initialsFor(creatorName)}
+              </div>
+              <p className="text-xs" style={{ color: colors.textTertiary }}>
+                Created by <span style={{ color: colors.textSecondary, fontWeight: 500 }}>{creatorName}</span>
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div
+          className="px-6 py-4 flex-shrink-0"
+          style={{ borderTop: `1px solid ${colors.divider}` }}
+        >
+          <button
+            onClick={onEdit}
+            className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-xl transition-opacity hover:opacity-90"
+            style={{
+              backgroundColor: colors.mistyForest,
+              color: "white",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            <Pencil className="w-3.5 h-3.5" />
+            Edit Event
+          </button>
+        </div>
+      </motion.div>
+    </>
+  );
+}
+
 // ─── Main Component ────────────────────────────────────────────────────────────
 
 export default function CalendarClient({
   currentUser,
   initialEvents = [],
+  usersMap = {},
 }: {
   currentUser?: { full_name: string; role: string; id: string } | null;
   initialEvents?: CalendarEvent[];
+  usersMap?: Record<string, string>;
 }) {
   const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
+  const [viewEvent, setViewEvent] = useState<CalendarEvent | null>(null);
+  const [editEvent, setEditEvent] = useState<CalendarEvent | null>(null);
   const [selectedProgram, setSelectedProgram] = useState<ProgramKey>("summer");
   const [view, setView] = useState<ViewMode>("monthly");
   const [currentDate, setCurrentDate] = useState<Date>(
@@ -1248,6 +1596,7 @@ export default function CalendarClient({
                 currentMonth={currentDate.getMonth()}
                 today={today}
                 onAddEvent={openAddEvent}
+                onViewEvent={setViewEvent}
                 events={events}
               />
             ) : (
@@ -1255,7 +1604,9 @@ export default function CalendarClient({
                 weekDays={weekDays}
                 today={today}
                 onAddEvent={openAddEvent}
+                onViewEvent={setViewEvent}
                 events={events}
+                usersMap={usersMap}
               />
             )}
           </div>
@@ -1272,6 +1623,28 @@ export default function CalendarClient({
             onSave={(event) => setEvents((prev) => [...prev, event])}
             initialDate={addEventDate}
             initialHour={addEventTime}
+            currentUser={currentUser}
+          />
+        )}
+        {viewEvent && !editEvent && (
+          <EventDetailPanel
+            event={viewEvent}
+            usersMap={usersMap}
+            onClose={() => setViewEvent(null)}
+            onEdit={() => {
+              setEditEvent(viewEvent);
+              setViewEvent(null);
+            }}
+          />
+        )}
+        {editEvent && (
+          <AddEventPanel
+            onClose={() => setEditEvent(null)}
+            onUpdate={(updated) => {
+              setEvents((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
+              setEditEvent(null);
+            }}
+            eventToEdit={editEvent}
             currentUser={currentUser}
           />
         )}
@@ -1319,12 +1692,14 @@ function MonthlyGrid({
   currentMonth,
   today,
   onAddEvent,
+  onViewEvent,
   events,
 }: {
   days: Date[];
   currentMonth: number;
   today: Date;
   onAddEvent: (date: Date) => void;
+  onViewEvent: (event: CalendarEvent) => void;
   events: CalendarEvent[];
 }) {
   return (
@@ -1380,17 +1755,21 @@ function MonthlyGrid({
               {inMonth && (
                 <div className="flex flex-col gap-0.5 mt-0.5">
                   {visibleEvents.map((ev) => (
-                    <div
+                    <button
                       key={ev.id}
-                      className="truncate px-1.5 py-0.5 text-[10px] font-medium leading-tight"
+                      onClick={(e) => { e.stopPropagation(); onViewEvent(ev); }}
+                      className="truncate px-1.5 py-0.5 text-[10px] font-medium leading-tight text-left transition-opacity hover:opacity-80"
                       style={{
                         backgroundColor: ev.color,
                         color: "white",
                         borderRadius: "4px",
+                        border: "none",
+                        cursor: "pointer",
+                        width: "100%",
                       }}
                     >
                       {ev.title}
-                    </div>
+                    </button>
                   ))}
                   {overflow > 0 && (
                     <span
@@ -1432,16 +1811,25 @@ function MonthlyGrid({
 // Header is sticky *inside* the scroll container so it shares the exact same
 // width as the body — this prevents the scrollbar from causing misalignment.
 
+const SHARE_COLORS: Record<string, string> = {
+  "Teachers": "#5B9BBF",
+  "Parents": "#C2717A",
+};
+
 function WeeklyGrid({
   weekDays,
   today,
   onAddEvent,
+  onViewEvent,
   events,
+  usersMap,
 }: {
   weekDays: Date[];
   today: Date;
   onAddEvent: (date: Date, hour?: number) => void;
+  onViewEvent: (event: CalendarEvent) => void;
   events: CalendarEvent[];
+  usersMap: Record<string, string>;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const now = new Date();
@@ -1657,33 +2045,96 @@ function WeeklyGrid({
                 {timedEvents.map((ev) => {
                   const [sh, sm] = (ev.start_time ?? "").split(":").map(Number);
                   const startMinutes = sh * 60 + (sm || 0);
-                  const gridStart = 7 * 60; // 7 AM
+                  const gridStart = 7 * 60;
                   const topPx = ((startMinutes - gridStart) / 60) * HOUR_HEIGHT;
-                  let heightPx = HOUR_HEIGHT; // default 1 hour
+                  let heightPx = HOUR_HEIGHT;
                   if (ev.end_time) {
                     const [eh, em] = ev.end_time.split(":").map(Number);
                     const endMinutes = eh * 60 + (em || 0);
-                    heightPx = Math.max(20, ((endMinutes - startMinutes) / 60) * HOUR_HEIGHT);
+                    heightPx = Math.max(22, ((endMinutes - startMinutes) / 60) * HOUR_HEIGHT);
                   }
+                  const showMeta = heightPx >= 52;
+                  const creatorName = ev.created_by ? usersMap[ev.created_by] : null;
                   return (
-                    <div
+                    <button
                       key={ev.id}
-                      className="absolute left-0.5 right-0.5 px-1.5 py-1 overflow-hidden pointer-events-none"
+                      onClick={(e) => { e.stopPropagation(); onViewEvent(ev); }}
+                      className="absolute left-0.5 right-0.5 px-1.5 py-1 overflow-hidden text-left transition-opacity hover:opacity-85"
                       style={{
                         top: `${topPx}px`,
                         height: `${heightPx}px`,
                         backgroundColor: ev.color,
                         borderRadius: "5px",
                         zIndex: 10,
+                        border: "none",
+                        cursor: "pointer",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "flex-start",
+                        position: "absolute",
                       }}
                     >
+                      {/* Row 1: shared with groups */}
+                      {showMeta && (ev.shared_with ?? []).length > 0 && (
+                        <div className="flex items-center gap-1 mb-0.5 flex-wrap">
+                          {(ev.shared_with ?? []).map((g) => (
+                            <span
+                              key={g}
+                              className="leading-none"
+                              style={{
+                                fontSize: "8px",
+                                fontWeight: 600,
+                                color: SHARE_COLORS[g] ?? ev.color,
+                                backgroundColor: "white",
+                                borderRadius: "3px",
+                                padding: "1px 4px",
+                              }}
+                            >
+                              {g}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Row 2: title */}
                       <p
                         className="text-[10px] font-semibold leading-tight truncate"
                         style={{ color: "white" }}
                       >
                         {ev.title}
                       </p>
-                    </div>
+
+                      {/* Row 3: category */}
+                      {showMeta && ev.category && (
+                        <p
+                          className="truncate leading-none mt-0.5"
+                          style={{ color: "rgba(255,255,255,0.80)", fontSize: "8px", fontWeight: 500 }}
+                        >
+                          {ev.category}
+                        </p>
+                      )}
+
+                      {/* Creator avatar — bottom right */}
+                      {showMeta && creatorName && (
+                        <span
+                          className="inline-flex items-center justify-center text-[8px] font-bold leading-none"
+                          style={{
+                            position: "absolute",
+                            bottom: "4px",
+                            right: "4px",
+                            width: "20px",
+                            height: "20px",
+                            borderRadius: "50%",
+                            backgroundColor: "rgba(255,255,255,0.30)",
+                            color: "white",
+                            border: "1.5px solid rgba(255,255,255,0.55)",
+                            flexShrink: 0,
+                          }}
+                        >
+                          {initialsFor(creatorName)}
+                        </span>
+                      )}
+                    </button>
                   );
                 })}
               </div>

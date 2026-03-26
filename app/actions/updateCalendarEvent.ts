@@ -3,7 +3,8 @@
 import { z } from "zod";
 import { createAdminClient } from "@/app/lib/supabase-server";
 
-const saveCalendarEventSchema = z.object({
+const updateCalendarEventSchema = z.object({
+  id: z.string().uuid(),
   title: z.string().min(1, "Event name is required").max(200),
   event_date: z.string().min(1, "Date is required"),
   is_all_day: z.boolean(),
@@ -23,12 +24,11 @@ const saveCalendarEventSchema = z.object({
   reminder_in_app: z.boolean().default(false),
   reminder_timing: z.string().default("30 min before"),
   internal_notes: z.string().max(2000).optional(),
-  created_by: z.string().uuid().optional(),
 });
 
-export type SaveCalendarEventData = z.infer<typeof saveCalendarEventSchema>;
+export type UpdateCalendarEventData = z.infer<typeof updateCalendarEventSchema>;
 
-export type SaveCalendarEventResponse = {
+export type UpdateCalendarEventResponse = {
   success: boolean;
   message: string;
   event?: {
@@ -57,16 +57,16 @@ export type SaveCalendarEventResponse = {
   error?: string;
 };
 
-export async function saveCalendarEvent(
-  data: SaveCalendarEventData
-): Promise<SaveCalendarEventResponse> {
+export async function updateCalendarEvent(
+  data: UpdateCalendarEventData
+): Promise<UpdateCalendarEventResponse> {
   try {
-    const validated = saveCalendarEventSchema.parse(data);
+    const validated = updateCalendarEventSchema.parse(data);
 
-    const { data: inserted, error } = await createAdminClient()
+    const { data: updated, error } = await createAdminClient()
       .schema("calendar")
       .from("events")
-      .insert({
+      .update({
         title: validated.title,
         event_date: validated.event_date,
         is_all_day: validated.is_all_day,
@@ -86,27 +86,29 @@ export async function saveCalendarEvent(
         reminder_in_app: validated.reminder_in_app,
         reminder_timing: validated.reminder_timing,
         internal_notes: validated.internal_notes || null,
-        created_by: validated.created_by || null,
       })
-      .select("id, title, event_date, is_all_day, start_time, end_time, color, category, shared_with, programs, description, location, recurrence, recurrence_end_date, attachment_links, rsvp_enabled, reminder_email, reminder_in_app, reminder_timing, internal_notes, created_by")
+      .eq("id", validated.id)
+      .select(
+        "id, title, event_date, is_all_day, start_time, end_time, color, category, shared_with, programs, description, location, recurrence, recurrence_end_date, attachment_links, rsvp_enabled, reminder_email, reminder_in_app, reminder_timing, internal_notes, created_by"
+      )
       .single();
 
     if (error) {
       console.error("Supabase error:", error);
       return {
         success: false,
-        message: "Failed to save event. Please try again.",
+        message: "Failed to update event. Please try again.",
         error: error.message,
       };
     }
 
     return {
       success: true,
-      message: "Event saved successfully.",
-      event: inserted,
+      message: "Event updated successfully.",
+      event: updated,
     };
   } catch (error) {
-    console.error("Save calendar event error:", error);
+    console.error("Update calendar event error:", error);
 
     if (error instanceof z.ZodError) {
       return {
