@@ -7,7 +7,11 @@ import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import MessagesPage from "./MessagesPage";
 import { createAdminClient } from "@/app/lib/supabase-server";
 
-export default async function MessagesRoute() {
+export default async function MessagesRoute({
+  searchParams,
+}: {
+  searchParams: Promise<{ recipientId?: string; recipientName?: string }>;
+}) {
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
@@ -26,6 +30,10 @@ export default async function MessagesRoute() {
     .single();
 
   const fullName = adminUser?.full_name ?? null;
+
+  const params = await searchParams;
+  const initialRecipientId = params.recipientId ?? null;
+  const initialRecipientName = params.recipientName ?? null;
 
   return (
     <div className="bg-welcome-bg h-screen overflow-hidden">
@@ -53,7 +61,11 @@ export default async function MessagesRoute() {
         </header>
 
         <main className="flex-1 min-h-0 flex flex-col">
-          <MessagesPage userId={user.id} />
+          <MessagesPage
+            userId={user.id}
+            initialRecipientId={initialRecipientId}
+            initialRecipientName={initialRecipientName}
+          />
         </main>
       </div>
     </div>

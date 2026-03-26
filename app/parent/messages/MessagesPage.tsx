@@ -58,7 +58,15 @@ function formatTime(iso: string): string {
   return date.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
-export default function MessagesPage({ userId }: { userId: string }) {
+export default function MessagesPage({
+  userId,
+  initialRecipientId,
+  initialRecipientName,
+}: {
+  userId: string;
+  initialRecipientId?: string | null;
+  initialRecipientName?: string | null;
+}) {
   const [conversations, setConversations] = useState<ConversationWithMeta[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessageRow[]>([]);
@@ -93,6 +101,21 @@ export default function MessagesPage({ userId }: { userId: string }) {
       setLoadingConvos(false);
     });
   }, [userId]);
+
+  // Handle deep-link to a specific recipient (e.g. from teacher card)
+  useEffect(() => {
+    if (!initialRecipientId || loadingConvos) return;
+    const existing = conversations.find((c) => c.otherUser.id === initialRecipientId);
+    if (existing) {
+      setActiveId(existing.id);
+      setMobileShowChat(true);
+    } else if (initialRecipientName) {
+      setIsComposingNew(true);
+      setSelectedRecipient({ id: initialRecipientId, full_name: initialRecipientName });
+      setMobileShowChat(true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadingConvos]);
 
   // Load messages when active conversation changes
   useEffect(() => {

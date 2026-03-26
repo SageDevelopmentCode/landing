@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Image as ImageIcon,
   MessageCircle,
@@ -256,7 +257,7 @@ function TeacherTab({
   onMessage,
 }: {
   teachers: TeacherAssignment[];
-  onMessage: () => void;
+  onMessage: (teacherId: string, teacherName: string) => void;
 }) {
   const programMap = new Map<string, TeacherAssignment[]>();
   for (const t of teachers) {
@@ -333,7 +334,7 @@ function TeacherTab({
               imageSrc={card?.image}
               about={card?.about ?? ""}
               email={card?.email ?? ""}
-              onMessage={onMessage}
+              onMessage={() => onMessage(t.teacher_id, t.teacher_name ?? "")}
             />
           );
         })}
@@ -409,6 +410,7 @@ function ChildProfile({
   teachers: TeacherAssignment[];
 }) {
   const [activeTab, setActiveTab] = useState<ContentTab>("teacher");
+  const router = useRouter();
 
   const age = computeAge(child.dob_month, child.dob_day, child.dob_year);
   const dob = formatDOB(child.dob_month, child.dob_day, child.dob_year);
@@ -481,7 +483,11 @@ function ChildProfile({
       {activeTab === "teacher" && (
         <TeacherTab
           teachers={teachers}
-          onMessage={() => setActiveTab("messages")}
+          onMessage={(teacherId, teacherName) =>
+            router.push(
+              `/parent/messages?recipientId=${teacherId}&recipientName=${encodeURIComponent(teacherName)}`
+            )
+          }
         />
       )}
       {activeTab === "attendance" && <AttendanceTab />}
