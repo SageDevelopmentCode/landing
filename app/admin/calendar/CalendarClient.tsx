@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ChevronLeft, ChevronRight, ChevronDown, Plus, X, Link2, Upload, Pencil, MapPin, Users, RefreshCw, Bell, StickyNote } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, Plus, X, Link2, Upload, Pencil, MapPin, Users, RefreshCw, Bell, StickyNote, Trash2 } from "lucide-react";
 import { Merriweather } from "next/font/google";
 import { motion, AnimatePresence } from "framer-motion";
 import { colors, radius, shadows } from "../design-system";
 import { saveCalendarEvent } from "@/app/actions/saveCalendarEvent";
 import { updateCalendarEvent } from "@/app/actions/updateCalendarEvent";
+import { deleteCalendarEvent } from "@/app/actions/deleteCalendarEvent";
 
 const merriweather = Merriweather({
   weight: ["300", "400", "700", "900"],
@@ -70,7 +71,34 @@ const REMINDER_TIMING_OPTIONS = [
   "1 day before",
 ];
 const HOURS = Array.from({ length: 15 }, (_, i) => i + 7); // 7 AM → 9 PM
-const HOUR_HEIGHT = 64; // px per hour slot
+const HOUR_HEIGHT = 120; // px per hour slot
+
+function getOverlapClusters(events: CalendarEvent[]): CalendarEvent[][] {
+  if (events.length === 0) return [];
+  const toMin = (t: string | null) => {
+    if (!t) return 0;
+    const [h, m] = t.split(":").map(Number);
+    return h * 60 + (m || 0);
+  };
+  const sorted = [...events].sort((a, b) => toMin(a.start_time) - toMin(b.start_time));
+  const clusters: CalendarEvent[][] = [];
+  for (const ev of sorted) {
+    const evStart = toMin(ev.start_time);
+    const evEnd = toMin(ev.end_time) || evStart + 60;
+    let placed = false;
+    for (const cluster of clusters) {
+      const clusterEnd = Math.max(...cluster.map((c) => toMin(c.end_time) || toMin(c.start_time) + 60));
+      const clusterStart = toMin(cluster[0].start_time);
+      if (evStart < clusterEnd && evEnd > clusterStart) {
+        cluster.push(ev);
+        placed = true;
+        break;
+      }
+    }
+    if (!placed) clusters.push([ev]);
+  }
+  return clusters;
+}
 
 const programs: Record<ProgramKey, { label: string; start: Date; end: Date }> =
   {
@@ -1069,6 +1097,151 @@ function Field({
   );
 }
 
+// ─── Overlap Panel ─────────────────────────────────────────────────────────────
+
+function OverlapPanel({
+  events,
+  usersMap,
+  onClose,
+  onViewEvent,
+}: {
+  events: CalendarEvent[];
+  usersMap: Record<string, string>;
+  onClose: () => void;
+  onViewEvent: (ev: CalendarEvent) => void;
+}) {
+  const first = events[0];
+  const timeLabel = first?.start_time
+    ? `${formatTime(first.start_time)}${first.end_time ? ` – ${formatTime(first.end_time)}` : ""}`
+    : "";
+
+  return (
+    <>
+      <motion.div
+        className="fixed inset-0 z-40"
+        style={{ backgroundColor: "rgba(0,0,0,0.10)" }}
+        onClick={onClose}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+      />
+      <motion.div
+        className="fixed top-0 right-0 h-full z-50 flex flex-col"
+        style={{
+          width: "380px",
+          backgroundColor: "white",
+          borderLeft: `1px solid ${colors.border}`,
+          boxShadow: "-12px 0 40px rgba(0,0,0,0.07)",
+        }}
+        initial={{ x: "100%" }}
+        animate={{ x: 0 }}
+        exit={{ x: "100%" }}
+        transition={{ type: "spring", stiffness: 320, damping: 32, mass: 0.8 }}
+      >
+        {/* Header */}
+        <div
+          className="flex items-center justify-between px-6 py-5 flex-shrink-0"
+          style={{ borderBottom: `1px solid ${colors.border}` }}
+        >
+          <div>
+            {timeLabel && (
+              <p className="text-xs font-medium mb-0.5" style={{ color: colors.textSecondary }}>
+                {timeLabel}
+              </p>
+            )}
+            <h2 className="text-base font-semibold" style={{ color: colors.textPrimary }}>
+              {events.length} events
+            </h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="transition-colors"
+            style={{ color: colors.textSecondary }}
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Event list */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
+          {events.map((ev) => {
+            const creatorName = ev.created_by ? usersMap[ev.created_by] : null;
+            const evTime = ev.start_time
+              ? `${formatTime(ev.start_time)}${ev.end_time ? ` – ${formatTime(ev.end_time)}` : ""}`
+              : "All day";
+            return (
+              <button
+                key={ev.id}
+                onClick={() => onViewEvent(ev)}
+                className="w-full text-left rounded-lg px-3 py-3 transition-opacity hover:opacity-90 relative"
+                style={{ backgroundColor: ev.color }}
+              >
+                {/* Badges */}
+                {(ev.shared_with ?? []).length > 0 && (
+                  <div className="flex items-center gap-1 mb-1.5 flex-wrap">
+                    {(ev.shared_with ?? []).map((g) => (
+                      <span
+                        key={g}
+                        className="leading-none"
+                        style={{
+                          fontSize: "9px",
+                          fontWeight: 600,
+                          color: SHARE_COLORS[g] ?? ev.color,
+                          backgroundColor: "white",
+                          borderRadius: "3px",
+                          padding: "2px 5px",
+                        }}
+                      >
+                        {g}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {/* Title */}
+                <p className="text-sm font-semibold text-white leading-tight">{ev.title}</p>
+                {/* Time + category */}
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.75)" }}>{evTime}</p>
+                  {ev.category && (
+                    <p className="text-[10px] font-medium" style={{ color: "rgba(255,255,255,0.75)" }}>
+                      {ev.category}
+                    </p>
+                  )}
+                </div>
+                {/* Creator */}
+                {creatorName && (
+                  <div className="flex items-center gap-1.5 mt-2">
+                    <span
+                      className="inline-flex items-center justify-center text-[8px] font-bold leading-none"
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        borderRadius: "50%",
+                        backgroundColor: "rgba(255,255,255,0.30)",
+                        color: "white",
+                        border: "1.5px solid rgba(255,255,255,0.55)",
+                        flexShrink: 0,
+                      }}
+                    >
+                      {initialsFor(creatorName)}
+                    </span>
+                    <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.75)" }}>
+                      {creatorName}
+                    </span>
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </motion.div>
+    </>
+  );
+}
+
 // ─── Event Detail Panel ────────────────────────────────────────────────────────
 
 function formatTime(t: string): string {
@@ -1083,12 +1256,32 @@ function EventDetailPanel({
   usersMap,
   onClose,
   onEdit,
+  onDelete,
+  currentUser,
 }: {
   event: CalendarEvent;
   usersMap: Record<string, string>;
   onClose: () => void;
   onEdit: () => void;
+  onDelete: () => void;
+  currentUser?: { id: string; full_name: string; role: string } | null;
 }) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const isOwner = !!currentUser && currentUser.id === event.created_by;
+
+  async function handleDelete() {
+    setDeleting(true);
+    const result = await deleteCalendarEvent(event.id);
+    if (result.success) {
+      onDelete();
+    } else {
+      setDeleting(false);
+      console.error("Failed to delete event:", result.error);
+    }
+  }
+
   const [eventDate] = event.event_date.split("T");
   const [year, month, day] = eventDate.split("-").map(Number);
   const dateLabel = `${MONTHS[month - 1]} ${day}, ${year}`;
@@ -1357,24 +1550,78 @@ function EventDetailPanel({
         </div>
 
         {/* Footer */}
-        <div
-          className="px-6 py-4 flex-shrink-0"
-          style={{ borderTop: `1px solid ${colors.divider}` }}
-        >
-          <button
-            onClick={onEdit}
-            className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-xl transition-opacity hover:opacity-90"
-            style={{
-              backgroundColor: colors.mistyForest,
-              color: "white",
-              border: "none",
-              cursor: "pointer",
-            }}
+        {isOwner && (
+          <div
+            className="px-6 py-4 flex-shrink-0 space-y-2"
+            style={{ borderTop: `1px solid ${colors.divider}` }}
           >
-            <Pencil className="w-3.5 h-3.5" />
-            Edit Event
-          </button>
-        </div>
+            {!confirmDelete && (
+              <>
+                <button
+                  onClick={onEdit}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-xl transition-opacity hover:opacity-90"
+                  style={{
+                    backgroundColor: colors.mistyForest,
+                    color: "white",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  Edit Event
+                </button>
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-xl transition-opacity hover:opacity-90"
+                  style={{
+                    backgroundColor: "#fee2e2",
+                    color: "#b91c1c",
+                    border: "1px solid #fca5a5",
+                    cursor: "pointer",
+                  }}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Delete Event
+                </button>
+              </>
+            )}
+            {confirmDelete && (
+              <div>
+                <p className="text-sm text-center mb-2" style={{ color: colors.textSecondary }}>
+                  Are you sure you want to delete this event?
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="flex-1 py-2.5 text-sm font-medium rounded-xl transition-opacity hover:opacity-90"
+                    style={{
+                      backgroundColor: "#b91c1c",
+                      color: "white",
+                      border: "none",
+                      cursor: deleting ? "not-allowed" : "pointer",
+                      opacity: deleting ? 0.6 : 1,
+                    }}
+                  >
+                    {deleting ? "Deleting…" : "Yes, delete"}
+                  </button>
+                  <button
+                    onClick={() => setConfirmDelete(false)}
+                    className="flex-1 py-2.5 text-sm font-medium rounded-xl transition-opacity hover:opacity-90"
+                    style={{
+                      backgroundColor: colors.warmLinen,
+                      color: colors.textSecondary,
+                      border: `1px solid ${colors.border}`,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </motion.div>
     </>
   );
@@ -1402,6 +1649,7 @@ export default function CalendarClient({
   const [addEventOpen, setAddEventOpen] = useState(false);
   const [addEventDate, setAddEventDate] = useState<Date | null>(null);
   const [addEventTime, setAddEventTime] = useState<number | null>(null);
+  const [overlapEvents, setOverlapEvents] = useState<CalendarEvent[] | null>(null);
 
   const program = programs[selectedProgram];
   const today = new Date();
@@ -1605,6 +1853,7 @@ export default function CalendarClient({
                 today={today}
                 onAddEvent={openAddEvent}
                 onViewEvent={setViewEvent}
+                onViewOverlap={setOverlapEvents}
                 events={events}
                 usersMap={usersMap}
               />
@@ -1626,13 +1875,26 @@ export default function CalendarClient({
             currentUser={currentUser}
           />
         )}
+        {overlapEvents && !viewEvent && !editEvent && (
+          <OverlapPanel
+            events={overlapEvents}
+            usersMap={usersMap}
+            onClose={() => setOverlapEvents(null)}
+            onViewEvent={(ev) => { setOverlapEvents(null); setViewEvent(ev); }}
+          />
+        )}
         {viewEvent && !editEvent && (
           <EventDetailPanel
             event={viewEvent}
             usersMap={usersMap}
+            currentUser={currentUser}
             onClose={() => setViewEvent(null)}
             onEdit={() => {
               setEditEvent(viewEvent);
+              setViewEvent(null);
+            }}
+            onDelete={() => {
+              setEvents((prev) => prev.filter((e) => e.id !== viewEvent.id));
               setViewEvent(null);
             }}
           />
@@ -1821,6 +2083,7 @@ function WeeklyGrid({
   today,
   onAddEvent,
   onViewEvent,
+  onViewOverlap,
   events,
   usersMap,
 }: {
@@ -1828,6 +2091,7 @@ function WeeklyGrid({
   today: Date;
   onAddEvent: (date: Date, hour?: number) => void;
   onViewEvent: (event: CalendarEvent) => void;
+  onViewOverlap: (events: CalendarEvent[]) => void;
   events: CalendarEvent[];
   usersMap: Record<string, string>;
 }) {
@@ -2042,99 +2306,176 @@ function WeeklyGrid({
                   </button>
                 ))}
                 {/* Timed event blocks */}
-                {timedEvents.map((ev) => {
+                {getOverlapClusters(timedEvents).map((cluster) => {
+                  const ev = cluster[0];
                   const [sh, sm] = (ev.start_time ?? "").split(":").map(Number);
                   const startMinutes = sh * 60 + (sm || 0);
                   const gridStart = 7 * 60;
                   const topPx = ((startMinutes - gridStart) / 60) * HOUR_HEIGHT;
-                  let heightPx = HOUR_HEIGHT;
+                  let basePx = HOUR_HEIGHT;
                   if (ev.end_time) {
                     const [eh, em] = ev.end_time.split(":").map(Number);
                     const endMinutes = eh * 60 + (em || 0);
-                    heightPx = Math.max(22, ((endMinutes - startMinutes) / 60) * HOUR_HEIGHT);
+                    basePx = Math.max(22, ((endMinutes - startMinutes) / 60) * HOUR_HEIGHT);
                   }
-                  const showMeta = heightPx >= 52;
-                  const creatorName = ev.created_by ? usersMap[ev.created_by] : null;
+
+                  const isMulti = cluster.length > 1;
+                  const CARD_H = 56;
+                  const MORE_BAR_H = 14;
+                  const needsMoreBar = cluster.length > 2;
+                  const moreCount = cluster.length - 2;
+                  const heightPx = isMulti
+                    ? Math.max(basePx, 2 * CARD_H + 1 + (needsMoreBar ? MORE_BAR_H : 0))
+                    : basePx;
+                  const singleShowMeta = !isMulti && basePx >= 52;
+
+                  const renderCard = (cardEv: CalendarEvent, cardTop: number, cardHeight: number | undefined, cardBottom: number | undefined, cardRadius: string) => {
+                    const cardCreator = cardEv.created_by ? usersMap[cardEv.created_by] : null;
+                    const showMeta = cardHeight != null ? cardHeight >= 52 : (cardBottom != null ? (heightPx - cardTop - cardBottom) >= 52 : singleShowMeta);
+                    return (
+                      <button
+                        key={cardEv.id}
+                        onClick={(e) => { e.stopPropagation(); onViewEvent(cardEv); }}
+                        className="absolute px-1.5 py-1 overflow-hidden text-left transition-opacity hover:opacity-85"
+                        style={{
+                          top: cardTop,
+                          bottom: cardBottom,
+                          height: cardHeight,
+                          left: 0,
+                          right: "20px",
+                          backgroundColor: cardEv.color,
+                          borderRadius: cardRadius,
+                          border: "none",
+                          cursor: "pointer",
+                          display: "flex",
+                          flexDirection: "column",
+                          justifyContent: "flex-start",
+                        }}
+                      >
+                        {showMeta && (cardEv.shared_with ?? []).length > 0 && (
+                          <div className="flex items-center gap-1 mb-0.5 flex-wrap">
+                            {(cardEv.shared_with ?? []).map((g) => (
+                              <span
+                                key={g}
+                                className="leading-none"
+                                style={{
+                                  fontSize: "8px",
+                                  fontWeight: 600,
+                                  color: SHARE_COLORS[g] ?? cardEv.color,
+                                  backgroundColor: "white",
+                                  borderRadius: "3px",
+                                  padding: "1px 4px",
+                                }}
+                              >
+                                {g}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        <p className="text-[10px] font-semibold leading-tight truncate" style={{ color: "white" }}>
+                          {cardEv.title}
+                        </p>
+                        {showMeta && cardEv.category && (
+                          <p className="truncate leading-none mt-0.5" style={{ color: "rgba(255,255,255,0.80)", fontSize: "8px", fontWeight: 500 }}>
+                            {cardEv.category}
+                          </p>
+                        )}
+                        {showMeta && cardCreator && (
+                          <span
+                            className="inline-flex items-center justify-center text-[8px] font-bold leading-none"
+                            style={{
+                              position: "absolute",
+                              bottom: "4px",
+                              right: "4px",
+                              width: "20px",
+                              height: "20px",
+                              borderRadius: "50%",
+                              backgroundColor: "rgba(255,255,255,0.30)",
+                              color: "white",
+                              border: "1.5px solid rgba(255,255,255,0.55)",
+                              flexShrink: 0,
+                            }}
+                          >
+                            {initialsFor(cardCreator)}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  };
+
                   return (
-                    <button
+                    <div
                       key={ev.id}
-                      onClick={(e) => { e.stopPropagation(); onViewEvent(ev); }}
-                      className="absolute left-0.5 right-0.5 px-1.5 py-1 overflow-hidden text-left transition-opacity hover:opacity-85"
                       style={{
+                        position: "absolute",
                         top: `${topPx}px`,
                         height: `${heightPx}px`,
-                        backgroundColor: ev.color,
-                        borderRadius: "5px",
+                        left: "2px",
+                        right: "2px",
                         zIndex: 10,
-                        border: "none",
-                        cursor: "pointer",
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "flex-start",
-                        position: "absolute",
                       }}
                     >
-                      {/* Row 1: shared with groups */}
-                      {showMeta && (ev.shared_with ?? []).length > 0 && (
-                        <div className="flex items-center gap-1 mb-0.5 flex-wrap">
-                          {(ev.shared_with ?? []).map((g) => (
-                            <span
-                              key={g}
-                              className="leading-none"
-                              style={{
-                                fontSize: "8px",
-                                fontWeight: 600,
-                                color: SHARE_COLORS[g] ?? ev.color,
-                                backgroundColor: "white",
-                                borderRadius: "3px",
-                                padding: "1px 4px",
-                              }}
-                            >
-                              {g}
-                            </span>
-                          ))}
-                        </div>
+                      {/* Card 1 */}
+                      {isMulti
+                        ? renderCard(cluster[0], 0, CARD_H, undefined, needsMoreBar ? "5px 5px 0 0" : "5px 5px 0 0")
+                        : renderCard(cluster[0], 0, undefined, 0, "5px")}
+
+                      {/* Card 2 (multi only) */}
+                      {isMulti && renderCard(
+                        cluster[1],
+                        CARD_H + 1,
+                        needsMoreBar ? CARD_H : undefined,
+                        needsMoreBar ? undefined : 0,
+                        needsMoreBar ? "0" : "0 0 5px 5px"
                       )}
 
-                      {/* Row 2: title */}
-                      <p
-                        className="text-[10px] font-semibold leading-tight truncate"
-                        style={{ color: "white" }}
-                      >
-                        {ev.title}
-                      </p>
-
-                      {/* Row 3: category */}
-                      {showMeta && ev.category && (
-                        <p
-                          className="truncate leading-none mt-0.5"
-                          style={{ color: "rgba(255,255,255,0.80)", fontSize: "8px", fontWeight: 500 }}
-                        >
-                          {ev.category}
-                        </p>
-                      )}
-
-                      {/* Creator avatar — bottom right */}
-                      {showMeta && creatorName && (
-                        <span
-                          className="inline-flex items-center justify-center text-[8px] font-bold leading-none"
+                      {/* "View X more" bar — only when >2 events */}
+                      {needsMoreBar && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onViewOverlap(cluster); }}
+                          className="absolute flex items-center justify-center transition-colors hover:brightness-95"
                           style={{
-                            position: "absolute",
-                            bottom: "4px",
-                            right: "4px",
-                            width: "20px",
-                            height: "20px",
-                            borderRadius: "50%",
-                            backgroundColor: "rgba(255,255,255,0.30)",
+                            bottom: 0,
+                            left: 0,
+                            right: "20px",
+                            height: `${MORE_BAR_H}px`,
+                            backgroundColor: cluster[1].color,
+                            opacity: 0.75,
+                            borderRadius: "0 0 0 5px",
+                            border: "none",
+                            borderTop: "1px solid rgba(255,255,255,0.3)",
+                            cursor: "pointer",
+                            fontSize: "8px",
+                            fontWeight: 600,
                             color: "white",
-                            border: "1.5px solid rgba(255,255,255,0.55)",
-                            flexShrink: 0,
+                            letterSpacing: "0.02em",
                           }}
                         >
-                          {initialsFor(creatorName)}
-                        </span>
+                          View {moreCount} more
+                        </button>
                       )}
-                    </button>
+
+                      {/* Add event bar — right side */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onAddEvent(day, sh); }}
+                        title="Add event at this time"
+                        className="absolute flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-colors"
+                        style={{
+                          top: 0,
+                          bottom: 0,
+                          right: 0,
+                          width: "18px",
+                          backgroundColor: "#f3f4f6",
+                          borderRadius: "0 5px 5px 0",
+                          border: "none",
+                          cursor: "pointer",
+                          fontSize: "12px",
+                          lineHeight: 1,
+                        }}
+                      >
+                        +
+                      </button>
+                    </div>
                   );
                 })}
               </div>
