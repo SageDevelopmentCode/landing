@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Image as ImageIcon,
-  MessageCircle,
   Mail,
   UserX,
   Smartphone,
@@ -20,7 +19,6 @@ type ContentTab =
   | "attendance"
   | "learning"
   | "photos"
-  | "messages"
   | "profile";
 
 interface Props {
@@ -421,7 +419,6 @@ function ChildProfile({
     { id: "attendance", label: "Attendance" },
     { id: "learning", label: "Learning" },
     { id: "photos", label: "Photos" },
-    { id: "messages", label: "Messages" },
     { id: "profile", label: "Profile" },
   ];
 
@@ -498,13 +495,6 @@ function ChildProfile({
           icon={ImageIcon}
           title="Photos coming soon"
           subtitle="Photos from school activities and events will appear here."
-        />
-      )}
-      {activeTab === "messages" && (
-        <EmptyStateCard
-          icon={MessageCircle}
-          title="Messages coming soon"
-          subtitle="Direct communication with teachers will be available here."
         />
       )}
 

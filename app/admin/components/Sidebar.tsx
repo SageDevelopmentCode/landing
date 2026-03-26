@@ -18,6 +18,7 @@ import {
   Megaphone,
   TreePine,
   MessageSquare,
+  CalendarDays,
 } from "lucide-react";
 import { colors, radius, shadows, spacing } from "../design-system";
 import { Tooltip } from "./Tooltip";
@@ -80,6 +81,11 @@ const navItems: NavItem[] = [
     name: "Messages",
     href: "/admin/messages",
     icon: <MessageSquare className="w-4 h-4" />,
+  },
+  {
+    name: "Calendar",
+    href: "/admin/calendar",
+    icon: <CalendarDays className="w-4 h-4" />,
   },
   {
     name: "Emails",
