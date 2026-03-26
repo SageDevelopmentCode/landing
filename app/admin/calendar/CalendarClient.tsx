@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, ChevronDown, Plus, X, Link2, Upload } from "
 import { Merriweather } from "next/font/google";
 import { motion, AnimatePresence } from "framer-motion";
 import { colors, radius, shadows } from "../design-system";
+import { saveCalendarEvent } from "@/app/actions/saveCalendarEvent";
 
 const merriweather = Merriweather({
   weight: ["300", "400", "700", "900"],
@@ -13,6 +14,17 @@ const merriweather = Merriweather({
 
 type ProgramKey = "summer" | "school";
 type ViewMode = "monthly" | "weekly";
+
+type CalendarEvent = {
+  id: string;
+  title: string;
+  event_date: string;
+  is_all_day: boolean;
+  start_time: string | null;
+  end_time: string | null;
+  color: string;
+  category: string | null;
+};
 
 const SHARE_GROUPS = ["Teachers", "Parents"];
 const PROGRAM_PILLS = ["Pre-K – 1st Grade", "2nd – 4th Grade", "Both"];
@@ -186,17 +198,27 @@ function ToggleSwitch({
 
 function AddEventPanel({
   onClose,
+  onSave,
   initialDate,
   initialHour,
   currentUser,
 }: {
   onClose: () => void;
+  onSave: (event: CalendarEvent) => void;
   initialDate?: Date | null;
   initialHour?: number | null;
   currentUser?: { full_name: string; role: string; id: string } | null;
 }) {
+  const [eventName, setEventName] = useState("");
+  const [eventDate, setEventDate] = useState(initialDate ? formatDateInput(initialDate) : "");
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [isAllDay, setIsAllDay] = useState(false);
+  const [startTime, setStartTime] = useState(
+    initialHour != null ? `${String(initialHour).padStart(2, "0")}:00` : ""
+  );
+  const [endTime, setEndTime] = useState(
+    initialHour != null ? `${String(initialHour + 1).padStart(2, "0")}:00` : ""
+  );
   const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
   const [eventCategory, setEventCategory] = useState("");
   const [eventColor, setEventColor] = useState(EVENT_COLORS[0].value);
@@ -215,11 +237,9 @@ function AddEventPanel({
   const [reminderInApp, setReminderInApp] = useState(false);
   const [reminderTiming, setReminderTiming] = useState("30 min before");
   const [internalNotes, setInternalNotes] = useState("");
-
-  const initialStartTime =
-    initialHour != null ? `${String(initialHour).padStart(2, "0")}:00` : "";
-  const initialEndTime =
-    initialHour != null ? `${String(initialHour + 1).padStart(2, "0")}:00` : "";
+  const [saving, setSaving] = useState(false);
+  const [titleError, setTitleError] = useState("");
+  const [dateError, setDateError] = useState("");
 
   function toggleGroup(g: string) {
     setSelectedGroups((prev) =>
@@ -238,6 +258,55 @@ function AddEventPanel({
     if (trimmed) {
       setAttachmentLinks((prev) => [...prev, trimmed]);
       setAttachmentLinkInput("");
+    }
+  }
+
+  async function handleSubmit() {
+    let valid = true;
+    if (!eventName.trim()) {
+      setTitleError("Event name is required");
+      valid = false;
+    } else {
+      setTitleError("");
+    }
+    if (!eventDate) {
+      setDateError("Date is required");
+      valid = false;
+    } else {
+      setDateError("");
+    }
+    if (!valid) return;
+
+    setSaving(true);
+    const result = await saveCalendarEvent({
+      title: eventName.trim(),
+      event_date: eventDate,
+      is_all_day: isAllDay,
+      start_time: isAllDay ? null : startTime || null,
+      end_time: isAllDay ? null : endTime || null,
+      description: description || undefined,
+      location: location || undefined,
+      shared_with: selectedGroups,
+      programs: selectedPrograms,
+      category: eventCategory || undefined,
+      color: eventColor,
+      recurrence,
+      recurrence_end_date: recurrenceEndDate || null,
+      attachment_links: attachmentLinks,
+      rsvp_enabled: rsvpEnabled,
+      reminder_email: reminderEmail,
+      reminder_in_app: reminderInApp,
+      reminder_timing: reminderTiming,
+      internal_notes: internalNotes || undefined,
+      created_by: currentUser?.id,
+    });
+    setSaving(false);
+
+    if (result.success && result.event) {
+      onSave(result.event);
+      onClose();
+    } else {
+      setTitleError(result.message || "Failed to save event");
     }
   }
 
@@ -307,23 +376,32 @@ function AddEventPanel({
             <input
               type="text"
               placeholder="e.g. Swimming Lessons"
+              value={eventName}
+              onChange={(e) => { setEventName(e.target.value); if (titleError) setTitleError(""); }}
               className="w-full px-3.5 py-2.5 text-sm outline-none"
-              style={inputStyle}
-              onFocus={(e) => (e.target.style.borderColor = colors.mistyForest)}
-              onBlur={(e) => (e.target.style.borderColor = colors.border)}
+              style={{ ...inputStyle, borderColor: titleError ? "#ef4444" : undefined }}
+              onFocus={(e) => (e.target.style.borderColor = titleError ? "#ef4444" : colors.mistyForest)}
+              onBlur={(e) => (e.target.style.borderColor = titleError ? "#ef4444" : colors.border)}
             />
+            {titleError && (
+              <p className="text-[11px] mt-1" style={{ color: "#ef4444" }}>{titleError}</p>
+            )}
           </Field>
 
           {/* Date */}
           <Field label="Date">
             <input
               type="date"
-              defaultValue={initialDate ? formatDateInput(initialDate) : ""}
+              value={eventDate}
+              onChange={(e) => { setEventDate(e.target.value); if (dateError) setDateError(""); }}
               className="w-full px-3.5 py-2.5 text-sm outline-none"
-              style={inputStyle}
-              onFocus={(e) => (e.target.style.borderColor = colors.mistyForest)}
-              onBlur={(e) => (e.target.style.borderColor = colors.border)}
+              style={{ ...inputStyle, borderColor: dateError ? "#ef4444" : undefined }}
+              onFocus={(e) => (e.target.style.borderColor = dateError ? "#ef4444" : colors.mistyForest)}
+              onBlur={(e) => (e.target.style.borderColor = dateError ? "#ef4444" : colors.border)}
             />
+            {dateError && (
+              <p className="text-[11px] mt-1" style={{ color: "#ef4444" }}>{dateError}</p>
+            )}
           </Field>
 
           {/* All-day toggle */}
@@ -349,7 +427,8 @@ function AddEventPanel({
               <div className="flex items-center gap-2">
                 <input
                   type="time"
-                  defaultValue={initialStartTime}
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
                   className="flex-1 px-3.5 py-2.5 text-sm outline-none"
                   style={inputStyle}
                   onFocus={(e) => (e.target.style.borderColor = colors.mistyForest)}
@@ -360,7 +439,8 @@ function AddEventPanel({
                 </span>
                 <input
                   type="time"
-                  defaultValue={initialEndTime}
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
                   className="flex-1 px-3.5 py-2.5 text-sm outline-none"
                   style={inputStyle}
                   onFocus={(e) => (e.target.style.borderColor = colors.mistyForest)}
@@ -909,15 +989,18 @@ function AddEventPanel({
             Cancel
           </button>
           <button
+            onClick={handleSubmit}
+            disabled={saving}
             className="flex-1 py-2.5 text-sm font-medium rounded-xl transition-opacity hover:opacity-90"
             style={{
               backgroundColor: colors.mistyForest,
               color: "white",
               border: "none",
-              cursor: "pointer",
+              cursor: saving ? "not-allowed" : "pointer",
+              opacity: saving ? 0.7 : 1,
             }}
           >
-            Add Event
+            {saving ? "Saving…" : "Add Event"}
           </button>
         </div>
       </motion.div>
@@ -957,9 +1040,12 @@ function Field({
 
 export default function CalendarClient({
   currentUser,
+  initialEvents = [],
 }: {
   currentUser?: { full_name: string; role: string; id: string } | null;
+  initialEvents?: CalendarEvent[];
 }) {
+  const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
   const [selectedProgram, setSelectedProgram] = useState<ProgramKey>("summer");
   const [view, setView] = useState<ViewMode>("monthly");
   const [currentDate, setCurrentDate] = useState<Date>(
@@ -1162,12 +1248,14 @@ export default function CalendarClient({
                 currentMonth={currentDate.getMonth()}
                 today={today}
                 onAddEvent={openAddEvent}
+                events={events}
               />
             ) : (
               <WeeklyGrid
                 weekDays={weekDays}
                 today={today}
                 onAddEvent={openAddEvent}
+                events={events}
               />
             )}
           </div>
@@ -1181,6 +1269,7 @@ export default function CalendarClient({
               setAddEventOpen(false);
               setAddEventTime(null);
             }}
+            onSave={(event) => setEvents((prev) => [...prev, event])}
             initialDate={addEventDate}
             initialHour={addEventTime}
             currentUser={currentUser}
@@ -1230,11 +1319,13 @@ function MonthlyGrid({
   currentMonth,
   today,
   onAddEvent,
+  events,
 }: {
   days: Date[];
   currentMonth: number;
   today: Date;
   onAddEvent: (date: Date) => void;
+  events: CalendarEvent[];
 }) {
   return (
     <div className="h-full flex flex-col overflow-auto">
@@ -1259,6 +1350,10 @@ function MonthlyGrid({
         {days.map((day, i) => {
           const inMonth = day.getMonth() === currentMonth;
           const isToday = isSameDay(day, today);
+          const dateStr = formatDateInput(day);
+          const dayEvents = events.filter((e) => e.event_date === dateStr);
+          const visibleEvents = dayEvents.slice(0, 3);
+          const overflow = dayEvents.length - visibleEvents.length;
           return (
             <div
               key={i}
@@ -1280,6 +1375,33 @@ function MonthlyGrid({
               >
                 {day.getDate()}
               </span>
+
+              {/* Event pills */}
+              {inMonth && (
+                <div className="flex flex-col gap-0.5 mt-0.5">
+                  {visibleEvents.map((ev) => (
+                    <div
+                      key={ev.id}
+                      className="truncate px-1.5 py-0.5 text-[10px] font-medium leading-tight"
+                      style={{
+                        backgroundColor: ev.color,
+                        color: "white",
+                        borderRadius: "4px",
+                      }}
+                    >
+                      {ev.title}
+                    </div>
+                  ))}
+                  {overflow > 0 && (
+                    <span
+                      className="text-[10px] px-1"
+                      style={{ color: colors.textTertiary }}
+                    >
+                      +{overflow} more
+                    </span>
+                  )}
+                </div>
+              )}
 
               {/* Add button — appears on hover */}
               {inMonth && (
@@ -1314,10 +1436,12 @@ function WeeklyGrid({
   weekDays,
   today,
   onAddEvent,
+  events,
 }: {
   weekDays: Date[];
   today: Date;
   onAddEvent: (date: Date, hour?: number) => void;
+  events: CalendarEvent[];
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const now = new Date();
@@ -1355,6 +1479,8 @@ function WeeklyGrid({
         />
         {weekDays.map((day, i) => {
           const isToday = isSameDay(day, today);
+          const dateStr = formatDateInput(day);
+          const allDayEvents = events.filter((e) => e.event_date === dateStr && e.is_all_day);
           return (
             <div
               key={i}
@@ -1380,6 +1506,23 @@ function WeeklyGrid({
               >
                 {day.getDate()}
               </div>
+              {allDayEvents.length > 0 && (
+                <div className="w-full px-1 flex flex-col gap-0.5">
+                  {allDayEvents.slice(0, 2).map((ev) => (
+                    <div
+                      key={ev.id}
+                      className="truncate px-1.5 py-0.5 text-[9px] font-medium"
+                      style={{
+                        backgroundColor: ev.color,
+                        color: "white",
+                        borderRadius: "3px",
+                      }}
+                    >
+                      {ev.title}
+                    </div>
+                  ))}
+                </div>
+              )}
               <button
                 onClick={() => onAddEvent(day)}
                 className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex items-center justify-center w-5 h-5"
@@ -1460,6 +1603,10 @@ function WeeklyGrid({
 
           {weekDays.map((day, colIdx) => {
             const isToday = isSameDay(day, today);
+            const dateStr = formatDateInput(day);
+            const timedEvents = events.filter(
+              (e) => e.event_date === dateStr && !e.is_all_day && e.start_time
+            );
             return (
               <div
                 key={colIdx}
@@ -1473,7 +1620,7 @@ function WeeklyGrid({
                   <button
                     key={rowIdx}
                     onClick={() => onAddEvent(day, h)}
-                    className="hover:bg-gray-50 transition-colors duration-100"
+                    className="group relative hover:bg-[#e8f0ec] transition-colors duration-100"
                     style={{
                       display: "block",
                       width: "100%",
@@ -1487,8 +1634,58 @@ function WeeklyGrid({
                       backgroundColor: "transparent",
                       cursor: "pointer",
                     }}
-                  />
+                  >
+                    <span
+                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-100 pointer-events-none"
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: colors.mistyForest,
+                        fontSize: "18px",
+                        fontWeight: 300,
+                        lineHeight: 1,
+                      }}
+                    >
+                      +
+                    </span>
+                  </button>
                 ))}
+                {/* Timed event blocks */}
+                {timedEvents.map((ev) => {
+                  const [sh, sm] = (ev.start_time ?? "").split(":").map(Number);
+                  const startMinutes = sh * 60 + (sm || 0);
+                  const gridStart = 7 * 60; // 7 AM
+                  const topPx = ((startMinutes - gridStart) / 60) * HOUR_HEIGHT;
+                  let heightPx = HOUR_HEIGHT; // default 1 hour
+                  if (ev.end_time) {
+                    const [eh, em] = ev.end_time.split(":").map(Number);
+                    const endMinutes = eh * 60 + (em || 0);
+                    heightPx = Math.max(20, ((endMinutes - startMinutes) / 60) * HOUR_HEIGHT);
+                  }
+                  return (
+                    <div
+                      key={ev.id}
+                      className="absolute left-0.5 right-0.5 px-1.5 py-1 overflow-hidden pointer-events-none"
+                      style={{
+                        top: `${topPx}px`,
+                        height: `${heightPx}px`,
+                        backgroundColor: ev.color,
+                        borderRadius: "5px",
+                        zIndex: 10,
+                      }}
+                    >
+                      <p
+                        className="text-[10px] font-semibold leading-tight truncate"
+                        style={{ color: "white" }}
+                      >
+                        {ev.title}
+                      </p>
+                    </div>
+                  );
+                })}
               </div>
             );
           })}

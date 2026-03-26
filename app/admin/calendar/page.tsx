@@ -22,5 +22,11 @@ export default async function CalendarPage() {
     }
   }
 
-  return <CalendarClient currentUser={currentUser} />;
+  const { data: events } = await createAdminClient()
+    .schema("calendar")
+    .from("events")
+    .select("id, title, event_date, is_all_day, start_time, end_time, color, category")
+    .order("event_date", { ascending: true });
+
+  return <CalendarClient currentUser={currentUser} initialEvents={events ?? []} />;
 }
