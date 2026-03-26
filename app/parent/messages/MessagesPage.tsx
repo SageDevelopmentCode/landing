@@ -73,8 +73,9 @@ export default function MessagesPage({ userId }: { userId: string }) {
   const [sendError, setSendError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // New message modal
-  const [showNewModal, setShowNewModal] = useState(false);
+  // Compose new message
+  const [isComposingNew, setIsComposingNew] = useState(false);
+  const [selectedRecipient, setSelectedRecipient] = useState<{ id: string; full_name: string } | null>(null);
   const [recipientSearch, setRecipientSearch] = useState("");
   const [recipientResults, setRecipientResults] = useState<{ id: string; full_name: string }[]>([]);
   const [searchingUsers, setSearchingUsers] = useState(false);
@@ -179,20 +180,63 @@ export default function MessagesPage({ userId }: { userId: string }) {
     }, 300);
   }, []);
 
-  const handleSelectRecipient = async (recipient: { id: string; full_name: string }) => {
-    setCreatingConvo(true);
-    const convoId = await createConversation(userId, recipient.id);
-    if (convoId) {
-      // Refresh conversations
-      const updated = await getConversations(userId);
-      setConversations(updated);
-      setActiveId(convoId);
-      setMobileShowChat(true);
-    }
-    setShowNewModal(false);
+  const handleSelectRecipient = (recipient: { id: string; full_name: string }) => {
+    setSelectedRecipient(recipient);
     setRecipientSearch("");
     setRecipientResults([]);
+  };
+
+  const handleRemoveRecipient = () => {
+    setSelectedRecipient(null);
+    setRecipientSearch("");
+    setRecipientResults([]);
+  };
+
+  const handleSendNew = async () => {
+    if (!selectedRecipient || (!draft.trim() && !imageFile) || sending) return;
+    const body = draft.trim();
+    setDraft("");
+    setSendError(null);
+    setCreatingConvo(true);
+
+    const convoId = await createConversation(userId, selectedRecipient.id);
+    if (!convoId) {
+      setSendError("Could not create conversation. Please try again.");
+      setCreatingConvo(false);
+      return;
+    }
+
+    setSending(true);
     setCreatingConvo(false);
+
+    let imageUrl: string | undefined;
+    if (imageFile) {
+      const fd = new FormData();
+      fd.append("file", imageFile);
+      fd.append("conversationId", convoId);
+      const result = await uploadMessageImage(fd);
+      if ("url" in result) {
+        imageUrl = result.url;
+      } else {
+        setSendError(`Image upload failed: ${result.error}`);
+        setSending(false);
+        return;
+      }
+      setImageFile(null);
+      setImagePreview(null);
+    }
+
+    const saved = await sendMessage(convoId, body, imageUrl);
+    const updated = await getConversations(userId);
+    setConversations(updated);
+    if (saved) setMessages([saved]);
+
+    setActiveId(convoId);
+    setIsComposingNew(false);
+    setSelectedRecipient(null);
+    setRecipientSearch("");
+    setRecipientResults([]);
+    setSending(false);
   };
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -312,8 +356,18 @@ export default function MessagesPage({ userId }: { userId: string }) {
             />
           </div>
           <button
-            onClick={() => setShowNewModal(true)}
-            className="w-full flex items-center justify-center gap-2 bg-[#4a7c59] hover:bg-[#3d6849] text-white text-sm font-medium py-2 rounded-lg transition-colors cursor-pointer"
+            onClick={() => {
+              setIsComposingNew(true);
+              setActiveId(null);
+              setMessages([]);
+              setSelectedRecipient(null);
+              setRecipientSearch("");
+              setRecipientResults([]);
+              setMobileShowChat(true);
+            }}
+            className={`w-full flex items-center justify-center gap-2 text-white text-sm font-medium py-2 rounded-lg transition-colors cursor-pointer ${
+              isComposingNew ? "bg-[#3d6849]" : "bg-[#4a7c59] hover:bg-[#3d6849]"
+            }`}
           >
             <SquarePen className="w-4 h-4" />
             New Message
@@ -336,6 +390,8 @@ export default function MessagesPage({ userId }: { userId: string }) {
                 key={convo.id}
                 onClick={() => {
                   setActiveId(convo.id);
+                  setIsComposingNew(false);
+                  setSelectedRecipient(null);
                   setMobileShowChat(true);
                 }}
                 className={`w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors cursor-pointer ${
@@ -381,8 +437,145 @@ export default function MessagesPage({ userId }: { userId: string }) {
       </div>
 
       {/* Chat area */}
-      <div className={`flex-1 min-h-0 flex flex-col overflow-hidden ${mobileShowChat ? "flex" : "hidden md:flex"}`}>
-        {!active ? (
+      <div className={`flex-1 min-h-0 flex flex-col ${mobileShowChat ? "flex" : "hidden md:flex"}`}>
+        {isComposingNew ? (
+          <>
+            {/* Compose header */}
+            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-gray-100 shrink-0">
+              <button
+                onClick={() => { setIsComposingNew(false); setMobileShowChat(false); }}
+                className="md:hidden text-gray-500 hover:text-gray-700 cursor-pointer"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <p className="text-sm font-semibold font-body text-gray-800">New Message</p>
+            </div>
+
+            {/* To: row */}
+            <div className="px-5 py-3 border-b border-gray-100 shrink-0 relative">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-body text-gray-500 shrink-0">To:</span>
+                {!selectedRecipient ? (
+                  <input
+                    autoFocus
+                    type="text"
+                    placeholder="Search by name..."
+                    value={recipientSearch}
+                    onChange={(e) => handleRecipientSearch(e.target.value)}
+                    className="flex-1 text-sm font-body bg-transparent border-none outline-none text-gray-800 placeholder:text-gray-400"
+                  />
+                ) : (
+                  <div className="flex items-center gap-1.5 bg-[#4a7c59]/10 text-[#4a7c59] text-sm font-body px-3 py-1 rounded-full">
+                    <span>{selectedRecipient.full_name}</span>
+                    <button
+                      onClick={handleRemoveRecipient}
+                      className="text-[#4a7c59] hover:text-[#3d6849] cursor-pointer"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Dropdown results */}
+              {!selectedRecipient && recipientSearch.trim() && (
+                <div className="absolute left-0 right-0 top-full z-20 bg-white border border-gray-100 shadow-lg max-h-60 overflow-y-auto">
+                  {searchingUsers ? (
+                    <div className="flex items-center justify-center py-6">
+                      <Loader2 className="w-4 h-4 animate-spin text-gray-300" />
+                    </div>
+                  ) : recipientResults.length === 0 ? (
+                    <p className="text-sm text-gray-400 font-body text-center py-6">No users found</p>
+                  ) : (
+                    recipientResults.map((user) => (
+                      <button
+                        key={user.id}
+                        onClick={() => handleSelectRecipient(user)}
+                        className="w-full flex items-center gap-3 px-5 py-2.5 hover:bg-gray-50 text-left transition-colors cursor-pointer"
+                      >
+                        <div className={`${colorForId(user.id)} w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold font-body shrink-0`}>
+                          {initialsFor(user.full_name)}
+                        </div>
+                        <span className="text-sm font-body text-gray-800">{user.full_name}</span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Empty message area */}
+            <div className="flex-1 overflow-y-auto px-5 py-4">
+              {!selectedRecipient && (
+                <p className="text-sm text-gray-400 font-body text-center py-8">
+                  Search for someone to start a conversation
+                </p>
+              )}
+            </div>
+
+            {/* Input */}
+            <div className="border-t border-gray-100 shrink-0">
+              {sendError && (
+                <p className="px-4 pt-2 text-xs text-red-500">{sendError}</p>
+              )}
+              {imagePreview && (
+                <div className="px-4 pt-2 flex items-center gap-2">
+                  <div className="relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={imagePreview} alt="preview" className="h-16 w-16 object-cover rounded-lg border border-gray-200" />
+                    <button
+                      onClick={() => { setImageFile(null); setImagePreview(null); }}
+                      className="absolute -top-1.5 -right-1.5 bg-white rounded-full shadow p-0.5 cursor-pointer"
+                    >
+                      <X className="w-3 h-3 text-gray-500" />
+                    </button>
+                  </div>
+                </div>
+              )}
+              <div className="px-4 py-3 flex items-center gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*,.heic,.heif"
+                  className="hidden"
+                  onChange={handleImageSelect}
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={!selectedRecipient}
+                  className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-[#4a7c59] transition-colors cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <ImageIcon className="w-5 h-5" />
+                </button>
+                <input
+                  type="text"
+                  placeholder={selectedRecipient ? "Type a message..." : "Select a recipient first..."}
+                  value={draft}
+                  disabled={!selectedRecipient}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendNew();
+                    }
+                  }}
+                  className="flex-1 px-4 py-2.5 text-sm font-body bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59]/40 text-gray-800 placeholder:text-gray-400 disabled:opacity-60"
+                />
+                <button
+                  onClick={handleSendNew}
+                  disabled={!selectedRecipient || (!draft.trim() && !imageFile) || sending || creatingConvo}
+                  className="w-10 h-10 rounded-xl bg-[#4a7c59] hover:bg-[#3d6849] disabled:opacity-50 text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                >
+                  {(sending || creatingConvo) ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+          </>
+        ) : !active ? (
           <div className="flex-1 flex items-center justify-center">
             <p className="text-sm text-gray-400 font-body">Select a conversation or start a new one</p>
           </div>
@@ -512,66 +705,6 @@ export default function MessagesPage({ userId }: { userId: string }) {
           </>
         )}
       </div>
-
-      {/* New Message Modal */}
-      {showNewModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <p className="text-sm font-semibold font-body text-gray-800">New Message</p>
-              <button
-                onClick={() => {
-                  setShowNewModal(false);
-                  setRecipientSearch("");
-                  setRecipientResults([]);
-                }}
-                className="text-gray-400 hover:text-gray-600 cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="p-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  autoFocus
-                  type="text"
-                  placeholder="Search by name..."
-                  value={recipientSearch}
-                  onChange={(e) => handleRecipientSearch(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-sm font-body bg-gray-50 border border-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59]/40 text-gray-800 placeholder:text-gray-400"
-                />
-              </div>
-              <div className="mt-2 max-h-60 overflow-y-auto">
-                {searchingUsers || creatingConvo ? (
-                  <div className="flex items-center justify-center py-6">
-                    <Loader2 className="w-4 h-4 animate-spin text-gray-300" />
-                  </div>
-                ) : recipientResults.length === 0 && recipientSearch.trim() ? (
-                  <p className="text-sm text-gray-400 font-body text-center py-6">No users found</p>
-                ) : recipientResults.length === 0 ? (
-                  <p className="text-sm text-gray-400 font-body text-center py-6">
-                    Type a name to search
-                  </p>
-                ) : (
-                  recipientResults.map((user) => (
-                    <button
-                      key={user.id}
-                      onClick={() => handleSelectRecipient(user)}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 text-left transition-colors cursor-pointer"
-                    >
-                      <div className={`${colorForId(user.id)} w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold font-body shrink-0`}>
-                        {initialsFor(user.full_name)}
-                      </div>
-                      <span className="text-sm font-body text-gray-800">{user.full_name}</span>
-                    </button>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
