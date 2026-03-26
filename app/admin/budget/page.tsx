@@ -3066,6 +3066,8 @@ function RevenueTab({
     fun_friday: 0,
     summer: 0,
   });
+  const [view, setView] = useState<"monthly" | "type">("monthly");
+  const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     async function fetchLists() {
@@ -3093,137 +3095,359 @@ function RevenueTab({
     enrollment.fun_friday * TUITION_RATES.fun_friday +
     enrollment.summer * TUITION_RATES.summer_14_wk;
 
+  function txNet(tx: StripeTransaction) {
+    return (tx.cover_fees ? (tx.intended_amount_cents ?? tx.amount_cents) : tx.amount_cents) / 100;
+  }
+
+  const visibleTx = transactions.filter(tx => !tx.exclude_from_revenue);
+
+  const byMonth = visibleTx.reduce<Record<string, StripeTransaction[]>>((acc, tx) => {
+    const key = tx.created_at.slice(0, 7);
+    (acc[key] ??= []).push(tx);
+    return acc;
+  }, {});
+  const revenueMonths = Object.keys(byMonth).sort().reverse();
+
+  function toggleMonth(key: string) {
+    setCollapsedMonths(prev => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  }
+
+  function formatMonthLabel(key: string) {
+    const [year, month] = key.split("-");
+    const date = new Date(Number(year), Number(month) - 1, 1);
+    return date.toLocaleString("default", { month: "long", year: "numeric" });
+  }
+
+  const byType = visibleTx.reduce<Record<string, number>>((acc, tx) => {
+    const t = tx.payment_type ?? "other";
+    acc[t] = (acc[t] ?? 0) + txNet(tx);
+    return acc;
+  }, {});
+
   return (
     <div className="space-y-6">
-      {/* Transaction Log */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <p
-            className="text-sm font-semibold"
-            style={{ color: colors.textPrimary }}
-          >
-            Revenue (Stripe Transactions)
-          </p>
-          <button
-            onClick={() => setHideExcluded(!hideExcluded)}
+      {/* Header: title + controls */}
+      <div className="flex items-center justify-between">
+        <p
+          className="text-sm font-semibold"
+          style={{ color: colors.textPrimary }}
+        >
+          Revenue (Stripe Transactions)
+        </p>
+        <div className="flex items-center gap-3">
+          {/* View toggle */}
+          <div
             style={{
-              backgroundColor: hideExcluded ? colors.mistyForest : 'transparent',
-              color: hideExcluded ? '#fff' : colors.textSecondary,
-              border: `1px solid ${hideExcluded ? colors.mistyForest : colors.border}`,
-              borderRadius: '99px',
-              padding: '4px 12px',
-              fontSize: '12px',
-              fontWeight: 500,
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
+              display: "inline-flex",
+              borderRadius: radius.md,
+              border: `1px solid ${colors.border}`,
+              overflow: "hidden",
+              backgroundColor: colors.warmLinen,
             }}
           >
-            {hideExcluded ? 'Show Excluded' : 'Hide Excluded'}
-          </button>
+            {(["monthly", "type"] as const).map((v) => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                style={{
+                  padding: "6px 16px",
+                  fontSize: "13px",
+                  fontWeight: view === v ? 600 : 400,
+                  border: "none",
+                  cursor: "pointer",
+                  backgroundColor: view === v ? colors.mistyForest : "transparent",
+                  color: view === v ? "white" : colors.textSecondary,
+                  transition: "all 0.15s",
+                }}
+              >
+                {v === "monthly" ? "Monthly" : "By Type"}
+              </button>
+            ))}
+          </div>
+          {/* Show/Hide Excluded (monthly view only) */}
+          {view === "monthly" && (
+            <button
+              onClick={() => setHideExcluded(!hideExcluded)}
+              style={{
+                backgroundColor: hideExcluded ? colors.mistyForest : 'transparent',
+                color: hideExcluded ? '#fff' : colors.textSecondary,
+                border: `1px solid ${hideExcluded ? colors.mistyForest : colors.border}`,
+                borderRadius: '99px',
+                padding: '4px 12px',
+                fontSize: '12px',
+                fontWeight: 500,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {hideExcluded ? 'Show Excluded' : 'Hide Excluded'}
+            </button>
+          )}
         </div>
+      </div>
 
+      {/* Monthly view */}
+      {view === "monthly" && (
         <Table
           headers={["Date", "Type", "Student", "Application", "Payer", "Net Amount"]}
         >
           {(() => {
-            const visibleTransactions = hideExcluded
+            const displayTx = hideExcluded
               ? transactions.filter(tx => !tx.exclude_from_revenue)
               : transactions;
-            return visibleTransactions.length === 0 ? (
-            <tr>
-              <td
-                colSpan={6}
-                className="px-4 py-8 text-center text-sm text-gray-400"
-              >
-                {hideExcluded ? 'All transactions are excluded.' : 'No transactions yet.'}
-              </td>
-            </tr>
-          ) : (
-            visibleTransactions.map((tx, i) => (
-              <TableRow
-                key={tx.id}
-                index={i}
-                onClick={() => setSelectedTransaction(tx)}
-                style={{ cursor: 'pointer', opacity: tx.exclude_from_revenue ? 0.5 : 1 }}
-              >
-                <TableCell>
-                  {new Date(tx.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                </TableCell>
-                <TableCell>
-                  <span
-                    style={{
-                      backgroundColor: colors.pastelSage,
-                      color: colors.mistyForest,
-                      borderRadius: "99px",
-                      padding: "2px 8px",
-                      fontSize: "11px",
-                      fontWeight: 600,
-                    }}
-                  >
-                    {formatPaymentType(tx.payment_type)}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  {tx.student_id
-                    ? (students.find((s) => s.id === tx.student_id)?.child_legal_name ?? tx.student_id)
-                    : "—"}
-                </TableCell>
-                <TableCell>{tx.application_id ? "✓" : "—"}</TableCell>
-                <TableCell>
-                  {(() => {
-                    const effectiveParentId = tx.parent_id ?? (tx.metadata?.parent_id as string | null) ?? null
-                    return tx.payer_name || tx.payer_email || (effectiveParentId ? (parents.find(p => p.id === effectiveParentId)?.email ?? "—") : "—")
-                  })()}
-                </TableCell>
-                <TableCell
-                  className="font-semibold"
-                  style={{ color: tx.exclude_from_revenue ? '#9CA3AF' : colors.successText }}
-                >
-                  <span className="flex items-center gap-2">
-                    {formatCents(tx.cover_fees ? tx.intended_amount_cents : tx.amount_cents, tx.currency)}
-                    {tx.exclude_from_revenue && (
-                      <span style={{
-                        backgroundColor: '#FEF3C7',
-                        color: '#D97706',
-                        borderRadius: '99px',
-                        padding: '1px 6px',
-                        fontSize: '10px',
-                        fontWeight: 600,
-                      }}>
-                        Excluded
-                      </span>
-                    )}
-                  </span>
-                </TableCell>
-              </TableRow>
-            ))
-          );
+            const displayByMonth = displayTx.reduce<Record<string, StripeTransaction[]>>((acc, tx) => {
+              const key = tx.created_at.slice(0, 7);
+              (acc[key] ??= []).push(tx);
+              return acc;
+            }, {});
+            const displayMonths = Object.keys(displayByMonth).sort().reverse();
+            return displayMonths.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-400">
+                  {hideExcluded ? 'All transactions are excluded.' : 'No transactions yet.'}
+                </td>
+              </tr>
+            ) : (
+              <>
+                {displayMonths.map((monthKey) => {
+                  const monthTxs = displayByMonth[monthKey];
+                  const monthTotal = monthTxs.reduce((s, tx) => s + txNet(tx), 0);
+                  const isCollapsed = collapsedMonths.has(monthKey);
+                  return (
+                    <React.Fragment key={monthKey}>
+                      {/* Month header row */}
+                      <tr
+                        style={{ backgroundColor: "#F6F1E8", cursor: "pointer" }}
+                        onClick={() => toggleMonth(monthKey)}
+                      >
+                        <td colSpan={6} style={{ padding: "10px 16px" }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <span
+                                style={{
+                                  fontSize: "12px",
+                                  color: colors.textSecondary,
+                                  transform: isCollapsed ? "rotate(-90deg)" : "rotate(0deg)",
+                                  display: "inline-block",
+                                  transition: "transform 0.2s",
+                                }}
+                              >
+                                ▾
+                              </span>
+                              <span className="text-sm font-bold" style={{ color: colors.textPrimary }}>
+                                {formatMonthLabel(monthKey)}
+                              </span>
+                              <span className="text-xs" style={{ color: colors.textSecondary }}>
+                                ({monthTxs.length} transaction{monthTxs.length !== 1 ? "s" : ""})
+                              </span>
+                            </div>
+                            <span className="text-sm font-bold" style={{ color: colors.successText }}>
+                              {fmt(monthTotal)}
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                      {/* Transaction rows */}
+                      {!isCollapsed && monthTxs.map((tx, i) => (
+                        <TableRow
+                          key={tx.id}
+                          index={i}
+                          onClick={() => setSelectedTransaction(tx)}
+                          style={{ cursor: 'pointer', opacity: tx.exclude_from_revenue ? 0.5 : 1 }}
+                        >
+                          <TableCell>
+                            {new Date(tx.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </TableCell>
+                          <TableCell>
+                            <span
+                              style={{
+                                backgroundColor: colors.pastelSage,
+                                color: colors.mistyForest,
+                                borderRadius: "99px",
+                                padding: "2px 8px",
+                                fontSize: "11px",
+                                fontWeight: 600,
+                              }}
+                            >
+                              {formatPaymentType(tx.payment_type)}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            {tx.student_id
+                              ? (students.find(s => s.id === tx.student_id)?.child_legal_name ?? tx.student_id)
+                              : "—"}
+                          </TableCell>
+                          <TableCell>{tx.application_id ? "✓" : "—"}</TableCell>
+                          <TableCell>
+                            {(() => {
+                              const effectiveParentId = tx.parent_id ?? (tx.metadata?.parent_id as string | null) ?? null;
+                              return tx.payer_name || tx.payer_email || (effectiveParentId ? (parents.find(p => p.id === effectiveParentId)?.email ?? "—") : "—");
+                            })()}
+                          </TableCell>
+                          <TableCell
+                            className="font-semibold"
+                            style={{ color: tx.exclude_from_revenue ? '#9CA3AF' : colors.successText }}
+                          >
+                            <span className="flex items-center gap-2">
+                              {formatCents(tx.cover_fees ? tx.intended_amount_cents : tx.amount_cents, tx.currency)}
+                              {tx.exclude_from_revenue && (
+                                <span style={{
+                                  backgroundColor: '#FEF3C7',
+                                  color: '#D97706',
+                                  borderRadius: '99px',
+                                  padding: '1px 6px',
+                                  fontSize: '10px',
+                                  fontWeight: 600,
+                                }}>
+                                  Excluded
+                                </span>
+                              )}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </React.Fragment>
+                  );
+                })}
+              </>
+            );
           })()}
           {/* Total row */}
-          <tr
-            style={{
-              backgroundColor: "#F6F1E8",
-              borderTop: `1px solid #E8E4DF`,
-            }}
-          >
-            <td
-              colSpan={5}
-              className="px-4 py-3 text-sm font-bold"
-              style={{ color: colors.textPrimary }}
-            >
+          <tr style={{ backgroundColor: "#F6F1E8", borderTop: `1px solid #E8E4DF` }}>
+            <td colSpan={5} className="px-4 py-3 text-sm font-bold" style={{ color: colors.textPrimary }}>
               Total
             </td>
-            <td
-              className="px-4 py-3 text-sm font-bold"
-              style={{ color: colors.successText }}
-            >
+            <td className="px-4 py-3 text-sm font-bold" style={{ color: colors.successText }}>
               {fmt(totalActual)}
             </td>
           </tr>
         </Table>
-      </div>
+      )}
 
-      {/* Revenue Projections */}
+      {/* By Type view */}
+      {view === "type" && (
+        <div style={{ ...cardStyle, padding: "24px" }}>
+          <p
+            className="text-sm font-semibold mb-4"
+            style={{ color: colors.textPrimary }}
+          >
+            Revenue by Type
+          </p>
+          {visibleTx.length === 0 ? (
+            <p className="text-sm text-center py-8" style={{ color: colors.textTertiary }}>
+              No transactions yet.
+            </p>
+          ) : (
+            <div className="flex flex-col md:flex-row gap-8 items-start">
+              {/* Donut SVG */}
+              <div style={{ flexShrink: 0 }}>
+                <svg width={220} height={220}>
+                  {(() => {
+                    const cx = 110, cy = 110;
+                    const typeEntries = Object.entries(byType).sort(([, a], [, b]) => b - a);
+                    let cumulative = 0;
+                    const slices = typeEntries.map(([t, val], i) => {
+                      const pct = totalActual > 0 ? val / totalActual : 0;
+                      const dashLen = pct * CIRC;
+                      const offset = CIRC - cumulative - CIRC / 4;
+                      cumulative += dashLen;
+                      return { t, val, pct, dashLen, offset, color: SLICE_COLORS[i % SLICE_COLORS.length] };
+                    });
+                    return (
+                      <>
+                        <circle cx={cx} cy={cy} r={RADIUS} fill="none" stroke={colors.warmLinen} strokeWidth={30} />
+                        {slices.map((slice, i) => (
+                          <motion.circle
+                            key={slice.t}
+                            cx={cx}
+                            cy={cy}
+                            r={RADIUS}
+                            fill="none"
+                            stroke={slice.color}
+                            strokeWidth={30}
+                            strokeDasharray={`${slice.dashLen} ${CIRC}`}
+                            strokeDashoffset={slice.offset}
+                            initial={{ strokeDasharray: `0 ${CIRC}` }}
+                            animate={{ strokeDasharray: `${slice.dashLen} ${CIRC}` }}
+                            transition={{ duration: 0.6, delay: i * 0.08, ease: "easeOut" }}
+                          />
+                        ))}
+                        <circle cx={cx} cy={cy} r={50} fill="white" />
+                        <text x={cx} y={cy - 6} textAnchor="middle" fontSize="13" fontWeight="700" fill={colors.textPrimary}>
+                          {fmt(totalActual)}
+                        </text>
+                        <text x={cx} y={cy + 12} textAnchor="middle" fontSize="10" fill={colors.textSecondary}>
+                          total revenue
+                        </text>
+                      </>
+                    );
+                  })()}
+                </svg>
+              </div>
+
+              {/* Type list */}
+              <div className="flex-1 space-y-3" style={{ minWidth: 0 }}>
+                {Object.entries(byType)
+                  .sort(([, a], [, b]) => b - a)
+                  .map(([t, val], i) => {
+                    const pct = totalActual > 0 ? val / totalActual : 0;
+                    const color = SLICE_COLORS[i % SLICE_COLORS.length];
+                    return (
+                      <div key={t} className="space-y-1">
+                        <div className="flex items-center gap-3">
+                          <div
+                            style={{
+                              width: 10,
+                              height: 10,
+                              borderRadius: "50%",
+                              backgroundColor: color,
+                              flexShrink: 0,
+                            }}
+                          />
+                          <span className="text-sm flex-1" style={{ color: colors.textSecondary }}>
+                            {SOURCE_LABELS[t] ?? formatPaymentType(t)}
+                          </span>
+                          <span className="text-sm font-medium" style={{ color: colors.textPrimary }}>
+                            {fmt(val)}
+                          </span>
+                          <span
+                            className="text-xs"
+                            style={{ color: colors.textTertiary, minWidth: 40, textAlign: "right" }}
+                          >
+                            {(pct * 100).toFixed(1)}%
+                          </span>
+                        </div>
+                        <div
+                          style={{
+                            height: 4,
+                            borderRadius: 99,
+                            backgroundColor: colors.warmLinen,
+                            overflow: "hidden",
+                            marginLeft: 22,
+                          }}
+                        >
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${pct * 100}%` }}
+                            transition={{ duration: 0.5, ease: "easeOut" }}
+                            style={{ height: "100%", borderRadius: 99, backgroundColor: color }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Enrollment Revenue Projections — commented out for now */}
+      {/*
       <div style={{ ...cardStyle, padding: "24px" }}>
         <p
           className="text-sm font-semibold mb-4"
@@ -3233,117 +3457,47 @@ function RevenueTab({
         </p>
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           {[
-            {
-              key: "full_14",
-              label: "Full Enrollment (1st–4th)",
-              rate: TUITION_RATES.full_14,
-            },
-            {
-              key: "full_primary",
-              label: "Full Enrollment (Primary)",
-              rate: TUITION_RATES.full_primary,
-            },
-            {
-              key: "aftercare",
-              label: "After Care (enrolled rate)",
-              rate: TUITION_RATES.aftercare_enrolled,
-            },
-            {
-              key: "fun_friday",
-              label: "Field Day Friday",
-              rate: TUITION_RATES.fun_friday,
-            },
-            {
-              key: "summer",
-              label: "Summer (per week)",
-              rate: TUITION_RATES.summer_14_wk,
-            },
+            { key: "full_14", label: "Full Enrollment (1st–4th)", rate: TUITION_RATES.full_14 },
+            { key: "full_primary", label: "Full Enrollment (Primary)", rate: TUITION_RATES.full_primary },
+            { key: "aftercare", label: "After Care (enrolled rate)", rate: TUITION_RATES.aftercare_enrolled },
+            { key: "fun_friday", label: "Field Day Friday", rate: TUITION_RATES.fun_friday },
+            { key: "summer", label: "Summer (per week)", rate: TUITION_RATES.summer_14_wk },
           ].map(({ key, label, rate }) => (
             <div key={key}>
-              <label
-                className="text-xs mb-1 block"
-                style={{ color: colors.textSecondary }}
-              >
-                {label}{" "}
-                <span style={{ color: colors.textTertiary }}>
-                  ({fmt(rate)}/mo)
-                </span>
+              <label className="text-xs mb-1 block" style={{ color: colors.textSecondary }}>
+                {label} <span style={{ color: colors.textTertiary }}>({fmt(rate)}/mo)</span>
               </label>
               <input
                 style={{ ...inputStyle, width: "80px" }}
                 type="number"
                 min="0"
                 value={(enrollment as Record<string, number>)[key]}
-                onChange={(e) =>
-                  setEnrollment((p) => ({
-                    ...p,
-                    [key]: parseInt(e.target.value) || 0,
-                  }))
-                }
+                onChange={(e) => setEnrollment((p) => ({ ...p, [key]: parseInt(e.target.value) || 0 }))}
               />
-              <span
-                className="ml-2 text-xs"
-                style={{ color: colors.successText }}
-              >
+              <span className="ml-2 text-xs" style={{ color: colors.successText }}>
                 = {fmt((enrollment as Record<string, number>)[key] * rate)}
               </span>
             </div>
           ))}
         </div>
-
-        <div
-          className="flex items-center justify-between p-4 rounded-xl"
-          style={{ backgroundColor: colors.pastelSage }}
-        >
+        <div className="flex items-center justify-between p-4 rounded-xl" style={{ backgroundColor: colors.pastelSage }}>
           <div>
-            <p
-              className="text-xs font-medium"
-              style={{ color: colors.mistyForest }}
-            >
-              Projected Monthly Revenue
-            </p>
-            <p
-              className="text-2xl font-bold"
-              style={{ color: colors.mistyForest }}
-            >
-              {fmt(projectedRevenue)}
-            </p>
+            <p className="text-xs font-medium" style={{ color: colors.mistyForest }}>Projected Monthly Revenue</p>
+            <p className="text-2xl font-bold" style={{ color: colors.mistyForest }}>{fmt(projectedRevenue)}</p>
           </div>
           <div className="text-right">
-            <p
-              className="text-xs font-medium"
-              style={{ color: colors.mistyForest }}
-            >
-              Actual Revenue
-            </p>
-            <p
-              className="text-2xl font-bold"
-              style={{ color: colors.mistyForest }}
-            >
-              {fmt(totalActual)}
-            </p>
+            <p className="text-xs font-medium" style={{ color: colors.mistyForest }}>Actual Revenue</p>
+            <p className="text-2xl font-bold" style={{ color: colors.mistyForest }}>{fmt(totalActual)}</p>
           </div>
           <div className="text-right">
-            <p
-              className="text-xs font-medium"
-              style={{ color: colors.mistyForest }}
-            >
-              Difference
-            </p>
-            <p
-              className="text-2xl font-bold"
-              style={{
-                color:
-                  totalActual >= projectedRevenue
-                    ? colors.successText
-                    : colors.errorText,
-              }}
-            >
+            <p className="text-xs font-medium" style={{ color: colors.mistyForest }}>Difference</p>
+            <p className="text-2xl font-bold" style={{ color: totalActual >= projectedRevenue ? colors.successText : colors.errorText }}>
               {fmt(totalActual - projectedRevenue)}
             </p>
           </div>
         </div>
       </div>
+      */}
 
       <TransactionDetailSidebar
         transaction={selectedTransaction}
