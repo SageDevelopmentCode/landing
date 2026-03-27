@@ -17,6 +17,7 @@ import {
   Phone,
   Bus,
   Receipt,
+  Rss,
 } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 
@@ -26,10 +27,11 @@ const primaryNavItems: { label: string; icon: LucideIcon; href: string }[] = [
   { label: "Tuition & Billing", icon: CreditCard, href: "/parent/billing" },
   { label: "Messages", icon: MessageCircle, href: "/parent/messages" },
   { label: "Calendar", icon: Calendar, href: "#" },
-  { label: "Forms & Documents", icon: FileText, href: "/parent/forms" },
+  { label: "Feed", icon: Rss, href: "/parent/feed" },
 ];
 
 const moreItems: { label: string; icon: LucideIcon; href?: string }[] = [
+  { label: "Forms & Documents", icon: FileText, href: "/parent/forms" },
   { label: "Resources", icon: BookOpen },
   { label: "Photos/Updates", icon: Image },
   { label: "Volunteer Opportunities", icon: Heart, href: "/parent/volunteer" },

@@ -252,6 +252,7 @@ export async function searchUsers(query: string): Promise<{ id: string; full_nam
     .from("users")
     .select("id, full_name")
     .ilike("full_name", `%${query}%`)
+    .in("role", ["teacher", "super_admin"])
     .limit(10);
 
   if (error) return [];
