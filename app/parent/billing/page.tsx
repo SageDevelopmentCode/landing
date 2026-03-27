@@ -22,6 +22,8 @@ export type PendingPaymentRequest = {
   created_at: string;
 };
 
+export type PaidWeeksByStudent = Record<string, number[]>; // studentId → array of paid week numbers
+
 export type SummerEnrollment = {
   id: string;
   student_id: string;
@@ -98,15 +100,27 @@ export default async function BillingRoute() {
   const summerEnrollments = ((summerData ?? []) as { id: string; student_id: string | null; child_grade: string | null }[])
     .filter((e): e is SummerEnrollment => !!e.student_id && !!e.id);
 
-  const paidSummerStudentIds = new Set(
-    transactions
-      .filter((t) => t.payment_type === "summer_tuition" && t.status === "completed")
-      .map((t) => t.student_id)
-      .filter(Boolean) as string[]
-  );
+  // Build paid-weeks map per student from all completed summer_tuition transactions
+  const paidWeeksByStudent: PaidWeeksByStudent = {};
+  for (const tx of transactions) {
+    if (tx.payment_type === "summer_tuition" && tx.status === "completed" && tx.student_id) {
+      const planType = (tx.metadata as Record<string, string>)?.plan_type;
+      const weeksStr = (tx.metadata as Record<string, string>)?.weeks ?? "";
+      if (planType === "full") {
+        paidWeeksByStudent[tx.student_id] = Array.from({ length: 12 }, (_, i) => i + 1);
+      } else {
+        const weeks = weeksStr.split(",").map(Number).filter(Boolean);
+        paidWeeksByStudent[tx.student_id] = [
+          ...(paidWeeksByStudent[tx.student_id] ?? []),
+          ...weeks,
+        ];
+      }
+    }
+  }
 
+  // Show enrollment if parent has paid fewer than 12 weeks (weekly plan with room to add more)
   const unpaidSummerEnrollments = summerEnrollments.filter(
-    (e) => !paidSummerStudentIds.has(e.student_id)
+    (e) => (paidWeeksByStudent[e.student_id]?.length ?? 0) < 12
   );
 
   const studentIds = [
@@ -160,7 +174,7 @@ export default async function BillingRoute() {
               Tuition &amp; Billing
             </h1>
           </div>
-          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} unpaidSummerEnrollments={unpaidSummerEnrollments} parentId={user.id} parentEmail={user.email ?? ""} />
+          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} unpaidSummerEnrollments={unpaidSummerEnrollments} paidWeeksByStudent={paidWeeksByStudent} parentId={user.id} parentEmail={user.email ?? ""} />
         </main>
       </div>
       <Footer />

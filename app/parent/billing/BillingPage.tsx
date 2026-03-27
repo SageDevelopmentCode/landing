@@ -19,7 +19,7 @@ import {
   SidebarField,
   SidebarSection,
 } from "@/app/components/SidebarPrimitives";
-import type { StripeTransaction, PendingPaymentRequest, SummerEnrollment } from "./page";
+import type { StripeTransaction, PendingPaymentRequest, SummerEnrollment, PaidWeeksByStudent } from "./page";
 
 interface Props {
   transactions: StripeTransaction[];
@@ -27,6 +27,7 @@ interface Props {
   pendingRequests: PendingPaymentRequest[];
   summerEnrollments: SummerEnrollment[];
   unpaidSummerEnrollments: SummerEnrollment[];
+  paidWeeksByStudent: PaidWeeksByStudent;
   parentId: string;
   parentEmail: string;
 }
@@ -156,11 +157,14 @@ function PendingPaymentCard({
 
 function SummerTuitionCard({
   studentName,
+  paidWeeks,
   onClick,
 }: {
   studentName: string | null;
+  paidWeeks: number[];
   onClick: () => void;
 }) {
+  const hasPaidWeeks = paidWeeks.length > 0;
   return (
     <div
       className="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 px-5 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
@@ -178,10 +182,17 @@ function SummerTuitionCard({
           <span className="text-xs text-gray-400">&mdash;</span>
           <span className="text-xs text-gray-500">Summer 2026</span>
         </div>
+        {hasPaidWeeks && (
+          <div className="mt-1">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+              {paidWeeks.length} week{paidWeeks.length !== 1 ? "s" : ""} paid
+            </span>
+          </div>
+        )}
       </div>
       <div className="flex-shrink-0 flex items-center gap-1.5">
         <span className="text-sm font-semibold" style={{ color: "#e07a3a" }}>
-          Select plan
+          {hasPaidWeeks ? "Pay for more weeks" : "Select plan"}
         </span>
         <ChevronRight className="w-4 h-4" style={{ color: "#e07a3a" }} strokeWidth={2} />
       </div>
@@ -194,14 +205,17 @@ function SummerPaymentModal({
   studentName,
   parentId,
   parentEmail,
+  paidWeeks,
   onClose,
 }: {
   enrollment: SummerEnrollment;
   studentName: string | null;
   parentId: string;
   parentEmail: string;
+  paidWeeks: number[];
   onClose: () => void;
 }) {
+  const isOnWeeklyPlan = paidWeeks.length > 0;
   const [step, setStep] = useState<"plan" | "payment">("plan");
   const [tab, setTab] = useState<"weekly" | "full">("weekly");
   const [selectedWeeks, setSelectedWeeks] = useState<Set<number>>(new Set());
@@ -233,6 +247,7 @@ function SummerPaymentModal({
   const achFeeDisplay  = Math.min(Math.round((intendedAmountCents / 100) * 0.008 * 100) / 100, 5.0);
 
   function toggleWeek(week: number) {
+    if (paidWeeks.includes(week)) return; // no-op for already-paid weeks
     setSelectedWeeks((prev) => {
       const next = new Set(prev);
       if (next.has(week)) next.delete(week);
@@ -350,19 +365,22 @@ function SummerPaymentModal({
               Pay Weekly
             </button>
             <button
-              onClick={() => setTab("full")}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
-                tab === "full"
-                  ? "text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              onClick={() => { if (!isOnWeeklyPlan) setTab("full"); }}
+              title={isOnWeeklyPlan ? "Not available — you're on the weekly plan" : undefined}
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold transition-colors ${
+                isOnWeeklyPlan
+                  ? "bg-gray-100 text-gray-400 opacity-40 cursor-not-allowed"
+                  : tab === "full"
+                  ? "text-white cursor-pointer"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200 cursor-pointer"
               }`}
-              style={tab === "full" ? { backgroundColor: "#4a7c59" } : {}}
+              style={!isOnWeeklyPlan && tab === "full" ? { backgroundColor: "#4a7c59" } : {}}
             >
               Full Summer
               <span
                 className="px-1.5 py-0.5 rounded-full text-xs font-semibold"
                 style={
-                  tab === "full"
+                  !isOnWeeklyPlan && tab === "full"
                     ? { backgroundColor: "rgba(255,255,255,0.25)", color: "#fff" }
                     : { backgroundColor: "#d4e6d0", color: "#4a7c59" }
                 }
@@ -469,37 +487,44 @@ function SummerPaymentModal({
               {/* Week list */}
               <div className="grid grid-cols-3 gap-2 mb-4">
                 {SUMMER_WEEKS.map((w) => {
-                  const selected = selectedWeeks.has(w.week);
+                  const isPaid = paidWeeks.includes(w.week);
+                  const selected = isPaid || selectedWeeks.has(w.week);
                   return (
                     <motion.button
                       key={w.week}
                       onClick={() => toggleWeek(w.week)}
-                      className="flex flex-col gap-1.5 rounded-xl px-3 py-3 text-left cursor-pointer transition-colors"
+                      className={`flex flex-col gap-1.5 rounded-xl px-3 py-3 text-left transition-colors ${isPaid ? "cursor-default" : "cursor-pointer"}`}
                       animate={{
-                        backgroundColor: selected ? "#f0f7f1" : "#f9fafb",
+                        backgroundColor: isPaid ? "#f0fdf4" : selected ? "#f0f7f1" : "#f9fafb",
                       }}
-                      whileTap={{ scale: 0.99 }}
+                      whileTap={isPaid ? {} : { scale: 0.99 }}
                       transition={{ duration: 0.15 }}
-                      style={selected ? { boxShadow: "inset 3px 0 0 #4a7c59" } : {}}
+                      style={isPaid ? { boxShadow: "inset 3px 0 0 #16a34a" } : selected ? { boxShadow: "inset 3px 0 0 #4a7c59" } : {}}
                     >
                       <div className="flex items-center gap-2">
                         {/* Checkbox */}
                         <div
                           className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-colors"
                           style={
-                            selected
+                            isPaid
+                              ? { backgroundColor: "#16a34a" }
+                              : selected
                               ? { backgroundColor: "#4a7c59" }
                               : { backgroundColor: "transparent", border: "2px solid #d1d5db" }
                           }
                         >
-                          {selected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                          {(isPaid || selected) && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                         </div>
-                        <span className="text-sm font-semibold text-gray-800 font-heading">
+                        <span className={`text-sm font-semibold font-heading ${isPaid ? "text-green-700" : "text-gray-800"}`}>
                           Week {w.week}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-400 font-body">{w.dates}</p>
-                      <p className="text-xs text-gray-500 font-body truncate">{w.theme}</p>
+                      <p className={`text-xs font-body ${isPaid ? "text-green-600" : "text-gray-400"}`}>{w.dates}</p>
+                      {isPaid ? (
+                        <p className="text-xs font-semibold text-green-600 font-body">Paid ✓</p>
+                      ) : (
+                        <p className="text-xs text-gray-500 font-body truncate">{w.theme}</p>
+                      )}
                     </motion.button>
                   );
                 })}
@@ -513,11 +538,18 @@ function SummerPaymentModal({
                 transition={{ duration: 0.2 }}
               >
                 <div className="flex flex-col gap-0.5">
+                  {isOnWeeklyPlan && paidWeeks.length > 0 && (
+                    <span className="text-xs text-green-600 font-body">
+                      {paidWeeks.length} week{paidWeeks.length !== 1 ? "s" : ""} already paid
+                    </span>
+                  )}
                   <span className="text-sm text-gray-500 font-body">
                     {selectedWeeks.size === 0
-                      ? "No weeks selected"
+                      ? isOnWeeklyPlan ? "Select more weeks to pay for" : "No weeks selected"
                       : allWeeksSelected
                       ? "All 12 weeks · Full Summer discount applied"
+                      : isOnWeeklyPlan
+                      ? `paying for ${selectedWeeks.size} more week${selectedWeeks.size !== 1 ? "s" : ""} × ${formatCents(weeklyRate)}/wk`
                       : `${selectedWeeks.size} week${selectedWeeks.size !== 1 ? "s" : ""} × ${formatCents(weeklyRate)}/wk`}
                   </span>
                   {allWeeksSelected && (
@@ -671,6 +703,7 @@ function PendingPaymentsSection({
   unpaidSummerEnrollments,
   pendingRequests,
   studentMap,
+  paidWeeksByStudent,
   onSelectSummer,
   onSelectPending,
 }: {
@@ -678,6 +711,7 @@ function PendingPaymentsSection({
   unpaidSummerEnrollments: SummerEnrollment[];
   pendingRequests: PendingPaymentRequest[];
   studentMap: Record<string, string>;
+  paidWeeksByStudent: PaidWeeksByStudent;
   onSelectSummer: (e: SummerEnrollment) => void;
   onSelectPending: (r: PendingPaymentRequest) => void;
 }) {
@@ -772,6 +806,7 @@ function PendingPaymentsSection({
                 <SummerTuitionCard
                   key={enrollment.student_id}
                   studentName={studentMap[enrollment.student_id] ?? null}
+                  paidWeeks={paidWeeksByStudent[enrollment.student_id] ?? []}
                   onClick={() => onSelectSummer(enrollment)}
                 />
               ))}
@@ -848,7 +883,7 @@ function PendingDetailSidebar({
   );
 }
 
-export default function BillingPage({ transactions, studentMap, pendingRequests, summerEnrollments, unpaidSummerEnrollments, parentId, parentEmail }: Props) {
+export default function BillingPage({ transactions, studentMap, pendingRequests, summerEnrollments, unpaidSummerEnrollments, paidWeeksByStudent, parentId, parentEmail }: Props) {
   const [selectedTx, setSelectedTx] = useState<StripeTransaction | null>(null);
   const [selectedPending, setSelectedPending] = useState<PendingPaymentRequest | null>(null);
   const [selectedSummerEnrollment, setSelectedSummerEnrollment] = useState<SummerEnrollment | null>(null);
@@ -866,6 +901,7 @@ export default function BillingPage({ transactions, studentMap, pendingRequests,
             unpaidSummerEnrollments={unpaidSummerEnrollments}
             pendingRequests={pendingRequests}
             studentMap={studentMap}
+            paidWeeksByStudent={paidWeeksByStudent}
             onSelectSummer={setSelectedSummerEnrollment}
             onSelectPending={setSelectedPending}
           />
@@ -907,6 +943,7 @@ export default function BillingPage({ transactions, studentMap, pendingRequests,
             studentName={studentMap[selectedSummerEnrollment.student_id] ?? null}
             parentId={parentId}
             parentEmail={parentEmail}
+            paidWeeks={paidWeeksByStudent[selectedSummerEnrollment.student_id] ?? []}
             onClose={() => setSelectedSummerEnrollment(null)}
           />
         )}
@@ -927,6 +964,7 @@ export default function BillingPage({ transactions, studentMap, pendingRequests,
             unpaidSummerEnrollments={unpaidSummerEnrollments}
             pendingRequests={pendingRequests}
             studentMap={studentMap}
+            paidWeeksByStudent={paidWeeksByStudent}
             onSelectSummer={setSelectedSummerEnrollment}
             onSelectPending={setSelectedPending}
           />
@@ -1069,6 +1107,7 @@ export default function BillingPage({ transactions, studentMap, pendingRequests,
             studentName={studentMap[selectedSummerEnrollment.student_id] ?? null}
             parentId={parentId}
             parentEmail={parentEmail}
+            paidWeeks={paidWeeksByStudent[selectedSummerEnrollment.student_id] ?? []}
             onClose={() => setSelectedSummerEnrollment(null)}
           />
         )}
