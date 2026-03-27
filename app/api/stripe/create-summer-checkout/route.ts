@@ -117,6 +117,7 @@ export async function POST(request: NextRequest) {
       metadata: {
         payment_type: "summer_tuition",
         parent_id: parentId,
+        parent_email: parentEmail,
         student_id: studentId,
         application_id: applicationId,
         plan_type: planType,

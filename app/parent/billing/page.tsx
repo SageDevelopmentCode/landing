@@ -98,6 +98,17 @@ export default async function BillingRoute() {
   const summerEnrollments = ((summerData ?? []) as { id: string; student_id: string | null; child_grade: string | null }[])
     .filter((e): e is SummerEnrollment => !!e.student_id && !!e.id);
 
+  const paidSummerStudentIds = new Set(
+    transactions
+      .filter((t) => t.payment_type === "summer_tuition" && t.status === "completed")
+      .map((t) => t.student_id)
+      .filter(Boolean) as string[]
+  );
+
+  const unpaidSummerEnrollments = summerEnrollments.filter(
+    (e) => !paidSummerStudentIds.has(e.student_id)
+  );
+
   const studentIds = [
     ...new Set([
       ...transactions.map((t) => t.student_id),
@@ -149,7 +160,7 @@ export default async function BillingRoute() {
               Tuition &amp; Billing
             </h1>
           </div>
-          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} parentId={user.id} parentEmail={user.email ?? ""} />
+          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} unpaidSummerEnrollments={unpaidSummerEnrollments} parentId={user.id} parentEmail={user.email ?? ""} />
         </main>
       </div>
       <Footer />

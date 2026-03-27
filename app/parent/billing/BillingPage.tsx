@@ -26,6 +26,7 @@ interface Props {
   studentMap: Record<string, string>;
   pendingRequests: PendingPaymentRequest[];
   summerEnrollments: SummerEnrollment[];
+  unpaidSummerEnrollments: SummerEnrollment[];
   parentId: string;
   parentEmail: string;
 }
@@ -667,12 +668,14 @@ function AllCaughtUpCard() {
 
 function PendingPaymentsSection({
   summerEnrollments,
+  unpaidSummerEnrollments,
   pendingRequests,
   studentMap,
   onSelectSummer,
   onSelectPending,
 }: {
   summerEnrollments: SummerEnrollment[];
+  unpaidSummerEnrollments: SummerEnrollment[];
   pendingRequests: PendingPaymentRequest[];
   studentMap: Record<string, string>;
   onSelectSummer: (e: SummerEnrollment) => void;
@@ -690,7 +693,7 @@ function PendingPaymentsSection({
     studentIds[0] ?? null
   );
 
-  if (summerEnrollments.length === 0 && pendingRequests.length === 0) {
+  if (unpaidSummerEnrollments.length === 0 && pendingRequests.length === 0) {
     return <AllCaughtUpCard />;
   }
 
@@ -699,7 +702,7 @@ function PendingPaymentsSection({
   const hasOrphans = orphanRequests.length > 0;
 
   // Items for the active student
-  const activeSummerEnrollments = summerEnrollments.filter(
+  const activeSummerEnrollments = unpaidSummerEnrollments.filter(
     (e) => e.student_id === activeStudentId
   );
   const activePendingRequests = pendingRequests.filter(
@@ -845,7 +848,7 @@ function PendingDetailSidebar({
   );
 }
 
-export default function BillingPage({ transactions, studentMap, pendingRequests, summerEnrollments, parentId, parentEmail }: Props) {
+export default function BillingPage({ transactions, studentMap, pendingRequests, summerEnrollments, unpaidSummerEnrollments, parentId, parentEmail }: Props) {
   const [selectedTx, setSelectedTx] = useState<StripeTransaction | null>(null);
   const [selectedPending, setSelectedPending] = useState<PendingPaymentRequest | null>(null);
   const [selectedSummerEnrollment, setSelectedSummerEnrollment] = useState<SummerEnrollment | null>(null);
@@ -860,6 +863,7 @@ export default function BillingPage({ transactions, studentMap, pendingRequests,
           </h2>
           <PendingPaymentsSection
             summerEnrollments={summerEnrollments}
+            unpaidSummerEnrollments={unpaidSummerEnrollments}
             pendingRequests={pendingRequests}
             studentMap={studentMap}
             onSelectSummer={setSelectedSummerEnrollment}
@@ -920,6 +924,7 @@ export default function BillingPage({ transactions, studentMap, pendingRequests,
           </h2>
           <PendingPaymentsSection
             summerEnrollments={summerEnrollments}
+            unpaidSummerEnrollments={unpaidSummerEnrollments}
             pendingRequests={pendingRequests}
             studentMap={studentMap}
             onSelectSummer={setSelectedSummerEnrollment}

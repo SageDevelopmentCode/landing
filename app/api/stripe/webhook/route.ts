@@ -468,7 +468,7 @@ export async function POST(request: NextRequest) {
           cover_fees: session.metadata?.cover_fees === "true",
           payer_name: session.metadata?.donor_name || null,
           payer_email:
-            session.metadata?.donor_email || session.customer_email || "",
+            session.metadata?.parent_email || session.metadata?.donor_email || session.customer_email || "",
           description: session.metadata?.description || null,
           student_id: session.metadata?.student_id || null,
           application_id: session.metadata?.application_id || null,
