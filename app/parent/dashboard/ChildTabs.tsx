@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
@@ -1007,7 +1007,11 @@ export default function ChildTabs({
   religiousExemptionCountByStudent,
 }: ChildTabsProps) {
   const router = useRouter();
-  const [activeTabId, setActiveTabId] = useState<string>(apps[0].id);
+  const searchParams = useSearchParams();
+  const initialAppId = searchParams.get("app");
+  const [activeTabId, setActiveTabId] = useState<string>(
+    initialAppId && apps.find((a) => a.id === initialAppId) ? initialAppId : apps[0].id
+  );
   const [appViewOpen, setAppViewOpen] = useState(false);
   const [openContractId, setOpenContractId] = useState<number | null>(null);
   const [openStudentId, setOpenStudentId] = useState<string | null>(null);

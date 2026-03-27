@@ -54,6 +54,23 @@ export default async function ChildrenRoute() {
     }
   }
 
+  const nonEnrolledAppByStudent: Record<string, string> = {};
+  if (studentIds.length > 0) {
+    const { data: appsData } = await adminClient
+      .schema("parent_app")
+      .from("applications")
+      .select("id, student_id, status")
+      .eq("user_id", user.id)
+      .eq("approved", true)
+      .in("student_id", studentIds);
+
+    for (const app of appsData ?? []) {
+      if (app.student_id && app.status !== "enrolled") {
+        nonEnrolledAppByStudent[app.student_id] = app.id;
+      }
+    }
+  }
+
   return (
     <div className="bg-welcome-bg">
       <div className="min-h-screen flex flex-col">
@@ -85,7 +102,7 @@ export default async function ChildrenRoute() {
               My Children
             </h1>
           </div>
-          <ChildrenPage children={children} teachersByStudent={teachersByStudent} />
+          <ChildrenPage children={children} teachersByStudent={teachersByStudent} nonEnrolledAppByStudent={nonEnrolledAppByStudent} />
         </main>
       </div>
       <Footer />

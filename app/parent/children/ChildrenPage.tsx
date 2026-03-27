@@ -8,6 +8,7 @@ import {
   UserX,
   Smartphone,
   MessageCircle,
+  ChevronRight,
 } from "lucide-react";
 import NextImage from "next/image";
 import type { Database } from "@/app/types/database.types";
@@ -20,6 +21,7 @@ type ContentTab = "teacher" | "attendance" | "learning" | "photos" | "profile";
 interface Props {
   children: Student[];
   teachersByStudent: Record<string, TeacherAssignment[]>;
+  nonEnrolledAppByStudent: Record<string, string>;
 }
 
 function getInitials(name: string | null): string {
@@ -399,9 +401,11 @@ function LearningTab() {
 function ChildProfile({
   child,
   teachers,
+  enrollmentAppId,
 }: {
   child: Student;
   teachers: TeacherAssignment[];
+  enrollmentAppId?: string;
 }) {
   const [activeTab, setActiveTab] = useState<ContentTab>("teacher");
   const router = useRouter();
@@ -455,124 +459,142 @@ function ChildProfile({
         </div>
       </div>
 
-      {/* Content tabs */}
-      <div className="flex gap-1 mb-6">
-        {contentTabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-1.5 text-sm rounded-full transition-colors cursor-pointer ${
-              activeTab === tab.id
-                ? "bg-[#4a7c59] text-white font-semibold"
-                : "text-gray-500 hover:text-[#4a7c59]"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {enrollmentAppId ? (
+        <a
+          href={`/parent/dashboard?app=${enrollmentAppId}`}
+          className="flex items-center gap-4 bg-amber-50 border border-amber-100 rounded-2xl px-5 py-4 hover:bg-amber-100 transition-colors no-underline"
+        >
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold text-gray-800">Enrollment not complete</div>
+            <div className="text-xs text-amber-600 mt-0.5">Finish setting up this child&apos;s enrollment to access teacher info, attendance, and more.</div>
+          </div>
+          <div className="flex-shrink-0 flex items-center gap-1.5">
+            <span className="text-sm font-semibold text-amber-700">Complete enrollment</span>
+            <ChevronRight className="w-4 h-4 text-amber-700" strokeWidth={2} />
+          </div>
+        </a>
+      ) : (
+        <>
+          {/* Content tabs */}
+          <div className="flex gap-1 mb-6">
+            {contentTabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-4 py-1.5 text-sm rounded-full transition-colors cursor-pointer ${
+                  activeTab === tab.id
+                    ? "bg-[#4a7c59] text-white font-semibold"
+                    : "text-gray-500 hover:text-[#4a7c59]"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
 
-      {/* Tab content */}
-      {activeTab === "teacher" && (
-        <TeacherTab
-          teachers={teachers}
-          onMessage={(teacherId, teacherName) =>
-            router.push(
-              `/parent/messages?recipientId=${teacherId}&recipientName=${encodeURIComponent(teacherName)}`,
-            )
-          }
-        />
-      )}
-      {activeTab === "attendance" && <AttendanceTab />}
-      {activeTab === "learning" && <LearningTab />}
+          {/* Tab content */}
+          {activeTab === "teacher" && (
+            <TeacherTab
+              teachers={teachers}
+              onMessage={(teacherId, teacherName) =>
+                router.push(
+                  `/parent/messages?recipientId=${teacherId}&recipientName=${encodeURIComponent(teacherName)}`,
+                )
+              }
+            />
+          )}
+          {activeTab === "attendance" && <AttendanceTab />}
+          {activeTab === "learning" && <LearningTab />}
 
-      {activeTab === "photos" && (
-        <EmptyStateCard
-          icon={ImageIcon}
-          title="Photos coming soon"
-          subtitle="Photos from school activities and events will appear here."
-        />
-      )}
+          {activeTab === "photos" && (
+            <EmptyStateCard
+              icon={ImageIcon}
+              title="Photos coming soon"
+              subtitle="Photos from school activities and events will appear here."
+            />
+          )}
 
-      {activeTab === "profile" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <SectionCard title="Medical Info">
-            <Field
-              label="Has Medical Conditions"
-              value={child.has_medical_conditions}
-            />
-            {child.has_medical_conditions?.toLowerCase() === "yes" && (
-              <Field
-                label="Medical Conditions"
-                value={child.medical_conditions_description}
-              />
-            )}
-            <Field label="Has Allergies" value={child.has_allergies} />
-            {child.has_allergies?.toLowerCase() === "yes" && (
-              <Field label="Allergies" value={child.allergies_description} />
-            )}
-            <Field
-              label="Has Emergency Medications"
-              value={child.has_emergency_medications}
-            />
-            {child.has_emergency_medications?.toLowerCase() === "yes" && (
-              <Field
-                label="Emergency Medications"
-                value={child.emergency_medications_description}
-              />
-            )}
-          </SectionCard>
+          {activeTab === "profile" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <SectionCard title="Medical Info">
+                <Field
+                  label="Has Medical Conditions"
+                  value={child.has_medical_conditions}
+                />
+                {child.has_medical_conditions?.toLowerCase() === "yes" && (
+                  <Field
+                    label="Medical Conditions"
+                    value={child.medical_conditions_description}
+                  />
+                )}
+                <Field label="Has Allergies" value={child.has_allergies} />
+                {child.has_allergies?.toLowerCase() === "yes" && (
+                  <Field label="Allergies" value={child.allergies_description} />
+                )}
+                <Field
+                  label="Has Emergency Medications"
+                  value={child.has_emergency_medications}
+                />
+                {child.has_emergency_medications?.toLowerCase() === "yes" && (
+                  <Field
+                    label="Emergency Medications"
+                    value={child.emergency_medications_description}
+                  />
+                )}
+              </SectionCard>
 
-          <SectionCard title="Learning Profile">
-            <Field label="Learning Style" value={child.learning_style} />
-            <Field
-              label="Strengths & Interests"
-              value={child.strengths_interests}
-            />
-            <Field
-              label="Current Challenges"
-              value={child.current_challenges}
-            />
-          </SectionCard>
+              <SectionCard title="Learning Profile">
+                <Field label="Learning Style" value={child.learning_style} />
+                <Field
+                  label="Strengths & Interests"
+                  value={child.strengths_interests}
+                />
+                <Field
+                  label="Current Challenges"
+                  value={child.current_challenges}
+                />
+              </SectionCard>
 
-          <SectionCard title="Regulation & Support">
-            <Field
-              label="Dysregulation Response"
-              value={child.dysregulation_response}
-            />
-            <Field
-              label="Regulation Strategies"
-              value={child.regulation_strategies}
-            />
-            <Field
-              label="Activities to Avoid"
-              value={child.activities_to_avoid}
-            />
-          </SectionCard>
+              <SectionCard title="Regulation & Support">
+                <Field
+                  label="Dysregulation Response"
+                  value={child.dysregulation_response}
+                />
+                <Field
+                  label="Regulation Strategies"
+                  value={child.regulation_strategies}
+                />
+                <Field
+                  label="Activities to Avoid"
+                  value={child.activities_to_avoid}
+                />
+              </SectionCard>
 
-          <SectionCard title="Additional Support">
-            <Field label="Needs Aide" value={child.needs_aide} />
-            {child.needs_aide?.toLowerCase() === "yes" && (
-              <Field
-                label="Aide Description"
-                value={child.needs_aide_description}
-              />
-            )}
-            <Field label="History Flags" value={child.history_flags} />
-            {child.history_flags?.toLowerCase() === "yes" && (
-              <Field
-                label="History Explanation"
-                value={child.history_explanation}
-              />
-            )}
-          </SectionCard>
-        </div>
+              <SectionCard title="Additional Support">
+                <Field label="Needs Aide" value={child.needs_aide} />
+                {child.needs_aide?.toLowerCase() === "yes" && (
+                  <Field
+                    label="Aide Description"
+                    value={child.needs_aide_description}
+                  />
+                )}
+                <Field label="History Flags" value={child.history_flags} />
+                {child.history_flags?.toLowerCase() === "yes" && (
+                  <Field
+                    label="History Explanation"
+                    value={child.history_explanation}
+                  />
+                )}
+              </SectionCard>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
 }
 
-export default function ChildrenPage({ children, teachersByStudent }: Props) {
+export default function ChildrenPage({ children, teachersByStudent, nonEnrolledAppByStudent }: Props) {
   const [activeIndex, setActiveIndex] = useState(0);
 
   if (children.length === 0) {
@@ -599,13 +621,16 @@ export default function ChildrenPage({ children, teachersByStudent }: Props) {
             <button
               key={child.id}
               onClick={() => setActiveIndex(i)}
-              className={`px-4 py-1.5 text-sm rounded-full border transition-colors cursor-pointer whitespace-nowrap ${
+              className={`relative px-4 py-1.5 text-sm rounded-full border transition-colors cursor-pointer whitespace-nowrap ${
                 i === activeIndex
                   ? "bg-[#4a7c59] text-white border-[#4a7c59] font-semibold"
                   : "bg-white border-gray-200 text-gray-600 hover:border-[#4a7c59]"
               }`}
             >
               {child.child_legal_name ?? `Child ${i + 1}`}
+              {nonEnrolledAppByStudent[child.id] && (
+                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-400 border-2 border-white" />
+              )}
             </button>
           ))}
         </div>
@@ -615,6 +640,7 @@ export default function ChildrenPage({ children, teachersByStudent }: Props) {
         key={activeChild.id}
         child={activeChild}
         teachers={teachersByStudent[activeChild.id] ?? []}
+        enrollmentAppId={nonEnrolledAppByStudent[activeChild.id]}
       />
     </div>
   );

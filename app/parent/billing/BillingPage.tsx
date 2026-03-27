@@ -19,7 +19,7 @@ import {
   SidebarField,
   SidebarSection,
 } from "@/app/components/SidebarPrimitives";
-import type { StripeTransaction, PendingPaymentRequest, SummerEnrollment, PaidWeeksByStudent } from "./page";
+import type { StripeTransaction, PendingPaymentRequest, SummerEnrollment, PaidWeeksByStudent, NonEnrolledApp } from "./page";
 
 interface Props {
   transactions: StripeTransaction[];
@@ -30,6 +30,7 @@ interface Props {
   paidWeeksByStudent: PaidWeeksByStudent;
   parentId: string;
   parentEmail: string;
+  nonEnrolledApps: NonEnrolledApp[];
 }
 
 // --- Summer pricing ---
@@ -197,6 +198,32 @@ function SummerTuitionCard({
         <ChevronRight className="w-4 h-4" style={{ color: "#e07a3a" }} strokeWidth={2} />
       </div>
     </div>
+  );
+}
+
+function NonEnrolledCard({ app }: { app: NonEnrolledApp }) {
+  return (
+    <a
+      href={`/parent/dashboard?app=${app.id}`}
+      className="flex items-center gap-4 bg-amber-50 border border-amber-100 rounded-2xl px-5 py-4 hover:bg-amber-100 transition-colors no-underline"
+    >
+      <div
+        className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full text-sm font-semibold"
+        style={{ backgroundColor: "#f5e0c0", color: "#b45309" }}
+      >
+        {getInitials(app.name)}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-semibold text-gray-800">
+          {app.name ?? "Student"}
+        </div>
+        <div className="text-xs text-amber-600 mt-0.5">Enrollment not complete</div>
+      </div>
+      <div className="flex-shrink-0 flex items-center gap-1.5">
+        <span className="text-sm font-semibold text-amber-700">Complete enrollment</span>
+        <ChevronRight className="w-4 h-4 text-amber-700" strokeWidth={2} />
+      </div>
+    </a>
   );
 }
 
@@ -706,6 +733,7 @@ function PendingPaymentsSection({
   paidWeeksByStudent,
   onSelectSummer,
   onSelectPending,
+  nonEnrolledApps,
 }: {
   summerEnrollments: SummerEnrollment[];
   unpaidSummerEnrollments: SummerEnrollment[];
@@ -714,20 +742,24 @@ function PendingPaymentsSection({
   paidWeeksByStudent: PaidWeeksByStudent;
   onSelectSummer: (e: SummerEnrollment) => void;
   onSelectPending: (r: PendingPaymentRequest) => void;
+  nonEnrolledApps: NonEnrolledApp[];
 }) {
-  // Collect all unique student IDs
-  const studentIds = [
+  const nonEnrolledMap = new Map(nonEnrolledApps.map((a) => [a.student_id, a]));
+
+  // Collect all unique student IDs (enrolled + pending + non-enrolled)
+  const allStudentIds = [
     ...new Set([
       ...summerEnrollments.map((e) => e.student_id),
       ...pendingRequests.map((r) => r.student_id).filter(Boolean) as string[],
+      ...nonEnrolledApps.map((a) => a.student_id),
     ]),
   ];
 
   const [activeStudentId, setActiveStudentId] = useState<string | null>(
-    studentIds[0] ?? null
+    allStudentIds[0] ?? null
   );
 
-  if (unpaidSummerEnrollments.length === 0 && pendingRequests.length === 0) {
+  if (unpaidSummerEnrollments.length === 0 && pendingRequests.length === 0 && nonEnrolledApps.length === 0) {
     return <AllCaughtUpCard />;
   }
 
@@ -751,18 +783,21 @@ function PendingPaymentsSection({
   const currentItems = isOtherTab ? orphanRequests : activePendingRequests;
   const currentSummer = isOtherTab ? [] : activeSummerEnrollments;
 
+  const activeNonEnrolled = activeStudentId ? nonEnrolledMap.get(activeStudentId) : undefined;
+
   return (
     <div>
       {/* Child tabs */}
       <div className="flex gap-2 mb-4 flex-wrap">
-        {studentIds.map((id) => {
-          const name = studentMap[id] ?? "Unknown";
+        {allStudentIds.map((id) => {
+          const isNonEnrolled = nonEnrolledMap.has(id);
+          const name = isNonEnrolled ? (nonEnrolledMap.get(id)!.name ?? "Student") : (studentMap[id] ?? "Unknown");
           const isActive = activeStudentId === id;
           return (
             <button
               key={id}
               onClick={() => setActiveStudentId(id)}
-              className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
+              className={`relative px-4 py-1.5 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
                 isActive
                   ? "text-white"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -770,6 +805,9 @@ function PendingPaymentsSection({
               style={isActive ? { backgroundColor: "#4a7c59" } : {}}
             >
               {name}
+              {isNonEnrolled && (
+                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-400 border-2 border-white" />
+              )}
             </button>
           );
         })}
@@ -798,7 +836,9 @@ function PendingPaymentsSection({
           transition={{ duration: 0.15, ease: "easeInOut" }}
           className="space-y-3"
         >
-          {currentSummer.length === 0 && currentItems.length === 0 ? (
+          {activeNonEnrolled ? (
+            <NonEnrolledCard app={activeNonEnrolled} />
+          ) : currentSummer.length === 0 && currentItems.length === 0 ? (
             <AllCaughtUpCard />
           ) : (
             <>
@@ -883,12 +923,15 @@ function PendingDetailSidebar({
   );
 }
 
-export default function BillingPage({ transactions, studentMap, pendingRequests, summerEnrollments, unpaidSummerEnrollments, paidWeeksByStudent, parentId, parentEmail }: Props) {
+export default function BillingPage({ transactions, studentMap, pendingRequests, summerEnrollments, unpaidSummerEnrollments, paidWeeksByStudent, parentId, parentEmail, nonEnrolledApps }: Props) {
   const [selectedTx, setSelectedTx] = useState<StripeTransaction | null>(null);
   const [selectedPending, setSelectedPending] = useState<PendingPaymentRequest | null>(null);
   const [selectedSummerEnrollment, setSelectedSummerEnrollment] = useState<SummerEnrollment | null>(null);
 
-  if (transactions.length === 0) {
+  const nonEnrolledStudentIds = new Set(nonEnrolledApps.map((a) => a.student_id));
+  const visibleTransactions = transactions.filter((tx) => !tx.student_id || !nonEnrolledStudentIds.has(tx.student_id));
+
+  if (visibleTransactions.length === 0) {
     return (
       <>
       <div className="space-y-8">
@@ -904,6 +947,7 @@ export default function BillingPage({ transactions, studentMap, pendingRequests,
             paidWeeksByStudent={paidWeeksByStudent}
             onSelectSummer={setSelectedSummerEnrollment}
             onSelectPending={setSelectedPending}
+            nonEnrolledApps={nonEnrolledApps}
           />
         </div>
         <div>
@@ -967,6 +1011,7 @@ export default function BillingPage({ transactions, studentMap, pendingRequests,
             paidWeeksByStudent={paidWeeksByStudent}
             onSelectSummer={setSelectedSummerEnrollment}
             onSelectPending={setSelectedPending}
+            nonEnrolledApps={nonEnrolledApps}
           />
         </div>
         <div>
@@ -998,7 +1043,7 @@ export default function BillingPage({ transactions, studentMap, pendingRequests,
             </tr>
           </thead>
           <tbody>
-            {transactions.map((tx) => (
+            {visibleTransactions.map((tx) => (
               <tr
                 key={tx.id}
                 onClick={() => setSelectedTx(tx)}

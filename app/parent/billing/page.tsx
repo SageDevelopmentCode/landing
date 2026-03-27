@@ -30,6 +30,12 @@ export type SummerEnrollment = {
   child_grade: string | null;
 };
 
+export type NonEnrolledApp = {
+  id: string;
+  student_id: string;
+  name: string | null;
+};
+
 export type StripeTransaction = {
   id: string;
   stripe_session_id: string | null;
@@ -88,7 +94,7 @@ export default async function BillingRoute() {
     adminClient
       .schema("parent_app")
       .from("applications")
-      .select("id, student_id, child_grade")
+      .select("id, student_id, child_grade, status, child_legal_name")
       .eq("user_id", user.id)
       .eq("approved", true)
       .in("program", ["summer_26", "both"]),
@@ -97,8 +103,22 @@ export default async function BillingRoute() {
   const transactions = (txData ?? []) as StripeTransaction[];
   const pendingRequests = (pendingData ?? []) as PendingPaymentRequest[];
   const fullName = adminUser?.full_name ?? null;
-  const summerEnrollments = ((summerData ?? []) as { id: string; student_id: string | null; child_grade: string | null }[])
-    .filter((e): e is SummerEnrollment => !!e.student_id && !!e.id);
+
+  const allSummerApps = ((summerData ?? []) as {
+    id: string;
+    student_id: string | null;
+    child_grade: string | null;
+    status: string | null;
+    child_legal_name: string | null;
+  }[]).filter((e) => !!e.student_id && !!e.id);
+
+  const summerEnrollments: SummerEnrollment[] = allSummerApps
+    .filter((e) => e.status === "enrolled")
+    .map((e) => ({ id: e.id, student_id: e.student_id!, child_grade: e.child_grade }));
+
+  const nonEnrolledApps: NonEnrolledApp[] = allSummerApps
+    .filter((e) => e.status !== "enrolled")
+    .map((e) => ({ id: e.id, student_id: e.student_id!, name: e.child_legal_name }));
 
   // Build paid-weeks map per student from all completed summer_tuition transactions
   const paidWeeksByStudent: PaidWeeksByStudent = {};
@@ -174,7 +194,7 @@ export default async function BillingRoute() {
               Tuition &amp; Billing
             </h1>
           </div>
-          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} unpaidSummerEnrollments={unpaidSummerEnrollments} paidWeeksByStudent={paidWeeksByStudent} parentId={user.id} parentEmail={user.email ?? ""} />
+          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} unpaidSummerEnrollments={unpaidSummerEnrollments} paidWeeksByStudent={paidWeeksByStudent} parentId={user.id} parentEmail={user.email ?? ""} nonEnrolledApps={nonEnrolledApps} />
         </main>
       </div>
       <Footer />
