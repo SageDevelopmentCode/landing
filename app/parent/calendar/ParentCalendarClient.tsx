@@ -1,7 +1,16 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ChevronLeft, ChevronRight, X, Link2, MapPin, Users, RefreshCw, Bell } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  X,
+  Link2,
+  MapPin,
+  Users,
+  RefreshCw,
+  Bell,
+} from "lucide-react";
 import { Merriweather } from "next/font/google";
 import { motion, AnimatePresence } from "framer-motion";
 import { colors, radius, shadows } from "@/app/admin/design-system";
@@ -36,24 +45,35 @@ type CalendarEvent = {
   reminder_timing: string | null;
 };
 
-const programs: Record<ProgramKey, { label: string; start: Date; end: Date }> = {
-  summer: {
-    label: "Summer 2026",
-    start: new Date(2026, 4, 1),
-    end: new Date(2026, 7, 31),
-  },
-  school: {
-    label: "School Year 2026–2027",
-    start: new Date(2026, 7, 1),
-    end: new Date(2027, 4, 31),
-  },
-};
+const programs: Record<ProgramKey, { label: string; start: Date; end: Date }> =
+  {
+    summer: {
+      label: "Summer 2026",
+      start: new Date(2026, 4, 1),
+      end: new Date(2026, 7, 31),
+    },
+    school: {
+      label: "School Year 2026–2027",
+      start: new Date(2026, 7, 1),
+      end: new Date(2027, 4, 31),
+    },
+  };
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 const HOURS = Array.from({ length: 15 }, (_, i) => i + 7); // 7 AM → 9 PM
@@ -96,7 +116,8 @@ function getDaysInMonth(year: number, month: number): Date[] {
   for (let i = startPad - 1; i >= 0; i--) days.push(new Date(year, month, -i));
   for (let d = 1; d <= last.getDate(); d++) days.push(new Date(year, month, d));
   const rem = 7 - (days.length % 7);
-  if (rem < 7) for (let i = 1; i <= rem; i++) days.push(new Date(year, month + 1, i));
+  if (rem < 7)
+    for (let i = 1; i <= rem; i++) days.push(new Date(year, month + 1, i));
   return days;
 }
 
@@ -121,14 +142,18 @@ function getOverlapClusters(events: CalendarEvent[]): CalendarEvent[][] {
     const [h, m] = t.split(":").map(Number);
     return h * 60 + (m || 0);
   };
-  const sorted = [...events].sort((a, b) => toMin(a.start_time) - toMin(b.start_time));
+  const sorted = [...events].sort(
+    (a, b) => toMin(a.start_time) - toMin(b.start_time),
+  );
   const clusters: CalendarEvent[][] = [];
   for (const ev of sorted) {
     const evStart = toMin(ev.start_time);
     const evEnd = toMin(ev.end_time) || evStart + 60;
     let placed = false;
     for (const cluster of clusters) {
-      const clusterEnd = Math.max(...cluster.map((c) => toMin(c.end_time) || toMin(c.start_time) + 60));
+      const clusterEnd = Math.max(
+        ...cluster.map((c) => toMin(c.end_time) || toMin(c.start_time) + 60),
+      );
       const clusterStart = toMin(cluster[0].start_time);
       if (evStart < clusterEnd && evEnd > clusterStart) {
         cluster.push(ev);
@@ -225,11 +250,17 @@ function OverlapPanel({
         >
           <div>
             {timeLabel && (
-              <p className="text-xs font-medium mb-0.5" style={{ color: colors.textSecondary }}>
+              <p
+                className="text-xs font-medium mb-0.5"
+                style={{ color: colors.textSecondary }}
+              >
                 {timeLabel}
               </p>
             )}
-            <h2 className="text-base font-semibold" style={{ color: colors.textPrimary }}>
+            <h2
+              className="text-base font-semibold"
+              style={{ color: colors.textPrimary }}
+            >
               {events.length} events
             </h2>
           </div>
@@ -239,7 +270,12 @@ function OverlapPanel({
             style={{ color: colors.textSecondary }}
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path
+                d="M5 5l10 10M15 5L5 15"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
             </svg>
           </button>
         </div>
@@ -277,11 +313,21 @@ function OverlapPanel({
                     ))}
                   </div>
                 )}
-                <p className="text-sm font-semibold text-white leading-tight">{ev.title}</p>
+                <p className="text-sm font-semibold text-white leading-tight">
+                  {ev.title}
+                </p>
                 <div className="flex items-center justify-between mt-1">
-                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.75)" }}>{evTime}</p>
+                  <p
+                    className="text-xs"
+                    style={{ color: "rgba(255,255,255,0.75)" }}
+                  >
+                    {evTime}
+                  </p>
                   {ev.category && (
-                    <p className="text-[10px] font-medium" style={{ color: "rgba(255,255,255,0.75)" }}>
+                    <p
+                      className="text-[10px] font-medium"
+                      style={{ color: "rgba(255,255,255,0.75)" }}
+                    >
                       {ev.category}
                     </p>
                   )}
@@ -311,8 +357,8 @@ function EventDetailPanel({
   const timeLabel = event.is_all_day
     ? "All day"
     : event.start_time
-    ? `${formatTime(event.start_time)}${event.end_time ? ` – ${formatTime(event.end_time)}` : ""}`
-    : null;
+      ? `${formatTime(event.start_time)}${event.end_time ? ` – ${formatTime(event.end_time)}` : ""}`
+      : null;
 
   return (
     <>
@@ -361,7 +407,10 @@ function EventDetailPanel({
               >
                 {event.title}
               </h2>
-              <p className="text-xs mt-0.5" style={{ color: colors.textTertiary }}>
+              <p
+                className="text-xs mt-0.5"
+                style={{ color: colors.textTertiary }}
+              >
                 {dateLabel}
                 {timeLabel ? ` · ${timeLabel}` : ""}
               </p>
@@ -389,7 +438,10 @@ function EventDetailPanel({
               cursor: "pointer",
             }}
           >
-            <X className="w-3.5 h-3.5" style={{ color: colors.textSecondary }} />
+            <X
+              className="w-3.5 h-3.5"
+              style={{ color: colors.textSecondary }}
+            />
           </button>
         </div>
 
@@ -397,10 +449,16 @@ function EventDetailPanel({
         <div className="flex-1 overflow-auto px-6 py-5 space-y-4">
           {event.description && (
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide mb-1" style={{ color: colors.textTertiary }}>
+              <p
+                className="text-xs font-medium uppercase tracking-wide mb-1"
+                style={{ color: colors.textTertiary }}
+              >
                 Description
               </p>
-              <p className="text-sm leading-relaxed" style={{ color: colors.textPrimary }}>
+              <p
+                className="text-sm leading-relaxed"
+                style={{ color: colors.textPrimary }}
+              >
                 {event.description}
               </p>
             </div>
@@ -408,14 +466,22 @@ function EventDetailPanel({
 
           {event.location && (
             <div className="flex items-start gap-2">
-              <MapPin className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: colors.textTertiary }} />
-              <p className="text-sm" style={{ color: colors.textPrimary }}>{event.location}</p>
+              <MapPin
+                className="w-3.5 h-3.5 mt-0.5 flex-shrink-0"
+                style={{ color: colors.textTertiary }}
+              />
+              <p className="text-sm" style={{ color: colors.textPrimary }}>
+                {event.location}
+              </p>
             </div>
           )}
 
           {(event.programs ?? []).length > 0 && (
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide mb-1.5" style={{ color: colors.textTertiary }}>
+              <p
+                className="text-xs font-medium uppercase tracking-wide mb-1.5"
+                style={{ color: colors.textTertiary }}
+              >
                 Program
               </p>
               <div className="flex flex-wrap gap-1.5">
@@ -439,10 +505,15 @@ function EventDetailPanel({
 
           {event.recurrence && event.recurrence !== "None" && (
             <div className="flex items-center gap-2">
-              <RefreshCw className="w-3.5 h-3.5 flex-shrink-0" style={{ color: colors.textTertiary }} />
+              <RefreshCw
+                className="w-3.5 h-3.5 flex-shrink-0"
+                style={{ color: colors.textTertiary }}
+              />
               <p className="text-sm" style={{ color: colors.textPrimary }}>
                 Repeats {event.recurrence.toLowerCase()}
-                {event.recurrence_end_date ? ` until ${event.recurrence_end_date}` : ""}
+                {event.recurrence_end_date
+                  ? ` until ${event.recurrence_end_date}`
+                  : ""}
               </p>
             </div>
           )}
@@ -450,8 +521,14 @@ function EventDetailPanel({
           {(event.attachment_links ?? []).length > 0 && (
             <div>
               <div className="flex items-center gap-1.5 mb-1.5">
-                <Link2 className="w-3.5 h-3.5" style={{ color: colors.textTertiary }} />
-                <p className="text-xs font-medium uppercase tracking-wide" style={{ color: colors.textTertiary }}>
+                <Link2
+                  className="w-3.5 h-3.5"
+                  style={{ color: colors.textTertiary }}
+                />
+                <p
+                  className="text-xs font-medium uppercase tracking-wide"
+                  style={{ color: colors.textTertiary }}
+                >
                   Attachments
                 </p>
               </div>
@@ -474,14 +551,17 @@ function EventDetailPanel({
 
           {(event.reminder_email || event.reminder_in_app) && (
             <div className="flex items-start gap-2">
-              <Bell className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: colors.textTertiary }} />
+              <Bell
+                className="w-3.5 h-3.5 mt-0.5 flex-shrink-0"
+                style={{ color: colors.textTertiary }}
+              />
               <p className="text-sm" style={{ color: colors.textPrimary }}>
                 Reminder {event.reminder_timing ?? "30 min before"}
                 {event.reminder_email && event.reminder_in_app
                   ? " (email + in-app)"
                   : event.reminder_email
-                  ? " (email)"
-                  : " (in-app)"}
+                    ? " (email)"
+                    : " (in-app)"}
               </p>
             </div>
           )}
@@ -494,8 +574,14 @@ function EventDetailPanel({
                 borderRadius: radius.md,
               }}
             >
-              <Users className="w-3.5 h-3.5" style={{ color: colors.mistyForest }} />
-              <p className="text-xs font-medium" style={{ color: colors.mistyForest }}>
+              <Users
+                className="w-3.5 h-3.5"
+                style={{ color: colors.mistyForest }}
+              />
+              <p
+                className="text-xs font-medium"
+                style={{ color: colors.mistyForest }}
+              >
                 RSVP enabled for parents
               </p>
             </div>
@@ -540,7 +626,10 @@ function MonthlyGrid({
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-7 flex-1" style={{ alignContent: "start" }}>
+      <div
+        className="grid grid-cols-7 flex-1"
+        style={{ alignContent: "start" }}
+      >
         {days.map((day, i) => {
           const inMonth = day.getMonth() === currentMonth;
           const isToday = isSameDay(day, today);
@@ -554,7 +643,8 @@ function MonthlyGrid({
               className="relative p-2 flex flex-col"
               style={{
                 minHeight: "128px",
-                borderRight: (i + 1) % 7 === 0 ? "none" : `1px solid ${colors.border}`,
+                borderRight:
+                  (i + 1) % 7 === 0 ? "none" : `1px solid ${colors.border}`,
                 borderBottom: `1px solid ${colors.border}`,
               }}
             >
@@ -563,7 +653,11 @@ function MonthlyGrid({
                 style={{
                   borderRadius: radius.full,
                   backgroundColor: isToday ? colors.mistyForest : "transparent",
-                  color: isToday ? "white" : inMonth ? colors.textPrimary : colors.textTertiary,
+                  color: isToday
+                    ? "white"
+                    : inMonth
+                      ? colors.textPrimary
+                      : colors.textTertiary,
                   opacity: inMonth ? 1 : 0.4,
                 }}
               >
@@ -575,7 +669,10 @@ function MonthlyGrid({
                   {visibleEvents.map((ev) => (
                     <button
                       key={ev.id}
-                      onClick={(e) => { e.stopPropagation(); onViewEvent(ev); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onViewEvent(ev);
+                      }}
                       className="truncate px-1.5 py-0.5 text-[10px] font-medium leading-tight text-left transition-opacity hover:opacity-80"
                       style={{
                         backgroundColor: ev.color,
@@ -641,7 +738,10 @@ function WeeklyGrid({
   const GUTTER = 52;
 
   return (
-    <div ref={scrollRef} className="h-full overflow-y-auto">
+    <div
+      ref={scrollRef}
+      className="h-full overflow-y-auto"
+    >
       {/* ── Sticky day header ── */}
       <div
         className="sticky top-0 z-10 flex bg-white"
@@ -657,7 +757,25 @@ function WeeklyGrid({
         {weekDays.map((day, i) => {
           const isToday = isSameDay(day, today);
           const dateStr = formatDateInput(day);
-          const allDayEvents = events.filter((e) => e.event_date === dateStr && e.is_all_day);
+          const allDayEvents = events.filter(
+            (e) => e.event_date === dateStr && e.is_all_day,
+          );
+          const timedEvents = events
+            .filter(
+              (e) =>
+                e.event_date === dateStr && !e.is_all_day && !!e.start_time,
+            )
+            .sort((a, b) => (a.start_time! > b.start_time! ? 1 : -1));
+          const timedCount = timedEvents.length;
+          const firstEventTopPx =
+            timedCount > 0
+              ? (() => {
+                  const [sh, sm] = timedEvents[0]
+                    .start_time!.split(":")
+                    .map(Number);
+                  return ((sh * 60 + (sm || 0) - 7 * 60) / 60) * HOUR_HEIGHT;
+                })()
+              : 0;
           return (
             <div
               key={i}
@@ -669,7 +787,9 @@ function WeeklyGrid({
             >
               <span
                 className="text-[10px] font-semibold uppercase tracking-wider"
-                style={{ color: isToday ? colors.mistyForest : colors.textTertiary }}
+                style={{
+                  color: isToday ? colors.mistyForest : colors.textTertiary,
+                }}
               >
                 {WEEK_DAYS[i]}
               </span>
@@ -701,6 +821,37 @@ function WeeklyGrid({
                   ))}
                 </div>
               )}
+              {timedCount > 0 && (
+                <button
+                  onClick={() => {
+                    if (scrollRef.current) {
+                      scrollRef.current.scrollTop = Math.max(0, firstEventTopPx - 16);
+                    }
+                  }}
+                  style={{
+                    width: "90%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 4,
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: "2px 6px",
+                    borderRadius: radius.full,
+                    backgroundColor: colors.pastelSage,
+                    color: colors.mistyForest,
+                    fontSize: "9px",
+                    fontWeight: 600,
+                    letterSpacing: "0.02em",
+                    transition: "opacity 150ms",
+                  }}
+                  className="hover:opacity-70"
+                >
+                  {timedCount} event{timedCount !== 1 ? "s" : ""}
+                  <span style={{ fontSize: "8px", lineHeight: 1 }}>↓</span>
+                </button>
+              )}
             </div>
           );
         })}
@@ -714,7 +865,10 @@ function WeeklyGrid({
         {/* Time label gutter */}
         <div
           className="flex-shrink-0 relative"
-          style={{ width: `${GUTTER}px`, borderRight: `1px solid ${colors.border}` }}
+          style={{
+            width: `${GUTTER}px`,
+            borderRight: `1px solid ${colors.border}`,
+          }}
         >
           {HOURS.map((h, i) => (
             <div
@@ -769,14 +923,15 @@ function WeeklyGrid({
             const isToday = isSameDay(day, today);
             const dateStr = formatDateInput(day);
             const timedEvents = events.filter(
-              (e) => e.event_date === dateStr && !e.is_all_day && e.start_time
+              (e) => e.event_date === dateStr && !e.is_all_day && e.start_time,
             );
             return (
               <div
                 key={colIdx}
                 className="flex-1 relative"
                 style={{
-                  borderRight: colIdx === 4 ? "none" : `1px solid ${colors.border}`,
+                  borderRight:
+                    colIdx === 4 ? "none" : `1px solid ${colors.border}`,
                   backgroundColor: isToday ? "#f8fbf9" : "white",
                 }}
               >
@@ -805,7 +960,10 @@ function WeeklyGrid({
                   if (ev.end_time) {
                     const [eh, em] = ev.end_time.split(":").map(Number);
                     const endMinutes = eh * 60 + (em || 0);
-                    basePx = Math.max(22, ((endMinutes - startMinutes) / 60) * HOUR_HEIGHT);
+                    basePx = Math.max(
+                      22,
+                      ((endMinutes - startMinutes) / 60) * HOUR_HEIGHT,
+                    );
                   }
 
                   const isMulti = cluster.length > 1;
@@ -814,7 +972,10 @@ function WeeklyGrid({
                   const needsMoreBar = cluster.length > 2;
                   const moreCount = cluster.length - 2;
                   const heightPx = isMulti
-                    ? Math.max(basePx, 2 * CARD_H + 1 + (needsMoreBar ? MORE_BAR_H : 0))
+                    ? Math.max(
+                        basePx,
+                        2 * CARD_H + 1 + (needsMoreBar ? MORE_BAR_H : 0),
+                      )
                     : basePx;
                   const singleShowMeta = !isMulti && basePx >= 52;
 
@@ -823,18 +984,21 @@ function WeeklyGrid({
                     cardTop: number,
                     cardHeight: number | undefined,
                     cardBottom: number | undefined,
-                    cardRadius: string
+                    cardRadius: string,
                   ) => {
                     const showMeta =
                       cardHeight != null
                         ? cardHeight >= 52
                         : cardBottom != null
-                        ? heightPx - cardTop - cardBottom >= 52
-                        : singleShowMeta;
+                          ? heightPx - cardTop - cardBottom >= 52
+                          : singleShowMeta;
                     return (
                       <button
                         key={cardEv.id}
-                        onClick={(e) => { e.stopPropagation(); onViewEvent(cardEv); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onViewEvent(cardEv);
+                        }}
                         className="absolute px-1.5 py-1 overflow-hidden text-left transition-opacity hover:opacity-85"
                         style={{
                           top: cardTop,
@@ -871,13 +1035,20 @@ function WeeklyGrid({
                             ))}
                           </div>
                         )}
-                        <p className="text-[10px] font-semibold leading-tight truncate" style={{ color: "white" }}>
+                        <p
+                          className="text-[10px] font-semibold leading-tight truncate"
+                          style={{ color: "white" }}
+                        >
                           {cardEv.title}
                         </p>
                         {showMeta && cardEv.category && (
                           <p
                             className="truncate leading-none mt-0.5"
-                            style={{ color: "rgba(255,255,255,0.80)", fontSize: "8px", fontWeight: 500 }}
+                            style={{
+                              color: "rgba(255,255,255,0.80)",
+                              fontSize: "8px",
+                              fontWeight: 500,
+                            }}
                           >
                             {cardEv.category}
                           </p>
@@ -899,20 +1070,30 @@ function WeeklyGrid({
                       }}
                     >
                       {isMulti
-                        ? renderCard(cluster[0], 0, CARD_H, undefined, needsMoreBar ? "5px 5px 0 0" : "5px 5px 0 0")
+                        ? renderCard(
+                            cluster[0],
+                            0,
+                            CARD_H,
+                            undefined,
+                            needsMoreBar ? "5px 5px 0 0" : "5px 5px 0 0",
+                          )
                         : renderCard(cluster[0], 0, undefined, 0, "5px")}
 
-                      {isMulti && renderCard(
-                        cluster[1],
-                        CARD_H + 1,
-                        needsMoreBar ? CARD_H : undefined,
-                        needsMoreBar ? undefined : 0,
-                        needsMoreBar ? "0" : "0 0 5px 5px"
-                      )}
+                      {isMulti &&
+                        renderCard(
+                          cluster[1],
+                          CARD_H + 1,
+                          needsMoreBar ? CARD_H : undefined,
+                          needsMoreBar ? undefined : 0,
+                          needsMoreBar ? "0" : "0 0 5px 5px",
+                        )}
 
                       {needsMoreBar && (
                         <button
-                          onClick={(e) => { e.stopPropagation(); onViewOverlap(cluster); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onViewOverlap(cluster);
+                          }}
                           className="absolute flex items-center justify-center transition-colors hover:brightness-95"
                           style={{
                             bottom: 0,
@@ -957,8 +1138,12 @@ export default function ParentCalendarClient({
   const [viewEvent, setViewEvent] = useState<CalendarEvent | null>(null);
   const [selectedProgram, setSelectedProgram] = useState<ProgramKey>("summer");
   const [view, setView] = useState<ViewMode>("monthly");
-  const [currentDate, setCurrentDate] = useState<Date>(new Date(programs.summer.start));
-  const [overlapEvents, setOverlapEvents] = useState<CalendarEvent[] | null>(null);
+  const [currentDate, setCurrentDate] = useState<Date>(
+    new Date(programs.summer.start),
+  );
+  const [overlapEvents, setOverlapEvents] = useState<CalendarEvent[] | null>(
+    null,
+  );
 
   const program = programs[selectedProgram];
   const today = new Date();
@@ -981,12 +1166,15 @@ export default function ParentCalendarClient({
   }
 
   function handlePrev() {
-    if (view === "monthly" && !atMonthStart) setCurrentDate((d) => addMonths(d, -1));
-    if (view === "weekly" && !atWeekStart) setCurrentDate((d) => addDays(d, -7));
+    if (view === "monthly" && !atMonthStart)
+      setCurrentDate((d) => addMonths(d, -1));
+    if (view === "weekly" && !atWeekStart)
+      setCurrentDate((d) => addDays(d, -7));
   }
 
   function handleNext() {
-    if (view === "monthly" && !atMonthEnd) setCurrentDate((d) => addMonths(d, 1));
+    if (view === "monthly" && !atMonthEnd)
+      setCurrentDate((d) => addMonths(d, 1));
     if (view === "weekly" && !atWeekEnd) setCurrentDate((d) => addDays(d, 7));
   }
 
@@ -1006,16 +1194,16 @@ export default function ParentCalendarClient({
   const prevDisabled = view === "monthly" ? atMonthStart : atWeekStart;
   const nextDisabled = view === "monthly" ? atMonthEnd : atWeekEnd;
 
-  const monthDays = getDaysInMonth(currentDate.getFullYear(), currentDate.getMonth());
+  const monthDays = getDaysInMonth(
+    currentDate.getFullYear(),
+    currentDate.getMonth(),
+  );
   const ws = startOfWeek(currentDate);
   const weekDays = Array.from({ length: 5 }, (_, i) => addDays(ws, i));
 
   return (
     <>
-      <div
-        className="flex flex-1"
-        style={{ minHeight: 0 }}
-      >
+      <div className="flex flex-1" style={{ minHeight: 0 }}>
         {/* ── Left Panel ── */}
         <aside
           className="flex-shrink-0 flex flex-col pt-7 pb-6"
@@ -1033,7 +1221,10 @@ export default function ParentCalendarClient({
           </p>
           <nav className="space-y-0.5 px-2">
             {(
-              Object.entries(programs) as [ProgramKey, (typeof programs)[ProgramKey]][]
+              Object.entries(programs) as [
+                ProgramKey,
+                (typeof programs)[ProgramKey],
+              ][]
             ).map(([key, prog]) => {
               const active = selectedProgram === key;
               return (
@@ -1058,7 +1249,10 @@ export default function ParentCalendarClient({
         </aside>
 
         {/* ── Calendar Area ── */}
-        <div className="flex-1 flex flex-col min-w-0" style={{ backgroundColor: "white" }}>
+        <div
+          className="flex-1 flex flex-col min-w-0"
+          style={{ backgroundColor: "white" }}
+        >
           {/* Top bar */}
           <div
             className="flex items-center justify-between px-6 py-4 flex-shrink-0"
@@ -1069,10 +1263,18 @@ export default function ParentCalendarClient({
           >
             {/* Left: nav + label */}
             <div className="flex items-center gap-1">
-              <NavButton onClick={handlePrev} disabled={prevDisabled} aria-label="Previous">
+              <NavButton
+                onClick={handlePrev}
+                disabled={prevDisabled}
+                aria-label="Previous"
+              >
                 <ChevronLeft className="w-4 h-4" />
               </NavButton>
-              <NavButton onClick={handleNext} disabled={nextDisabled} aria-label="Next">
+              <NavButton
+                onClick={handleNext}
+                disabled={nextDisabled}
+                aria-label="Next"
+              >
                 <ChevronRight className="w-4 h-4" />
               </NavButton>
               <span
@@ -1144,7 +1346,10 @@ export default function ParentCalendarClient({
           <OverlapPanel
             events={overlapEvents}
             onClose={() => setOverlapEvents(null)}
-            onViewEvent={(ev) => { setOverlapEvents(null); setViewEvent(ev); }}
+            onViewEvent={(ev) => {
+              setOverlapEvents(null);
+              setViewEvent(ev);
+            }}
           />
         )}
         {viewEvent && (
