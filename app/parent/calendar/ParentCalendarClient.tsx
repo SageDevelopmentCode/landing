@@ -222,7 +222,7 @@ function OverlapPanel({
   return (
     <>
       <motion.div
-        className="fixed inset-0 z-40"
+        className="fixed inset-0 z-[60]"
         style={{ backgroundColor: "rgba(0,0,0,0.10)" }}
         onClick={onClose}
         initial={{ opacity: 0 }}
@@ -231,7 +231,7 @@ function OverlapPanel({
         transition={{ duration: 0.2 }}
       />
       <motion.div
-        className="fixed top-0 right-0 h-full z-50 flex flex-col"
+        className="fixed top-0 right-0 h-full z-[70] flex flex-col"
         style={{
           width: "380px",
           backgroundColor: "white",
@@ -363,7 +363,7 @@ function EventDetailPanel({
   return (
     <>
       <motion.div
-        className="fixed inset-0 z-40"
+        className="fixed inset-0 z-[60]"
         style={{ backgroundColor: "rgba(0,0,0,0.10)" }}
         onClick={onClose}
         initial={{ opacity: 0 }}
@@ -372,7 +372,7 @@ function EventDetailPanel({
         transition={{ duration: 0.2 }}
       />
       <motion.div
-        className="fixed top-0 right-0 h-full z-50 flex flex-col"
+        className="fixed top-0 right-0 h-full z-[70] flex flex-col"
         style={{
           width: "420px",
           backgroundColor: "white",
@@ -1254,6 +1254,7 @@ export default function ParentCalendarClient({
             borderRadius: "16px",
             border: `1px solid ${colors.border}`,
             boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+            overflow: "hidden",
           }}
         >
         <div
