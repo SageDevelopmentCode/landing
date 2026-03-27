@@ -1203,7 +1203,17 @@ export default function ParentCalendarClient({
 
   return (
     <>
-      <div className="flex flex-1" style={{ minHeight: 0 }}>
+      <div className="flex flex-1 p-5" style={{ minHeight: 0, backgroundColor: colors.warmLinen }}>
+      <div
+        className="flex flex-1"
+        style={{
+          minHeight: 0,
+          borderRadius: "16px",
+          border: `1px solid ${colors.border}`,
+          boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+          overflow: "hidden",
+        }}
+      >
         {/* ── Left Panel ── */}
         <aside
           className="flex-shrink-0 flex flex-col pt-7 pb-6"
@@ -1339,6 +1349,7 @@ export default function ParentCalendarClient({
             )}
           </div>
         </div>
+      </div>
       </div>
 
       <AnimatePresence>
