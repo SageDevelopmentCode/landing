@@ -608,7 +608,7 @@ function MonthlyGrid({
   events: CalendarEvent[];
 }) {
   return (
-    <div className="h-full flex flex-col overflow-auto">
+    <div className="flex-1 min-h-0 flex flex-col overflow-auto">
       {/* Day name header */}
       <div
         className="grid grid-cols-7 flex-shrink-0"
@@ -730,7 +730,7 @@ function WeeklyGrid({
   useEffect(() => {
     if (scrollRef.current) {
       const offset = Math.max(0, (now.getHours() - 7 - 1.5) * HOUR_HEIGHT);
-      scrollRef.current.scrollTop = offset;
+      window.scrollTo(0, scrollRef.current.getBoundingClientRect().top + window.scrollY + offset);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -738,13 +738,10 @@ function WeeklyGrid({
   const GUTTER = 52;
 
   return (
-    <div
-      ref={scrollRef}
-      className="h-full overflow-y-auto"
-    >
-      {/* ── Sticky day header ── */}
+    <div className="flex flex-col">
+      {/* ── Day header ── */}
       <div
-        className="sticky top-0 z-10 flex bg-white"
+        className="flex flex-shrink-0 bg-white"
         style={{ borderBottom: `1px solid ${colors.border}` }}
       >
         <div
@@ -825,7 +822,7 @@ function WeeklyGrid({
                 <button
                   onClick={() => {
                     if (scrollRef.current) {
-                      scrollRef.current.scrollTop = Math.max(0, firstEventTopPx - 16);
+                      window.scrollTo({ top: scrollRef.current.getBoundingClientRect().top + window.scrollY + Math.max(0, firstEventTopPx - 16), behavior: 'smooth' });
                     }
                   }}
                   style={{
@@ -859,6 +856,7 @@ function WeeklyGrid({
 
       {/* ── Time grid ── */}
       <div
+        ref={scrollRef}
         className="flex relative"
         style={{ height: `${HOURS.length * HOUR_HEIGHT}px` }}
       >
@@ -1203,24 +1201,14 @@ export default function ParentCalendarClient({
 
   return (
     <>
-      <div className="flex flex-1 p-5" style={{ minHeight: 0, backgroundColor: colors.warmLinen }}>
-      <div
-        className="flex flex-1"
-        style={{
-          minHeight: 0,
-          borderRadius: "16px",
-          border: `1px solid ${colors.border}`,
-          boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
-          overflow: "hidden",
-        }}
-      >
+      <div className="flex flex-1">
         {/* ── Left Panel ── */}
         <aside
           className="flex-shrink-0 flex flex-col pt-7 pb-6"
           style={{
             width: "168px",
             borderRight: `1px solid ${colors.border}`,
-            backgroundColor: colors.warmLinen,
+            backgroundColor: "white",
           }}
         >
           <p
@@ -1259,6 +1247,15 @@ export default function ParentCalendarClient({
         </aside>
 
         {/* ── Calendar Area ── */}
+        <div className="flex-1 flex p-4" style={{ backgroundColor: colors.warmLinen }}>
+        <div
+          className="flex-1 flex flex-col"
+          style={{
+            borderRadius: "16px",
+            border: `1px solid ${colors.border}`,
+            boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+          }}
+        >
         <div
           className="flex-1 flex flex-col min-w-0"
           style={{ backgroundColor: "white" }}
@@ -1329,7 +1326,7 @@ export default function ParentCalendarClient({
           </div>
 
           {/* Calendar body */}
-          <div className="flex-1 overflow-hidden">
+          <div className="flex flex-col">
             {view === "monthly" ? (
               <MonthlyGrid
                 days={monthDays}
@@ -1349,7 +1346,8 @@ export default function ParentCalendarClient({
             )}
           </div>
         </div>
-      </div>
+        </div>
+        </div>
       </div>
 
       <AnimatePresence>

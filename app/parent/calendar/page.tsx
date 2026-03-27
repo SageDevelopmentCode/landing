@@ -33,7 +33,7 @@ export default async function ParentCalendarPage() {
       .schema("calendar")
       .from("events")
       .select(
-        "id, title, event_date, is_all_day, start_time, end_time, color, category, shared_with, programs, description, location, recurrence, recurrence_end_date, attachment_links, rsvp_enabled, reminder_email, reminder_in_app, reminder_timing"
+        "id, title, event_date, is_all_day, start_time, end_time, color, category, shared_with, programs, description, location, recurrence, recurrence_end_date, attachment_links, rsvp_enabled, reminder_email, reminder_in_app, reminder_timing",
       )
       .contains("shared_with", ["Parents"])
       .order("event_date", { ascending: true }),
@@ -43,8 +43,8 @@ export default async function ParentCalendarPage() {
   const events = eventsData ?? [];
 
   return (
-    <div className="bg-welcome-bg flex flex-col" style={{ minHeight: "100vh" }}>
-      <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-3 items-center flex-shrink-0">
+    <div className="bg-welcome-bg min-h-screen flex flex-col">
+      <header className="sticky top-0 z-50 bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-3 items-center">
         <div className="flex items-center">
           <Link href="/">
             <Image
@@ -66,11 +66,11 @@ export default async function ParentCalendarPage() {
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col min-h-0">
+      <main className="flex-1 flex flex-col">
         <ParentCalendarClient initialEvents={events} />
       </main>
 
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 }
