@@ -26,7 +26,7 @@ const primaryNavItems: { label: string; icon: LucideIcon; href: string }[] = [
   { label: "My Children", icon: Users, href: "/parent/children" },
   { label: "Tuition & Billing", icon: CreditCard, href: "/parent/billing" },
   { label: "Messages", icon: MessageCircle, href: "/parent/messages" },
-  { label: "Calendar", icon: Calendar, href: "#" },
+  { label: "Calendar", icon: Calendar, href: "/parent/calendar" },
   { label: "Feed", icon: Rss, href: "/parent/feed" },
 ];
 
