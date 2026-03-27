@@ -7,6 +7,7 @@ import {
   Mail,
   UserX,
   Smartphone,
+  MessageCircle,
 } from "lucide-react";
 import NextImage from "next/image";
 import type { Database } from "@/app/types/database.types";
@@ -14,12 +15,7 @@ import type { TeacherAssignment } from "@/app/actions/teacherAssignments";
 
 type Student = Database["admin"]["Tables"]["students"]["Row"];
 
-type ContentTab =
-  | "teacher"
-  | "attendance"
-  | "learning"
-  | "photos"
-  | "profile";
+type ContentTab = "teacher" | "attendance" | "learning" | "photos" | "profile";
 
 interface Props {
   children: Student[];
@@ -482,7 +478,7 @@ function ChildProfile({
           teachers={teachers}
           onMessage={(teacherId, teacherName) =>
             router.push(
-              `/parent/messages?recipientId=${teacherId}&recipientName=${encodeURIComponent(teacherName)}`
+              `/parent/messages?recipientId=${teacherId}&recipientName=${encodeURIComponent(teacherName)}`,
             )
           }
         />

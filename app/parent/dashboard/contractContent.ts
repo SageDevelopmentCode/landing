@@ -148,6 +148,7 @@ export const CONTRACT_1_SECTIONS: ContractSection[] = [
     title: "3. Tuition, Fees, and Payment",
     paragraphs: [
       "Tuition is due on the 1st of each month. A grace period of three (3) calendar days is provided. Accounts not paid by the 4th of the month will incur a $50 late fee.",
+      "Monthly tuition is a fixed, flat rate for the school year and is not pro-rated under any circumstances. This includes months with school holidays, scheduled breaks, shortened weeks, or months in which the program begins or ends mid-month (such as August or June). The monthly payment obligation remains the same regardless of the number of school days in a given month.",
     ],
     bullets: [
       "Tuition is non-refundable.",
