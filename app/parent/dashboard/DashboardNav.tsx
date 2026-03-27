@@ -29,10 +29,10 @@ const primaryNavItems: { label: string; icon: LucideIcon; href: string }[] = [
   { label: "Forms & Documents", icon: FileText, href: "/parent/forms" },
 ];
 
-const moreItems: { label: string; icon: LucideIcon }[] = [
+const moreItems: { label: string; icon: LucideIcon; href?: string }[] = [
   { label: "Resources", icon: BookOpen },
   { label: "Photos/Updates", icon: Image },
-  { label: "Volunteer Opportunities", icon: Heart },
+  { label: "Volunteer Opportunities", icon: Heart, href: "/parent/volunteer" },
   { label: "Emergency Contacts", icon: Phone },
   { label: "Transportation", icon: Bus },
   { label: "Reimbursement", icon: Receipt },
@@ -90,16 +90,34 @@ export default function DashboardNav() {
 
         {moreOpen && (
           <div className="absolute left-1/2 -translate-x-1/2 mt-1.5 w-52 bg-white border border-gray-100 rounded-xl shadow-sm z-50 py-1.5">
-            {moreItems.map(({ label, icon: Icon }) => (
-              <button
-                key={label}
-                onClick={() => setMoreOpen(false)}
-                className="flex items-center gap-1.5 w-full text-left px-4 py-2 text-sm font-body text-gray-700 hover:bg-gray-50 hover:text-[#4a7c59] transition-colors cursor-pointer"
-              >
-                <Icon className="w-4 h-4" />
-                {label}
-              </button>
-            ))}
+            {moreItems.map(({ label, icon: Icon, href }) => {
+              const isActive = !!href && pathname === href;
+              const baseClass = `flex items-center gap-1.5 w-full text-left px-4 py-2 text-sm font-body transition-colors cursor-pointer ${
+                isActive
+                  ? "text-[#4a7c59] bg-[#4a7c59]/8 font-semibold"
+                  : "text-gray-700 hover:bg-gray-50 hover:text-[#4a7c59]"
+              }`;
+              return href ? (
+                <Link
+                  key={label}
+                  href={href}
+                  onClick={() => setMoreOpen(false)}
+                  className={baseClass}
+                >
+                  <Icon className="w-4 h-4" />
+                  {label}
+                </Link>
+              ) : (
+                <button
+                  key={label}
+                  onClick={() => setMoreOpen(false)}
+                  className={baseClass}
+                >
+                  <Icon className="w-4 h-4" />
+                  {label}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
