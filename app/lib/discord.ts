@@ -280,6 +280,37 @@ export function createDonationEmbed(data: {
 }
 
 /**
+ * Creates a Discord embed for summer tuition payments
+ */
+export function createSummerTuitionEmbed(data: {
+  parentName: string;
+  parentEmail: string;
+  childName: string;
+  planType: "weekly" | "full";
+  amountCents: number;
+  weeks?: number[];
+}): DiscordEmbed {
+  const amountDollars = (data.amountCents / 100).toFixed(2);
+  const planLabel =
+    data.planType === "full"
+      ? "Full Summer (12 Weeks)"
+      : `Weekly — ${data.weeks?.length ?? 0} week${(data.weeks?.length ?? 0) !== 1 ? "s" : ""}${data.weeks && data.weeks.length > 0 ? ` (${data.weeks.join(", ")})` : ""}`;
+
+  return {
+    title: "☀️ Summer Tuition Paid",
+    color: 0xe07a3a,
+    fields: [
+      { name: "Parent", value: data.parentName || "N/A", inline: true },
+      { name: "Email", value: data.parentEmail || "N/A", inline: true },
+      { name: "Child", value: data.childName || "N/A", inline: true },
+      { name: "Plan", value: planLabel, inline: true },
+      { name: "Amount Paid", value: `$${amountDollars}`, inline: true },
+    ],
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
  * Creates a Discord embed for new parent account creation
  */
 export function createParentSignupEmbed(data: {

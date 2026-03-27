@@ -1,0 +1,145 @@
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { getStripe } from "@/app/lib/stripe";
+import { getOrCreateStripeCustomer } from "@/app/lib/stripe-customer";
+
+const SUMMER_WEEKLY_CENTS = { primary: 37500, upper: 35000 };
+const SUMMER_FULL_CENTS = { primary: 405000, upper: 378000 };
+
+const schema = z.object({
+  parentId: z.string(),
+  parentEmail: z.string().email("Valid email required"),
+  studentId: z.string(),
+  applicationId: z.string(),
+  planType: z.enum(["weekly", "full"]),
+  selectedWeeks: z.array(z.number()).default([]),
+  gradeTier: z.enum(["primary", "upper"]),
+  intendedAmountCents: z.number().int().positive(),
+  coverFees: z.boolean().optional().default(false),
+  paymentMethod: z.enum(["card", "ach"]).optional().default("card"),
+});
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const validated = schema.parse(body);
+
+    const {
+      parentId,
+      parentEmail,
+      studentId,
+      applicationId,
+      planType,
+      selectedWeeks,
+      gradeTier,
+      intendedAmountCents,
+      coverFees,
+      paymentMethod,
+    } = validated;
+
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
+
+    // Build line items
+    const lineItems: {
+      quantity: number;
+      price_data: {
+        currency: string;
+        unit_amount: number;
+        product_data: { name: string; description?: string };
+      };
+    }[] = [];
+
+    if (planType === "full") {
+      lineItems.push({
+        quantity: 1,
+        price_data: {
+          currency: "usd",
+          unit_amount: SUMMER_FULL_CENTS[gradeTier],
+          product_data: {
+            name: "Summer 2026 Tuition — Full Summer (12 Weeks)",
+            description: "Sage Field Private School — May 26 – Aug 13, 2026",
+          },
+        },
+      });
+    } else {
+      // Weekly: single line item with quantity = number of weeks
+      lineItems.push({
+        quantity: selectedWeeks.length,
+        price_data: {
+          currency: "usd",
+          unit_amount: SUMMER_WEEKLY_CENTS[gradeTier],
+          product_data: {
+            name: `Summer 2026 Tuition — Weekly (${selectedWeeks.length} week${selectedWeeks.length !== 1 ? "s" : ""})`,
+            description: `Weeks: ${selectedWeeks.join(", ")}`,
+          },
+        },
+      });
+    }
+
+    if (coverFees) {
+      const feeCents =
+        paymentMethod === "ach"
+          ? Math.min(Math.round(intendedAmountCents * 0.008), 500)
+          : Math.round((intendedAmountCents + 30) / (1 - 0.029)) - intendedAmountCents;
+
+      lineItems.push({
+        quantity: 1,
+        price_data: {
+          currency: "usd",
+          unit_amount: feeCents,
+          product_data: {
+            name: paymentMethod === "ach" ? "ACH processing fee" : "Card processing fee",
+          },
+        },
+      });
+    }
+
+    const description =
+      planType === "full"
+        ? "Summer 2026 Tuition — Full Summer"
+        : `Summer 2026 Tuition — ${selectedWeeks.length} Week${selectedWeeks.length !== 1 ? "s" : ""}`;
+
+    const stripeCustomerId = await getOrCreateStripeCustomer(parentId, parentEmail);
+
+    const session = await getStripe().checkout.sessions.create({
+      mode: "payment",
+      payment_method_types: ["card", "us_bank_account"],
+      customer: stripeCustomerId,
+      saved_payment_method_options: {
+        allow_redisplay_filters: ["always", "limited"],
+        payment_method_save: "enabled",
+      },
+      payment_intent_data: {
+        receipt_email: parentEmail,
+        setup_future_usage: "off_session",
+      },
+      line_items: lineItems,
+      metadata: {
+        payment_type: "summer_tuition",
+        parent_id: parentId,
+        student_id: studentId,
+        application_id: applicationId,
+        plan_type: planType,
+        weeks: selectedWeeks.join(","),
+        grade_tier: gradeTier,
+        cover_fees: String(coverFees),
+        payment_method: paymentMethod,
+        intended_amount_cents: String(intendedAmountCents),
+        description,
+      },
+      success_url: `${baseUrl}/parent/billing/summer-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/parent/billing`,
+    });
+
+    return NextResponse.json({ url: session.url });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: error.issues[0].message }, { status: 400 });
+    }
+    console.error("Summer checkout error:", error);
+    return NextResponse.json(
+      { error: "Failed to create checkout session" },
+      { status: 500 },
+    );
+  }
+}

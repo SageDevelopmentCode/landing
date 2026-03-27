@@ -23,6 +23,7 @@ export type PendingPaymentRequest = {
 };
 
 export type SummerEnrollment = {
+  id: string;
   student_id: string;
   child_grade: string | null;
 };
@@ -85,7 +86,7 @@ export default async function BillingRoute() {
     adminClient
       .schema("parent_app")
       .from("applications")
-      .select("student_id, child_grade")
+      .select("id, student_id, child_grade")
       .eq("user_id", user.id)
       .eq("approved", true)
       .in("program", ["summer_26", "both"]),
@@ -94,13 +95,14 @@ export default async function BillingRoute() {
   const transactions = (txData ?? []) as StripeTransaction[];
   const pendingRequests = (pendingData ?? []) as PendingPaymentRequest[];
   const fullName = adminUser?.full_name ?? null;
-  const summerEnrollments = ((summerData ?? []) as { student_id: string | null; child_grade: string | null }[])
-    .filter((e): e is SummerEnrollment => !!e.student_id);
+  const summerEnrollments = ((summerData ?? []) as { id: string; student_id: string | null; child_grade: string | null }[])
+    .filter((e): e is SummerEnrollment => !!e.student_id && !!e.id);
 
   const studentIds = [
     ...new Set([
       ...transactions.map((t) => t.student_id),
       ...pendingRequests.map((p) => p.student_id),
+      ...summerEnrollments.map((e) => e.student_id),
     ].filter(Boolean)),
   ] as string[];
 
@@ -147,7 +149,7 @@ export default async function BillingRoute() {
               Tuition &amp; Billing
             </h1>
           </div>
-          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} />
+          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} parentId={user.id} parentEmail={user.email ?? ""} />
         </main>
       </div>
       <Footer />

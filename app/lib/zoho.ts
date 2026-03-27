@@ -699,6 +699,46 @@ export async function buildRegistrationFeeConfirmationEmail(opts: {
 }
 
 /**
+ * Build HTML confirmation email for a paid summer tuition
+ */
+export async function buildSummerTuitionConfirmationEmail(opts: {
+  g1FullName: string;
+  childLegalName: string;
+  planType: "weekly" | "full";
+  amountDollars: string;
+  weeks?: number[];
+}): Promise<{ subject: string; content: string }> {
+  const subject = "Summer 2026 Tuition Received — See You This Summer!";
+  const planLabel =
+    opts.planType === "full"
+      ? "Full Summer — all 12 weeks (May 26 – Aug 13, 2026)"
+      : `${opts.weeks?.length ?? 0} week${(opts.weeks?.length ?? 0) !== 1 ? "s" : ""}${opts.weeks && opts.weeks.length > 0 ? ` (Weeks ${opts.weeks.join(", ")})` : ""}`;
+
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${opts.g1FullName},</p>
+
+  <p>We are so excited to confirm that your Summer 2026 tuition payment of <strong>$${opts.amountDollars}</strong> has been received for <strong>${opts.childLegalName}</strong>!</p>
+
+  <p><strong>Plan:</strong> ${planLabel}</p>
+
+  <p>Your child's spot is officially secured for summer camp. We can't wait to welcome them for a season full of adventure, learning, and fun at Sage Field.</p>
+
+  <p>If you have any questions in the meantime, please reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a>.</p>
+
+  <p style="margin-top: 32px;">See you this summer!</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field Private School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
+/**
  * Build HTML approval email for an approved application
  */
 export async function buildApprovalEmail(opts: {

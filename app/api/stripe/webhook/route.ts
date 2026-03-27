@@ -4,12 +4,14 @@ import { createAdminClient } from "@/app/lib/supabase-server";
 import Stripe from "stripe";
 import {
   createRegistrationFeeEmbed,
+  createSummerTuitionEmbed,
   createDonationEmbed,
   createErrorEmbed,
   sendDiscordNotification,
 } from "@/app/lib/discord";
 import {
   buildRegistrationFeeConfirmationEmail,
+  buildSummerTuitionConfirmationEmail,
   buildDonationConfirmationEmail,
   sendZohoEmail,
 } from "@/app/lib/zoho";
@@ -266,6 +268,95 @@ export async function POST(request: NextRequest) {
           }
         })();
       }
+    } else if (session.metadata?.payment_type === "summer_tuition") {
+      const applicationId = session.metadata?.application_id;
+      const studentId = session.metadata?.student_id;
+      const planType = (session.metadata?.plan_type ?? "full") as "weekly" | "full";
+      const weeksStr = session.metadata?.weeks ?? "";
+      const weeks = weeksStr
+        ? weeksStr.split(",").map(Number).filter((n: number) => !isNaN(n))
+        : [];
+      const amountCents = session.amount_total ?? 0;
+      const amountDollars = (amountCents / 100).toFixed(2);
+
+      // Fetch application for parent/child names
+      let parentName = "N/A";
+      let parentEmailAddr = session.customer_email ?? "N/A";
+      let childName = "N/A";
+
+      if (applicationId) {
+        const { data: application } = await supabase
+          .schema("parent_app")
+          .from("applications")
+          .select("g1_full_name, g1_email, child_legal_name")
+          .eq("id", applicationId)
+          .single();
+
+        if (application) {
+          parentName = application.g1_full_name ?? "N/A";
+          parentEmailAddr = application.g1_email ?? session.customer_email ?? "N/A";
+          childName = application.child_legal_name ?? "N/A";
+        }
+      } else if (studentId) {
+        const { data: student } = await supabase
+          .schema("admin")
+          .from("students")
+          .select("child_legal_name")
+          .eq("id", studentId)
+          .single();
+        if (student) childName = student.child_legal_name ?? "N/A";
+      }
+
+      // Discord notification (non-blocking)
+      sendDiscordNotification(
+        createSummerTuitionEmbed({
+          parentName,
+          parentEmail: parentEmailAddr,
+          childName,
+          planType,
+          amountCents,
+          weeks: weeks.length > 0 ? weeks : undefined,
+        }),
+      ).catch((err) => console.error("Summer tuition Discord notification failed:", err));
+
+      // Email confirmation (non-blocking, with error embed fallback)
+      (async () => {
+        try {
+          const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
+          if (!toAddress) return;
+
+          const { subject, content } = await buildSummerTuitionConfirmationEmail({
+            g1FullName: parentName !== "N/A" ? parentName : "Parent",
+            childLegalName: childName !== "N/A" ? childName : "your child",
+            planType,
+            amountDollars,
+            weeks: weeks.length > 0 ? weeks : undefined,
+          });
+
+          const emailResult = await sendZohoEmail({ toAddress, subject, content });
+
+          if (emailResult.success) {
+            await supabase.schema("email_logs").from("sends").insert({
+              to_address: toAddress,
+              subject,
+              template: "summer_tuition_confirmation",
+              application_id: applicationId ?? null,
+              status: "success",
+            });
+          } else {
+            throw new Error(emailResult.error ?? "Unknown email error");
+          }
+        } catch (err) {
+          console.error("Summer tuition confirmation email failed:", err);
+          sendDiscordNotification(
+            createErrorEmbed({
+              context: "Summer tuition confirmation email",
+              error: String(err),
+              details: { applicationId: applicationId ?? "N/A", studentId: studentId ?? "N/A" },
+            }),
+          ).catch(() => {});
+        }
+      })();
     } else {
       const donorEmail =
         session.metadata?.donor_email || session.customer_email || "";
@@ -391,6 +482,25 @@ export async function POST(request: NextRequest) {
     if (billingError) {
       console.error("Failed to record billing transaction:", billingError);
     }
+  }
+
+  if (event.type === "payment_intent.payment_failed") {
+    const intent = event.data.object as Stripe.PaymentIntent;
+    const failureMessage = intent.last_payment_error?.message ?? "Unknown error";
+    const amountCents = intent.amount ?? 0;
+    const parentEmail = intent.metadata?.parent_email ?? intent.receipt_email ?? "N/A";
+
+    sendDiscordNotification(
+      createErrorEmbed({
+        context: "Payment failed",
+        error: failureMessage,
+        details: {
+          parentEmail,
+          amount: `$${(amountCents / 100).toFixed(2)}`,
+          paymentIntentId: intent.id,
+        },
+      }),
+    ).catch(() => {});
   }
 
   return NextResponse.json({ received: true });
