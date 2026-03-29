@@ -414,18 +414,36 @@ function EventDetailPanel({
                 {dateLabel}
                 {timeLabel ? ` · ${timeLabel}` : ""}
               </p>
-              {event.category && (
-                <span
-                  className="inline-block mt-1.5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
-                  style={{
-                    backgroundColor: `${event.color}22`,
-                    color: event.color,
-                    borderRadius: radius.full,
-                    border: `1px solid ${event.color}44`,
-                  }}
-                >
-                  {event.category}
-                </span>
+              {(event.category || (event.programs ?? []).length > 0) && (
+                <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                  {event.category && (
+                    <span
+                      className="inline-block px-2.5 py-1 text-xs font-semibold uppercase tracking-wide"
+                      style={{
+                        backgroundColor: `${event.color}22`,
+                        color: event.color,
+                        borderRadius: radius.full,
+                        border: `1px solid ${event.color}44`,
+                      }}
+                    >
+                      {event.category}
+                    </span>
+                  )}
+                  {(event.programs ?? []).map((p) => (
+                    <span
+                      key={p}
+                      className="px-2.5 py-1 text-xs font-medium"
+                      style={{
+                        backgroundColor: colors.softCloud,
+                        color: colors.textSecondary,
+                        borderRadius: radius.full,
+                        border: `1px solid ${colors.border}`,
+                      }}
+                    >
+                      {p}
+                    </span>
+                  ))}
+                </div>
               )}
             </div>
           </div>
@@ -473,33 +491,6 @@ function EventDetailPanel({
               <p className="text-sm" style={{ color: colors.textPrimary }}>
                 {event.location}
               </p>
-            </div>
-          )}
-
-          {(event.programs ?? []).length > 0 && (
-            <div>
-              <p
-                className="text-xs font-medium uppercase tracking-wide mb-1.5"
-                style={{ color: colors.textTertiary }}
-              >
-                Program
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {(event.programs ?? []).map((p) => (
-                  <span
-                    key={p}
-                    className="px-2.5 py-1 text-xs font-medium"
-                    style={{
-                      backgroundColor: colors.softCloud,
-                      color: colors.textSecondary,
-                      borderRadius: radius.full,
-                      border: `1px solid ${colors.border}`,
-                    }}
-                  >
-                    {p}
-                  </span>
-                ))}
-              </div>
             </div>
           )}
 
@@ -1142,6 +1133,12 @@ export default function ParentCalendarClient({
   const [overlapEvents, setOverlapEvents] = useState<CalendarEvent[] | null>(
     null,
   );
+
+  useEffect(() => {
+    const isOpen = !!viewEvent || !!overlapEvents;
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [viewEvent, overlapEvents]);
 
   const program = programs[selectedProgram];
   const today = new Date();

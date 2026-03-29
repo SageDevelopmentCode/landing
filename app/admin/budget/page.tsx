@@ -16,7 +16,7 @@ import { MercuryDetailSidebar, type MercuryTransaction } from "../components/Mer
 import { IncomeDetailSidebar } from "../components/IncomeDetailSidebar";
 import { TransactionDetailSidebar, formatPaymentType, formatCents } from "../components/TransactionDetailSidebar";
 import { getStripeTransactions } from "@/app/actions/getStripeTransactions";
-import { Upload, Trash2, FileText, Eye, Download, X } from "lucide-react";
+import { Upload, Trash2, FileText, Download, X } from "lucide-react";
 import { uploadExpenseReceipt } from "@/app/actions/uploadExpenseReceipt";
 import { deleteExpenseReceipt } from "@/app/actions/deleteExpenseReceipt";
 import { listExpenseReceipts } from "@/app/actions/listExpenseReceipts";
@@ -1266,10 +1266,12 @@ function ExpensesTab({
   const [isDraggingReceipt, setIsDraggingReceipt] = useState(false);
   const [deletingReceiptPath, setDeletingReceiptPath] = useState<string | null>(null);
   const [receiptError, setReceiptError] = useState<string | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [previewName, setPreviewName] = useState<string>('');
   const [loadingPreviewPath, setLoadingPreviewPath] = useState<string | null>(null);
   const receiptInputRef = useRef<HTMLInputElement>(null);
+  const [newPendingReceipts, setNewPendingReceipts] = useState<File[]>([]);
+  const [isDraggingNewReceipt, setIsDraggingNewReceipt] = useState(false);
+  const [newReceiptError, setNewReceiptError] = useState<string | null>(null);
+  const newReceiptInputRef = useRef<HTMLInputElement>(null);
   const receiptCacheRef = useRef<Map<string, FileObject[]>>(new Map());
 
   const MAX_RECEIPT_FILES = 10;
@@ -1301,15 +1303,6 @@ function ExpensesTab({
     }
     loadReceipts(editingId);
   }, [editingId]);
-
-  useEffect(() => {
-    if (!previewUrl) return;
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setPreviewUrl(null);
-    }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [previewUrl]);
 
   async function handleReceiptUpload(file: File) {
     if (!editingId) return;
@@ -1350,19 +1343,18 @@ function ExpensesTab({
     setDeletingReceiptPath(null);
   }
 
-  async function handleReceiptView(path: string, fileName: string) {
+  async function handleReceiptDownload(path: string, fileName: string) {
     setLoadingPreviewPath(path);
     const result = await getExpenseReceiptUrl(path);
     if ('error' in result) {
       setReceiptError(result.error ?? 'Unknown error');
     } else {
-      const isImage = /\.(jpe?g|png|webp|heic)$/i.test(fileName);
-      if (isImage) {
-        setPreviewName(fileName);
-        setPreviewUrl(result.url);
-      } else {
-        window.open(result.url, '_blank');
-      }
+      const a = document.createElement('a');
+      a.href = result.url;
+      a.download = fileName.replace(/^\d+-/, '');
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
     setLoadingPreviewPath(null);
   }
@@ -1475,7 +1467,7 @@ function ExpensesTab({
   async function addExpense() {
     if (!newExp.expense_name.trim()) return;
     setSaving(true);
-    await db
+    const { data } = await db
       .schema("budget")
       .from("expenses")
       .insert({
@@ -1486,7 +1478,19 @@ function ExpensesTab({
         expense_date: newExp.expense_date,
         notes: newExp.notes || null,
         tax_deductible: newExp.tax_deductible,
-      });
+      })
+      .select('id')
+      .single();
+
+    if (data?.id && newPendingReceipts.length > 0) {
+      for (const file of newPendingReceipts) {
+        const fd = new FormData();
+        fd.append('expenseId', data.id);
+        fd.append('file', file);
+        await uploadExpenseReceipt(fd);
+      }
+    }
+
     setSaving(false);
     setShowAdd(false);
     setNewExp({
@@ -1498,6 +1502,8 @@ function ExpensesTab({
       notes: "",
       tax_deductible: false,
     });
+    setNewPendingReceipts([]);
+    setNewReceiptError(null);
     onRefresh();
   }
 
@@ -1691,6 +1697,94 @@ function ExpensesTab({
                       ))}
                     </select>
                   </div>
+                </div>
+
+                {/* Receipts & Screenshots */}
+                <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: 16, marginTop: 4 }}>
+                  <p className="text-xs font-semibold mb-3" style={{ color: colors.textPrimary, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                    Receipts &amp; Screenshots
+                  </p>
+
+                  {/* Queued file list */}
+                  {newPendingReceipts.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
+                      {newPendingReceipts.map((file, i) => (
+                        <div
+                          key={i}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 8,
+                            padding: '6px 10px',
+                            background: colors.softCloud,
+                            border: `1px solid ${colors.border}`,
+                            borderRadius: radius.sm,
+                          }}
+                        >
+                          <FileText size={14} style={{ color: colors.textSecondary, flexShrink: 0 }} />
+                          <span className="text-xs" style={{ color: colors.textPrimary, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {file.name}
+                          </span>
+                          <button
+                            onClick={() => setNewPendingReceipts(p => p.filter((_, idx) => idx !== i))}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: colors.textSecondary, flexShrink: 0 }}
+                          >
+                            <X size={13} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Drop zone */}
+                  {newPendingReceipts.length < MAX_RECEIPT_FILES && (
+                    <div
+                      onDragOver={(e) => { e.preventDefault(); setIsDraggingNewReceipt(true); }}
+                      onDragLeave={() => setIsDraggingNewReceipt(false)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setIsDraggingNewReceipt(false);
+                        const file = e.dataTransfer.files[0];
+                        if (!file) return;
+                        if (!ACCEPTED_TYPES.includes(file.type)) { setNewReceiptError('File type not supported.'); return; }
+                        if (file.size > MAX_FILE_SIZE) { setNewReceiptError('File exceeds 10 MB limit.'); return; }
+                        setNewReceiptError(null);
+                        setNewPendingReceipts(p => [...p, file]);
+                      }}
+                      onClick={() => newReceiptInputRef.current?.click()}
+                      style={{
+                        border: `2px dashed ${isDraggingNewReceipt ? colors.mistyForest : colors.border}`,
+                        borderRadius: radius.sm,
+                        padding: '16px 12px',
+                        textAlign: 'center',
+                        cursor: 'pointer',
+                        background: isDraggingNewReceipt ? colors.pastelSage + '30' : colors.softCloud,
+                        transition: 'border-color 0.15s, background 0.15s',
+                      }}
+                    >
+                      <Upload size={18} style={{ color: colors.textSecondary, margin: '0 auto 6px' }} />
+                      <p className="text-xs" style={{ color: colors.textSecondary }}>Drop a file or click to upload</p>
+                      <p className="text-xs" style={{ color: colors.textSecondary, opacity: 0.6, marginTop: 2 }}>PDF, JPEG, PNG, WEBP, HEIC · max 10 MB</p>
+                    </div>
+                  )}
+
+                  <input
+                    ref={newReceiptInputRef}
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.webp,.heic"
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      if (!ACCEPTED_TYPES.includes(file.type)) { setNewReceiptError('File type not supported.'); return; }
+                      if (file.size > MAX_FILE_SIZE) { setNewReceiptError('File exceeds 10 MB limit.'); return; }
+                      setNewReceiptError(null);
+                      setNewPendingReceipts(p => [...p, file]);
+                      e.target.value = '';
+                    }}
+                  />
+
+                  {newReceiptError && (
+                    <p className="text-xs mt-2" style={{ color: '#ef4444' }}>{newReceiptError}</p>
+                  )}
                 </div>
               </div>
 
@@ -2844,7 +2938,7 @@ function ExpensesTab({
                         {f.name.replace(/^\d+-/, '')}
                       </span>
                       <button
-                        onClick={() => handleReceiptView(filePath, f.name)}
+                        onClick={() => handleReceiptDownload(filePath, f.name)}
                         disabled={loadingPreviewPath === filePath}
                         style={{
                           background: 'none',
@@ -2856,7 +2950,7 @@ function ExpensesTab({
                           flexShrink: 0,
                         }}
                       >
-                        <Eye size={13} />
+                        <Download size={13} />
                       </button>
                       <button
                         onClick={() => handleReceiptDelete(filePath)}
@@ -2931,89 +3025,6 @@ function ExpensesTab({
         </div>
       </DetailSidebar>
 
-      {/* Image preview lightbox */}
-      <AnimatePresence>
-        {previewUrl && (
-          <motion.div
-            key="lightbox"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{
-              position: 'fixed',
-              inset: 0,
-              zIndex: 9999,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: 'rgba(0,0,0,0.8)',
-            }}
-            onClick={() => setPreviewUrl(null)}
-          >
-            {/* Top-right controls */}
-            <div
-              style={{
-                position: 'absolute',
-                top: 16,
-                right: 16,
-                display: 'flex',
-                gap: 8,
-                zIndex: 10000,
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <a
-                href={previewUrl}
-                download={previewName}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 36,
-                  height: 36,
-                  borderRadius: '50%',
-                  background: 'rgba(255,255,255,0.15)',
-                  color: '#fff',
-                  textDecoration: 'none',
-                  cursor: 'pointer',
-                }}
-              >
-                <Download size={16} />
-              </a>
-              <button
-                onClick={() => setPreviewUrl(null)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 36,
-                  height: 36,
-                  borderRadius: '50%',
-                  background: 'rgba(255,255,255,0.15)',
-                  border: 'none',
-                  color: '#fff',
-                  cursor: 'pointer',
-                }}
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            {/* Image */}
-            <img
-              src={previewUrl}
-              alt={previewName}
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                maxWidth: '90vw',
-                maxHeight: '90vh',
-                objectFit: 'contain',
-                borderRadius: 4,
-              }}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

@@ -43,3 +43,6 @@ next-env.d.ts
 .claude-account3
 .claude-account2
 .claude-account1
+
+STYLE_GUIDE.md
+SUPABASE_MOBILE_GUIDE.md
