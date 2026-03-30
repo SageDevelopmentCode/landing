@@ -41,5 +41,14 @@ export async function getTeacherStudentDetail(studentId: string) {
     console.error('[getTeacherStudentDetail] Student query error:', studentError)
   }
 
-  return data ?? null
+  if (!data) return null
+
+  const { data: healthInfo } = await adminClient
+    .schema('parent_app')
+    .from('student_health_info')
+    .select('in_state_contact_name, in_state_contact_relation, in_state_contact_phone, out_of_state_contact_name, out_of_state_contact_relation, out_of_state_contact_phone')
+    .eq('student_id', studentId)
+    .maybeSingle()
+
+  return { ...data, ...healthInfo }
 }

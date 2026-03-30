@@ -19,6 +19,7 @@ import {
   TreePine,
   MessageSquare,
   CalendarDays,
+  School,
 } from "lucide-react";
 import { colors, radius, shadows, spacing } from "../design-system";
 import { Tooltip } from "./Tooltip";
@@ -34,6 +35,7 @@ interface NavItem {
   name: string;
   href: string;
   icon: React.ReactNode;
+  newTab?: boolean;
 }
 
 const navItems: NavItem[] = [
@@ -96,6 +98,12 @@ const navItems: NavItem[] = [
     name: "Marketing",
     href: "/admin/marketing",
     icon: <Megaphone className="w-4 h-4" />,
+  },
+  {
+    name: "Teacher View",
+    href: "/teacher/dashboard",
+    icon: <School className="w-4 h-4" />,
+    newTab: true,
   },
   // {
   //   name: "Property",
@@ -223,6 +231,8 @@ export function Sidebar({
               <Tooltip key={item.href} content={item.name} side="right">
                 <Link
                   href={item.href}
+                  target={item.newTab ? "_blank" : undefined}
+                  rel={item.newTab ? "noopener noreferrer" : undefined}
                   className="relative flex items-center justify-center p-2 transition-all duration-200"
                   style={{
                     backgroundColor: active ? colors.pastelSage : "transparent",
@@ -389,6 +399,8 @@ export function Sidebar({
                   <Link
                     key={item.href}
                     href={item.href}
+                    target={item.newTab ? "_blank" : undefined}
+                    rel={item.newTab ? "noopener noreferrer" : undefined}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="flex items-center gap-3 px-4 py-3 transition-all duration-200"
                     style={{

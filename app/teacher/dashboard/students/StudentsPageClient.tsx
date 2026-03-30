@@ -69,20 +69,24 @@ function PlaceholderCard({ title, children }: { title?: string; children: React.
   )
 }
 
-function EmergencyContactsTab() {
+type EmergencyContact = {
+  name: string | null | undefined
+  relation: string | null | undefined
+  phone: string | null | undefined
+}
+
+function EmergencyContactsTab({ primary, secondary }: { primary: EmergencyContact; secondary: EmergencyContact }) {
   return (
     <>
-      <PlaceholderCard title="Primary Contact">
-        <SidebarField label="Name" value="Margaret Johnson" />
-        <SidebarField label="Relationship" value="Mother" />
-        <SidebarField label="Phone" value="(512) 555-0182" />
-        <SidebarField label="Email" value="m.johnson@email.com" />
+      <PlaceholderCard title="In-State Contact">
+        <SidebarField label="Name" value={primary.name} />
+        <SidebarField label="Relationship" value={primary.relation} />
+        <SidebarField label="Phone" value={primary.phone} />
       </PlaceholderCard>
-      <PlaceholderCard title="Secondary Contact">
-        <SidebarField label="Name" value="Robert Johnson" />
-        <SidebarField label="Relationship" value="Father" />
-        <SidebarField label="Phone" value="(512) 555-0247" />
-        <SidebarField label="Email" value="r.johnson@email.com" />
+      <PlaceholderCard title="Out-of-State Contact">
+        <SidebarField label="Name" value={secondary.name} />
+        <SidebarField label="Relationship" value={secondary.relation} />
+        <SidebarField label="Phone" value={secondary.phone} />
       </PlaceholderCard>
     </>
   )
@@ -404,7 +408,20 @@ export default function StudentsPageClient({ students }: { students: StudentRow[
                   </SidebarSection>
                 </>
               )}
-              {activeTab === 'emergency-contacts' && <EmergencyContactsTab />}
+              {activeTab === 'emergency-contacts' && (
+                <EmergencyContactsTab
+                  primary={{
+                    name: detail?.in_state_contact_name,
+                    relation: detail?.in_state_contact_relation,
+                    phone: detail?.in_state_contact_phone,
+                  }}
+                  secondary={{
+                    name: detail?.out_of_state_contact_name,
+                    relation: detail?.out_of_state_contact_relation,
+                    phone: detail?.out_of_state_contact_phone,
+                  }}
+                />
+              )}
               {activeTab === 'teacher-notes' && <TeacherNotesTab />}
               {activeTab === 'attendance' && <AttendanceTab />}
               {activeTab === 'portfolio' && <PortfolioTab />}

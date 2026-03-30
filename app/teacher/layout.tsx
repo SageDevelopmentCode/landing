@@ -21,11 +21,7 @@ export default async function TeacherLayout({ children }: { children: React.Reac
     redirect('/apply/dashboard')
   }
 
-  if (adminUser?.role === 'super_admin') {
-    redirect('/admin')
-  }
-
-  if (adminUser?.role !== 'teacher') {
+  if (adminUser?.role !== 'teacher' && adminUser?.role !== 'super_admin') {
     redirect('/login')
   }
 
