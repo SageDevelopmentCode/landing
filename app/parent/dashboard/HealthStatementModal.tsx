@@ -43,7 +43,13 @@ interface HealthStatementModalProps {
 
 const MAX_FILES = 3;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
-const ACCEPTED_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/webp", "image/heic"];
+const ACCEPTED_TYPES = [
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+];
 const ACCEPTED_EXT = ".pdf,.jpg,.jpeg,.png,.webp,.heic";
 
 function formatFileName(name: string): string {
@@ -79,18 +85,22 @@ export default function HealthStatementModal({
       ? `${app.dob_month}/${app.dob_day}/${app.dob_year}`
       : "—";
 
-  const [selectedOption, setSelectedOption] = useState<"professional" | "religious" | null>(
-    (existingStatement?.option_type as "professional" | "religious") ?? null
-  );
+  const [selectedOption, setSelectedOption] = useState<
+    "professional" | "religious" | null
+  >((existingStatement?.option_type as "professional" | "religious") ?? null);
   const [hasDownloaded, setHasDownloaded] = useState(false);
-  const [religiousExemptionCount, setReligiousExemptionCount] = useState(initialReligiousExemptionCount);
+  const [religiousExemptionCount, setReligiousExemptionCount] = useState(
+    initialReligiousExemptionCount,
+  );
   const [uploadedFiles, setUploadedFiles] = useState<StorageFile[]>([]);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [deletingPath, setDeletingPath] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [localSig, setLocalSig] = useState<EnrollmentSignature | undefined>(existingSig);
+  const [localSig, setLocalSig] = useState<EnrollmentSignature | undefined>(
+    existingSig,
+  );
   const [, startTransition] = useTransition();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -108,7 +118,9 @@ export default function HealthStatementModal({
     setIsLoadingFiles(true);
     const result = await listReligiousExemptions(parentId, studentId);
     if ("files" in result) {
-      const files = (result.files as StorageFile[]).filter((f) => f.name !== ".emptyFolderPlaceholder");
+      const files = (result.files as StorageFile[]).filter(
+        (f) => f.name !== ".emptyFolderPlaceholder",
+      );
       setUploadedFiles(files);
       setReligiousExemptionCount(files.length);
     }
@@ -240,7 +252,9 @@ export default function HealthStatementModal({
               <h2 className="text-base font-bold font-heading text-gray-800">
                 Health Information Form
               </h2>
-              <p className="text-xs text-gray-400 font-body mt-0.5">{studentName}</p>
+              <p className="text-xs text-gray-400 font-body mt-0.5">
+                {studentName}
+              </p>
             </div>
             <button
               onClick={onClose}
@@ -256,7 +270,10 @@ export default function HealthStatementModal({
             <div className="flex flex-col gap-8">
               {/* Pre-filled info */}
               <div className="flex flex-col gap-3 bg-gray-50 rounded-xl px-5 py-4 border border-gray-100">
-                <InfoRow label="Name of Child" value={app.child_legal_name ?? "—"} />
+                <InfoRow
+                  label="Name of Child"
+                  value={app.child_legal_name ?? "—"}
+                />
                 <InfoRow label="Date of Birth" value={dob} />
               </div>
 
@@ -292,7 +309,9 @@ export default function HealthStatementModal({
                       className="accent-teal-600 cursor-pointer flex-shrink-0"
                     />
                     <span className="flex-1 text-sm font-body text-gray-700">
-                      <span className="font-semibold">Option A:</span> My child has been examined by a health care professional within the past year
+                      <span className="font-semibold">Option A:</span> My child
+                      has been examined by a health care professional within the
+                      past year
                     </span>
                   </label>
                   <label
@@ -311,7 +330,9 @@ export default function HealthStatementModal({
                       className="accent-teal-600 cursor-pointer flex-shrink-0"
                     />
                     <span className="flex-1 text-sm font-body text-gray-700">
-                      <span className="font-semibold">Option B:</span> Religious exemption — I object to physical examination of my child on religious grounds
+                      <span className="font-semibold">Option B:</span> Religious
+                      exemption — I object to physical examination of my child
+                      on religious grounds
                     </span>
                   </label>
                 </div>
@@ -324,7 +345,14 @@ export default function HealthStatementModal({
                     Option A: Health Care Professional Examination
                   </p>
                   <p className="text-sm text-gray-600 font-body leading-relaxed">
-                    I hereby certify that my child, {app.child_legal_name ?? studentName}, has been examined by a licensed health care professional within the past year and is in satisfactory health to attend school. By signing below, I agree to have the Health Care Statement form signed by my child&apos;s health care professional and email the completed form to sabrina@sagefield.co within the current school year.
+                    I hereby certify that my child,{" "}
+                    {app.child_legal_name ?? studentName}, has been examined by
+                    a licensed health care professional within the past year and
+                    is in satisfactory health to attend school. By signing
+                    below, I agree to have the Health Care Statement form signed
+                    by my child&apos;s health care professional and email the
+                    completed form to sabrina@sagefield.co within the current
+                    school year.
                   </p>
                   <div className="flex flex-col gap-2">
                     <a
@@ -339,18 +367,22 @@ export default function HealthStatementModal({
                     <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-amber-50 border border-amber-200">
                       <Mail className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                       <p className="text-xs text-amber-700 font-body">
-                        After your health care professional signs it, email it to{" "}
+                        After your health care professional signs it, email it
+                        to{" "}
                         <a
                           href="mailto:sabrina@sagefield.co"
                           className="font-semibold underline hover:text-amber-900"
                         >
                           sabrina@sagefield.co
-                        </a>
+                        </a>{" "}
+                        by the end of the school year.
                       </p>
                     </div>
                     {hasDownloaded && (
                       <p className="text-xs text-teal-700 font-body font-semibold">
-                        ✓ PDF downloaded — you may sign below. Please email the completed form to sabrina@sagefield.co within the school year.
+                        ✓ PDF downloaded — you may sign below. Please email the
+                        completed form to sabrina@sagefield.co within the school
+                        year.
                       </p>
                     )}
                   </div>
@@ -364,15 +396,29 @@ export default function HealthStatementModal({
                     Option B: Religious Exemption Affidavit
                   </p>
                   <p className="text-sm text-gray-600 font-body leading-relaxed">
-                    I object to the physical examination of my child on religious grounds. I understand that I must provide a signed, dated, and <span className="font-semibold text-gray-800">notarized</span> affidavit stating my religious objection to such examination. This affidavit must be uploaded below and will be kept on file with Sage Field Private School.
+                    I object to the physical examination of my child on
+                    religious grounds. I understand that I must provide a
+                    signed, dated, and{" "}
+                    <span className="font-semibold text-gray-800">
+                      notarized
+                    </span>{" "}
+                    affidavit stating my religious objection to such
+                    examination. This affidavit must be uploaded below and will
+                    be kept on file with Sage Field Private School.
                   </p>
 
                   {/* File count */}
                   <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold text-gray-500 font-body">Uploaded affidavits</p>
-                    <span className={`text-xs font-semibold font-body px-2 py-0.5 rounded-full ${
-                      uploadedFiles.length >= MAX_FILES ? "bg-red-50 text-red-600" : "bg-gray-100 text-gray-500"
-                    }`}>
+                    <p className="text-xs font-semibold text-gray-500 font-body">
+                      Uploaded affidavits
+                    </p>
+                    <span
+                      className={`text-xs font-semibold font-body px-2 py-0.5 rounded-full ${
+                        uploadedFiles.length >= MAX_FILES
+                          ? "bg-red-50 text-red-600"
+                          : "bg-gray-100 text-gray-500"
+                      }`}
+                    >
                       {uploadedFiles.length} / {MAX_FILES}
                     </span>
                   </div>
@@ -439,7 +485,9 @@ export default function HealthStatementModal({
                       )}
                       <div className="text-center">
                         <p className="text-sm font-semibold text-gray-600 font-heading">
-                          {isUploading ? "Uploading..." : "Click or drag to upload affidavit"}
+                          {isUploading
+                            ? "Uploading..."
+                            : "Click or drag to upload affidavit"}
                         </p>
                         <p className="text-xs text-gray-400 font-body mt-0.5">
                           PDF, JPG, PNG, WEBP, HEIC — up to 10MB each
@@ -471,7 +519,10 @@ export default function HealthStatementModal({
                     Parent / Guardian Signature
                   </h3>
                   <p className="text-sm text-gray-600 font-body leading-relaxed">
-                    By signing below, I certify that the information provided is accurate and complete to the best of my knowledge, and I authorize Sage Field Private School to maintain this health information on file for my child.
+                    By signing below, I certify that the information provided is
+                    accurate and complete to the best of my knowledge, and I
+                    authorize Sage Field Private School to maintain this health
+                    information on file for my child.
                   </p>
                   {readOnly ? (
                     <SectionSignatureBlock
