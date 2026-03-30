@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   User,
   Phone,
@@ -10,10 +10,18 @@ import {
   TrendingUp,
   MessageCircle,
   CarFront,
+  Plus,
+  Lock,
+  Users,
+  Upload,
+  X,
+  FileText,
 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { type StudentRow } from '../MyStudentsSection'
 import { SidebarField, SidebarSection } from '@/app/components/SidebarPrimitives'
 import { getTeacherStudentDetail } from '@/app/actions/getTeacherStudentDetail'
+import { getTeacherNotes, createTeacherNote, updateTeacherNote, deleteTeacherNote, type TeacherNoteRecord } from '@/app/actions/teacherNotes'
 
 const PROGRAM_LABELS: Record<string, string> = {
   summer_26: 'Summer 2026',
@@ -92,24 +100,679 @@ function EmergencyContactsTab({ primary, secondary }: { primary: EmergencyContac
   )
 }
 
-function TeacherNotesTab() {
-  const notes = [
-    { date: 'Mar 14, 2026', text: 'Had a great day during outdoor free play. Engaged well with peers during the nature walk activity.' },
-    { date: 'Mar 10, 2026', text: 'Needed extra support during transitions today. Used breathing exercises — responded well.' },
-    { date: 'Mar 5, 2026',  text: 'Showed strong focus during art project. Completed independently without prompting.' },
-    { date: 'Feb 28, 2026', text: 'Parent communication sent regarding reading progress. Follow-up scheduled for next week.' },
-  ]
+type NoteCategory = TeacherNoteRecord['category']
+
+type PendingAttachment = {
+  file: File
+  previewUrl: string
+  type: 'image' | 'file'
+}
+
+const NOTE_CATEGORIES: { id: NoteCategory; label: string }[] = [
+  { id: 'general',    label: 'General' },
+  { id: 'behavioral', label: 'Behavioral' },
+  { id: 'academic',   label: 'Academic' },
+  { id: 'social',     label: 'Social' },
+  { id: 'health',     label: 'Health' },
+]
+
+const CATEGORY_BADGE: Record<NoteCategory, string> = {
+  general:    'bg-gray-100 text-gray-600',
+  behavioral: 'bg-orange-100 text-orange-700',
+  academic:   'bg-blue-100 text-blue-700',
+  social:     'bg-purple-100 text-purple-700',
+  health:     'bg-red-100 text-red-600',
+}
+
+function TeacherNotesTab({ studentId }: { studentId: string }) {
+  const [notes, setNotes] = useState<TeacherNoteRecord[]>([])
+  const [loadingNotes, setLoadingNotes] = useState(true)
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [noteText, setNoteText] = useState('')
+  const [category, setCategory] = useState<NoteCategory>('general')
+  const [isShared, setIsShared] = useState(false)
+  const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([])
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    setLoadingNotes(true)
+    getTeacherNotes(studentId)
+      .then(setNotes)
+      .catch(() => setNotes([]))
+      .finally(() => setLoadingNotes(false))
+  }, [studentId])
+
+  const closeDrawer = () => {
+    setIsDrawerOpen(false)
+    setNoteText('')
+    setCategory('general')
+    setIsShared(false)
+    setPendingAttachments([])
+    setSaveError(null)
+  }
+
+  const handleSave = async () => {
+    if (!noteText.trim() || isSaving) return
+    setIsSaving(true)
+    setSaveError(null)
+
+    const fd = new FormData()
+    fd.append('studentId', studentId)
+    fd.append('noteText', noteText.trim())
+    fd.append('category', category)
+    fd.append('isShared', String(isShared))
+    for (const pa of pendingAttachments) fd.append('files', pa.file)
+
+    const result = await createTeacherNote(fd)
+    setIsSaving(false)
+
+    if ('error' in result && result.error) {
+      setSaveError(result.error)
+      return
+    }
+
+    if (result.note) setNotes(prev => [result.note, ...prev])
+    closeDrawer()
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? [])
+    const added: PendingAttachment[] = files.map(file => ({
+      file,
+      previewUrl: URL.createObjectURL(file),
+      type: file.type.startsWith('image/') ? 'image' as const : 'file' as const,
+    }))
+    setPendingAttachments(prev => [...prev, ...added])
+    e.target.value = ''
+  }
+
+  const removeAttachment = (index: number) => {
+    setPendingAttachments(prev => prev.filter((_, i) => i !== index))
+  }
+
+  useEffect(() => {
+    if (!isDrawerOpen) return
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') closeDrawer() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [isDrawerOpen])
+
+  // ── Note detail sidebar state ────────────────────────────────────────────
+  const [selectedNote, setSelectedNote]   = useState<TeacherNoteRecord | null>(null)
+  const [isDetailOpen, setIsDetailOpen]   = useState(false)
+  const [isEditing, setIsEditing]         = useState(false)
+  const [isConfirmDelete, setIsConfirmDelete] = useState(false)
+  const [editText, setEditText]           = useState('')
+  const [editCategory, setEditCategory]   = useState<NoteCategory>('general')
+  const [editIsShared, setEditIsShared]   = useState(false)
+  const [isUpdating, setIsUpdating]       = useState(false)
+  const [isDeleting, setIsDeleting]       = useState(false)
+  const [detailError, setDetailError]     = useState<string | null>(null)
+
+  const openDetail = (note: TeacherNoteRecord) => {
+    setSelectedNote(note)
+    setIsEditing(false)
+    setIsConfirmDelete(false)
+    setDetailError(null)
+    setIsDetailOpen(true)
+  }
+
+  const closeDetail = () => {
+    setIsDetailOpen(false)
+    setIsEditing(false)
+    setIsConfirmDelete(false)
+    setDetailError(null)
+    setSelectedNote(null)
+  }
+
+  const startEdit = () => {
+    if (!selectedNote) return
+    setEditText(selectedNote.note_text)
+    setEditCategory(selectedNote.category)
+    setEditIsShared(selectedNote.is_shared)
+    setDetailError(null)
+    setIsEditing(true)
+  }
+
+  const handleUpdate = async () => {
+    if (!selectedNote || !editText.trim() || isUpdating) return
+    setIsUpdating(true)
+    setDetailError(null)
+    const fd = new FormData()
+    fd.append('noteId', selectedNote.id)
+    fd.append('noteText', editText.trim())
+    fd.append('category', editCategory)
+    fd.append('isShared', String(editIsShared))
+    const result = await updateTeacherNote(fd)
+    setIsUpdating(false)
+    if ('error' in result && result.error) { setDetailError(result.error); return }
+    if (result.note) {
+      setNotes(prev => prev.map(n => n.id === result.note.id ? result.note : n))
+      setSelectedNote(result.note)
+    }
+    setIsEditing(false)
+  }
+
+  const handleDelete = async () => {
+    if (!selectedNote || isDeleting) return
+    setIsDeleting(true)
+    const result = await deleteTeacherNote(selectedNote.id)
+    setIsDeleting(false)
+    if ('error' in result) { setDetailError(result.error); return }
+    setNotes(prev => prev.filter(n => n.id !== selectedNote.id))
+    closeDetail()
+  }
+
+  useEffect(() => {
+    if (!isDetailOpen) return
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') closeDetail() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [isDetailOpen])
+
+  useEffect(() => {
+    const anyOpen = isDrawerOpen || isDetailOpen
+    document.body.style.overflow = anyOpen ? 'hidden' : 'unset'
+    return () => { document.body.style.overflow = 'unset' }
+  }, [isDrawerOpen, isDetailOpen])
+
   return (
-    <PlaceholderCard title="Teacher Notes">
-      <div className="space-y-4">
-        {notes.map((n, i) => (
-          <div key={i} className="border-b border-gray-50 last:border-0 pb-3 last:pb-0">
-            <p className="text-xs text-gray-400 font-body mb-1">{n.date}</p>
-            <p className="text-sm text-gray-700">{n.text}</p>
+    <>
+      {/* ── Full-width notes list ─────────────────────────────────────────── */}
+      <div className="mb-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body">
+            Teacher Notes
+          </h3>
+          <button
+            onClick={() => setIsDrawerOpen(true)}
+            className="flex items-center gap-1.5 text-xs font-semibold text-sage-700 hover:text-sage-800 bg-sage-50 hover:bg-sage-100 px-3 py-1.5 rounded-lg transition-colors"
+          >
+            <Plus size={13} />
+            Add Note
+          </button>
+        </div>
+
+        {loadingNotes ? (
+          <div className="space-y-3">
+            {[1,2,3].map(i => (
+              <div key={i} className="border border-gray-100 rounded-2xl px-5 py-4 space-y-2 animate-pulse">
+                <div className="flex justify-between">
+                  <div className="h-3 w-20 bg-gray-100 rounded" />
+                  <div className="h-3 w-24 bg-gray-100 rounded" />
+                </div>
+                <div className="h-4 w-full bg-gray-100 rounded" />
+                <div className="h-4 w-2/3 bg-gray-100 rounded" />
+              </div>
+            ))}
           </div>
-        ))}
+        ) : notes.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+              <NotebookPen size={20} className="text-gray-400" />
+            </div>
+            <p className="text-sm font-medium text-gray-500">No notes yet</p>
+            <p className="text-xs text-gray-400 mt-1">Add your first observation for this student</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {notes.map((note) => {
+              const dateLabel = new Date(note.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+              return (
+                <div
+                  key={note.id}
+                  onClick={() => openDetail(note)}
+                  className="group border border-gray-100 hover:border-sage-200 bg-white hover:bg-sage-50/30 rounded-2xl px-5 py-4 cursor-pointer transition-all"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs text-gray-400 font-body">{dateLabel}</p>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${CATEGORY_BADGE[note.category]}`}>
+                        {NOTE_CATEGORIES.find(c => c.id === note.category)?.label}
+                      </span>
+                      {note.is_shared ? (
+                        <span className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+                          <Users size={10} />
+                          Shared
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                          <Lock size={10} />
+                          Private
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-700 line-clamp-2">{note.note_text}</p>
+                  {note.teacher_note_attachments.length > 0 && (
+                    <div className="mt-2 flex items-center gap-1.5">
+                      <FileText size={12} className="text-gray-400" />
+                      <span className="text-xs text-gray-400">
+                        {note.teacher_note_attachments.length} attachment{note.teacher_note_attachments.length > 1 ? 's' : ''}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
-    </PlaceholderCard>
+
+      {/* ── Note Detail Sidebar ───────────────────────────────────────────── */}
+      <AnimatePresence>
+        {isDetailOpen && selectedNote && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 h-[100dvh] bg-black/20 z-40 backdrop-blur-sm"
+              onClick={closeDetail}
+            />
+            <motion.div
+              initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="fixed top-0 right-0 bottom-0 w-full sm:w-[520px] z-50 bg-white flex flex-col overflow-hidden shadow-xl"
+            >
+              {/* Header */}
+              <div className="sticky top-0 z-10 px-6 py-5 flex items-center justify-between border-b border-gray-100 flex-shrink-0 bg-white">
+                <h2 className="text-lg font-bold font-heading text-gray-800">
+                  {isEditing ? 'Edit Note' : 'Note'}
+                </h2>
+                <button onClick={closeDetail} className="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                  <X size={18} className="text-gray-500" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="flex-1 overflow-y-auto px-6 py-6">
+                {isConfirmDelete ? (
+                  <div className="flex flex-col items-center justify-center h-full text-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                      <FileText size={20} className="text-red-500" />
+                    </div>
+                    <div>
+                      <p className="text-base font-semibold text-gray-800 mb-1">Delete this note?</p>
+                      <p className="text-sm text-gray-500">This action cannot be undone.</p>
+                    </div>
+                    {detailError && <p className="text-xs text-red-500">{detailError}</p>}
+                  </div>
+                ) : isEditing ? (
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-2">
+                        Note <span className="text-red-400">*</span>
+                      </label>
+                      <textarea
+                        value={editText}
+                        onChange={e => setEditText(e.target.value)}
+                        rows={6}
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 resize-none focus:outline-none focus:ring-2 focus:ring-sage-700/20 focus:border-sage-700 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-2">
+                        Category
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {NOTE_CATEGORIES.map(cat => (
+                          <button
+                            key={cat.id}
+                            onClick={() => setEditCategory(cat.id)}
+                            className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
+                              editCategory === cat.id
+                                ? 'bg-sage-700 text-white border-sage-700'
+                                : 'bg-white text-gray-600 border-gray-200 hover:border-sage-700 hover:text-sage-700'
+                            }`}
+                          >
+                            {cat.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-2">
+                        Visibility
+                      </label>
+                      <div className="flex rounded-xl border border-gray-200 overflow-hidden">
+                        <button
+                          onClick={() => setEditIsShared(false)}
+                          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium transition-colors ${
+                            !editIsShared ? 'bg-sage-700 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'
+                          }`}
+                        >
+                          <Lock size={14} /> Private
+                        </button>
+                        <button
+                          onClick={() => setEditIsShared(true)}
+                          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium transition-colors border-l border-gray-200 ${
+                            editIsShared ? 'bg-sage-700 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'
+                          }`}
+                        >
+                          <Users size={14} /> Share with Parent
+                        </button>
+                      </div>
+                    </div>
+                    {/* Existing attachments (read-only in edit mode) */}
+                    {selectedNote.teacher_note_attachments.length > 0 && (
+                      <div>
+                        <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-2">
+                          Attachments
+                        </label>
+                        <div className="space-y-2">
+                          {selectedNote.teacher_note_attachments.some(a => a.file_type === 'image') && (
+                            <div className="grid grid-cols-3 gap-2">
+                              {selectedNote.teacher_note_attachments.filter(a => a.file_type === 'image').map(att => (
+                                <img key={att.id} src={att.url} alt={att.file_name} className="h-24 w-full object-cover rounded-lg border border-gray-100" />
+                              ))}
+                            </div>
+                          )}
+                          {selectedNote.teacher_note_attachments.filter(a => a.file_type === 'file').map(att => (
+                            <div key={att.id} className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2">
+                              <FileText size={14} className="text-gray-400 shrink-0" />
+                              <span className="text-sm text-gray-700 truncate">{att.file_name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {detailError && <p className="text-xs text-red-500">{detailError}</p>}
+                  </div>
+                ) : (
+                  <div className="space-y-5">
+                    {/* Meta row */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs text-gray-400">
+                        {new Date(selectedNote.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                      </span>
+                      <span className="text-gray-200">·</span>
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${CATEGORY_BADGE[selectedNote.category]}`}>
+                        {NOTE_CATEGORIES.find(c => c.id === selectedNote.category)?.label}
+                      </span>
+                      {selectedNote.is_shared ? (
+                        <span className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+                          <Users size={10} /> Shared with Parent
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                          <Lock size={10} /> Private
+                        </span>
+                      )}
+                    </div>
+                    {/* Note text */}
+                    <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">{selectedNote.note_text}</p>
+                    {/* Attachments */}
+                    {selectedNote.teacher_note_attachments.length > 0 && (
+                      <div className="pt-2 border-t border-gray-100">
+                        <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-3">Attachments</p>
+                        <div className="space-y-2">
+                          {selectedNote.teacher_note_attachments.some(a => a.file_type === 'image') && (
+                            <div className="grid grid-cols-2 gap-2">
+                              {selectedNote.teacher_note_attachments.filter(a => a.file_type === 'image').map(att => (
+                                <a key={att.id} href={att.url} target="_blank" rel="noopener noreferrer">
+                                  <img src={att.url} alt={att.file_name} className="h-32 w-full object-cover rounded-xl border border-gray-100 hover:opacity-90 transition-opacity" />
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                          {selectedNote.teacher_note_attachments.filter(a => a.file_type === 'file').map(att => (
+                            <a key={att.id} href={att.url} target="_blank" rel="noopener noreferrer"
+                              className="flex items-center gap-2 bg-gray-50 border border-gray-100 hover:border-sage-200 rounded-lg px-3 py-2 transition-colors"
+                            >
+                              <FileText size={14} className="text-gray-400 shrink-0" />
+                              <span className="text-sm text-gray-700 truncate">{att.file_name}</span>
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="flex-shrink-0 px-6 py-4 bg-white border-t border-gray-100">
+                {isConfirmDelete ? (
+                  <div className="flex items-center justify-between">
+                    <button
+                      onClick={() => setIsConfirmDelete(false)}
+                      disabled={isDeleting}
+                      className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleDelete}
+                      disabled={isDeleting}
+                      className="px-5 py-2 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 rounded-xl disabled:opacity-50 transition-colors"
+                    >
+                      {isDeleting ? 'Deleting…' : 'Delete Note'}
+                    </button>
+                  </div>
+                ) : isEditing ? (
+                  <div className="flex items-center justify-between">
+                    <button
+                      onClick={() => { setIsEditing(false); setDetailError(null) }}
+                      disabled={isUpdating}
+                      className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleUpdate}
+                      disabled={!editText.trim() || isUpdating}
+                      className="px-5 py-2 text-sm font-semibold text-white bg-sage-700 hover:bg-sage-800 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {isUpdating ? 'Saving…' : 'Save Changes'}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <button
+                      onClick={() => setIsConfirmDelete(true)}
+                      className="px-4 py-2 text-sm font-medium text-red-500 border border-red-200 hover:bg-red-50 rounded-xl transition-colors"
+                    >
+                      Delete
+                    </button>
+                    <button
+                      onClick={startEdit}
+                      className="px-5 py-2 text-sm font-semibold text-white bg-sage-700 hover:bg-sage-800 rounded-xl transition-colors"
+                    >
+                      Edit
+                    </button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Add Note Drawer */}
+      <AnimatePresence>
+        {isDrawerOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 h-[100dvh] bg-black/20 z-40 backdrop-blur-sm"
+              onClick={closeDrawer}
+            />
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="fixed top-0 right-0 bottom-0 w-full sm:w-[520px] z-50 bg-white flex flex-col overflow-hidden shadow-xl"
+            >
+              {/* Header */}
+              <div className="sticky top-0 z-10 px-6 py-5 flex items-center justify-between border-b border-gray-100 flex-shrink-0 bg-white">
+                <h2 className="text-lg font-bold font-heading text-gray-800">Add Note</h2>
+                <button
+                  onClick={closeDrawer}
+                  className="p-2 rounded-full transition-colors hover:bg-gray-100"
+                  aria-label="Close"
+                >
+                  <X size={18} className="text-gray-500" />
+                </button>
+              </div>
+
+              {/* Form */}
+              <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+                {/* Note text */}
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-2">
+                    Note <span className="text-red-400">*</span>
+                  </label>
+                  <textarea
+                    value={noteText}
+                    onChange={e => setNoteText(e.target.value)}
+                    placeholder="Write your observation..."
+                    rows={5}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-sage-700/20 focus:border-sage-700 transition-colors"
+                  />
+                </div>
+
+                {/* Category */}
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-2">
+                    Category
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {NOTE_CATEGORIES.map(cat => (
+                      <button
+                        key={cat.id}
+                        onClick={() => setCategory(cat.id)}
+                        className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
+                          category === cat.id
+                            ? 'bg-sage-700 text-white border-sage-700'
+                            : 'bg-white text-gray-600 border-gray-200 hover:border-sage-700 hover:text-sage-700'
+                        }`}
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Attachments */}
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-2">
+                    Attachments{' '}
+                    <span className="text-gray-400 font-normal normal-case tracking-normal">(optional)</span>
+                  </label>
+                  <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-xl py-6 cursor-pointer hover:border-sage-700 hover:bg-sage-50/30 transition-colors">
+                    <Upload size={20} className="text-gray-400 mb-2" />
+                    <p className="text-sm text-gray-500">Drag photos or files here</p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      or <span className="text-sage-700 font-medium">browse files</span>
+                    </p>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      accept="image/*,.pdf,.doc,.docx"
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
+                  </label>
+                  {pendingAttachments.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      {pendingAttachments.some(a => a.type === 'image') && (
+                        <div className="grid grid-cols-3 gap-2">
+                          {pendingAttachments.map((att, i) => att.type === 'image' && (
+                            <div key={i} className="relative group">
+                              <img src={att.previewUrl} alt={att.file.name} className="h-20 w-full object-cover rounded-lg border border-gray-100" />
+                              <button
+                                onClick={() => removeAttachment(i)}
+                                className="absolute top-1 right-1 w-5 h-5 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <X size={10} className="text-white" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {pendingAttachments.map((att, i) => att.type === 'file' && (
+                        <div key={i} className="flex items-center justify-between bg-gray-50 border border-gray-100 rounded-lg px-3 py-2">
+                          <div className="flex items-center gap-2">
+                            <FileText size={14} className="text-gray-400 shrink-0" />
+                            <span className="text-sm text-gray-700 truncate max-w-[300px]">{att.file.name}</span>
+                          </div>
+                          <button onClick={() => removeAttachment(i)} className="p-1 hover:bg-gray-200 rounded-full transition-colors">
+                            <X size={12} className="text-gray-500" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Visibility */}
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-2">
+                    Visibility
+                  </label>
+                  <div className="flex rounded-xl border border-gray-200 overflow-hidden">
+                    <button
+                      onClick={() => setIsShared(false)}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium transition-colors ${
+                        !isShared ? 'bg-sage-700 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      <Lock size={14} />
+                      Private
+                    </button>
+                    <button
+                      onClick={() => setIsShared(true)}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium transition-colors border-l border-gray-200 ${
+                        isShared ? 'bg-sage-700 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      <Users size={14} />
+                      Share with Parent
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1.5">
+                    {isShared
+                      ? "This note will be visible to the student's parent."
+                      : 'Only you can see this note.'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex-shrink-0 px-6 py-4 bg-white border-t border-gray-100">
+                {saveError && (
+                  <p className="text-xs text-red-500 mb-3">{saveError}</p>
+                )}
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={closeDrawer}
+                    disabled={isSaving}
+                    className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    disabled={!noteText.trim() || isSaving}
+                    className="px-5 py-2 text-sm font-semibold text-white bg-sage-700 rounded-xl hover:bg-sage-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {isSaving ? 'Saving…' : 'Save Note'}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   )
 }
 
@@ -422,7 +1085,7 @@ export default function StudentsPageClient({ students }: { students: StudentRow[
                   }}
                 />
               )}
-              {activeTab === 'teacher-notes' && <TeacherNotesTab />}
+              {activeTab === 'teacher-notes' && <TeacherNotesTab studentId={selectedStudent.student_id} />}
               {activeTab === 'attendance' && <AttendanceTab />}
               {activeTab === 'portfolio' && <PortfolioTab />}
               {activeTab === 'progress' && <ProgressTab />}
