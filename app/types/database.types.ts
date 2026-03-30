@@ -430,6 +430,157 @@ export type Database = {
       [_ in never]: never
     }
   }
+  budget: {
+    Tables: {
+      expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string | null
+          expense_date: string
+          expense_name: string
+          id: string
+          is_deleted: boolean
+          notes: string | null
+          payment_method: string | null
+          tax_deductible: boolean
+          updated_at: string | null
+        }
+        Insert: {
+          amount?: number
+          category: string
+          created_at?: string | null
+          expense_date?: string
+          expense_name: string
+          id?: string
+          is_deleted?: boolean
+          notes?: string | null
+          payment_method?: string | null
+          tax_deductible?: boolean
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string | null
+          expense_date?: string
+          expense_name?: string
+          id?: string
+          is_deleted?: boolean
+          notes?: string | null
+          payment_method?: string | null
+          tax_deductible?: boolean
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      income: {
+        Row: {
+          amount: number
+          created_at: string | null
+          description: string | null
+          id: string
+          income_date: string
+          parent_id: string | null
+          source: string
+          student_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount?: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          income_date?: string
+          parent_id?: string | null
+          source: string
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          income_date?: string
+          parent_id?: string | null
+          source?: string
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      line_items: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: string
+          is_active: boolean
+          item_name: string
+          notes: string | null
+          planned_amount: number
+          sort_order: number
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          item_name: string
+          notes?: string | null
+          planned_amount?: number
+          sort_order?: number
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          item_name?: string
+          notes?: string | null
+          planned_amount?: number
+          sort_order?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      settings: {
+        Row: {
+          id: string
+          key: string
+          updated_at: string | null
+          value: Json
+        }
+        Insert: {
+          id?: string
+          key: string
+          updated_at?: string | null
+          value?: Json
+        }
+        Update: {
+          id?: string
+          key?: string
+          updated_at?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      is_super_admin: { Args: never; Returns: boolean }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   calendar: {
     Tables: {
       events: {
@@ -1408,6 +1559,77 @@ export type Database = {
   }
   teachers: {
     Tables: {
+      teacher_note_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_type: string
+          id: string
+          note_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_type: string
+          id?: string
+          note_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_type?: string
+          id?: string
+          note_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_note_attachments_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_notes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_notes: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          is_deleted: boolean
+          is_shared: boolean
+          note_text: string
+          student_id: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          id?: string
+          is_deleted?: boolean
+          is_shared?: boolean
+          note_text: string
+          student_id: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          is_deleted?: boolean
+          is_shared?: boolean
+          note_text?: string
+          student_id?: string
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       teacher_students: {
         Row: {
           classroom: string | null
@@ -1694,6 +1916,9 @@ export const Constants = {
     Enums: {},
   },
   billing: {
+    Enums: {},
+  },
+  budget: {
     Enums: {},
   },
   calendar: {

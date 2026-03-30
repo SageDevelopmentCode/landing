@@ -69,7 +69,7 @@ async function main() {
     "database.types.ts",
   );
   const schemas =
-    "waitlist,contact,admin,parent_app,attendance,billing,calendar,chat,donations,email_logs,marketing,teachers,waitlist";
+    "budget,waitlist,contact,admin,parent_app,attendance,billing,calendar,chat,donations,email_logs,marketing,teachers";
 
   console.log(`Generating types for project: ${projectId}`);
   console.log(`Schemas: ${schemas}`);

@@ -22,6 +22,7 @@ import { type StudentRow } from '../MyStudentsSection'
 import { SidebarField, SidebarSection } from '@/app/components/SidebarPrimitives'
 import { getTeacherStudentDetail } from '@/app/actions/getTeacherStudentDetail'
 import { getTeacherNotes, createTeacherNote, updateTeacherNote, deleteTeacherNote, type TeacherNoteRecord } from '@/app/actions/teacherNotes'
+import { getStudentAttendance, type CheckInRecord } from '@/app/actions/getStudentAttendance'
 
 const PROGRAM_LABELS: Record<string, string> = {
   summer_26: 'Summer 2026',
@@ -776,32 +777,46 @@ function TeacherNotesTab({ studentId }: { studentId: string }) {
   )
 }
 
-function AttendanceTab() {
-  const records = [
-    { date: 'Mar 14, 2026', status: 'Present' },
-    { date: 'Mar 13, 2026', status: 'Present' },
-    { date: 'Mar 12, 2026', status: 'Late' },
-    { date: 'Mar 11, 2026', status: 'Absent' },
-    { date: 'Mar 10, 2026', status: 'Present' },
-    { date: 'Mar 7, 2026',  status: 'Present' },
-  ]
-  const badgeClass = (status: string) => {
-    if (status === 'Present') return 'bg-green-100 text-green-700'
-    if (status === 'Absent')  return 'bg-red-100 text-red-600'
-    return 'bg-yellow-100 text-yellow-700'
-  }
+function AttendanceTab({ studentId }: { studentId: string }) {
+  const [records, setRecords] = useState<CheckInRecord[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    setLoading(true)
+    getStudentAttendance(studentId)
+      .then(setRecords)
+      .catch(() => setRecords([]))
+      .finally(() => setLoading(false))
+  }, [studentId])
+
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+
   return (
     <PlaceholderCard title="Attendance">
-      <div className="space-y-2">
-        {records.map((r, i) => (
-          <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0">
-            <p className="text-sm text-gray-700">{r.date}</p>
-            <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${badgeClass(r.status)}`}>
-              {r.status}
-            </span>
-          </div>
-        ))}
-      </div>
+      {loading ? (
+        <div className="space-y-2">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0">
+              <div className="h-4 w-24 bg-gray-100 rounded animate-pulse" />
+              <div className="h-5 w-14 bg-gray-100 rounded-full animate-pulse" />
+            </div>
+          ))}
+        </div>
+      ) : records.length === 0 ? (
+        <p className="text-sm text-gray-400">No attendance records found.</p>
+      ) : (
+        <div className="space-y-2">
+          {records.map((r) => (
+            <div key={r.id} className="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0">
+              <p className="text-sm text-gray-700">{formatDate(r.checked_in_at)}</p>
+              <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-green-100 text-green-700">
+                Present
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </PlaceholderCard>
   )
 }
@@ -1086,7 +1101,7 @@ export default function StudentsPageClient({ students }: { students: StudentRow[
                 />
               )}
               {activeTab === 'teacher-notes' && <TeacherNotesTab studentId={selectedStudent.student_id} />}
-              {activeTab === 'attendance' && <AttendanceTab />}
+              {activeTab === 'attendance' && <AttendanceTab studentId={selectedStudent.student_id} />}
               {activeTab === 'portfolio' && <PortfolioTab />}
               {activeTab === 'progress' && <ProgressTab />}
               {activeTab === 'parent-communication' && <ParentCommunicationTab />}
