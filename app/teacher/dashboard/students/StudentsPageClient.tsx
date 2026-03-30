@@ -23,6 +23,8 @@ import { SidebarField, SidebarSection } from '@/app/components/SidebarPrimitives
 import { getTeacherStudentDetail } from '@/app/actions/getTeacherStudentDetail'
 import { getTeacherNotes, createTeacherNote, updateTeacherNote, deleteTeacherNote, type TeacherNoteRecord } from '@/app/actions/teacherNotes'
 import { getStudentAttendance, type CheckInRecord } from '@/app/actions/getStudentAttendance'
+import { getCheckInUser, type CheckInUser } from '@/app/actions/getCheckInUser'
+import { DetailSidebar } from '@/app/admin/components/DetailSidebar'
 
 const PROGRAM_LABELS: Record<string, string> = {
   summer_26: 'Summer 2026',
@@ -780,6 +782,9 @@ function TeacherNotesTab({ studentId }: { studentId: string }) {
 function AttendanceTab({ studentId }: { studentId: string }) {
   const [records, setRecords] = useState<CheckInRecord[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedRecord, setSelectedRecord] = useState<CheckInRecord | null>(null)
+  const [sidebarUser, setSidebarUser] = useState<CheckInUser | null>(null)
+  const [sidebarLoading, setSidebarLoading] = useState(false)
 
   useEffect(() => {
     setLoading(true)
@@ -792,32 +797,131 @@ function AttendanceTab({ studentId }: { studentId: string }) {
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 
+  const formatTime = (iso: string) =>
+    new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+
+  const isPastDay = (iso: string) => {
+    const d = new Date(iso)
+    const today = new Date()
+    return d.toDateString() !== today.toDateString() && d < today
+  }
+
+  const handleRowClick = async (r: CheckInRecord) => {
+    setSelectedRecord(r)
+    setSidebarUser(null)
+    setSidebarLoading(true)
+    const user = await getCheckInUser(r.checked_in_by).catch(() => null)
+    setSidebarUser(user)
+    setSidebarLoading(false)
+  }
+
   return (
-    <PlaceholderCard title="Attendance">
+    <>
       {loading ? (
-        <div className="space-y-2">
+        <div className="space-y-0">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0">
-              <div className="h-4 w-24 bg-gray-100 rounded animate-pulse" />
-              <div className="h-5 w-14 bg-gray-100 rounded-full animate-pulse" />
+            <div key={i} className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+              <div className="h-4 w-28 bg-gray-100 rounded animate-pulse" />
+              <div className="h-4 w-20 bg-gray-100 rounded animate-pulse" />
+              <div className="h-4 w-20 bg-gray-100 rounded animate-pulse" />
+              <div className="h-5 w-24 bg-gray-100 rounded-full animate-pulse" />
             </div>
           ))}
         </div>
       ) : records.length === 0 ? (
-        <p className="text-sm text-gray-400">No attendance records found.</p>
+        <p className="text-sm text-gray-400 px-4">No attendance records found.</p>
       ) : (
-        <div className="space-y-2">
-          {records.map((r) => (
-            <div key={r.id} className="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0">
-              <p className="text-sm text-gray-700">{formatDate(r.checked_in_at)}</p>
-              <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-green-100 text-green-700">
-                Present
-              </span>
-            </div>
-          ))}
+        <div>
+          {/* Header */}
+          <div className="grid grid-cols-4 px-4 py-2 border-b border-gray-100 bg-gray-50 rounded-t-xl">
+            <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">Date</span>
+            <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">Checked In</span>
+            <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">Checked Out</span>
+            <span className="text-xs font-semibold uppercase tracking-widest text-gray-400 text-right">Status</span>
+          </div>
+          {records.map((r, i) => {
+            const notCheckedOut = !r.checked_out_at && isPastDay(r.checked_in_at)
+            const isToday = !r.checked_out_at && !isPastDay(r.checked_in_at)
+            return (
+              <div
+                key={r.id}
+                onClick={() => handleRowClick(r)}
+                className={`grid grid-cols-4 px-4 py-3 cursor-pointer transition-colors hover:bg-gray-50 ${
+                  i < records.length - 1 ? 'border-b border-gray-100' : ''
+                }`}
+              >
+                <span className="text-sm text-gray-700">{formatDate(r.checked_in_at)}</span>
+                <span className="text-sm text-gray-600">{formatTime(r.checked_in_at)}</span>
+                <span className="text-sm text-gray-600">
+                  {r.checked_out_at ? formatTime(r.checked_out_at) : '—'}
+                </span>
+                <div className="flex justify-end">
+                  {r.checked_out_at ? (
+                    <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-green-100 text-green-700">
+                      Present
+                    </span>
+                  ) : notCheckedOut ? (
+                    <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                      Not Checked Out
+                    </span>
+                  ) : (
+                    <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                      In Progress
+                    </span>
+                  )}
+                </div>
+              </div>
+            )
+          })}
         </div>
       )}
-    </PlaceholderCard>
+
+      <DetailSidebar
+        isOpen={!!selectedRecord}
+        onClose={() => setSelectedRecord(null)}
+        title="Check-In Details"
+      >
+        {selectedRecord && (
+          <>
+            <SidebarSection title="Check-In Record">
+              <SidebarField label="Date" value={formatDate(selectedRecord.checked_in_at)} />
+              <SidebarField label="Checked In" value={formatTime(selectedRecord.checked_in_at)} />
+              <SidebarField
+                label="Checked Out"
+                value={selectedRecord.checked_out_at ? formatTime(selectedRecord.checked_out_at) : 'Not checked out'}
+              />
+              {selectedRecord.notes && (
+                <SidebarField label="Notes" value={selectedRecord.notes} />
+              )}
+            </SidebarSection>
+
+            {sidebarLoading ? (
+              <div className="space-y-2 mt-4">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-4 bg-gray-100 rounded animate-pulse" />
+                ))}
+              </div>
+            ) : sidebarUser ? (
+              <>
+                <SidebarSection title="Checked In By">
+                  <SidebarField label="Name" value={sidebarUser.full_name} />
+                  <SidebarField label="Email" value={sidebarUser.email} />
+                  <SidebarField label="Cell Phone" value={sidebarUser.g1_cell_phone} />
+                </SidebarSection>
+                {sidebarUser.g2_full_name && (
+                  <SidebarSection title="Guardian 2">
+                    <SidebarField label="Name" value={sidebarUser.g2_full_name} />
+                    <SidebarField label="Relationship" value={sidebarUser.g2_relationship} />
+                    <SidebarField label="Email" value={sidebarUser.g2_email} />
+                    <SidebarField label="Cell Phone" value={sidebarUser.g2_cell_phone} />
+                  </SidebarSection>
+                )}
+              </>
+            ) : null}
+          </>
+        )}
+      </DetailSidebar>
+    </>
   )
 }
 
@@ -1039,7 +1143,7 @@ export default function StudentsPageClient({ students }: { students: StudentRow[
               <LoadingSkeleton />
             </div>
           ) : (
-            <div className="max-w-xl">
+            <div className={activeTab === 'attendance' ? 'w-full' : 'max-w-xl'}>
               <div className="mb-6">
                 <h2 className="text-xl font-bold font-heading text-gray-800">{selectedStudent.name ?? '—'}</h2>
                 <p className="text-sm text-gray-400 mt-0.5">
