@@ -133,6 +133,7 @@ export type Database = {
           id: string
           is_deleted: boolean
           role: string | null
+          stripe_customer_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -158,6 +159,7 @@ export type Database = {
           id: string
           is_deleted?: boolean
           role?: string | null
+          stripe_customer_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -183,6 +185,233 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           role?: string | null
+          stripe_customer_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      volunteer_interests: {
+        Row: {
+          availability: string[]
+          created_at: string | null
+          help_areas: string[]
+          id: string
+          notes: string | null
+          parent_id: string | null
+          skills: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          availability: string[]
+          created_at?: string | null
+          help_areas: string[]
+          id?: string
+          notes?: string | null
+          parent_id?: string | null
+          skills: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          availability?: string[]
+          created_at?: string | null
+          help_areas?: string[]
+          id?: string
+          notes?: string | null
+          parent_id?: string | null
+          skills?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "volunteer_interests_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+  attendance: {
+    Tables: {
+      check_ins: {
+        Row: {
+          checked_in_at: string
+          checked_in_by: string
+          checked_out_at: string | null
+          created_at: string
+          id: string
+          is_deleted: boolean
+          notes: string | null
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          checked_in_at?: string
+          checked_in_by: string
+          checked_out_at?: string | null
+          created_at?: string
+          id?: string
+          is_deleted?: boolean
+          notes?: string | null
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          checked_in_at?: string
+          checked_in_by?: string
+          checked_out_at?: string | null
+          created_at?: string
+          id?: string
+          is_deleted?: boolean
+          notes?: string | null
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+  billing: {
+    Tables: {
+      pending_payment_requests: {
+        Row: {
+          amount_cents: number | null
+          created_at: string
+          created_by: string | null
+          id: string
+          label: string
+          month: string | null
+          parent_id: string
+          payment_type: string
+          program: string
+          status: string
+          student_id: string | null
+          week: string | null
+        }
+        Insert: {
+          amount_cents?: number | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label: string
+          month?: string | null
+          parent_id: string
+          payment_type: string
+          program: string
+          status?: string
+          student_id?: string | null
+          week?: string | null
+        }
+        Update: {
+          amount_cents?: number | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label?: string
+          month?: string | null
+          parent_id?: string
+          payment_type?: string
+          program?: string
+          status?: string
+          student_id?: string | null
+          week?: string | null
+        }
+        Relationships: []
+      }
+      stripe_transactions: {
+        Row: {
+          amount_cents: number
+          application_id: string | null
+          cover_fees: boolean | null
+          created_at: string | null
+          currency: string
+          description: string | null
+          exclude_from_revenue: boolean
+          id: string
+          intended_amount_cents: number | null
+          is_deleted: boolean
+          metadata: Json | null
+          parent_id: string | null
+          payer_email: string | null
+          payer_name: string | null
+          payment_type: string
+          status: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string
+          student_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount_cents: number
+          application_id?: string | null
+          cover_fees?: boolean | null
+          created_at?: string | null
+          currency?: string
+          description?: string | null
+          exclude_from_revenue?: boolean
+          id?: string
+          intended_amount_cents?: number | null
+          is_deleted?: boolean
+          metadata?: Json | null
+          parent_id?: string | null
+          payer_email?: string | null
+          payer_name?: string | null
+          payment_type: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id: string
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          application_id?: string | null
+          cover_fees?: boolean | null
+          created_at?: string | null
+          currency?: string
+          description?: string | null
+          exclude_from_revenue?: boolean
+          id?: string
+          intended_amount_cents?: number | null
+          is_deleted?: boolean
+          metadata?: Json | null
+          parent_id?: string | null
+          payer_email?: string | null
+          payer_name?: string | null
+          payment_type?: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string
+          student_id?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -201,10 +430,122 @@ export type Database = {
       [_ in never]: never
     }
   }
+  calendar: {
+    Tables: {
+      events: {
+        Row: {
+          attachment_links: string[] | null
+          category: string | null
+          color: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          end_time: string | null
+          event_date: string
+          id: string
+          internal_notes: string | null
+          is_all_day: boolean
+          location: string | null
+          programs: string[] | null
+          recurrence: string | null
+          recurrence_end_date: string | null
+          reminder_email: boolean
+          reminder_in_app: boolean
+          reminder_timing: string | null
+          rsvp_enabled: boolean
+          shared_with: string[] | null
+          start_time: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          attachment_links?: string[] | null
+          category?: string | null
+          color?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_time?: string | null
+          event_date: string
+          id?: string
+          internal_notes?: string | null
+          is_all_day?: boolean
+          location?: string | null
+          programs?: string[] | null
+          recurrence?: string | null
+          recurrence_end_date?: string | null
+          reminder_email?: boolean
+          reminder_in_app?: boolean
+          reminder_timing?: string | null
+          rsvp_enabled?: boolean
+          shared_with?: string[] | null
+          start_time?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          attachment_links?: string[] | null
+          category?: string | null
+          color?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_time?: string | null
+          event_date?: string
+          id?: string
+          internal_notes?: string | null
+          is_all_day?: boolean
+          location?: string | null
+          programs?: string[] | null
+          recurrence?: string | null
+          recurrence_end_date?: string | null
+          reminder_email?: boolean
+          reminder_in_app?: boolean
+          reminder_timing?: string | null
+          rsvp_enabled?: boolean
+          shared_with?: string[] | null
+          start_time?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+  chat: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   contact: {
     Tables: {
       submissions: {
         Row: {
+          call_notes: string | null
           created_at: string | null
           email: string
           id: string
@@ -213,7 +554,6 @@ export type Database = {
           name: string
           notes: string | null
           phone: string | null
-          tags: string[] | null
           status:
             | "new_inquiry"
             | "not_contacted"
@@ -230,9 +570,11 @@ export type Database = {
             | "lost"
             | null
           subject: string
+          tags: string[] | null
           updated_at: string | null
         }
         Insert: {
+          call_notes?: string | null
           created_at?: string | null
           email: string
           id?: string
@@ -241,7 +583,6 @@ export type Database = {
           name: string
           notes?: string | null
           phone?: string | null
-          tags?: string[] | null
           status?:
             | "new_inquiry"
             | "not_contacted"
@@ -258,9 +599,11 @@ export type Database = {
             | "lost"
             | null
           subject: string
+          tags?: string[] | null
           updated_at?: string | null
         }
         Update: {
+          call_notes?: string | null
           created_at?: string | null
           email?: string
           id?: string
@@ -269,7 +612,6 @@ export type Database = {
           name?: string
           notes?: string | null
           phone?: string | null
-          tags?: string[] | null
           status?:
             | "new_inquiry"
             | "not_contacted"
@@ -286,7 +628,164 @@ export type Database = {
             | "lost"
             | null
           subject?: string
+          tags?: string[] | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+  donations: {
+    Tables: {
+      donations: {
+        Row: {
+          amount_cents: number
+          created_at: string | null
+          currency: string
+          donor_email: string
+          donor_name: string | null
+          id: string
+          message: string | null
+          status: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string | null
+          currency?: string
+          donor_email: string
+          donor_name?: string | null
+          id?: string
+          message?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string | null
+          currency?: string
+          donor_email?: string
+          donor_name?: string | null
+          id?: string
+          message?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+  email_logs: {
+    Tables: {
+      sends: {
+        Row: {
+          application_id: string | null
+          error_message: string | null
+          id: string
+          sent_at: string
+          status: string
+          subject: string
+          template: string | null
+          to_address: string
+        }
+        Insert: {
+          application_id?: string | null
+          error_message?: string | null
+          id?: string
+          sent_at?: string
+          status: string
+          subject: string
+          template?: string | null
+          to_address: string
+        }
+        Update: {
+          application_id?: string | null
+          error_message?: string | null
+          id?: string
+          sent_at?: string
+          status?: string
+          subject?: string
+          template?: string | null
+          to_address?: string
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+  marketing: {
+    Tables: {
+      open_house_rsvps: {
+        Row: {
+          adults_attending: number
+          children_attending: number
+          created_at: string
+          email: string
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+        }
+        Insert: {
+          adults_attending: number
+          children_attending: number
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+        }
+        Update: {
+          adults_attending?: number
+          children_attending?: number
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
         }
         Relationships: []
       }
@@ -358,6 +857,7 @@ export type Database = {
           dob_day: string | null
           dob_month: string | null
           dob_year: string | null
+          drop_in_program: string | null
           dysregulation_response: string | null
           emergency_medications_description: string | null
           g1_cell_phone: string | null
@@ -403,7 +903,6 @@ export type Database = {
           previous_schools: string | null
           previous_schools_list: string | null
           program: string | null
-          drop_in_program: string | null
           registration_fee_paid: boolean | null
           regulation_strategies: string | null
           special_interests: string | null
@@ -435,6 +934,7 @@ export type Database = {
           dob_day?: string | null
           dob_month?: string | null
           dob_year?: string | null
+          drop_in_program?: string | null
           dysregulation_response?: string | null
           emergency_medications_description?: string | null
           g1_cell_phone?: string | null
@@ -480,7 +980,6 @@ export type Database = {
           previous_schools?: string | null
           previous_schools_list?: string | null
           program?: string | null
-          drop_in_program?: string | null
           registration_fee_paid?: boolean | null
           regulation_strategies?: string | null
           special_interests?: string | null
@@ -512,6 +1011,7 @@ export type Database = {
           dob_day?: string | null
           dob_month?: string | null
           dob_year?: string | null
+          drop_in_program?: string | null
           dysregulation_response?: string | null
           emergency_medications_description?: string | null
           g1_cell_phone?: string | null
@@ -557,7 +1057,6 @@ export type Database = {
           previous_schools?: string | null
           previous_schools_list?: string | null
           program?: string | null
-          drop_in_program?: string | null
           registration_fee_paid?: boolean | null
           regulation_strategies?: string | null
           special_interests?: string | null
@@ -907,10 +1406,60 @@ export type Database = {
       [_ in never]: never
     }
   }
+  teachers: {
+    Tables: {
+      teacher_students: {
+        Row: {
+          classroom: string | null
+          created_at: string | null
+          id: string
+          is_deleted: boolean
+          program: string
+          student_id: string
+          teacher_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          classroom?: string | null
+          created_at?: string | null
+          id?: string
+          is_deleted?: boolean
+          program: string
+          student_id: string
+          teacher_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          classroom?: string | null
+          created_at?: string | null
+          id?: string
+          is_deleted?: boolean
+          program?: string
+          student_id?: string
+          teacher_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   waitlist: {
     Tables: {
       submissions: {
         Row: {
+          call_notes: string | null
           child_age: number
           child_name: string
           created_at: string
@@ -922,7 +1471,6 @@ export type Database = {
           phone: string | null
           program_interest: string
           special_interests: string | null
-          tags: string[] | null
           status:
             | "new_inquiry"
             | "not_contacted"
@@ -938,9 +1486,11 @@ export type Database = {
             | "not_fit"
             | "lost"
             | null
+          tags: string[] | null
           updated_at: string
         }
         Insert: {
+          call_notes?: string | null
           child_age: number
           child_name: string
           created_at?: string
@@ -952,7 +1502,6 @@ export type Database = {
           phone?: string | null
           program_interest: string
           special_interests?: string | null
-          tags?: string[] | null
           status?:
             | "new_inquiry"
             | "not_contacted"
@@ -968,9 +1517,11 @@ export type Database = {
             | "not_fit"
             | "lost"
             | null
+          tags?: string[] | null
           updated_at?: string
         }
         Update: {
+          call_notes?: string | null
           child_age?: number
           child_name?: string
           created_at?: string
@@ -982,7 +1533,6 @@ export type Database = {
           phone?: string | null
           program_interest?: string
           special_interests?: string | null
-          tags?: string[] | null
           status?:
             | "new_inquiry"
             | "not_contacted"
@@ -998,6 +1548,7 @@ export type Database = {
             | "not_fit"
             | "lost"
             | null
+          tags?: string[] | null
           updated_at?: string
         }
         Relationships: []
@@ -1139,47 +1690,37 @@ export const Constants = {
   admin: {
     Enums: {},
   },
+  attendance: {
+    Enums: {},
+  },
+  billing: {
+    Enums: {},
+  },
+  calendar: {
+    Enums: {},
+  },
+  chat: {
+    Enums: {},
+  },
   contact: {
+    Enums: {},
+  },
+  donations: {
+    Enums: {},
+  },
+  email_logs: {
+    Enums: {},
+  },
+  marketing: {
     Enums: {},
   },
   parent_app: {
     Enums: {},
   },
+  teachers: {
+    Enums: {},
+  },
   waitlist: {
     Enums: {},
   },
-  messaging: {
-    Enums: {},
-  },
 } as const
-
-export interface BudgetLineItem {
-  id: string;
-  category: string;
-  item_name: string;
-  planned_amount: number | string;
-  notes: string | null;
-  sort_order: number;
-}
-
-export interface BudgetExpense {
-  id: string;
-  expense_name: string;
-  category: string | null;
-  amount: number | string;
-  payment_method: string | null;
-  expense_date: string;
-  notes: string | null;
-  tax_deductible: boolean;
-  is_deleted: boolean;
-}
-
-export interface BudgetIncome {
-  id: string;
-  source: string;
-  student_id: string | null;
-  parent_id: string | null;
-  description: string | null;
-  amount: number | string;
-  income_date: string;
-}
