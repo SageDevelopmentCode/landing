@@ -5,11 +5,10 @@ import { createBrowserClient } from "@supabase/ssr";
 import { motion, AnimatePresence } from "framer-motion";
 import { Merriweather } from "next/font/google";
 import { colors, radius, shadows } from "../design-system";
-import type {
-  BudgetLineItem,
-  BudgetExpense,
-  BudgetIncome,
-} from "../../types/database.types";
+import type { Tables } from "../../types/database.types";
+type BudgetLineItem = Tables<{ schema: "budget" }, "line_items">;
+type BudgetExpense = Tables<{ schema: "budget" }, "expenses">;
+type BudgetIncome = Tables<{ schema: "budget" }, "income">;
 import { Table, TableRow, TableCell } from "../components/Table";
 import { DetailSidebar } from "../components/DetailSidebar";
 import { MercuryDetailSidebar, type MercuryTransaction } from "../components/MercuryDetailSidebar";

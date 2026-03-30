@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { DetailSidebar } from './DetailSidebar'
 import { SidebarField, SidebarSection } from '../../components/SidebarPrimitives'
-import type { BudgetIncome } from '../../types/database.types'
+import type { Tables } from '../../types/database.types'
+type BudgetIncome = Tables<{ schema: "budget" }, "income">
 import { colors, radius } from '../design-system'
 
 const SOURCE_LABELS: Record<string, string> = {
