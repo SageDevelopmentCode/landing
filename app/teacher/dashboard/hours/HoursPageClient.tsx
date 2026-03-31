@@ -218,6 +218,22 @@ function DayView({
                 <Check className="w-3 h-3" /> Logged
               </span>
             )}
+            <AnimatePresence>
+              {duration !== null && duration > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.15 }}
+                  className="flex items-center gap-1.5 px-3 py-1 bg-[#4a7c59]/8 rounded-full"
+                >
+                  <Clock className="w-3.5 h-3.5 text-[#4a7c59]" />
+                  <span className="text-sm font-semibold text-[#4a7c59] font-body tabular-nums">
+                    {formatDuration(duration)}
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
           <p className="text-sm text-gray-400 font-body">{dayFull.split(", ").slice(1).join(", ")}</p>
         </div>
@@ -281,26 +297,6 @@ function DayView({
                 ))}
               </div>
             </div>
-          </div>
-
-          {/* Live duration pill */}
-          <div className="h-7 flex items-center mb-4">
-            <AnimatePresence>
-              {duration !== null && duration > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.15 }}
-                  className="flex items-center gap-1.5 px-3 py-1 bg-[#4a7c59]/8 rounded-full"
-                >
-                  <Clock className="w-3.5 h-3.5 text-[#4a7c59]" />
-                  <span className="text-sm font-semibold text-[#4a7c59] font-body tabular-nums">
-                    {formatDuration(duration)}
-                  </span>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
 
           {/* Note */}
