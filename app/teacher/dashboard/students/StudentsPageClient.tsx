@@ -161,32 +161,30 @@ function ContactCard({
 }) {
   const visibleRows = rows.filter(r => !!r.value)
   return (
-    <div className="mb-4 bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+    <div className="border-b border-gray-200 pb-4 mb-4">
+      <div className="flex items-center justify-between mb-3">
         <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body">{title}</h3>
         {badge && (
           <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full capitalize">{badge}</span>
         )}
       </div>
-      <div className="px-5 pt-3 pb-1">
-        {name && (
-          <div className="flex items-center gap-3 pb-3 mb-1 border-b border-gray-50">
-            <div className="w-9 h-9 rounded-full bg-[#3d6b4f]/10 flex items-center justify-center text-[#3d6b4f] font-semibold text-sm flex-shrink-0">
-              {name.trim().charAt(0).toUpperCase()}
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-gray-800 leading-tight">{name}</p>
-              {relationship && <p className="text-xs text-gray-400 capitalize">{relationship}</p>}
-            </div>
+      {name && (
+        <div className="flex items-center gap-3 pb-3 mb-1 border-b border-gray-100">
+          <div className="w-9 h-9 rounded-full bg-[#3d6b4f]/10 flex items-center justify-center text-[#3d6b4f] font-semibold text-sm flex-shrink-0">
+            {name.trim().charAt(0).toUpperCase()}
           </div>
-        )}
-        {visibleRows.length > 0
-          ? visibleRows.map((r, i) => (
-              <ContactRow key={i} icon={r.icon} label={r.label} value={r.value} href={r.href} />
-            ))
-          : <p className="text-sm text-gray-400 py-2">No contact info available</p>
-        }
-      </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-800 leading-tight">{name}</p>
+            {relationship && <p className="text-xs text-gray-400 capitalize">{relationship}</p>}
+          </div>
+        </div>
+      )}
+      {visibleRows.length > 0
+        ? visibleRows.map((r, i) => (
+            <ContactRow key={i} icon={r.icon} label={r.label} value={r.value} href={r.href} />
+          ))
+        : <p className="text-sm text-gray-400 py-2">No contact info available</p>
+      }
     </div>
   )
 }

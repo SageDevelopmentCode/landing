@@ -29,8 +29,8 @@ export function SidebarSection({
   const kids = Array.isArray(children) ? children.filter(Boolean) : children
   if (!kids || (Array.isArray(kids) && kids.length === 0)) return null
   return (
-    <div className="mb-4 bg-white border border-gray-100 rounded-2xl px-5 py-4 shadow-sm">
-      <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-3 pb-2 border-b border-gray-100">
+    <div className="border-b border-gray-200 pb-4 mb-4">
+      <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-3">
         {title}
       </h3>
       <div className="flex flex-col gap-3">{children}</div>
