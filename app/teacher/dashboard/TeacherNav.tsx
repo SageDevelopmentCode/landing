@@ -24,7 +24,7 @@ const primaryNavItems: { label: string; icon: LucideIcon; href: string }[] = [
   { label: "Attendance", icon: ClipboardCheck, href: "#" },
   { label: "My Hours", icon: Clock, href: "#" },
   { label: "Messages", icon: MessageCircle, href: "/teacher/messages" },
-  { label: "Calendar", icon: Calendar, href: "#" },
+  { label: "Calendar", icon: Calendar, href: "/teacher/calendar" },
 ];
 
 const moreItems: { label: string; icon: LucideIcon }[] = [
