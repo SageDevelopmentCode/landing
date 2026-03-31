@@ -171,20 +171,6 @@ function DayView({
   const canSave = !!startTime && !!endTime && endTime > startTime;
   const isLogged = !!existing;
 
-  // Build week strip around selected date
-  const monday = getMondayOfWeek(selectedDate);
-  const weekDays = getWeekDays(monday);
-
-  function goDay(delta: number) {
-    const d = new Date(selectedDate);
-    // Skip weekends
-    let next = new Date(d);
-    next.setDate(d.getDate() + delta);
-    if (next.getDay() === 0) next.setDate(next.getDate() + (delta > 0 ? 1 : -2));
-    if (next.getDay() === 6) next.setDate(next.getDate() + (delta > 0 ? 2 : -1));
-    onDateChange(next);
-  }
-
   function handleSave() {
     if (!canSave) return;
     onSave(selectedKey, { startTime, endTime, note });
@@ -207,122 +193,34 @@ function DayView({
   });
 
   return (
-    <div className="flex flex-col gap-6 h-full">
-      {/* Week strip */}
+    <AnimatePresence mode="wait">
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        key={selectedKey}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25 }}
-        className="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-2"
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
+        className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 flex flex-col"
       >
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => {
-              const prev = new Date(monday);
-              prev.setDate(monday.getDate() - 7);
-              onDateChange(getMondayOfWeek(prev));
-            }}
-            className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-300 hover:text-gray-500 transition-colors cursor-pointer shrink-0"
-          >
-            <ChevronLeft className="w-3.5 h-3.5" />
-          </button>
-
-          <div className="flex-1 grid grid-cols-5 gap-1">
-            {weekDays.map((d) => {
-              const key = toISOKey(d);
-              const isSel = key === selectedKey;
-              const isT = key === todayKey;
-              const logged = !!entries[key];
-              const dayShort = d.toLocaleDateString("en-US", { weekday: "short" });
-              const dayNum = d.getDate();
-
-              return (
-                <button
-                  key={key}
-                  onClick={() => onDateChange(d)}
-                  className={`flex flex-col items-center gap-1 py-2 px-2 rounded-lg transition-all cursor-pointer
-                    ${isSel
-                      ? "bg-[#4a7c59] text-white"
-                      : isT
-                      ? "bg-[#4a7c59]/8 text-[#4a7c59]"
-                      : "hover:bg-gray-50 text-gray-500"
-                    }`}
-                >
-                  <span className={`text-[11px] font-medium font-body ${isSel ? "text-white/70" : "text-gray-400"}`}>
-                    {dayShort}
-                  </span>
-                  <span className={`text-sm font-bold font-body leading-none ${isSel ? "text-white" : "text-gray-700"}`}>
-                    {dayNum}
-                  </span>
-                  <div className={`w-1 h-1 rounded-full transition-all ${
-                    logged
-                      ? isSel ? "bg-white/50" : "bg-[#4a7c59]"
-                      : "bg-transparent"
-                  }`} />
-                </button>
-              );
-            })}
+        {/* Day header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-1">
+            <h2 className="text-2xl font-semibold font-heading text-gray-800">
+              {selectedDate.toLocaleDateString("en-US", { weekday: "long" })}
+            </h2>
+            {isToday && (
+              <span className="px-2.5 py-1 rounded-full text-xs font-medium font-body bg-amber-50 text-amber-600 border border-amber-200">
+                Today
+              </span>
+            )}
+            {isLogged && !isToday && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium font-body bg-[#4a7c59]/10 text-[#4a7c59]">
+                <Check className="w-3 h-3" /> Logged
+              </span>
+            )}
           </div>
-
-          <button
-            onClick={() => {
-              const next = new Date(monday);
-              next.setDate(monday.getDate() + 7);
-              onDateChange(getMondayOfWeek(next));
-            }}
-            className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-300 hover:text-gray-500 transition-colors cursor-pointer shrink-0"
-          >
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
+          <p className="text-sm text-gray-400 font-body">{dayFull.split(", ").slice(1).join(", ")}</p>
         </div>
-      </motion.div>
-
-      {/* Day card */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={selectedKey}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
-          className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 flex-1 flex flex-col"
-        >
-          {/* Day header */}
-          <div className="flex items-start justify-between mb-8">
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <h2 className="text-2xl font-semibold font-heading text-gray-800">
-                  {selectedDate.toLocaleDateString("en-US", { weekday: "long" })}
-                </h2>
-                {isToday && (
-                  <span className="px-2.5 py-1 rounded-full text-xs font-medium font-body bg-amber-50 text-amber-600 border border-amber-200">
-                    Today
-                  </span>
-                )}
-                {isLogged && !isToday && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium font-body bg-[#4a7c59]/10 text-[#4a7c59]">
-                    <Check className="w-3 h-3" /> Logged
-                  </span>
-                )}
-              </div>
-              <p className="text-sm text-gray-400 font-body">{dayFull.split(", ").slice(1).join(", ")}</p>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => goDay(-1)}
-                className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => goDay(1)}
-                className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
 
           {/* Time inputs */}
           <div className="flex gap-6 mb-4">
@@ -466,7 +364,6 @@ function DayView({
           </div>
         </motion.div>
       </AnimatePresence>
-    </div>
   );
 }
 
@@ -950,6 +847,15 @@ export default function HoursPageClient({
     if (switchToDay) setView("day");
   }
 
+  function goDay(delta: number) {
+    const d = new Date(selectedDate);
+    const next = new Date(d);
+    next.setDate(d.getDate() + delta);
+    if (next.getDay() === 0) next.setDate(next.getDate() + (delta > 0 ? 1 : -2));
+    if (next.getDay() === 6) next.setDate(next.getDate() + (delta > 0 ? 2 : -1));
+    setSelectedDate(next);
+  }
+
   const views: { id: ViewMode; label: string; icon: React.ReactNode }[] = [
     { id: "day", label: "Day", icon: <Clock className="w-3.5 h-3.5" /> },
     { id: "week", label: "Week", icon: <CalendarDays className="w-3.5 h-3.5" /> },
@@ -974,22 +880,45 @@ export default function HoursPageClient({
             </p>
           </div>
 
-          {/* View switcher */}
-          <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1 shrink-0">
-            {views.map(({ id, label, icon }) => (
-              <button
-                key={id}
-                onClick={() => setView(id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold font-body transition-all cursor-pointer
-                  ${view === id
-                    ? "bg-white text-gray-800 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                  }`}
-              >
-                {icon}
-                {label}
-              </button>
-            ))}
+          <div className="flex items-center gap-3 shrink-0">
+            {/* Day nav arrows — only in day view */}
+            {view === "day" && (
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => goDay(-1)}
+                  className="p-1.5 rounded-lg hover:bg-gray-200/60 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="text-sm font-medium text-gray-600 font-body tabular-nums min-w-[110px] text-center">
+                  {selectedDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                </span>
+                <button
+                  onClick={() => goDay(1)}
+                  className="p-1.5 rounded-lg hover:bg-gray-200/60 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
+            {/* View switcher */}
+            <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
+              {views.map(({ id, label, icon }) => (
+                <button
+                  key={id}
+                  onClick={() => setView(id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold font-body transition-all cursor-pointer
+                    ${view === id
+                      ? "bg-white text-gray-800 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                    }`}
+                >
+                  {icon}
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
         </motion.div>
 
