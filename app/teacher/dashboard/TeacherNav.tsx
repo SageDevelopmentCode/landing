@@ -23,7 +23,7 @@ const primaryNavItems: { label: string; icon: LucideIcon; href: string }[] = [
   { label: "My Students", icon: Users, href: "/teacher/dashboard/students" },
   { label: "Attendance", icon: ClipboardCheck, href: "#" },
   { label: "My Hours", icon: Clock, href: "#" },
-  { label: "Messages", icon: MessageCircle, href: "#" },
+  { label: "Messages", icon: MessageCircle, href: "/teacher/messages" },
   { label: "Calendar", icon: Calendar, href: "#" },
 ];
 

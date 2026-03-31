@@ -78,7 +78,7 @@ export default async function StudentsPage() {
       </header>
 
       <main className="flex-1 flex flex-col overflow-hidden">
-        <StudentsPageClient students={myStudents} />
+        <StudentsPageClient students={myStudents} teacherId={user.id} />
       </main>
     </div>
   )

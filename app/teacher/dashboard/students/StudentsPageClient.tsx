@@ -25,6 +25,8 @@ import { getTeacherNotes, createTeacherNote, updateTeacherNote, deleteTeacherNot
 import { getStudentAttendance, type CheckInRecord } from '@/app/actions/getStudentAttendance'
 import { getCheckInUser, type CheckInUser } from '@/app/actions/getCheckInUser'
 import { DetailSidebar } from '@/app/admin/components/DetailSidebar'
+import { getParentUsersByEmails, type ParentUserInfo } from '@/app/actions/getParentUsersByEmails'
+import { getConversations, type ConversationWithMeta } from '@/app/parent/messages/actions'
 
 const PROGRAM_LABELS: Record<string, string> = {
   summer_26: 'Summer 2026',
@@ -1005,7 +1007,7 @@ function AttendanceTab({ studentId }: { studentId: string }) {
                 <div className="flex justify-end">
                   {r.checked_out_at ? (
                     <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-green-100 text-green-700">
-                      Present
+                      Checked Out
                     </span>
                   ) : notCheckedOut ? (
                     <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700">
@@ -1135,27 +1137,150 @@ function ProgressTab() {
   )
 }
 
-function ParentCommunicationTab() {
-  const messages = [
-    { date: 'Mar 13, 2026', sender: 'You → Margaret Johnson',   preview: 'Just wanted to share that Lena had a wonderful week…' },
-    { date: 'Mar 10, 2026', sender: 'Margaret Johnson → You',   preview: 'Thank you for the update! She mentioned the nature walk…' },
-    { date: 'Mar 5, 2026',  sender: 'You → Margaret Johnson',   preview: 'Following up on our last conversation about reading…' },
-    { date: 'Feb 25, 2026', sender: 'Robert Johnson → You',     preview: 'Quick question about the upcoming field trip forms…' },
+type ParentEntry = {
+  email: string
+  nameFromApp: string
+  userInfo: ParentUserInfo | null
+  conversation: ConversationWithMeta | null
+}
+
+function ParentCommunicationTab({
+  teacherId,
+  detail,
+}: {
+  teacherId: string
+  detail: Awaited<ReturnType<typeof getTeacherStudentDetail>>
+}) {
+  const [parents, setParents] = useState<ParentEntry[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!detail) { setLoading(false); return }
+
+    const rawParents: { email: string; nameFromApp: string }[] = []
+    if (detail.g1_email) rawParents.push({ email: detail.g1_email, nameFromApp: detail.g1_full_name ?? detail.g1_email })
+    if (detail.g2_email) rawParents.push({ email: detail.g2_email, nameFromApp: detail.g2_full_name ?? detail.g2_email })
+
+    if (!rawParents.length) { setLoading(false); return }
+
+    setLoading(true)
+    const emails = rawParents.map((p) => p.email)
+
+    Promise.all([getParentUsersByEmails(emails), getConversations(teacherId)])
+      .then(([userMap, allConvos]) => {
+        setParents(rawParents.map((p) => {
+          const userInfo = userMap[p.email] ?? null
+          const conversation = userInfo
+            ? allConvos.find((c) => c.otherUser.id === userInfo.id) ?? null
+            : null
+          return { ...p, userInfo, conversation }
+        }))
+      })
+      .catch(() => setParents([]))
+      .finally(() => setLoading(false))
+  }, [teacherId, detail])
+
+  const openMessaging = (parentId: string, parentName: string) => {
+    window.open(
+      `/teacher/messages?recipientId=${encodeURIComponent(parentId)}&recipientName=${encodeURIComponent(parentName)}`,
+      '_blank'
+    )
+  }
+
+  const avatarColors = [
+    'bg-[#4a7c59]', 'bg-[#7c6b4a]', 'bg-[#5a6b8a]',
+    'bg-[#8a5a6b]', 'bg-[#6b7c4a]', 'bg-[#4a6b7c]',
   ]
-  return (
-    <PlaceholderCard title="Parent Communication">
-      <div className="space-y-4">
-        {messages.map((m, i) => (
-          <div key={i} className="border-b border-gray-50 last:border-0 pb-3 last:pb-0">
-            <div className="flex items-center justify-between mb-0.5">
-              <p className="text-xs font-medium text-gray-500">{m.sender}</p>
-              <p className="text-xs text-gray-400">{m.date}</p>
+  const colorForId = (id: string) => {
+    let hash = 0
+    for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash)
+    return avatarColors[Math.abs(hash) % avatarColors.length]
+  }
+  const initialsFor = (name: string) =>
+    name.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join('')
+
+  const formatTime = (iso: string) => {
+    const date = new Date(iso)
+    const now = new Date()
+    const diffDays = Math.floor((now.getTime() - date.getTime()) / 86400000)
+    if (diffDays === 0) return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+    if (diffDays === 1) return 'Yesterday'
+    if (diffDays < 7) return date.toLocaleDateString([], { weekday: 'short' })
+    return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
+  }
+
+  if (loading) {
+    return (
+      <div className="w-full">
+        {[1, 2].map((i) => (
+          <div key={i} className="flex items-start gap-3 px-4 py-3.5 border-b border-gray-100">
+            <div className="w-10 h-10 rounded-full bg-gray-100 animate-pulse shrink-0" />
+            <div className="flex-1 min-w-0 space-y-2">
+              <div className="h-3 w-32 bg-gray-100 rounded animate-pulse" />
+              <div className="h-3 w-full bg-gray-100 rounded animate-pulse" />
             </div>
-            <p className="text-sm text-gray-600 truncate">{m.preview}</p>
           </div>
         ))}
       </div>
-    </PlaceholderCard>
+    )
+  }
+
+  if (!parents.length) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <p className="text-sm text-gray-400 font-body">No guardian contact info available.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="w-full">
+      {parents.map((p) => {
+        const displayName = p.userInfo?.full_name ?? p.nameFromApp
+        const canMessage = !!p.userInfo
+        const avatarColor = p.userInfo ? colorForId(p.userInfo.id) : 'bg-gray-200'
+
+        return (
+          <button
+            key={p.email}
+            disabled={!canMessage}
+            onClick={() => canMessage && openMessaging(p.userInfo!.id, displayName)}
+            className={`w-full flex items-start gap-3 px-4 py-3.5 text-left border-b border-gray-100 last:border-0 transition-colors ${
+              canMessage ? 'hover:bg-gray-50 cursor-pointer' : 'cursor-default'
+            }`}
+          >
+            <div className={`${avatarColor} w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-semibold font-body shrink-0`}>
+              {initialsFor(displayName)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold font-body text-gray-800 truncate">
+                  {displayName}
+                </span>
+                {p.conversation?.lastMessage && (
+                  <span className="text-[11px] text-gray-400 font-body shrink-0 ml-2">
+                    {formatTime(p.conversation.lastMessage.created_at)}
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-gray-400 font-body">Parent</p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <p className="text-xs text-gray-500 font-body truncate flex-1">
+                  {p.conversation?.lastMessage
+                    ? (p.conversation.lastMessage.sender_id === teacherId ? 'You: ' : '') + p.conversation.lastMessage.body
+                    : canMessage ? 'No messages yet' : `No account found for ${p.email}`}
+                </p>
+                {(p.conversation?.unreadCount ?? 0) > 0 && (
+                  <span className="bg-[#4a7c59] text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shrink-0">
+                    {p.conversation!.unreadCount}
+                  </span>
+                )}
+              </div>
+            </div>
+          </button>
+        )
+      })}
+    </div>
   )
 }
 
@@ -1182,7 +1307,7 @@ function PickupTab() {
   )
 }
 
-export default function StudentsPageClient({ students }: { students: StudentRow[] }) {
+export default function StudentsPageClient({ students, teacherId }: { students: StudentRow[]; teacherId: string }) {
   const programs = PROGRAM_ORDER.filter((p) => students.some((s) => s.program === p))
 
   const [activeProgram, setActiveProgram] = useState<string>(programs[0] ?? '')
@@ -1280,7 +1405,7 @@ export default function StudentsPageClient({ students }: { students: StudentRow[
       <div className="flex flex-1 h-full overflow-hidden bg-white">
 
         {/* Content area */}
-        <div className="flex-1 overflow-y-auto px-8 py-8">
+        <div className={`flex-1 overflow-y-auto ${activeTab === 'parent-communication' ? '' : 'px-8 py-8'}`}>
           {!selectedStudent ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
               <p className="text-gray-400 text-sm">Select a student to view their profile.</p>
@@ -1290,14 +1415,25 @@ export default function StudentsPageClient({ students }: { students: StudentRow[
               <LoadingSkeleton />
             </div>
           ) : (
-            <div className={['attendance', 'student-info', 'emergency-contacts', 'teacher-notes'].includes(activeTab) ? 'w-full' : 'max-w-xl'}>
-              <div className="mb-6">
-                <h2 className="text-xl font-bold font-heading text-gray-800">{selectedStudent.name ?? '—'}</h2>
-                <p className="text-sm text-gray-400 mt-0.5">
-                  {PROGRAM_LABELS[selectedStudent.program] ?? selectedStudent.program}
-                  {selectedStudent.classroom ? ` · ${selectedStudent.classroom}` : ''}
-                </p>
-              </div>
+            <div className={['attendance', 'student-info', 'emergency-contacts', 'teacher-notes', 'parent-communication'].includes(activeTab) ? 'w-full' : 'max-w-xl'}>
+              {activeTab !== 'parent-communication' && (
+                <div className="mb-6">
+                  <h2 className="text-xl font-bold font-heading text-gray-800">{selectedStudent.name ?? '—'}</h2>
+                  <p className="text-sm text-gray-400 mt-0.5">
+                    {PROGRAM_LABELS[selectedStudent.program] ?? selectedStudent.program}
+                    {selectedStudent.classroom ? ` · ${selectedStudent.classroom}` : ''}
+                  </p>
+                </div>
+              )}
+              {activeTab === 'parent-communication' && (
+                <div className="px-4 py-4 border-b border-gray-100">
+                  <h2 className="text-base font-semibold font-heading text-gray-800">{selectedStudent.name ?? '—'}</h2>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {PROGRAM_LABELS[selectedStudent.program] ?? selectedStudent.program}
+                    {selectedStudent.classroom ? ` · ${selectedStudent.classroom}` : ''}
+                  </p>
+                </div>
+              )}
 
               {/* Tab content */}
               {activeTab === 'student-info' && (
@@ -1369,7 +1505,9 @@ export default function StudentsPageClient({ students }: { students: StudentRow[
               {activeTab === 'attendance' && <AttendanceTab studentId={selectedStudent.student_id} />}
               {activeTab === 'portfolio' && <PortfolioTab />}
               {activeTab === 'progress' && <ProgressTab />}
-              {activeTab === 'parent-communication' && <ParentCommunicationTab />}
+              {activeTab === 'parent-communication' && (
+                <ParentCommunicationTab teacherId={teacherId} detail={detail} />
+              )}
               {activeTab === 'pickup' && <PickupTab />}
             </div>
           )}
