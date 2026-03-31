@@ -43,12 +43,22 @@ export async function getTeacherStudentDetail(studentId: string) {
 
   if (!data) return null
 
-  const { data: healthInfo } = await adminClient
-    .schema('parent_app')
-    .from('student_health_info')
-    .select('in_state_contact_name, in_state_contact_relation, in_state_contact_phone, out_of_state_contact_name, out_of_state_contact_relation, out_of_state_contact_phone')
-    .eq('student_id', studentId)
-    .maybeSingle()
+  const [{ data: healthInfo }, { data: applicationInfo }] = await Promise.all([
+    adminClient
+      .schema('parent_app')
+      .from('student_health_info')
+      .select('in_state_contact_name, in_state_contact_relation, in_state_contact_phone, out_of_state_contact_name, out_of_state_contact_relation, out_of_state_contact_phone')
+      .eq('student_id', studentId)
+      .maybeSingle(),
+    adminClient
+      .schema('parent_app')
+      .from('applications')
+      .select('g1_full_name, g1_email, g1_cell_phone, g1_work_phone, g1_relationship, g2_full_name, g2_email, g2_cell_phone, g2_work_phone, g2_relationship')
+      .eq('student_id', studentId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ])
 
-  return { ...data, ...healthInfo }
+  return { ...data, ...healthInfo, ...applicationInfo }
 }
