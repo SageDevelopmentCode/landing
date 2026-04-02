@@ -398,6 +398,78 @@ export function createApplicationEmbed(data: {
 }
 
 /**
+ * Creates a Discord embed for teacher clock-in events
+ */
+export function createTeacherClockInEmbed(data: {
+  teacherName: string
+  clockInAt: string
+}): DiscordEmbed {
+  const time = new Date(data.clockInAt).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  })
+  const date = new Date(data.clockInAt).toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  })
+  return {
+    title: "🟢 Teacher Clocked In",
+    color: 0x4a7c59,
+    fields: [
+      { name: "Teacher", value: data.teacherName, inline: true },
+      { name: "Time", value: time, inline: true },
+      { name: "Date", value: date, inline: false },
+    ],
+    timestamp: new Date().toISOString(),
+  }
+}
+
+/**
+ * Creates a Discord embed for teacher clock-out events
+ */
+export function createTeacherClockOutEmbed(data: {
+  teacherName: string
+  clockInAt: string
+  clockOutAt: string
+}): DiscordEmbed {
+  const inTime = new Date(data.clockInAt).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  })
+  const outTime = new Date(data.clockOutAt).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  })
+  const date = new Date(data.clockInAt).toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  })
+  const diffMs = new Date(data.clockOutAt).getTime() - new Date(data.clockInAt).getTime()
+  const totalMins = Math.round(diffMs / 60000)
+  const h = Math.floor(totalMins / 60)
+  const m = totalMins % 60
+  const duration = h > 0 ? `${h}h ${m}m` : `${m}m`
+
+  return {
+    title: "🔴 Teacher Clocked Out",
+    color: 0xe74c3c,
+    fields: [
+      { name: "Teacher", value: data.teacherName, inline: true },
+      { name: "Duration", value: duration, inline: true },
+      { name: "Date", value: date, inline: false },
+      { name: "In", value: inTime, inline: true },
+      { name: "Out", value: outTime, inline: true },
+    ],
+    timestamp: new Date().toISOString(),
+  }
+}
+
+/**
  * Creates a Discord embed for campus tour booking submissions
  */
 export function createTourBookingEmbed(data: {

@@ -1,6 +1,7 @@
 'use server'
 
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
+import { sendDiscordNotification, createTeacherClockInEmbed, createTeacherClockOutEmbed } from '@/app/lib/discord'
 
 export type ClockSession = {
   id: string
@@ -58,20 +59,35 @@ export async function clockIn(): Promise<ClockSession | null> {
   if (!user) return null
 
   const adminClient = createAdminClient()
-  const { data, error } = await adminClient
-    .schema('teachers')
-    .from('clock_sessions')
-    .insert({ teacher_id: user.id, clock_in_at: new Date().toISOString() })
-    .select('id, clock_in_at, clock_out_at, note')
-    .single()
+
+  const [{ data: adminUser }, { data, error }] = await Promise.all([
+    adminClient.schema('admin').from('users').select('full_name').eq('id', user.id).single(),
+    adminClient
+      .schema('teachers')
+      .from('clock_sessions')
+      .insert({ teacher_id: user.id, clock_in_at: new Date().toISOString() })
+      .select('id, clock_in_at, clock_out_at, note')
+      .single(),
+  ])
 
   if (error || !data) return null
-  return {
+
+  const session: ClockSession = {
     id: data.id,
     clockInAt: data.clock_in_at,
     clockOutAt: data.clock_out_at ?? null,
     note: data.note ?? '',
   }
+
+  sendDiscordNotification(
+    createTeacherClockInEmbed({
+      teacherName: adminUser?.full_name ?? user.email ?? 'Unknown',
+      clockInAt: session.clockInAt,
+    }),
+    process.env.DISCORD_EMPLOYEE_WEBHOOK_URL,
+  )
+
+  return session
 }
 
 export async function clockOut(sessionId: string): Promise<string | null> {
@@ -81,12 +97,29 @@ export async function clockOut(sessionId: string): Promise<string | null> {
 
   const now = new Date().toISOString()
   const adminClient = createAdminClient()
+
+  const [{ data: adminUser }, { data: session }] = await Promise.all([
+    adminClient.schema('admin').from('users').select('full_name').eq('id', user.id).single(),
+    adminClient.schema('teachers').from('clock_sessions').select('clock_in_at').eq('id', sessionId).single(),
+  ])
+
   await adminClient
     .schema('teachers')
     .from('clock_sessions')
     .update({ clock_out_at: now })
     .eq('id', sessionId)
     .eq('teacher_id', user.id)
+
+  if (session) {
+    sendDiscordNotification(
+      createTeacherClockOutEmbed({
+        teacherName: adminUser?.full_name ?? user.email ?? 'Unknown',
+        clockInAt: session.clock_in_at,
+        clockOutAt: now,
+      }),
+      process.env.DISCORD_EMPLOYEE_WEBHOOK_URL,
+    )
+  }
 
   return now
 }
