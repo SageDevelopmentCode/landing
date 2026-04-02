@@ -1247,6 +1247,9 @@ function ExpensesTab({
   const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(
     new Set(),
   );
+  const [collapsedCatMonths, setCollapsedCatMonths] = useState<Set<string>>(
+    new Set(),
+  );
   const [newExp, setNewExp] = useState({
     expense_name: "",
     category: CATEGORIES[0],
@@ -1375,6 +1378,15 @@ function ExpensesTab({
 
   function toggleMonth(key: string) {
     setCollapsedMonths((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  function toggleCatMonth(key: string) {
+    setCollapsedCatMonths((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
       else next.add(key);
@@ -2268,399 +2280,533 @@ function ExpensesTab({
 
       {/* By Category view */}
       {view === "category" && (
-        <div style={{ ...cardStyle, padding: "24px" }}>
-          <p
-            className="text-sm font-semibold mb-4"
-            style={{ color: colors.textPrimary }}
-          >
-            Expenses by Category
-          </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {filtered.length === 0 ? (
-            <p
-              className="text-sm text-center py-8"
-              style={{ color: colors.textTertiary }}
-            >
-              No expenses found.
-            </p>
-          ) : (
-            <div className="flex flex-col md:flex-row gap-8 items-start">
-              {/* Donut SVG */}
-              <div style={{ flexShrink: 0 }}>
-                <svg width={220} height={220}>
-                  {(() => {
-                    const cx = 110,
-                      cy = 110;
-                    const catEntries = Object.entries(byCat).sort(
-                      ([, a], [, b]) => b - a,
-                    );
-                    let cumulative = 0;
-                    const slices = catEntries.map(([cat, val], i) => {
-                      const pct = total > 0 ? val / total : 0;
-                      const dashLen = pct * CIRC;
-                      const offset = CIRC - cumulative - CIRC / 4;
-                      cumulative += dashLen;
-                      return {
-                        cat,
-                        val,
-                        pct,
-                        dashLen,
-                        offset,
-                        color: SLICE_COLORS[i % SLICE_COLORS.length],
-                      };
-                    });
-                    return (
-                      <>
-                        <circle
-                          cx={cx}
-                          cy={cy}
-                          r={RADIUS}
-                          fill="none"
-                          stroke={colors.warmLinen}
-                          strokeWidth={30}
-                        />
-                        {slices.map((slice, i) => (
-                          <motion.circle
-                            key={slice.cat}
-                            cx={cx}
-                            cy={cy}
-                            r={RADIUS}
-                            fill="none"
-                            stroke={slice.color}
-                            strokeWidth={30}
-                            strokeDasharray={`${slice.dashLen} ${CIRC}`}
-                            strokeDashoffset={slice.offset}
-                            initial={{ strokeDasharray: `0 ${CIRC}` }}
-                            animate={{
-                              strokeDasharray: `${slice.dashLen} ${CIRC}`,
-                            }}
-                            transition={{
-                              duration: 0.6,
-                              delay: i * 0.08,
-                              ease: "easeOut",
-                            }}
-                          />
-                        ))}
-                        <circle cx={cx} cy={cy} r={50} fill="white" />
-                        <text
-                          x={cx}
-                          y={cy - 6}
-                          textAnchor="middle"
-                          fontSize="13"
-                          fontWeight="700"
-                          fill={colors.textPrimary}
-                        >
-                          {fmt(total)}
-                        </text>
-                        <text
-                          x={cx}
-                          y={cy + 12}
-                          textAnchor="middle"
-                          fontSize="10"
-                          fill={colors.textSecondary}
-                        >
-                          total expenses
-                        </text>
-                      </>
-                    );
-                  })()}
-                </svg>
-              </div>
-
-              {/* Category list */}
-              <div className="flex-1 space-y-3" style={{ minWidth: 0 }}>
-                {Object.entries(byCat)
-                  .sort(([, a], [, b]) => b - a)
-                  .map(([cat, val], i) => {
-                    const pct = total > 0 ? val / total : 0;
-                    const color = SLICE_COLORS[i % SLICE_COLORS.length];
-                    return (
-                      <div key={cat} className="space-y-1">
-                        <div className="flex items-center gap-3">
-                          <div
-                            style={{
-                              width: 10,
-                              height: 10,
-                              borderRadius: "50%",
-                              backgroundColor: color,
-                              flexShrink: 0,
-                            }}
-                          />
-                          <span
-                            className="text-sm flex-1"
-                            style={{ color: colors.textSecondary }}
-                          >
-                            {cat}
-                          </span>
-                          <span
-                            className="text-sm font-medium"
-                            style={{ color: colors.textPrimary }}
-                          >
-                            {fmt(val)}
-                          </span>
-                          <span
-                            className="text-xs"
-                            style={{
-                              color: colors.textTertiary,
-                              minWidth: 40,
-                              textAlign: "right",
-                            }}
-                          >
-                            {(pct * 100).toFixed(1)}%
-                          </span>
-                        </div>
-                        <div
-                          style={{
-                            height: 4,
-                            borderRadius: 99,
-                            backgroundColor: colors.warmLinen,
-                            overflow: "hidden",
-                            marginLeft: 22,
-                          }}
-                        >
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${pct * 100}%` }}
-                            transition={{ duration: 0.5, ease: "easeOut" }}
-                            style={{
-                              height: "100%",
-                              borderRadius: 99,
-                              backgroundColor: color,
-                            }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
-          )}
-
-          {/* vs. Monthly Budget table */}
-          {budgetRows.length > 0 && (
-            <>
-              <hr style={{ margin: "24px 0", borderColor: colors.border }} />
+            <div style={{ ...cardStyle, padding: "24px" }}>
               <p
-                className="text-sm font-semibold mb-4"
-                style={{ color: colors.textPrimary }}
+                className="text-sm text-center py-8"
+                style={{ color: colors.textTertiary }}
               >
-                vs. Monthly Budget
+                No expenses found.
               </p>
-              <div style={{ overflowX: "auto" }}>
-                <table
-                  style={{
-                    width: "100%",
-                    borderCollapse: "collapse",
-                    fontSize: "13px",
-                  }}
-                >
-                  <thead>
-                    <tr style={{ borderBottom: `1px solid ${colors.border}` }}>
-                      {[
-                        "Category",
-                        "Budgeted",
-                        "Spent",
-                        "Variance",
-                        "Usage",
-                      ].map((h) => (
-                        <th
-                          key={h}
-                          className="text-left py-2 px-3"
-                          style={{
-                            color: colors.textSecondary,
-                            fontWeight: 600,
-                            fontSize: "11px",
-                            textTransform: "uppercase",
-                            letterSpacing: "0.05em",
-                          }}
-                        >
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {budgetRows.map((row) => (
-                      <tr
-                        key={row.cat}
-                        style={{ borderBottom: `1px solid ${colors.border}` }}
-                      >
-                        <td
-                          className="py-3 px-3"
-                          style={{ color: colors.textPrimary }}
-                        >
-                          <div className="flex items-center gap-2">
-                            <div
-                              style={{
-                                width: 8,
-                                height: 8,
-                                borderRadius: "50%",
-                                backgroundColor: row.color,
-                                flexShrink: 0,
-                              }}
-                            />
-                            {row.cat}
-                          </div>
-                        </td>
-                        <td
-                          className="py-3 px-3"
-                          style={{ color: colors.textSecondary }}
-                        >
-                          {row.planned > 0 ? fmt(row.planned) : "—"}
-                        </td>
-                        <td
-                          className="py-3 px-3"
-                          style={{ color: colors.textSecondary }}
-                        >
-                          {fmt(row.actual)}
-                        </td>
-                        <td
-                          className="py-3 px-3"
-                          style={{
-                            color:
-                              row.planned === 0
-                                ? colors.textTertiary
-                                : row.over
-                                  ? colors.errorText
-                                  : colors.successText,
-                            fontWeight: 600,
-                          }}
-                        >
-                          {row.planned === 0
-                            ? "—"
-                            : (row.over ? "-" : "+") +
-                              fmt(Math.abs(row.variance))}
-                        </td>
-                        <td className="py-3 px-3" style={{ minWidth: "140px" }}>
-                          {row.pct === null ? (
-                            <span
-                              style={{
-                                color: colors.textTertiary,
-                                fontSize: "12px",
-                              }}
-                            >
-                              —
-                            </span>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <div
-                                style={{
-                                  flex: 1,
-                                  height: "6px",
-                                  borderRadius: "99px",
-                                  backgroundColor: colors.warmLinen,
-                                  overflow: "hidden",
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    width: `${Math.min(row.pct, 1) * 100}%`,
-                                    height: "100%",
-                                    borderRadius: "99px",
-                                    backgroundColor: row.over
-                                      ? colors.errorText
-                                      : colors.mistyForest,
-                                    transition: "width 0.4s ease",
-                                  }}
-                                />
-                              </div>
-                              <span
-                                style={{
-                                  color: row.over
-                                    ? colors.errorText
-                                    : colors.textSecondary,
-                                  fontSize: "12px",
-                                  minWidth: "38px",
-                                  textAlign: "right",
-                                }}
-                              >
-                                {(row.pct * 100).toFixed(0)}%
-                              </span>
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr style={{ backgroundColor: colors.warmLinen }}>
-                      <td
-                        className="py-3 px-3 font-bold"
-                        style={{ color: colors.textPrimary }}
-                      >
-                        Total
-                      </td>
-                      <td
-                        className="py-3 px-3 font-bold"
-                        style={{ color: colors.textPrimary }}
-                      >
-                        {totalBudgetPlanned > 0 ? fmt(totalBudgetPlanned) : "—"}
-                      </td>
-                      <td
-                        className="py-3 px-3 font-bold"
-                        style={{ color: colors.textPrimary }}
-                      >
-                        {fmt(totalBudgetActual)}
-                      </td>
-                      <td
-                        className="py-3 px-3 font-bold"
+            </div>
+          ) : (
+            months.map((monthKey) => {
+              const monthExps = byMonth[monthKey];
+              const monthTotal = monthExps.reduce(
+                (s, e) => s + Number(e.amount),
+                0,
+              );
+              const isCatCollapsed = collapsedCatMonths.has(monthKey);
+
+              const byCatMonth = monthExps.reduce<Record<string, number>>(
+                (acc, e) => {
+                  const cat = e.category ?? "Uncategorized";
+                  acc[cat] = (acc[cat] ?? 0) + Number(e.amount);
+                  return acc;
+                },
+                {},
+              );
+
+              const monthBudgetRows = Object.entries(byCatMonth)
+                .sort(([, a], [, b]) => b - a)
+                .map(([cat, actual], i) => {
+                  const planned = plannedByCat[cat] ?? 0;
+                  const variance = planned - actual;
+                  const pct = planned > 0 ? actual / planned : null;
+                  const over = planned > 0 && actual > planned;
+                  return {
+                    cat,
+                    actual,
+                    planned,
+                    variance,
+                    pct,
+                    over,
+                    color: SLICE_COLORS[i % SLICE_COLORS.length],
+                  };
+                });
+
+              const monthBudgetPlanned = monthBudgetRows.reduce(
+                (s, r) => s + r.planned,
+                0,
+              );
+              const monthBudgetActual = monthBudgetRows.reduce(
+                (s, r) => s + r.actual,
+                0,
+              );
+              const monthBudgetVariance = monthBudgetPlanned - monthBudgetActual;
+
+              return (
+                <div key={monthKey} style={{ ...cardStyle, overflow: "hidden" }}>
+                  {/* Month header */}
+                  <div
+                    style={{
+                      padding: "12px 20px",
+                      backgroundColor: "#F6F1E8",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                    onClick={() => toggleCatMonth(monthKey)}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span
                         style={{
-                          color:
-                            totalBudgetVariance < 0
-                              ? colors.errorText
-                              : colors.successText,
+                          fontSize: "12px",
+                          color: colors.textSecondary,
+                          transform: isCatCollapsed
+                            ? "rotate(-90deg)"
+                            : "rotate(0deg)",
+                          display: "inline-block",
+                          transition: "transform 0.2s",
                         }}
                       >
-                        {totalBudgetPlanned === 0
-                          ? "—"
-                          : (totalBudgetVariance < 0 ? "-" : "+") +
-                            fmt(Math.abs(totalBudgetVariance))}
-                      </td>
-                      <td className="py-3 px-3">
-                        {totalBudgetPlanned > 0 && (
-                          <div className="flex items-center gap-2">
-                            <div
+                        ▾
+                      </span>
+                      <span
+                        className="text-sm font-bold"
+                        style={{ color: colors.textPrimary }}
+                      >
+                        {formatMonthLabel(monthKey)}
+                      </span>
+                      <span
+                        className="text-xs"
+                        style={{ color: colors.textSecondary }}
+                      >
+                        ({monthExps.length} expense
+                        {monthExps.length !== 1 ? "s" : ""})
+                      </span>
+                    </div>
+                    <span
+                      className="text-sm font-bold"
+                      style={{ color: colors.errorText }}
+                    >
+                      {fmt(monthTotal)}
+                    </span>
+                  </div>
+
+                  {/* Expanded content */}
+                  {!isCatCollapsed && (
+                    <div style={{ padding: "24px" }}>
+                      <div className="flex flex-col md:flex-row gap-8 items-start">
+                        {/* Donut SVG */}
+                        <div style={{ flexShrink: 0 }}>
+                          <svg width={220} height={220}>
+                            {(() => {
+                              const cx = 110,
+                                cy = 110;
+                              const catEntries = Object.entries(
+                                byCatMonth,
+                              ).sort(([, a], [, b]) => b - a);
+                              let cumulative = 0;
+                              const slices = catEntries.map(([cat, val], i) => {
+                                const pct =
+                                  monthTotal > 0 ? val / monthTotal : 0;
+                                const dashLen = pct * CIRC;
+                                const offset =
+                                  CIRC - cumulative - CIRC / 4;
+                                cumulative += dashLen;
+                                return {
+                                  cat,
+                                  val,
+                                  pct,
+                                  dashLen,
+                                  offset,
+                                  color: SLICE_COLORS[i % SLICE_COLORS.length],
+                                };
+                              });
+                              return (
+                                <>
+                                  <circle
+                                    cx={cx}
+                                    cy={cy}
+                                    r={RADIUS}
+                                    fill="none"
+                                    stroke={colors.warmLinen}
+                                    strokeWidth={30}
+                                  />
+                                  {slices.map((slice, i) => (
+                                    <motion.circle
+                                      key={slice.cat}
+                                      cx={cx}
+                                      cy={cy}
+                                      r={RADIUS}
+                                      fill="none"
+                                      stroke={slice.color}
+                                      strokeWidth={30}
+                                      strokeDasharray={`${slice.dashLen} ${CIRC}`}
+                                      strokeDashoffset={slice.offset}
+                                      initial={{
+                                        strokeDasharray: `0 ${CIRC}`,
+                                      }}
+                                      animate={{
+                                        strokeDasharray: `${slice.dashLen} ${CIRC}`,
+                                      }}
+                                      transition={{
+                                        duration: 0.6,
+                                        delay: i * 0.08,
+                                        ease: "easeOut",
+                                      }}
+                                    />
+                                  ))}
+                                  <circle cx={cx} cy={cy} r={50} fill="white" />
+                                  <text
+                                    x={cx}
+                                    y={cy - 6}
+                                    textAnchor="middle"
+                                    fontSize="13"
+                                    fontWeight="700"
+                                    fill={colors.textPrimary}
+                                  >
+                                    {fmt(monthTotal)}
+                                  </text>
+                                  <text
+                                    x={cx}
+                                    y={cy + 12}
+                                    textAnchor="middle"
+                                    fontSize="10"
+                                    fill={colors.textSecondary}
+                                  >
+                                    total expenses
+                                  </text>
+                                </>
+                              );
+                            })()}
+                          </svg>
+                        </div>
+
+                        {/* Category list */}
+                        <div
+                          className="flex-1 space-y-3"
+                          style={{ minWidth: 0 }}
+                        >
+                          {Object.entries(byCatMonth)
+                            .sort(([, a], [, b]) => b - a)
+                            .map(([cat, val], i) => {
+                              const pct =
+                                monthTotal > 0 ? val / monthTotal : 0;
+                              const color =
+                                SLICE_COLORS[i % SLICE_COLORS.length];
+                              return (
+                                <div key={cat} className="space-y-1">
+                                  <div className="flex items-center gap-3">
+                                    <div
+                                      style={{
+                                        width: 10,
+                                        height: 10,
+                                        borderRadius: "50%",
+                                        backgroundColor: color,
+                                        flexShrink: 0,
+                                      }}
+                                    />
+                                    <span
+                                      className="text-sm flex-1"
+                                      style={{ color: colors.textSecondary }}
+                                    >
+                                      {cat}
+                                    </span>
+                                    <span
+                                      className="text-sm font-medium"
+                                      style={{ color: colors.textPrimary }}
+                                    >
+                                      {fmt(val)}
+                                    </span>
+                                    <span
+                                      className="text-xs"
+                                      style={{
+                                        color: colors.textTertiary,
+                                        minWidth: 40,
+                                        textAlign: "right",
+                                      }}
+                                    >
+                                      {(pct * 100).toFixed(1)}%
+                                    </span>
+                                  </div>
+                                  <div
+                                    style={{
+                                      height: 4,
+                                      borderRadius: 99,
+                                      backgroundColor: colors.warmLinen,
+                                      overflow: "hidden",
+                                      marginLeft: 22,
+                                    }}
+                                  >
+                                    <motion.div
+                                      initial={{ width: 0 }}
+                                      animate={{ width: `${pct * 100}%` }}
+                                      transition={{
+                                        duration: 0.5,
+                                        ease: "easeOut",
+                                      }}
+                                      style={{
+                                        height: "100%",
+                                        borderRadius: 99,
+                                        backgroundColor: color,
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                        </div>
+                      </div>
+
+                      {/* vs. Monthly Budget table */}
+                      {monthBudgetRows.length > 0 && (
+                        <>
+                          <hr
+                            style={{
+                              margin: "24px 0",
+                              borderColor: colors.border,
+                            }}
+                          />
+                          <p
+                            className="text-sm font-semibold mb-4"
+                            style={{ color: colors.textPrimary }}
+                          >
+                            vs. Monthly Budget
+                          </p>
+                          <div style={{ overflowX: "auto" }}>
+                            <table
                               style={{
-                                flex: 1,
-                                height: "6px",
-                                borderRadius: "99px",
-                                backgroundColor: colors.border,
-                                overflow: "hidden",
+                                width: "100%",
+                                borderCollapse: "collapse",
+                                fontSize: "13px",
                               }}
                             >
-                              <div
-                                style={{
-                                  width: `${Math.min(totalBudgetPlanned > 0 ? totalBudgetActual / totalBudgetPlanned : 0, 1) * 100}%`,
-                                  height: "100%",
-                                  borderRadius: "99px",
-                                  backgroundColor:
-                                    totalBudgetActual > totalBudgetPlanned
-                                      ? colors.errorText
-                                      : colors.mistyForest,
-                                }}
-                              />
-                            </div>
-                            <span
-                              style={{
-                                color: colors.textSecondary,
-                                fontSize: "12px",
-                                minWidth: "38px",
-                                textAlign: "right",
-                              }}
-                            >
-                              {(totalBudgetPlanned > 0
-                                ? (totalBudgetActual / totalBudgetPlanned) * 100
-                                : 0
-                              ).toFixed(0)}
-                              %
-                            </span>
+                              <thead>
+                                <tr
+                                  style={{
+                                    borderBottom: `1px solid ${colors.border}`,
+                                  }}
+                                >
+                                  {[
+                                    "Category",
+                                    "Budgeted",
+                                    "Spent",
+                                    "Variance",
+                                    "Usage",
+                                  ].map((h) => (
+                                    <th
+                                      key={h}
+                                      className="text-left py-2 px-3"
+                                      style={{
+                                        color: colors.textSecondary,
+                                        fontWeight: 600,
+                                        fontSize: "11px",
+                                        textTransform: "uppercase",
+                                        letterSpacing: "0.05em",
+                                      }}
+                                    >
+                                      {h}
+                                    </th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {monthBudgetRows.map((row) => (
+                                  <tr
+                                    key={row.cat}
+                                    style={{
+                                      borderBottom: `1px solid ${colors.border}`,
+                                    }}
+                                  >
+                                    <td
+                                      className="py-3 px-3"
+                                      style={{ color: colors.textPrimary }}
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <div
+                                          style={{
+                                            width: 8,
+                                            height: 8,
+                                            borderRadius: "50%",
+                                            backgroundColor: row.color,
+                                            flexShrink: 0,
+                                          }}
+                                        />
+                                        {row.cat}
+                                      </div>
+                                    </td>
+                                    <td
+                                      className="py-3 px-3"
+                                      style={{ color: colors.textSecondary }}
+                                    >
+                                      {row.planned > 0
+                                        ? fmt(row.planned)
+                                        : "—"}
+                                    </td>
+                                    <td
+                                      className="py-3 px-3"
+                                      style={{ color: colors.textSecondary }}
+                                    >
+                                      {fmt(row.actual)}
+                                    </td>
+                                    <td
+                                      className="py-3 px-3"
+                                      style={{
+                                        color:
+                                          row.planned === 0
+                                            ? colors.textTertiary
+                                            : row.over
+                                              ? colors.errorText
+                                              : colors.successText,
+                                        fontWeight: 600,
+                                      }}
+                                    >
+                                      {row.planned === 0
+                                        ? "—"
+                                        : (row.over ? "-" : "+") +
+                                          fmt(Math.abs(row.variance))}
+                                    </td>
+                                    <td
+                                      className="py-3 px-3"
+                                      style={{ minWidth: "140px" }}
+                                    >
+                                      {row.pct === null ? (
+                                        <span
+                                          style={{
+                                            color: colors.textTertiary,
+                                            fontSize: "12px",
+                                          }}
+                                        >
+                                          —
+                                        </span>
+                                      ) : (
+                                        <div className="flex items-center gap-2">
+                                          <div
+                                            style={{
+                                              flex: 1,
+                                              height: "6px",
+                                              borderRadius: "99px",
+                                              backgroundColor: colors.warmLinen,
+                                              overflow: "hidden",
+                                            }}
+                                          >
+                                            <div
+                                              style={{
+                                                width: `${Math.min(row.pct, 1) * 100}%`,
+                                                height: "100%",
+                                                borderRadius: "99px",
+                                                backgroundColor: row.over
+                                                  ? colors.errorText
+                                                  : colors.mistyForest,
+                                                transition: "width 0.4s ease",
+                                              }}
+                                            />
+                                          </div>
+                                          <span
+                                            style={{
+                                              color: row.over
+                                                ? colors.errorText
+                                                : colors.textSecondary,
+                                              fontSize: "12px",
+                                              minWidth: "38px",
+                                              textAlign: "right",
+                                            }}
+                                          >
+                                            {(row.pct * 100).toFixed(0)}%
+                                          </span>
+                                        </div>
+                                      )}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                              <tfoot>
+                                <tr
+                                  style={{ backgroundColor: colors.warmLinen }}
+                                >
+                                  <td
+                                    className="py-3 px-3 font-bold"
+                                    style={{ color: colors.textPrimary }}
+                                  >
+                                    Total
+                                  </td>
+                                  <td
+                                    className="py-3 px-3 font-bold"
+                                    style={{ color: colors.textPrimary }}
+                                  >
+                                    {monthBudgetPlanned > 0
+                                      ? fmt(monthBudgetPlanned)
+                                      : "—"}
+                                  </td>
+                                  <td
+                                    className="py-3 px-3 font-bold"
+                                    style={{ color: colors.textPrimary }}
+                                  >
+                                    {fmt(monthBudgetActual)}
+                                  </td>
+                                  <td
+                                    className="py-3 px-3 font-bold"
+                                    style={{
+                                      color:
+                                        monthBudgetVariance < 0
+                                          ? colors.errorText
+                                          : colors.successText,
+                                    }}
+                                  >
+                                    {monthBudgetPlanned === 0
+                                      ? "—"
+                                      : (monthBudgetVariance < 0 ? "-" : "+") +
+                                        fmt(Math.abs(monthBudgetVariance))}
+                                  </td>
+                                  <td className="py-3 px-3">
+                                    {monthBudgetPlanned > 0 && (
+                                      <div className="flex items-center gap-2">
+                                        <div
+                                          style={{
+                                            flex: 1,
+                                            height: "6px",
+                                            borderRadius: "99px",
+                                            backgroundColor: colors.border,
+                                            overflow: "hidden",
+                                          }}
+                                        >
+                                          <div
+                                            style={{
+                                              width: `${Math.min(monthBudgetPlanned > 0 ? monthBudgetActual / monthBudgetPlanned : 0, 1) * 100}%`,
+                                              height: "100%",
+                                              borderRadius: "99px",
+                                              backgroundColor:
+                                                monthBudgetActual >
+                                                monthBudgetPlanned
+                                                  ? colors.errorText
+                                                  : colors.mistyForest,
+                                            }}
+                                          />
+                                        </div>
+                                        <span
+                                          style={{
+                                            color: colors.textSecondary,
+                                            fontSize: "12px",
+                                            minWidth: "38px",
+                                            textAlign: "right",
+                                          }}
+                                        >
+                                          {(monthBudgetPlanned > 0
+                                            ? (monthBudgetActual /
+                                                monthBudgetPlanned) *
+                                              100
+                                            : 0
+                                          ).toFixed(0)}
+                                          %
+                                        </span>
+                                      </div>
+                                    )}
+                                  </td>
+                                </tr>
+                              </tfoot>
+                            </table>
                           </div>
-                        )}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-            </>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })
           )}
         </div>
       )}
