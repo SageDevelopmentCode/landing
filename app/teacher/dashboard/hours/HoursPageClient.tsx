@@ -1,58 +1,31 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft,
   ChevronRight,
-  Check,
   Trash2,
   Clock,
   CalendarDays,
   LayoutGrid,
-  Minus,
   TrendingUp,
+  LogIn,
+  LogOut,
 } from "lucide-react";
+import {
+  clockIn,
+  clockOut,
+  deleteSession,
+  updateSessionNote,
+} from "@/app/actions/teacherHours";
+import type { ClockSession, SessionsByDay } from "@/app/actions/teacherHours";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type ViewMode = "day" | "week" | "month";
-type DayStatus = "logged" | "today" | "not-logged" | "future";
-
-type TimeEntry = {
-  startTime: string;
-  endTime: string;
-  note: string;
-};
-
-type TimesheetState = {
-  [isoDateKey: string]: TimeEntry;
-};
-
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const MOCK_ENTRIES: TimesheetState = {
-  "2026-03-23": { startTime: "08:00", endTime: "15:30", note: "Morning circle, outdoor math" },
-  "2026-03-24": { startTime: "07:45", endTime: "15:00", note: "Reading groups & assessments" },
-  "2026-03-25": { startTime: "08:15", endTime: "15:45", note: "Art project day" },
-  "2026-03-26": { startTime: "08:00", endTime: "15:30", note: "Parent-teacher prep" },
-  "2026-03-27": { startTime: "08:00", endTime: "13:00", note: "Half day — professional development" },
-  "2026-03-30": { startTime: "08:00", endTime: "15:30", note: "Morning circle, outdoor math station" },
-  "2026-03-31": { startTime: "07:45", endTime: "15:45", note: "Field day prep & parent check-ins" },
-};
 
 const WEEKLY_GOAL = 40;
-
-const TIME_PRESETS = [
-  { label: "8:00 AM", value: "08:00" },
-  { label: "8:30 AM", value: "08:30" },
-  { label: "9:00 AM", value: "09:00" },
-];
-const END_PRESETS = [
-  { label: "3:00 PM", value: "15:00" },
-  { label: "3:30 PM", value: "15:30" },
-  { label: "4:00 PM", value: "16:00" },
-];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -72,32 +45,6 @@ function getMondayOfWeek(date: Date): Date {
   return d;
 }
 
-function parseMinutes(timeStr: string): number {
-  const [h, m] = timeStr.split(":").map(Number);
-  return h * 60 + m;
-}
-
-function computeHours(entry: TimeEntry): number {
-  if (!entry.startTime || !entry.endTime) return 0;
-  const diff = parseMinutes(entry.endTime) - parseMinutes(entry.startTime);
-  return Math.max(0, diff / 60);
-}
-
-function formatDuration(hours: number): string {
-  const h = Math.floor(hours);
-  const m = Math.round((hours - h) * 60);
-  if (h === 0 && m === 0) return "0h";
-  if (h === 0) return `${m}m`;
-  if (m === 0) return `${h}h`;
-  return `${h}h ${m}m`;
-}
-
-function getDayStatus(isoKey: string, todayKey: string): DayStatus {
-  if (isoKey === todayKey) return "today";
-  if (isoKey < todayKey) return "not-logged";
-  return "future";
-}
-
 function getWeekDays(monday: Date): Date[] {
   return Array.from({ length: 5 }, (_, i) => {
     const d = new Date(monday);
@@ -109,7 +56,7 @@ function getWeekDays(monday: Date): Date[] {
 function getMonthDays(year: number, month: number): (Date | null)[] {
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const offset = firstDay === 0 ? 6 : firstDay - 1; // Mon-start
+  const offset = firstDay === 0 ? 6 : firstDay - 1;
   const cells: (Date | null)[] = Array(offset).fill(null);
   for (let d = 1; d <= daysInMonth; d++) {
     cells.push(new Date(year, month, d));
@@ -118,19 +65,135 @@ function getMonthDays(year: number, month: number): (Date | null)[] {
   return cells;
 }
 
-function getWeekTotalHours(monday: Date, entries: TimesheetState): number {
+function sessionDurationHours(session: ClockSession): number {
+  if (!session.clockOutAt) return 0;
+  const diff = new Date(session.clockOutAt).getTime() - new Date(session.clockInAt).getTime();
+  return Math.max(0, diff / 1000 / 3600);
+}
+
+function getDayTotalHours(sessions: ClockSession[]): number {
+  return sessions.reduce((acc, s) => acc + sessionDurationHours(s), 0);
+}
+
+function getWeekTotalHours(monday: Date, sessionsByDay: SessionsByDay): number {
   return getWeekDays(monday).reduce((acc, d) => {
-    const entry = entries[toISOKey(d)];
-    return acc + (entry ? computeHours(entry) : 0);
+    return acc + getDayTotalHours(sessionsByDay[toISOKey(d)] ?? []);
   }, 0);
 }
 
-function fmt12(time24: string): string {
-  if (!time24) return "";
-  const [h, m] = time24.split(":").map(Number);
+function formatDuration(hours: number): string {
+  const h = Math.floor(hours);
+  const m = Math.round((hours - h) * 60);
+  if (h === 0 && m === 0) return "0h";
+  if (h === 0) return `${m}m`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+}
+
+function fmt12(isoTimestamp: string): string {
+  const d = new Date(isoTimestamp);
+  const h = d.getHours();
+  const m = d.getMinutes();
   const ampm = h >= 12 ? "PM" : "AM";
   const h12 = h % 12 || 12;
   return `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
+}
+
+function formatElapsed(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0) return `${h}h ${String(m).padStart(2, "0")}m`;
+  if (m > 0) return `${m}m ${String(s).padStart(2, "0")}s`;
+  return `${s}s`;
+}
+
+// ─── Live Elapsed Timer ───────────────────────────────────────────────────────
+
+function ElapsedTimer({ clockInAt }: { clockInAt: string }) {
+  const [elapsed, setElapsed] = useState(() =>
+    Math.floor((Date.now() - new Date(clockInAt).getTime()) / 1000)
+  );
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - new Date(clockInAt).getTime()) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [clockInAt]);
+
+  return <span className="tabular-nums">{formatElapsed(elapsed)}</span>;
+}
+
+// ─── Session Row ──────────────────────────────────────────────────────────────
+
+function SessionRow({
+  session,
+  onDelete,
+  onNoteChange,
+}: {
+  session: ClockSession;
+  onDelete: (id: string) => void;
+  onNoteChange: (id: string, note: string) => void;
+}) {
+  const [note, setNote] = useState(session.note);
+  const [editing, setEditing] = useState(false);
+  const noteRef = useRef<HTMLInputElement>(null);
+  const hours = sessionDurationHours(session);
+
+  function handleNoteBlur() {
+    setEditing(false);
+    if (note !== session.note) {
+      onNoteChange(session.id, note);
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-4 px-5 py-3.5 rounded-xl bg-gray-50 border border-gray-100 group">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-3 mb-1">
+          <span className="text-sm font-semibold text-gray-700 font-body tabular-nums">
+            {fmt12(session.clockInAt)}
+            {session.clockOutAt && (
+              <> &ndash; {fmt12(session.clockOutAt)}</>
+            )}
+          </span>
+          {session.clockOutAt && (
+            <span className="text-xs font-semibold text-[#4a7c59] bg-[#4a7c59]/8 px-2 py-0.5 rounded-full font-body">
+              {formatDuration(hours)}
+            </span>
+          )}
+        </div>
+        {session.clockOutAt && (
+          editing ? (
+            <input
+              ref={noteRef}
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              onBlur={handleNoteBlur}
+              onKeyDown={(e) => { if (e.key === "Enter") noteRef.current?.blur(); }}
+              autoFocus
+              placeholder="Add a note..."
+              className="w-full text-xs text-gray-500 font-body bg-transparent border-b border-gray-200 focus:outline-none focus:border-[#4a7c59] py-0.5"
+            />
+          ) : (
+            <button
+              onClick={() => setEditing(true)}
+              className="text-xs text-gray-400 font-body hover:text-gray-600 transition-colors text-left truncate max-w-[260px] cursor-pointer"
+            >
+              {note || "Add a note…"}
+            </button>
+          )
+        )}
+      </div>
+      <button
+        onClick={() => onDelete(session.id)}
+        className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-red-300 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer shrink-0"
+      >
+        <Trash2 className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  );
 }
 
 // ─── Day View ─────────────────────────────────────────────────────────────────
@@ -138,52 +201,32 @@ function fmt12(time24: string): string {
 function DayView({
   selectedDate,
   onDateChange,
-  entries,
-  onSave,
-  onDelete,
+  sessionsByDay,
+  activeSession,
+  onClockIn,
+  onClockOut,
+  onDeleteSession,
+  onNoteChange,
 }: {
   selectedDate: Date;
   onDateChange: (d: Date) => void;
-  entries: TimesheetState;
-  onSave: (key: string, entry: TimeEntry) => void;
-  onDelete: (key: string) => void;
+  sessionsByDay: SessionsByDay;
+  activeSession: ClockSession | null;
+  onClockIn: () => void;
+  onClockOut: () => void;
+  onDeleteSession: (id: string) => void;
+  onNoteChange: (id: string, note: string) => void;
 }) {
   const todayKey = toISOKey(new Date());
   const selectedKey = toISOKey(selectedDate);
-  const existing = entries[selectedKey] ?? null;
-
-  const [startTime, setStartTime] = useState(existing?.startTime ?? "08:30");
-  const [endTime, setEndTime] = useState(existing?.endTime ?? "15:30");
-  const [note, setNote] = useState(existing?.note ?? "");
-  const [saved, setSaved] = useState(false);
-
-  // Sync form when selected date changes
-  useEffect(() => {
-    const e = entries[toISOKey(selectedDate)];
-    setStartTime(e?.startTime ?? "08:30");
-    setEndTime(e?.endTime ?? "15:30");
-    setNote(e?.note ?? "");
-    setSaved(false);
-  }, [selectedDate, entries]);
-
-  const duration =
-    startTime && endTime ? computeHours({ startTime, endTime, note: "" }) : null;
-  const canSave = !!startTime && !!endTime && endTime > startTime;
-  const isLogged = !!existing;
-
-  function handleSave() {
-    if (!canSave) return;
-    onSave(selectedKey, { startTime, endTime, note });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  }
-
-  function handleDelete() {
-    onDelete(selectedKey);
-  }
-
   const isToday = selectedKey === todayKey;
   const isFuture = selectedKey > todayKey;
+
+  const daySessions = sessionsByDay[selectedKey] ?? [];
+  const completedSessions = daySessions.filter((s) => !!s.clockOutAt);
+  const dayTotalHours = getDayTotalHours(daySessions);
+
+  const isActiveDay = activeSession !== null && toISOKey(new Date(activeSession.clockInAt)) === selectedKey;
 
   const dayFull = selectedDate.toLocaleDateString("en-US", {
     weekday: "long",
@@ -200,10 +243,10 @@ function DayView({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -8 }}
         transition={{ duration: 0.2, ease: "easeOut" }}
-        className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 flex flex-col"
+        className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 flex flex-col gap-6"
       >
         {/* Day header */}
-        <div className="mb-8">
+        <div>
           <div className="flex items-center gap-3 mb-1">
             <h2 className="text-2xl font-semibold font-heading text-gray-800">
               {selectedDate.toLocaleDateString("en-US", { weekday: "long" })}
@@ -213,163 +256,112 @@ function DayView({
                 Today
               </span>
             )}
-            {isLogged && !isToday && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium font-body bg-[#4a7c59]/10 text-[#4a7c59]">
-                <Check className="w-3 h-3" /> Logged
+            {dayTotalHours > 0 && (
+              <span className="flex items-center gap-1.5 px-3 py-1 bg-[#4a7c59]/8 rounded-full">
+                <Clock className="w-3.5 h-3.5 text-[#4a7c59]" />
+                <span className="text-sm font-semibold text-[#4a7c59] font-body tabular-nums">
+                  {formatDuration(dayTotalHours)}
+                </span>
               </span>
             )}
-            <AnimatePresence>
-              {duration !== null && duration > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.15 }}
-                  className="flex items-center gap-1.5 px-3 py-1 bg-[#4a7c59]/8 rounded-full"
-                >
-                  <Clock className="w-3.5 h-3.5 text-[#4a7c59]" />
-                  <span className="text-sm font-semibold text-[#4a7c59] font-body tabular-nums">
-                    {formatDuration(duration)}
-                  </span>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
-          <p className="text-sm text-gray-400 font-body">{dayFull.split(", ").slice(1).join(", ")}</p>
+          <p className="text-sm text-gray-400 font-body">
+            {dayFull.split(", ").slice(1).join(", ")}
+          </p>
         </div>
 
-          {/* Time inputs */}
-          <div className="flex gap-6 mb-4">
-            <div className="flex-1">
-              <label className="block text-xs font-semibold text-gray-400 font-body mb-3 uppercase tracking-wide">
-                Start Time
-              </label>
-              <input
-                type="time"
-                value={startTime}
-                onChange={(e) => { setStartTime(e.target.value); setSaved(false); }}
-                className="w-full px-5 py-4 border border-gray-200 rounded-xl font-body text-lg text-gray-800 focus:outline-none focus:border-[#4a7c59] focus:ring-2 focus:ring-[#4a7c59]/10 transition-all bg-white tabular-nums"
-              />
-              <div className="flex gap-2 mt-3 flex-wrap">
-                {TIME_PRESETS.map((p) => (
-                  <button
-                    key={p.value}
-                    onClick={() => { setStartTime(p.value); setSaved(false); }}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium font-body transition-all cursor-pointer
-                      ${startTime === p.value
-                        ? "bg-[#4a7c59] text-white"
-                        : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                      }`}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-center mt-7 shrink-0 px-2">
-              <Minus className="w-5 h-5 text-gray-200" />
-            </div>
-
-            <div className="flex-1">
-              <label className="block text-xs font-semibold text-gray-400 font-body mb-3 uppercase tracking-wide">
-                End Time
-              </label>
-              <input
-                type="time"
-                value={endTime}
-                onChange={(e) => { setEndTime(e.target.value); setSaved(false); }}
-                className="w-full px-5 py-4 border border-gray-200 rounded-xl font-body text-lg text-gray-800 focus:outline-none focus:border-[#4a7c59] focus:ring-2 focus:ring-[#4a7c59]/10 transition-all bg-white tabular-nums"
-              />
-              <div className="flex gap-2 mt-3 flex-wrap">
-                {END_PRESETS.map((p) => (
-                  <button
-                    key={p.value}
-                    onClick={() => { setEndTime(p.value); setSaved(false); }}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium font-body transition-all cursor-pointer
-                      ${endTime === p.value
-                        ? "bg-[#4a7c59] text-white"
-                        : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                      }`}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Note */}
-          <div className="mb-6">
-            <label className="block text-xs font-semibold text-gray-400 font-body mb-3 uppercase tracking-wide">
-              Notes{" "}
-              <span className="normal-case font-normal tracking-normal text-gray-300">
-                (optional)
-              </span>
-            </label>
-            <textarea
-              value={note}
-              onChange={(e) => { setNote(e.target.value); setSaved(false); }}
-              placeholder="What did you work on today?"
-              rows={3}
-              className="w-full px-5 py-4 border border-gray-200 rounded-xl font-body text-sm text-gray-800 focus:outline-none focus:border-[#4a7c59] focus:ring-2 focus:ring-[#4a7c59]/10 transition-all bg-white resize-none placeholder:text-gray-300"
-            />
-          </div>
-
-          {/* Action buttons */}
-          <div className="flex items-center justify-between mt-auto pt-2">
-            <div className="flex items-center gap-3">
-              <AnimatePresence mode="wait">
-                {saved ? (
-                  <motion.div
-                    key="saved"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                    className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-[#4a7c59] bg-[#4a7c59]/10 rounded-xl"
-                  >
-                    <Check className="w-4 h-4" />
-                    Saved
-                  </motion.div>
-                ) : (
-                  <motion.button
-                    key="save"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    onClick={handleSave}
-                    disabled={!canSave}
-                    className="px-6 py-2.5 text-sm font-semibold text-white bg-[#4a7c59] rounded-xl hover:bg-[#5e7c68] disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                  >
-                    {isLogged ? "Update Hours" : "Save Hours"}
-                  </motion.button>
-                )}
-              </AnimatePresence>
-
-              {isLogged && (
-                <button
-                  onClick={handleDelete}
-                  className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium text-red-400 border border-red-100 rounded-xl hover:bg-red-50 hover:text-red-500 transition-colors cursor-pointer"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  Clear
-                </button>
+        {/* Clock in / out — only for today */}
+        {isToday && (
+          <div className={`flex items-center justify-between px-6 py-5 rounded-2xl border ${
+            isActiveDay
+              ? "bg-[#4a7c59]/5 border-[#4a7c59]/20"
+              : "bg-gray-50 border-gray-100"
+          }`}>
+            <div>
+              {isActiveDay ? (
+                <>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-[#4a7c59] font-body mb-1">
+                    Clocked In
+                  </p>
+                  <p className="text-2xl font-bold font-heading text-gray-800 tabular-nums leading-none">
+                    <ElapsedTimer clockInAt={activeSession!.clockInAt} />
+                  </p>
+                  <p className="text-xs text-gray-400 font-body mt-1">
+                    Since {fmt12(activeSession!.clockInAt)}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-1">
+                    Not clocked in
+                  </p>
+                  <p className="text-sm text-gray-400 font-body">
+                    {completedSessions.length > 0
+                      ? "Clock in again to log more time"
+                      : "Tap Clock In to start tracking"}
+                  </p>
+                </>
               )}
             </div>
+
+            {isActiveDay ? (
+              <button
+                onClick={onClockOut}
+                className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 text-gray-700 font-semibold font-body text-sm rounded-xl hover:border-red-200 hover:text-red-500 hover:bg-red-50 transition-all shadow-sm cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+                Clock Out
+              </button>
+            ) : (
+              <button
+                onClick={onClockIn}
+                disabled={isFuture}
+                className="flex items-center gap-2 px-5 py-3 bg-[#4a7c59] text-white font-semibold font-body text-sm rounded-xl hover:bg-[#3d6b4a] transition-colors shadow-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <LogIn className="w-4 h-4" />
+                Clock In
+              </button>
+            )}
           </div>
-        </motion.div>
-      </AnimatePresence>
+        )}
+
+        {/* Past / non-today: no clock controls, just show sessions */}
+        {!isToday && !isFuture && daySessions.length === 0 && (
+          <div className="px-6 py-5 rounded-2xl bg-gray-50 border border-gray-100">
+            <p className="text-sm text-gray-400 font-body">No sessions logged for this day.</p>
+          </div>
+        )}
+
+        {/* Sessions list */}
+        {daySessions.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-1">
+              Sessions
+            </p>
+            {daySessions.map((session) => (
+              <SessionRow
+                key={session.id}
+                session={session}
+                onDelete={onDeleteSession}
+                onNoteChange={onNoteChange}
+              />
+            ))}
+          </div>
+        )}
+      </motion.div>
+    </AnimatePresence>
   );
 }
 
 // ─── Week View ────────────────────────────────────────────────────────────────
 
 function WeekView({
-  entries,
+  sessionsByDay,
+  activeSession,
   onDayClick,
 }: {
-  entries: TimesheetState;
+  sessionsByDay: SessionsByDay;
+  activeSession: ClockSession | null;
   onDayClick: (date: Date, switchView: boolean) => void;
 }) {
   const todayKey = toISOKey(new Date());
@@ -378,7 +370,7 @@ function WeekView({
   const monday = getMondayOfWeek(new Date());
   monday.setDate(monday.getDate() + weekOffset * 7);
   const weekDays = getWeekDays(monday);
-  const totalHours = getWeekTotalHours(monday, entries);
+  const totalHours = getWeekTotalHours(monday, sessionsByDay);
 
   const weekLabel = (() => {
     const fri = new Date(monday);
@@ -396,7 +388,6 @@ function WeekView({
         transition={{ duration: 0.25 }}
         className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8"
       >
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-lg font-semibold text-gray-700 font-body">
@@ -425,15 +416,14 @@ function WeekView({
           </div>
         </div>
 
-        {/* Day rows */}
         <div className="flex flex-col gap-3">
           {weekDays.map((d, i) => {
             const key = toISOKey(d);
-            const entry = entries[key] ?? null;
-            const isLogged = !!entry;
+            const daySessions = sessionsByDay[key] ?? [];
+            const isActiveDay = activeSession !== null && toISOKey(new Date(activeSession.clockInAt)) === key;
+            const isLogged = daySessions.some((s) => !!s.clockOutAt);
             const isToday = key === todayKey;
-            const status = isLogged ? "logged" : getDayStatus(key, todayKey);
-            const duration = entry ? computeHours(entry) : 0;
+            const hours = getDayTotalHours(daySessions);
 
             return (
               <motion.div
@@ -443,32 +433,39 @@ function WeekView({
                 transition={{ duration: 0.2, delay: i * 0.05 }}
                 onClick={() => onDayClick(d, true)}
                 className={`flex items-center gap-5 px-5 py-4 rounded-xl border cursor-pointer transition-all duration-150 group
-                  ${isLogged
+                  ${isLogged || isActiveDay
                     ? "border-l-[3px] border-l-[#4a7c59] border-t-gray-100 border-r-gray-100 border-b-gray-100 bg-gray-50 hover:bg-white hover:shadow-sm"
                     : isToday
                     ? "border border-[#4a7c59]/20 bg-[#4a7c59]/5 hover:shadow-sm"
-                    : "border border-gray-100 bg-gray-50 hover:bg-white hover:border-[#4a7c59]/15 hover:shadow-sm"
+                    : key > todayKey
+                    ? "border border-gray-50 bg-gray-50/50 opacity-50"
+                    : "border border-gray-100 hover:bg-gray-50 hover:shadow-sm"
                   }`}
               >
-                <div className="w-32 shrink-0">
-                  <p className="text-sm font-semibold text-gray-800 font-body">
-                    {d.toLocaleDateString("en-US", { weekday: "long" })}
+                <div className="w-16 shrink-0">
+                  <p className="text-sm font-semibold text-gray-700 font-body">
+                    {d.toLocaleDateString("en-US", { weekday: "short" })}
                   </p>
-                  <p className="text-xs text-gray-400 font-body mt-0.5">
+                  <p className="text-xs text-gray-400 font-body">
                     {d.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                   </p>
                 </div>
 
-                <div className="w-24 shrink-0">
-                  {isLogged ? (
+                <div className="shrink-0">
+                  {isActiveDay ? (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium font-body bg-[#4a7c59]/10 text-[#4a7c59]">
-                      <Check className="w-3 h-3" /> Logged
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#4a7c59] animate-pulse" />
+                      Active
+                    </span>
+                  ) : isLogged ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium font-body bg-[#4a7c59]/10 text-[#4a7c59]">
+                      Logged
                     </span>
                   ) : isToday ? (
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium font-body bg-amber-50 text-amber-600 border border-amber-200">
+                    <span className="px-2.5 py-1 rounded-full text-xs font-medium font-body bg-amber-50 text-amber-500 border border-amber-200">
                       Today
                     </span>
-                  ) : status === "future" ? (
+                  ) : key > todayKey ? (
                     <span className="text-xs text-gray-300 font-body">Upcoming</span>
                   ) : (
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium font-body bg-gray-100 text-gray-400">
@@ -478,20 +475,15 @@ function WeekView({
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  {entry ? (
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <span className="text-sm font-medium text-gray-700 font-body tabular-nums">
-                        {fmt12(entry.startTime)} – {fmt12(entry.endTime)}
-                      </span>
-                      <span className="text-xs text-[#4a7c59] font-semibold font-body bg-[#4a7c59]/8 px-2.5 py-1 rounded-full">
-                        {formatDuration(duration)}
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-sm text-gray-300 font-body">—</span>
+                  {hours > 0 && (
+                    <span className="text-xs text-[#4a7c59] font-semibold font-body bg-[#4a7c59]/8 px-2.5 py-1 rounded-full">
+                      {formatDuration(hours)}
+                    </span>
                   )}
-                  {entry?.note && (
-                    <p className="text-xs text-gray-400 font-body mt-1 truncate">{entry.note}</p>
+                  {isActiveDay && activeSession && (
+                    <span className="text-xs text-gray-400 font-body ml-2">
+                      Clocked in {fmt12(activeSession.clockInAt)}
+                    </span>
                   )}
                 </div>
 
@@ -501,7 +493,6 @@ function WeekView({
           })}
         </div>
 
-        {/* Week total */}
         <div className="mt-6 pt-5 border-t border-gray-100 flex items-center justify-between">
           <span className="text-xs text-gray-400 font-body font-semibold uppercase tracking-widest">
             Week total
@@ -519,10 +510,10 @@ function WeekView({
 // ─── Month View ───────────────────────────────────────────────────────────────
 
 function MonthView({
-  entries,
+  sessionsByDay,
   onDayClick,
 }: {
-  entries: TimesheetState;
+  sessionsByDay: SessionsByDay;
   onDayClick: (date: Date, switchView: boolean) => void;
 }) {
   const today = new Date();
@@ -545,11 +536,14 @@ function MonthView({
     else setMonth((m) => m + 1);
   }
 
-  const loggedCount = cells.filter((d) => d && entries[toISOKey(d)]).length;
+  const loggedCount = cells.filter((d) => {
+    if (!d) return false;
+    return getDayTotalHours(sessionsByDay[toISOKey(d)] ?? []) > 0;
+  }).length;
+
   const totalLoggedHours = cells.reduce((acc, d) => {
     if (!d) return acc;
-    const e = entries[toISOKey(d)];
-    return acc + (e ? computeHours(e) : 0);
+    return acc + getDayTotalHours(sessionsByDay[toISOKey(d)] ?? []);
   }, 0);
 
   return (
@@ -560,7 +554,6 @@ function MonthView({
         transition={{ duration: 0.25 }}
         className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8"
       >
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-lg font-semibold text-gray-700 font-body">{monthLabel}</h2>
@@ -569,43 +562,30 @@ function MonthView({
             </p>
           </div>
           <div className="flex items-center gap-1">
-            <button
-              onClick={prevMonth}
-              className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-            >
+            <button onClick={prevMonth} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <button
-              onClick={nextMonth}
-              className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-            >
+            <button onClick={nextMonth} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Day labels */}
         <div className="grid grid-cols-7 mb-1">
           {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
-            <div key={d} className="text-center text-xs font-semibold text-gray-300 font-body py-1.5">
-              {d}
-            </div>
+            <div key={d} className="text-center text-xs font-semibold text-gray-300 font-body py-1.5">{d}</div>
           ))}
         </div>
 
-        {/* Calendar grid */}
         <div className="grid grid-cols-7 gap-1">
           {cells.map((d, i) => {
-            if (!d) {
-              return <div key={`empty-${i}`} />;
-            }
+            if (!d) return <div key={`empty-${i}`} />;
             const key = toISOKey(d);
-            const entry = entries[key];
-            const isLogged = !!entry;
+            const hours = getDayTotalHours(sessionsByDay[key] ?? []);
+            const isLogged = hours > 0;
             const isToday = key === todayKey;
             const isFuture = key > todayKey;
             const isWeekend = d.getDay() === 0 || d.getDay() === 6;
-            const hours = entry ? computeHours(entry) : 0;
 
             return (
               <button
@@ -645,7 +625,6 @@ function MonthView({
           })}
         </div>
 
-        {/* Legend */}
         <div className="flex items-center gap-4 mt-5 pt-4 border-t border-gray-100">
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded bg-[#4a7c59]/15" />
@@ -667,36 +646,36 @@ function MonthView({
 
 // ─── Summary Panel ────────────────────────────────────────────────────────────
 
-function SummaryPanel({ entries }: { entries: TimesheetState }) {
+function SummaryPanel({
+  sessionsByDay,
+  activeSession,
+}: {
+  sessionsByDay: SessionsByDay;
+  activeSession: ClockSession | null;
+}) {
   const today = new Date();
   const todayKey = toISOKey(today);
 
-  // This week
   const monday = getMondayOfWeek(today);
   const weekDays = getWeekDays(monday);
-  const weekTotal = getWeekTotalHours(monday, entries);
-  const weekLogged = weekDays.filter((d) => entries[toISOKey(d)]).length;
+  const weekTotal = getWeekTotalHours(monday, sessionsByDay);
+  const weekLogged = weekDays.filter((d) => getDayTotalHours(sessionsByDay[toISOKey(d)] ?? []) > 0).length;
 
-  // This month
   const monthCells = getMonthDays(today.getFullYear(), today.getMonth());
   const monthTotal = monthCells.reduce((acc, d) => {
     if (!d) return acc;
-    const e = entries[toISOKey(d)];
-    return acc + (e ? computeHours(e) : 0);
+    return acc + getDayTotalHours(sessionsByDay[toISOKey(d)] ?? []);
   }, 0);
-  const monthLogged = monthCells.filter((d) => d && entries[toISOKey(d)]).length;
+  const monthLogged = monthCells.filter((d) => d && getDayTotalHours(sessionsByDay[toISOKey(d)] ?? []) > 0).length;
 
-  // Today
-  const todayEntry = entries[todayKey];
-  const todayHours = todayEntry ? computeHours(todayEntry) : 0;
+  const todayHours = getDayTotalHours(sessionsByDay[todayKey] ?? []);
+  const todaySessions = sessionsByDay[todayKey] ?? [];
 
-  // Last 5 logged days
-  const recentEntries = Object.entries(entries)
-    .filter(([k]) => k <= todayKey)
+  const recentDays = Object.entries(sessionsByDay)
+    .filter(([k]) => k <= todayKey && getDayTotalHours(sessionsByDay[k]) > 0)
     .sort(([a], [b]) => b.localeCompare(a))
     .slice(0, 5);
 
-  // Weekly goal progress
   const weekPct = Math.min(1, weekTotal / WEEKLY_GOAL);
   const weekRemaining = Math.max(0, WEEKLY_GOAL - weekTotal);
 
@@ -704,9 +683,7 @@ function SummaryPanel({ entries }: { entries: TimesheetState }) {
     <div className="flex flex-col h-full">
       {/* This Week */}
       <div className="px-6 py-6 border-b border-gray-100">
-        <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-4">
-          This Week
-        </p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-4">This Week</p>
         <div className="flex items-end justify-between mb-2.5">
           <span className="text-2xl font-bold font-heading text-gray-800 tabular-nums leading-none">
             {formatDuration(weekTotal)}
@@ -737,19 +714,29 @@ function SummaryPanel({ entries }: { entries: TimesheetState }) {
       <div className="grid grid-cols-2 border-b border-gray-100">
         <div className="px-6 py-5 border-r border-gray-100">
           <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-2">Today</p>
-          {todayEntry ? (
+          {activeSession ? (
+            <>
+              <p className="text-[11px] font-semibold text-[#4a7c59] font-body mb-1 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#4a7c59] animate-pulse inline-block" />
+                Clocked in
+              </p>
+              <p className="text-xl font-bold font-heading text-gray-800 tabular-nums leading-none">
+                <ElapsedTimer clockInAt={activeSession.clockInAt} />
+              </p>
+            </>
+          ) : todayHours > 0 ? (
             <>
               <p className="text-xl font-bold font-heading text-gray-800 tabular-nums leading-none">
                 {formatDuration(todayHours)}
               </p>
-              <p className="text-[11px] text-gray-400 font-body mt-1 tabular-nums leading-snug">
-                {fmt12(todayEntry.startTime)} –<br />{fmt12(todayEntry.endTime)}
+              <p className="text-[11px] text-gray-400 font-body mt-1">
+                {todaySessions.length} session{todaySessions.length !== 1 ? "s" : ""}
               </p>
             </>
           ) : (
             <>
               <p className="text-xl font-bold font-heading text-gray-300 leading-none">—</p>
-              <p className="text-[11px] text-gray-300 font-body mt-1">Not logged</p>
+              <p className="text-[11px] text-gray-300 font-body mt-1">Not clocked in</p>
             </>
           )}
         </div>
@@ -768,19 +755,17 @@ function SummaryPanel({ entries }: { entries: TimesheetState }) {
       <div className="px-6 py-5 flex-1">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="w-3 h-3 text-gray-400" />
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body">
-            Recent
-          </p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body">Recent</p>
         </div>
-
-        {recentEntries.length === 0 ? (
+        {recentDays.length === 0 ? (
           <p className="text-sm text-gray-300 font-body">No entries yet.</p>
         ) : (
           <div className="flex flex-col gap-4">
-            {recentEntries.map(([key, entry]) => {
+            {recentDays.map(([key]) => {
               const d = new Date(key + "T00:00:00");
               const isToday = key === todayKey;
-              const hours = computeHours(entry);
+              const hours = getDayTotalHours(sessionsByDay[key] ?? []);
+              const sessionCount = (sessionsByDay[key] ?? []).filter(s => !!s.clockOutAt).length;
               return (
                 <div key={key} className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
@@ -789,11 +774,9 @@ function SummaryPanel({ entries }: { entries: TimesheetState }) {
                         ? "Today"
                         : d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
                     </p>
-                    {entry.note && (
-                      <p className="text-[11px] text-gray-400 font-body truncate max-w-[130px]">
-                        {entry.note}
-                      </p>
-                    )}
+                    <p className="text-[11px] text-gray-400 font-body">
+                      {sessionCount} session{sessionCount !== 1 ? "s" : ""}
+                    </p>
                   </div>
                   <span className="text-xs font-semibold text-[#4a7c59] font-body tabular-nums shrink-0">
                     {formatDuration(hours)}
@@ -812,28 +795,68 @@ function SummaryPanel({ entries }: { entries: TimesheetState }) {
 
 export default function HoursPageClient({
   teacherName,
+  initialSessions,
 }: {
   teacherName: string | null;
+  initialSessions: SessionsByDay;
 }) {
   const [view, setView] = useState<ViewMode>("day");
-  const [entries, setEntries] = useState<TimesheetState>(MOCK_ENTRIES);
+  const [sessionsByDay, setSessionsByDay] = useState<SessionsByDay>(initialSessions);
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
     const today = new Date();
     const day = today.getDay();
-    // If weekend, default to Friday
     if (day === 6) { const fri = new Date(today); fri.setDate(today.getDate() - 1); return fri; }
     if (day === 0) { const fri = new Date(today); fri.setDate(today.getDate() - 2); return fri; }
     return today;
   });
 
-  function handleSave(key: string, entry: TimeEntry) {
-    setEntries((prev) => ({ ...prev, [key]: entry }));
+  // Find active (open) session across all days
+  const activeSession = Object.values(sessionsByDay)
+    .flat()
+    .find((s) => !s.clockOutAt) ?? null;
+
+  async function handleClockIn() {
+    const session = await clockIn();
+    if (!session) return;
+    const dateKey = toISOKey(new Date(session.clockInAt));
+    setSessionsByDay((prev) => ({
+      ...prev,
+      [dateKey]: [...(prev[dateKey] ?? []), session],
+    }));
   }
 
-  function handleDelete(key: string) {
-    setEntries((prev) => {
+  async function handleClockOut() {
+    if (!activeSession) return;
+    const clockOutAt = await clockOut(activeSession.id);
+    if (!clockOutAt) return;
+    const dateKey = toISOKey(new Date(activeSession.clockInAt));
+    setSessionsByDay((prev) => ({
+      ...prev,
+      [dateKey]: (prev[dateKey] ?? []).map((s) =>
+        s.id === activeSession.id ? { ...s, clockOutAt } : s
+      ),
+    }));
+  }
+
+  function handleDeleteSession(id: string) {
+    deleteSession(id);
+    setSessionsByDay((prev) => {
       const next = { ...prev };
-      delete next[key];
+      for (const key of Object.keys(next)) {
+        next[key] = next[key].filter((s) => s.id !== id);
+        if (next[key].length === 0) delete next[key];
+      }
+      return next;
+    });
+  }
+
+  function handleNoteChange(id: string, note: string) {
+    updateSessionNote(id, note);
+    setSessionsByDay((prev) => {
+      const next = { ...prev };
+      for (const key of Object.keys(next)) {
+        next[key] = next[key].map((s) => (s.id === id ? { ...s, note } : s));
+      }
       return next;
     });
   }
@@ -862,7 +885,6 @@ export default function HoursPageClient({
     <div className="flex flex-1 overflow-hidden">
       {/* LEFT: scrollable main content */}
       <div className="flex-1 overflow-y-auto px-10 py-10">
-        {/* Page heading + view switcher */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -872,12 +894,11 @@ export default function HoursPageClient({
           <div>
             <h1 className="text-3xl font-bold font-heading text-gray-800">My Hours</h1>
             <p className="text-sm text-gray-400 font-body mt-1">
-              Track and log your daily work hours.
+              Clock in and out to track your daily work time.
             </p>
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            {/* Day nav arrows — only in day view */}
             {view === "day" && (
               <div className="flex items-center gap-1">
                 <button
@@ -898,7 +919,6 @@ export default function HoursPageClient({
               </div>
             )}
 
-            {/* View switcher */}
             <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
               {views.map(({ id, label, icon }) => (
                 <button
@@ -918,45 +938,29 @@ export default function HoursPageClient({
           </div>
         </motion.div>
 
-        {/* View content */}
         <AnimatePresence mode="wait">
           {view === "day" && (
-            <motion.div
-              key="day"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-            >
+            <motion.div key="day" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
               <DayView
                 selectedDate={selectedDate}
                 onDateChange={setSelectedDate}
-                entries={entries}
-                onSave={handleSave}
-                onDelete={handleDelete}
+                sessionsByDay={sessionsByDay}
+                activeSession={activeSession}
+                onClockIn={handleClockIn}
+                onClockOut={handleClockOut}
+                onDeleteSession={handleDeleteSession}
+                onNoteChange={handleNoteChange}
               />
             </motion.div>
           )}
           {view === "week" && (
-            <motion.div
-              key="week"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-            >
-              <WeekView entries={entries} onDayClick={handleDayClick} />
+            <motion.div key="week" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
+              <WeekView sessionsByDay={sessionsByDay} activeSession={activeSession} onDayClick={handleDayClick} />
             </motion.div>
           )}
           {view === "month" && (
-            <motion.div
-              key="month"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-            >
-              <MonthView entries={entries} onDayClick={handleDayClick} />
+            <motion.div key="month" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
+              <MonthView sessionsByDay={sessionsByDay} onDayClick={handleDayClick} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -964,7 +968,7 @@ export default function HoursPageClient({
 
       {/* RIGHT: fixed sidebar */}
       <div className="w-72 shrink-0 border-l border-gray-100 bg-white overflow-y-auto">
-        <SummaryPanel entries={entries} />
+        <SummaryPanel sessionsByDay={sessionsByDay} activeSession={activeSession} />
       </div>
     </div>
   );

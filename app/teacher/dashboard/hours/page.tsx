@@ -5,6 +5,7 @@ import Image from 'next/image'
 import ProfileDropdown from '@/app/apply/dashboard/ProfileDropdown'
 import TeacherNav from '../TeacherNav'
 import HoursPageClient from './HoursPageClient'
+import { getTeacherSessions } from '@/app/actions/teacherHours'
 
 export default async function HoursPage() {
   const supabase = await createServerSupabaseClient()
@@ -23,6 +24,7 @@ export default async function HoursPage() {
     .single()
 
   const fullName = adminUser?.full_name ?? null
+  const initialSessions = await getTeacherSessions()
 
   return (
     <div className="bg-welcome-bg min-h-screen flex flex-col">
@@ -49,7 +51,7 @@ export default async function HoursPage() {
       </header>
 
       <main className="flex-1 flex overflow-hidden">
-        <HoursPageClient teacherName={fullName} />
+        <HoursPageClient teacherName={fullName} initialSessions={initialSessions} />
       </main>
     </div>
   )
