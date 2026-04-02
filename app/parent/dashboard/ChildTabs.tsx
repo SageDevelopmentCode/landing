@@ -962,6 +962,17 @@ function Checklist({
           );
         })}
       </div>
+      <p className="mt-3 text-xs text-gray-400 font-body text-center">
+        Have another kid?{" "}
+        <Link
+          href="/apply/step/1?new=1"
+          className="text-emerald-600 hover:text-emerald-700 font-medium underline underline-offset-2"
+        >
+          Create an application for them
+        </Link>{" "}
+        — you can pay a combined registration fee for all children in one
+        transaction.
+      </p>
     </div>
   );
 }
