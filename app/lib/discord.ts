@@ -396,3 +396,54 @@ export function createApplicationEmbed(data: {
     timestamp: new Date().toISOString(),
   };
 }
+
+/**
+ * Creates a Discord embed for campus tour booking submissions
+ */
+export function createTourBookingEmbed(data: {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  childName: string;
+  childGrade: string;
+  numChildren: number;
+  tourDate: string;
+  tourTime: string;
+  howDidYouHear: string;
+  accommodations?: string;
+}): DiscordEmbed {
+  const referralLabels: Record<string, string> = {
+    google: "Google",
+    social_media: "Social Media",
+    friend_family: "Friend / Family",
+    flyer: "Flyer / Poster",
+    other: "Other",
+  };
+
+  const fields: DiscordEmbedField[] = [
+    { name: "Parent / Guardian", value: `${data.firstName} ${data.lastName}`, inline: true },
+    { name: "Email", value: data.email, inline: true },
+    { name: "Phone", value: data.phone || "Not provided", inline: true },
+    { name: "Child", value: `${data.childName} — ${data.childGrade}`, inline: true },
+    { name: "Children Attending", value: String(data.numChildren), inline: true },
+    { name: "Tour Date", value: data.tourDate, inline: true },
+    { name: "Tour Time", value: data.tourTime, inline: true },
+    { name: "How They Heard", value: referralLabels[data.howDidYouHear] || data.howDidYouHear, inline: true },
+  ];
+
+  if (data.accommodations) {
+    fields.push({
+      name: "Notes / Accommodations",
+      value: data.accommodations.length > 1024 ? data.accommodations.substring(0, 1021) + "..." : data.accommodations,
+      inline: false,
+    });
+  }
+
+  return {
+    title: "🏫 New Campus Tour Booked",
+    color: 0xa8c5a0, // Sage green
+    fields,
+    timestamp: new Date().toISOString(),
+  };
+}

@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/app/lib/supabase-server'
 import { MarketingClient } from './MarketingClient'
+import type { TourUnavailability } from '@/app/actions/tourUnavailability'
 
 export type OpenHouseRsvp = {
   id: string
@@ -14,11 +15,24 @@ export type OpenHouseRsvp = {
 
 export default async function MarketingPage() {
   const supabase = createAdminClient()
-  const { data: rsvps } = await supabase
-    .schema('marketing')
-    .from('open_house_rsvps')
-    .select('*')
-    .order('created_at', { ascending: false })
 
-  return <MarketingClient rsvps={(rsvps as OpenHouseRsvp[]) ?? []} />
+  const [{ data: rsvps }, { data: tourUnavailability }] = await Promise.all([
+    supabase
+      .schema('marketing')
+      .from('open_house_rsvps')
+      .select('*')
+      .order('created_at', { ascending: false }),
+    supabase
+      .schema('marketing')
+      .from('tour_unavailability')
+      .select('*')
+      .order('unavailable_date', { ascending: true }),
+  ])
+
+  return (
+    <MarketingClient
+      rsvps={(rsvps as OpenHouseRsvp[]) ?? []}
+      tourUnavailability={(tourUnavailability as TourUnavailability[]) ?? []}
+    />
+  )
 }

@@ -4,20 +4,29 @@ import { useState } from 'react'
 import { Merriweather } from 'next/font/google'
 import { colors, radius, shadows, spacing } from '../design-system'
 import { OpenHouseTable } from './OpenHouseTable'
+import { TourUnavailabilityView } from './TourUnavailabilityView'
 import type { OpenHouseRsvp } from './page'
+import type { TourUnavailability } from '@/app/actions/tourUnavailability'
 
 const merriweather = Merriweather({
   weight: ['300', '400', '700', '900'],
   subsets: ['latin'],
 })
 
-type SubMenuItem = 'open-house'
+type SubMenuItem = 'open-house' | 'tour-unavailability'
 
 const subMenuItems: { id: SubMenuItem; label: string; sublabel: string }[] = [
   { id: 'open-house', label: 'Open House', sublabel: 'April 25' },
+  { id: 'tour-unavailability', label: 'Campus Tours', sublabel: 'Manage availability' },
 ]
 
-export function MarketingClient({ rsvps }: { rsvps: OpenHouseRsvp[] }) {
+export function MarketingClient({
+  rsvps,
+  tourUnavailability,
+}: {
+  rsvps: OpenHouseRsvp[]
+  tourUnavailability: TourUnavailability[]
+}) {
   const [active, setActive] = useState<SubMenuItem>('open-house')
 
   return (
@@ -51,7 +60,7 @@ export function MarketingClient({ rsvps }: { rsvps: OpenHouseRsvp[] }) {
             paddingLeft: '8px',
           }}
         >
-          Events
+          Marketing
         </p>
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           {subMenuItems.map((item) => {
@@ -121,6 +130,10 @@ export function MarketingClient({ rsvps }: { rsvps: OpenHouseRsvp[] }) {
             </div>
             <OpenHouseTable rsvps={rsvps} />
           </div>
+        )}
+
+        {active === 'tour-unavailability' && (
+          <TourUnavailabilityView initial={tourUnavailability} />
         )}
       </main>
     </div>

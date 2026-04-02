@@ -1212,3 +1212,49 @@ export async function getAuthorizationUrl(): Promise<string> {
 
   return `https://accounts.zoho.com/oauth/v2/auth?${params.toString()}`;
 }
+
+/**
+ * Build HTML confirmation email for a campus tour booking
+ */
+export async function buildTourConfirmationEmail(opts: {
+  firstName: string;
+  tourDate: string;
+  tourTime: string;
+}): Promise<{ subject: string; content: string }> {
+  const subject = "Your campus tour is confirmed — Sage Field School";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${opts.firstName},</p>
+
+  <p>Thank you for scheduling a campus tour at Sage Field School! We're looking forward to showing you around and answering any questions you have about our programs.</p>
+
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; margin: 28px 0;">
+    <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 15px;">Your Tour Details</p>
+    <p style="margin: 4px 0;"><strong>Date:</strong> ${opts.tourDate}</p>
+    <p style="margin: 4px 0;"><strong>Time:</strong> ${opts.tourTime}</p>
+    <p style="margin: 4px 0;"><strong>Location:</strong> <a href="https://maps.google.com/?q=2760+Gattis+School+Rd,+Round+Rock,+TX+78664" style="color: #5a7a5a;">2760 Gattis School Rd, Round Rock, TX 78664</a></p>
+    <p style="margin: 4px 0;"><strong>Duration:</strong> Approximately 45 minutes</p>
+  </div>
+
+  <h2 style="font-size: 18px; margin-top: 32px; margin-bottom: 8px; color: #2c2c2c;">What to Expect</h2>
+  <ul style="padding-left: 20px;">
+    <li style="margin-bottom: 8px;">A private, one-on-one family tour of our campus</li>
+    <li style="margin-bottom: 8px;">Walk through our outdoor learning spaces and classrooms</li>
+    <li style="margin-bottom: 8px;">Meet Sabrina and our educators</li>
+    <li style="margin-bottom: 8px;">See our curriculum and day-to-day rhythm in action</li>
+    <li style="margin-bottom: 8px;">Learn about enrollment for Summer 2026 &amp; School Year 2026–2027</li>
+  </ul>
+
+  <p>We'll be in touch to confirm the details closer to your visit. In the meantime, if you have any questions, feel free to reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a>.</p>
+
+  <p style="margin-top: 32px;">With warmth,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
