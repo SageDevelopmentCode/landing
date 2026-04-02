@@ -5,7 +5,7 @@ import { Merriweather } from 'next/font/google'
 import { colors, radius, shadows, spacing } from '../design-system'
 import { OpenHouseTable } from './OpenHouseTable'
 import { TourUnavailabilityView } from './TourUnavailabilityView'
-import type { OpenHouseRsvp } from './page'
+import type { OpenHouseRsvp, TourBooking } from './page'
 import type { TourUnavailability } from '@/app/actions/tourUnavailability'
 
 const merriweather = Merriweather({
@@ -23,9 +23,11 @@ const subMenuItems: { id: SubMenuItem; label: string; sublabel: string }[] = [
 export function MarketingClient({
   rsvps,
   tourUnavailability,
+  tourBookings,
 }: {
   rsvps: OpenHouseRsvp[]
   tourUnavailability: TourUnavailability[]
+  tourBookings: TourBooking[]
 }) {
   const [active, setActive] = useState<SubMenuItem>('open-house')
 
@@ -133,7 +135,7 @@ export function MarketingClient({
         )}
 
         {active === 'tour-unavailability' && (
-          <TourUnavailabilityView initial={tourUnavailability} />
+          <TourUnavailabilityView initial={tourUnavailability} tourBookings={tourBookings} />
         )}
       </main>
     </div>

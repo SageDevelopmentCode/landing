@@ -9,6 +9,7 @@ export type TourUnavailability = {
   unavailable_time: string | null;
   reason: string | null;
   is_recurring: boolean;
+  booking_id: string | null;
   created_at: string;
   updated_at: string;
 };

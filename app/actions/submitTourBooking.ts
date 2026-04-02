@@ -39,7 +39,7 @@ export async function submitTourBooking(
     const validated = schema.parse(data);
     const supabase = createAdminClient();
 
-    const { error } = await supabase
+    const { data: booking, error } = await supabase
       .schema("marketing")
       .from("tour_bookings")
       .insert({
@@ -54,7 +54,9 @@ export async function submitTourBooking(
         tour_time: validated.tour_time,
         how_did_you_hear: validated.how_did_you_hear,
         accommodations: validated.accommodations || null,
-      });
+      })
+      .select("id")
+      .single();
 
     if (error) {
       console.error("Supabase error:", error);
@@ -70,6 +72,7 @@ export async function submitTourBooking(
         unavailable_time: validated.tour_time,
         reason: "Booked",
         is_recurring: false,
+        booking_id: booking.id,
       });
 
     const formattedDate = formatTourDate(validated.tour_date);
