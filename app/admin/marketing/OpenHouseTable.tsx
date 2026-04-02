@@ -6,6 +6,7 @@ import { colors, radius, shadows } from '../design-system'
 import { Table, TableRow, TableCell } from '../components/Table'
 import type { OpenHouseRsvp } from './page'
 import { AddRsvpSidebar } from './AddRsvpSidebar'
+import { EmailThread } from '../components/EmailThread'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -257,6 +258,12 @@ export function OpenHouseTable({ rsvps }: { rsvps: OpenHouseRsvp[] }) {
                   <p style={{ fontSize: '14px', color: colors.textPrimary }}>{value}</p>
                 </div>
               ))}
+
+              {/* Email History */}
+              <div style={{ borderTop: `1px solid ${colors.divider}`, paddingTop: '14px', marginTop: '4px' }}>
+                <p style={{ fontSize: '11px', color: colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px' }}>Email History</p>
+                <EmailThread emailAddress={selectedRsvp.email} />
+              </div>
             </motion.div>
           </>
         )}

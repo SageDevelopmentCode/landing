@@ -367,7 +367,7 @@ function AdminCalendarGrid({
           const isPartial = !isFullyBlocked && partialDates.has(dateKey)
 
           let bg = 'white'
-          let textColor = colors.textPrimary
+          let textColor: string = colors.textPrimary
           let border = `1px solid ${colors.border}`
 
           if (isSelected) {
