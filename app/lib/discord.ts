@@ -405,11 +405,13 @@ export function createTeacherClockInEmbed(data: {
   clockInAt: string
 }): DiscordEmbed {
   const time = new Date(data.clockInAt).toLocaleTimeString("en-US", {
+    timeZone: "America/Chicago",
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
   })
   const date = new Date(data.clockInAt).toLocaleDateString("en-US", {
+    timeZone: "America/Chicago",
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -435,16 +437,19 @@ export function createTeacherClockOutEmbed(data: {
   clockOutAt: string
 }): DiscordEmbed {
   const inTime = new Date(data.clockInAt).toLocaleTimeString("en-US", {
+    timeZone: "America/Chicago",
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
   })
   const outTime = new Date(data.clockOutAt).toLocaleTimeString("en-US", {
+    timeZone: "America/Chicago",
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
   })
   const date = new Date(data.clockInAt).toLocaleDateString("en-US", {
+    timeZone: "America/Chicago",
     weekday: "long",
     month: "long",
     day: "numeric",
