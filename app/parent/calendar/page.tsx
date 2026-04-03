@@ -26,7 +26,7 @@ export default async function ParentCalendarPage() {
     adminClient
       .schema("admin")
       .from("users")
-      .select("full_name")
+      .select("full_name, profile_image_url")
       .eq("id", user.id)
       .single(),
     adminClient
@@ -40,6 +40,7 @@ export default async function ParentCalendarPage() {
   ]);
 
   const fullName = adminUser?.full_name ?? null;
+  const profileImageUrl = adminUser?.profile_image_url ?? null;
   const events = eventsData ?? [];
 
   return (
@@ -61,7 +62,7 @@ export default async function ParentCalendarPage() {
         </div>
         <div className="flex items-center justify-end">
           {user?.email && (
-            <ProfileDropdown email={user.email} fullName={fullName} />
+            <ProfileDropdown email={user.email} fullName={fullName} userId={user.id} profileImageUrl={profileImageUrl} />
           )}
         </div>
       </header>

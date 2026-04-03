@@ -37,13 +37,14 @@ export default async function ChildrenRoute() {
     adminClient
       .schema("admin")
       .from("users")
-      .select("full_name")
+      .select("full_name, profile_image_url")
       .eq("id", user.id)
       .single(),
   ]);
 
   const children: Student[] = studentsData ?? [];
   const fullName = adminUser?.full_name ?? null;
+  const profileImageUrl = adminUser?.profile_image_url ?? null;
 
   const studentIds = children.map((s) => s.id);
   const teachersByStudent: Record<string, TeacherAssignment[]> = {};
@@ -91,7 +92,7 @@ export default async function ChildrenRoute() {
           </div>
           <div className="flex items-center justify-end">
             {user?.email && (
-              <ProfileDropdown email={user.email} fullName={fullName} />
+              <ProfileDropdown email={user.email} fullName={fullName} userId={user.id} profileImageUrl={profileImageUrl} />
             )}
           </div>
         </header>

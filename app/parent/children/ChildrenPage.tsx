@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Image as ImageIcon,
@@ -9,7 +9,10 @@ import {
   Smartphone,
   MessageCircle,
   ChevronRight,
+  Camera,
+  Loader2,
 } from "lucide-react";
+import { uploadStudentProfileImage } from "@/app/actions/uploadStudentProfileImage";
 import NextImage from "next/image";
 import type { Database } from "@/app/types/database.types";
 import type { TeacherAssignment } from "@/app/actions/teacherAssignments";
@@ -402,13 +405,32 @@ function ChildProfile({
   child,
   teachers,
   enrollmentAppId,
+  initialProfileImageUrl,
 }: {
   child: Student;
   teachers: TeacherAssignment[];
   enrollmentAppId?: string;
+  initialProfileImageUrl: string | null;
 }) {
   const [activeTab, setActiveTab] = useState<ContentTab>("teacher");
+  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(initialProfileImageUrl);
+  const [avatarHovered, setAvatarHovered] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('studentId', child.id);
+    const result = await uploadStudentProfileImage(formData);
+    setUploading(false);
+    if ('url' in result) setCurrentImageUrl(result.url);
+    e.target.value = '';
+  }
 
   const age = computeAge(child.dob_month, child.dob_day, child.dob_year);
   const dob = formatDOB(child.dob_month, child.dob_day, child.dob_year);
@@ -427,11 +449,39 @@ function ChildProfile({
       {/* Profile Hero */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6 flex items-center gap-6">
         <div
-          className="flex-shrink-0 flex items-center justify-center w-20 h-20 rounded-full text-2xl font-bold font-heading"
-          style={{ backgroundColor: "#d4e6d0", color: "#4a7c59" }}
+          className="relative flex-shrink-0 w-20 h-20 rounded-full overflow-hidden cursor-pointer"
+          onMouseEnter={() => setAvatarHovered(true)}
+          onMouseLeave={() => setAvatarHovered(false)}
+          onClick={() => !uploading && fileInputRef.current?.click()}
         >
-          {initials}
+          {currentImageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={currentImageUrl} alt={child.child_legal_name ?? ''} className="w-full h-full object-cover" />
+          ) : (
+            <div
+              className="w-full h-full flex items-center justify-center text-2xl font-bold font-heading"
+              style={{ backgroundColor: "#d4e6d0", color: "#4a7c59" }}
+            >
+              {initials}
+            </div>
+          )}
+          {(avatarHovered || uploading) && (
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+              {uploading ? (
+                <Loader2 className="w-6 h-6 text-white animate-spin" />
+              ) : (
+                <Camera className="w-6 h-6 text-white" />
+              )}
+            </div>
+          )}
         </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleFileChange}
+        />
         <div className="min-w-0">
           <h2 className="text-2xl font-bold font-heading text-gray-800 mb-1">
             {child.child_legal_name ?? "Unknown"}
@@ -641,6 +691,7 @@ export default function ChildrenPage({ children, teachersByStudent, nonEnrolledA
         child={activeChild}
         teachers={teachersByStudent[activeChild.id] ?? []}
         enrollmentAppId={nonEnrolledAppByStudent[activeChild.id]}
+        initialProfileImageUrl={(activeChild as Record<string, unknown>).profile_image_url as string | null ?? null}
       />
     </div>
   );

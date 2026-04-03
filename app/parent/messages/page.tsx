@@ -25,11 +25,12 @@ export default async function MessagesRoute({
   const { data: adminUser } = await adminClient
     .schema("admin")
     .from("users")
-    .select("full_name")
+    .select("full_name, profile_image_url")
     .eq("id", user.id)
     .single();
 
   const fullName = adminUser?.full_name ?? null;
+  const profileImageUrl = adminUser?.profile_image_url ?? null;
 
   const params = await searchParams;
   const initialRecipientId = params.recipientId ?? null;
@@ -55,7 +56,7 @@ export default async function MessagesRoute({
           </div>
           <div className="flex items-center justify-end">
             {user?.email && (
-              <ProfileDropdown email={user.email} fullName={fullName} />
+              <ProfileDropdown email={user.email} fullName={fullName} userId={user.id} profileImageUrl={profileImageUrl} />
             )}
           </div>
         </header>
