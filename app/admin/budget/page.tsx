@@ -5262,10 +5262,16 @@ function MercuryTab() {
   const COUNTERPARTY_USER: Record<string, string> = {
     'Capital One - Checking ••4567': 'Julius',
     'Wells Fargo - Checking ••0769': 'Sage',
+    'GOLDMAN SACHS BA; TRANSFER; Julius Cecilia': 'Julius',
   };
 
+  const resolveUser = (tx: MercuryTransaction, fallback: string) =>
+    COUNTERPARTY_USER[tx.counterpartyName ?? '']
+    ?? COUNTERPARTY_USER[tx.bankDescription ?? '']
+    ?? fallback;
+
   const userTotals = transactions.reduce<Record<string, number>>((acc, tx) => {
-    const user = tx.counterpartyName ? (COUNTERPARTY_USER[tx.counterpartyName] ?? 'Other') : 'Other';
+    const user = resolveUser(tx, 'Other');
     acc[user] = (acc[user] ?? 0) + tx.amount;
     return acc;
   }, {});
@@ -5292,7 +5298,7 @@ function MercuryTab() {
             </p>
             <p className="text-xs mt-1" style={{ color: colors.textSecondary }}>
               {transactions.filter(tx => {
-                const u = tx.counterpartyName ? (COUNTERPARTY_USER[tx.counterpartyName] ?? 'Other') : 'Other';
+                const u = resolveUser(tx, 'Other');
                 return u === user;
               }).length} transactions
             </p>
@@ -5358,7 +5364,7 @@ function MercuryTab() {
                   tx.merchantName ??
                   tx.bankDescription ??
                   "—";
-                const user = tx.counterpartyName ? (COUNTERPARTY_USER[tx.counterpartyName] ?? '—') : '—'
+                const user = resolveUser(tx, '—')
                 return (
                   <tr
                     key={tx.id}
