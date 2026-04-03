@@ -7,6 +7,7 @@ import { Table, TableRow, TableCell } from '../components/Table'
 import type { OpenHouseRsvp } from './page'
 import { AddRsvpSidebar } from './AddRsvpSidebar'
 import { EmailThread } from '../components/EmailThread'
+import { sendOpenHouseReminderEmail } from '../../actions/sendOpenHouseReminderEmail'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -23,6 +24,9 @@ export function OpenHouseTable({ rsvps }: { rsvps: OpenHouseRsvp[] }) {
   const [showSubmitted, setShowSubmitted] = useState(false)
   const [selectedRsvp, setSelectedRsvp] = useState<OpenHouseRsvp | null>(null)
   const [showAddSidebar, setShowAddSidebar] = useState(false)
+  const [reminderSending, setReminderSending] = useState(false)
+  const [reminderSent, setReminderSent] = useState(false)
+  const [reminderError, setReminderError] = useState<string | null>(null)
   const totalAdults = localRsvps.reduce((sum, r) => sum + (r.adults_attending ?? 0), 0)
   const totalChildren = localRsvps.reduce((sum, r) => sum + (r.children_attending ?? 0), 0)
   const totalAttendees = totalAdults + totalChildren
@@ -71,6 +75,20 @@ export function OpenHouseTable({ rsvps }: { rsvps: OpenHouseRsvp[] }) {
         />
       </>
     )
+  }
+
+  const handleSendReminder = async (rsvp: OpenHouseRsvp) => {
+    if (reminderSending || reminderSent) return
+    setReminderSending(true)
+    setReminderError(null)
+    const result = await sendOpenHouseReminderEmail({ name: rsvp.name, email: rsvp.email })
+    setReminderSending(false)
+    if (result.success) {
+      setReminderSent(true)
+      setTimeout(() => setReminderSent(false), 3000)
+    } else {
+      setReminderError(result.error ?? 'Failed to send email')
+    }
   }
 
   return (
@@ -156,7 +174,7 @@ export function OpenHouseTable({ rsvps }: { rsvps: OpenHouseRsvp[] }) {
         headers={['Name', 'Email', 'Phone', 'Adults', 'Children', 'Notes', ...(showSubmitted ? ['Submitted'] : [])]}
       >
         {localRsvps.map((rsvp, i) => (
-          <TableRow key={rsvp.id} index={i} onClick={() => setSelectedRsvp(rsvp)} style={{ cursor: 'pointer' }}>
+          <TableRow key={rsvp.id} index={i} onClick={() => { setSelectedRsvp(rsvp); setReminderSent(false); setReminderError(null) }} style={{ cursor: 'pointer' }}>
             <TableCell>
               <span style={{ fontWeight: 500, color: colors.textPrimary }}>
                 {rsvp.name}
@@ -258,6 +276,31 @@ export function OpenHouseTable({ rsvps }: { rsvps: OpenHouseRsvp[] }) {
                   <p style={{ fontSize: '14px', color: colors.textPrimary }}>{value}</p>
                 </div>
               ))}
+
+              {/* Outreach */}
+              <div style={{ borderTop: `1px solid ${colors.divider}`, paddingTop: '14px', marginTop: '4px' }}>
+                <p style={{ fontSize: '11px', color: colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px' }}>Outreach</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => handleSendReminder(selectedRsvp)}
+                    disabled={reminderSending || reminderSent}
+                    style={{
+                      backgroundColor: '#2C5F2E',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '6px 12px',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      cursor: reminderSending || reminderSent ? 'not-allowed' : 'pointer',
+                      opacity: reminderSending || reminderSent ? 0.5 : 1,
+                    }}
+                  >
+                    {reminderSending ? 'Sending…' : reminderSent ? '✓ Sent!' : 'Send Reminder 1'}
+                  </button>
+                  {reminderError && <span style={{ fontSize: '12px', color: '#DC2626' }}>{reminderError}</span>}
+                </div>
+              </div>
 
               {/* Email History */}
               <div style={{ borderTop: `1px solid ${colors.divider}`, paddingTop: '14px', marginTop: '4px' }}>
