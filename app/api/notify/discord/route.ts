@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/app/lib/supabase-server'
+import { createAdminClient } from '@/app/lib/supabase-server'
 import {
   sendDiscordNotification,
   createTeacherClockInEmbed,
@@ -8,10 +8,17 @@ import {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient()
+    const authHeader = request.headers.get('Authorization')
+    const token = authHeader?.replace('Bearer ', '')
+
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const supabase = createAdminClient()
     const {
       data: { user },
-    } = await supabase.auth.getUser()
+    } = await supabase.auth.getUser(token)
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
