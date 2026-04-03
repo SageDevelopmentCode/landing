@@ -266,7 +266,8 @@ function CategoryBudgetRings({
           const emoji = CATEGORY_EMOJI[row.cat] ?? "💰";
           const clampedPct = Math.min(row.pct, 1);
           const dashLen = clampedPct * RING_CIRC;
-          const strokeColor = row.over ? colors.errorText : colors.mistyForest;
+          const strokeColor = row.over ? colors.errorText : SLICE_COLORS[i % SLICE_COLORS.length];
+          const textColor = row.over ? colors.errorText : colors.mistyForest;
           const bgColor = row.over ? colors.error : colors.success;
 
           return (
@@ -361,7 +362,7 @@ function CategoryBudgetRings({
                 style={{
                   fontSize: "14px",
                   fontWeight: 700,
-                  color: strokeColor,
+                  color: textColor,
                 }}
               >
                 {(clampedPct * 100).toFixed(0)}%
@@ -393,7 +394,7 @@ function CategoryBudgetRings({
               <div
                 style={{
                   backgroundColor: bgColor,
-                  color: strokeColor,
+                  color: textColor,
                   borderRadius: radius.sm,
                   padding: "2px 8px",
                   fontSize: "10px",
@@ -1021,7 +1022,7 @@ function BudgetVsActual({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
+            {rows.map((row, i) => (
               <tr
                 key={row.cat}
                 style={{ borderBottom: `1px solid ${colors.border}` }}
@@ -1070,7 +1071,7 @@ function BudgetVsActual({
                           borderRadius: "99px",
                           backgroundColor: row.over
                             ? colors.errorText
-                            : colors.mistyForest,
+                            : SLICE_COLORS[i % SLICE_COLORS.length],
                           transition: "width 0.4s ease",
                         }}
                       />

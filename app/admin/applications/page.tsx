@@ -7,6 +7,7 @@ import { Table, TableRow, TableCell } from '../components/Table'
 import { ApplicationDetailSidebar } from '../components/ApplicationDetailSidebar'
 import type { CachedEnrollmentData } from '../components/ApplicationDetailSidebar'
 import { AdminEnrollmentItemDrawer } from '../components/AdminEnrollmentItemDrawer'
+import { EnrollmentPipelineView } from '../components/EnrollmentPipelineView'
 import { colors } from '../design-system'
 import { Merriweather } from 'next/font/google'
 import { approveApplication } from '../../actions/approveApplication'
@@ -127,7 +128,7 @@ export default function ApplicationsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [selectedApp, setSelectedApp] = useState<Application | null>(null)
   const [approvingId, setApprovingId] = useState<string | null>(null)
-  const [view, setView] = useState<'table' | 'kanban'>('table')
+  const [view, setView] = useState<'table' | 'kanban' | 'pipeline'>('table')
   const [activeTab, setActiveTab] = useState<'active' | 'inactive'>('active')
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null)
   const [selectedItemStudentId, setSelectedItemStudentId] = useState<string | null>(null)
@@ -262,7 +263,7 @@ export default function ApplicationsPage() {
             ))}
           </div>
           <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ backgroundColor: colors.warmLinen, border: `1px solid ${colors.border}` }}>
-            {(['table', 'kanban'] as const).map(v => (
+            {(['table', 'kanban', 'pipeline'] as const).map(v => (
               <button
                 key={v}
                 onClick={() => setView(v)}
@@ -272,7 +273,7 @@ export default function ApplicationsPage() {
                   : { color: colors.textSecondary }
                 }
               >
-                {v === 'table' ? 'Table' : 'Board'}
+                {v === 'table' ? 'Table' : v === 'kanban' ? 'Board' : 'Pipeline'}
               </button>
             ))}
           </div>
@@ -390,6 +391,19 @@ export default function ApplicationsPage() {
                 <p className="text-gray-500">No applications yet</p>
               </div>
             )}
+          </motion.div>
+        ) : view === 'pipeline' ? (
+          <motion.div
+            key="pipeline"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+          >
+            <EnrollmentPipelineView
+              applications={applications as Parameters<typeof EnrollmentPipelineView>[0]['applications']}
+              setSelectedApp={(app) => setSelectedApp(app as Application)}
+            />
           </motion.div>
         ) : (
           <motion.div
