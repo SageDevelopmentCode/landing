@@ -105,6 +105,29 @@ const CATEGORIES = [
   "Other",
 ];
 
+const CATEGORY_EMOJI: Record<string, string> = {
+  Tuition: "🎓",
+  Donations: "🎁",
+  "Teacher Pay": "👩‍🏫",
+  "Staff Pay": "👥",
+  "Contractor / 1099": "🔧",
+  "Payroll Taxes": "📋",
+  Rent: "🏠",
+  Utilities: "💡",
+  "Maintenance & Repairs": "🛠️",
+  "Furniture & Equipment": "🪑",
+  "Supplies & Materials": "📦",
+  Curriculum: "📚",
+  "Field Trips": "🚌",
+  "Technology & Software": "💻",
+  Insurance: "🛡️",
+  Marketing: "📣",
+  "Professional Services": "💼",
+  Administrative: "📁",
+  Savings: "🏦",
+  Other: "📎",
+};
+
 // ─── Reusable styles ────────────────────────────────────────────────────────
 
 const cardStyle = {
@@ -189,6 +212,331 @@ function MiniStat({
   );
 }
 
+// ─── Category Budget Rings ───────────────────────────────────────────────────
+
+const RING_R = 36;
+const RING_CIRC = 2 * Math.PI * RING_R;
+
+function CategoryBudgetRings({
+  lineItems,
+  monthExpenses,
+}: {
+  lineItems: BudgetLineItem[];
+  monthExpenses: BudgetExpense[];
+}) {
+  const plannedByCategory = lineItems.reduce<Record<string, number>>(
+    (acc, i) => {
+      acc[i.category] = (acc[i.category] ?? 0) + Number(i.planned_amount);
+      return acc;
+    },
+    {},
+  );
+
+  const actualByCategory = monthExpenses.reduce<Record<string, number>>(
+    (acc, e) => {
+      const cat = e.category ?? "Other";
+      acc[cat] = (acc[cat] ?? 0) + Number(e.amount);
+      return acc;
+    },
+    {},
+  );
+
+  const rows = Object.entries(plannedByCategory)
+    .sort(([, a], [, b]) => b - a)
+    .map(([cat, planned]) => {
+      const actual = actualByCategory[cat] ?? 0;
+      const variance = planned - actual;
+      const pct = planned > 0 ? actual / planned : 0;
+      const over = actual > planned;
+      return { cat, planned, actual, variance, pct, over };
+    });
+
+  if (rows.length === 0) return null;
+
+  return (
+    <div style={{ ...cardStyle, padding: "24px" }}>
+      <p
+        className="text-sm font-semibold mb-4"
+        style={{ color: colors.textPrimary }}
+      >
+        Budget Usage by Category
+      </p>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        {rows.map((row, i) => {
+          const emoji = CATEGORY_EMOJI[row.cat] ?? "💰";
+          const clampedPct = Math.min(row.pct, 1);
+          const dashLen = clampedPct * RING_CIRC;
+          const strokeColor = row.over ? colors.errorText : colors.mistyForest;
+          const bgColor = row.over ? colors.error : colors.success;
+
+          return (
+            <motion.div
+              key={row.cat}
+              initial={{ opacity: 0, scale: 0.92 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: i * 0.04 }}
+              style={{
+                ...cardStyle,
+                padding: "16px 12px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "8px",
+                textAlign: "center",
+              }}
+            >
+              {/* Ring chart */}
+              <div style={{ position: "relative", width: 92, height: 92 }}>
+                <svg width={92} height={92}>
+                  {/* Track */}
+                  <circle
+                    cx={46}
+                    cy={46}
+                    r={RING_R}
+                    fill="none"
+                    stroke={colors.warmLinen}
+                    strokeWidth={10}
+                  />
+                  {/* Over-budget full ring fill */}
+                  {row.over && (
+                    <circle
+                      cx={46}
+                      cy={46}
+                      r={RING_R}
+                      fill="none"
+                      stroke={colors.error}
+                      strokeWidth={10}
+                    />
+                  )}
+                  {/* Progress arc, starts at 12 o'clock */}
+                  <motion.circle
+                    cx={46}
+                    cy={46}
+                    r={RING_R}
+                    fill="none"
+                    stroke={strokeColor}
+                    strokeWidth={10}
+                    strokeLinecap="round"
+                    strokeDasharray={`${dashLen} ${RING_CIRC}`}
+                    strokeDashoffset={0}
+                    transform="rotate(-90 46 46)"
+                    initial={{ strokeDasharray: `0 ${RING_CIRC}` }}
+                    animate={{ strokeDasharray: `${dashLen} ${RING_CIRC}` }}
+                    transition={{
+                      duration: 0.6,
+                      delay: i * 0.04,
+                      ease: "easeOut",
+                    }}
+                  />
+                </svg>
+                {/* Emoji center */}
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "22px",
+                  }}
+                >
+                  {emoji}
+                </div>
+              </div>
+
+              {/* Category name */}
+              <p
+                style={{
+                  fontSize: "11px",
+                  fontWeight: 600,
+                  color: colors.textPrimary,
+                  lineHeight: 1.3,
+                }}
+              >
+                {row.cat}
+              </p>
+
+              {/* Usage % */}
+              <p
+                style={{
+                  fontSize: "14px",
+                  fontWeight: 700,
+                  color: strokeColor,
+                }}
+              >
+                {(clampedPct * 100).toFixed(0)}%
+              </p>
+
+              {/* Planned / Actual */}
+              <div
+                style={{
+                  fontSize: "11px",
+                  color: colors.textSecondary,
+                  width: "100%",
+                }}
+              >
+                <div className="flex justify-between">
+                  <span>Plan</span>
+                  <span style={{ color: colors.textPrimary, fontWeight: 600 }}>
+                    {fmt(row.planned)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Actual</span>
+                  <span style={{ color: colors.textPrimary, fontWeight: 600 }}>
+                    {fmt(row.actual)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Over / Under badge */}
+              <div
+                style={{
+                  backgroundColor: bgColor,
+                  color: strokeColor,
+                  borderRadius: radius.sm,
+                  padding: "2px 8px",
+                  fontSize: "10px",
+                  fontWeight: 700,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {row.over
+                  ? `▲ ${fmt(Math.abs(row.variance))} over`
+                  : `▼ ${fmt(Math.abs(row.variance))} left`}
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── Revenue Trend ────────────────────────────────────────────────────────────
+
+function RevenueTrend({
+  stripeTransactions,
+}: {
+  stripeTransactions: StripeTransaction[];
+}) {
+  const now = new Date();
+  const months: string[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push(d.toISOString().slice(0, 7));
+  }
+
+  const data = months.map((m) => {
+    const total = stripeTransactions
+      .filter(
+        (tx) =>
+          !tx.exclude_from_revenue && tx.created_at.slice(0, 7) === m,
+      )
+      .reduce((s, tx) => {
+        const net = tx.cover_fees
+          ? (tx.intended_amount_cents ?? tx.amount_cents)
+          : tx.amount_cents;
+        return s + net / 100;
+      }, 0);
+    return { month: m, total };
+  });
+
+  const maxVal = Math.max(...data.map((d) => d.total), 1);
+
+  const fmtMo = (m: string) =>
+    new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)) - 1).toLocaleString(
+      "default",
+      { month: "short" },
+    );
+
+  const BAR_MAX_PX = 80;
+
+  return (
+    <div style={{ ...cardStyle, padding: "24px" }}>
+      <p
+        className="text-sm font-semibold mb-4"
+        style={{ color: colors.textPrimary }}
+      >
+        Revenue Trend (6 months)
+      </p>
+
+      {/* Amount labels */}
+      <div style={{ display: "flex", gap: "6px", marginBottom: "4px" }}>
+        {data.map((d) => (
+          <div
+            key={d.month}
+            style={{
+              flex: 1,
+              textAlign: "center",
+              fontSize: "9px",
+              color: colors.textSecondary,
+              minHeight: "14px",
+            }}
+          >
+            {d.total > 0 ? fmt(d.total) : "—"}
+          </div>
+        ))}
+      </div>
+
+      {/* Bars */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-end",
+          gap: "6px",
+          height: `${BAR_MAX_PX}px`,
+        }}
+      >
+        {data.map((d, i) => {
+          const barH = d.total > 0
+            ? Math.max((d.total / maxVal) * BAR_MAX_PX, 4)
+            : 0;
+          return (
+            <motion.div
+              key={d.month}
+              initial={{ height: 0 }}
+              animate={{ height: barH }}
+              transition={{ duration: 0.5, delay: i * 0.07, ease: "easeOut" }}
+              style={{
+                flex: 1,
+                borderRadius: "4px 4px 0 0",
+                backgroundColor: colors.mistyForest,
+              }}
+            />
+          );
+        })}
+      </div>
+
+      {/* Baseline */}
+      <div
+        style={{
+          height: "1px",
+          backgroundColor: colors.border,
+          marginBottom: "4px",
+        }}
+      />
+
+      {/* Month labels */}
+      <div style={{ display: "flex", gap: "6px" }}>
+        {data.map((d) => (
+          <div
+            key={d.month}
+            style={{
+              flex: 1,
+              textAlign: "center",
+              fontSize: "10px",
+              color: colors.textSecondary,
+            }}
+          >
+            {fmtMo(d.month)}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Overview Tab ────────────────────────────────────────────────────────────
 
 function OverviewTab({
@@ -226,14 +574,28 @@ function OverviewTab({
   const netProfit = totalRevenue - totalExpenses;
   const profitColor = netProfit >= 0 ? colors.successText : colors.errorText;
 
-  // Category breakdown for budget
+  // All-time totals (unfiltered)
+  const allTimeRevenue = stripeTransactions
+    .filter(tx => !tx.exclude_from_revenue)
+    .reduce((s, tx) => {
+      const net = tx.cover_fees ? (tx.intended_amount_cents ?? tx.amount_cents) : tx.amount_cents;
+      return s + net / 100;
+    }, 0);
+  const allTimeExpenses = expenses.reduce((s, e) => s + Number(e.amount), 0);
+  const allTimeNet = allTimeRevenue - allTimeExpenses;
+  const allTimeNetColor = allTimeNet >= 0 ? colors.successText : colors.errorText;
+
+  const monthLabel = new Date(
+    Number(selectedMonth.slice(0, 4)),
+    Number(selectedMonth.slice(5, 7)) - 1,
+  ).toLocaleString("default", { month: "long", year: "numeric" });
+
+  // Category breakdown for budget (used by BudgetPieChart)
   const byCategory = lineItems.reduce<Record<string, number>>((acc, item) => {
     acc[item.category] =
       (acc[item.category] ?? 0) + Number(item.planned_amount);
     return acc;
   }, {});
-
-  const maxCatVal = Math.max(...Object.values(byCategory), 1);
 
   return (
     <div className="space-y-6">
@@ -250,167 +612,143 @@ function OverviewTab({
       {/* Stat row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <MiniStat
-          label="Monthly Planned Budget"
+          label={`Planned Budget · ${monthLabel}`}
           value={fmt(totalBudget)}
           color={colors.textPrimary}
           delay={0}
         />
         <MiniStat
-          label="Actual Expenses"
+          label={`Actual Expenses · ${monthLabel}`}
           value={fmt(totalExpenses)}
           color={colors.errorText}
           delay={0.05}
         />
         <MiniStat
-          label="Revenue"
+          label={`Revenue · ${monthLabel}`}
           value={fmt(totalRevenue)}
           color={colors.successText}
           delay={0.1}
         />
         <MiniStat
-          label="Net Profit / Loss"
+          label={`Net Profit / Loss · ${monthLabel}`}
           value={fmt(netProfit)}
           color={profitColor}
           delay={0.15}
         />
       </div>
 
+      {/* Category ring charts */}
+      <CategoryBudgetRings
+        lineItems={lineItems}
+        monthExpenses={monthExpenses}
+      />
+
+      {/* Budget allocation donut + Revenue trend */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Budget breakdown bars */}
-        <div style={{ ...cardStyle, padding: "24px" }}>
-          <p
-            className="text-sm font-semibold mb-4"
-            style={{ color: colors.textPrimary }}
-          >
-            Budget by Category
-          </p>
-          <div className="space-y-3">
-            {Object.entries(byCategory)
-              .sort(([, a], [, b]) => b - a)
-              .map(([cat, val]) => (
-                <div key={cat}>
-                  <div
-                    className="flex justify-between text-xs mb-1"
-                    style={{ color: colors.textSecondary }}
-                  >
-                    <span>{cat}</span>
-                    <span>{fmt(val)}</span>
+        <BudgetPieChart byCategory={byCategory} total={totalBudget} />
+        <div className="space-y-4">
+          <RevenueTrend stripeTransactions={stripeTransactions} />
+          {/* P&L Summary — monthly + all-time */}
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              {
+                title: "This Month",
+                revenue: totalRevenue,
+                expenses: totalExpenses,
+                net: netProfit,
+                netColor: profitColor,
+              },
+              {
+                title: "All Time",
+                revenue: allTimeRevenue,
+                expenses: allTimeExpenses,
+                net: allTimeNet,
+                netColor: allTimeNetColor,
+              },
+            ].map(({ title, revenue, expenses: exp, net, netColor }) => (
+              <div key={title} style={{ ...cardStyle, padding: "16px" }}>
+                <p
+                  className="text-xs font-semibold mb-3"
+                  style={{ color: colors.textSecondary, textTransform: "uppercase", letterSpacing: "0.05em" }}
+                >
+                  {title}
+                </p>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span style={{ color: colors.textSecondary }}>Revenue</span>
+                    <span style={{ color: colors.successText, fontWeight: 600 }}>{fmt(revenue)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span style={{ color: colors.textSecondary }}>Expenses</span>
+                    <span style={{ color: colors.errorText, fontWeight: 600 }}>{fmt(exp)}</span>
                   </div>
                   <div
-                    style={{
-                      height: "8px",
-                      borderRadius: "99px",
-                      backgroundColor: colors.warmLinen,
-                      overflow: "hidden",
-                    }}
+                    className="flex justify-between pt-2 mt-1"
+                    style={{ borderTop: `1px solid ${colors.border}`, fontWeight: 700 }}
                   >
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${(val / maxCatVal) * 100}%` }}
-                      transition={{ duration: 0.6, ease: "easeOut" }}
-                      style={{
-                        height: "100%",
-                        borderRadius: "99px",
-                        backgroundColor: colors.mistyForest,
-                      }}
-                    />
+                    <span style={{ color: colors.textPrimary }}>Net</span>
+                    <span style={{ color: netColor }}>{net < 0 ? `-${fmt(Math.abs(net))}` : fmt(net)}</span>
                   </div>
                 </div>
-              ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Budget vs. Actual table */}
+      <BudgetVsActual lineItems={lineItems} expenses={expenses} />
+
+      {/* Break-even + Tax Reserve */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div style={{ ...cardStyle, padding: "24px" }}>
+          <p
+            className="text-sm font-semibold mb-3"
+            style={{ color: colors.textPrimary }}
+          >
+            Break-even Analysis
+          </p>
+          <div
+            className="space-y-1 text-sm"
+            style={{ color: colors.textSecondary }}
+          >
+            <p>
+              At $1,095/mo (Full Enroll 1–4):{" "}
+              <strong style={{ color: colors.textPrimary }}>
+                {Math.ceil(totalBudget / 1095)} students
+              </strong>
+            </p>
+            <p>
+              At $1,195/mo (Primary):{" "}
+              <strong style={{ color: colors.textPrimary }}>
+                {Math.ceil(totalBudget / 1195)} students
+              </strong>
+            </p>
+            <p>
+              At $375/mo (After Care):{" "}
+              <strong style={{ color: colors.textPrimary }}>
+                {Math.ceil(totalBudget / 375)} students
+              </strong>
+            </p>
           </div>
         </div>
 
-        {/* P&L Summary + Break-even */}
-        <div className="space-y-4">
-          <div style={{ ...cardStyle, padding: "24px" }}>
-            <p
-              className="text-sm font-semibold mb-3"
-              style={{ color: colors.textPrimary }}
-            >
-              P&L Summary
-            </p>
-            <div className="space-y-2 text-sm">
-              {[
-                {
-                  label: "Revenue",
-                  value: totalRevenue,
-                  color: colors.successText,
-                },
-                {
-                  label: "Expenses",
-                  value: -totalExpenses,
-                  color: colors.errorText,
-                },
-              ].map(({ label, value, color }) => (
-                <div key={label} className="flex justify-between">
-                  <span style={{ color: colors.textSecondary }}>{label}</span>
-                  <span style={{ color, fontWeight: 600 }}>
-                    {fmt(Math.abs(value))}
-                  </span>
-                </div>
-              ))}
-              <div
-                className="flex justify-between pt-2 mt-2"
-                style={{
-                  borderTop: `1px solid ${colors.border}`,
-                  fontWeight: 700,
-                }}
-              >
-                <span style={{ color: colors.textPrimary }}>Net</span>
-                <span style={{ color: profitColor }}>{fmt(netProfit)}</span>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ ...cardStyle, padding: "24px" }}>
-            <p
-              className="text-sm font-semibold mb-3"
-              style={{ color: colors.textPrimary }}
-            >
-              Break-even Analysis
-            </p>
-            <div
-              className="space-y-1 text-sm"
-              style={{ color: colors.textSecondary }}
-            >
-              <p>
-                At $1,095/mo (Full Enroll 1–4):{" "}
-                <strong style={{ color: colors.textPrimary }}>
-                  {Math.ceil(totalBudget / 1095)} students
-                </strong>
-              </p>
-              <p>
-                At $1,195/mo (Primary):{" "}
-                <strong style={{ color: colors.textPrimary }}>
-                  {Math.ceil(totalBudget / 1195)} students
-                </strong>
-              </p>
-              <p>
-                At $375/mo (After Care):{" "}
-                <strong style={{ color: colors.textPrimary }}>
-                  {Math.ceil(totalBudget / 375)} students
-                </strong>
-              </p>
-            </div>
-          </div>
-
-          <div style={{ ...cardStyle, padding: "24px" }}>
-            <p
-              className="text-sm font-semibold mb-2"
-              style={{ color: colors.textPrimary }}
-            >
-              Tax Reserve (25% of profit)
-            </p>
-            <p
-              className="text-xl font-semibold"
-              style={{ color: colors.warningText }}
-            >
-              {fmt(Math.max(netProfit * 0.25, 0))}
-            </p>
-            <p className="text-xs mt-1" style={{ color: colors.textTertiary }}>
-              Set aside monthly from any profit
-            </p>
-          </div>
+        <div style={{ ...cardStyle, padding: "24px" }}>
+          <p
+            className="text-sm font-semibold mb-2"
+            style={{ color: colors.textPrimary }}
+          >
+            Tax Reserve (25% of profit)
+          </p>
+          <p
+            className="text-xl font-semibold"
+            style={{ color: colors.warningText }}
+          >
+            {fmt(Math.max(netProfit * 0.25, 0))}
+          </p>
+          <p className="text-xs mt-1" style={{ color: colors.textTertiary }}>
+            Set aside monthly from any profit
+          </p>
         </div>
       </div>
     </div>
