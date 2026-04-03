@@ -7,7 +7,12 @@ import { denyApplication } from '../../actions/denyApplication'
 import { deactivateApplication } from '../../actions/deactivateApplication'
 import { getApplicationNotes } from '../../actions/getApplicationNotes'
 import { addApplicationNote } from '../../actions/addApplicationNote'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import type { FileObject } from '@supabase/storage-js'
+import { listHealthInfoForms } from '../../actions/listHealthInfoForms'
+import { uploadHealthInfoForm } from '../../actions/uploadHealthInfoForm'
+import { deleteHealthInfoForm } from '../../actions/deleteHealthInfoForm'
+import { getHealthInfoFormUrl } from '../../actions/getHealthInfoFormUrl'
 import { createBrowserClient } from '@supabase/ssr'
 import { getAdminEnrollmentData, type AdminEnrollmentData } from '../../actions/getAdminEnrollmentData'
 import { EnrollmentProgressCard, type ApprovedApplication } from './EnrollmentProgressCard'
@@ -142,6 +147,18 @@ export function ApplicationDetailSidebar({
   const [siblingApps, setSiblingApps] = useState<ApprovedApplication[]>([])
   const [emailThreadKey, setEmailThreadKey] = useState(0)
 
+  const [healthForms, setHealthForms] = useState<FileObject[]>([])
+  const [isLoadingHealthForms, setIsLoadingHealthForms] = useState(false)
+  const [isUploadingHealthForm, setIsUploadingHealthForm] = useState(false)
+  const [isDraggingHealthForm, setIsDraggingHealthForm] = useState(false)
+  const [deletingHealthFormPath, setDeletingHealthFormPath] = useState<string | null>(null)
+  const [healthFormError, setHealthFormError] = useState<string | null>(null)
+  const [loadingHealthFormPreviewPath, setLoadingHealthFormPreviewPath] = useState<string | null>(null)
+  const healthFormInputRef = useRef<HTMLInputElement>(null)
+  const MAX_HEALTH_FORM_FILES = 10
+  const HEALTH_FORM_MAX_FILE_SIZE = 10 * 1024 * 1024
+  const HEALTH_FORM_ACCEPTED_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/heic']
+
   useEffect(() => {
     if (!application?.approved) {
       setEnrollmentData(null)
@@ -229,7 +246,73 @@ export function ApplicationDetailSidebar({
     }
   }, [application?.id])
 
+  useEffect(() => {
+    setHealthForms([])
+    setHealthFormError(null)
+    if (!application?.approved || !application?.student_id) return
+    const studentId = application.student_id
+    setIsLoadingHealthForms(true)
+    listHealthInfoForms(studentId).then((res) => {
+      if (res.error) setHealthFormError(res.error)
+      else setHealthForms(res.files as FileObject[])
+      setIsLoadingHealthForms(false)
+    })
+  }, [application?.id])
+
   if (!application) return null
+
+  const loadHealthForms = async () => {
+    if (!application.student_id) return
+    setIsLoadingHealthForms(true)
+    const res = await listHealthInfoForms(application.student_id)
+    if (res.error) setHealthFormError(res.error)
+    else setHealthForms(res.files as FileObject[])
+    setIsLoadingHealthForms(false)
+  }
+
+  const handleHealthFormUpload = async (file: File) => {
+    if (!application.student_id) return
+    if (!HEALTH_FORM_ACCEPTED_TYPES.includes(file.type)) {
+      setHealthFormError('File type not supported. Use PDF, JPEG, PNG, WEBP, or HEIC.')
+      return
+    }
+    if (file.size > HEALTH_FORM_MAX_FILE_SIZE) {
+      setHealthFormError('File exceeds 10 MB limit.')
+      return
+    }
+    if (healthForms.length >= MAX_HEALTH_FORM_FILES) {
+      setHealthFormError(`Maximum ${MAX_HEALTH_FORM_FILES} files allowed.`)
+      return
+    }
+    setHealthFormError(null)
+    setIsUploadingHealthForm(true)
+    const fd = new FormData()
+    fd.append('studentId', application.student_id)
+    fd.append('file', file)
+    const result = await uploadHealthInfoForm(fd)
+    if ('error' in result && result.error) setHealthFormError(result.error)
+    else await loadHealthForms()
+    setIsUploadingHealthForm(false)
+  }
+
+  const handleHealthFormDelete = async (path: string) => {
+    setDeletingHealthFormPath(path)
+    const result = await deleteHealthInfoForm(path)
+    if ('error' in result && result.error) setHealthFormError(result.error)
+    else await loadHealthForms()
+    setDeletingHealthFormPath(null)
+  }
+
+  const handleHealthFormDownload = async (path: string) => {
+    setLoadingHealthFormPreviewPath(path)
+    const result = await getHealthInfoFormUrl(path)
+    setLoadingHealthFormPreviewPath(null)
+    if ('error' in result) {
+      setHealthFormError(result.error ?? 'Unknown error')
+      return
+    }
+    if ('url' in result && result.url) window.open(result.url, '_blank')
+  }
 
   const isActioned = application.approved || application.denied
 
@@ -512,6 +595,80 @@ export function ApplicationDetailSidebar({
               }}
             />
           ) : null
+        )}
+
+        {application.approved && application.student_id && (
+          <SidebarSection title="Health Info Forms">
+            {isLoadingHealthForms ? (
+              <p className="text-xs text-gray-400">Loading…</p>
+            ) : healthForms.length > 0 ? (
+              <div className="flex flex-col gap-1.5 mb-3">
+                {healthForms.map((f) => {
+                  const filePath = `forms/${application.student_id}/${f.name}`
+                  return (
+                    <div key={f.name} className="flex items-center gap-2 px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-lg">
+                      <span className="text-xs text-gray-700 flex-1 truncate min-w-0">
+                        {f.name.replace(/^\d+-/, '')}
+                      </span>
+                      <button
+                        onClick={() => handleHealthFormDownload(filePath)}
+                        disabled={loadingHealthFormPreviewPath === filePath}
+                        className="text-gray-400 hover:text-gray-600 disabled:opacity-40 flex-shrink-0 text-xs underline"
+                        title="Open"
+                      >
+                        Open
+                      </button>
+                      <button
+                        onClick={() => handleHealthFormDelete(filePath)}
+                        disabled={deletingHealthFormPath === filePath}
+                        className="text-gray-400 hover:text-red-500 disabled:opacity-40 flex-shrink-0 text-xs"
+                        title="Delete"
+                      >
+                        {deletingHealthFormPath === filePath ? '…' : '✕'}
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : null}
+
+            {healthForms.length < MAX_HEALTH_FORM_FILES && (
+              <div
+                onDragOver={(e) => { e.preventDefault(); setIsDraggingHealthForm(true) }}
+                onDragLeave={() => setIsDraggingHealthForm(false)}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  setIsDraggingHealthForm(false)
+                  const f = e.dataTransfer.files[0]
+                  if (f) handleHealthFormUpload(f)
+                }}
+                onClick={() => { if (!isUploadingHealthForm) healthFormInputRef.current?.click() }}
+                className={[
+                  'border-2 border-dashed rounded-lg px-3 py-4 text-center transition-colors',
+                  isDraggingHealthForm ? 'border-[#2C5F2E] bg-green-50' : 'border-gray-200 bg-gray-50 hover:border-[#2C5F2E]/50',
+                  isUploadingHealthForm ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer',
+                ].join(' ')}
+              >
+                <p className="text-xs text-gray-400">
+                  {isUploadingHealthForm ? 'Uploading…' : 'Drop a file or click to upload'}
+                </p>
+                <p className="text-xs text-gray-300 mt-0.5">PDF, JPEG, PNG, WEBP, HEIC · max 10 MB</p>
+              </div>
+            )}
+
+            <input
+              ref={healthFormInputRef}
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png,.webp,.heic"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0]
+                if (f) handleHealthFormUpload(f)
+                e.target.value = ''
+              }}
+            />
+            {healthFormError && <p className="text-xs text-red-500 mt-1">{healthFormError}</p>}
+          </SidebarSection>
         )}
 
         {application.approved && application.g1_email && (
