@@ -200,12 +200,24 @@ function OverviewTab({
   expenses: BudgetExpense[];
   stripeTransactions: StripeTransaction[];
 }) {
+  const [selectedMonth, setSelectedMonth] = useState(() =>
+    new Date().toISOString().slice(0, 7),
+  );
+
   const totalBudget = lineItems.reduce(
     (s, i) => s + Number(i.planned_amount),
     0,
   );
-  const totalExpenses = expenses.reduce((s, e) => s + Number(e.amount), 0);
-  const totalRevenue = stripeTransactions
+
+  const monthExpenses = expenses.filter(e =>
+    e.expense_date.startsWith(selectedMonth),
+  );
+  const totalExpenses = monthExpenses.reduce((s, e) => s + Number(e.amount), 0);
+
+  const monthTransactions = stripeTransactions.filter(
+    tx => tx.created_at.slice(0, 7) === selectedMonth,
+  );
+  const totalRevenue = monthTransactions
     .filter(tx => !tx.exclude_from_revenue)
     .reduce((s, tx) => {
       const net = tx.cover_fees ? (tx.intended_amount_cents ?? tx.amount_cents) : tx.amount_cents;
@@ -225,22 +237,32 @@ function OverviewTab({
 
   return (
     <div className="space-y-6">
+      {/* Month picker */}
+      <div className="flex items-center gap-3">
+        <input
+          style={{ ...inputStyle, width: "140px" }}
+          type="month"
+          value={selectedMonth}
+          onChange={(e) => setSelectedMonth(e.target.value)}
+        />
+      </div>
+
       {/* Stat row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <MiniStat
-          label="Total Planned Budget"
+          label="Monthly Planned Budget"
           value={fmt(totalBudget)}
           color={colors.textPrimary}
           delay={0}
         />
         <MiniStat
-          label="Total Actual Expenses"
+          label="Actual Expenses"
           value={fmt(totalExpenses)}
           color={colors.errorText}
           delay={0.05}
         />
         <MiniStat
-          label="Total Revenue"
+          label="Revenue"
           value={fmt(totalRevenue)}
           color={colors.successText}
           delay={0.1}
