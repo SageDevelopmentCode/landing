@@ -18,7 +18,7 @@ export default async function TeacherDashboard() {
   const adminClient = createAdminClient()
 
   const [{ data: adminUser }, { data: teacherStudentRows }] = await Promise.all([
-    adminClient.schema('admin').from('users').select('full_name').eq('id', user.id).single(),
+    adminClient.schema('admin').from('users').select('full_name, profile_image_url').eq('id', user.id).single(),
     adminClient
       .schema('teachers')
       .from('teacher_students')
@@ -28,6 +28,7 @@ export default async function TeacherDashboard() {
   ])
 
   const fullName = adminUser?.full_name ?? null
+  const profileImageUrl = adminUser?.profile_image_url ?? null
 
   let myStudents: StudentRow[] = []
 
@@ -74,7 +75,12 @@ export default async function TeacherDashboard() {
           </div>
           <div className="flex items-center justify-end">
             {user?.email && (
-              <ProfileDropdown email={user.email} fullName={fullName} />
+              <ProfileDropdown
+                email={user.email}
+                fullName={fullName}
+                userId={user.id}
+                profileImageUrl={profileImageUrl}
+              />
             )}
           </div>
         </header>
