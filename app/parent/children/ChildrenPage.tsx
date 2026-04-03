@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Image as ImageIcon,
@@ -13,6 +13,9 @@ import {
   Loader2,
 } from "lucide-react";
 import { uploadStudentProfileImage } from "@/app/actions/uploadStudentProfileImage";
+import { getParentStudentAttendance, type ParentCheckInRecord } from "@/app/actions/getParentStudentAttendance";
+import { DetailSidebar } from "@/app/admin/components/DetailSidebar";
+import { SidebarField, SidebarSection } from "@/app/components/SidebarPrimitives";
 import NextImage from "next/image";
 import type { Database } from "@/app/types/database.types";
 import type { TeacherAssignment } from "@/app/actions/teacherAssignments";
@@ -342,32 +345,149 @@ function TeacherTab({
   );
 }
 
-function AttendanceTab() {
+function AttendanceTab({
+  records,
+  loading,
+}: {
+  records: ParentCheckInRecord[];
+  loading: boolean;
+}) {
+  const [selectedRecord, setSelectedRecord] = useState<ParentCheckInRecord | null>(null);
+
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+
+  const formatTime = (iso: string) =>
+    new Date(iso).toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+
+  const isPastDay = (iso: string) => {
+    const d = new Date(iso);
+    const today = new Date();
+    return d.toDateString() !== today.toDateString() && d < today;
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center bg-white rounded-2xl border border-gray-100 p-12 text-center">
-      <div
-        className="flex items-center justify-center w-14 h-14 rounded-full mb-4"
-        style={{ backgroundColor: "#d4e6d0" }}
-      >
-        <Smartphone
-          className="w-6 h-6"
-          style={{ color: "#4a7c59" }}
-          strokeWidth={1.5}
-        />
+    <>
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        {loading ? (
+          <div className="space-y-0">
+            {[...Array(4)].map((_, i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between px-4 py-3 border-b border-gray-100"
+              >
+                <div className="h-4 w-28 bg-gray-100 rounded animate-pulse" />
+                <div className="h-4 w-20 bg-gray-100 rounded animate-pulse" />
+                <div className="h-4 w-20 bg-gray-100 rounded animate-pulse" />
+                <div className="h-5 w-24 bg-gray-100 rounded-full animate-pulse" />
+              </div>
+            ))}
+          </div>
+        ) : records.length === 0 ? (
+          <p className="text-sm text-gray-400 px-4 py-6">
+            No attendance records found.
+          </p>
+        ) : (
+          <div>
+            <div className="grid grid-cols-4 px-4 py-2 border-b border-gray-100 bg-gray-50">
+              <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                Date
+              </span>
+              <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                Checked In
+              </span>
+              <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                Checked Out
+              </span>
+              <span className="text-xs font-semibold uppercase tracking-widest text-gray-400 text-right">
+                Status
+              </span>
+            </div>
+            {records.map((r, i) => {
+              const notCheckedOut = !r.checked_out_at && isPastDay(r.checked_in_at);
+              return (
+                <div
+                  key={r.id}
+                  onClick={() => setSelectedRecord(r)}
+                  className={`grid grid-cols-4 px-4 py-3 cursor-pointer transition-colors hover:bg-gray-50 ${
+                    i < records.length - 1 ? "border-b border-gray-100" : ""
+                  }`}
+                >
+                  <span className="text-sm text-gray-700">
+                    {formatDate(r.checked_in_at)}
+                  </span>
+                  <span className="text-sm text-gray-600">
+                    {formatTime(r.checked_in_at)}
+                  </span>
+                  <span className="text-sm text-gray-600">
+                    {r.checked_out_at ? formatTime(r.checked_out_at) : "—"}
+                  </span>
+                  <div className="flex justify-end">
+                    {r.checked_out_at ? (
+                      <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-green-100 text-green-700">
+                        Checked Out
+                      </span>
+                    ) : notCheckedOut ? (
+                      <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                        Not Checked Out
+                      </span>
+                    ) : (
+                      <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                        In Progress
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        <div className="flex items-center gap-2 px-4 py-3 border-t border-gray-100 bg-gray-50">
+          <Smartphone className="w-4 h-4 text-gray-400 flex-shrink-0" strokeWidth={1.5} />
+          <p className="text-xs text-gray-400">
+            To check your child in or out, use the Sage Field mobile app.
+          </p>
+        </div>
       </div>
-      <p className="text-base font-semibold font-heading text-gray-700 mb-1">
-        Checking in/out your child is only available on the Sage Field App
-      </p>
-      <p className="text-sm font-body text-gray-400 mb-5">
-        Download the app to manage attendance.
-      </p>
-      <button
-        onClick={() => {}}
-        className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-[#4a7c59] text-white hover:bg-[#3d6b4a] transition-colors cursor-pointer"
+
+      <DetailSidebar
+        isOpen={!!selectedRecord}
+        onClose={() => setSelectedRecord(null)}
+        title="Check-In Details"
       >
-        Download the App
-      </button>
-    </div>
+        {selectedRecord && (
+          <SidebarSection title="Check-In Record">
+            <SidebarField
+              label="Date"
+              value={formatDate(selectedRecord.checked_in_at)}
+            />
+            <SidebarField
+              label="Checked In"
+              value={formatTime(selectedRecord.checked_in_at)}
+            />
+            <SidebarField
+              label="Checked Out"
+              value={
+                selectedRecord.checked_out_at
+                  ? formatTime(selectedRecord.checked_out_at)
+                  : "Not checked out"
+              }
+            />
+            {selectedRecord.notes && (
+              <SidebarField label="Notes" value={selectedRecord.notes} />
+            )}
+          </SidebarSection>
+        )}
+      </DetailSidebar>
+    </>
   );
 }
 
@@ -416,8 +536,18 @@ function ChildProfile({
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(initialProfileImageUrl);
   const [avatarHovered, setAvatarHovered] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [attendanceRecords, setAttendanceRecords] = useState<ParentCheckInRecord[]>([]);
+  const [attendanceLoading, setAttendanceLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    setAttendanceLoading(true);
+    getParentStudentAttendance(child.id)
+      .then(setAttendanceRecords)
+      .catch(() => setAttendanceRecords([]))
+      .finally(() => setAttendanceLoading(false));
+  }, [child.id]);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -553,7 +683,7 @@ function ChildProfile({
               }
             />
           )}
-          {activeTab === "attendance" && <AttendanceTab />}
+          {activeTab === "attendance" && <AttendanceTab records={attendanceRecords} loading={attendanceLoading} />}
           {activeTab === "learning" && <LearningTab />}
 
           {activeTab === "photos" && (

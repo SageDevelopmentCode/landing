@@ -35,7 +35,7 @@ const moreItems: { label: string; icon: LucideIcon; href?: string }[] = [
   { label: "Resources", icon: BookOpen },
   { label: "Photos/Updates", icon: Image },
   { label: "Volunteer Opportunities", icon: Heart, href: "/parent/volunteer" },
-  { label: "Emergency Contacts", icon: Phone },
+  { label: "Emergency Contacts", icon: Phone, href: "/parent/emergency-contacts" },
   { label: "Transportation", icon: Bus },
   { label: "Reimbursement", icon: Receipt },
 ];
