@@ -18,7 +18,7 @@ export default async function StudentsPage() {
   const adminClient = createAdminClient()
 
   const [{ data: adminUser }, { data: teacherStudentRows }] = await Promise.all([
-    adminClient.schema('admin').from('users').select('full_name').eq('id', user.id).single(),
+    adminClient.schema('admin').from('users').select('full_name, profile_image_url').eq('id', user.id).single(),
     adminClient
       .schema('teachers')
       .from('teacher_students')
@@ -28,6 +28,7 @@ export default async function StudentsPage() {
   ])
 
   const fullName = adminUser?.full_name ?? null
+  const profileImageUrl = adminUser?.profile_image_url ?? null
 
   let myStudents: StudentRow[] = []
 
@@ -36,11 +37,11 @@ export default async function StudentsPage() {
     const { data: studentRecords } = await adminClient
       .schema('admin')
       .from('students')
-      .select('id, child_legal_name, child_grade')
+      .select('id, child_legal_name, child_grade, profile_image_url')
       .in('id', studentIds)
 
     const studentMap = new Map(
-      (studentRecords ?? []).map((s) => [s.id, { name: s.child_legal_name, grade: s.child_grade }])
+      (studentRecords ?? []).map((s) => [s.id, { name: s.child_legal_name, grade: s.child_grade, profile_image_url: s.profile_image_url ?? null }])
     )
 
     myStudents = teacherStudentRows.map((r) => ({
@@ -50,12 +51,13 @@ export default async function StudentsPage() {
       grade: studentMap.get(r.student_id)?.grade ?? null,
       program: r.program,
       classroom: r.classroom,
+      profile_image_url: studentMap.get(r.student_id)?.profile_image_url ?? null,
     }))
   }
 
   return (
     <div className="bg-white min-h-screen flex flex-col">
-      <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-3 items-center">
+      <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-[auto_1fr_auto] items-center">
         <div className="flex items-center">
           <Link href="/">
             <Image
@@ -72,7 +74,7 @@ export default async function StudentsPage() {
         </div>
         <div className="flex items-center justify-end">
           {user?.email && (
-            <ProfileDropdown email={user.email} fullName={fullName} />
+            <ProfileDropdown email={user.email} fullName={fullName} userId={user.id} profileImageUrl={profileImageUrl} />
           )}
         </div>
       </header>

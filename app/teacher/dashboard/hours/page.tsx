@@ -19,16 +19,17 @@ export default async function HoursPage() {
   const { data: adminUser } = await adminClient
     .schema('admin')
     .from('users')
-    .select('full_name')
+    .select('full_name, profile_image_url')
     .eq('id', user.id)
     .single()
 
   const fullName = adminUser?.full_name ?? null
+  const profileImageUrl = adminUser?.profile_image_url ?? null
   const initialSessions = await getTeacherSessions()
 
   return (
     <div className="bg-welcome-bg min-h-screen flex flex-col">
-      <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-3 items-center">
+      <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-[auto_1fr_auto] items-center">
         <div className="flex items-center">
           <Link href="/">
             <Image
@@ -45,7 +46,7 @@ export default async function HoursPage() {
         </div>
         <div className="flex items-center justify-end">
           {user?.email && (
-            <ProfileDropdown email={user.email} fullName={fullName} />
+            <ProfileDropdown email={user.email} fullName={fullName} userId={user.id} profileImageUrl={profileImageUrl} />
           )}
         </div>
       </header>

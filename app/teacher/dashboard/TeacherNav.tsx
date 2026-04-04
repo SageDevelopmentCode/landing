@@ -6,12 +6,11 @@ import { usePathname } from "next/navigation";
 import {
   ChevronDown,
   LayoutDashboard,
-  ClipboardCheck,
   Clock,
   MessageCircle,
   Calendar,
   CreditCard,
-  BookOpen,
+  Rss,
   FileText,
   Users,
 } from "lucide-react";
@@ -20,15 +19,14 @@ import { LucideIcon } from "lucide-react";
 const primaryNavItems: { label: string; icon: LucideIcon; href: string }[] = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/teacher/dashboard" },
   { label: "My Students", icon: Users, href: "/teacher/dashboard/students" },
-  { label: "Attendance", icon: ClipboardCheck, href: "#" },
   { label: "My Hours", icon: Clock, href: "/teacher/dashboard/hours" },
   { label: "Messages", icon: MessageCircle, href: "/teacher/messages" },
   { label: "Calendar", icon: Calendar, href: "/teacher/calendar" },
+  { label: "Feed", icon: Rss, href: "/teacher/feed" },
 ];
 
 const moreItems: { label: string; icon: LucideIcon; id: string }[] = [
   { label: "Payroll", icon: CreditCard, id: "payroll" },
-  { label: "Class Updates", icon: BookOpen, id: "class-updates" },
   { label: "Forms and Documents", icon: FileText, id: "forms" },
 ];
 
@@ -63,7 +61,7 @@ export default function TeacherNav() {
                   : "text-gray-600 hover:text-[#4a7c59] hover:bg-gray-50"
               }`}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="w-4 h-4 pointer-events-none" />
               {label}
             </Link>
           );

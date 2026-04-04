@@ -24,11 +24,12 @@ export default async function TeacherMessagesRoute({
   const { data: adminUser } = await adminClient
     .schema("admin")
     .from("users")
-    .select("full_name")
+    .select("full_name, profile_image_url")
     .eq("id", user.id)
     .single();
 
   const fullName = adminUser?.full_name ?? null;
+  const profileImageUrl = adminUser?.profile_image_url ?? null;
 
   const params = await searchParams;
   const initialRecipientId = params.recipientId ?? null;
@@ -36,7 +37,7 @@ export default async function TeacherMessagesRoute({
 
   return (
     <div className="bg-white h-screen overflow-hidden flex flex-col">
-      <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-3 items-center shrink-0">
+      <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-[auto_1fr_auto] items-center shrink-0">
         <div className="flex items-center">
           <Link href="/">
             <Image
@@ -53,7 +54,7 @@ export default async function TeacherMessagesRoute({
         </div>
         <div className="flex items-center justify-end">
           {user?.email && (
-            <ProfileDropdown email={user.email} fullName={fullName} />
+            <ProfileDropdown email={user.email} fullName={fullName} userId={user.id} profileImageUrl={profileImageUrl} />
           )}
         </div>
       </header>

@@ -10,6 +10,7 @@ export type ConversationWithMeta = {
     id: string;
     full_name: string;
     role: string | null;
+    profile_image_url: string | null;
   };
   lastMessage: {
     body: string;
@@ -76,7 +77,7 @@ export async function getConversations(userId: string): Promise<ConversationWith
   const { data: adminUsers } = await adminClient
     .schema("admin")
     .from("users")
-    .select("id, full_name, role")
+    .select("id, full_name, role, profile_image_url")
     .in("id", otherUserIds);
 
   const userMap = new Map((adminUsers ?? []).map((u) => [u.id, u]));
@@ -116,6 +117,7 @@ export async function getConversations(userId: string): Promise<ConversationWith
           id: otherUser?.id ?? otherParticipant?.user_id ?? "",
           full_name: otherUser?.full_name ?? "Unknown",
           role: otherUser?.role ?? null,
+          profile_image_url: otherUser?.profile_image_url ?? null,
         },
         lastMessage: lastMessage
           ? {
@@ -243,20 +245,20 @@ export async function createConversation(
   return newConvo.id;
 }
 
-export async function searchUsers(query: string): Promise<{ id: string; full_name: string }[]> {
+export async function searchUsers(query: string): Promise<{ id: string; full_name: string; profile_image_url: string | null }[]> {
   if (!query.trim()) return [];
   const adminClient = createAdminClient();
 
   const { data, error } = await adminClient
     .schema("admin")
     .from("users")
-    .select("id, full_name")
+    .select("id, full_name, profile_image_url")
     .ilike("full_name", `%${query}%`)
     .in("role", ["teacher", "super_admin"])
     .limit(10);
 
   if (error) return [];
-  return data ?? [];
+  return (data ?? []).map((u) => ({ ...u, profile_image_url: u.profile_image_url ?? null }));
 }
 
 export async function uploadMessageImage(

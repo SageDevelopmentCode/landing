@@ -10,6 +10,7 @@ export type StudentRow = {
   grade: string | null
   program: string
   classroom: string | null
+  profile_image_url: string | null
 }
 
 const PROGRAM_LABELS: Record<string, string> = {

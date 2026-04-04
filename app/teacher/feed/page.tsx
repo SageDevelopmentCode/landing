@@ -6,11 +6,10 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
-import Footer from "@/app/components/Footer";
 import TeacherNav from "../dashboard/TeacherNav";
-import TeacherCalendarClient from "./TeacherCalendarClient";
+import TeacherFeedClient from "./TeacherFeedClient";
 
-export default async function TeacherCalendarPage() {
+export default async function TeacherFeedPage() {
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
@@ -22,8 +21,7 @@ export default async function TeacherCalendarPage() {
 
   const adminClient = createAdminClient();
 
-  let currentUser: { full_name: string; role: string; id: string } | null =
-    null;
+  let currentUser: { full_name: string; role: string; id: string } | null = null;
 
   const { data: adminUser } = await adminClient
     .schema("admin")
@@ -38,25 +36,6 @@ export default async function TeacherCalendarPage() {
       role: adminUser.role,
       id: user.id,
     };
-  }
-
-  const { data: events } = await adminClient
-    .schema("calendar")
-    .from("events")
-    .select(
-      "id, title, event_date, is_all_day, start_time, end_time, color, category, shared_with, programs, description, location, recurrence, recurrence_end_date, attachment_links, rsvp_enabled, reminder_email, reminder_in_app, reminder_timing, internal_notes, created_by",
-    )
-    .or(`shared_with.cs.{"Teachers"},created_by.eq.${user.id}`)
-    .order("event_date", { ascending: true });
-
-  const { data: adminUsers } = await adminClient
-    .schema("admin")
-    .from("users")
-    .select("id, full_name");
-
-  const usersMap: Record<string, string> = {};
-  for (const u of adminUsers ?? []) {
-    usersMap[u.id] = u.full_name;
   }
 
   return (
@@ -89,14 +68,8 @@ export default async function TeacherCalendarPage() {
       </header>
 
       <main className="flex-1 flex flex-col overflow-hidden">
-        <TeacherCalendarClient
-          currentUser={currentUser}
-          initialEvents={events ?? []}
-          usersMap={usersMap}
-        />
+        <TeacherFeedClient currentUser={currentUser} />
       </main>
-
-      {/* <Footer /> */}
     </div>
   );
 }

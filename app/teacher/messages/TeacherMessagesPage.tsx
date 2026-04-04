@@ -45,6 +45,19 @@ function initialsFor(name: string): string {
     .join("");
 }
 
+function UserAvatar({ id, name, imageUrl, size = "md" }: { id: string; name: string; imageUrl: string | null; size?: "sm" | "md" }) {
+  const dim = size === "sm" ? "w-9 h-9" : "w-10 h-10";
+  if (imageUrl) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={imageUrl} alt={name} className={`${dim} rounded-full object-cover shrink-0`} />;
+  }
+  return (
+    <div className={`${colorForId(id)} ${dim} rounded-full flex items-center justify-center text-white text-xs font-semibold font-body shrink-0`}>
+      {initialsFor(name)}
+    </div>
+  );
+}
+
 function formatTime(iso: string): string {
   const date = new Date(iso);
   const now = new Date();
@@ -81,9 +94,9 @@ export default function TeacherMessagesPage({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isComposingNew, setIsComposingNew] = useState(false);
-  const [selectedRecipient, setSelectedRecipient] = useState<{ id: string; full_name: string } | null>(null);
+  const [selectedRecipient, setSelectedRecipient] = useState<{ id: string; full_name: string; profile_image_url: string | null } | null>(null);
   const [recipientSearch, setRecipientSearch] = useState("");
-  const [recipientResults, setRecipientResults] = useState<{ id: string; full_name: string }[]>([]);
+  const [recipientResults, setRecipientResults] = useState<{ id: string; full_name: string; profile_image_url: string | null }[]>([]);
   const [searchingUsers, setSearchingUsers] = useState(false);
   const [creatingConvo, setCreatingConvo] = useState(false);
 
@@ -402,9 +415,7 @@ export default function TeacherMessagesPage({
                     : "hover:bg-gray-50"
                 }`}
               >
-                <div className={`${colorForId(convo.otherUser.id)} w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-semibold font-body shrink-0`}>
-                  {initialsFor(convo.otherUser.full_name)}
-                </div>
+                <UserAvatar id={convo.otherUser.id} name={convo.otherUser.full_name} imageUrl={convo.otherUser.profile_image_url} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-semibold font-body text-gray-800 truncate">
@@ -492,9 +503,7 @@ export default function TeacherMessagesPage({
                         onClick={() => handleSelectRecipient(user)}
                         className="w-full flex items-center gap-3 px-5 py-2.5 hover:bg-gray-50 text-left transition-colors cursor-pointer"
                       >
-                        <div className={`${colorForId(user.id)} w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold font-body shrink-0`}>
-                          {initialsFor(user.full_name)}
-                        </div>
+                        <UserAvatar id={user.id} name={user.full_name} imageUrl={user.profile_image_url} size="sm" />
                         <span className="text-sm font-body text-gray-800">{user.full_name}</span>
                       </button>
                     ))
@@ -585,9 +594,7 @@ export default function TeacherMessagesPage({
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
-              <div className={`${colorForId(active.otherUser.id)} w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-semibold font-body`}>
-                {initialsFor(active.otherUser.full_name)}
-              </div>
+              <UserAvatar id={active.otherUser.id} name={active.otherUser.full_name} imageUrl={active.otherUser.profile_image_url} size="sm" />
               <div>
                 <p className="text-sm font-semibold font-body text-gray-800">
                   {active.otherUser.full_name}
