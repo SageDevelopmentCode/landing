@@ -51,6 +51,8 @@ export type FeedPost = {
   comments: FeedCommentRow[];
 };
 
+import { DEFAULT_REACTIONS } from "./constants";
+
 // ─── Fetch Posts ──────────────────────────────────────────────────────────────
 
 export async function getFeedPosts(): Promise<FeedPost[]> {
@@ -161,11 +163,15 @@ export async function getFeedPosts(): Promise<FeedPost[]> {
         ...a,
         storage_url: attachmentUrlMap.get(a.storage_url) ?? a.storage_url,
       })),
-      reactions: Array.from(reactionMap.entries()).map(([emoji, { count, reacted_by_me }]) => ({
-        emoji,
-        count,
-        reacted_by_me,
-      })),
+      reactions: [
+        ...DEFAULT_REACTIONS.map((emoji) => {
+          const existing = reactionMap.get(emoji);
+          return { emoji, count: existing?.count ?? 0, reacted_by_me: existing?.reacted_by_me ?? false };
+        }),
+        ...Array.from(reactionMap.entries())
+          .filter(([emoji]) => !DEFAULT_REACTIONS.includes(emoji))
+          .map(([emoji, { count, reacted_by_me }]) => ({ emoji, count, reacted_by_me })),
+      ],
       comments: (p.post_comments ?? [])
         .filter((c) => !c.is_deleted)
         .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())

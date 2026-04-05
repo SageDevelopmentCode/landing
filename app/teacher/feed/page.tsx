@@ -24,7 +24,7 @@ export default async function TeacherFeedPage() {
 
   let currentUser: { full_name: string; role: string; id: string } | null = null;
 
-  const [{ data: adminUser }, initialPosts] = await Promise.all([
+  const [{ data: adminUser }, initialPosts, { data: teachers }] = await Promise.all([
     adminClient
       .schema("admin")
       .from("users")
@@ -32,6 +32,13 @@ export default async function TeacherFeedPage() {
       .eq("id", user.id)
       .single(),
     getFeedPosts(),
+    adminClient
+      .schema("admin")
+      .from("users")
+      .select("id, full_name, role, profile_image_url")
+      .in("role", ["teacher", "super_admin"])
+      .eq("is_deleted", false)
+      .order("full_name", { ascending: true }),
   ]);
 
   if (adminUser) {
@@ -75,6 +82,8 @@ export default async function TeacherFeedPage() {
         <TeacherFeedClient
           currentUser={currentUser}
           initialPosts={initialPosts}
+          profileImageUrl={adminUser?.profile_image_url ?? null}
+          teachers={teachers ?? []}
         />
       </main>
     </div>
