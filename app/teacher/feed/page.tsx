@@ -8,6 +8,7 @@ import Image from "next/image";
 import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import TeacherNav from "../dashboard/TeacherNav";
 import TeacherFeedClient from "./TeacherFeedClient";
+import { getFeedPosts } from "./actions";
 
 export default async function TeacherFeedPage() {
   const supabase = await createServerSupabaseClient();
@@ -23,12 +24,15 @@ export default async function TeacherFeedPage() {
 
   let currentUser: { full_name: string; role: string; id: string } | null = null;
 
-  const { data: adminUser } = await adminClient
-    .schema("admin")
-    .from("users")
-    .select("full_name, role, profile_image_url")
-    .eq("id", user.id)
-    .single();
+  const [{ data: adminUser }, initialPosts] = await Promise.all([
+    adminClient
+      .schema("admin")
+      .from("users")
+      .select("full_name, role, profile_image_url")
+      .eq("id", user.id)
+      .single(),
+    getFeedPosts(),
+  ]);
 
   if (adminUser) {
     currentUser = {
@@ -68,7 +72,10 @@ export default async function TeacherFeedPage() {
       </header>
 
       <main className="flex-1 flex flex-col overflow-hidden">
-        <TeacherFeedClient currentUser={currentUser} />
+        <TeacherFeedClient
+          currentUser={currentUser}
+          initialPosts={initialPosts}
+        />
       </main>
     </div>
   );
