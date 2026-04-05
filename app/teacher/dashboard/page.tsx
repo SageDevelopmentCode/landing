@@ -37,11 +37,11 @@ export default async function TeacherDashboard() {
     const { data: studentRecords } = await adminClient
       .schema('admin')
       .from('students')
-      .select('id, child_legal_name, child_grade')
+      .select('id, child_legal_name, child_grade, profile_image_url')
       .in('id', studentIds)
 
     const studentMap = new Map(
-      (studentRecords ?? []).map((s) => [s.id, { name: s.child_legal_name, grade: s.child_grade }])
+      (studentRecords ?? []).map((s) => [s.id, { name: s.child_legal_name, grade: s.child_grade, profile_image_url: s.profile_image_url ?? null }])
     )
 
     myStudents = teacherStudentRows.map((r) => ({
@@ -51,6 +51,7 @@ export default async function TeacherDashboard() {
       grade: studentMap.get(r.student_id)?.grade ?? null,
       program: r.program,
       classroom: r.classroom,
+      profile_image_url: studentMap.get(r.student_id)?.profile_image_url ?? null,
     }))
   }
 

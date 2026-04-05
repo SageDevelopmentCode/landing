@@ -120,7 +120,7 @@ export default function TeacherMessagesPage({
       setMobileShowChat(true);
     } else if (initialRecipientName) {
       setIsComposingNew(true);
-      setSelectedRecipient({ id: initialRecipientId, full_name: initialRecipientName });
+      setSelectedRecipient({ id: initialRecipientId, full_name: initialRecipientName, profile_image_url: null });
       setMobileShowChat(true);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -204,7 +204,7 @@ export default function TeacherMessagesPage({
     }, 300);
   }, []);
 
-  const handleSelectRecipient = (recipient: { id: string; full_name: string }) => {
+  const handleSelectRecipient = (recipient: { id: string; full_name: string; profile_image_url: string | null }) => {
     setSelectedRecipient(recipient);
     setRecipientSearch("");
     setRecipientResults([]);

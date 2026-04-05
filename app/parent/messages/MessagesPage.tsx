@@ -216,7 +216,7 @@ export default function MessagesPage({
     }, 300);
   }, []);
 
-  const handleSelectRecipient = (recipient: { id: string; full_name: string }) => {
+  const handleSelectRecipient = (recipient: { id: string; full_name: string; profile_image_url: string | null }) => {
     setSelectedRecipient(recipient);
     setRecipientSearch("");
     setRecipientResults([]);
