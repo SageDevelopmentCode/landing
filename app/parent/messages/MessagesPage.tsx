@@ -124,7 +124,7 @@ export default function MessagesPage({
       setMobileShowChat(true);
     } else if (initialRecipientName) {
       setIsComposingNew(true);
-      setSelectedRecipient({ id: initialRecipientId, full_name: initialRecipientName });
+      setSelectedRecipient({ id: initialRecipientId, full_name: initialRecipientName, profile_image_url: null });
       setMobileShowChat(true);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
