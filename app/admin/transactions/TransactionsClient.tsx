@@ -75,7 +75,7 @@ const SUMMER_ITEMS: ChecklistItem[] = [
   ...Array.from({ length: 12 }, (_, i) => ({
     id: `week_${i + 1}`,
     label: `Week ${i + 1}`,
-    payment_type: "tuition",
+    payment_type: "summer_tuition",
     week: String(i + 1),
   })),
 ];
@@ -106,18 +106,35 @@ const SCHOOL_YEAR_ITEMS: ChecklistItem[] = [
   })),
 ];
 
+function parseMeta(tx: StripeTransaction): Record<string, unknown> {
+  if (!tx.metadata) return {};
+  if (typeof tx.metadata === "string") {
+    try { return JSON.parse(tx.metadata); } catch { return {}; }
+  }
+  return tx.metadata as Record<string, unknown>;
+}
+
 function isTxMatch(
   tx: StripeTransaction,
   item: ChecklistItem,
   program: "summer_26" | "school_year_26_27",
 ): boolean {
   if (tx.payment_type !== item.payment_type) return false;
-  const prog = tx.metadata?.program as string | undefined;
+  const meta = parseMeta(tx);
+
+  // Summer tuition: weeks stored as comma-separated "weeks" + plan_type in metadata
+  if (item.payment_type === "summer_tuition" && item.week) {
+    const planType = meta.plan_type as string | undefined;
+    if (planType === "full") return true;
+    const weeksStr = (meta.weeks as string | undefined) ?? "";
+    const weekNums = weeksStr.split(",").map(Number).filter(Boolean);
+    return weekNums.includes(Number(item.week));
+  }
+
+  const prog = meta.program as string | undefined;
   if (prog !== program && prog !== "both") return false;
-  if (item.week && (tx.metadata?.week as string | undefined) !== item.week)
-    return false;
-  if (item.month && (tx.metadata?.month as string | undefined) !== item.month)
-    return false;
+  if (item.week && (meta.week as string | undefined) !== item.week) return false;
+  if (item.month && (meta.month as string | undefined) !== item.month) return false;
   return true;
 }
 
@@ -331,7 +348,7 @@ function ProgramChecklist({
                 </span>
               )}
 
-              {!isPaid && parentId && (
+              {!isPaid && parentId && item.payment_type !== "summer_tuition" && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -400,7 +417,8 @@ export function TransactionsClient({
       }
     >();
     for (const tx of localTransactions) {
-      if (!tx.metadata?.program) continue;
+      const meta = parseMeta(tx);
+      if (!meta.program && tx.payment_type !== "summer_tuition") continue;
       const key = tx.parent_id ?? tx.payer_email ?? "unknown";
       if (!map.has(key)) {
         const resolvedName = tx.parent_id
@@ -447,13 +465,14 @@ export function TransactionsClient({
   // Determine which programs the selected child has
   const hasSummer =
     selectedChildGroup?.txs.some((tx) => {
-      const prog = tx.metadata?.program as string | undefined;
+      if (tx.payment_type === "summer_tuition") return true;
+      const prog = parseMeta(tx).program as string | undefined;
       return prog === "summer_26" || prog === "both";
     }) ?? false;
 
   const hasSchoolYear =
     selectedChildGroup?.txs.some((tx) => {
-      const prog = tx.metadata?.program as string | undefined;
+      const prog = parseMeta(tx).program as string | undefined;
       return prog === "school_year_26_27" || prog === "both";
     }) ?? false;
 
