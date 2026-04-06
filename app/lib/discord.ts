@@ -475,6 +475,41 @@ export function createTeacherClockOutEmbed(data: {
 }
 
 /**
+ * Creates a Discord embed for parent help requests
+ */
+export function createHelpRequestEmbed(data: {
+  parentName: string;
+  parentEmail: string;
+  description: string;
+  attachmentCount: number;
+  helpRequestId: string;
+  pageUrl?: string | null;
+}): DiscordEmbed {
+  const fields: DiscordEmbedField[] = [
+    { name: "Parent", value: data.parentName, inline: true },
+    { name: "Email", value: data.parentEmail, inline: true },
+    { name: "Attachments", value: String(data.attachmentCount), inline: true },
+    ...(data.pageUrl ? [{ name: "Page", value: data.pageUrl, inline: false }] : []),
+    {
+      name: "Description",
+      value:
+        data.description.length > 1024
+          ? data.description.substring(0, 1021) + "..."
+          : data.description,
+      inline: false,
+    },
+    { name: "Request ID", value: data.helpRequestId, inline: false },
+  ];
+
+  return {
+    title: "🆘 New Help Request",
+    color: 0xf29a8f, // Brand primary
+    fields,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
  * Creates a Discord embed for campus tour booking submissions
  */
 export function createTourBookingEmbed(data: {
