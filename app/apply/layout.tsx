@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import HelpWidget from "@/app/parent/components/HelpWidget";
 
 export const metadata: Metadata = {
   title: "Apply - Sage Field | Summer & School Year Programs",
@@ -49,10 +48,5 @@ export default function ApplyLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <>
-      {children}
-      <HelpWidget />
-    </>
-  );
+  return <>{children}</>;
 }

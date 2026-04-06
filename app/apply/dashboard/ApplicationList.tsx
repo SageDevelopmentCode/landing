@@ -425,6 +425,133 @@ function SlideOver({
   );
 }
 
+// ─── EmptyState ─────────────────────────────────────────────────────────────
+const STEPS = [
+  { num: 1, label: "Tell us about your child" },
+  { num: 2, label: "Share health & guardian info" },
+  { num: 3, label: "Sign and submit" },
+];
+
+function EmptyState() {
+  return (
+    <motion.div
+      className="bg-white border border-gray-100 rounded-2xl px-8 py-14 shadow-sm text-center mb-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+    >
+      {/* Icon */}
+      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#E0EDE2] mb-6">
+        <svg
+          width="32"
+          height="32"
+          viewBox="0 0 32 32"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <path
+            d="M16 28C16 28 6 22 6 13C6 8.58172 10.4772 5 16 5C21.5228 5 26 8.58172 26 13C26 22 16 28 16 28Z"
+            fill="#7FA888"
+            opacity="0.25"
+          />
+          <path
+            d="M16 28V14"
+            stroke="#5E7C68"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+          <path
+            d="M16 18C16 18 12 15 10 11"
+            stroke="#5E7C68"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+          <path
+            d="M16 21C16 21 19.5 18.5 22 15"
+            stroke="#5E7C68"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+        </svg>
+      </div>
+
+      {/* Heading */}
+      <motion.h2
+        className="font-heading text-2xl font-bold text-gray-800 mb-2"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: "easeOut", delay: 0.1 }}
+      >
+        Let&apos;s find the right fit for your child.
+      </motion.h2>
+      <motion.p
+        className="font-body text-sm text-gray-500 mb-10"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: "easeOut", delay: 0.18 }}
+      >
+        The application takes about 10 minutes and is saved automatically as you go.
+      </motion.p>
+
+      {/* Step list */}
+      <motion.div
+        className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-2 mb-10"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: "easeOut", delay: 0.26 }}
+      >
+        {STEPS.map((step, i) => (
+          <div key={step.num} className="flex items-center gap-2 md:gap-2">
+            <div className="flex items-center gap-2.5">
+              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#E0EDE2] text-[#4A6354] text-xs font-bold font-body flex-shrink-0">
+                {step.num}
+              </span>
+              <span className="font-body text-sm text-gray-700">{step.label}</span>
+            </div>
+            {i < STEPS.length - 1 && (
+              <span className="hidden md:inline-block text-gray-300 mx-3 text-base select-none">→</span>
+            )}
+          </div>
+        ))}
+      </motion.div>
+
+      {/* CTA */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: "easeOut", delay: 0.34 }}
+      >
+        <Link
+          href="/apply/step/1?new=1"
+          className="inline-flex items-center justify-center gap-2 w-full md:w-auto px-10 py-3.5 bg-primary text-white font-semibold font-body text-sm rounded-xl shadow-sm hover:bg-primary-hover active:bg-primary-active transition-colors"
+        >
+          Start New Application
+        </Link>
+      </motion.div>
+
+      {/* Trust line */}
+      <motion.p
+        className="font-body text-xs text-gray-400 mt-4 flex items-center justify-center gap-1.5"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4, ease: "easeOut", delay: 0.44 }}
+      >
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+          <path
+            d="M6 1L7.5 4.5H11L8.25 6.75L9.25 10.5L6 8.25L2.75 10.5L3.75 6.75L1 4.5H4.5L6 1Z"
+            fill="none"
+            stroke="#9CA3AF"
+            strokeWidth="0.8"
+            strokeLinejoin="round"
+          />
+        </svg>
+        Saved automatically · Takes ~10 minutes
+      </motion.p>
+    </motion.div>
+  );
+}
+
 // ─── ApplicationList ─────────────────────────────────────────────────────────
 export default function ApplicationList({
   apps: initialApps,
@@ -440,13 +567,7 @@ export default function ApplicationList({
   }
 
   if (apps.length === 0) {
-    return (
-      <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm text-center mb-6">
-        <p className="text-gray-500 font-body text-sm">
-          No applications found.
-        </p>
-      </div>
-    );
+    return <EmptyState />;
   }
 
   return (

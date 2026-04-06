@@ -9,6 +9,7 @@ import ApplicationList from "./ApplicationList";
 import ProfileDropdown from "./ProfileDropdown";
 import Footer from "@/app/components/Footer";
 import EnrollmentCodeEntry from "./EnrollmentCodeEntry";
+import HelpWidget from "@/app/parent/components/HelpWidget";
 
 export default async function ApplicationDashboard() {
   const supabase = await createServerSupabaseClient();
@@ -115,17 +116,20 @@ export default async function ApplicationDashboard() {
         {/* Application List */}
         <ApplicationList apps={apps} />
 
-        {/* Start another application */}
-        <Link
-          href="/apply/step/1?new=1"
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm text-sm font-semibold text-gray-700 font-body hover:bg-gray-50 transition-colors"
-        >
-          <span className="text-lg leading-none">+</span>
-          Start another application
-        </Link>
+        {/* Start another application — only shown when apps exist */}
+        {apps.length > 0 && (
+          <Link
+            href="/apply/step/1?new=1"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm text-sm font-semibold text-gray-700 font-body hover:bg-gray-50 transition-colors"
+          >
+            <span className="text-lg leading-none">+</span>
+            Start another application
+          </Link>
+        )}
       </main>
       </div>
       <Footer />
+      <HelpWidget />
     </div>
   );
 }

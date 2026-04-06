@@ -1,3 +1,5 @@
+import HelpWidget from "@/app/parent/components/HelpWidget";
+
 export const metadata = {
   title: "Start Your Application — Sage Field",
   description:
@@ -9,5 +11,10 @@ export default function StartLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <HelpWidget />
+    </>
+  );
 }

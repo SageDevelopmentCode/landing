@@ -17,6 +17,7 @@ import Footer from "@/app/components/Footer";
 import WaitlistDialog from "@/app/components/WaitlistDialog";
 import { submitRSVP } from "@/app/actions/rsvp";
 import FloatingSMSButton from "@/app/components/FloatingSMSButton";
+import MeetTheTeamSection from "@/app/components/MeetTheTeamSection";
 import { formatPhone } from "@/app/utils/formatPhone";
 
 const programs = [
@@ -627,43 +628,6 @@ export default function OpenHousePage() {
               </p>
             </motion.div>
 
-            {/* Photo Booth */}
-            <motion.div
-              className="w-[80%] flex-shrink-0 snap-start sm:w-auto bg-white rounded-xl p-6 shadow-sm border border-gray-100"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: 0.5, ease: "easeOut" }}
-            >
-              <h3 className="text-base font-bold text-gray-800 font-heading mb-2">
-                📸 Photo Booth
-              </h3>
-              <p className="text-sm text-gray-600 font-body leading-relaxed">
-                Capture the moment! We&apos;ll have a fun photo booth set up for
-                families to take home a memory from the day.
-              </p>
-            </motion.div>
-
-            {/* Free Shirts */}
-            <motion.div
-              className="w-[80%] flex-shrink-0 snap-start sm:w-auto bg-blue-50 border border-blue-200 rounded-xl p-6 shadow-sm flex items-start gap-4"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: 0.6, ease: "easeOut" }}
-            >
-              <span className="text-3xl flex-shrink-0">👕</span>
-              <div>
-                <h3 className="text-base font-bold text-gray-800 font-heading mb-1">
-                  Sage Field Shirts — Support Our School
-                </h3>
-                <p className="text-sm text-gray-600 font-body leading-relaxed">
-                  Show your Sage Field spirit and support our school! Shirts will
-                  be available for purchase at the event.
-                </p>
-              </div>
-            </motion.div>
-
           </div>
         </div>
       </section>
@@ -1022,6 +986,8 @@ export default function OpenHousePage() {
       </section>
 
       <WaitlistDialog isOpen={isWaitlistOpen} onClose={() => setIsWaitlistOpen(false)} />
+
+      <MeetTheTeamSection />
 
       {/* ── Apply CTA ── */}
       <section className="pb-20 px-6 sm:px-12 lg:px-16">
