@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useRef } from "react";
+import { useState, useTransition, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MoreHorizontal,
@@ -104,6 +104,33 @@ function avatarColor(id: string): string {
   let hash = 0;
   for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
   return AVATAR_COLORS[hash % AVATAR_COLORS.length];
+}
+
+// ─── Thread Utilities ─────────────────────────────────────────────────────────
+
+type ThreadedComment = FeedCommentRow & {
+  profile_image_url?: string | null;
+  depth: number;
+};
+
+function buildThreadedList(
+  comments: (FeedCommentRow & { profile_image_url?: string | null })[]
+): ThreadedComment[] {
+  const childMap = new Map<string | null, typeof comments>();
+  for (const c of comments) {
+    const key = c.parent_comment_id ?? null;
+    if (!childMap.has(key)) childMap.set(key, []);
+    childMap.get(key)!.push(c);
+  }
+  const result: ThreadedComment[] = [];
+  function walk(parentId: string | null, depth: number) {
+    for (const c of childMap.get(parentId) ?? []) {
+      result.push({ ...c, depth: Math.min(depth, 4) });
+      walk(c.id, depth + 1);
+    }
+  }
+  walk(null, 0);
+  return result;
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -414,15 +441,19 @@ function CommentItem({
   currentUserId,
   imageUrl,
   onDelete,
+  depth = 0,
+  onReply,
 }: {
-  comment: FeedCommentRow & { profile_image_url?: string | null };
+  comment: ThreadedComment;
   currentUserId: string | undefined;
   imageUrl?: string | null;
   onDelete: (commentId: string) => void;
+  depth?: number;
+  onReply: (commentId: string, authorName: string) => void;
 }) {
   const isOwner = currentUserId === comment.author_id;
   return (
-    <div className="flex gap-2.5 group/comment">
+    <div className="flex gap-2.5 group/comment" style={{ marginLeft: `${depth * 24}px` }}>
       <AuthorAvatar
         initials={getInitials(comment.author_name)}
         color={avatarColor(comment.author_id)}
@@ -430,7 +461,7 @@ function CommentItem({
         imageUrl={imageUrl ?? comment.profile_image_url}
       />
       <div className="flex-1 min-w-0">
-        <div className="bg-gray-50 rounded-2xl rounded-tl-sm px-3.5 py-2.5">
+        <div className="bg-[#eef4ef] rounded-2xl rounded-tl-sm px-3.5 py-2.5">
           <p className="text-xs font-semibold font-body text-gray-700 mb-0.5">
             {comment.author_name}
           </p>
@@ -438,6 +469,12 @@ function CommentItem({
         </div>
         <div className="flex items-center gap-3 mt-1 ml-1">
           <p className="text-xs text-gray-400 font-body">{formatTimestamp(comment.created_at)}</p>
+          <button
+            onClick={() => onReply(comment.id, comment.author_name)}
+            className="text-xs text-gray-300 hover:text-[#4a7c59] transition-colors opacity-0 group-hover/comment:opacity-100 font-body"
+          >
+            Reply
+          </button>
           {isOwner && (
             <button
               onClick={() => onDelete(comment.id)}
@@ -473,7 +510,12 @@ function PostSidebarContent({
 }) {
   const [commentText, setCommentText] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [replyingTo, setReplyingTo] = useState<{ id: string; authorName: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (replyingTo) inputRef.current?.focus();
+  }, [replyingTo]);
 
   const media: MediaItem[] = post.media.map((m, i) => ({
     type: m.kind,
@@ -492,9 +534,11 @@ function PostSidebarContent({
   function handleSubmitComment() {
     const text = commentText.trim();
     if (!text || isPending) return;
+    const parentId = replyingTo?.id ?? null;
     setCommentText("");
+    setReplyingTo(null);
     startTransition(async () => {
-      const newComment = await addComment(post.id, text);
+      const newComment = await addComment(post.id, text, parentId);
       onCommentAdded(post.id, { ...newComment, profile_image_url: currentUserProfileImageUrl ?? null });
     });
   }
@@ -618,51 +662,79 @@ function PostSidebarContent({
       </div>
 
       {/* Comments */}
-      <div className="border-t border-gray-100 pt-4">
-        <p className="text-xs font-semibold font-body text-gray-400 uppercase tracking-wide mb-4">
-          Comments · {post.comments.length}
-        </p>
-        <div className="flex flex-col gap-4">
-          {post.comments.map((comment) => (
-            <CommentItem
-              key={comment.id}
-              comment={comment}
-              currentUserId={currentUserId}
-              imageUrl={currentUserId === comment.author_id ? currentUserProfileImageUrl : null}
-              onDelete={(commentId) => onCommentDeleted(post.id, commentId)}
-            />
-          ))}
-          {post.comments.length === 0 && (
-            <p className="text-sm text-gray-400 font-body">No comments yet.</p>
-          )}
-        </div>
-      </div>
+      {(() => {
+        const threadedComments = buildThreadedList(
+          post.comments.map((c) => ({
+            ...c,
+            profile_image_url: currentUserId === c.author_id ? currentUserProfileImageUrl : null,
+          }))
+        );
+        return (
+          <div className="border-t border-gray-100 pt-4">
+            <p className="text-xs font-semibold font-body text-gray-400 uppercase tracking-wide mb-4">
+              Comments · {post.comments.length}
+            </p>
+            <div className="flex flex-col gap-4">
+              {threadedComments.map((comment) => (
+                <CommentItem
+                  key={comment.id}
+                  comment={comment}
+                  currentUserId={currentUserId}
+                  imageUrl={comment.profile_image_url}
+                  depth={comment.depth}
+                  onDelete={(commentId) => onCommentDeleted(post.id, commentId)}
+                  onReply={(commentId, authorName) => setReplyingTo({ id: commentId, authorName })}
+                />
+              ))}
+              {post.comments.length === 0 && (
+                <p className="text-sm text-gray-400 font-body">No comments yet.</p>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Comment input */}
-      <div className="border-t border-gray-100 pt-4 flex items-center gap-2.5">
-        {currentUserId && currentUserInitials && (
-          <AuthorAvatar initials={currentUserInitials} color="bg-[#4a7c59]" size="sm" imageUrl={currentUserProfileImageUrl} />
+      <div className="border-t border-gray-100 pt-4">
+        {replyingTo && (
+          <div className="flex items-center justify-between bg-[#eef4ef] rounded-xl px-3.5 py-2 mb-2 text-xs font-body text-[#4a7c59]">
+            <span>
+              Replying to <span className="font-semibold">{replyingTo.authorName}</span>
+            </span>
+            <button
+              onClick={() => setReplyingTo(null)}
+              className="text-[#4a7c59]/60 hover:text-[#4a7c59] transition-colors ml-2"
+              aria-label="Cancel reply"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
         )}
-        <div className="flex-1 flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-full px-3.5 py-2">
-          <input
-            ref={inputRef}
-            type="text"
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleSubmitComment();
-            }}
-            placeholder="Add a comment..."
-            className="flex-1 bg-transparent text-sm font-body text-gray-700 placeholder-gray-400 outline-none"
-            disabled={isPending}
-          />
-          <button
-            onClick={handleSubmitComment}
-            disabled={!commentText.trim() || isPending}
-            className="text-[#4a7c59] hover:text-[#3d6b4a] transition-colors flex-shrink-0 disabled:opacity-40"
-          >
-            <Send className="w-4 h-4" />
-          </button>
+        <div className="flex items-center gap-2.5">
+          {currentUserId && currentUserInitials && (
+            <AuthorAvatar initials={currentUserInitials} color="bg-[#4a7c59]" size="sm" imageUrl={currentUserProfileImageUrl} />
+          )}
+          <div className="flex-1 flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-full px-3.5 py-2">
+            <input
+              ref={inputRef}
+              type="text"
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSubmitComment();
+              }}
+              placeholder={replyingTo ? `Reply to ${replyingTo.authorName}...` : "Add a comment..."}
+              className="flex-1 bg-transparent text-sm font-body text-gray-700 placeholder-gray-400 outline-none"
+              disabled={isPending}
+            />
+            <button
+              onClick={handleSubmitComment}
+              disabled={!commentText.trim() || isPending}
+              className="text-[#4a7c59] hover:text-[#3d6b4a] transition-colors flex-shrink-0 disabled:opacity-40"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -33,6 +33,7 @@ export type FeedCommentRow = {
   author_name: string;
   body: string;
   created_at: string;
+  parent_comment_id: string | null;
 };
 
 export type FeedPost = {
@@ -76,7 +77,7 @@ export async function getFeedPosts(): Promise<FeedPost[]> {
       post_media ( id, kind, storage_url, display_order, duration_secs ),
       post_attachments ( id, file_name, file_size_bytes, kind, storage_url ),
       post_reactions ( emoji, user_id ),
-      post_comments ( id, author_id, body, created_at, is_deleted )
+      post_comments ( id, author_id, body, created_at, is_deleted, parent_comment_id )
     `)
     .eq("is_deleted", false)
     .order("created_at", { ascending: false });
@@ -181,6 +182,7 @@ export async function getFeedPosts(): Promise<FeedPost[]> {
           author_name: userMap.get(c.author_id)?.full_name ?? "Unknown",
           body: c.body,
           created_at: c.created_at,
+          parent_comment_id: c.parent_comment_id ?? null,
         })),
     };
   });
@@ -348,7 +350,7 @@ export async function deletePost(postId: string) {
 
 // ─── Add Comment ──────────────────────────────────────────────────────────────
 
-export async function addComment(postId: string, body: string): Promise<FeedCommentRow> {
+export async function addComment(postId: string, body: string, parentCommentId?: string | null): Promise<FeedCommentRow> {
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
@@ -362,8 +364,13 @@ export async function addComment(postId: string, body: string): Promise<FeedComm
   const { data: comment, error } = await adminClient
     .schema("feed")
     .from("post_comments")
-    .insert({ post_id: postId, author_id: user.id, body: body.trim() })
-    .select("id, author_id, body, created_at")
+    .insert({
+      post_id: postId,
+      author_id: user.id,
+      body: body.trim(),
+      ...(parentCommentId ? { parent_comment_id: parentCommentId } : {}),
+    })
+    .select("id, author_id, body, created_at, parent_comment_id")
     .single();
 
   if (error || !comment) throw new Error(error?.message ?? "Failed to add comment");
@@ -384,6 +391,7 @@ export async function addComment(postId: string, body: string): Promise<FeedComm
     author_name: adminUser?.full_name ?? "Unknown",
     body: comment.body,
     created_at: comment.created_at,
+    parent_comment_id: comment.parent_comment_id ?? null,
   };
 }
 
