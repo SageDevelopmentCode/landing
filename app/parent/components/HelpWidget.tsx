@@ -50,7 +50,7 @@ export default function HelpWidget() {
     startTransition(async () => {
       const result = await submitHelpRequest(fd);
       if ("error" in result) {
-        setError(result.error);
+        setError(result.error ?? "Something went wrong");
       } else {
         setSubmitted(true);
         setTimeout(() => handleClose(), 2500);
