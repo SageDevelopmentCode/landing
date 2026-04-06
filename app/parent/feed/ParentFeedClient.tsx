@@ -3,32 +3,24 @@
 import { useState, useTransition, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Image as ImageIcon,
-  Video,
-  Paperclip,
   MoreHorizontal,
   MessageCircle,
   Play,
   FileText,
   Send,
   Trash2,
-  Upload,
   X,
 } from "lucide-react";
 import { DetailSidebar } from "@/app/admin/components/DetailSidebar";
 import {
-  createPost,
-  uploadFeedMedia,
-  uploadFeedAttachment,
   addComment,
-  deletePost,
   deleteComment,
   toggleReaction,
   type FeedPost,
   type FeedCommentRow,
   type FeedReactionSummary,
-} from "./actions";
-import { DEFAULT_REACTIONS } from "./constants";
+} from "@/app/teacher/feed/actions";
+import { DEFAULT_REACTIONS } from "@/app/teacher/feed/constants";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -291,15 +283,15 @@ function PostCard({
   post,
   currentUserId,
   onReactionToggle,
-  onDelete,
   onClick,
 }: {
   post: FeedPost;
   currentUserId: string | undefined;
   onReactionToggle: (postId: string, emoji: string) => void;
-  onDelete: (postId: string) => void;
   onClick: () => void;
 }) {
+  // Parents are never post owners — the menu will never show, but keep
+  // the isOwner check for structural parity.
   const isOwner = currentUserId === post.teacher_id;
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -358,10 +350,7 @@ function PostCard({
                 className="absolute right-0 top-8 bg-white border border-gray-100 rounded-xl shadow-lg py-1 z-10 min-w-[130px]"
               >
                 <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onDelete(post.id);
-                  }}
+                  onClick={() => setMenuOpen(false)}
                   className="flex items-center gap-2 w-full px-3 py-2 text-sm text-rose-500 hover:bg-rose-50 transition-colors font-body"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -649,7 +638,7 @@ function PostSidebarContent({
         </div>
       </div>
 
-      {/* Comment input (inside sidebar content so it scrolls with content) */}
+      {/* Comment input */}
       <div className="border-t border-gray-100 pt-4 flex items-center gap-2.5">
         {currentUserId && currentUserInitials && (
           <AuthorAvatar initials={currentUserInitials} color="bg-[#4a7c59]" size="sm" imageUrl={currentUserProfileImageUrl} />
@@ -680,394 +669,9 @@ function PostSidebarContent({
   );
 }
 
-const MEDIA_ACCEPTED = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif", "image/heic", "video/mp4", "video/quicktime", "video/webm"];
-const ATTACHMENT_ACCEPTED = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"];
-const MAX_MEDIA = 10;
-const MAX_ATTACHMENTS = 5;
-const MAX_MEDIA_SIZE = 50 * 1024 * 1024; // 50 MB
-const MAX_ATTACHMENT_SIZE = 25 * 1024 * 1024; // 25 MB
-
-type QueuedFile = { file: File; previewUrl: string | null };
-
-function ComposeBar({
-  initials,
-  onPost,
-  profileImageUrl,
-}: {
-  initials: string;
-  onPost: () => void;
-  profileImageUrl?: string | null;
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const [body, setBody] = useState("");
-  const [isPending, startTransition] = useTransition();
-
-  const [mediaQueue, setMediaQueue] = useState<QueuedFile[]>([]);
-  const [attachmentQueue, setAttachmentQueue] = useState<QueuedFile[]>([]);
-  const [isDraggingMedia, setIsDraggingMedia] = useState(false);
-  const [isDraggingAttachment, setIsDraggingAttachment] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-
-  const mediaInputRef = useRef<HTMLInputElement>(null);
-  const attachmentInputRef = useRef<HTMLInputElement>(null);
-
-  function addMediaFiles(files: FileList | File[]) {
-    setUploadError(null);
-    const arr = Array.from(files);
-    const valid: QueuedFile[] = [];
-    for (const f of arr) {
-      if (!MEDIA_ACCEPTED.includes(f.type)) {
-        setUploadError(`"${f.name}" is not a supported media type.`);
-        continue;
-      }
-      if (f.size > MAX_MEDIA_SIZE) {
-        setUploadError(`"${f.name}" exceeds the 50 MB limit.`);
-        continue;
-      }
-      if (mediaQueue.length + valid.length >= MAX_MEDIA) {
-        setUploadError(`Maximum ${MAX_MEDIA} media files allowed.`);
-        break;
-      }
-      const previewUrl = f.type.startsWith("image/") ? URL.createObjectURL(f) : null;
-      valid.push({ file: f, previewUrl });
-    }
-    setMediaQueue((q) => [...q, ...valid]);
-  }
-
-  function addAttachmentFiles(files: FileList | File[]) {
-    setUploadError(null);
-    const arr = Array.from(files);
-    const valid: QueuedFile[] = [];
-    for (const f of arr) {
-      if (!ATTACHMENT_ACCEPTED.includes(f.type)) {
-        setUploadError(`"${f.name}" is not a supported file type.`);
-        continue;
-      }
-      if (f.size > MAX_ATTACHMENT_SIZE) {
-        setUploadError(`"${f.name}" exceeds the 25 MB limit.`);
-        continue;
-      }
-      if (attachmentQueue.length + valid.length >= MAX_ATTACHMENTS) {
-        setUploadError(`Maximum ${MAX_ATTACHMENTS} attachments allowed.`);
-        break;
-      }
-      valid.push({ file: f, previewUrl: null });
-    }
-    setAttachmentQueue((q) => [...q, ...valid]);
-  }
-
-  function removeMedia(index: number) {
-    setMediaQueue((q) => {
-      const next = [...q];
-      if (next[index].previewUrl) URL.revokeObjectURL(next[index].previewUrl!);
-      next.splice(index, 1);
-      return next;
-    });
-  }
-
-  function removeAttachment(index: number) {
-    setAttachmentQueue((q) => {
-      const next = [...q];
-      next.splice(index, 1);
-      return next;
-    });
-  }
-
-  function reset() {
-    mediaQueue.forEach((m) => { if (m.previewUrl) URL.revokeObjectURL(m.previewUrl); });
-    setMediaQueue([]);
-    setAttachmentQueue([]);
-    setBody("");
-    setExpanded(false);
-    setUploadError(null);
-  }
-
-  function handlePost() {
-    const text = body.trim();
-    if (!text || isPending) return;
-    startTransition(async () => {
-      setUploadError(null);
-      // 1. Create the post
-      const fd = new FormData();
-      fd.append("body", text);
-      let postId: string;
-      try {
-        postId = await createPost(fd);
-      } catch (e) {
-        setUploadError(e instanceof Error ? e.message : "Failed to create post");
-        return;
-      }
-
-      // 2. Upload media in order
-      for (let i = 0; i < mediaQueue.length; i++) {
-        const mfd = new FormData();
-        mfd.append("postId", postId);
-        mfd.append("file", mediaQueue[i].file);
-        mfd.append("displayOrder", String(i));
-        const result = await uploadFeedMedia(mfd);
-        if (result.error) {
-          setUploadError(`Media upload failed: ${result.error}`);
-          return;
-        }
-      }
-
-      // 3. Upload attachments
-      for (const { file } of attachmentQueue) {
-        const afd = new FormData();
-        afd.append("postId", postId);
-        afd.append("file", file);
-        const result = await uploadFeedAttachment(afd);
-        if (result.error) {
-          setUploadError(`Attachment upload failed: ${result.error}`);
-          return;
-        }
-      }
-
-      reset();
-      onPost();
-    });
-  }
-
-  const hasContent = body.trim() || mediaQueue.length > 0 || attachmentQueue.length > 0;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className="bg-white rounded-2xl border border-gray-100 p-4 mb-4"
-    >
-      <div className="flex items-start gap-3">
-        <div className="mt-0.5">
-          <AuthorAvatar initials={initials} color="bg-[#4a7c59]" imageUrl={profileImageUrl} />
-        </div>
-        <div className="flex-1">
-          <AnimatePresence mode="wait">
-            {!expanded ? (
-              <motion.button
-                key="placeholder"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-                onClick={() => setExpanded(true)}
-                className="w-full text-left bg-gray-50 rounded-full px-4 py-2.5 border border-gray-100 text-sm font-body text-gray-400 hover:bg-gray-100 transition-colors"
-              >
-                Share something with parents...
-              </motion.button>
-            ) : (
-              <motion.textarea
-                key="textarea"
-                initial={{ opacity: 0, scaleY: 0.8, originY: 0 }}
-                animate={{ opacity: 1, scaleY: 1 }}
-                exit={{ opacity: 0, scaleY: 0.8 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
-                autoFocus
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                placeholder="What's happening in the classroom today?"
-                rows={3}
-                className="w-full bg-gray-50 rounded-2xl px-4 py-3 border border-gray-200 text-sm font-body text-gray-700 placeholder-gray-400 outline-none resize-none focus:border-[#4a7c59]/40 transition-colors"
-              />
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-
-      <AnimatePresence>
-        {expanded && (
-          <motion.div
-            key="expanded-content"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
-            style={{ overflow: "hidden" }}
-          >
-            {/* Media queue preview */}
-            <AnimatePresence>
-              {mediaQueue.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 6 }}
-                  transition={{ duration: 0.2 }}
-                  className="mt-3 flex flex-wrap gap-2"
-                >
-                  <AnimatePresence>
-                    {mediaQueue.map((m, i) => (
-                      <motion.div
-                        key={`${m.file.name}-${i}`}
-                        initial={{ opacity: 0, scale: 0.85 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.75 }}
-                        transition={{ duration: 0.18, ease: "easeOut" }}
-                        className="relative w-20 h-20 rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0"
-                      >
-                        {m.previewUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={m.previewUrl} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <Video className="w-6 h-6 text-gray-400" />
-                        )}
-                        <button
-                          onClick={() => removeMedia(i)}
-                          className="absolute top-1 right-1 w-5 h-5 bg-black/60 rounded-full flex items-center justify-center hover:bg-black/80 transition-colors"
-                        >
-                          <X className="w-3 h-3 text-white" />
-                        </button>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Attachment queue */}
-            <AnimatePresence>
-              {attachmentQueue.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 6 }}
-                  transition={{ duration: 0.2 }}
-                  className="mt-3 flex flex-col gap-1.5"
-                >
-                  <AnimatePresence>
-                    {attachmentQueue.map((a, i) => (
-                      <motion.div
-                        key={`${a.file.name}-${i}`}
-                        initial={{ opacity: 0, x: -8 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -8 }}
-                        transition={{ duration: 0.18 }}
-                        className="flex items-center gap-2.5 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2"
-                      >
-                        <FileText className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                        <span className="text-xs font-body text-gray-600 flex-1 truncate min-w-0">{a.file.name}</span>
-                        <span className="text-xs text-gray-400 font-body flex-shrink-0">{formatFileSize(a.file.size)}</span>
-                        <button onClick={() => removeAttachment(i)} className="text-gray-300 hover:text-rose-400 transition-colors flex-shrink-0">
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Media drop zone */}
-            {mediaQueue.length < MAX_MEDIA && (
-              <div
-                onDragOver={(e) => { e.preventDefault(); setIsDraggingMedia(true); }}
-                onDragLeave={() => setIsDraggingMedia(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setIsDraggingMedia(false);
-                  addMediaFiles(e.dataTransfer.files);
-                }}
-                onClick={() => mediaInputRef.current?.click()}
-                className={`mt-3 border-2 border-dashed rounded-xl px-4 py-4 text-center cursor-pointer transition-all duration-200 ${
-                  isDraggingMedia
-                    ? "border-[#4a7c59] bg-[#4a7c59]/5 scale-[1.01]"
-                    : "border-gray-200 bg-gray-50 hover:border-[#4a7c59]/40"
-                } ${isPending ? "opacity-60 cursor-not-allowed pointer-events-none" : ""}`}
-              >
-                <Upload className="w-4 h-4 text-gray-400 mx-auto mb-1.5" />
-                <p className="text-xs font-body text-gray-400">Drop photos or videos, or click to select</p>
-                <p className="text-xs text-gray-300 font-body mt-0.5">JPEG, PNG, WEBP, GIF, HEIC, MP4, MOV · max 50 MB</p>
-              </div>
-            )}
-
-            {/* Attachment drop zone */}
-            {attachmentQueue.length < MAX_ATTACHMENTS && (
-              <div
-                onDragOver={(e) => { e.preventDefault(); setIsDraggingAttachment(true); }}
-                onDragLeave={() => setIsDraggingAttachment(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setIsDraggingAttachment(false);
-                  addAttachmentFiles(e.dataTransfer.files);
-                }}
-                onClick={() => attachmentInputRef.current?.click()}
-                className={`mt-2 border-2 border-dashed rounded-xl px-4 py-3 text-center cursor-pointer transition-all duration-200 ${
-                  isDraggingAttachment
-                    ? "border-amber-400 bg-amber-50 scale-[1.01]"
-                    : "border-gray-200 bg-gray-50 hover:border-amber-300"
-                } ${isPending ? "opacity-60 cursor-not-allowed pointer-events-none" : ""}`}
-              >
-                <Paperclip className="w-4 h-4 text-amber-400 mx-auto mb-1.5" />
-                <p className="text-xs font-body text-gray-400">Drop a document, or click to select</p>
-                <p className="text-xs text-gray-300 font-body mt-0.5">PDF, Word, Excel · max 25 MB</p>
-              </div>
-            )}
-
-            <AnimatePresence>
-              {uploadError && (
-                <motion.p
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  transition={{ duration: 0.15 }}
-                  className="mt-2 text-xs text-rose-500 font-body"
-                >
-                  {uploadError}
-                </motion.p>
-              )}
-            </AnimatePresence>
-
-            <div className="flex items-center justify-end gap-2 border-t border-gray-50 pt-3 mt-3">
-              <button
-                onClick={reset}
-                disabled={isPending}
-                className="px-3 py-1.5 text-sm font-body text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                Cancel
-              </button>
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={handlePost}
-                disabled={!hasContent || isPending}
-                className="px-4 py-1.5 bg-[#4a7c59] text-white text-sm font-semibold font-body rounded-full hover:bg-[#3d6b4a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isPending ? "Posting..." : "Post"}
-              </motion.button>
-            </div>
-
-            {/* Hidden file inputs */}
-            <input
-              ref={mediaInputRef}
-              type="file"
-              accept="image/jpeg,image/jpg,image/png,image/webp,image/gif,image/heic,video/mp4,video/quicktime,video/webm"
-              multiple
-              className="hidden"
-              onChange={(e) => {
-                if (e.target.files) addMediaFiles(e.target.files);
-                e.target.value = "";
-              }}
-            />
-            <input
-              ref={attachmentInputRef}
-              type="file"
-              accept=".pdf,.doc,.docx,.xls,.xlsx"
-              multiple
-              className="hidden"
-              onChange={(e) => {
-                if (e.target.files) addAttachmentFiles(e.target.files);
-                e.target.value = "";
-              }}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
-}
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export default function TeacherFeedClient({
+export default function ParentFeedClient({
   currentUser,
   initialPosts,
   profileImageUrl,
@@ -1092,10 +696,9 @@ export default function TeacherFeedClient({
         .map((n) => n[0])
         .join("")
         .toUpperCase()
-    : "T";
+    : "P";
 
   function handleReactionToggle(postId: string, emoji: string) {
-    // Optimistic update
     setPosts((prev) =>
       prev.map((p) => {
         if (p.id !== postId) return p;
@@ -1118,15 +721,8 @@ export default function TeacherFeedClient({
       })
     );
     toggleReaction(postId, emoji).catch(() => {
-      // Revert on error — simplest approach is to refresh
       window.location.reload();
     });
-  }
-
-  function handleDeletePost(postId: string) {
-    setPosts((prev) => prev.filter((p) => p.id !== postId));
-    if (selectedPost?.id === postId) setSelectedPost(null);
-    deletePost(postId).catch(() => window.location.reload());
   }
 
   function handleCommentAdded(postId: string, comment: FeedCommentRow & { profile_image_url?: string | null }) {
@@ -1152,7 +748,6 @@ export default function TeacherFeedClient({
     deleteComment(commentId).catch(() => window.location.reload());
   }
 
-  // Keep selectedPost in sync with posts state
   const liveSelectedPost = selectedPost
     ? (posts.find((p) => p.id === selectedPost.id) ?? selectedPost)
     : null;
@@ -1165,7 +760,6 @@ export default function TeacherFeedClient({
           Teachers
         </p>
 
-        {/* "All Teachers" tab */}
         <button
           onClick={() => setSelectedTeacherId(null)}
           className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-colors cursor-pointer ${
@@ -1180,7 +774,6 @@ export default function TeacherFeedClient({
           <span className="text-sm font-body font-medium truncate">All Teachers</span>
         </button>
 
-        {/* Teacher tabs */}
         {teachers.map((teacher) => {
           const isSelected = selectedTeacherId === teacher.id;
           return (
@@ -1215,7 +808,6 @@ export default function TeacherFeedClient({
       {/* ── Right: Feed column ── */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-2xl mx-auto px-4 py-8">
-          {/* Page title */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1228,16 +820,6 @@ export default function TeacherFeedClient({
             </p>
           </motion.div>
 
-          {/* Compose bar */}
-          <ComposeBar
-            initials={initials}
-            profileImageUrl={profileImageUrl}
-            onPost={() => {
-              window.location.reload();
-            }}
-          />
-
-          {/* Posts */}
           <AnimatePresence mode="wait">
             {displayedPosts.length === 0 ? (
               <motion.div
@@ -1250,7 +832,7 @@ export default function TeacherFeedClient({
               >
                 {selectedTeacherId
                   ? `No posts from ${teachers.find((t) => t.id === selectedTeacherId)?.full_name ?? "this teacher"} yet.`
-                  : "No posts yet. Share your first update above!"}
+                  : "No posts yet."}
               </motion.div>
             ) : (
               <motion.div
@@ -1278,7 +860,6 @@ export default function TeacherFeedClient({
                         post={post}
                         currentUserId={currentUser?.id}
                         onReactionToggle={handleReactionToggle}
-                        onDelete={handleDeletePost}
                         onClick={() => setSelectedPost(post)}
                       />
                     </motion.div>
