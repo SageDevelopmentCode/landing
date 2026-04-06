@@ -507,23 +507,21 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
         </div>
       </div>
 
-      {/* Mobile CTA strip — only when scrolled */}
-      {scrolled && (
-        <div className="lg:hidden px-4 pb-3 flex gap-2">
-          <Link
-            href="/apply"
-            className="flex-1 flex items-center justify-center px-4 py-2.5 bg-sage-600 text-white text-sm font-semibold rounded-2xl"
-          >
-            Enroll Today!
-          </Link>
-          <Link
-            href="/rsvp"
-            className="flex-1 flex items-center justify-center px-3 py-2.5 bg-indigo-500 text-white text-sm font-semibold rounded-2xl"
-          >
-            Open House on 4/25
-          </Link>
-        </div>
-      )}
+      {/* Mobile CTA strip — slides in when scrolled */}
+      <div className={`lg:hidden overflow-hidden transition-all duration-200 px-4 flex gap-2 ${scrolled ? "max-h-20 opacity-100 pb-3" : "max-h-0 opacity-0"}`}>
+        <Link
+          href="/apply"
+          className="flex-1 flex items-center justify-center px-4 py-2.5 bg-sage-600 text-white text-sm font-semibold rounded-2xl"
+        >
+          Enroll Today!
+        </Link>
+        <Link
+          href="/rsvp"
+          className="flex-1 flex items-center justify-center px-3 py-2.5 bg-indigo-500 text-white text-sm font-semibold rounded-2xl"
+        >
+          Open House on 4/25
+        </Link>
+      </div>
 
       {/* Mobile Menu */}
       <AnimatePresence>

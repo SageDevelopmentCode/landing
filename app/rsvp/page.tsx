@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, animate } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Calendar,
   Clock,
@@ -154,14 +154,7 @@ export default function OpenHousePage() {
   });
   const scrollToRSVP = (e: React.MouseEvent) => {
     e.preventDefault();
-    const target = document.getElementById("rsvp");
-    if (!target) return;
-    const targetY = target.getBoundingClientRect().top + window.scrollY;
-    animate(window.scrollY, targetY, {
-      duration: 1.2,
-      ease: [0.76, 0, 0.24, 1],
-      onUpdate: (value) => window.scrollTo(0, value),
-    });
+    document.getElementById("rsvp")?.scrollIntoView({ behavior: "smooth" });
   };
 
   const [contactOpen, setContactOpen] = useState(false);
@@ -281,31 +274,31 @@ export default function OpenHousePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
           >
-            <div className="col-span-2 rounded-2xl overflow-hidden shadow-md">
+            <div className="col-span-2 relative h-56 rounded-2xl overflow-hidden shadow-md">
               <Image
                 src="/assets/After1.png"
                 alt="Sage Field outdoor space"
-                width={800}
-                height={500}
-                className="w-full h-56 object-cover"
+                fill
+                className="object-cover"
+                priority
               />
             </div>
-            <div className="rounded-2xl overflow-hidden shadow-md">
+            <div className="relative h-40 rounded-2xl overflow-hidden shadow-md">
               <Image
                 src="/assets/After2.png"
                 alt="Sage Field classroom environment"
-                width={400}
-                height={300}
-                className="w-full h-40 object-cover"
+                fill
+                className="object-cover"
+                priority
               />
             </div>
-            <div className="rounded-2xl overflow-hidden shadow-md">
+            <div className="relative h-40 rounded-2xl overflow-hidden shadow-md">
               <Image
                 src="/assets/After3.png"
                 alt="Sage Field learning area"
-                width={400}
-                height={300}
-                className="w-full h-40 object-cover"
+                fill
+                className="object-cover"
+                priority
               />
             </div>
           </motion.div>
@@ -699,6 +692,7 @@ export default function OpenHousePage() {
           </motion.div>
 
           <motion.div
+            layout
             className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -708,6 +702,7 @@ export default function OpenHousePage() {
             {/* Success state */}
             {submitStatus.type === "success" ? (
               <motion.div
+                layout
                 className="flex flex-col items-center gap-4 py-8 text-center"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
