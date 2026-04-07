@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ChevronLeft, ChevronRight, ChevronDown, Plus, X, Link2, Upload, Pencil, MapPin, Users, RefreshCw, Bell, StickyNote, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, Plus, X, Link2, Upload, Pencil, MapPin, Users, RefreshCw, Bell, StickyNote, Trash2, Calendar, Sun, BookOpen, Clock, Paperclip } from "lucide-react";
 import { Merriweather } from "next/font/google";
 import { motion, AnimatePresence } from "framer-motion";
 import { colors, radius, shadows } from "../design-system";
@@ -100,15 +100,34 @@ function getOverlapClusters(events: CalendarEvent[]): CalendarEvent[][] {
   return clusters;
 }
 
-const programs: Record<ProgramKey, { label: string; start: Date; end: Date }> =
+// ─── Animation constants ────────────────────────────────────────────────────────
+
+const panelSpring = { type: "spring" as const, stiffness: 380, damping: 36, mass: 0.7 };
+
+const fadeUpVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } },
+  exit: { opacity: 0, y: -6, transition: { duration: 0.15 } },
+};
+
+const staggerContainer = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.04, delayChildren: 0.05 } },
+};
+
+const programs: Record<ProgramKey, { label: string; shortLabel: string; dateRange: string; start: Date; end: Date }> =
   {
     summer: {
       label: "Summer 2026",
+      shortLabel: "SUMMER",
+      dateRange: "May – Aug 2026",
       start: new Date(2026, 4, 1),
       end: new Date(2026, 7, 31),
     },
     school: {
       label: "School Year 2026–2027",
+      shortLabel: "SCHOOL",
+      dateRange: "Aug 2026 – May 2027",
       start: new Date(2026, 7, 1),
       end: new Date(2027, 4, 31),
     },
@@ -1119,7 +1138,7 @@ function OverlapPanel({
     <>
       <motion.div
         className="fixed inset-0 z-40"
-        style={{ backgroundColor: "rgba(0,0,0,0.10)" }}
+        style={{ backgroundColor: "rgba(0,0,0,0.12)" }}
         onClick={onClose}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -1128,112 +1147,52 @@ function OverlapPanel({
       />
       <motion.div
         className="fixed top-0 right-0 h-full z-50 flex flex-col"
-        style={{
-          width: "380px",
-          backgroundColor: "white",
-          borderLeft: `1px solid ${colors.border}`,
-          boxShadow: "-12px 0 40px rgba(0,0,0,0.07)",
-        }}
-        initial={{ x: "100%" }}
-        animate={{ x: 0 }}
-        exit={{ x: "100%" }}
-        transition={{ type: "spring", stiffness: 320, damping: 32, mass: 0.8 }}
+        style={{ width: "380px", backgroundColor: "white", borderLeft: `1px solid ${colors.border}`, boxShadow: "-16px 0 48px rgba(0,0,0,0.10)" }}
+        initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={panelSpring}
       >
-        {/* Header */}
-        <div
-          className="flex items-center justify-between px-6 py-5 flex-shrink-0"
-          style={{ borderBottom: `1px solid ${colors.border}` }}
-        >
+        <div className="flex items-center justify-between px-6 py-5 flex-shrink-0"
+          style={{ backgroundColor: colors.warmLinen, borderBottom: `1px solid ${colors.border}` }}>
           <div>
-            {timeLabel && (
-              <p className="text-xs font-medium mb-0.5" style={{ color: colors.textSecondary }}>
-                {timeLabel}
-              </p>
-            )}
-            <h2 className="text-base font-semibold" style={{ color: colors.textPrimary }}>
-              {events.length} events
-            </h2>
+            {timeLabel && <p className="text-xs mb-0.5" style={{ color: colors.textSecondary }}>{timeLabel}</p>}
+            <h2 className={`text-base font-bold ${merriweather.className}`} style={{ color: colors.textPrimary }}>{events.length} Events</h2>
           </div>
-          <button
-            onClick={onClose}
-            className="transition-colors"
-            style={{ color: colors.textSecondary }}
-          >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-          </button>
+          <motion.button onClick={onClose} whileHover={{ backgroundColor: colors.border }} whileTap={{ scale: 0.95 }} transition={{ duration: 0.12 }}
+            style={{ padding: 6, borderRadius: 8, border: "none", cursor: "pointer", color: colors.textSecondary, backgroundColor: "white", display: "flex" }}>
+            <X className="w-4 h-4" />
+          </motion.button>
         </div>
 
-        {/* Event list */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
+        <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-2.5">
           {events.map((ev) => {
             const creatorName = ev.created_by ? usersMap[ev.created_by] : null;
-            const evTime = ev.start_time
-              ? `${formatTime(ev.start_time)}${ev.end_time ? ` – ${formatTime(ev.end_time)}` : ""}`
-              : "All day";
+            const evTime = ev.start_time ? `${formatTime(ev.start_time)}${ev.end_time ? ` – ${formatTime(ev.end_time)}` : ""}` : "All day";
             return (
-              <button
-                key={ev.id}
-                onClick={() => onViewEvent(ev)}
-                className="w-full text-left rounded-lg px-3 py-3 transition-opacity hover:opacity-90 relative"
-                style={{ backgroundColor: ev.color }}
-              >
-                {/* Badges */}
-                {(ev.shared_with ?? []).length > 0 && (
-                  <div className="flex items-center gap-1 mb-1.5 flex-wrap">
-                    {(ev.shared_with ?? []).map((g) => (
-                      <span
-                        key={g}
-                        className="leading-none"
-                        style={{
-                          fontSize: "9px",
-                          fontWeight: 600,
-                          color: SHARE_COLORS[g] ?? ev.color,
-                          backgroundColor: "white",
-                          borderRadius: "3px",
-                          padding: "2px 5px",
-                        }}
-                      >
-                        {g}
-                      </span>
-                    ))}
-                  </div>
+              <motion.button key={ev.id} onClick={() => onViewEvent(ev)}
+                whileHover={{ x: 4, backgroundColor: `${ev.color}20` }} whileTap={{ scale: 0.99 }} transition={{ duration: 0.12 }}
+                className="w-full text-left relative"
+                style={{
+                  backgroundColor: `${ev.color}12`,
+                  borderTop: "none", borderRight: "none", borderBottom: "none",
+                  borderLeft: `3px solid ${ev.color}`,
+                  outline: `1px solid ${ev.color}30`,
+                  borderRadius: 10, padding: "12px 14px", cursor: "pointer",
+                }}>
+                <p className="text-sm font-semibold leading-tight" style={{ color: colors.textPrimary }}>{ev.title}</p>
+                <p className="text-xs mt-1" style={{ color: colors.textSecondary }}>{evTime}</p>
+                {ev.category && (
+                  <span className="inline-block mt-1.5 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide"
+                    style={{ backgroundColor: `${ev.color}18`, color: ev.color, borderRadius: radius.full }}>{ev.category}</span>
                 )}
-                {/* Title */}
-                <p className="text-sm font-semibold text-white leading-tight">{ev.title}</p>
-                {/* Time + category */}
-                <div className="flex items-center justify-between mt-1">
-                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.75)" }}>{evTime}</p>
-                  {ev.category && (
-                    <p className="text-[10px] font-medium" style={{ color: "rgba(255,255,255,0.75)" }}>
-                      {ev.category}
-                    </p>
-                  )}
-                </div>
-                {/* Creator */}
                 {creatorName && (
                   <div className="flex items-center gap-1.5 mt-2">
-                    <span
-                      className="inline-flex items-center justify-center text-[8px] font-bold leading-none"
-                      style={{
-                        width: "18px",
-                        height: "18px",
-                        borderRadius: "50%",
-                        backgroundColor: "rgba(255,255,255,0.30)",
-                        color: "white",
-                        border: "1.5px solid rgba(255,255,255,0.55)",
-                        flexShrink: 0,
-                      }}
-                    >
+                    <span className="inline-flex items-center justify-center text-[8px] font-bold leading-none"
+                      style={{ width: 18, height: 18, borderRadius: "50%", backgroundColor: `${ev.color}30`, color: ev.color, border: `1.5px solid ${ev.color}50`, flexShrink: 0 }}>
                       {initialsFor(creatorName)}
                     </span>
-                    <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.75)" }}>
-                      {creatorName}
-                    </span>
+                    <span className="text-[10px]" style={{ color: colors.textTertiary }}>{creatorName}</span>
                   </div>
                 )}
-              </button>
+              </motion.button>
             );
           })}
         </div>
@@ -1307,314 +1266,205 @@ function EventDetailPanel({
       />
       <motion.div
         className="fixed top-0 right-0 h-full z-50 flex flex-col"
-        style={{
-          width: "420px",
-          backgroundColor: "white",
-          borderLeft: `1px solid ${colors.border}`,
-          boxShadow: "-12px 0 40px rgba(0,0,0,0.07)",
-        }}
-        initial={{ x: "100%" }}
-        animate={{ x: 0 }}
-        exit={{ x: "100%" }}
-        transition={{ type: "spring", stiffness: 320, damping: 32, mass: 0.8 }}
+        style={{ width: "420px", backgroundColor: "white", borderLeft: `1px solid ${colors.border}`, boxShadow: "-16px 0 48px rgba(0,0,0,0.10)" }}
+        initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={panelSpring}
       >
-        {/* Color bar + header */}
-        <div
-          className="flex items-start justify-between px-6 py-5 flex-shrink-0"
-          style={{ borderBottom: `1px solid ${colors.divider}` }}
+        {/* Full-color header band */}
+        <motion.div
+          key={event.id + "-header"}
+          animate={{ backgroundColor: event.color }}
+          transition={{ duration: 0.3 }}
+          className="flex-shrink-0"
+          style={{ padding: "24px 24px 20px 24px" }}
         >
-          <div className="flex items-start gap-3 min-w-0">
-            <div
-              className="flex-shrink-0 mt-0.5"
-              style={{
-                width: "10px",
-                height: "10px",
-                borderRadius: radius.full,
-                backgroundColor: event.color,
-                marginTop: "5px",
-              }}
-            />
-            <div className="min-w-0">
-              <h2
-                className={`text-base font-bold leading-snug ${merriweather.className}`}
-                style={{ color: colors.textPrimary }}
-              >
-                {event.title}
-              </h2>
-              <p className="text-xs mt-0.5" style={{ color: colors.textTertiary }}>
-                {dateLabel}
-                {timeLabel ? ` · ${timeLabel}` : ""}
-              </p>
+          <div className="flex items-start justify-between mb-3">
+            <div>
               {event.category && (
-                <span
-                  className="inline-block mt-1.5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
-                  style={{
-                    backgroundColor: `${event.color}22`,
-                    color: event.color,
-                    borderRadius: radius.full,
-                    border: `1px solid ${event.color}44`,
-                  }}
-                >
+                <span className="inline-block px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider"
+                  style={{ backgroundColor: "rgba(255,255,255,0.22)", color: "white", borderRadius: radius.full }}>
                   {event.category}
                 </span>
               )}
             </div>
+            <motion.button onClick={onClose}
+              whileHover={{ backgroundColor: "rgba(255,255,255,0.30)" }} whileTap={{ scale: 0.95 }} transition={{ duration: 0.12 }}
+              style={{ padding: 6, borderRadius: 8, border: "none", cursor: "pointer", backgroundColor: "rgba(255,255,255,0.20)", color: "white", display: "flex", flexShrink: 0 }}>
+              <X className="w-4 h-4" />
+            </motion.button>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg transition-opacity hover:opacity-60 flex-shrink-0"
-            style={{
-              backgroundColor: colors.warmLinen,
-              border: `1px solid ${colors.border}`,
-              cursor: "pointer",
-            }}
-          >
-            <X className="w-3.5 h-3.5" style={{ color: colors.textSecondary }} />
-          </button>
-        </div>
+          <h2 className={`text-xl font-bold leading-snug ${merriweather.className}`} style={{ color: "white" }}>{event.title}</h2>
+          <p className="text-xs mt-2" style={{ color: "rgba(255,255,255,0.82)" }}>
+            {dateLabel}{timeLabel ? <> &middot; {timeLabel}</> : null}
+          </p>
+          {(event.programs ?? []).length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-3">
+              {(event.programs ?? []).map((p) => (
+                <span key={p} className="px-2.5 py-1 text-[10px] font-medium"
+                  style={{ backgroundColor: "rgba(255,255,255,0.18)", color: "rgba(255,255,255,0.90)", borderRadius: radius.full }}>{p}</span>
+              ))}
+            </div>
+          )}
+        </motion.div>
 
         {/* Body */}
-        <div className="flex-1 overflow-auto px-6 py-5 space-y-4">
+        <motion.div className="flex-1 overflow-auto px-6 py-5" variants={staggerContainer} initial="hidden" animate="visible">
           {event.description && (
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide mb-1" style={{ color: colors.textTertiary }}>
-                Description
-              </p>
-              <p className="text-sm leading-relaxed" style={{ color: colors.textPrimary }}>
-                {event.description}
-              </p>
-            </div>
-          )}
-
-          {event.location && (
-            <div className="flex items-start gap-2">
-              <MapPin className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: colors.textTertiary }} />
-              <p className="text-sm" style={{ color: colors.textPrimary }}>{event.location}</p>
-            </div>
-          )}
-
-          {(event.shared_with ?? []).length > 0 && (
-            <div>
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <Users className="w-3.5 h-3.5" style={{ color: colors.textTertiary }} />
-                <p className="text-xs font-medium uppercase tracking-wide" style={{ color: colors.textTertiary }}>
-                  Shared with
-                </p>
+            <motion.div variants={fadeUpVariants} className="mb-4">
+              <div style={{ backgroundColor: "#F2F7F3", borderRadius: 10, padding: "14px 16px" }}>
+                <p className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: colors.textTertiary }}>Description</p>
+                <p className="text-sm leading-relaxed" style={{ color: colors.textPrimary, lineHeight: 1.65 }}>{event.description}</p>
               </div>
-              <div className="flex flex-wrap gap-1.5">
-                {(event.shared_with ?? []).map((g) => (
-                  <span
-                    key={g}
-                    className="px-2.5 py-1 text-xs font-medium"
-                    style={{
-                      backgroundColor: colors.pastelSage,
-                      color: colors.mistyForest,
-                      borderRadius: radius.full,
-                    }}
-                  >
-                    {g}
-                  </span>
-                ))}
-              </div>
-            </div>
+            </motion.div>
           )}
 
-          {(event.programs ?? []).length > 0 && (
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide mb-1.5" style={{ color: colors.textTertiary }}>
-                Program
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {(event.programs ?? []).map((p) => (
-                  <span
-                    key={p}
-                    className="px-2.5 py-1 text-xs font-medium"
-                    style={{
-                      backgroundColor: colors.softCloud,
-                      color: colors.textSecondary,
-                      borderRadius: radius.full,
-                      border: `1px solid ${colors.border}`,
-                    }}
-                  >
-                    {p}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+          <div className="flex flex-col">
+            {event.location && (
+              <motion.div variants={fadeUpVariants} className="flex items-start gap-3" style={{ padding: "12px 0", borderBottom: `1px solid ${colors.border}` }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: colors.warmLinen, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <MapPin className="w-3.5 h-3.5" style={{ color: colors.textSecondary }} />
+                </div>
+                <div className="min-w-0 pt-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: colors.textTertiary }}>Location</p>
+                  <p className="text-sm" style={{ color: colors.textPrimary }}>{event.location}</p>
+                </div>
+              </motion.div>
+            )}
 
-          {event.recurrence && event.recurrence !== "None" && (
-            <div className="flex items-center gap-2">
-              <RefreshCw className="w-3.5 h-3.5 flex-shrink-0" style={{ color: colors.textTertiary }} />
-              <p className="text-sm" style={{ color: colors.textPrimary }}>
-                Repeats {event.recurrence.toLowerCase()}
-                {event.recurrence_end_date ? ` until ${event.recurrence_end_date}` : ""}
-              </p>
-            </div>
-          )}
+            {(event.shared_with ?? []).length > 0 && (
+              <motion.div variants={fadeUpVariants} className="flex items-start gap-3" style={{ padding: "12px 0", borderBottom: `1px solid ${colors.border}` }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: colors.warmLinen, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Users className="w-3.5 h-3.5" style={{ color: colors.textSecondary }} />
+                </div>
+                <div className="min-w-0 pt-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: colors.textTertiary }}>Shared with</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(event.shared_with ?? []).map((g) => (
+                      <span key={g} className="px-2.5 py-1 text-xs font-medium"
+                        style={{ backgroundColor: colors.pastelSage, color: colors.mistyForest, borderRadius: radius.full }}>{g}</span>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
-          {(event.attachment_links ?? []).length > 0 && (
-            <div>
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <Link2 className="w-3.5 h-3.5" style={{ color: colors.textTertiary }} />
-                <p className="text-xs font-medium uppercase tracking-wide" style={{ color: colors.textTertiary }}>
-                  Attachments
-                </p>
-              </div>
-              <div className="flex flex-col gap-1">
-                {(event.attachment_links ?? []).map((link, i) => (
-                  <a
-                    key={i}
-                    href={link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs truncate hover:underline"
-                    style={{ color: colors.mistyForest }}
-                  >
-                    {link}
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
+            {!event.is_all_day && event.start_time && (
+              <motion.div variants={fadeUpVariants} className="flex items-start gap-3" style={{ padding: "12px 0", borderBottom: `1px solid ${colors.border}` }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: colors.warmLinen, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Clock className="w-3.5 h-3.5" style={{ color: colors.textSecondary }} />
+                </div>
+                <div className="min-w-0 pt-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: colors.textTertiary }}>Time</p>
+                  <p className="text-sm" style={{ color: colors.textPrimary }}>{formatTime(event.start_time)}{event.end_time ? ` – ${formatTime(event.end_time)}` : ""}</p>
+                </div>
+              </motion.div>
+            )}
 
-          {(event.reminder_email || event.reminder_in_app) && (
-            <div className="flex items-start gap-2">
-              <Bell className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: colors.textTertiary }} />
-              <p className="text-sm" style={{ color: colors.textPrimary }}>
-                Reminder {event.reminder_timing ?? "30 min before"}
-                {event.reminder_email && event.reminder_in_app
-                  ? " (email + in-app)"
-                  : event.reminder_email
-                  ? " (email)"
-                  : " (in-app)"}
-              </p>
-            </div>
-          )}
+            {event.recurrence && event.recurrence !== "None" && (
+              <motion.div variants={fadeUpVariants} className="flex items-start gap-3" style={{ padding: "12px 0", borderBottom: `1px solid ${colors.border}` }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: colors.warmLinen, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <RefreshCw className="w-3.5 h-3.5" style={{ color: colors.textSecondary }} />
+                </div>
+                <div className="min-w-0 pt-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: colors.textTertiary }}>Recurrence</p>
+                  <p className="text-sm" style={{ color: colors.textPrimary }}>Repeats {event.recurrence.toLowerCase()}{event.recurrence_end_date ? ` until ${event.recurrence_end_date}` : ""}</p>
+                </div>
+              </motion.div>
+            )}
+
+            {(event.attachment_links ?? []).length > 0 && (
+              <motion.div variants={fadeUpVariants} className="flex items-start gap-3" style={{ padding: "12px 0", borderBottom: `1px solid ${colors.border}` }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: colors.warmLinen, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Paperclip className="w-3.5 h-3.5" style={{ color: colors.textSecondary }} />
+                </div>
+                <div className="min-w-0 pt-1 flex-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: colors.textTertiary }}>Attachments</p>
+                  <div className="flex flex-col gap-1">
+                    {(event.attachment_links ?? []).map((link, i) => (
+                      <a key={i} href={link} target="_blank" rel="noopener noreferrer" className="text-xs truncate hover:underline" style={{ color: colors.mistyForest }}>{link}</a>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {(event.reminder_email || event.reminder_in_app) && (
+              <motion.div variants={fadeUpVariants} className="flex items-start gap-3" style={{ padding: "12px 0", borderBottom: `1px solid ${colors.border}` }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: colors.warmLinen, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Bell className="w-3.5 h-3.5" style={{ color: colors.textSecondary }} />
+                </div>
+                <div className="min-w-0 pt-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: colors.textTertiary }}>Reminder</p>
+                  <p className="text-sm" style={{ color: colors.textPrimary }}>
+                    {event.reminder_timing ?? "30 min before"}
+                    {event.reminder_email && event.reminder_in_app ? " · email + in-app" : event.reminder_email ? " · email" : " · in-app"}
+                  </p>
+                </div>
+              </motion.div>
+            )}
+
+            {event.internal_notes && (
+              <motion.div variants={fadeUpVariants} className="flex items-start gap-3" style={{ padding: "12px 0", borderBottom: `1px solid ${colors.border}` }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: colors.warmLinen, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <StickyNote className="w-3.5 h-3.5" style={{ color: colors.textSecondary }} />
+                </div>
+                <div className="min-w-0 pt-1 flex-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: colors.textTertiary }}>Internal notes</p>
+                  <p className="text-xs leading-relaxed px-3 py-2"
+                    style={{ color: colors.textSecondary, backgroundColor: colors.warmLinen, borderRadius: radius.md, border: `1px solid ${colors.border}` }}>
+                    {event.internal_notes}
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </div>
 
           {event.rsvp_enabled && (
-            <div
-              className="flex items-center gap-2 px-3 py-2"
-              style={{
-                backgroundColor: colors.pastelSage,
-                borderRadius: radius.md,
-              }}
-            >
-              <Users className="w-3.5 h-3.5" style={{ color: colors.mistyForest }} />
-              <p className="text-xs font-medium" style={{ color: colors.mistyForest }}>
-                RSVP enabled for parents
-              </p>
-            </div>
-          )}
-
-          {event.internal_notes && (
-            <div>
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <StickyNote className="w-3.5 h-3.5" style={{ color: colors.textTertiary }} />
-                <p className="text-xs font-medium uppercase tracking-wide" style={{ color: colors.textTertiary }}>
-                  Internal notes
-                </p>
-              </div>
-              <p
-                className="text-xs leading-relaxed px-3 py-2"
-                style={{
-                  color: colors.textSecondary,
-                  backgroundColor: colors.warmLinen,
-                  borderRadius: radius.md,
-                  border: `1px solid ${colors.border}`,
-                }}
-              >
-                {event.internal_notes}
-              </p>
-            </div>
+            <motion.div variants={fadeUpVariants} className="flex items-center gap-3 mt-4"
+              style={{ backgroundColor: colors.pastelSage, borderRadius: 10, padding: "12px 16px" }}>
+              <Users className="w-4 h-4 flex-shrink-0" style={{ color: colors.mistyForest }} />
+              <p className="text-sm font-semibold flex-1" style={{ color: colors.mistyForest }}>RSVP enabled for parents</p>
+              <span style={{ color: colors.mistyForest, fontSize: 16, fontWeight: 300 }}>→</span>
+            </motion.div>
           )}
 
           {creatorName && (
-            <div className="flex items-center gap-2.5 pt-1">
-              <div
-                className="flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0"
-                style={{
-                  width: "24px",
-                  height: "24px",
-                  borderRadius: radius.full,
-                  backgroundColor: colorForId(event.created_by!),
-                }}
-              >
+            <motion.div variants={fadeUpVariants} className="flex items-center gap-2.5 mt-4 pt-4" style={{ borderTop: `1px solid ${colors.border}` }}>
+              <div className="flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0"
+                style={{ width: 24, height: 24, borderRadius: radius.full, backgroundColor: colorForId(event.created_by!) }}>
                 {initialsFor(creatorName)}
               </div>
               <p className="text-xs" style={{ color: colors.textTertiary }}>
                 Created by <span style={{ color: colors.textSecondary, fontWeight: 500 }}>{creatorName}</span>
               </p>
-            </div>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
 
         {/* Footer */}
         {isOwner && (
-          <div
-            className="px-6 py-4 flex-shrink-0 space-y-2"
-            style={{ borderTop: `1px solid ${colors.divider}` }}
-          >
+          <div className="px-6 py-4 flex-shrink-0 space-y-2" style={{ borderTop: `1px solid ${colors.divider}` }}>
             {!confirmDelete && (
               <>
-                <button
-                  onClick={onEdit}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-xl transition-opacity hover:opacity-90"
-                  style={{
-                    backgroundColor: colors.mistyForest,
-                    color: "white",
-                    border: "none",
-                    cursor: "pointer",
-                  }}
-                >
-                  <Pencil className="w-3.5 h-3.5" />
-                  Edit Event
+                <button onClick={onEdit} className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-xl transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: colors.mistyForest, color: "white", border: "none", cursor: "pointer" }}>
+                  <Pencil className="w-3.5 h-3.5" />Edit Event
                 </button>
-                <button
-                  onClick={() => setConfirmDelete(true)}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-xl transition-opacity hover:opacity-90"
-                  style={{
-                    backgroundColor: "#fee2e2",
-                    color: "#b91c1c",
-                    border: "1px solid #fca5a5",
-                    cursor: "pointer",
-                  }}
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  Delete Event
+                <button onClick={() => setConfirmDelete(true)} className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-xl transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: "#fee2e2", color: "#b91c1c", border: "1px solid #fca5a5", cursor: "pointer" }}>
+                  <Trash2 className="w-3.5 h-3.5" />Delete Event
                 </button>
               </>
             )}
             {confirmDelete && (
               <div>
-                <p className="text-sm text-center mb-2" style={{ color: colors.textSecondary }}>
-                  Are you sure you want to delete this event?
-                </p>
+                <p className="text-sm text-center mb-2" style={{ color: colors.textSecondary }}>Are you sure you want to delete this event?</p>
                 <div className="flex gap-2">
-                  <button
-                    onClick={handleDelete}
-                    disabled={deleting}
-                    className="flex-1 py-2.5 text-sm font-medium rounded-xl transition-opacity hover:opacity-90"
-                    style={{
-                      backgroundColor: "#b91c1c",
-                      color: "white",
-                      border: "none",
-                      cursor: deleting ? "not-allowed" : "pointer",
-                      opacity: deleting ? 0.6 : 1,
-                    }}
-                  >
+                  <button onClick={handleDelete} disabled={deleting} className="flex-1 py-2.5 text-sm font-medium rounded-xl transition-opacity hover:opacity-90"
+                    style={{ backgroundColor: "#b91c1c", color: "white", border: "none", cursor: deleting ? "not-allowed" : "pointer", opacity: deleting ? 0.6 : 1 }}>
                     {deleting ? "Deleting…" : "Yes, delete"}
                   </button>
-                  <button
-                    onClick={() => setConfirmDelete(false)}
-                    className="flex-1 py-2.5 text-sm font-medium rounded-xl transition-opacity hover:opacity-90"
-                    style={{
-                      backgroundColor: colors.warmLinen,
-                      color: colors.textSecondary,
-                      border: `1px solid ${colors.border}`,
-                      cursor: "pointer",
-                    }}
-                  >
+                  <button onClick={() => setConfirmDelete(false)} className="flex-1 py-2.5 text-sm font-medium rounded-xl transition-opacity hover:opacity-90"
+                    style={{ backgroundColor: colors.warmLinen, color: colors.textSecondary, border: `1px solid ${colors.border}`, cursor: "pointer" }}>
                     Cancel
                   </button>
                 </div>
@@ -1707,157 +1557,170 @@ export default function CalendarClient({
   const ws = startOfWeek(currentDate);
   const weekDays = Array.from({ length: 5 }, (_, i) => addDays(ws, i));
 
+  const isOnToday = view === "monthly"
+    ? currentDate.getMonth() === today.getMonth() && currentDate.getFullYear() === today.getFullYear()
+    : weekDays.some((d) => isSameDay(d, today));
+
+  function handleToday() {
+    const t = new Date();
+    setCurrentDate(view === "monthly" ? new Date(t.getFullYear(), t.getMonth(), 1) : startOfWeek(t));
+  }
+
+  const categoryEntries = Array.from(
+    new Map(events.filter((e) => e.category && e.color).map((e) => [e.category!, e.color])).entries()
+  ).slice(0, 5);
+
   return (
     <>
-      {/* Full-bleed layout that cancels the main's padding */}
-      <div
-        className="-mx-3 sm:-mx-4 lg:-mx-6 flex h-full"
-        style={{ minHeight: 0 }}
-      >
-        {/* ── Left Panel ── */}
-        <aside
-          className="flex-shrink-0 flex flex-col pt-7 pb-6"
-          style={{
-            width: "168px",
-            borderRight: `1px solid ${colors.border}`,
-            backgroundColor: colors.warmLinen,
-          }}
-        >
-          <p
-            className="px-4 text-[10px] font-semibold uppercase tracking-[0.12em] mb-3"
-            style={{ color: colors.textTertiary }}
-          >
-            Programs
-          </p>
-          <nav className="space-y-0.5 px-2">
-            {(
-              Object.entries(programs) as [
-                ProgramKey,
-                (typeof programs)[ProgramKey]
-              ][]
-            ).map(([key, prog]) => {
+      <div className="flex h-full" style={{ minHeight: 0 }}>
+        {/* ── Left Rail ── */}
+        <aside className="flex-shrink-0 flex flex-col" style={{ width: 220, borderRight: `1px solid ${colors.border}`, backgroundColor: "white" }}>
+          {/* Branding strip */}
+          <div className="flex items-center gap-2 px-4 flex-shrink-0"
+            style={{ height: 56, background: "linear-gradient(90deg, #F2F7F3 0%, white 100%)", borderBottom: `1px solid ${colors.border}` }}>
+            <Calendar className="w-3.5 h-3.5 flex-shrink-0" style={{ color: colors.mistyForest }} />
+            <span className={`text-[13px] font-bold ${merriweather.className}`} style={{ color: colors.mistyForest }}>Admin Calendar</span>
+          </div>
+
+          <p className="px-4 pt-5 pb-2 text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: colors.textTertiary }}>Programs</p>
+
+          <nav className="space-y-1.5 px-3">
+            {(Object.entries(programs) as [ProgramKey, (typeof programs)[ProgramKey]][]).map(([key, prog]) => {
               const active = selectedProgram === key;
+              const Icon = key === "summer" ? Sun : BookOpen;
               return (
-                <button
-                  key={key}
-                  onClick={() => handleProgramSelect(key)}
-                  className="w-full text-left px-3 py-2 text-sm transition-all duration-150"
+                <motion.button key={key} onClick={() => handleProgramSelect(key)}
+                  whileHover={active ? {} : { x: 2 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.15 }}
+                  className="w-full text-left relative"
                   style={{
-                    backgroundColor: active ? colors.pastelSage : "transparent",
-                    color: active ? colors.mistyForest : colors.textSecondary,
-                    fontWeight: active ? 600 : 400,
-                    borderRadius: radius.sm,
-                    cursor: "pointer",
-                    border: "none",
-                  }}
-                >
-                  {prog.label}
-                </button>
+                    backgroundColor: active ? "#F2F7F3" : "transparent",
+                    borderTop: "none", borderRight: "none", borderBottom: "none",
+                    borderLeft: `3px solid ${active ? colors.mistyForest : "transparent"}`,
+                    borderRadius: 12, padding: "12px 12px 12px 11px", cursor: "pointer",
+                    boxShadow: active ? shadows.soft : "none",
+                    display: "flex", flexDirection: "column", gap: 4,
+                  }}>
+                  <div className="flex items-center gap-2">
+                    <div style={{ width: 20, height: 20, borderRadius: "50%", backgroundColor: colors.pastelSage, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <Icon style={{ width: 10, height: 10, color: colors.mistyForest }} />
+                    </div>
+                    <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.10em", color: colors.mistyForest, textTransform: "uppercase" }}>{prog.shortLabel}</span>
+                    {active && <motion.div layoutId="admin-program-indicator" style={{ marginLeft: "auto", width: 7, height: 7, borderRadius: "50%", backgroundColor: colors.mistyForest, flexShrink: 0 }} />}
+                  </div>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: colors.textPrimary, lineHeight: 1.2 }}>{prog.label}</p>
+                  <p style={{ fontSize: 10, color: colors.textTertiary }}>{prog.dateRange}</p>
+                </motion.button>
               );
             })}
           </nav>
+
+          {categoryEntries.length > 0 && (
+            <div className="mt-auto px-4 pb-6 pt-4" style={{ borderTop: `1px solid ${colors.border}` }}>
+              <p className="text-[9px] font-bold uppercase tracking-[0.12em] mb-3" style={{ color: colors.textTertiary }}>Categories</p>
+              <div className="flex flex-col gap-2">
+                {categoryEntries.map(([cat, color]) => (
+                  <div key={cat} className="flex items-center gap-2">
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: color, flexShrink: 0 }} />
+                    <span style={{ fontSize: 11, color: colors.textSecondary }}>{cat}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </aside>
 
         {/* ── Calendar Area ── */}
-        <div className="flex-1 flex flex-col min-w-0" style={{ backgroundColor: "white" }}>
-          {/* Top bar */}
-          <div
-            className="flex items-center justify-between px-6 py-4 flex-shrink-0"
-            style={{
-              backgroundColor: "white",
-              borderBottom: `1px solid ${colors.border}`,
-            }}
-          >
-            {/* Left: nav + label */}
-            <div className="flex items-center gap-1">
-              <NavButton onClick={handlePrev} disabled={prevDisabled} aria-label="Previous">
-                <ChevronLeft className="w-4 h-4" />
-              </NavButton>
-              <NavButton onClick={handleNext} disabled={nextDisabled} aria-label="Next">
-                <ChevronRight className="w-4 h-4" />
-              </NavButton>
-              <span
-                className="ml-2 text-sm font-semibold"
-                style={{ color: colors.textPrimary }}
-              >
-                {navLabel}
-              </span>
-            </div>
+        <div className="flex-1 flex p-4" style={{ backgroundColor: "#F0F4F1" }}>
+          <div className="flex-1 flex flex-col"
+            style={{ borderRadius: 20, border: `1px solid ${colors.border}`, boxShadow: "0 4px 24px rgba(94,124,104,0.10)", overflow: "hidden", backgroundColor: "white" }}>
 
-            {/* Right: Add Event + view toggle */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => openAddEvent()}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 text-sm font-medium transition-opacity hover:opacity-85"
-                style={{
-                  backgroundColor: colors.mistyForest,
-                  color: "white",
-                  border: "none",
-                  borderRadius: radius.md,
-                  cursor: "pointer",
-                  boxShadow: shadows.soft,
-                }}
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Add Event
-              </button>
+            {/* Top bar */}
+            <div className="flex items-center justify-between flex-shrink-0"
+              style={{ height: 68, padding: "0 24px", borderBottom: `1px solid ${colors.border}`, backgroundColor: "white" }}>
+              {/* Left: nav cluster + label */}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center"
+                  style={{ backgroundColor: colors.warmLinen, border: `1px solid ${colors.border}`, borderRadius: 10, padding: 3, gap: 2, display: "flex" }}>
+                  <NavButton onClick={handlePrev} disabled={prevDisabled} aria-label="Previous"><ChevronLeft className="w-5 h-5" /></NavButton>
+                  <NavButton onClick={handleNext} disabled={nextDisabled} aria-label="Next"><ChevronRight className="w-5 h-5" /></NavButton>
+                </div>
+                <h1 className={`text-xl ${merriweather.className}`} style={{ color: colors.textPrimary, fontWeight: 700, lineHeight: 1 }}>
+                  {view === "monthly" ? (
+                    <><span>{MONTHS[currentDate.getMonth()]}</span>{" "}<span style={{ fontWeight: 300, color: colors.textSecondary }}>{currentDate.getFullYear()}</span></>
+                  ) : <span style={{ fontSize: 16 }}>{navLabel}</span>}
+                </h1>
+              </div>
 
-              {/* Segmented control */}
-              <div
-                className="flex p-0.5"
+              {/* Center: Today button */}
+              <motion.button onClick={handleToday}
+                whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} transition={{ duration: 0.12 }}
                 style={{
-                  backgroundColor: colors.warmLinen,
-                  border: `1px solid ${colors.border}`,
-                  borderRadius: radius.md,
-                }}
-              >
-                {(["monthly", "weekly"] as ViewMode[]).map((v) => {
-                  const active = view === v;
-                  return (
-                    <button
-                      key={v}
-                      onClick={() => setView(v)}
-                      className="px-3.5 py-1 text-sm font-medium transition-all duration-150 capitalize"
-                      style={{
-                        backgroundColor: active ? "white" : "transparent",
-                        color: active ? colors.textPrimary : colors.textTertiary,
-                        borderRadius: "10px",
-                        border: "none",
-                        cursor: "pointer",
-                        boxShadow: active ? shadows.soft : "none",
-                        fontWeight: active ? 600 : 400,
-                      }}
-                    >
-                      {v}
-                    </button>
-                  );
-                })}
+                  padding: "6px 18px", borderRadius: radius.full,
+                  backgroundColor: isOnToday ? colors.pastelSage : "white",
+                  color: isOnToday ? colors.mistyForest : colors.textSecondary,
+                  border: `1px solid ${isOnToday ? colors.pastelSage : colors.border}`,
+                  fontSize: 12, fontWeight: 600, cursor: "pointer",
+                }}>
+                Today
+              </motion.button>
+
+              {/* Right: Add Event + sliding view toggle */}
+              <div className="flex items-center gap-2">
+                <motion.button onClick={() => openAddEvent()}
+                  whileHover={{ opacity: 0.88 }} whileTap={{ scale: 0.97 }} transition={{ duration: 0.12 }}
+                  className="flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium"
+                  style={{ backgroundColor: colors.mistyForest, color: "white", border: "none", borderRadius: radius.md, cursor: "pointer", boxShadow: shadows.soft }}>
+                  <Plus className="w-3.5 h-3.5" />
+                  Add Event
+                </motion.button>
+
+                <div className="relative flex"
+                  style={{ backgroundColor: colors.warmLinen, border: `1px solid ${colors.border}`, borderRadius: 12, padding: 3 }}>
+                  {(["monthly", "weekly"] as ViewMode[]).map((v) => {
+                    const active = view === v;
+                    return (
+                      <button key={v} onClick={() => setView(v)}
+                        className="relative px-4 py-1.5 text-xs font-medium capitalize z-10"
+                        style={{ color: active ? colors.textPrimary : colors.textTertiary, border: "none", cursor: "pointer", backgroundColor: "transparent", fontWeight: active ? 600 : 400, borderRadius: 9, transition: "color 150ms" }}>
+                        {active && (
+                          <motion.div layoutId="admin-view-toggle"
+                            className="absolute inset-0"
+                            style={{ backgroundColor: "white", borderRadius: 9, boxShadow: "0 1px 4px rgba(0,0,0,0.08), 0 0 0 1px rgba(94,124,104,0.08)" }}
+                            transition={{ type: "spring", stiffness: 400, damping: 30 }} />
+                        )}
+                        <span className="relative z-10">{v}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Calendar body — flush, no padding */}
-          <div className="flex-1 overflow-hidden">
-            {view === "monthly" ? (
-              <MonthlyGrid
-                days={monthDays}
-                currentMonth={currentDate.getMonth()}
-                today={today}
-                onAddEvent={openAddEvent}
-                onViewEvent={setViewEvent}
-                events={events}
-              />
-            ) : (
-              <WeeklyGrid
-                weekDays={weekDays}
-                today={today}
-                onAddEvent={openAddEvent}
-                onViewEvent={setViewEvent}
-                onViewOverlap={setOverlapEvents}
-                events={events}
-                usersMap={usersMap}
-              />
-            )}
+            {/* Calendar body */}
+            <AnimatePresence mode="wait">
+              <motion.div key={view + navLabel} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.18, ease: "easeOut" }} className="flex-1 overflow-hidden flex flex-col">
+                {view === "monthly" ? (
+                  <MonthlyGrid
+                    days={monthDays}
+                    currentMonth={currentDate.getMonth()}
+                    today={today}
+                    onAddEvent={openAddEvent}
+                    onViewEvent={setViewEvent}
+                    events={events}
+                  />
+                ) : (
+                  <WeeklyGrid
+                    weekDays={weekDays}
+                    today={today}
+                    onAddEvent={openAddEvent}
+                    onViewEvent={setViewEvent}
+                    onViewOverlap={setOverlapEvents}
+                    events={events}
+                    usersMap={usersMap}
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </div>
@@ -1929,21 +1792,24 @@ function NavButton({
   "aria-label": string;
 }) {
   return (
-    <button
+    <motion.button
       onClick={onClick}
       disabled={disabled}
       aria-label={ariaLabel}
-      className="p-1.5 rounded-lg transition-all duration-150"
+      whileHover={disabled ? {} : { backgroundColor: colors.warmLinen, scale: 1.05 }}
+      whileTap={disabled ? {} : { scale: 0.93 }}
+      transition={{ duration: 0.12 }}
       style={{
-        backgroundColor: "transparent",
-        border: "none",
+        padding: 6, borderRadius: 8, border: "none",
         cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.3 : 1,
+        opacity: disabled ? 0.25 : 1,
         color: colors.textSecondary,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        backgroundColor: "transparent",
       }}
     >
       {children}
-    </button>
+    </motion.button>
   );
 }
 
@@ -1964,19 +1830,16 @@ function MonthlyGrid({
   onViewEvent: (event: CalendarEvent) => void;
   events: CalendarEvent[];
 }) {
+  const isWeekend = (colIndex: number) => colIndex === 0 || colIndex === 6;
+
   return (
     <div className="h-full flex flex-col overflow-auto">
       {/* Day name header */}
-      <div
-        className="grid grid-cols-7 flex-shrink-0"
-        style={{ borderBottom: `1px solid ${colors.border}` }}
-      >
-        {DAY_NAMES.map((d) => (
-          <div
-            key={d}
-            className="py-3 text-center text-[11px] font-semibold uppercase tracking-wider"
-            style={{ color: colors.textTertiary }}
-          >
+      <div className="grid grid-cols-7 flex-shrink-0"
+        style={{ borderBottom: `1px solid ${colors.border}`, backgroundColor: "#F2F7F3" }}>
+        {DAY_NAMES.map((d, i) => (
+          <div key={d} className="py-3 text-center text-[11px] font-bold uppercase tracking-wider"
+            style={{ color: isWeekend(i) ? `${colors.textTertiary}99` : colors.textSecondary }}>
             {d}
           </div>
         ))}
@@ -1985,76 +1848,84 @@ function MonthlyGrid({
       {/* Grid */}
       <div className="grid grid-cols-7 flex-1" style={{ alignContent: "start" }}>
         {days.map((day, i) => {
+          const colIndex = i % 7;
           const inMonth = day.getMonth() === currentMonth;
           const isToday = isSameDay(day, today);
           const dateStr = formatDateInput(day);
           const dayEvents = events.filter((e) => e.event_date === dateStr);
           const visibleEvents = dayEvents.slice(0, 3);
-          const overflow = dayEvents.length - visibleEvents.length;
+          const overflowEvents = dayEvents.slice(3);
+          const overflow = overflowEvents.length;
           return (
             <div
               key={i}
-              className="group relative p-2 flex flex-col transition-colors duration-100 hover:bg-gray-50"
+              className="group relative flex flex-col"
               style={{
-                minHeight: "128px",
+                minHeight: 140,
+                padding: "10px 8px 8px 8px",
                 borderRight: (i + 1) % 7 === 0 ? "none" : `1px solid ${colors.border}`,
                 borderBottom: `1px solid ${colors.border}`,
+                backgroundColor: isToday ? "#F4F8F5" : isWeekend(colIndex) ? "#FAFBFA" : "white",
               }}
             >
-              <span
-                className="inline-flex items-center justify-center w-6 h-6 text-xs font-semibold mb-1 transition-colors"
+              <motion.span
+                whileHover={inMonth ? { scale: 1.08 } : {}}
+                transition={{ duration: 0.12 }}
+                className="inline-flex items-center justify-center self-start"
                 style={{
-                  borderRadius: radius.full,
+                  width: 32, height: 32, borderRadius: radius.full,
                   backgroundColor: isToday ? colors.mistyForest : "transparent",
                   color: isToday ? "white" : inMonth ? colors.textPrimary : colors.textTertiary,
-                  opacity: inMonth ? 1 : 0.4,
+                  fontSize: 14, fontWeight: isToday ? 700 : 500,
+                  opacity: inMonth ? 1 : 0.35,
+                  boxShadow: isToday ? "0 0 0 3px rgba(94,124,104,0.18)" : "none",
+                  flexShrink: 0,
                 }}
               >
                 {day.getDate()}
-              </span>
+              </motion.span>
 
-              {/* Event pills */}
               {inMonth && (
-                <div className="flex flex-col gap-0.5 mt-0.5">
+                <div className="flex flex-col gap-0.5 mt-1.5">
                   {visibleEvents.map((ev) => (
-                    <button
+                    <motion.button
                       key={ev.id}
                       onClick={(e) => { e.stopPropagation(); onViewEvent(ev); }}
-                      className="truncate px-1.5 py-0.5 text-[10px] font-medium leading-tight text-left transition-opacity hover:opacity-80"
+                      whileHover={{ opacity: 0.85 }}
+                      transition={{ duration: 0.1 }}
+                      className="truncate text-left w-full"
                       style={{
-                        backgroundColor: ev.color,
-                        color: "white",
-                        borderRadius: "4px",
-                        border: "none",
-                        cursor: "pointer",
-                        width: "100%",
+                        fontSize: 11, fontWeight: 600,
+                        padding: ev.is_all_day ? "2px 6px" : "2px 6px 2px 5px",
+                        borderRadius: ev.is_all_day ? 4 : "0 4px 4px 0",
+                        borderTop: "none", borderRight: "none", borderBottom: "none",
+                        borderLeft: ev.is_all_day ? "none" : `3px solid ${ev.color}`,
+                        backgroundColor: ev.is_all_day ? ev.color : `${ev.color}18`,
+                        color: ev.is_all_day ? "white" : colors.textPrimary,
+                        cursor: "pointer", lineHeight: "1.4",
                       }}
                     >
                       {ev.title}
-                    </button>
+                    </motion.button>
                   ))}
                   {overflow > 0 && (
-                    <span
-                      className="text-[10px] px-1"
-                      style={{ color: colors.textTertiary }}
-                    >
-                      +{overflow} more
-                    </span>
+                    <div className="flex items-center gap-1 mt-0.5 px-1">
+                      {overflowEvents.slice(0, 3).map((ev) => (
+                        <div key={ev.id} style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: ev.color, flexShrink: 0 }} />
+                      ))}
+                      {overflow > 3 && <span style={{ fontSize: 9, color: colors.textTertiary, marginLeft: 2 }}>+{overflow - 3}</span>}
+                    </div>
                   )}
                 </div>
               )}
 
-              {/* Add button — appears on hover */}
               {inMonth && (
                 <button
                   onClick={() => onAddEvent(day)}
                   className="absolute bottom-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex items-center justify-center w-5 h-5"
                   style={{
-                    backgroundColor: colors.pastelSage,
-                    color: colors.mistyForest,
-                    borderRadius: radius.sm,
-                    border: "none",
-                    cursor: "pointer",
+                    backgroundColor: colors.pastelSage, color: colors.mistyForest,
+                    borderRadius: radius.sm, border: "none", cursor: "pointer",
                   }}
                   title={`Add event on ${MONTHS[day.getMonth()]} ${day.getDate()}`}
                 >
@@ -2111,82 +1982,63 @@ function WeeklyGrid({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const GUTTER = 52; // px — time label column width
+  const GUTTER = 52;
 
   return (
-    // Single scrollable container — header is sticky inside it
     <div ref={scrollRef} className="h-full overflow-y-auto">
       {/* ── Sticky day header ── */}
-      <div
-        className="sticky top-0 z-10 flex bg-white"
-        style={{ borderBottom: `1px solid ${colors.border}` }}
-      >
-        {/* Gutter spacer */}
-        <div
-          style={{
-            width: `${GUTTER}px`,
-            flexShrink: 0,
-            borderRight: `1px solid ${colors.border}`,
-          }}
-        />
+      <div className="sticky top-0 z-10 flex" style={{ borderBottom: `1px solid ${colors.border}` }}>
+        <div style={{ width: `${GUTTER}px`, flexShrink: 0, borderRight: `1px solid ${colors.border}` }} />
         {weekDays.map((day, i) => {
           const isToday = isSameDay(day, today);
           const dateStr = formatDateInput(day);
           const allDayEvents = events.filter((e) => e.event_date === dateStr && e.is_all_day);
+          const timedEvents = events.filter((e) => e.event_date === dateStr && !e.is_all_day && !!e.start_time);
           return (
-            <div
-              key={i}
-              className="flex-1 py-3 flex flex-col items-center gap-1 relative group"
+            <div key={i} className="flex-1 py-3 flex flex-col items-center gap-1 relative group"
               style={{
                 borderRight: i === 4 ? "none" : `1px solid ${colors.border}`,
-                backgroundColor: isToday ? "#f8fbf9" : "white",
-              }}
-            >
-              <span
-                className="text-[10px] font-semibold uppercase tracking-wider"
-                style={{ color: isToday ? colors.mistyForest : colors.textTertiary }}
-              >
+                backgroundColor: isToday ? "#F2F7F3" : "white",
+                borderBottom: isToday ? `2px solid ${colors.mistyForest}` : "2px solid transparent",
+                height: 72,
+              }}>
+              <span className="text-[10px] font-bold uppercase tracking-wider"
+                style={{ color: isToday ? colors.mistyForest : colors.textTertiary }}>
                 {WEEK_DAYS[i]}
               </span>
-              <div
-                className="flex items-center justify-center w-8 h-8 text-sm font-semibold"
+              <div className="flex items-center justify-center"
                 style={{
-                  borderRadius: radius.full,
+                  width: 36, height: 36, borderRadius: radius.full,
                   backgroundColor: isToday ? colors.mistyForest : "transparent",
                   color: isToday ? "white" : colors.textPrimary,
-                }}
-              >
+                  fontSize: 15, fontWeight: isToday ? 700 : 500,
+                  boxShadow: isToday ? "0 0 0 4px rgba(94,124,104,0.15)" : "none",
+                }}>
                 {day.getDate()}
               </div>
               {allDayEvents.length > 0 && (
                 <div className="w-full px-1 flex flex-col gap-0.5">
-                  {allDayEvents.slice(0, 2).map((ev) => (
-                    <div
-                      key={ev.id}
-                      className="truncate px-1.5 py-0.5 text-[9px] font-medium"
-                      style={{
-                        backgroundColor: ev.color,
-                        color: "white",
-                        borderRadius: "3px",
-                      }}
-                    >
+                  {allDayEvents.slice(0, 1).map((ev) => (
+                    <div key={ev.id} className="truncate px-1.5 py-0.5 text-[9px] font-semibold cursor-pointer transition-opacity hover:opacity-80"
+                      style={{ backgroundColor: ev.color, color: "white", borderRadius: 3 }}
+                      onClick={() => onViewEvent(ev)}>
                       {ev.title}
                     </div>
                   ))}
                 </div>
               )}
-              <button
-                onClick={() => onAddEvent(day)}
+              {timedEvents.length > 0 && (
+                <div className="flex items-center gap-1 mt-0.5">
+                  {timedEvents.slice(0, 3).map((ev) => (
+                    <div key={ev.id} style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: ev.color, flexShrink: 0 }} />
+                  ))}
+                  {timedEvents.length > 3 && <span style={{ fontSize: 8, color: colors.textTertiary }}>+{timedEvents.length - 3}</span>}
+                </div>
+              )}
+              <button onClick={() => onAddEvent(day)}
                 className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex items-center justify-center w-5 h-5"
-                style={{
-                  backgroundColor: colors.pastelSage,
-                  color: colors.mistyForest,
-                  borderRadius: radius.sm,
-                  border: "none",
-                  cursor: "pointer",
-                }}
-                title={`Add event on ${MONTHS[day.getMonth()]} ${day.getDate()}`}
-              >
+                style={{ backgroundColor: colors.pastelSage, color: colors.mistyForest, borderRadius: radius.sm, border: "none", cursor: "pointer" }}
+                title={`Add event on ${MONTHS[day.getMonth()]} ${day.getDate()}`}>
                 <Plus className="w-3 h-3" />
               </button>
             </div>
@@ -2195,33 +2047,15 @@ function WeeklyGrid({
       </div>
 
       {/* ── Time grid ── */}
-      <div
-        className="flex relative"
-        style={{ height: `${HOURS.length * HOUR_HEIGHT}px` }}
-      >
+      <div className="flex relative" style={{ height: `${HOURS.length * HOUR_HEIGHT}px` }}>
         {/* Time label gutter */}
-        <div
-          className="flex-shrink-0 relative"
-          style={{ width: `${GUTTER}px`, borderRight: `1px solid ${colors.border}` }}
-        >
+        <div className="flex-shrink-0 relative" style={{ width: `${GUTTER}px`, borderRight: `1px solid ${colors.border}` }}>
           {HOURS.map((h, i) => (
-            <div
-              key={h}
-              className="absolute flex items-center justify-end pr-2"
-              style={{
-                top: `${i * HOUR_HEIGHT}px`,
-                width: `${GUTTER}px`,
-              }}
-            >
+            <div key={h} className="absolute flex items-center justify-end pr-2.5"
+              style={{ top: `${i * HOUR_HEIGHT}px`, width: `${GUTTER}px` }}>
               {i > 0 && (
-                <span
-                  className="text-[10px] font-medium"
-                  style={{
-                    color: colors.textTertiary,
-                    transform: "translateY(-50%)",
-                    display: "block",
-                  }}
-                >
+                <span className="text-[10px] font-medium"
+                  style={{ color: colors.textTertiary, transform: "translateY(-50%)", display: "block" }}>
                   {h < 12 ? `${h}am` : h === 12 ? "12pm" : `${h - 12}pm`}
                 </span>
               )}
@@ -2229,80 +2063,56 @@ function WeeklyGrid({
           ))}
         </div>
 
-        {/* Day columns — flex (not grid) to match header exactly */}
+        {/* Day columns */}
         <div className="flex-1 flex relative">
           {/* Current time indicator */}
           {currentTimeTop !== null && (
-            <div
-              className="absolute left-0 right-0 z-20 flex items-center pointer-events-none"
-              style={{ top: `${currentTimeTop}px` }}
-            >
-              <div
-                className="rounded-full flex-shrink-0"
+            <div className="absolute left-0 right-0 z-20 flex items-center pointer-events-none"
+              style={{ top: `${currentTimeTop}px` }}>
+              <motion.div
+                animate={{ scale: [1, 1.2, 1], opacity: [1, 0.75, 1] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                 style={{
-                  width: "8px",
-                  height: "8px",
-                  backgroundColor: "#ef4444",
-                  marginLeft: "-4px",
+                  width: 10, height: 10, borderRadius: "50%",
+                  backgroundColor: "#f29a8f",
+                  boxShadow: "0 0 0 3px rgba(242,154,143,0.25), 0 0 8px rgba(242,154,143,0.4)",
+                  flexShrink: 0, marginLeft: -5, zIndex: 30,
                 }}
               />
-              <div
-                className="flex-1"
-                style={{ height: "1.5px", backgroundColor: "#ef4444" }}
-              />
+              <div className="flex-1" style={{ height: 2, background: "linear-gradient(90deg, #f29a8f 0%, rgba(242,154,143,0.25) 100%)" }} />
             </div>
           )}
 
           {weekDays.map((day, colIdx) => {
             const isToday = isSameDay(day, today);
             const dateStr = formatDateInput(day);
-            const timedEvents = events.filter(
-              (e) => e.event_date === dateStr && !e.is_all_day && e.start_time
-            );
+            const timedEvents = events.filter((e) => e.event_date === dateStr && !e.is_all_day && e.start_time);
             return (
-              <div
-                key={colIdx}
-                className="flex-1 relative"
+              <div key={colIdx} className="flex-1 relative"
                 style={{
                   borderRight: colIdx === 4 ? "none" : `1px solid ${colors.border}`,
-                  backgroundColor: isToday ? "#f8fbf9" : "white",
-                }}
-              >
+                  backgroundColor: isToday ? "#F4F8F5" : "white",
+                }}>
                 {HOURS.map((h, rowIdx) => (
-                  <button
-                    key={rowIdx}
-                    onClick={() => onAddEvent(day, h)}
+                  <button key={rowIdx} onClick={() => onAddEvent(day, h)}
                     className="group relative hover:bg-[#e8f0ec] transition-colors duration-100"
                     style={{
-                      display: "block",
-                      width: "100%",
-                      height: `${HOUR_HEIGHT}px`,
-                      border: "none",
-                      padding: 0,
-                      borderBottom:
-                        rowIdx === HOURS.length - 1
-                          ? "none"
-                          : `1px solid ${colors.border}`,
-                      backgroundColor: "transparent",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <span
-                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-100 pointer-events-none"
+                      display: "block", width: "100%", height: `${HOUR_HEIGHT}px`,
+                      border: "none", padding: 0,
+                      borderBottom: rowIdx === HOURS.length - 1 ? "none" : `1px solid ${colors.border}`,
+                      backgroundColor: rowIdx % 2 === 1 ? "#FAFBFA" : "transparent",
+                      cursor: "pointer", position: "relative",
+                    }}>
+                    <div style={{
+                      position: "absolute", top: "50%", left: 0, right: 0,
+                      borderTop: "1px dashed rgba(229,231,235,0.65)", pointerEvents: "none",
+                    }} />
+                    <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-100 pointer-events-none"
                       style={{
-                        position: "absolute",
-                        inset: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: colors.mistyForest,
-                        fontSize: "18px",
-                        fontWeight: 300,
-                        lineHeight: 1,
-                      }}
-                    >
-                      +
-                    </span>
+                        position: "absolute", inset: 0, display: "flex",
+                        alignItems: "center", justifyContent: "center",
+                        color: colors.mistyForest, fontSize: "18px", fontWeight: 300, lineHeight: 1,
+                      }}>+</span>
                   </button>
                 ))}
                 {/* Timed event blocks */}
@@ -2318,163 +2128,91 @@ function WeeklyGrid({
                     const endMinutes = eh * 60 + (em || 0);
                     basePx = Math.max(22, ((endMinutes - startMinutes) / 60) * HOUR_HEIGHT);
                   }
-
                   const isMulti = cluster.length > 1;
                   const CARD_H = 56;
                   const MORE_BAR_H = 14;
                   const needsMoreBar = cluster.length > 2;
                   const moreCount = cluster.length - 2;
-                  const heightPx = isMulti
-                    ? Math.max(basePx, 2 * CARD_H + 1 + (needsMoreBar ? MORE_BAR_H : 0))
-                    : basePx;
+                  const heightPx = isMulti ? Math.max(basePx, 2 * CARD_H + 1 + (needsMoreBar ? MORE_BAR_H : 0)) : basePx;
                   const singleShowMeta = !isMulti && basePx >= 52;
 
                   const renderCard = (cardEv: CalendarEvent, cardTop: number, cardHeight: number | undefined, cardBottom: number | undefined, cardRadius: string) => {
                     const cardCreator = cardEv.created_by ? usersMap[cardEv.created_by] : null;
                     const showMeta = cardHeight != null ? cardHeight >= 52 : (cardBottom != null ? (heightPx - cardTop - cardBottom) >= 52 : singleShowMeta);
                     return (
-                      <button
-                        key={cardEv.id}
+                      <motion.button key={cardEv.id}
                         onClick={(e) => { e.stopPropagation(); onViewEvent(cardEv); }}
-                        className="absolute px-1.5 py-1 overflow-hidden text-left transition-opacity hover:opacity-85"
+                        whileHover={{ scale: 1.02, boxShadow: "0 4px 12px rgba(0,0,0,0.18)" }}
+                        whileTap={{ scale: 0.98 }}
+                        transition={{ duration: 0.12 }}
+                        className="absolute overflow-hidden text-left"
                         style={{
-                          top: cardTop,
-                          bottom: cardBottom,
-                          height: cardHeight,
-                          left: 0,
-                          right: "20px",
-                          backgroundColor: cardEv.color,
-                          borderRadius: cardRadius,
-                          border: "none",
-                          cursor: "pointer",
-                          display: "flex",
-                          flexDirection: "column",
-                          justifyContent: "flex-start",
-                        }}
-                      >
+                          top: cardTop, bottom: cardBottom, height: cardHeight,
+                          left: 0, right: "20px",
+                          backgroundColor: cardEv.color, borderRadius: cardRadius,
+                          border: "1px solid rgba(255,255,255,0.25)", cursor: "pointer",
+                          display: "flex", flexDirection: "column", justifyContent: "flex-start",
+                          padding: "4px 6px", boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
+                        }}>
                         {showMeta && (cardEv.shared_with ?? []).length > 0 && (
                           <div className="flex items-center gap-1 mb-0.5 flex-wrap">
                             {(cardEv.shared_with ?? []).map((g) => (
-                              <span
-                                key={g}
-                                className="leading-none"
-                                style={{
-                                  fontSize: "8px",
-                                  fontWeight: 600,
-                                  color: SHARE_COLORS[g] ?? cardEv.color,
-                                  backgroundColor: "white",
-                                  borderRadius: "3px",
-                                  padding: "1px 4px",
-                                }}
-                              >
+                              <span key={g} className="leading-none"
+                                style={{ fontSize: "8px", fontWeight: 600, color: SHARE_COLORS[g] ?? cardEv.color, backgroundColor: "white", borderRadius: "3px", padding: "1px 4px" }}>
                                 {g}
                               </span>
                             ))}
                           </div>
                         )}
-                        <p className="text-[10px] font-semibold leading-tight truncate" style={{ color: "white" }}>
-                          {cardEv.title}
-                        </p>
-                        {showMeta && cardEv.category && (
-                          <p className="truncate leading-none mt-0.5" style={{ color: "rgba(255,255,255,0.80)", fontSize: "8px", fontWeight: 500 }}>
-                            {cardEv.category}
+                        <p className="text-[11px] font-bold leading-tight truncate" style={{ color: "white" }}>{cardEv.title}</p>
+                        {showMeta && cardEv.start_time && (
+                          <p style={{ fontSize: 9, color: "rgba(255,255,255,0.82)", marginTop: 2 }}>
+                            {formatTime(cardEv.start_time)}{cardEv.end_time ? ` – ${formatTime(cardEv.end_time)}` : ""}
                           </p>
                         )}
+                        {showMeta && cardEv.category && (
+                          <p style={{ color: "rgba(255,255,255,0.68)", fontSize: 9, fontWeight: 500, marginTop: 1 }}>{cardEv.category}</p>
+                        )}
                         {showMeta && cardCreator && (
-                          <span
-                            className="inline-flex items-center justify-center text-[8px] font-bold leading-none"
+                          <span className="inline-flex items-center justify-center text-[8px] font-bold leading-none"
                             style={{
-                              position: "absolute",
-                              bottom: "4px",
-                              right: "4px",
-                              width: "20px",
-                              height: "20px",
-                              borderRadius: "50%",
-                              backgroundColor: "rgba(255,255,255,0.30)",
-                              color: "white",
-                              border: "1.5px solid rgba(255,255,255,0.55)",
-                              flexShrink: 0,
-                            }}
-                          >
+                              position: "absolute", bottom: 4, right: 4,
+                              width: 20, height: 20, borderRadius: "50%",
+                              backgroundColor: "rgba(255,255,255,0.30)", color: "white",
+                              border: "1.5px solid rgba(255,255,255,0.55)", flexShrink: 0,
+                            }}>
                             {initialsFor(cardCreator)}
                           </span>
                         )}
-                      </button>
+                      </motion.button>
                     );
                   };
 
                   return (
-                    <div
-                      key={ev.id}
-                      style={{
-                        position: "absolute",
-                        top: `${topPx}px`,
-                        height: `${heightPx}px`,
-                        left: "2px",
-                        right: "2px",
-                        zIndex: 10,
-                      }}
-                    >
-                      {/* Card 1 */}
-                      {isMulti
-                        ? renderCard(cluster[0], 0, CARD_H, undefined, needsMoreBar ? "5px 5px 0 0" : "5px 5px 0 0")
-                        : renderCard(cluster[0], 0, undefined, 0, "5px")}
-
-                      {/* Card 2 (multi only) */}
-                      {isMulti && renderCard(
-                        cluster[1],
-                        CARD_H + 1,
-                        needsMoreBar ? CARD_H : undefined,
-                        needsMoreBar ? undefined : 0,
-                        needsMoreBar ? "0" : "0 0 5px 5px"
-                      )}
-
-                      {/* "View X more" bar — only when >2 events */}
+                    <div key={ev.id} style={{ position: "absolute", top: `${topPx}px`, height: `${heightPx}px`, left: 2, right: 2, zIndex: 10 }}>
+                      {isMulti ? renderCard(cluster[0], 0, CARD_H, undefined, "6px 6px 0 0") : renderCard(cluster[0], 0, undefined, 0, "6px")}
+                      {isMulti && renderCard(cluster[1], CARD_H + 1, needsMoreBar ? CARD_H : undefined, needsMoreBar ? undefined : 0, needsMoreBar ? "0" : "0 0 6px 6px")}
                       {needsMoreBar && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); onViewOverlap(cluster); }}
+                        <button onClick={(e) => { e.stopPropagation(); onViewOverlap(cluster); }}
                           className="absolute flex items-center justify-center transition-colors hover:brightness-95"
                           style={{
-                            bottom: 0,
-                            left: 0,
-                            right: "20px",
-                            height: `${MORE_BAR_H}px`,
-                            backgroundColor: cluster[1].color,
-                            opacity: 0.75,
-                            borderRadius: "0 0 0 5px",
-                            border: "none",
-                            borderTop: "1px solid rgba(255,255,255,0.3)",
-                            cursor: "pointer",
-                            fontSize: "8px",
-                            fontWeight: 600,
-                            color: "white",
-                            letterSpacing: "0.02em",
-                          }}
-                        >
+                            bottom: 0, left: 0, right: "20px", height: `${MORE_BAR_H}px`,
+                            backgroundColor: cluster[1].color, opacity: 0.78,
+                            borderRadius: "0 0 0 6px", border: "none",
+                            borderTop: "1px solid rgba(255,255,255,0.3)", cursor: "pointer",
+                            fontSize: 8, fontWeight: 700, color: "white", letterSpacing: "0.02em",
+                          }}>
                           View {moreCount} more
                         </button>
                       )}
-
-                      {/* Add event bar — right side */}
-                      <button
-                        onClick={(e) => { e.stopPropagation(); onAddEvent(day, sh); }}
+                      <button onClick={(e) => { e.stopPropagation(); onAddEvent(day, sh); }}
                         title="Add event at this time"
                         className="absolute flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-colors"
                         style={{
-                          top: 0,
-                          bottom: 0,
-                          right: 0,
-                          width: "18px",
-                          backgroundColor: "#f3f4f6",
-                          borderRadius: "0 5px 5px 0",
-                          border: "none",
-                          cursor: "pointer",
-                          fontSize: "12px",
-                          lineHeight: 1,
-                        }}
-                      >
-                        +
-                      </button>
+                          top: 0, bottom: 0, right: 0, width: 18,
+                          backgroundColor: "#f3f4f6", borderRadius: "0 6px 6px 0",
+                          border: "none", cursor: "pointer", fontSize: 12, lineHeight: 1,
+                        }}>+</button>
                     </div>
                   );
                 })}

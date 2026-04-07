@@ -10,6 +10,11 @@ import {
   Users,
   RefreshCw,
   Bell,
+  Calendar,
+  Sun,
+  BookOpen,
+  Clock,
+  Paperclip,
 } from "lucide-react";
 import { Merriweather } from "next/font/google";
 import { motion, AnimatePresence } from "framer-motion";
@@ -45,39 +50,50 @@ type CalendarEvent = {
   reminder_timing: string | null;
 };
 
-const programs: Record<ProgramKey, { label: string; start: Date; end: Date }> =
+const programs: Record<ProgramKey, { label: string; shortLabel: string; start: Date; end: Date; dateRange: string }> =
   {
     summer: {
       label: "Summer 2026",
+      shortLabel: "SUMMER",
       start: new Date(2026, 4, 1),
       end: new Date(2026, 7, 31),
+      dateRange: "May – Aug 2026",
     },
     school: {
       label: "School Year 2026–2027",
+      shortLabel: "SCHOOL",
       start: new Date(2026, 7, 1),
       end: new Date(2027, 4, 31),
+      dateRange: "Aug 2026 – May 2027",
     },
   };
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
 ];
 
 const HOURS = Array.from({ length: 15 }, (_, i) => i + 7); // 7 AM → 9 PM
 const HOUR_HEIGHT = 120; // px per hour slot
+
+// ─── Animation constants ────────────────────────────────────────────────────────
+
+const panelSpring = { type: "spring" as const, stiffness: 380, damping: 36, mass: 0.7 };
+
+const fadeUpVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } },
+  exit: { opacity: 0, y: -6, transition: { duration: 0.15 } },
+};
+
+const staggerContainer = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.04, delayChildren: 0.05 } },
+};
+
+// ─── Helper functions ───────────────────────────────────────────────────────────
 
 function isSameDay(a: Date, b: Date) {
   return (
@@ -166,11 +182,6 @@ function getOverlapClusters(events: CalendarEvent[]): CalendarEvent[][] {
   return clusters;
 }
 
-const SHARE_COLORS: Record<string, string> = {
-  Teachers: "#5B9BBF",
-  Parents: "#C2717A",
-};
-
 // ─── Nav Button ────────────────────────────────────────────────────────────────
 
 function NavButton({
@@ -185,21 +196,28 @@ function NavButton({
   "aria-label": string;
 }) {
   return (
-    <button
+    <motion.button
       onClick={onClick}
       disabled={disabled}
       aria-label={ariaLabel}
-      className="p-1.5 rounded-lg transition-all duration-150"
+      whileHover={disabled ? {} : { backgroundColor: colors.warmLinen, scale: 1.05 }}
+      whileTap={disabled ? {} : { scale: 0.93 }}
+      transition={{ duration: 0.12 }}
       style={{
-        backgroundColor: "transparent",
+        padding: 6,
+        borderRadius: 8,
         border: "none",
         cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.3 : 1,
+        opacity: disabled ? 0.25 : 1,
         color: colors.textSecondary,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "transparent",
       }}
     >
       {children}
-    </button>
+    </motion.button>
   );
 }
 
@@ -223,7 +241,7 @@ function OverlapPanel({
     <>
       <motion.div
         className="fixed inset-0 z-[60]"
-        style={{ backgroundColor: "rgba(0,0,0,0.10)" }}
+        style={{ backgroundColor: "rgba(0,0,0,0.12)" }}
         onClick={onClose}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -236,103 +254,92 @@ function OverlapPanel({
           width: "380px",
           backgroundColor: "white",
           borderLeft: `1px solid ${colors.border}`,
-          boxShadow: "-12px 0 40px rgba(0,0,0,0.07)",
+          boxShadow: "-16px 0 48px rgba(0,0,0,0.10)",
         }}
         initial={{ x: "100%" }}
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
-        transition={{ type: "spring", stiffness: 320, damping: 32, mass: 0.8 }}
+        transition={panelSpring}
       >
         {/* Header */}
         <div
           className="flex items-center justify-between px-6 py-5 flex-shrink-0"
-          style={{ borderBottom: `1px solid ${colors.border}` }}
+          style={{ backgroundColor: colors.warmLinen, borderBottom: `1px solid ${colors.border}` }}
         >
           <div>
             {timeLabel && (
-              <p
-                className="text-xs font-medium mb-0.5"
-                style={{ color: colors.textSecondary }}
-              >
+              <p className="text-xs mb-0.5" style={{ color: colors.textSecondary }}>
                 {timeLabel}
               </p>
             )}
             <h2
-              className="text-base font-semibold"
+              className={`text-base font-bold ${merriweather.className}`}
               style={{ color: colors.textPrimary }}
             >
-              {events.length} events
+              {events.length} Events
             </h2>
           </div>
-          <button
+          <motion.button
             onClick={onClose}
-            className="transition-colors"
-            style={{ color: colors.textSecondary }}
+            whileHover={{ backgroundColor: colors.border }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ duration: 0.12 }}
+            style={{
+              padding: 6,
+              borderRadius: 8,
+              border: "none",
+              cursor: "pointer",
+              color: colors.textSecondary,
+              backgroundColor: "white",
+              display: "flex",
+            }}
           >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M5 5l10 10M15 5L5 15"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
+            <X className="w-4 h-4" />
+          </motion.button>
         </div>
 
         {/* Event list */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
+        <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-2.5">
           {events.map((ev) => {
             const evTime = ev.start_time
               ? `${formatTime(ev.start_time)}${ev.end_time ? ` – ${formatTime(ev.end_time)}` : ""}`
               : "All day";
             return (
-              <button
+              <motion.button
                 key={ev.id}
                 onClick={() => onViewEvent(ev)}
-                className="w-full text-left rounded-lg px-3 py-3 transition-opacity hover:opacity-90 relative"
-                style={{ backgroundColor: ev.color }}
+                whileHover={{ x: 4, backgroundColor: `${ev.color}20` }}
+                whileTap={{ scale: 0.99 }}
+                transition={{ duration: 0.12 }}
+                className="w-full text-left relative"
+                style={{
+                  backgroundColor: `${ev.color}12`,
+                  border: `1px solid ${ev.color}30`,
+                  borderLeft: `3px solid ${ev.color}`,
+                  borderRadius: 10,
+                  padding: "12px 14px",
+                  cursor: "pointer",
+                }}
               >
-                {(ev.shared_with ?? []).length > 0 && (
-                  <div className="flex items-center gap-1 mb-1.5 flex-wrap">
-                    {(ev.shared_with ?? []).map((g) => (
-                      <span
-                        key={g}
-                        className="leading-none"
-                        style={{
-                          fontSize: "9px",
-                          fontWeight: 600,
-                          color: SHARE_COLORS[g] ?? ev.color,
-                          backgroundColor: "white",
-                          borderRadius: "3px",
-                          padding: "2px 5px",
-                        }}
-                      >
-                        {g}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                <p className="text-sm font-semibold text-white leading-tight">
+                <p className="text-sm font-semibold leading-tight" style={{ color: colors.textPrimary }}>
                   {ev.title}
                 </p>
-                <div className="flex items-center justify-between mt-1">
-                  <p
-                    className="text-xs"
-                    style={{ color: "rgba(255,255,255,0.75)" }}
+                <p className="text-xs mt-1" style={{ color: colors.textSecondary }}>
+                  {evTime}
+                </p>
+                {ev.category && (
+                  <span
+                    className="inline-block mt-1.5 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide"
+                    style={{
+                      backgroundColor: `${ev.color}18`,
+                      color: ev.color,
+                      borderRadius: radius.full,
+                    }}
                   >
-                    {evTime}
-                  </p>
-                  {ev.category && (
-                    <p
-                      className="text-[10px] font-medium"
-                      style={{ color: "rgba(255,255,255,0.75)" }}
-                    >
-                      {ev.category}
-                    </p>
-                  )}
-                </div>
-              </button>
+                    {ev.category}
+                  </span>
+                )}
+              </motion.button>
             );
           })}
         </div>
@@ -364,7 +371,7 @@ function EventDetailPanel({
     <>
       <motion.div
         className="fixed inset-0 z-[60]"
-        style={{ backgroundColor: "rgba(0,0,0,0.10)" }}
+        style={{ backgroundColor: "rgba(0,0,0,0.12)" }}
         onClick={onClose}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -377,207 +384,267 @@ function EventDetailPanel({
           width: "420px",
           backgroundColor: "white",
           borderLeft: `1px solid ${colors.border}`,
-          boxShadow: "-12px 0 40px rgba(0,0,0,0.07)",
+          boxShadow: "-16px 0 48px rgba(0,0,0,0.10)",
         }}
         initial={{ x: "100%" }}
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
-        transition={{ type: "spring", stiffness: 320, damping: 32, mass: 0.8 }}
+        transition={panelSpring}
       >
-        {/* Color dot + header */}
-        <div
-          className="flex items-start justify-between px-6 py-5 flex-shrink-0"
-          style={{ borderBottom: `1px solid ${colors.border}` }}
+        {/* Full-color header band */}
+        <motion.div
+          key={event.id + "-header"}
+          animate={{ backgroundColor: event.color }}
+          transition={{ duration: 0.3 }}
+          className="flex-shrink-0"
+          style={{ padding: "24px 24px 20px 24px", position: "relative" }}
         >
-          <div className="flex items-start gap-3 min-w-0">
-            <div
-              className="flex-shrink-0"
-              style={{
-                width: "10px",
-                height: "10px",
-                borderRadius: radius.full,
-                backgroundColor: event.color,
-                marginTop: "5px",
-              }}
-            />
-            <div className="min-w-0">
-              <h2
-                className={`text-base font-bold leading-snug ${merriweather.className}`}
-                style={{ color: colors.textPrimary }}
-              >
-                {event.title}
-              </h2>
-              <p
-                className="text-xs mt-0.5"
-                style={{ color: colors.textTertiary }}
-              >
-                {dateLabel}
-                {timeLabel ? ` · ${timeLabel}` : ""}
-              </p>
-              {(event.category || (event.programs ?? []).length > 0) && (
-                <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                  {event.category && (
-                    <span
-                      className="inline-block px-2.5 py-1 text-xs font-semibold uppercase tracking-wide"
-                      style={{
-                        backgroundColor: `${event.color}22`,
-                        color: event.color,
-                        borderRadius: radius.full,
-                        border: `1px solid ${event.color}44`,
-                      }}
-                    >
-                      {event.category}
-                    </span>
-                  )}
-                  {(event.programs ?? []).map((p) => (
-                    <span
-                      key={p}
-                      className="px-2.5 py-1 text-xs font-medium"
-                      style={{
-                        backgroundColor: colors.softCloud,
-                        color: colors.textSecondary,
-                        borderRadius: radius.full,
-                        border: `1px solid ${colors.border}`,
-                      }}
-                    >
-                      {p}
-                    </span>
-                  ))}
-                </div>
+          {/* Top row: category pill + close */}
+          <div className="flex items-start justify-between mb-3">
+            <div>
+              {event.category && (
+                <span
+                  className="inline-block px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider"
+                  style={{
+                    backgroundColor: "rgba(255,255,255,0.22)",
+                    color: "white",
+                    borderRadius: radius.full,
+                  }}
+                >
+                  {event.category}
+                </span>
               )}
             </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg transition-opacity hover:opacity-60 flex-shrink-0"
-            style={{
-              backgroundColor: colors.warmLinen,
-              border: `1px solid ${colors.border}`,
-              cursor: "pointer",
-            }}
-          >
-            <X
-              className="w-3.5 h-3.5"
-              style={{ color: colors.textSecondary }}
-            />
-          </button>
-        </div>
-
-        {/* Body */}
-        <div className="flex-1 overflow-auto px-6 py-5 space-y-4">
-          {event.description && (
-            <div>
-              <p
-                className="text-xs font-medium uppercase tracking-wide mb-1"
-                style={{ color: colors.textTertiary }}
-              >
-                Description
-              </p>
-              <p
-                className="text-sm leading-relaxed"
-                style={{ color: colors.textPrimary }}
-              >
-                {event.description}
-              </p>
-            </div>
-          )}
-
-          {event.location && (
-            <div className="flex items-start gap-2">
-              <MapPin
-                className="w-3.5 h-3.5 mt-0.5 flex-shrink-0"
-                style={{ color: colors.textTertiary }}
-              />
-              <p className="text-sm" style={{ color: colors.textPrimary }}>
-                {event.location}
-              </p>
-            </div>
-          )}
-
-          {event.recurrence && event.recurrence !== "None" && (
-            <div className="flex items-center gap-2">
-              <RefreshCw
-                className="w-3.5 h-3.5 flex-shrink-0"
-                style={{ color: colors.textTertiary }}
-              />
-              <p className="text-sm" style={{ color: colors.textPrimary }}>
-                Repeats {event.recurrence.toLowerCase()}
-                {event.recurrence_end_date
-                  ? ` until ${event.recurrence_end_date}`
-                  : ""}
-              </p>
-            </div>
-          )}
-
-          {(event.attachment_links ?? []).length > 0 && (
-            <div>
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <Link2
-                  className="w-3.5 h-3.5"
-                  style={{ color: colors.textTertiary }}
-                />
-                <p
-                  className="text-xs font-medium uppercase tracking-wide"
-                  style={{ color: colors.textTertiary }}
-                >
-                  Attachments
-                </p>
-              </div>
-              <div className="flex flex-col gap-1">
-                {(event.attachment_links ?? []).map((link, i) => (
-                  <a
-                    key={i}
-                    href={link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs truncate hover:underline"
-                    style={{ color: colors.mistyForest }}
-                  >
-                    {link}
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {(event.reminder_email || event.reminder_in_app) && (
-            <div className="flex items-start gap-2">
-              <Bell
-                className="w-3.5 h-3.5 mt-0.5 flex-shrink-0"
-                style={{ color: colors.textTertiary }}
-              />
-              <p className="text-sm" style={{ color: colors.textPrimary }}>
-                Reminder {event.reminder_timing ?? "30 min before"}
-                {event.reminder_email && event.reminder_in_app
-                  ? " (email + in-app)"
-                  : event.reminder_email
-                    ? " (email)"
-                    : " (in-app)"}
-              </p>
-            </div>
-          )}
-
-          {event.rsvp_enabled && (
-            <div
-              className="flex items-center gap-2 px-3 py-2"
+            <motion.button
+              onClick={onClose}
+              whileHover={{ backgroundColor: "rgba(255,255,255,0.30)" }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.12 }}
               style={{
-                backgroundColor: colors.pastelSage,
-                borderRadius: radius.md,
+                padding: 6,
+                borderRadius: 8,
+                border: "none",
+                cursor: "pointer",
+                backgroundColor: "rgba(255,255,255,0.20)",
+                color: "white",
+                display: "flex",
+                flexShrink: 0,
               }}
             >
-              <Users
-                className="w-3.5 h-3.5"
-                style={{ color: colors.mistyForest }}
-              />
-              <p
-                className="text-xs font-medium"
-                style={{ color: colors.mistyForest }}
-              >
-                RSVP enabled for parents
-              </p>
+              <X className="w-4 h-4" />
+            </motion.button>
+          </div>
+
+          {/* Title */}
+          <h2
+            className={`text-xl font-bold leading-snug ${merriweather.className}`}
+            style={{ color: "white" }}
+          >
+            {event.title}
+          </h2>
+
+          {/* Date + time */}
+          <p className="text-xs mt-2" style={{ color: "rgba(255,255,255,0.82)" }}>
+            {dateLabel}
+            {timeLabel ? <> &middot; {timeLabel}</> : null}
+          </p>
+
+          {/* Program chips */}
+          {(event.programs ?? []).length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-3">
+              {(event.programs ?? []).map((p) => (
+                <span
+                  key={p}
+                  className="px-2.5 py-1 text-[10px] font-medium"
+                  style={{
+                    backgroundColor: "rgba(255,255,255,0.18)",
+                    color: "rgba(255,255,255,0.90)",
+                    borderRadius: radius.full,
+                  }}
+                >
+                  {p}
+                </span>
+              ))}
             </div>
           )}
-        </div>
+        </motion.div>
+
+        {/* Body */}
+        <motion.div
+          className="flex-1 overflow-auto px-6 py-5"
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+        >
+          {event.description && (
+            <motion.div variants={fadeUpVariants} className="mb-4">
+              <div
+                style={{
+                  backgroundColor: "#F2F7F3",
+                  borderRadius: 10,
+                  padding: "14px 16px",
+                }}
+              >
+                <p className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: colors.textTertiary }}>
+                  Description
+                </p>
+                <p className="text-sm leading-relaxed" style={{ color: colors.textPrimary, lineHeight: 1.65 }}>
+                  {event.description}
+                </p>
+              </div>
+            </motion.div>
+          )}
+
+          <div className="flex flex-col" style={{ gap: 0 }}>
+            {event.location && (
+              <motion.div
+                variants={fadeUpVariants}
+                className="flex items-start gap-3"
+                style={{ padding: "12px 0", borderBottom: `1px solid ${colors.border}` }}
+              >
+                <div style={{
+                  width: 32, height: 32, borderRadius: 8,
+                  backgroundColor: colors.warmLinen,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0,
+                }}>
+                  <MapPin className="w-3.5 h-3.5" style={{ color: colors.textSecondary }} />
+                </div>
+                <div className="min-w-0 pt-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: colors.textTertiary }}>Location</p>
+                  <p className="text-sm" style={{ color: colors.textPrimary }}>{event.location}</p>
+                </div>
+              </motion.div>
+            )}
+
+            {!event.is_all_day && event.start_time && (
+              <motion.div
+                variants={fadeUpVariants}
+                className="flex items-start gap-3"
+                style={{ padding: "12px 0", borderBottom: `1px solid ${colors.border}` }}
+              >
+                <div style={{
+                  width: 32, height: 32, borderRadius: 8,
+                  backgroundColor: colors.warmLinen,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0,
+                }}>
+                  <Clock className="w-3.5 h-3.5" style={{ color: colors.textSecondary }} />
+                </div>
+                <div className="min-w-0 pt-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: colors.textTertiary }}>Time</p>
+                  <p className="text-sm" style={{ color: colors.textPrimary }}>
+                    {formatTime(event.start_time)}{event.end_time ? ` – ${formatTime(event.end_time)}` : ""}
+                  </p>
+                </div>
+              </motion.div>
+            )}
+
+            {event.recurrence && event.recurrence !== "None" && (
+              <motion.div
+                variants={fadeUpVariants}
+                className="flex items-start gap-3"
+                style={{ padding: "12px 0", borderBottom: `1px solid ${colors.border}` }}
+              >
+                <div style={{
+                  width: 32, height: 32, borderRadius: 8,
+                  backgroundColor: colors.warmLinen,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0,
+                }}>
+                  <RefreshCw className="w-3.5 h-3.5" style={{ color: colors.textSecondary }} />
+                </div>
+                <div className="min-w-0 pt-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: colors.textTertiary }}>Recurrence</p>
+                  <p className="text-sm" style={{ color: colors.textPrimary }}>
+                    Repeats {event.recurrence.toLowerCase()}
+                    {event.recurrence_end_date ? ` until ${event.recurrence_end_date}` : ""}
+                  </p>
+                </div>
+              </motion.div>
+            )}
+
+            {(event.attachment_links ?? []).length > 0 && (
+              <motion.div
+                variants={fadeUpVariants}
+                className="flex items-start gap-3"
+                style={{ padding: "12px 0", borderBottom: `1px solid ${colors.border}` }}
+              >
+                <div style={{
+                  width: 32, height: 32, borderRadius: 8,
+                  backgroundColor: colors.warmLinen,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0,
+                }}>
+                  <Paperclip className="w-3.5 h-3.5" style={{ color: colors.textSecondary }} />
+                </div>
+                <div className="min-w-0 pt-1 flex-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: colors.textTertiary }}>Attachments</p>
+                  <div className="flex flex-col gap-1">
+                    {(event.attachment_links ?? []).map((link, i) => (
+                      <a
+                        key={i}
+                        href={link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs truncate hover:underline"
+                        style={{ color: colors.mistyForest }}
+                      >
+                        {link}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {(event.reminder_email || event.reminder_in_app) && (
+              <motion.div
+                variants={fadeUpVariants}
+                className="flex items-start gap-3"
+                style={{ padding: "12px 0", borderBottom: event.rsvp_enabled ? `1px solid ${colors.border}` : "none" }}
+              >
+                <div style={{
+                  width: 32, height: 32, borderRadius: 8,
+                  backgroundColor: colors.warmLinen,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0,
+                }}>
+                  <Bell className="w-3.5 h-3.5" style={{ color: colors.textSecondary }} />
+                </div>
+                <div className="min-w-0 pt-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: colors.textTertiary }}>Reminder</p>
+                  <p className="text-sm" style={{ color: colors.textPrimary }}>
+                    {event.reminder_timing ?? "30 min before"}
+                    {event.reminder_email && event.reminder_in_app
+                      ? " · email + in-app"
+                      : event.reminder_email
+                        ? " · email"
+                        : " · in-app"}
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </div>
+
+          {event.rsvp_enabled && (
+            <motion.div
+              variants={fadeUpVariants}
+              className="flex items-center gap-3 mt-4"
+              style={{
+                backgroundColor: colors.pastelSage,
+                borderRadius: 10,
+                padding: "12px 16px",
+              }}
+            >
+              <Users className="w-4 h-4 flex-shrink-0" style={{ color: colors.mistyForest }} />
+              <p className="text-sm font-semibold flex-1" style={{ color: colors.mistyForest }}>
+                RSVP enabled for parents
+              </p>
+              <span style={{ color: colors.mistyForest, fontSize: 16, fontWeight: 300 }}>→</span>
+            </motion.div>
+          )}
+        </motion.div>
       </motion.div>
     </>
   );
@@ -598,18 +665,20 @@ function MonthlyGrid({
   onViewEvent: (event: CalendarEvent) => void;
   events: CalendarEvent[];
 }) {
+  const isWeekend = (colIndex: number) => colIndex === 0 || colIndex === 6;
+
   return (
     <div className="flex-1 min-h-0 flex flex-col overflow-auto">
       {/* Day name header */}
       <div
         className="grid grid-cols-7 flex-shrink-0"
-        style={{ borderBottom: `1px solid ${colors.border}` }}
+        style={{ borderBottom: `1px solid ${colors.border}`, backgroundColor: "#F2F7F3" }}
       >
-        {DAY_NAMES.map((d) => (
+        {DAY_NAMES.map((d, i) => (
           <div
             key={d}
-            className="py-3 text-center text-[11px] font-semibold uppercase tracking-wider"
-            style={{ color: colors.textTertiary }}
+            className="py-3 text-center text-[11px] font-bold uppercase tracking-wider"
+            style={{ color: isWeekend(i) ? `${colors.textTertiary}99` : colors.textSecondary }}
           >
             {d}
           </div>
@@ -617,73 +686,103 @@ function MonthlyGrid({
       </div>
 
       {/* Grid */}
-      <div
-        className="grid grid-cols-7 flex-1"
-        style={{ alignContent: "start" }}
-      >
+      <div className="grid grid-cols-7 flex-1" style={{ alignContent: "start" }}>
         {days.map((day, i) => {
+          const colIndex = i % 7;
           const inMonth = day.getMonth() === currentMonth;
           const isToday = isSameDay(day, today);
           const dateStr = formatDateInput(day);
           const dayEvents = events.filter((e) => e.event_date === dateStr);
           const visibleEvents = dayEvents.slice(0, 3);
-          const overflow = dayEvents.length - visibleEvents.length;
+          const overflowEvents = dayEvents.slice(3);
+          const overflow = overflowEvents.length;
+
           return (
             <div
               key={i}
-              className="relative p-2 flex flex-col"
+              className="relative flex flex-col"
               style={{
-                minHeight: "128px",
-                borderRight:
-                  (i + 1) % 7 === 0 ? "none" : `1px solid ${colors.border}`,
+                minHeight: "140px",
+                padding: "10px 8px 8px 8px",
+                borderRight: (i + 1) % 7 === 0 ? "none" : `1px solid ${colors.border}`,
                 borderBottom: `1px solid ${colors.border}`,
+                backgroundColor: isToday
+                  ? "#F4F8F5"
+                  : isWeekend(colIndex)
+                    ? "#FAFBFA"
+                    : "white",
               }}
             >
-              <span
-                className="inline-flex items-center justify-center w-6 h-6 text-xs font-semibold mb-1"
+              <motion.span
+                whileHover={inMonth ? { scale: 1.08 } : {}}
+                transition={{ duration: 0.12 }}
+                className="inline-flex items-center justify-center self-start"
                 style={{
+                  width: 32,
+                  height: 32,
                   borderRadius: radius.full,
                   backgroundColor: isToday ? colors.mistyForest : "transparent",
-                  color: isToday
-                    ? "white"
-                    : inMonth
-                      ? colors.textPrimary
-                      : colors.textTertiary,
-                  opacity: inMonth ? 1 : 0.4,
+                  color: isToday ? "white" : inMonth ? colors.textPrimary : colors.textTertiary,
+                  fontSize: 14,
+                  fontWeight: isToday ? 700 : 500,
+                  opacity: inMonth ? 1 : 0.35,
+                  boxShadow: isToday ? "0 0 0 3px rgba(94,124,104,0.18)" : "none",
+                  cursor: inMonth ? "default" : "default",
+                  flexShrink: 0,
                 }}
               >
                 {day.getDate()}
-              </span>
+              </motion.span>
 
               {inMonth && (
-                <div className="flex flex-col gap-0.5 mt-0.5">
+                <div className="flex flex-col gap-0.5 mt-1.5">
                   {visibleEvents.map((ev) => (
-                    <button
+                    <motion.button
                       key={ev.id}
                       onClick={(e) => {
                         e.stopPropagation();
                         onViewEvent(ev);
                       }}
-                      className="truncate px-1.5 py-0.5 text-[10px] font-medium leading-tight text-left transition-opacity hover:opacity-80"
+                      whileHover={{ opacity: 0.85 }}
+                      transition={{ duration: 0.1 }}
+                      className="truncate text-left w-full"
                       style={{
-                        backgroundColor: ev.color,
-                        color: "white",
-                        borderRadius: "4px",
-                        border: "none",
+                        fontSize: 11,
+                        fontWeight: 600,
+                        padding: ev.is_all_day ? "2px 6px" : "2px 6px 2px 5px",
+                        borderRadius: ev.is_all_day ? 4 : "0 4px 4px 0",
+                        borderLeft: ev.is_all_day ? "none" : `3px solid ${ev.color}`,
+                        backgroundColor: ev.is_all_day ? ev.color : `${ev.color}18`,
+                        color: ev.is_all_day ? "white" : colors.textPrimary,
+                        border: ev.is_all_day ? "none" : `1px solid transparent`,
+                        borderLeftColor: ev.is_all_day ? "transparent" : ev.color,
                         cursor: "pointer",
-                        width: "100%",
+                        lineHeight: "1.4",
                       }}
                     >
                       {ev.title}
-                    </button>
+                    </motion.button>
                   ))}
                   {overflow > 0 && (
-                    <span
-                      className="text-[10px] px-1"
-                      style={{ color: colors.textTertiary }}
-                    >
-                      +{overflow} more
-                    </span>
+                    <div className="flex items-center gap-1 mt-0.5 px-1">
+                      {overflowEvents.slice(0, 3).map((ev) => (
+                        <div
+                          key={ev.id}
+                          style={{
+                            width: 6,
+                            height: 6,
+                            borderRadius: "50%",
+                            backgroundColor: ev.color,
+                            flexShrink: 0,
+                          }}
+                        />
+                      ))}
+                      {overflow > 3 && (
+                        <span style={{ fontSize: 9, color: colors.textTertiary, marginLeft: 2 }}>
+                          +{overflow - 3}
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
@@ -726,7 +825,7 @@ function WeeklyGrid({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const GUTTER = 52;
+  const GUTTER = 56;
 
   return (
     <div className="flex flex-col">
@@ -735,73 +834,55 @@ function WeeklyGrid({
         className="flex flex-shrink-0 bg-white"
         style={{ borderBottom: `1px solid ${colors.border}` }}
       >
-        <div
-          style={{
-            width: `${GUTTER}px`,
-            flexShrink: 0,
-            borderRight: `1px solid ${colors.border}`,
-          }}
-        />
+        <div style={{ width: `${GUTTER}px`, flexShrink: 0, borderRight: `1px solid ${colors.border}` }} />
         {weekDays.map((day, i) => {
           const isToday = isSameDay(day, today);
           const dateStr = formatDateInput(day);
-          const allDayEvents = events.filter(
-            (e) => e.event_date === dateStr && e.is_all_day,
-          );
+          const allDayEvents = events.filter((e) => e.event_date === dateStr && e.is_all_day);
           const timedEvents = events
-            .filter(
-              (e) =>
-                e.event_date === dateStr && !e.is_all_day && !!e.start_time,
-            )
+            .filter((e) => e.event_date === dateStr && !e.is_all_day && !!e.start_time)
             .sort((a, b) => (a.start_time! > b.start_time! ? 1 : -1));
-          const timedCount = timedEvents.length;
-          const firstEventTopPx =
-            timedCount > 0
-              ? (() => {
-                  const [sh, sm] = timedEvents[0]
-                    .start_time!.split(":")
-                    .map(Number);
-                  return ((sh * 60 + (sm || 0) - 7 * 60) / 60) * HOUR_HEIGHT;
-                })()
-              : 0;
+
           return (
             <div
               key={i}
               className="flex-1 py-3 flex flex-col items-center gap-1 relative"
               style={{
                 borderRight: i === 4 ? "none" : `1px solid ${colors.border}`,
-                backgroundColor: isToday ? "#f8fbf9" : "white",
+                backgroundColor: isToday ? "#F2F7F3" : "white",
+                borderBottom: isToday ? `2px solid ${colors.mistyForest}` : "2px solid transparent",
+                height: 72,
               }}
             >
               <span
-                className="text-[10px] font-semibold uppercase tracking-wider"
-                style={{
-                  color: isToday ? colors.mistyForest : colors.textTertiary,
-                }}
+                className="text-[10px] font-bold uppercase tracking-wider"
+                style={{ color: isToday ? colors.mistyForest : colors.textTertiary }}
               >
                 {WEEK_DAYS[i]}
               </span>
               <div
-                className="flex items-center justify-center w-8 h-8 text-sm font-semibold"
+                className="flex items-center justify-center"
                 style={{
+                  width: 36,
+                  height: 36,
                   borderRadius: radius.full,
                   backgroundColor: isToday ? colors.mistyForest : "transparent",
                   color: isToday ? "white" : colors.textPrimary,
+                  fontSize: 15,
+                  fontWeight: isToday ? 700 : 500,
+                  boxShadow: isToday ? "0 0 0 4px rgba(94,124,104,0.15)" : "none",
                 }}
               >
                 {day.getDate()}
               </div>
+
               {allDayEvents.length > 0 && (
                 <div className="w-full px-1 flex flex-col gap-0.5">
-                  {allDayEvents.slice(0, 2).map((ev) => (
+                  {allDayEvents.slice(0, 1).map((ev) => (
                     <div
                       key={ev.id}
-                      className="truncate px-1.5 py-0.5 text-[9px] font-medium cursor-pointer transition-opacity hover:opacity-80"
-                      style={{
-                        backgroundColor: ev.color,
-                        color: "white",
-                        borderRadius: "3px",
-                      }}
+                      className="truncate px-1.5 py-0.5 text-[9px] font-semibold cursor-pointer transition-opacity hover:opacity-80"
+                      style={{ backgroundColor: ev.color, color: "white", borderRadius: 3 }}
                       onClick={() => onViewEvent(ev)}
                     >
                       {ev.title}
@@ -809,36 +890,19 @@ function WeeklyGrid({
                   ))}
                 </div>
               )}
-              {timedCount > 0 && (
-                <button
-                  onClick={() => {
-                    if (scrollRef.current) {
-                      window.scrollTo({ top: scrollRef.current.getBoundingClientRect().top + window.scrollY + Math.max(0, firstEventTopPx - 16), behavior: 'smooth' });
-                    }
-                  }}
-                  style={{
-                    width: "90%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 4,
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    padding: "2px 6px",
-                    borderRadius: radius.full,
-                    backgroundColor: colors.pastelSage,
-                    color: colors.mistyForest,
-                    fontSize: "9px",
-                    fontWeight: 600,
-                    letterSpacing: "0.02em",
-                    transition: "opacity 150ms",
-                  }}
-                  className="hover:opacity-70"
-                >
-                  {timedCount} event{timedCount !== 1 ? "s" : ""}
-                  <span style={{ fontSize: "8px", lineHeight: 1 }}>↓</span>
-                </button>
+
+              {timedEvents.length > 0 && (
+                <div className="flex items-center gap-1 mt-0.5">
+                  {timedEvents.slice(0, 3).map((ev) => (
+                    <div
+                      key={ev.id}
+                      style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: ev.color, flexShrink: 0 }}
+                    />
+                  ))}
+                  {timedEvents.length > 3 && (
+                    <span style={{ fontSize: 8, color: colors.textTertiary }}>+{timedEvents.length - 3}</span>
+                  )}
+                </div>
               )}
             </div>
           );
@@ -854,19 +918,13 @@ function WeeklyGrid({
         {/* Time label gutter */}
         <div
           className="flex-shrink-0 relative"
-          style={{
-            width: `${GUTTER}px`,
-            borderRight: `1px solid ${colors.border}`,
-          }}
+          style={{ width: `${GUTTER}px`, borderRight: `1px solid ${colors.border}` }}
         >
           {HOURS.map((h, i) => (
             <div
               key={h}
-              className="absolute flex items-center justify-end pr-2"
-              style={{
-                top: `${i * HOUR_HEIGHT}px`,
-                width: `${GUTTER}px`,
-              }}
+              className="absolute flex items-center justify-end pr-2.5"
+              style={{ top: `${i * HOUR_HEIGHT}px`, width: `${GUTTER}px` }}
             >
               {i > 0 && (
                 <span
@@ -892,18 +950,26 @@ function WeeklyGrid({
               className="absolute left-0 right-0 z-20 flex items-center pointer-events-none"
               style={{ top: `${currentTimeTop}px` }}
             >
-              <div
-                className="rounded-full flex-shrink-0"
+              <motion.div
+                animate={{ scale: [1, 1.2, 1], opacity: [1, 0.75, 1] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                 style={{
-                  width: "8px",
-                  height: "8px",
-                  backgroundColor: "#ef4444",
-                  marginLeft: "-4px",
+                  width: 10,
+                  height: 10,
+                  borderRadius: "50%",
+                  backgroundColor: "#f29a8f",
+                  boxShadow: "0 0 0 3px rgba(242,154,143,0.25), 0 0 8px rgba(242,154,143,0.4)",
+                  flexShrink: 0,
+                  marginLeft: -5,
+                  zIndex: 30,
                 }}
               />
               <div
                 className="flex-1"
-                style={{ height: "1.5px", backgroundColor: "#ef4444" }}
+                style={{
+                  height: 2,
+                  background: "linear-gradient(90deg, #f29a8f 0%, rgba(242,154,143,0.25) 100%)",
+                }}
               />
             </div>
           )}
@@ -919,25 +985,35 @@ function WeeklyGrid({
                 key={colIdx}
                 className="flex-1 relative"
                 style={{
-                  borderRight:
-                    colIdx === 4 ? "none" : `1px solid ${colors.border}`,
-                  backgroundColor: isToday ? "#f8fbf9" : "white",
+                  borderRight: colIdx === 4 ? "none" : `1px solid ${colors.border}`,
+                  backgroundColor: isToday ? "#F4F8F5" : "white",
                 }}
               >
                 {HOURS.map((h, rowIdx) => (
                   <div
                     key={rowIdx}
+                    className="relative"
                     style={{
-                      display: "block",
                       width: "100%",
                       height: `${HOUR_HEIGHT}px`,
-                      borderBottom:
-                        rowIdx === HOURS.length - 1
-                          ? "none"
-                          : `1px solid ${colors.border}`,
+                      borderBottom: rowIdx === HOURS.length - 1 ? "none" : `1px solid ${colors.border}`,
+                      backgroundColor: rowIdx % 2 === 1 ? "#FAFBFA" : "transparent",
                     }}
-                  />
+                  >
+                    {/* Half-hour dashed line */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "50%",
+                        left: 0,
+                        right: 0,
+                        borderTop: "1px dashed rgba(229,231,235,0.65)",
+                        pointerEvents: "none",
+                      }}
+                    />
+                  </div>
                 ))}
+
                 {/* Timed event blocks */}
                 {getOverlapClusters(timedEvents).map((cluster) => {
                   const ev = cluster[0];
@@ -949,10 +1025,7 @@ function WeeklyGrid({
                   if (ev.end_time) {
                     const [eh, em] = ev.end_time.split(":").map(Number);
                     const endMinutes = eh * 60 + (em || 0);
-                    basePx = Math.max(
-                      22,
-                      ((endMinutes - startMinutes) / 60) * HOUR_HEIGHT,
-                    );
+                    basePx = Math.max(22, ((endMinutes - startMinutes) / 60) * HOUR_HEIGHT);
                   }
 
                   const isMulti = cluster.length > 1;
@@ -961,10 +1034,7 @@ function WeeklyGrid({
                   const needsMoreBar = cluster.length > 2;
                   const moreCount = cluster.length - 2;
                   const heightPx = isMulti
-                    ? Math.max(
-                        basePx,
-                        2 * CARD_H + 1 + (needsMoreBar ? MORE_BAR_H : 0),
-                      )
+                    ? Math.max(basePx, 2 * CARD_H + 1 + (needsMoreBar ? MORE_BAR_H : 0))
                     : basePx;
                   const singleShowMeta = !isMulti && basePx >= 52;
 
@@ -982,67 +1052,57 @@ function WeeklyGrid({
                           ? heightPx - cardTop - cardBottom >= 52
                           : singleShowMeta;
                     return (
-                      <button
+                      <motion.button
                         key={cardEv.id}
                         onClick={(e) => {
                           e.stopPropagation();
                           onViewEvent(cardEv);
                         }}
-                        className="absolute px-1.5 py-1 overflow-hidden text-left transition-opacity hover:opacity-85"
+                        whileHover={{ scale: 1.02, boxShadow: "0 4px 12px rgba(0,0,0,0.18)" }}
+                        whileTap={{ scale: 0.98 }}
+                        transition={{ duration: 0.12 }}
+                        className="absolute overflow-hidden text-left"
                         style={{
                           top: cardTop,
                           bottom: cardBottom,
                           height: cardHeight,
-                          left: 0,
-                          right: 0,
+                          left: 2,
+                          right: 2,
                           backgroundColor: cardEv.color,
                           borderRadius: cardRadius,
-                          border: "none",
+                          border: "1px solid rgba(255,255,255,0.25)",
                           cursor: "pointer",
                           display: "flex",
                           flexDirection: "column",
                           justifyContent: "flex-start",
+                          padding: "4px 6px",
+                          boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
                         }}
                       >
-                        {showMeta && (cardEv.shared_with ?? []).length > 0 && (
-                          <div className="flex items-center gap-1 mb-0.5 flex-wrap">
-                            {(cardEv.shared_with ?? []).map((g) => (
-                              <span
-                                key={g}
-                                className="leading-none"
-                                style={{
-                                  fontSize: "8px",
-                                  fontWeight: 600,
-                                  color: SHARE_COLORS[g] ?? cardEv.color,
-                                  backgroundColor: "white",
-                                  borderRadius: "3px",
-                                  padding: "1px 4px",
-                                }}
-                              >
-                                {g}
-                              </span>
-                            ))}
-                          </div>
-                        )}
                         <p
-                          className="text-[10px] font-semibold leading-tight truncate"
+                          className="text-[11px] font-bold leading-tight truncate"
                           style={{ color: "white" }}
                         >
                           {cardEv.title}
                         </p>
+                        {showMeta && cardEv.start_time && (
+                          <p style={{ fontSize: 9, color: "rgba(255,255,255,0.82)", marginTop: 2 }}>
+                            {formatTime(cardEv.start_time)}{cardEv.end_time ? ` – ${formatTime(cardEv.end_time)}` : ""}
+                          </p>
+                        )}
                         {showMeta && cardEv.category && (
                           <p
-                            className="truncate leading-none mt-0.5"
                             style={{
-                              color: "rgba(255,255,255,0.80)",
-                              fontSize: "8px",
+                              color: "rgba(255,255,255,0.68)",
+                              fontSize: 9,
                               fontWeight: 500,
+                              marginTop: 1,
                             }}
                           >
                             {cardEv.category}
                           </p>
                         )}
-                      </button>
+                      </motion.button>
                     );
                   };
 
@@ -1053,20 +1113,14 @@ function WeeklyGrid({
                         position: "absolute",
                         top: `${topPx}px`,
                         height: `${heightPx}px`,
-                        left: "2px",
-                        right: "2px",
+                        left: 2,
+                        right: 2,
                         zIndex: 10,
                       }}
                     >
                       {isMulti
-                        ? renderCard(
-                            cluster[0],
-                            0,
-                            CARD_H,
-                            undefined,
-                            needsMoreBar ? "5px 5px 0 0" : "5px 5px 0 0",
-                          )
-                        : renderCard(cluster[0], 0, undefined, 0, "5px")}
+                        ? renderCard(cluster[0], 0, CARD_H, undefined, "6px 6px 0 0")
+                        : renderCard(cluster[0], 0, undefined, 0, "6px")}
 
                       {isMulti &&
                         renderCard(
@@ -1074,7 +1128,7 @@ function WeeklyGrid({
                           CARD_H + 1,
                           needsMoreBar ? CARD_H : undefined,
                           needsMoreBar ? undefined : 0,
-                          needsMoreBar ? "0" : "0 0 5px 5px",
+                          needsMoreBar ? "0" : "0 0 6px 6px",
                         )}
 
                       {needsMoreBar && (
@@ -1090,13 +1144,13 @@ function WeeklyGrid({
                             right: 0,
                             height: `${MORE_BAR_H}px`,
                             backgroundColor: cluster[1].color,
-                            opacity: 0.75,
-                            borderRadius: "0 0 5px 5px",
+                            opacity: 0.78,
+                            borderRadius: "0 0 6px 6px",
                             border: "none",
                             borderTop: "1px solid rgba(255,255,255,0.3)",
                             cursor: "pointer",
-                            fontSize: "8px",
-                            fontWeight: 600,
+                            fontSize: 8,
+                            fontWeight: 700,
                             color: "white",
                             letterSpacing: "0.02em",
                           }}
@@ -1127,17 +1181,13 @@ export default function ParentCalendarClient({
   const [viewEvent, setViewEvent] = useState<CalendarEvent | null>(null);
   const [selectedProgram, setSelectedProgram] = useState<ProgramKey>("summer");
   const [view, setView] = useState<ViewMode>("monthly");
-  const [currentDate, setCurrentDate] = useState<Date>(
-    new Date(programs.summer.start),
-  );
-  const [overlapEvents, setOverlapEvents] = useState<CalendarEvent[] | null>(
-    null,
-  );
+  const [currentDate, setCurrentDate] = useState<Date>(new Date(programs.summer.start));
+  const [overlapEvents, setOverlapEvents] = useState<CalendarEvent[] | null>(null);
 
   useEffect(() => {
     const isOpen = !!viewEvent || !!overlapEvents;
-    document.body.style.overflow = isOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    document.body.style.overflow = isOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
   }, [viewEvent, overlapEvents]);
 
   const program = programs[selectedProgram];
@@ -1155,196 +1205,365 @@ export default function ParentCalendarClient({
   const atWeekStart = weekStart <= program.start;
   const atWeekEnd = weekEnd >= program.end;
 
+  const ws = startOfWeek(currentDate);
+  const weekDays = Array.from({ length: 5 }, (_, i) => addDays(ws, i));
+
+  const isOnToday =
+    view === "monthly"
+      ? currentDate.getMonth() === today.getMonth() && currentDate.getFullYear() === today.getFullYear()
+      : weekDays.some((d) => isSameDay(d, today));
+
   function handleProgramSelect(key: ProgramKey) {
     setSelectedProgram(key);
     setCurrentDate(new Date(programs[key].start));
   }
 
   function handlePrev() {
-    if (view === "monthly" && !atMonthStart)
-      setCurrentDate((d) => addMonths(d, -1));
-    if (view === "weekly" && !atWeekStart)
-      setCurrentDate((d) => addDays(d, -7));
+    if (view === "monthly" && !atMonthStart) setCurrentDate((d) => addMonths(d, -1));
+    if (view === "weekly" && !atWeekStart) setCurrentDate((d) => addDays(d, -7));
   }
 
   function handleNext() {
-    if (view === "monthly" && !atMonthEnd)
-      setCurrentDate((d) => addMonths(d, 1));
+    if (view === "monthly" && !atMonthEnd) setCurrentDate((d) => addMonths(d, 1));
     if (view === "weekly" && !atWeekEnd) setCurrentDate((d) => addDays(d, 7));
+  }
+
+  function handleToday() {
+    const t = new Date();
+    setCurrentDate(
+      view === "monthly"
+        ? new Date(t.getFullYear(), t.getMonth(), 1)
+        : startOfWeek(t),
+    );
   }
 
   const navLabel =
     view === "monthly"
       ? `${MONTHS[currentDate.getMonth()]} ${currentDate.getFullYear()}`
       : (() => {
-          const ws = startOfWeek(currentDate);
-          const we = addDays(ws, 4);
-          const sm = MONTHS[ws.getMonth()].slice(0, 3);
-          const em = MONTHS[we.getMonth()].slice(0, 3);
-          return ws.getMonth() === we.getMonth()
-            ? `${sm} ${ws.getDate()}–${we.getDate()}, ${ws.getFullYear()}`
-            : `${sm} ${ws.getDate()} – ${em} ${we.getDate()}, ${we.getFullYear()}`;
+          const wstart = startOfWeek(currentDate);
+          const wend = addDays(wstart, 4);
+          const sm = MONTHS[wstart.getMonth()].slice(0, 3);
+          const em = MONTHS[wend.getMonth()].slice(0, 3);
+          return wstart.getMonth() === wend.getMonth()
+            ? `${sm} ${wstart.getDate()}–${wend.getDate()}, ${wstart.getFullYear()}`
+            : `${sm} ${wstart.getDate()} – ${em} ${wend.getDate()}, ${wend.getFullYear()}`;
         })();
 
   const prevDisabled = view === "monthly" ? atMonthStart : atWeekStart;
   const nextDisabled = view === "monthly" ? atMonthEnd : atWeekEnd;
 
-  const monthDays = getDaysInMonth(
-    currentDate.getFullYear(),
-    currentDate.getMonth(),
-  );
-  const ws = startOfWeek(currentDate);
-  const weekDays = Array.from({ length: 5 }, (_, i) => addDays(ws, i));
+  const monthDays = getDaysInMonth(currentDate.getFullYear(), currentDate.getMonth());
+
+  // Collect unique categories from events for the legend
+  const categoryEntries = Array.from(
+    new Map(
+      events
+        .filter((e) => e.category && e.color)
+        .map((e) => [e.category!, e.color])
+    ).entries()
+  ).slice(0, 5);
 
   return (
     <>
       <div className="flex flex-1">
-        {/* ── Left Panel ── */}
+        {/* ── Left Rail ── */}
         <aside
-          className="flex-shrink-0 flex flex-col pt-7 pb-6"
+          className="flex-shrink-0 flex flex-col"
           style={{
-            width: "168px",
+            width: 220,
             borderRight: `1px solid ${colors.border}`,
             backgroundColor: "white",
           }}
         >
+          {/* Branding strip */}
+          <div
+            className="flex items-center gap-2 px-4 flex-shrink-0"
+            style={{
+              height: 56,
+              background: "linear-gradient(90deg, #F2F7F3 0%, white 100%)",
+              borderBottom: `1px solid ${colors.border}`,
+            }}
+          >
+            <Calendar className="w-3.5 h-3.5 flex-shrink-0" style={{ color: colors.mistyForest }} />
+            <span
+              className={`text-[13px] font-bold ${merriweather.className}`}
+              style={{ color: colors.mistyForest }}
+            >
+              My Calendar
+            </span>
+          </div>
+
+          {/* Program label */}
           <p
-            className="px-4 text-[10px] font-semibold uppercase tracking-[0.12em] mb-3"
+            className="px-4 pt-5 pb-2 text-[10px] font-bold uppercase tracking-[0.12em]"
             style={{ color: colors.textTertiary }}
           >
             Programs
           </p>
-          <nav className="space-y-0.5 px-2">
-            {(
-              Object.entries(programs) as [
-                ProgramKey,
-                (typeof programs)[ProgramKey],
-              ][]
-            ).map(([key, prog]) => {
-              const active = selectedProgram === key;
-              return (
-                <button
-                  key={key}
-                  onClick={() => handleProgramSelect(key)}
-                  className="w-full text-left px-3 py-2 text-sm transition-all duration-150"
-                  style={{
-                    backgroundColor: active ? colors.pastelSage : "transparent",
-                    color: active ? colors.mistyForest : colors.textSecondary,
-                    fontWeight: active ? 600 : 400,
-                    borderRadius: radius.sm,
-                    cursor: "pointer",
-                    border: "none",
-                  }}
-                >
-                  {prog.label}
-                </button>
-              );
-            })}
+
+          {/* Program cards */}
+          <nav className="space-y-1.5 px-3">
+            {(Object.entries(programs) as [ProgramKey, (typeof programs)[ProgramKey]][]).map(
+              ([key, prog]) => {
+                const active = selectedProgram === key;
+                const Icon = key === "summer" ? Sun : BookOpen;
+                return (
+                  <motion.button
+                    key={key}
+                    onClick={() => handleProgramSelect(key)}
+                    whileHover={active ? {} : { x: 2 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ duration: 0.15 }}
+                    className="w-full text-left relative"
+                    style={{
+                      backgroundColor: active ? "#F2F7F3" : "transparent",
+                      borderTop: "none",
+                      borderRight: "none",
+                      borderBottom: "none",
+                      borderLeft: `3px solid ${active ? colors.mistyForest : "transparent"}`,
+                      borderRadius: 12,
+                      padding: "12px 12px 12px 11px",
+                      cursor: "pointer",
+                      boxShadow: active ? shadows.soft : "none",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 4,
+                    }}
+                  >
+                    {/* Top row: icon chip + label */}
+                    <div className="flex items-center gap-2">
+                      <div
+                        style={{
+                          width: 20,
+                          height: 20,
+                          borderRadius: "50%",
+                          backgroundColor: colors.pastelSage,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Icon style={{ width: 10, height: 10, color: colors.mistyForest }} />
+                      </div>
+                      <span
+                        style={{
+                          fontSize: 9,
+                          fontWeight: 700,
+                          letterSpacing: "0.10em",
+                          color: colors.mistyForest,
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        {prog.shortLabel}
+                      </span>
+                      {active && (
+                        <motion.div
+                          layoutId="program-indicator"
+                          style={{
+                            marginLeft: "auto",
+                            width: 7,
+                            height: 7,
+                            borderRadius: "50%",
+                            backgroundColor: colors.mistyForest,
+                            flexShrink: 0,
+                          }}
+                        />
+                      )}
+                    </div>
+                    {/* Program name */}
+                    <p style={{ fontSize: 13, fontWeight: 600, color: colors.textPrimary, lineHeight: 1.2 }}>
+                      {prog.label}
+                    </p>
+                    {/* Date range */}
+                    <p style={{ fontSize: 10, color: colors.textTertiary }}>
+                      {prog.dateRange}
+                    </p>
+                  </motion.button>
+                );
+              },
+            )}
           </nav>
+
+          {/* Category legend */}
+          {categoryEntries.length > 0 && (
+            <div className="mt-auto px-4 pb-6 pt-4" style={{ borderTop: `1px solid ${colors.border}` }}>
+              <p
+                className="text-[9px] font-bold uppercase tracking-[0.12em] mb-3"
+                style={{ color: colors.textTertiary }}
+              >
+                Categories
+              </p>
+              <div className="flex flex-col gap-2">
+                {categoryEntries.map(([cat, color]) => (
+                  <div key={cat} className="flex items-center gap-2">
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: color, flexShrink: 0 }} />
+                    <span style={{ fontSize: 11, color: colors.textSecondary }}>{cat}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </aside>
 
         {/* ── Calendar Area ── */}
-        <div className="flex-1 flex p-4" style={{ backgroundColor: colors.warmLinen }}>
-        <div
-          className="flex-1 flex flex-col"
-          style={{
-            borderRadius: "16px",
-            border: `1px solid ${colors.border}`,
-            boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
-            overflow: "hidden",
-          }}
-        >
-        <div
-          className="flex-1 flex flex-col min-w-0"
-          style={{ backgroundColor: "white" }}
-        >
-          {/* Top bar */}
+        <div className="flex-1 flex p-4" style={{ backgroundColor: "#F0F4F1" }}>
           <div
-            className="flex items-center justify-between px-6 py-4 flex-shrink-0"
+            className="flex-1 flex flex-col"
             style={{
+              borderRadius: 20,
+              border: `1px solid ${colors.border}`,
+              boxShadow: "0 4px 24px rgba(94,124,104,0.10)",
+              overflow: "hidden",
               backgroundColor: "white",
-              borderBottom: `1px solid ${colors.border}`,
             }}
           >
-            {/* Left: nav + label */}
-            <div className="flex items-center gap-1">
-              <NavButton
-                onClick={handlePrev}
-                disabled={prevDisabled}
-                aria-label="Previous"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </NavButton>
-              <NavButton
-                onClick={handleNext}
-                disabled={nextDisabled}
-                aria-label="Next"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </NavButton>
-              <span
-                className="ml-2 text-sm font-semibold"
-                style={{ color: colors.textPrimary }}
-              >
-                {navLabel}
-              </span>
-            </div>
-
-            {/* Right: view toggle */}
+            {/* Top bar */}
             <div
-              className="flex p-0.5"
+              className="flex items-center justify-between flex-shrink-0"
               style={{
-                backgroundColor: colors.warmLinen,
-                border: `1px solid ${colors.border}`,
-                borderRadius: radius.md,
+                height: 68,
+                padding: "0 24px",
+                borderBottom: `1px solid ${colors.border}`,
+                backgroundColor: "white",
               }}
             >
-              {(["monthly", "weekly"] as ViewMode[]).map((v) => {
-                const active = view === v;
-                return (
-                  <button
-                    key={v}
-                    onClick={() => setView(v)}
-                    className="px-3.5 py-1 text-sm font-medium transition-all duration-150 capitalize"
-                    style={{
-                      backgroundColor: active ? "white" : "transparent",
-                      color: active ? colors.textPrimary : colors.textTertiary,
-                      borderRadius: "10px",
-                      border: "none",
-                      cursor: "pointer",
-                      boxShadow: active ? shadows.soft : "none",
-                      fontWeight: active ? 600 : 400,
-                    }}
-                  >
-                    {v}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+              {/* Left: nav cluster + label */}
+              <div className="flex items-center gap-3">
+                <div
+                  className="flex items-center"
+                  style={{
+                    backgroundColor: colors.warmLinen,
+                    border: `1px solid ${colors.border}`,
+                    borderRadius: 10,
+                    padding: 3,
+                    gap: 2,
+                    display: "flex",
+                  }}
+                >
+                  <NavButton onClick={handlePrev} disabled={prevDisabled} aria-label="Previous">
+                    <ChevronLeft className="w-5 h-5" />
+                  </NavButton>
+                  <NavButton onClick={handleNext} disabled={nextDisabled} aria-label="Next">
+                    <ChevronRight className="w-5 h-5" />
+                  </NavButton>
+                </div>
 
-          {/* Calendar body */}
-          <div className="flex flex-col">
-            {view === "monthly" ? (
-              <MonthlyGrid
-                days={monthDays}
-                currentMonth={currentDate.getMonth()}
-                today={today}
-                onViewEvent={setViewEvent}
-                events={events}
-              />
-            ) : (
-              <WeeklyGrid
-                weekDays={weekDays}
-                today={today}
-                onViewEvent={setViewEvent}
-                onViewOverlap={setOverlapEvents}
-                events={events}
-              />
-            )}
+                <h1
+                  className={`text-xl ${merriweather.className}`}
+                  style={{ color: colors.textPrimary, fontWeight: 700, lineHeight: 1 }}
+                >
+                  {view === "monthly" ? (
+                    <>
+                      <span>{MONTHS[currentDate.getMonth()]}</span>{" "}
+                      <span style={{ fontWeight: 300, color: colors.textSecondary }}>
+                        {currentDate.getFullYear()}
+                      </span>
+                    </>
+                  ) : (
+                    <span style={{ fontSize: 16 }}>{navLabel}</span>
+                  )}
+                </h1>
+              </div>
+
+              {/* Center: Today button */}
+              <motion.button
+                onClick={handleToday}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ duration: 0.12 }}
+                style={{
+                  padding: "6px 18px",
+                  borderRadius: radius.full,
+                  backgroundColor: isOnToday ? colors.pastelSage : "white",
+                  color: isOnToday ? colors.mistyForest : colors.textSecondary,
+                  border: `1px solid ${isOnToday ? colors.pastelSage : colors.border}`,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "background-color 150ms, color 150ms, border-color 150ms",
+                }}
+              >
+                Today
+              </motion.button>
+
+              {/* Right: view toggle with sliding bg */}
+              <div
+                className="relative flex"
+                style={{
+                  backgroundColor: colors.warmLinen,
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: 12,
+                  padding: 3,
+                }}
+              >
+                {(["monthly", "weekly"] as ViewMode[]).map((v) => {
+                  const active = view === v;
+                  return (
+                    <button
+                      key={v}
+                      onClick={() => setView(v)}
+                      className="relative px-4 py-1.5 text-xs font-medium capitalize z-10"
+                      style={{
+                        color: active ? colors.textPrimary : colors.textTertiary,
+                        border: "none",
+                        cursor: "pointer",
+                        backgroundColor: "transparent",
+                        fontWeight: active ? 600 : 400,
+                        borderRadius: 9,
+                        transition: "color 150ms",
+                      }}
+                    >
+                      {active && (
+                        <motion.div
+                          layoutId="view-toggle-pill"
+                          className="absolute inset-0"
+                          style={{
+                            backgroundColor: "white",
+                            borderRadius: 9,
+                            boxShadow: "0 1px 4px rgba(0,0,0,0.08), 0 0 0 1px rgba(94,124,104,0.08)",
+                          }}
+                          transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                        />
+                      )}
+                      <span className="relative z-10">{v}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Calendar body with animated transitions */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={view + navLabel}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.18, ease: "easeOut" }}
+                className="flex flex-col flex-1"
+              >
+                {view === "monthly" ? (
+                  <MonthlyGrid
+                    days={monthDays}
+                    currentMonth={currentDate.getMonth()}
+                    today={today}
+                    onViewEvent={setViewEvent}
+                    events={events}
+                  />
+                ) : (
+                  <WeeklyGrid
+                    weekDays={weekDays}
+                    today={today}
+                    onViewEvent={setViewEvent}
+                    onViewOverlap={setOverlapEvents}
+                    events={events}
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
-        </div>
-        </div>
         </div>
       </div>
 
