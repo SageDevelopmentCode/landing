@@ -84,7 +84,7 @@ const panelSpring = { type: "spring" as const, stiffness: 380, damping: 36, mass
 
 const fadeUpVariants = {
   hidden: { opacity: 0, y: 10 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" as const } },
   exit: { opacity: 0, y: -6, transition: { duration: 0.15 } },
 };
 
@@ -952,7 +952,7 @@ function WeeklyGrid({
             >
               <motion.div
                 animate={{ scale: [1, 1.2, 1], opacity: [1, 0.75, 1] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" as const }}
                 style={{
                   width: 10,
                   height: 10,
@@ -1541,7 +1541,7 @@ export default function ParentCalendarClient({
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.18, ease: "easeOut" }}
+                transition={{ duration: 0.18, ease: "easeOut" as const }}
                 className="flex flex-col flex-1"
               >
                 {view === "monthly" ? (

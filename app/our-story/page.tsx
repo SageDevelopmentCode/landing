@@ -36,7 +36,7 @@ export default function OurStoryPage() {
             className="flex justify-center mb-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
               Our Story
@@ -47,7 +47,7 @@ export default function OurStoryPage() {
             className="text-4xl md:text-5xl font-bold text-center mb-6 font-heading text-gray-800"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
             Why We Started Sage Field
           </motion.h1>
@@ -56,7 +56,7 @@ export default function OurStoryPage() {
             className="text-lg md:text-xl text-center text-gray-600 font-body"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
           >
             In Sabrina&apos;s own words — the story behind why Sage Field exists.
           </motion.p>
@@ -69,7 +69,7 @@ export default function OurStoryPage() {
           className="max-w-3xl mx-auto space-y-6 font-body text-gray-700 leading-relaxed text-base md:text-lg"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+          transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
         >
           <p>
             When I was growing up, people often told me I was immature. Too
@@ -90,7 +90,7 @@ export default function OurStoryPage() {
             initial={{ opacity: 0, x: -10 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
             className="my-10 p-6 bg-primary/10 rounded-xl border-l-4 border-primary"
           >
             <p className="text-lg md:text-xl font-semibold text-gray-800 italic leading-relaxed font-heading">
@@ -130,7 +130,7 @@ export default function OurStoryPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
             className="mb-12"
           >
             <div className="inline-block bg-badge-bg px-6 py-2 rounded-full mb-6">
@@ -150,7 +150,7 @@ export default function OurStoryPage() {
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.1 * i, ease: "easeOut" }}
+                transition={{ duration: 0.6, delay: 0.1 * i, ease: "easeOut" as const }}
                 className="bg-white rounded-2xl shadow-md overflow-hidden"
               >
                 <div className="relative w-full aspect-[4/5]">

@@ -341,7 +341,7 @@ export default function ApplyPage() {
             className="flex justify-center mb-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
               Enrollment
@@ -352,7 +352,7 @@ export default function ApplyPage() {
             className="text-4xl md:text-5xl font-bold text-center mb-6 font-heading text-gray-800"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
             Apply to Sage Field
           </motion.h1>
@@ -368,7 +368,7 @@ export default function ApplyPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
+              transition={{ duration: 0.3, ease: "easeOut" as const }}
               className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start"
             >
               {/* LEFT COLUMN — content */}
@@ -567,7 +567,7 @@ export default function ApplyPage() {
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.6, ease: "easeOut" }}
+                    transition={{ duration: 0.6, ease: "easeOut" as const }}
                   >
                     {/* Badge */}
                     <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6">
@@ -671,7 +671,7 @@ export default function ApplyPage() {
                           transition={{
                             duration: 0.5,
                             delay: 0.1 + index * 0.1,
-                            ease: "easeOut",
+                            ease: "easeOut" as const,
                           }}
                         >
                           <div className="relative w-full h-40 rounded-t-lg overflow-hidden">
@@ -698,7 +698,7 @@ export default function ApplyPage() {
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.6, ease: "easeOut" }}
+                    transition={{ duration: 0.6, ease: "easeOut" as const }}
                   >
                     {/* Badge */}
                     <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6">
@@ -822,7 +822,7 @@ export default function ApplyPage() {
                             transition={{
                               duration: 0.4,
                               delay: 0.05 * i,
-                              ease: "easeOut",
+                              ease: "easeOut" as const,
                             }}
                           >
                             <div className="flex items-center gap-2 mb-2">
@@ -875,7 +875,7 @@ export default function ApplyPage() {
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.6, ease: "easeOut" }}
+                    transition={{ duration: 0.6, ease: "easeOut" as const }}
                   >
                     {/* Flexible Scheduling */}
                     <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6">
@@ -898,7 +898,7 @@ export default function ApplyPage() {
                           transition={{
                             duration: 0.5,
                             delay: 0.1 + index * 0.1,
-                            ease: "easeOut",
+                            ease: "easeOut" as const,
                           }}
                         >
                           <div className="inline-block px-3 py-1 bg-primary/10 rounded-full mb-3">
@@ -975,7 +975,7 @@ export default function ApplyPage() {
                           transition={{
                             duration: 0.5,
                             delay: 0.1 + index * 0.1,
-                            ease: "easeOut",
+                            ease: "easeOut" as const,
                           }}
                         >
                           <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mb-3 group-hover:bg-primary/30 transition-colors duration-200">
@@ -1004,7 +1004,7 @@ export default function ApplyPage() {
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.6, ease: "easeOut" }}
+                  transition={{ duration: 0.6, ease: "easeOut" as const }}
                 >
                   <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4">
                     Questions?

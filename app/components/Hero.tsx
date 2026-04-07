@@ -157,7 +157,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
+            transition={{ duration: 0.5, ease: "easeOut" as const }}
             className="max-w-2xl"
           >
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold text-white drop-shadow-lg font-heading leading-tight mb-3">

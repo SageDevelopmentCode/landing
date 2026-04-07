@@ -106,7 +106,7 @@ const panelSpring = { type: "spring" as const, stiffness: 380, damping: 36, mass
 
 const fadeUpVariants = {
   hidden: { opacity: 0, y: 10 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" as const } },
   exit: { opacity: 0, y: -6, transition: { duration: 0.15 } },
 };
 
@@ -683,7 +683,7 @@ function AddEventPanel({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.22, ease: "easeInOut" }}
+              transition={{ duration: 0.22, ease: "easeInOut" as const }}
               style={{ overflow: "hidden" }}
               className="space-y-5"
             >
@@ -1698,7 +1698,7 @@ export default function CalendarClient({
 
             {/* Calendar body */}
             <AnimatePresence mode="wait">
-              <motion.div key={view + navLabel} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.18, ease: "easeOut" }} className="flex-1 overflow-hidden flex flex-col">
+              <motion.div key={view + navLabel} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.18, ease: "easeOut" as const }} className="flex-1 overflow-hidden flex flex-col">
                 {view === "monthly" ? (
                   <MonthlyGrid
                     days={monthDays}
@@ -2071,7 +2071,7 @@ function WeeklyGrid({
               style={{ top: `${currentTimeTop}px` }}>
               <motion.div
                 animate={{ scale: [1, 1.2, 1], opacity: [1, 0.75, 1] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" as const }}
                 style={{
                   width: 10, height: 10, borderRadius: "50%",
                   backgroundColor: "#f29a8f",

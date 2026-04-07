@@ -327,7 +327,7 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
       }`}
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
+      transition={{ duration: 0.6, ease: "easeOut" as const }}
       ref={navRef}
     >
       {/* Announcement Bar */}
@@ -344,7 +344,7 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
             initial="enter"
             animate="center"
             exit="exit"
-            transition={{ duration: 0.4, ease: "easeInOut" }}
+            transition={{ duration: 0.4, ease: "easeInOut" as const }}
             className="flex items-center justify-center gap-3"
           >
             <span className="sm:hidden">
@@ -370,7 +370,7 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
             className="flex-shrink-0"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
             <Link href="/">
               <img
@@ -386,7 +386,7 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
             className="hidden lg:flex items-center space-x-1 absolute left-1/2 -translate-x-1/2"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" as const }}
           >
             {NAV_TABS.map((tab) => {
               if (tab.kind === "single") {
@@ -451,7 +451,7 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
                         initial={{ opacity: 0, y: -6, scale: 0.97 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -6, scale: 0.97 }}
-                        transition={{ duration: 0.15, ease: "easeOut" }}
+                        transition={{ duration: 0.15, ease: "easeOut" as const }}
                         className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50"
                       >
                         <div className="px-2 py-1 flex flex-col gap-0.5">
@@ -470,7 +470,7 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
             className="hidden lg:flex items-center gap-3"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
           >
             <button
               onClick={() => setWaitlistDialogOpen(true)}
@@ -531,7 +531,7 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
+            transition={{ duration: 0.3, ease: "easeInOut" as const }}
           >
             <motion.div
               className="px-5 py-3"
@@ -614,7 +614,7 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: "auto", opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.25, ease: "easeInOut" }}
+                            transition={{ duration: 0.25, ease: "easeInOut" as const }}
                             className="overflow-hidden"
                           >
                             <div className="border-l-2 border-primary/30 pl-4 pb-2 flex flex-col gap-0.5">

@@ -165,7 +165,7 @@ export default function VisionPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
             >
               <span className="inline-block px-6 py-2 bg-white/20 backdrop-blur-sm text-white text-sm font-semibold rounded-full border border-white/30">
                 Our Vision
@@ -176,7 +176,7 @@ export default function VisionPage() {
               className="text-4xl md:text-6xl font-bold text-white drop-shadow-lg font-heading"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" as const }}
             >
               Building Something Beautiful
             </motion.h1>
@@ -185,7 +185,7 @@ export default function VisionPage() {
               className="text-lg md:text-xl text-white/80 font-body max-w-xl"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.7, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.7, ease: "easeOut" as const }}
             >
               We&apos;ve secured our LLC and our property at 2760 Gattis School
               Rd, Round Rock, TX. Here&apos;s a glimpse of what&apos;s coming.
@@ -202,7 +202,7 @@ export default function VisionPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
               Where We Are
@@ -214,7 +214,7 @@ export default function VisionPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
             Three milestones on our path to opening day.
           </motion.p>
@@ -264,7 +264,7 @@ export default function VisionPage() {
                     transition={{
                       duration: 0.6,
                       delay: index * 0.15,
-                      ease: "easeOut",
+                      ease: "easeOut" as const,
                     }}
                   >
                     {/* Mobile vertical rail */}
@@ -329,7 +329,7 @@ export default function VisionPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
               The Property
@@ -341,7 +341,7 @@ export default function VisionPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
             From Here to There
           </motion.h2>
@@ -351,7 +351,7 @@ export default function VisionPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
           >
             Take a look at the space we&apos;re transforming into Sage Field.
           </motion.p>
@@ -362,7 +362,7 @@ export default function VisionPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
           >
             {/* Before Column */}
             <div className="hidden md:flex flex-col gap-4">
@@ -421,7 +421,7 @@ export default function VisionPage() {
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+        transition={{ duration: 0.6, ease: "easeOut" as const }}
       >
         <img
           src="/assets/After3.png"
@@ -452,7 +452,7 @@ export default function VisionPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
               Join our Community
@@ -464,7 +464,7 @@ export default function VisionPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
             I&apos;m Committed to Sage Field
           </motion.h2>
@@ -474,7 +474,7 @@ export default function VisionPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
           >
             Whether you want to enroll your child, donate, volunteer, or help
             with the property — we&apos;d love to hear from you.
@@ -487,7 +487,7 @@ export default function VisionPage() {
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
+              transition={{ duration: 0.6, ease: "easeOut" as const }}
             >
               <img
                 src="/assets/Interior.png"
@@ -503,14 +503,14 @@ export default function VisionPage() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+                transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
               >
                 {submitted ? (
                   <motion.div
                     className="flex flex-col items-center gap-4 py-8 text-center"
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, ease: "easeOut" }}
+                    transition={{ duration: 0.4, ease: "easeOut" as const }}
                   >
                     <CheckCircle className="w-12 h-12 text-green-500" />
                     <p className="text-xl font-bold font-heading text-gray-800">
@@ -691,7 +691,7 @@ export default function VisionPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
               Stay Connected
@@ -703,7 +703,7 @@ export default function VisionPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
             Sage Field Private School is an outdoor-focused private microschool
             in Round Rock, Texas. We are a small-group, outdoor-centered
@@ -717,7 +717,7 @@ export default function VisionPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
           >
             <a
               href="https://www.instagram.com/sagefield.co"

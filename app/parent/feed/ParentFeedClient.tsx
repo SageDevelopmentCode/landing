@@ -287,7 +287,7 @@ function ReactionPills({
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.88 }}
           animate={justToggled === r.emoji ? { scale: [1, 1.3, 1] } : {}}
-          transition={{ duration: 0.25, ease: "easeOut" }}
+          transition={{ duration: 0.25, ease: "easeOut" as const }}
           onClick={(e) => {
             e.stopPropagation();
             handleToggle(r.emoji);
@@ -339,7 +339,7 @@ function PostCard({
   return (
     <motion.div
       whileHover={{ y: -2 }}
-      transition={{ duration: 0.18, ease: "easeOut" }}
+      transition={{ duration: 0.18, ease: "easeOut" as const }}
       onClick={onClick}
       className="bg-white rounded-2xl border border-gray-100 overflow-hidden cursor-pointer hover:border-gray-200 transition-colors duration-200 group"
     >
@@ -883,7 +883,7 @@ export default function ParentFeedClient({
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
+            transition={{ duration: 0.4, ease: "easeOut" as const }}
             className="mb-6"
           >
             <h1 className="text-2xl font-bold font-heading text-gray-800">Class Feed</h1>
@@ -923,7 +923,7 @@ export default function ParentFeedClient({
                       key={post.id}
                       variants={{
                         hidden: { opacity: 0, y: 18 },
-                        visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
+                        visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" as const } },
                       }}
                       exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.2 } }}
                       layout

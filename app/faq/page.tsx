@@ -121,7 +121,7 @@ export default function FAQPage() {
             className="flex justify-center mb-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
               FAQ
@@ -132,7 +132,7 @@ export default function FAQPage() {
             className="text-4xl md:text-5xl font-bold text-center mb-6 font-heading text-gray-800"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
             Frequently Asked Questions
           </motion.h1>
@@ -141,7 +141,7 @@ export default function FAQPage() {
             className="text-lg md:text-xl text-center text-gray-600 mb-12 font-body"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
           >
             Find answers to common questions about Sage Field
           </motion.p>
@@ -151,7 +151,7 @@ export default function FAQPage() {
             className="relative"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
           >
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <Search className="h-5 w-5 text-gray-400" />
@@ -175,7 +175,7 @@ export default function FAQPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <h2 className="text-2xl md:text-3xl font-bold mb-6 font-heading text-gray-800">
               About Sage Field & Our Approach
@@ -191,7 +191,7 @@ export default function FAQPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
             <h2 className="text-2xl md:text-3xl font-bold mb-6 font-heading text-gray-800">
               Program Details
@@ -207,7 +207,7 @@ export default function FAQPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
           >
             <h2 className="text-2xl md:text-3xl font-bold mb-6 font-heading text-gray-800">
               Supporting All Learners
@@ -223,7 +223,7 @@ export default function FAQPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
           >
             <h2 className="text-2xl md:text-3xl font-bold mb-6 font-heading text-gray-800">
               Enrollment & Parent Partnership
@@ -240,7 +240,7 @@ export default function FAQPage() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
+          transition={{ duration: 0.6, ease: "easeOut" as const }}
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-4 font-heading text-gray-800">
             Still have questions?

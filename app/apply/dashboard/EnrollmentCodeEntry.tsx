@@ -81,7 +81,7 @@ export default function EnrollmentCodeEntry({
               initial={{ opacity: 0, scale: 0.95, y: 8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 8 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
+              transition={{ duration: 0.2, ease: "easeOut" as const }}
               className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4"
               onClick={(e) => e.stopPropagation()}
             >

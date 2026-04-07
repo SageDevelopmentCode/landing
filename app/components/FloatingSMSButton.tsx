@@ -15,7 +15,7 @@ export default function FloatingSMSButton() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
-          transition={{ duration: 0.35, ease: "easeOut" }}
+          transition={{ duration: 0.35, ease: "easeOut" as const }}
         >
           {/* Header band */}
           <div className="relative bg-sage-600 px-5 py-2 text-center">

@@ -62,7 +62,7 @@ export default function StartPageClient() {
         className="relative lg:w-1/2 h-64 sm:h-80 lg:h-screen flex-shrink-0 overflow-hidden"
         initial={{ opacity: 0, x: -40 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.7, ease: "easeOut" }}
+        transition={{ duration: 0.7, ease: "easeOut" as const }}
       >
         {/* Background slideshow */}
         <AnimatePresence mode="sync">
@@ -176,7 +176,7 @@ export default function StartPageClient() {
         className="flex-1 flex flex-col items-center justify-center px-6 py-12 sm:px-12 bg-welcome-bg"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.35, duration: 0.6, ease: "easeOut" }}
+        transition={{ delay: 0.35, duration: 0.6, ease: "easeOut" as const }}
       >
         <div className="w-full max-w-md">
           <AnimatePresence mode="wait">

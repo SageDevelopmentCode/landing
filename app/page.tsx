@@ -177,7 +177,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
               FAQ
@@ -189,7 +189,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
             Frequently Asked Questions
           </motion.h2>
@@ -199,7 +199,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
           >
             Find answers to common questions about Sage Field
           </motion.p>
@@ -210,7 +210,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
           >
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <Search className="h-5 w-5 text-gray-400" />
@@ -231,7 +231,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
+              transition={{ duration: 0.6, ease: "easeOut" as const }}
             >
               <h3 className="text-2xl md:text-3xl font-bold mb-6 font-heading text-gray-800">
                 About Sage Field & Our Approach
@@ -247,7 +247,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
             >
               <h3 className="text-2xl md:text-3xl font-bold mb-6 font-heading text-gray-800">
                 Program Details
@@ -263,7 +263,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
             >
               <h3 className="text-2xl md:text-3xl font-bold mb-6 font-heading text-gray-800">
                 Supporting All Learners
@@ -279,7 +279,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
             >
               <h3 className="text-2xl md:text-3xl font-bold mb-6 font-heading text-gray-800">
                 Enrollment & Parent Partnership

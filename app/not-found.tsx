@@ -46,7 +46,7 @@ export default function NotFound() {
               className="text-7xl md:text-9xl font-bold text-primary/30 font-heading mb-4 select-none"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
             >
               404
             </motion.h1>
@@ -55,7 +55,7 @@ export default function NotFound() {
               className="text-3xl md:text-4xl font-bold text-gray-800 font-heading mb-4"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
             >
               Page Not Found
             </motion.h2>
@@ -64,7 +64,7 @@ export default function NotFound() {
               className="text-lg text-gray-500 font-body max-w-xl mx-auto mb-16"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
             >
               Looks like this page took a wrong turn. Let&apos;s get you back to
               somewhere familiar.
@@ -81,7 +81,7 @@ export default function NotFound() {
                   transition={{
                     duration: 0.6,
                     delay: 0.4 + i * 0.1,
-                    ease: "easeOut",
+                    ease: "easeOut" as const,
                   }}
                   className={`group flex flex-col items-start text-left p-6 rounded-2xl border transition-all duration-200 cursor-pointer ${
                     cta.primary

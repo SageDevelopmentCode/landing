@@ -731,7 +731,7 @@ export default function TourPage() {
                 initial="initial"
                 animate="animate"
                 exit="exit"
-                transition={{ duration: 0.28, ease: "easeInOut" }}
+                transition={{ duration: 0.28, ease: "easeInOut" as const }}
               >
                 {/* ── Step 1: Date & Time ── */}
                 {currentStep === 1 && (

@@ -373,7 +373,7 @@ export default function DonatePage() {
             className="flex justify-center mb-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
               SUPPORT US
@@ -384,7 +384,7 @@ export default function DonatePage() {
             className="text-4xl md:text-5xl font-bold text-black font-heading mb-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
             Help Us Build Our Dream Property
           </motion.h1>
@@ -393,7 +393,7 @@ export default function DonatePage() {
             className="text-base md:text-lg text-text-gray leading-relaxed font-body max-w-2xl mx-auto mb-10"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
           >
             Sage Field Private School is a community-built dream. We&apos;re
             raising funds to secure and transform our property in Central Texas
@@ -405,7 +405,7 @@ export default function DonatePage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
           >
             <button
               onClick={() => setShowModal(true)}
@@ -425,7 +425,7 @@ export default function DonatePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
               OUR PROPERTY
@@ -437,7 +437,7 @@ export default function DonatePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
             A Glimpse of What&apos;s Coming
           </motion.h2>
@@ -447,7 +447,7 @@ export default function DonatePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
           >
             We envision a property with outdoor classrooms, lush gardens, and
             warm interior spaces that inspire wonder and hands-on learning every
@@ -459,7 +459,7 @@ export default function DonatePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
           >
             <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-lg relative">
               <Image
@@ -537,7 +537,7 @@ export default function DonatePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
               OUR VISION
@@ -549,7 +549,7 @@ export default function DonatePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
             Developing Our Farm Property
           </motion.h2>
@@ -559,7 +559,7 @@ export default function DonatePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
           >
             At Sage Field, we believe that children learn best when they are
             connected to the living world. Our farm property will become an
@@ -573,7 +573,7 @@ export default function DonatePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
           >
             From raised garden beds to a chicken coop and an aquatic pond, every
             element of our farm is designed to spark curiosity, build
@@ -592,7 +592,7 @@ export default function DonatePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
               WHAT WE&apos;RE BUILDING
@@ -604,7 +604,7 @@ export default function DonatePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
             Six Areas of the Farm
           </motion.h2>
@@ -622,7 +622,7 @@ export default function DonatePage() {
                   transition={{
                     duration: 0.6,
                     delay: index * 0.1,
-                    ease: "easeOut",
+                    ease: "easeOut" as const,
                   }}
                 >
                   <div
@@ -655,7 +655,7 @@ export default function DonatePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
               FUNDRAISING GOAL
@@ -667,7 +667,7 @@ export default function DonatePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
             How Your Donations Are Used
           </motion.h2>
@@ -677,7 +677,7 @@ export default function DonatePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
           >
             {/* SVG Donut Chart */}
             <div className="flex-shrink-0">
@@ -710,7 +710,7 @@ export default function DonatePage() {
                     transition={{
                       duration: 0.6,
                       delay: i * 0.08,
-                      ease: "easeOut",
+                      ease: "easeOut" as const,
                     }}
                   />
                 ))}
@@ -790,7 +790,7 @@ export default function DonatePage() {
                     initial={{ width: "0%" }}
                     whileInView={{ width: `${(amountRaised / TOTAL) * 100}%` }}
                     viewport={{ once: true }}
-                    transition={{ duration: 1.2, ease: "easeOut", delay: 0.4 }}
+                    transition={{ duration: 1.2, ease: "easeOut" as const, delay: 0.4 }}
                   />
                 </div>
                 <p className="text-sm text-text-gray font-body mt-2">
@@ -810,7 +810,7 @@ export default function DonatePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
               OUR COMMUNITY
@@ -822,7 +822,7 @@ export default function DonatePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
             Families &amp; Friends Who Believe In Us
           </motion.h2>
@@ -832,7 +832,7 @@ export default function DonatePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
           >
             <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-5 shadow-sm">
               <Heart className="w-8 h-8 text-primary" />
@@ -863,7 +863,7 @@ export default function DonatePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
               YOUR IMPACT
@@ -875,7 +875,7 @@ export default function DonatePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
             Why Your Support Matters
           </motion.h2>
@@ -893,7 +893,7 @@ export default function DonatePage() {
                   transition={{
                     duration: 0.6,
                     delay: index * 0.15,
-                    ease: "easeOut",
+                    ease: "easeOut" as const,
                   }}
                 >
                   <div className="w-14 h-14 rounded-full bg-badge-bg flex items-center justify-center mb-5">
@@ -915,7 +915,7 @@ export default function DonatePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" as const }}
           >
             <button
               onClick={() => setShowModal(true)}

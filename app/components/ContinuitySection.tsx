@@ -78,7 +78,7 @@ export default function ContinuitySection() {
           initial={{ opacity: 0, y: -10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
+          transition={{ duration: 0.5, ease: "easeOut" as const }}
         >
           <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
             Community Continuity
@@ -96,7 +96,7 @@ export default function ContinuitySection() {
                 initial={{ opacity: 0, y: -20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+                transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
               >
                 {outcomes.map((outcome, index) => (
                   <motion.div
@@ -111,7 +111,7 @@ export default function ContinuitySection() {
                     initial={{ opacity: 0, scale: 0.8 }}
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: 0.2 + index * 0.1, ease: "easeOut" }}
+                    transition={{ duration: 0.4, delay: 0.2 + index * 0.1, ease: "easeOut" as const }}
                   >
                     {outcome.label}
                   </motion.div>
@@ -164,7 +164,7 @@ export default function ContinuitySection() {
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: 0.4 + index * 0.1, ease: "easeOut" }}
+                    transition={{ duration: 0.5, delay: 0.4 + index * 0.1, ease: "easeOut" as const }}
                   >
                     {/* Image Header */}
                     <div className="relative w-full h-40 overflow-hidden">
@@ -197,7 +197,7 @@ export default function ContinuitySection() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
             >
               Keeping Our Community Together
             </motion.h2>
@@ -208,7 +208,7 @@ export default function ContinuitySection() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
             >
               Maintaining Continuity and Stability
             </motion.p>
@@ -219,7 +219,7 @@ export default function ContinuitySection() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
             >
               Sage Field was created to maintain the{" "}
               <span className="text-primary font-semibold">friendships</span>,{" "}
@@ -237,7 +237,7 @@ export default function ContinuitySection() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" as const }}
             >
               <h3 className="text-lg font-semibold text-black mb-3 font-heading">
                 Why It Matters

@@ -118,7 +118,7 @@ export default function HomeschoolDropInPage() {
             className="flex justify-center mb-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
               Homeschool Drop-In
@@ -129,7 +129,7 @@ export default function HomeschoolDropInPage() {
             className="text-4xl md:text-5xl font-bold text-gray-800 font-heading mb-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
             Homeschool Drop-In Program
           </motion.h1>
@@ -138,7 +138,7 @@ export default function HomeschoolDropInPage() {
             className="text-lg text-gray-500 font-body"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
           >
             1–5 Days/Week · Ages 4–11 · Fridays Are Field Days
           </motion.p>
@@ -151,7 +151,7 @@ export default function HomeschoolDropInPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
             className="space-y-4 mb-10"
           >
             <p className="text-lg text-gray-600 font-body leading-relaxed">
@@ -167,7 +167,7 @@ export default function HomeschoolDropInPage() {
             className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-14"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" as const }}
           >
             {details.map((detail) => (
               <div
@@ -192,7 +192,7 @@ export default function HomeschoolDropInPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
             className="bg-white rounded-2xl p-8 shadow-sm space-y-4"
           >
             <p className="text-lg text-gray-600 font-body leading-relaxed">
@@ -270,7 +270,7 @@ export default function HomeschoolDropInPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
           >
             <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6">
               Flexible Scheduling
@@ -293,7 +293,7 @@ export default function HomeschoolDropInPage() {
                 transition={{
                   duration: 0.5,
                   delay: 0.1 + index * 0.1,
-                  ease: "easeOut",
+                  ease: "easeOut" as const,
                 }}
               >
                 <div className="inline-block px-3 py-1 bg-primary/10 rounded-full mb-3">
@@ -319,7 +319,7 @@ export default function HomeschoolDropInPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4">
               Every Friday
@@ -337,7 +337,7 @@ export default function HomeschoolDropInPage() {
             className="flex flex-wrap justify-center gap-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" as const }}
           >
             <div className="flex items-center gap-2 px-5 py-3 bg-primary/10 rounded-full">
               <span>🌿</span>
@@ -373,7 +373,7 @@ export default function HomeschoolDropInPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
           >
             <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6">
               Why Sage Field?
@@ -403,7 +403,7 @@ export default function HomeschoolDropInPage() {
                 transition={{
                   duration: 0.5,
                   delay: 0.1 + index * 0.1,
-                  ease: "easeOut",
+                  ease: "easeOut" as const,
                 }}
               >
                 <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mb-3 group-hover:bg-primary/30 transition-colors duration-200">
@@ -427,7 +427,7 @@ export default function HomeschoolDropInPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
           >
             <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6">
               Our Programs
@@ -446,7 +446,7 @@ export default function HomeschoolDropInPage() {
                 key={program.href}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 + index * 0.15, ease: "easeOut" }}
+                transition={{ duration: 0.6, delay: 0.1 + index * 0.15, ease: "easeOut" as const }}
               >
                 <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 h-full flex flex-col">
                   <div className="relative h-48 w-full">
@@ -498,7 +498,7 @@ export default function HomeschoolDropInPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
           >
             <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6">
               Pricing
@@ -540,7 +540,7 @@ export default function HomeschoolDropInPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
+              transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" as const }}
               className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col"
             >
               <h3 className="text-base font-bold text-black font-heading mb-1">Explorer Day Pass</h3>
@@ -579,7 +579,7 @@ export default function HomeschoolDropInPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
+              transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" as const }}
               className="bg-white rounded-xl p-6 shadow-sm border border-primary/30 flex flex-col relative"
             >
               <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary text-white text-xs font-semibold rounded-full">
@@ -644,7 +644,7 @@ export default function HomeschoolDropInPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
+              transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" as const }}
               className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col relative"
             >
               <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-full">
@@ -687,7 +687,7 @@ export default function HomeschoolDropInPage() {
             className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
           >
             <h2 className="text-2xl font-bold text-gray-800 font-heading mb-2">
               Ready to drop in?

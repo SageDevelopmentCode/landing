@@ -438,7 +438,7 @@ function EmptyState() {
       className="bg-white border border-gray-100 rounded-2xl px-8 py-14 shadow-sm text-center mb-6"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
+      transition={{ duration: 0.5, ease: "easeOut" as const }}
     >
       {/* Icon */}
       <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#E0EDE2] mb-6">
@@ -481,7 +481,7 @@ function EmptyState() {
         className="font-heading text-2xl font-bold text-gray-800 mb-2"
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: "easeOut", delay: 0.1 }}
+        transition={{ duration: 0.45, ease: "easeOut" as const, delay: 0.1 }}
       >
         Let&apos;s find the right fit for your child.
       </motion.h2>
@@ -489,7 +489,7 @@ function EmptyState() {
         className="font-body text-sm text-gray-500 mb-10"
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: "easeOut", delay: 0.18 }}
+        transition={{ duration: 0.45, ease: "easeOut" as const, delay: 0.18 }}
       >
         The application takes about 10 minutes and is saved automatically as you go.
       </motion.p>
@@ -499,7 +499,7 @@ function EmptyState() {
         className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-2 mb-10"
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: "easeOut", delay: 0.26 }}
+        transition={{ duration: 0.45, ease: "easeOut" as const, delay: 0.26 }}
       >
         {STEPS.map((step, i) => (
           <div key={step.num} className="flex items-center gap-2 md:gap-2">
@@ -520,7 +520,7 @@ function EmptyState() {
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: "easeOut", delay: 0.34 }}
+        transition={{ duration: 0.45, ease: "easeOut" as const, delay: 0.34 }}
       >
         <Link
           href="/apply/step/1?new=1"
@@ -535,7 +535,7 @@ function EmptyState() {
         className="font-body text-xs text-gray-400 mt-4 flex items-center justify-center gap-1.5"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, ease: "easeOut", delay: 0.44 }}
+        transition={{ duration: 0.4, ease: "easeOut" as const, delay: 0.44 }}
       >
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
           <path

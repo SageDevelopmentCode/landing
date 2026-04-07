@@ -242,7 +242,7 @@ function DayView({
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -8 }}
-        transition={{ duration: 0.2, ease: "easeOut" }}
+        transition={{ duration: 0.2, ease: "easeOut" as const }}
         className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 flex flex-col gap-6"
       >
         {/* Day header */}
@@ -694,7 +694,7 @@ function SummaryPanel({
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${weekPct * 100}%` }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+            transition={{ duration: 0.8, ease: "easeOut" as const, delay: 0.2 }}
             className="h-full bg-[#4a7c59] rounded-full"
           />
         </div>

@@ -16,7 +16,7 @@ export default function ContactUsSection() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+          transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           className="inline-block mb-8"
         >
           <div className="bg-badge-bg px-6 py-2 rounded-full">
@@ -31,7 +31,7 @@ export default function ContactUsSection() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+          transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
           className="text-4xl md:text-5xl font-bold mb-16 text-text-gray font-heading"
         >
           Get in Touch
@@ -44,7 +44,7 @@ export default function ContactUsSection() {
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
             className="w-full lg:w-1/2"
           >
             <p className="text-lg md:text-xl text-text-gray leading-relaxed font-body mb-8">
@@ -68,7 +68,7 @@ export default function ContactUsSection() {
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" as const }}
             className="w-full lg:w-1/2"
           >
             <div className="bg-white rounded-2xl p-8 shadow-lg space-y-6">

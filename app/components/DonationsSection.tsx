@@ -34,7 +34,7 @@ const DonationsSection = () => {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
               className="text-4xl md:text-5xl font-bold text-black mb-4 font-heading text-center"
             >
               Tuition & Enrollment
@@ -44,7 +44,7 @@ const DonationsSection = () => {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
               className="text-base md:text-lg text-text-gray leading-relaxed mb-12 font-body text-center max-w-3xl mx-auto"
             >
               We offer flexible enrollment options designed to support your
@@ -56,7 +56,7 @@ const DonationsSection = () => {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
               className="mb-12 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl border-2 border-primary shadow-lg overflow-hidden"
             >
               {/* Image */}
@@ -192,7 +192,7 @@ const DonationsSection = () => {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
               className="mb-12 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl border-2 border-primary shadow-lg overflow-hidden"
             >
               {/* Image */}
@@ -300,7 +300,7 @@ const DonationsSection = () => {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+                transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" as const }}
                 whileHover={{ scale: 1.02 }}
                 className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-200 overflow-hidden"
               >
@@ -385,7 +385,7 @@ const DonationsSection = () => {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
+                transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" as const }}
                 whileHover={{ scale: 1.02 }}
                 className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-200 overflow-hidden"
               >

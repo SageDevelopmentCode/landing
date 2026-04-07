@@ -202,7 +202,7 @@ export default function LoginForm() {
         className="flex-1 flex flex-col items-center justify-center px-6 py-12 sm:px-12 bg-welcome-bg order-2 lg:order-1"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.35, duration: 0.6, ease: "easeOut" }}
+        transition={{ delay: 0.35, duration: 0.6, ease: "easeOut" as const }}
       >
         <div className="w-full max-w-md">
           {/* Logo */}
@@ -558,7 +558,7 @@ export default function LoginForm() {
         className="relative lg:w-1/2 h-64 sm:h-80 lg:h-screen flex-shrink-0 overflow-hidden order-1 lg:order-2"
         initial={{ opacity: 0, x: 40 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.7, ease: "easeOut" }}
+        transition={{ duration: 0.7, ease: "easeOut" as const }}
       >
         {/* Background slideshow */}
         <AnimatePresence mode="sync">

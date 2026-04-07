@@ -16,7 +16,7 @@ export default function SummerProgramCard({ onQuestionsClick }: SummerProgramCar
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+      transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
       className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl border-2 border-primary shadow-lg overflow-hidden"
     >
       <div className="relative h-[40vh] md:h-[50vh]">

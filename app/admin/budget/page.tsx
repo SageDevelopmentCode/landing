@@ -326,7 +326,7 @@ function CategoryBudgetRings({
                     transition={{
                       duration: 0.6,
                       delay: i * 0.04,
-                      ease: "easeOut",
+                      ease: "easeOut" as const,
                     }}
                   />
                 </svg>
@@ -498,7 +498,7 @@ function RevenueTrend({
               key={d.month}
               initial={{ height: 0 }}
               animate={{ height: barH }}
-              transition={{ duration: 0.5, delay: i * 0.07, ease: "easeOut" }}
+              transition={{ duration: 0.5, delay: i * 0.07, ease: "easeOut" as const }}
               style={{
                 flex: 1,
                 borderRadius: "4px 4px 0 0",
@@ -834,7 +834,7 @@ function BudgetPieChart({
                 strokeDashoffset={slice.offset}
                 initial={{ strokeDasharray: `0 ${CIRC}` }}
                 animate={{ strokeDasharray: `${slice.dashLen} ${CIRC}` }}
-                transition={{ duration: 0.6, delay: i * 0.08, ease: "easeOut" }}
+                transition={{ duration: 0.6, delay: i * 0.08, ease: "easeOut" as const }}
               />
             ))}
             <circle cx={cx} cy={cy} r={50} fill="white" />
@@ -909,7 +909,7 @@ function BudgetPieChart({
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${slice.pct * 100}%` }}
-                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  transition={{ duration: 0.5, ease: "easeOut" as const }}
                   style={{
                     height: "100%",
                     borderRadius: 99,
@@ -2807,7 +2807,7 @@ function ExpensesTab({
                                       transition={{
                                         duration: 0.6,
                                         delay: i * 0.08,
-                                        ease: "easeOut",
+                                        ease: "easeOut" as const,
                                       }}
                                     />
                                   ))}
@@ -2898,7 +2898,7 @@ function ExpensesTab({
                                       animate={{ width: `${pct * 100}%` }}
                                       transition={{
                                         duration: 0.5,
-                                        ease: "easeOut",
+                                        ease: "easeOut" as const,
                                       }}
                                       style={{
                                         height: "100%",
@@ -3223,7 +3223,7 @@ function ExpensesTab({
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${pct * 100}%` }}
-                        transition={{ duration: 0.5, ease: "easeOut" }}
+                        transition={{ duration: 0.5, ease: "easeOut" as const }}
                         style={{
                           height: "100%",
                           backgroundColor: colors.mistyForest,
@@ -3890,7 +3890,7 @@ function RevenueTab({
                             strokeDashoffset={slice.offset}
                             initial={{ strokeDasharray: `0 ${CIRC}` }}
                             animate={{ strokeDasharray: `${slice.dashLen} ${CIRC}` }}
-                            transition={{ duration: 0.6, delay: i * 0.08, ease: "easeOut" }}
+                            transition={{ duration: 0.6, delay: i * 0.08, ease: "easeOut" as const }}
                           />
                         ))}
                         <circle cx={cx} cy={cy} r={50} fill="white" />
@@ -3950,7 +3950,7 @@ function RevenueTab({
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${pct * 100}%` }}
-                            transition={{ duration: 0.5, ease: "easeOut" }}
+                            transition={{ duration: 0.5, ease: "easeOut" as const }}
                             style={{ height: "100%", borderRadius: 99, backgroundColor: color }}
                           />
                         </div>
@@ -4393,7 +4393,7 @@ function MixSummary({
       >
         <motion.div
           animate={{ width: `${barPct * 100}%` }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
+          transition={{ duration: 0.3, ease: "easeOut" as const }}
           style={{
             height: "100%",
             borderRadius: 99,
@@ -4475,7 +4475,7 @@ function RevenueGoalHeader({
       >
         <motion.div
           animate={{ width: `${barPct * 100}%` }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
+          transition={{ duration: 0.3, ease: "easeOut" as const }}
           style={{
             height: "100%",
             borderRadius: 99,
@@ -4672,7 +4672,7 @@ function CoreSliderRow({
       >
         <motion.div
           animate={{ width: `${barPct * 100}%` }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
+          transition={{ duration: 0.3, ease: "easeOut" as const }}
           style={{
             height: "100%",
             borderRadius: 99,

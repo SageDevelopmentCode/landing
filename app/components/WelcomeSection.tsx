@@ -44,7 +44,7 @@ export default function WelcomeSection() {
           initial={{ opacity: 0, y: -10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
+          transition={{ duration: 0.5, ease: "easeOut" as const }}
         >
           <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
             Welcome
@@ -59,7 +59,7 @@ export default function WelcomeSection() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
             What is Sage Field?
           </motion.h2>
@@ -70,7 +70,7 @@ export default function WelcomeSection() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
           >
             Sage Field Private School is an outdoor-focused private
             microschool in Round Rock, Texas. for children ages 4-11. We offer
@@ -86,7 +86,7 @@ export default function WelcomeSection() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+          transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" as const }}
         >
           {cards.map((card, index) => (
             <div

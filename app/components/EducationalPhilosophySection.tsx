@@ -40,7 +40,7 @@ export default function EducationalPhilosophySection() {
           initial={{ opacity: 0, y: -10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
+          transition={{ duration: 0.5, ease: "easeOut" as const }}
         >
           <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
             How We Learn
@@ -57,7 +57,7 @@ export default function EducationalPhilosophySection() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
             >
               How We Learn
             </motion.h2>
@@ -68,7 +68,7 @@ export default function EducationalPhilosophySection() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
             >
               Educational Philosophy
             </motion.p>
@@ -79,7 +79,7 @@ export default function EducationalPhilosophySection() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
             >
               Our approach integrates elements of{" "}
               <span className="text-primary font-semibold">Montessori</span>,{" "}
@@ -100,7 +100,7 @@ export default function EducationalPhilosophySection() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" as const }}
             >
               We value{" "}
               <span className="text-primary font-semibold">
@@ -117,7 +117,7 @@ export default function EducationalPhilosophySection() {
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
           >
             <div className="overflow-x-auto flex snap-x snap-mandatory gap-4 pb-4 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] lg:overflow-visible lg:grid lg:grid-cols-2">
               {pillars.map((pillar, index) => (
@@ -127,7 +127,7 @@ export default function EducationalPhilosophySection() {
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: 0.3 + index * 0.1, ease: "easeOut" }}
+                  transition={{ duration: 0.5, delay: 0.3 + index * 0.1, ease: "easeOut" as const }}
                 >
                   {/* Image */}
                   <div className="relative w-full h-40 rounded-t-lg overflow-hidden">

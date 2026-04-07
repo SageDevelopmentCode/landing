@@ -71,7 +71,7 @@ export default function FAQAccordion({ items, searchQuery = "" }: FAQAccordionPr
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
+                transition={{ duration: 0.3, ease: "easeInOut" as const }}
                 className="overflow-hidden"
               >
                 <div className="px-6 pb-6 text-gray-600 text-base md:text-lg leading-relaxed font-body">

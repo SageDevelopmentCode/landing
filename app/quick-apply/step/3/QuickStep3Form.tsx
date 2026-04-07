@@ -95,7 +95,7 @@ export default function QuickStep3Form({
         className="relative lg:w-1/2 h-64 sm:h-80 lg:h-screen lg:sticky lg:top-0 flex-shrink-0 overflow-hidden"
         initial={{ opacity: 0, x: -40 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.7, ease: "easeOut" }}
+        transition={{ duration: 0.7, ease: "easeOut" as const }}
       >
         <img
           src="/assets/Hero.jpg"
@@ -167,7 +167,7 @@ export default function QuickStep3Form({
         className="flex-1 flex flex-col items-center px-6 py-12 sm:px-12 bg-welcome-bg lg:h-screen lg:overflow-y-auto"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.35, duration: 0.6, ease: "easeOut" }}
+        transition={{ delay: 0.35, duration: 0.6, ease: "easeOut" as const }}
       >
         <div className="w-full max-w-md">
           <span className="inline-block px-4 py-1.5 bg-badge-bg text-black text-xs font-semibold rounded-full mb-4 font-body">

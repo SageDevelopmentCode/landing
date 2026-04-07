@@ -88,7 +88,7 @@ export default function AcademicCalendarPage() {
             className="flex justify-center mb-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
               Academic Calendar
@@ -99,7 +99,7 @@ export default function AcademicCalendarPage() {
             className="text-4xl md:text-5xl font-bold text-gray-800 mb-4 font-heading"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
             2026–2027 Student Calendar
           </motion.h1>
@@ -108,7 +108,7 @@ export default function AcademicCalendarPage() {
             className="text-lg md:text-xl text-gray-600 font-body"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
           >
             Sage Field Private School · Round Rock, Texas
           </motion.p>
@@ -123,7 +123,7 @@ export default function AcademicCalendarPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             Key School Year Dates
           </motion.h2>
@@ -135,7 +135,7 @@ export default function AcademicCalendarPage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
+              transition={{ duration: 0.5, ease: "easeOut" as const }}
             >
               <p className="text-sm font-semibold uppercase tracking-widest text-gray-400 font-body mt-1">
                 First Day of School
@@ -153,7 +153,7 @@ export default function AcademicCalendarPage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
+              transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" as const }}
             >
               <p className="text-sm font-semibold uppercase tracking-widest text-gray-400 font-body mt-1">
                 Last Day of School
@@ -176,7 +176,7 @@ export default function AcademicCalendarPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             Summer Program 2026
           </motion.h2>
@@ -186,7 +186,7 @@ export default function AcademicCalendarPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
+            transition={{ duration: 0.5, ease: "easeOut" as const }}
           >
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-3">
@@ -224,7 +224,7 @@ export default function AcademicCalendarPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             Holiday & Break Schedule
           </motion.h2>
@@ -233,7 +233,7 @@ export default function AcademicCalendarPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.05, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.05, ease: "easeOut" as const }}
           >
             School is closed on the following dates.
           </motion.p>
@@ -246,7 +246,7 @@ export default function AcademicCalendarPage() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.06, ease: "easeOut" }}
+                transition={{ duration: 0.5, delay: i * 0.06, ease: "easeOut" as const }}
               >
                 <SeasonBadge season={h.season} />
                 <div>
@@ -271,7 +271,7 @@ export default function AcademicCalendarPage() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
+          transition={{ duration: 0.6, ease: "easeOut" as const }}
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-4 font-heading text-gray-800">
             Ready to join us?

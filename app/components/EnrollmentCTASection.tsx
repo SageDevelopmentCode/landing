@@ -91,7 +91,7 @@ export default function EnrollmentCTASection() {
           initial={{ opacity: 0, y: -10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
+          transition={{ duration: 0.5, ease: "easeOut" as const }}
         >
           <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
             Enrollment Open
@@ -104,7 +104,7 @@ export default function EnrollmentCTASection() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+          transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
         >
           Enrollment is Now Open!
         </motion.h2>
@@ -115,7 +115,7 @@ export default function EnrollmentCTASection() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+          transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
         >
           Join our community and give your child the gift of hands-on,
           wisdom-focused learning in a nurturing environment. We&apos;re excited
@@ -128,7 +128,7 @@ export default function EnrollmentCTASection() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+          transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
         >
           <form className="space-y-5" onSubmit={handleSubmit}>
             {/* Status Messages */}

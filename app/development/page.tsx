@@ -87,7 +87,7 @@ export default function DevelopmentPage() {
             className="flex justify-center mb-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
               Our Campus
@@ -98,7 +98,7 @@ export default function DevelopmentPage() {
             className="text-4xl md:text-5xl font-bold text-center mb-6 font-heading text-gray-800"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
             School Development
           </motion.h1>
@@ -107,7 +107,7 @@ export default function DevelopmentPage() {
             className="text-lg md:text-xl text-center text-gray-600 font-body"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
           >
             Follow along as we build out our outdoor campus. Here&apos;s everything
             we&apos;re working on.
@@ -120,7 +120,7 @@ export default function DevelopmentPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+          transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
           className="overflow-x-auto pb-4"
         >
           {error && (
@@ -158,7 +158,7 @@ export default function DevelopmentPage() {
                     transition={{
                       duration: 0.5,
                       delay: 0.1 * colIdx,
-                      ease: "easeOut",
+                      ease: "easeOut" as const,
                     }}
                     className="w-80 flex-shrink-0 flex flex-col gap-3 bg-gray-50 rounded-2xl p-3 border border-gray-200"
                   >
@@ -199,7 +199,7 @@ export default function DevelopmentPage() {
                             transition={{
                               duration: 0.3,
                               delay: 0.05 * i,
-                              ease: "easeOut",
+                              ease: "easeOut" as const,
                             }}
                             className="bg-white rounded-xl border border-gray-200 p-3 shadow-sm hover:shadow-md transition-shadow"
                           >

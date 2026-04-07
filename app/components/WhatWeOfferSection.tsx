@@ -83,7 +83,7 @@ export default function WhatWeOfferSection() {
           initial={{ opacity: 0, y: -10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
+          transition={{ duration: 0.5, ease: "easeOut" as const }}
         >
           <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
             What We Offer
@@ -98,7 +98,7 @@ export default function WhatWeOfferSection() {
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
           >
             <WeeklySchedule />
           </motion.div>
@@ -111,7 +111,7 @@ export default function WhatWeOfferSection() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
             >
               What We Offer
             </motion.h2>
@@ -122,7 +122,7 @@ export default function WhatWeOfferSection() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
             >
               Enrichment Through Connection and Exploration
             </motion.p>
@@ -133,7 +133,7 @@ export default function WhatWeOfferSection() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
             >
               Sage Field operates as a private microschool using intentional
               enrichment. We focus on{" "}
@@ -160,7 +160,7 @@ export default function WhatWeOfferSection() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" as const }}
             >
               Our days are designed around{" "}
               <span className="text-primary font-semibold">movement</span>,{" "}
@@ -186,7 +186,7 @@ export default function WhatWeOfferSection() {
             initial={{ opacity: 0, y: -10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
+            transition={{ duration: 0.5, ease: "easeOut" as const }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
               Our Programs
@@ -199,7 +199,7 @@ export default function WhatWeOfferSection() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
             Explore Our Programs
           </motion.h2>
@@ -215,7 +215,7 @@ export default function WhatWeOfferSection() {
                 transition={{
                   duration: 0.6,
                   delay: 0.1 + index * 0.15,
-                  ease: "easeOut",
+                  ease: "easeOut" as const,
                 }}
               >
                 <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 h-full flex flex-col">

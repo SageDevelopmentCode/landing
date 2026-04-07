@@ -19,7 +19,7 @@ export default function TeamPage() {
             className="flex justify-center mb-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
               Our Team
@@ -30,7 +30,7 @@ export default function TeamPage() {
             className="text-4xl md:text-5xl font-bold text-center mb-6 font-heading text-gray-800"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
             Meet the Team
           </motion.h1>
@@ -39,7 +39,7 @@ export default function TeamPage() {
             className="text-lg md:text-xl text-center text-gray-600 mb-8 font-body"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
           >
             The passionate educators and staff dedicated to nurturing every
             child at Sage Field Private School

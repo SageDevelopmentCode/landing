@@ -119,7 +119,7 @@ export default function ProfileDropdown({
             initial={{ opacity: 0, y: -6, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.97 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
+            transition={{ duration: 0.15, ease: "easeOut" as const }}
             className="absolute right-0 mt-2 w-56 bg-white border border-gray-100 rounded-xl shadow-sm z-50"
           >
             {/* Avatar edit area — only shown when upload is enabled */}

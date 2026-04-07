@@ -63,7 +63,7 @@ export default function ResetPasswordPage() {
         className="w-full max-w-md"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
+        transition={{ duration: 0.5, ease: "easeOut" as const }}
       >
         <div className="flex justify-center mb-8">
           <Image

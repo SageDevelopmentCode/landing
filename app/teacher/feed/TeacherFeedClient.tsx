@@ -295,7 +295,7 @@ function ReactionPills({
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.88 }}
           animate={justToggled === r.emoji ? { scale: [1, 1.3, 1] } : {}}
-          transition={{ duration: 0.25, ease: "easeOut" }}
+          transition={{ duration: 0.25, ease: "easeOut" as const }}
           onClick={(e) => {
             e.stopPropagation();
             handleToggle(r.emoji);
@@ -347,7 +347,7 @@ function PostCard({
   return (
     <motion.div
       whileHover={{ y: -2 }}
-      transition={{ duration: 0.18, ease: "easeOut" }}
+      transition={{ duration: 0.18, ease: "easeOut" as const }}
       onClick={onClick}
       className="bg-white rounded-2xl border border-gray-100 overflow-hidden cursor-pointer hover:border-gray-200 transition-colors duration-200 group"
     >
@@ -906,7 +906,7 @@ function ComposeBar({
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
+      transition={{ duration: 0.4, ease: "easeOut" as const }}
       className="bg-white rounded-2xl border border-gray-100 p-4 mb-4"
     >
       <div className="flex items-start gap-3">
@@ -933,7 +933,7 @@ function ComposeBar({
                 initial={{ opacity: 0, scaleY: 0.8, originY: 0 }}
                 animate={{ opacity: 1, scaleY: 1 }}
                 exit={{ opacity: 0, scaleY: 0.8 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
+                transition={{ duration: 0.2, ease: "easeOut" as const }}
                 autoFocus
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
@@ -953,7 +953,7 @@ function ComposeBar({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
+            transition={{ duration: 0.25, ease: "easeOut" as const }}
             style={{ overflow: "hidden" }}
           >
             {/* Media queue preview */}
@@ -973,7 +973,7 @@ function ComposeBar({
                         initial={{ opacity: 0, scale: 0.85 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.75 }}
-                        transition={{ duration: 0.18, ease: "easeOut" }}
+                        transition={{ duration: 0.18, ease: "easeOut" as const }}
                         className="relative w-20 h-20 rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0"
                       >
                         {m.previewUrl ? (
@@ -1291,7 +1291,7 @@ export default function TeacherFeedClient({
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
+            transition={{ duration: 0.4, ease: "easeOut" as const }}
             className="mb-6"
           >
             <h1 className="text-2xl font-bold font-heading text-gray-800">Class Feed</h1>
@@ -1341,7 +1341,7 @@ export default function TeacherFeedClient({
                       key={post.id}
                       variants={{
                         hidden: { opacity: 0, y: 18 },
-                        visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
+                        visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" as const } },
                       }}
                       exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.2 } }}
                       layout

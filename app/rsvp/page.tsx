@@ -230,7 +230,7 @@ export default function OpenHousePage() {
               className="inline-block px-5 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
+              transition={{ duration: 0.6, ease: "easeOut" as const }}
             >
               Open House · April 25
             </motion.span>
@@ -239,7 +239,7 @@ export default function OpenHousePage() {
               className="text-4xl md:text-5xl font-bold font-heading text-gray-800 leading-tight mb-5"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
             >
               Come See Sage Field in Person
             </motion.h1>
@@ -248,7 +248,7 @@ export default function OpenHousePage() {
               className="text-lg text-gray-500 font-body leading-relaxed mb-8"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
             >
               Tour our outdoor space, meet our educators, and discover what
               makes Sage Field different. Bring the whole family — we&apos;d
@@ -261,7 +261,7 @@ export default function OpenHousePage() {
               className="inline-block px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 font-body"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
             >
               Reserve My Spot
             </motion.a>
@@ -272,7 +272,7 @@ export default function OpenHousePage() {
             className="grid grid-cols-2 gap-3"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
           >
             <div className="col-span-2 relative h-56 rounded-2xl overflow-hidden shadow-md">
               <Image
@@ -313,7 +313,7 @@ export default function OpenHousePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <div className="flex items-center gap-3">
               <Calendar className="w-5 h-5 text-primary flex-shrink-0" />
@@ -365,7 +365,7 @@ export default function OpenHousePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <h2 className="text-3xl md:text-4xl font-bold font-heading text-gray-800">
               Who Should Come?
@@ -380,7 +380,7 @@ export default function OpenHousePage() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.1, ease: "easeOut" }}
+                transition={{ duration: 0.4, delay: i * 0.1, ease: "easeOut" as const }}
               >
                 <h3 className="text-base font-bold text-gray-800 font-heading mb-1">
                   {card.title}
@@ -402,7 +402,7 @@ export default function OpenHousePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <h2 className="text-3xl md:text-4xl font-bold font-heading text-gray-800">
               Our Approach
@@ -442,7 +442,7 @@ export default function OpenHousePage() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.1, ease: "easeOut" }}
+                transition={{ duration: 0.4, delay: i * 0.1, ease: "easeOut" as const }}
               >
                 <div className="relative h-40 w-full">
                   <Image
@@ -475,7 +475,7 @@ export default function OpenHousePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <h2 className="text-3xl md:text-4xl font-bold font-heading text-gray-800 mb-3">
               What to Expect on April 25th
@@ -493,7 +493,7 @@ export default function OpenHousePage() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.1, ease: "easeOut" }}
+                transition={{ duration: 0.4, delay: i * 0.1, ease: "easeOut" as const }}
               >
                 <span className="text-2xl shrink-0">{item.emoji}</span>
                 <p className="text-base text-gray-700 font-body leading-relaxed pt-0.5">
@@ -515,7 +515,7 @@ export default function OpenHousePage() {
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: i * 0.1, ease: "easeOut" }}
+                  transition={{ duration: 0.4, delay: i * 0.1, ease: "easeOut" as const }}
                 >
                   <div className="text-3xl mb-3">{station.emoji}</div>
                   <h3 className="text-base font-bold text-gray-800 font-heading mb-3">
@@ -542,7 +542,7 @@ export default function OpenHousePage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: 0.3, ease: "easeOut" }}
+              transition={{ duration: 0.4, delay: 0.3, ease: "easeOut" as const }}
             >
               <h3 className="text-base font-bold text-gray-800 font-heading mb-2">
                 ☕ Parent Lounge
@@ -571,7 +571,7 @@ export default function OpenHousePage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: 0.4, ease: "easeOut" }}
+              transition={{ duration: 0.4, delay: 0.4, ease: "easeOut" as const }}
             >
               <h3 className="text-base font-bold text-gray-800 font-heading mb-4">
                 🍋 Food &amp; Drinks
@@ -633,7 +633,7 @@ export default function OpenHousePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <h2 className="text-3xl md:text-4xl font-bold font-heading text-gray-800">
               Our Space
@@ -657,7 +657,7 @@ export default function OpenHousePage() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.1, ease: "easeOut" }}
+                transition={{ duration: 0.4, delay: i * 0.1, ease: "easeOut" as const }}
                 whileHover={{ scale: 1.02 }}
               >
                 <Image
@@ -681,7 +681,7 @@ export default function OpenHousePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <h2 className="text-3xl md:text-4xl font-bold font-heading text-gray-800 mb-3">
               Reserve Your Spot
@@ -697,7 +697,7 @@ export default function OpenHousePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
             {/* Success state */}
             {submitStatus.type === "success" ? (
@@ -864,7 +864,7 @@ export default function OpenHousePage() {
             initial={{ opacity: 0, y: -10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
+            transition={{ duration: 0.5, ease: "easeOut" as const }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
               Our Programs
@@ -877,7 +877,7 @@ export default function OpenHousePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
             Explore Our Programs
           </motion.h2>
@@ -893,7 +893,7 @@ export default function OpenHousePage() {
                 transition={{
                   duration: 0.6,
                   delay: 0.1 + index * 0.15,
-                  ease: "easeOut",
+                  ease: "easeOut" as const,
                 }}
               >
                 <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 h-full flex flex-col">
@@ -992,7 +992,7 @@ export default function OpenHousePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4">
               Enrollment Open

@@ -217,7 +217,7 @@ export default function Summer2026Page() {
             className="flex justify-center mb-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
               Summer 2026
@@ -228,7 +228,7 @@ export default function Summer2026Page() {
             className="text-4xl md:text-5xl font-bold text-gray-800 font-heading mb-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
             Summer 2026 Program
           </motion.h1>
@@ -237,7 +237,7 @@ export default function Summer2026Page() {
             className="text-lg text-gray-500 font-body"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
           >
             May 26 – August 13, 2026 · 12 Weeks · Mon–Thu
           </motion.p>
@@ -250,7 +250,7 @@ export default function Summer2026Page() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
             className="space-y-4 mb-10"
           >
             <p className="text-lg text-gray-600 font-body leading-relaxed">
@@ -268,7 +268,7 @@ export default function Summer2026Page() {
             className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-14"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" as const }}
           >
             {details.map((detail) => (
               <div
@@ -294,7 +294,7 @@ export default function Summer2026Page() {
             className="text-center mb-10"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" as const }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6">
               Weekly Breakdown
@@ -314,7 +314,7 @@ export default function Summer2026Page() {
                 transition={{
                   duration: 0.4,
                   delay: 0.1 + i * 0.05,
-                  ease: "easeOut",
+                  ease: "easeOut" as const,
                 }}
               >
                 <div className="flex items-center gap-2 mb-2">
@@ -351,7 +351,7 @@ export default function Summer2026Page() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4">
               Optional Add-On
@@ -370,7 +370,7 @@ export default function Summer2026Page() {
             className="flex flex-wrap justify-center gap-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
           >
             <div className="flex items-center gap-2 px-5 py-3 bg-primary/10 rounded-full">
               <span>🌿</span>
@@ -407,7 +407,7 @@ export default function Summer2026Page() {
             className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4">
               Homeschool Friendly
@@ -465,7 +465,7 @@ export default function Summer2026Page() {
             className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 space-y-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
           >
             <p className="text-base text-gray-600 font-body leading-relaxed">
               Summer at Sage Field is a season of sunshine, discovery, and play!
@@ -495,7 +495,7 @@ export default function Summer2026Page() {
             className="text-center mb-10"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6">
               Tuition &amp; Pricing
@@ -524,7 +524,7 @@ export default function Summer2026Page() {
             className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
           >
             <h2 className="text-2xl font-bold text-gray-800 font-heading mb-2">
               Ready to join us this summer?

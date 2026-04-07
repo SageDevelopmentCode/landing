@@ -624,7 +624,7 @@ function SummerPaymentModal({
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.2, ease: "easeInOut" }}
+                transition={{ duration: 0.2, ease: "easeInOut" as const }}
                 className="space-y-5"
               >
                 {/* Payment method toggle */}
@@ -700,7 +700,7 @@ function SummerPaymentModal({
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.2, ease: "easeInOut" }}
+                transition={{ duration: 0.2, ease: "easeInOut" as const }}
               >
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-sm text-gray-500 font-body">
@@ -858,7 +858,7 @@ function SummerPaymentModal({
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.2, ease: "easeInOut" }}
+                transition={{ duration: 0.2, ease: "easeInOut" as const }}
               >
                 {/* Pricing summary card */}
                 <div className="relative rounded-xl border border-gray-200 bg-white p-5 mb-4">
@@ -1261,7 +1261,7 @@ function AftercarePaymentModal({
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.2, ease: "easeInOut" }}
+                transition={{ duration: 0.2, ease: "easeInOut" as const }}
                 className="space-y-5"
               >
                 {/* Payment method toggle */}
@@ -1338,7 +1338,7 @@ function AftercarePaymentModal({
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.2, ease: "easeInOut" }}
+                transition={{ duration: 0.2, ease: "easeInOut" as const }}
               >
                 <p className="text-sm text-gray-500 font-body mb-4">
                   Select the months you&apos;d like after care coverage for.
@@ -1421,7 +1421,7 @@ function AftercarePaymentModal({
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.2, ease: "easeInOut" }}
+                transition={{ duration: 0.2, ease: "easeInOut" as const }}
               >
                 <p className="text-sm text-gray-500 font-body mb-4">
                   Select individual days you&apos;d like after care. $35/day.
@@ -1471,7 +1471,7 @@ function AftercarePaymentModal({
                               initial={{ height: 0, opacity: 0 }}
                               animate={{ height: "auto", opacity: 1 }}
                               exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.2, ease: "easeInOut" }}
+                              transition={{ duration: 0.2, ease: "easeInOut" as const }}
                               className="overflow-hidden"
                             >
                               <div className="px-4 py-3 flex flex-wrap gap-2">
@@ -1778,7 +1778,7 @@ function FunFridayPaymentModal({
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.2, ease: "easeInOut" }}
+                transition={{ duration: 0.2, ease: "easeInOut" as const }}
                 className="space-y-5"
               >
                 {/* Payment method toggle */}
@@ -1855,7 +1855,7 @@ function FunFridayPaymentModal({
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.2, ease: "easeInOut" }}
+                transition={{ duration: 0.2, ease: "easeInOut" as const }}
               >
                 <p className="text-sm text-gray-500 font-body mb-1">
                   Select the months you&apos;d like Fun Friday coverage for.
@@ -1942,7 +1942,7 @@ function FunFridayPaymentModal({
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.2, ease: "easeInOut" }}
+                transition={{ duration: 0.2, ease: "easeInOut" as const }}
               >
                 <p className="text-sm text-gray-500 font-body mb-1">
                   Select individual Fridays you&apos;d like to attend.
@@ -1996,7 +1996,7 @@ function FunFridayPaymentModal({
                               initial={{ height: 0, opacity: 0 }}
                               animate={{ height: "auto", opacity: 1 }}
                               exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.2, ease: "easeInOut" }}
+                              transition={{ duration: 0.2, ease: "easeInOut" as const }}
                               className="overflow-hidden"
                             >
                               <div className="px-4 py-3 flex flex-wrap gap-2">
@@ -2293,7 +2293,7 @@ function PendingPaymentsSection({
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.15, ease: "easeInOut" }}
+          transition={{ duration: 0.15, ease: "easeInOut" as const }}
           className="space-y-3"
         >
           {activeNonEnrolled ? (

@@ -28,7 +28,7 @@ export default function TuitionPage() {
             className="flex justify-center mb-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
             <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
               TUITION
@@ -39,7 +39,7 @@ export default function TuitionPage() {
             className="text-4xl md:text-5xl font-bold text-black font-heading mb-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
             Tuition &amp; Enrollment
           </motion.h1>
@@ -48,7 +48,7 @@ export default function TuitionPage() {
             className="text-base md:text-lg text-text-gray leading-relaxed font-body max-w-2xl mx-auto mb-10"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
           >
             We offer flexible enrollment options designed to support your
             family&apos;s needs and schedule.
@@ -57,7 +57,7 @@ export default function TuitionPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
           >
             <button
               onClick={() => setIsWaitlistOpen(true)}
@@ -100,7 +100,7 @@ export default function TuitionPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
           >
             <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6">
               Homeschool Drop-In
@@ -143,7 +143,7 @@ export default function TuitionPage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
+              transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" as const }}
               className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col"
             >
               <h3 className="text-base font-bold text-black font-heading mb-1">Explorer Day Pass</h3>
@@ -183,7 +183,7 @@ export default function TuitionPage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
+              transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" as const }}
               className="bg-white rounded-xl p-6 shadow-sm border border-primary/30 flex flex-col relative"
             >
               <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary text-white text-xs font-semibold rounded-full">
@@ -249,7 +249,7 @@ export default function TuitionPage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
+              transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" as const }}
               className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col relative"
             >
               <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-full">
@@ -288,7 +288,7 @@ export default function TuitionPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.4, ease: "easeOut" }}
+            transition={{ duration: 0.5, delay: 0.4, ease: "easeOut" as const }}
           >
             <button
               onClick={() => router.push("/apply")}

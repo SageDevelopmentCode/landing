@@ -299,7 +299,7 @@ function CombinedRegistrationFeeModal({
         initial={{ opacity: 0, scale: 0.95, y: 8 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 8 }}
-        transition={{ duration: 0.2, ease: "easeOut" }}
+        transition={{ duration: 0.2, ease: "easeOut" as const }}
       >
         <h2 className="text-lg font-bold font-heading text-gray-800 mb-1">
           Pay Registration Fees
@@ -506,7 +506,7 @@ function RegistrationFeeModal({
         initial={{ opacity: 0, scale: 0.95, y: 8 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 8 }}
-        transition={{ duration: 0.2, ease: "easeOut" }}
+        transition={{ duration: 0.2, ease: "easeOut" as const }}
       >
         <h2 className="text-lg font-bold font-heading text-gray-800 mb-1">
           Pay Registration Fee
@@ -762,7 +762,7 @@ function Checklist({
         <motion.div
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
+          transition={{ duration: 0.4, ease: "easeOut" as const }}
           className="mb-5 bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-5 shadow-sm"
         >
           <div className="flex items-start gap-3">

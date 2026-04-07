@@ -74,7 +74,7 @@ export default function MeetTheTeamSection({
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+          transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           className="inline-block mb-8"
         >
           <div className="bg-badge-bg px-6 py-2 rounded-full">
@@ -89,7 +89,7 @@ export default function MeetTheTeamSection({
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+          transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
           className="text-4xl md:text-5xl font-bold mb-16 text-text-gray font-heading"
         >
           Meet the Team
@@ -102,7 +102,7 @@ export default function MeetTheTeamSection({
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
             className="w-full lg:w-1/2"
           >
             <motion.div
@@ -126,7 +126,7 @@ export default function MeetTheTeamSection({
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" as const }}
             className="w-full lg:w-1/2 space-y-8"
           >
             {/* Lead Tutor */}
@@ -156,7 +156,7 @@ export default function MeetTheTeamSection({
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" as const }}
               className="p-6 bg-primary/10 rounded-lg border-l-4 border-primary"
             >
               <p className="text-base md:text-lg text-text-gray leading-relaxed font-body">
@@ -177,7 +177,7 @@ export default function MeetTheTeamSection({
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.1 * i, ease: "easeOut" }}
+              transition={{ duration: 0.6, delay: 0.1 * i, ease: "easeOut" as const }}
               className="w-[68vw] shrink-0 sm:w-auto sm:shrink bg-white rounded-2xl shadow-md overflow-hidden"
             >
               <div className="relative w-full aspect-[4/3] sm:aspect-[4/5]">

@@ -10,7 +10,7 @@ export default function AfterCareCard() {
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+      transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" as const }}
       whileHover={{ scale: 1.02 }}
       className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-200 overflow-hidden"
     >
