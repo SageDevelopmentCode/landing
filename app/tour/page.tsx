@@ -15,7 +15,16 @@ import {
   BookOpen,
   MessageCircle,
   Star,
+  Leaf,
+  Heart,
+  Shield,
+  ArrowDown,
+  CalendarCheck,
+  ExternalLink,
+  Sparkles,
 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
 import FloatingSMSButton from "@/app/components/FloatingSMSButton";
@@ -83,22 +92,111 @@ const REFERRAL_OPTIONS = [
 ];
 
 const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 const DAY_HEADERS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const TOUR_EXPECTATIONS = [
-  { icon: MapPin,    text: "Walk the outdoor learning space and classrooms" },
-  { icon: Users,     text: "Meet Sage Field educators and ask any questions" },
-  { icon: BookOpen,  text: "See a typical day's rhythm and curriculum in action" },
-  { icon: Clock,     text: "Tour duration: approximately 45 minutes" },
-  { icon: Star,      text: "Private, one-on-one family tour experience" },
+  { icon: MapPin, text: "Walk the outdoor learning space and classrooms" },
+  { icon: Users, text: "Meet Sage Field educators and ask any questions" },
+  {
+    icon: BookOpen,
+    text: "See a typical day's rhythm and curriculum in action",
+  },
+  { icon: Clock, text: "Tour duration: approximately 45 minutes" },
+  { icon: Star, text: "Private, one-on-one family tour experience" },
 ];
 
 const TODAY = new Date(2026, 3, 27); // April 27, 2026 — earliest available tour date
 TODAY.setHours(0, 0, 0, 0);
+
+// ─── New Constants ────────────────────────────────────────────────────────────
+
+const TOUR_STEPS_WALKTHROUGH = [
+  {
+    icon: MapPin,
+    label: "Arrival",
+    description: "Park, meet your host, and take a breath — no rush.",
+  },
+  {
+    icon: BookOpen,
+    label: "Classroom Tour",
+    description:
+      "See the materials, learning centers, and daily rhythm boards.",
+  },
+  {
+    icon: Leaf,
+    label: "Outdoor Space",
+    description: "Walk our nature trail, garden, and outdoor learning areas.",
+  },
+  {
+    icon: Users,
+    label: "Meet the Team",
+    description:
+      "A real conversation with Ms. Sabrina and your child's future teacher.",
+  },
+  {
+    icon: MessageCircle,
+    label: "Q&A",
+    description: "Ask anything — enrollment, curriculum, schedules, tuition.",
+  },
+];
+
+const TRUST_BENEFITS = [
+  {
+    emoji: "👫",
+    headline: "Small Groups, Big Attention",
+    body: "Our class sizes cap at 12. Every child is seen, known, and guided by name — not lost in a crowd.",
+    accentClass: "bg-sage-50 border-sage-200",
+  },
+  {
+    emoji: "🌿",
+    headline: "Nature Is the Classroom",
+    body: "Montessori and Waldorf methods meet the Texas outdoors — in the garden, on the trail, and under the sky.",
+    accentClass: "bg-badge-bg border-primary/20",
+  },
+  {
+    emoji: "🧡",
+    headline: "Meet Your Child's Teacher",
+    body: "Tours are led by Ms. Sabrina herself. You'll leave knowing exactly who will care for your child every day.",
+    accentClass: "bg-sage-50 border-sage-200",
+  },
+];
+
+const TOUR_FAQS = [
+  {
+    question: "Can I bring siblings?",
+    answer:
+      "Absolutely. Siblings are welcome. Just note it in the 'Questions' field when booking so we can plan accordingly.",
+  },
+  {
+    question: "How long does the tour take?",
+    answer:
+      "Plan for approximately 45 minutes, though we often run a bit longer when families have lots of great questions.",
+  },
+  {
+    question: "Is the tour really free?",
+    answer:
+      "Yes — completely free, no strings attached. We want you to see Sage Field before making any decision.",
+  },
+  {
+    question: "What if I need to reschedule?",
+    answer:
+      "Just reach out via the Contact button or SMS. We're flexible and happy to find another time that works for your family.",
+  },
+];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -112,7 +210,6 @@ function getFirstDayOfMonth(year: number, month: number): number {
 
 function isAvailableDay(date: Date): boolean {
   const day = date.getDay();
-  // Mon–Fri (1–5) and Sat (6)
   return day !== 0;
 }
 
@@ -145,9 +242,69 @@ function isToday(date: Date): boolean {
   return date.toDateString() === TODAY.toDateString();
 }
 
+// ─── Trust Badge Row ──────────────────────────────────────────────────────────
+
+function TrustBadgeRow() {
+  const badges = [
+    { icon: Shield, label: "Private Tour" },
+    { icon: Clock, label: "~45 Minutes" },
+    { icon: Calendar, label: "Mon – Sat" },
+    { icon: Star, label: "100% Free" },
+  ];
+  return (
+    <div className="flex flex-wrap items-center gap-3 mt-8">
+      {badges.map(({ icon: Icon, label }) => (
+        <span
+          key={label}
+          className="flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-sage-200 rounded-full px-4 py-2 text-xs font-semibold text-gray-700 font-body shadow-sm"
+        >
+          <Icon className="w-3.5 h-3.5 text-sage-600" />
+          {label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+// ─── Selected Slot Chip ───────────────────────────────────────────────────────
+
+function SelectedSlotChip({
+  date,
+  time,
+}: {
+  date: Date | null;
+  time: string | null;
+}) {
+  const show = date !== null || time !== null;
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          initial={{ opacity: 0, y: 8, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 8, scale: 0.95 }}
+          transition={{ type: "spring", stiffness: 300, damping: 22 }}
+          className="mt-5 flex items-center gap-3 bg-sage-50 border border-sage-200 rounded-xl px-4 py-3"
+        >
+          <Check className="w-4 h-4 text-sage-600 flex-shrink-0" />
+          <p className="text-sm font-semibold text-sage-700 font-body">
+            {date ? formatShortDate(date) : "Date pending"}
+            {time ? ` · ${time}` : " · Select a time →"}
+          </p>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 // ─── Step Indicator ───────────────────────────────────────────────────────────
 
 const STEP_LABELS = ["Date & Time", "Your Info", "Confirmation"];
+const STEP_MICROCOPY = [
+  "Pick date & time",
+  "Tell us about your family",
+  "Confirm & submit",
+];
 
 function StepIndicator({ currentStep }: { currentStep: TourStep }) {
   return (
@@ -159,28 +316,46 @@ function StepIndicator({ currentStep }: { currentStep: TourStep }) {
         return (
           <div key={label} className="flex items-start">
             <div className="flex flex-col items-center">
-              <div
-                className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold font-body transition-colors duration-300 ${
-                  isCompleted
-                    ? "bg-sage-600 text-white"
-                    : isActive
-                    ? "bg-primary text-white"
-                    : "bg-gray-100 text-gray-400"
-                }`}
+              <motion.div
+                animate={
+                  isActive
+                    ? {
+                        boxShadow: [
+                          "0 0 0 0px rgba(242,154,143,0.35)",
+                          "0 0 0 8px rgba(242,154,143,0)",
+                        ],
+                      }
+                    : { boxShadow: "0 0 0 0px rgba(242,154,143,0)" }
+                }
+                transition={isActive ? { repeat: Infinity, duration: 1.8 } : {}}
+                className="rounded-full"
               >
-                {isCompleted ? <Check className="w-4 h-4" /> : stepNum}
-              </div>
+                <div
+                  className={`w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold font-body transition-colors duration-300 ${
+                    isCompleted
+                      ? "bg-sage-600 text-white"
+                      : isActive
+                        ? "bg-primary text-white"
+                        : "bg-gray-100 text-gray-400"
+                  }`}
+                >
+                  {isCompleted ? <Check className="w-4 h-4" /> : stepNum}
+                </div>
+              </motion.div>
               <span
-                className={`text-xs font-body mt-2 text-center w-16 leading-tight ${
+                className={`text-xs font-body mt-2 text-center w-20 leading-tight ${
                   isActive ? "text-primary font-semibold" : "text-gray-400"
                 }`}
               >
                 {label}
               </span>
+              <span className="text-[10px] text-gray-400 font-body text-center w-20 leading-tight mt-0.5">
+                {STEP_MICROCOPY[i]}
+              </span>
             </div>
             {i < STEP_LABELS.length - 1 && (
               <div
-                className={`h-0.5 w-12 sm:w-20 mt-4 mx-1 transition-colors duration-300 ${
+                className={`h-0.5 w-12 sm:w-24 mt-5 mx-1 transition-colors duration-300 ${
                   currentStep > stepNum ? "bg-sage-600" : "bg-gray-200"
                 }`}
               />
@@ -221,7 +396,6 @@ function CalendarGrid({
 
   return (
     <div>
-      {/* Month navigation */}
       <div className="flex items-center justify-between mb-5">
         <button
           onClick={onPrevMonth}
@@ -241,7 +415,6 @@ function CalendarGrid({
         </button>
       </div>
 
-      {/* Day headers */}
       <div className="grid grid-cols-7 gap-1 mb-2">
         {DAY_HEADERS.map((d) => (
           <div
@@ -253,7 +426,6 @@ function CalendarGrid({
         ))}
       </div>
 
-      {/* Day cells */}
       <div className="grid grid-cols-7 gap-1">
         {Array.from({ length: paddedCells }).map((_, idx) => {
           const dayNum = idx - startOffset + 1;
@@ -277,10 +449,10 @@ function CalendarGrid({
                 selected
                   ? "bg-primary text-white font-semibold shadow-sm"
                   : available
-                  ? todayCell
-                    ? "text-primary font-semibold ring-2 ring-primary/30 hover:bg-primary/10"
-                    : "text-gray-700 hover:bg-primary/10 hover:text-primary cursor-pointer"
-                  : "text-gray-300 cursor-not-allowed"
+                    ? todayCell
+                      ? "text-primary font-semibold ring-2 ring-primary/30 hover:bg-primary/10"
+                      : "text-gray-700 hover:bg-primary/10 hover:text-primary cursor-pointer"
+                    : "text-gray-300 cursor-not-allowed"
               }`}
             >
               {dayNum}
@@ -331,8 +503,8 @@ function TimeSlotPicker({
                   isBlocked
                     ? "border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed line-through"
                     : selectedTime === slot
-                    ? "border-primary bg-primary/10 text-primary font-semibold"
-                    : "border-gray-200 text-gray-700 hover:border-primary/50 hover:bg-primary/5"
+                      ? "border-primary bg-primary/10 text-primary font-semibold"
+                      : "border-gray-200 text-gray-700 hover:border-primary/50 hover:bg-primary/5"
                 }`}
               >
                 {slot}
@@ -364,61 +536,83 @@ function ConfirmationSummary({
 }) {
   return (
     <div>
-      {/* Header */}
       <motion.div
         className="flex flex-col items-center text-center mb-8"
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ type: "spring", stiffness: 200, damping: 18 }}
       >
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-          <CheckCircle className="w-8 h-8 text-green-600" />
+        <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mb-5">
+          <CheckCircle className="w-10 h-10 text-primary" />
         </div>
-        <h3 className="text-xl font-bold font-heading text-gray-800 mb-1">
-          Almost there!
+        <h3 className="text-2xl font-bold font-heading text-gray-800 mb-2">
+          You&apos;re almost in!
         </h3>
         <p className="text-sm text-gray-500 font-body max-w-sm">
-          Review your tour details below, then hit Schedule Tour to lock in your spot.
+          Everything look right? Hit the button below to lock in your private
+          tour with Ms. Sabrina.
         </p>
       </motion.div>
 
-      {/* Summary card */}
       <div className="bg-sage-50 rounded-2xl p-6 border border-sage-200 space-y-4 mb-8">
-        <SummaryRow icon={<Calendar className="w-4 h-4 text-sage-700" />} label="Date">
+        <p className="text-sm font-bold text-sage-700 font-body mb-4">
+          Your Tour at Sage Field
+        </p>
+        <SummaryRow
+          icon={<Calendar className="w-4 h-4 text-sage-700" />}
+          label="Date"
+        >
           {selectedDate ? formatDisplayDate(selectedDate) : "—"}
         </SummaryRow>
-        <SummaryRow icon={<Clock className="w-4 h-4 text-sage-700" />} label="Time">
+        <SummaryRow
+          icon={<Clock className="w-4 h-4 text-sage-700" />}
+          label="Time"
+        >
           {selectedTime ?? "—"}
         </SummaryRow>
         <div className="border-t border-sage-200" />
-        <SummaryRow icon={<Users className="w-4 h-4 text-sage-700" />} label="Parent / Guardian">
+        <SummaryRow
+          icon={<Users className="w-4 h-4 text-sage-700" />}
+          label="Parent / Guardian"
+        >
           {formData.firstName} {formData.lastName}
         </SummaryRow>
-        <SummaryRow icon={<BookOpen className="w-4 h-4 text-sage-700" />} label="Child">
+        <SummaryRow
+          icon={<BookOpen className="w-4 h-4 text-sage-700" />}
+          label="Child"
+        >
           {formData.childName}
           {formData.childGrade ? ` — ${formData.childGrade}` : ""}
         </SummaryRow>
         {formData.notes && (
-          <SummaryRow icon={<Star className="w-4 h-4 text-sage-700" />} label="Notes">
+          <SummaryRow
+            icon={<Star className="w-4 h-4 text-sage-700" />}
+            label="Notes"
+          >
             {formData.notes}
           </SummaryRow>
         )}
       </div>
 
       {submitError && (
-        <p className="text-sm text-red-500 font-body text-center mb-4">{submitError}</p>
+        <p className="text-sm text-red-500 font-body text-center mb-4">
+          {submitError}
+        </p>
       )}
 
       <motion.button
         whileTap={{ scale: 0.97 }}
+        whileHover={{ scale: 1.02 }}
         onClick={onSubmit}
         disabled={isSubmitting}
-        className="w-full bg-primary hover:bg-primary-hover text-white py-4 rounded-xl font-semibold font-body transition-colors duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full bg-primary hover:bg-primary-hover text-white py-5 rounded-xl font-semibold font-body transition-colors duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
-        {isSubmitting ? "Scheduling..." : "Schedule Tour"}
+        <Sparkles className="w-4 h-4" />
+        {isSubmitting ? "Scheduling..." : "Schedule My Tour"}
       </motion.button>
       <p className="text-xs text-gray-400 font-body text-center mt-3">
-        We&apos;ll send a confirmation email and reach out to finalize your visit.
+        We&apos;ll send a confirmation email and reach out to finalize your
+        visit.
       </p>
     </div>
   );
@@ -440,9 +634,158 @@ function SummaryRow({
         <p className="text-xs text-gray-400 uppercase tracking-wide font-body mb-0.5">
           {label}
         </p>
-        <p className="text-sm font-semibold text-gray-800 font-body">{children}</p>
+        <p className="text-sm font-semibold text-gray-800 font-body">
+          {children}
+        </p>
       </div>
     </div>
+  );
+}
+
+// ─── Tour Walkthrough ─────────────────────────────────────────────────────────
+
+function TourWalkthrough() {
+  return (
+    <section className="py-20 px-6 sm:px-12 lg:px-16 bg-white">
+      <div className="max-w-5xl mx-auto">
+        <motion.div
+          className="text-center mb-14"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+        >
+          <span className="inline-block px-5 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4 font-body">
+            Your Visit
+          </span>
+          <h2 className="text-3xl md:text-4xl font-bold font-heading text-gray-800 mb-3">
+            What Your Tour Looks Like
+          </h2>
+          <p className="text-base text-gray-500 font-body max-w-xl mx-auto">
+            From arrival to your last question — here&apos;s what to expect from
+            your private 45-minute visit.
+          </p>
+        </motion.div>
+
+        <div className="flex flex-col lg:flex-row items-stretch">
+          {TOUR_STEPS_WALKTHROUGH.map(
+            ({ icon: Icon, label, description }, i) => (
+              <div
+                key={label}
+                className="flex flex-col lg:flex-row items-center lg:items-start flex-1"
+              >
+                <motion.div
+                  className="flex flex-col items-center text-center px-4 py-6 flex-1"
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.45, delay: i * 0.1 }}
+                >
+                  <div className="relative mb-4">
+                    <div className="w-14 h-14 rounded-2xl bg-sage-50 border-2 border-sage-200 flex items-center justify-center">
+                      <Icon className="w-6 h-6 text-sage-600" />
+                    </div>
+                    <span className="absolute -top-2 -right-2 w-5 h-5 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center font-body">
+                      {i + 1}
+                    </span>
+                  </div>
+                  <h4 className="text-sm font-bold font-heading text-gray-800 mb-1.5">
+                    {label}
+                  </h4>
+                  <p className="text-xs text-gray-500 font-body leading-relaxed max-w-[140px]">
+                    {description}
+                  </p>
+                </motion.div>
+
+                {i < TOUR_STEPS_WALKTHROUGH.length - 1 && (
+                  <motion.div
+                    className="hidden lg:flex items-center self-center flex-shrink-0"
+                    initial={{ opacity: 0, scaleX: 0 }}
+                    whileInView={{ opacity: 1, scaleX: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: i * 0.1 + 0.2 }}
+                    style={{ originX: 0 }}
+                  >
+                    <div className="w-8 h-0.5 bg-sage-200" />
+                    <ChevronRight className="w-4 h-4 text-sage-300 -ml-1" />
+                  </motion.div>
+                )}
+              </div>
+            ),
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Tour FAQ ─────────────────────────────────────────────────────────────────
+
+function TourFAQ() {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  return (
+    <section className="py-20 px-6 sm:px-12 lg:px-16 bg-white">
+      <div className="max-w-3xl mx-auto">
+        <motion.div
+          className="text-center mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+        >
+          <h2 className="text-3xl font-bold font-heading text-gray-800 mb-3">
+            Before Your Visit
+          </h2>
+          <p className="text-gray-500 font-body">
+            Quick answers to the questions families ask most.
+          </p>
+        </motion.div>
+
+        <div className="space-y-3">
+          {TOUR_FAQS.map((faq, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.35, delay: i * 0.06 }}
+              className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+            >
+              <button
+                onClick={() => setOpenIndex(openIndex === i ? null : i)}
+                className="w-full flex items-center justify-between p-5 text-left cursor-pointer focus:outline-none"
+              >
+                <span className="text-sm font-semibold text-gray-800 font-body pr-4">
+                  {faq.question}
+                </span>
+                <motion.span
+                  animate={{ rotate: openIndex === i ? 180 : 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="flex-shrink-0"
+                >
+                  <ChevronDown className="w-4 h-4 text-primary" />
+                </motion.span>
+              </button>
+              <AnimatePresence>
+                {openIndex === i && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.28, ease: "easeInOut" as const }}
+                    className="overflow-hidden"
+                  >
+                    <p className="px-5 pb-5 text-sm text-gray-600 font-body leading-relaxed">
+                      {faq.answer}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -460,7 +803,7 @@ const stepVariants = {
 const STEP_HEADINGS: Record<TourStep, { title: string; sub: string }> = {
   1: {
     title: "Select a Date & Time",
-    sub: "Choose a weekday or Saturday that works best for your family.",
+    sub: "Pick a weekday or Saturday that works for your family — Mon through Sat, 9 AM to 5 PM.",
   },
   2: {
     title: "Your Information",
@@ -491,7 +834,9 @@ export default function TourPage() {
 
   const [isContactOpen, setIsContactOpen] = useState(false);
 
-  const [unavailability, setUnavailability] = useState<UnavailabilityEntry[]>([]);
+  const [unavailability, setUnavailability] = useState<UnavailabilityEntry[]>(
+    [],
+  );
   const [isSubmitting, startSubmitTransition] = useTransition();
   const [submitError, setSubmitError] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -546,7 +891,9 @@ export default function TourPage() {
   }
 
   function handleFormChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
   ) {
     const { name, value } = e.target;
     if (name === "phone") {
@@ -556,30 +903,27 @@ export default function TourPage() {
     }
   }
 
-  // Build a set of fully-blocked date strings (YYYY-MM-DD) — null time = whole day
   const blockedDates = new Set<string>(
     unavailability
       .filter((u) => u.unavailable_time === null)
-      .map((u) => u.unavailable_date)
+      .map((u) => u.unavailable_date),
   );
 
-  // Build a set of blocked time slots for the currently selected date
   const blockedTimesForDate = (() => {
     if (!selectedDate) return new Set<string>();
     const key = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`;
-    const dayOfWeek = selectedDate.getDay(); // 0=Sun … 6=Sat
+    const dayOfWeek = selectedDate.getDay();
     return new Set<string>(
       unavailability
         .filter((u) => {
           if (u.unavailable_time === null) return false;
           if (u.is_recurring) {
-            // Match by day-of-week against the stored date's day-of-week
             const [y, m, d] = u.unavailable_date.split("-").map(Number);
             return new Date(y, m - 1, d).getDay() === dayOfWeek;
           }
           return u.unavailable_date === key;
         })
-        .map((u) => u.unavailable_time as string)
+        .map((u) => u.unavailable_time as string),
     );
   })();
 
@@ -589,11 +933,11 @@ export default function TourPage() {
 
     const dateKey = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`;
     const referralMap: Record<string, string> = {
-      "Google": "google",
+      Google: "google",
       "Social Media": "social_media",
       "Friend / Family": "friend_family",
       "Flyer / Poster": "flyer",
-      "Other": "other",
+      Other: "other",
     };
 
     startSubmitTransition(async () => {
@@ -630,91 +974,335 @@ export default function TourPage() {
 
   const heading = STEP_HEADINGS[currentStep];
 
+  // ─── Success State ────────────────────────────────────────────────────────
+
   if (submitted) {
     return (
       <div className="min-h-screen bg-welcome-bg">
         <Navbar darkStyle />
-        <section className="pt-40 pb-20 px-6 flex flex-col items-center text-center">
+
+        <section className="pt-40 pb-20 px-6 flex flex-col items-center">
           <motion.div
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: "spring", stiffness: 200, damping: 18 }}
-            className="bg-white rounded-2xl shadow-sm border border-gray-100 p-10 max-w-md w-full"
+            initial={{ opacity: 0, scale: 0.88, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{
+              type: "spring",
+              stiffness: 220,
+              damping: 20,
+              delay: 0.1,
+            }}
+            className="relative bg-white rounded-3xl shadow-xl border border-gray-100 p-10 sm:p-14 max-w-lg w-full text-center overflow-hidden"
           >
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
-              <CheckCircle className="w-8 h-8 text-green-600" />
-            </div>
-            <h2 className="text-2xl font-bold font-heading text-gray-800 mb-3">
-              Tour Scheduled!
-            </h2>
-            <p className="text-sm text-gray-500 font-body leading-relaxed mb-2">
-              We received your request for{" "}
-              <span className="font-semibold text-gray-700">
-                {selectedDate ? formatDisplayDate(selectedDate) : ""} at {selectedTime}
+            {/* Confetti dots */}
+            {[
+              { color: "bg-primary", xEnd: -60, yEnd: -55 },
+              { color: "bg-sage-400", xEnd: 0, yEnd: -65 },
+              { color: "bg-yellow-300", xEnd: 60, yEnd: -55 },
+            ].map(({ color, xEnd, yEnd }, i) => (
+              <motion.div
+                key={i}
+                className={`absolute w-3 h-3 rounded-full ${color} opacity-80 pointer-events-none`}
+                style={{ top: "4rem", left: "50%", translateX: "-50%" }}
+                initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+                animate={{ x: xEnd, y: yEnd, opacity: 0, scale: 0.4 }}
+                transition={{
+                  duration: 0.85,
+                  delay: 0.25 + i * 0.08,
+                  ease: "easeOut",
+                }}
+              />
+            ))}
+
+            <motion.div
+              className="w-24 h-24 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-6"
+              initial={{ scale: 0, rotate: -12 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{
+                type: "spring",
+                stiffness: 260,
+                damping: 18,
+                delay: 0.2,
+              }}
+            >
+              <CheckCircle className="w-12 h-12 text-primary" />
+            </motion.div>
+
+            <motion.h2
+              className="text-3xl font-bold font-heading text-gray-800 mb-2"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              Your Tour Is Booked!
+            </motion.h2>
+
+            <motion.p
+              className="text-gray-500 font-body mb-7"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+            >
+              We can&apos;t wait to show you around.
+            </motion.p>
+
+            <motion.div
+              className="bg-sage-50 rounded-2xl p-6 border border-sage-200 text-left space-y-4 mb-7"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <div className="flex items-center gap-3">
+                <Calendar className="w-4 h-4 text-sage-600 flex-shrink-0" />
+                <div>
+                  <p className="text-xs text-gray-400 uppercase tracking-wide font-body">
+                    Date & Time
+                  </p>
+                  <p className="text-sm font-bold text-gray-800 font-body">
+                    {selectedDate ? formatDisplayDate(selectedDate) : ""} at{" "}
+                    {selectedTime}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Users className="w-4 h-4 text-sage-600 flex-shrink-0" />
+                <div>
+                  <p className="text-xs text-gray-400 uppercase tracking-wide font-body">
+                    Your Host
+                  </p>
+                  <p className="text-sm font-bold text-gray-800 font-body">
+                    Ms. Sabrina · Lead Teacher & Director
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <MapPin className="w-4 h-4 text-sage-600 flex-shrink-0" />
+                <div>
+                  <p className="text-xs text-gray-400 uppercase tracking-wide font-body">
+                    Location
+                  </p>
+                  <p className="text-sm font-bold text-gray-800 font-body">
+                    2760 Gattis School Rd, Round Rock, TX 78664
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.p
+              className="text-sm text-gray-400 font-body mb-6 leading-relaxed"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              A confirmation is headed to{" "}
+              <span className="font-semibold text-gray-600">
+                {formData.email}
               </span>
-              .
-            </p>
-            <p className="text-sm text-gray-500 font-body leading-relaxed">
-              We&apos;ll send a confirmation to{" "}
-              <span className="font-semibold text-gray-700">{formData.email}</span>{" "}
-              and follow up to finalize your visit.
-            </p>
+              . We&apos;ll follow up to finalize your visit details.
+            </motion.p>
+
+            <motion.div
+              className="flex items-center justify-center gap-2 text-sm text-primary font-semibold font-body mb-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.55 }}
+            >
+              <CalendarCheck className="w-4 h-4" />
+              <span>Add to your calendar once confirmed</span>
+            </motion.div>
+
+            <motion.div
+              className="border-t border-gray-100 pt-7"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+            >
+              <p className="text-xs text-gray-400 font-body uppercase tracking-wide mb-4">
+                While you wait, explore
+              </p>
+              <div className="flex flex-wrap gap-3 justify-center">
+                {[
+                  { label: "Our Philosophy", href: "/educational-philosophy" },
+                  { label: "Meet the Team", href: "/team" },
+                  {
+                    label: "School Year 2026–27",
+                    href: "/school-year-2026-2027",
+                  },
+                ].map(({ label, href }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    className="flex items-center gap-1.5 text-xs font-semibold font-body text-sage-700 bg-sage-50 hover:bg-sage-100 border border-sage-200 rounded-full px-4 py-2 transition-colors duration-150"
+                  >
+                    {label}
+                    <ExternalLink className="w-3 h-3" />
+                  </Link>
+                ))}
+              </div>
+            </motion.div>
           </motion.div>
         </section>
+
         <Footer />
       </div>
     );
   }
+
+  // ─── Main Page ────────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-screen bg-welcome-bg">
       <Navbar darkStyle />
 
       {/* ── Hero ── */}
-      <section className="pt-32 pb-14 px-6 sm:px-12 lg:px-16">
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.span
-            className="inline-block px-5 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6 font-body"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
+      <section className="relative pt-28 pb-16 px-6 sm:px-12 lg:px-16 bg-welcome-bg overflow-hidden">
+        {/* Decorative blobs */}
+        <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-12 -left-12 w-72 h-72 bg-sage-100/60 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center relative">
+          {/* Left column */}
+          <div>
+            <motion.span
+              className="inline-block px-5 py-2 bg-badge-bg border border-primary/20 text-gray-700 text-sm font-semibold rounded-full mb-6 font-body"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              Campus Tours · Round Rock, TX
+            </motion.span>
+
+            <motion.h1
+              className="text-4xl md:text-5xl lg:text-6xl font-bold font-heading text-gray-800 leading-tight mb-5"
+              initial={{ opacity: 0, x: -24 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.45, delay: 0.1 }}
+            >
+              See Where Your Child Will Thrive
+            </motion.h1>
+
+            <motion.p
+              className="text-lg text-gray-600 font-body leading-relaxed max-w-md mb-6"
+              initial={{ opacity: 0, x: -24 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.45, delay: 0.2 }}
+            >
+              Join us for a private, 45-minute tour of our outdoor campus. Walk
+              the space, meet Ms. Sabrina, and feel the Sage Field difference
+              for yourself.
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, x: -24 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.45, delay: 0.35 }}
+            >
+              <a
+                href="#schedule"
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white font-semibold font-body px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 text-base"
+              >
+                Schedule My Tour
+                <ArrowDown className="w-4 h-4" />
+              </a>
+              <TrustBadgeRow />
+            </motion.div>
+          </div>
+
+          {/* Right column — image */}
+          <motion.div
+            className="relative w-full h-[420px] lg:h-[540px] rounded-3xl overflow-hidden shadow-2xl"
+            initial={{ opacity: 0, x: 24, scale: 0.97 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            transition={{ duration: 0.55, delay: 0.2 }}
           >
-            Campus Tours
-          </motion.span>
-          <motion.h1
-            className="text-4xl md:text-5xl font-bold font-heading text-gray-800 leading-tight mb-5"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-          >
-            Schedule a Campus Tour
-          </motion.h1>
-          <motion.p
-            className="text-lg text-gray-500 font-body leading-relaxed max-w-2xl mx-auto"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            We&apos;d love to show you around. Pick a time that works for your
-            family and we&apos;ll walk you through our space, our approach, and
-            everything that makes Sage Field special.
-          </motion.p>
+            <Image
+              src="/assets/ImageEleven.jpg"
+              alt="Children learning outdoors at Sage Field School"
+              fill
+              className="object-cover"
+              priority
+            />
+            {/* Floating educator chip */}
+            <div className="absolute bottom-5 left-5 bg-white/95 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-lg flex items-center gap-3">
+              <div className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                <Image
+                  src="/assets/Headshot.jpeg"
+                  alt="Ms. Sabrina"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-gray-800 font-body">
+                  Ms. Sabrina
+                </p>
+                <p className="text-[10px] text-gray-500 font-body">
+                  Lead Teacher & Director
+                </p>
+              </div>
+              <span className="ml-1 bg-sage-100 text-sage-700 text-[10px] font-bold px-2 py-0.5 rounded-full font-body">
+                Your Host
+              </span>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── Trust Trio ── */}
+      <section className="py-16 px-6 sm:px-12 lg:px-16 bg-white border-y border-gray-100">
+        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+          {TRUST_BENEFITS.map(({ emoji, headline, body, accentClass }, i) => (
+            <motion.div
+              key={headline}
+              className={`rounded-2xl p-7 border-2 ${accentClass} flex flex-col gap-4 ${i === 1 ? "shadow-md" : "shadow-sm"}`}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.45, delay: i * 0.1 }}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+            >
+              <span className="text-3xl">{emoji}</span>
+              <h3 className="text-lg font-bold font-heading text-gray-800">
+                {headline}
+              </h3>
+              <p className="text-sm text-gray-600 font-body leading-relaxed">
+                {body}
+              </p>
+            </motion.div>
+          ))}
         </div>
       </section>
 
       {/* ── Scheduling Panel ── */}
-      <section className="pb-20 px-6 sm:px-12 lg:px-16">
+      <section
+        id="schedule"
+        className="py-20 px-6 sm:px-12 lg:px-16 scroll-mt-24"
+      >
         <div className="max-w-5xl mx-auto">
+          {/* Section header */}
+          <motion.div
+            className="text-center mb-10"
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4 }}
+          >
+            <span className="inline-block px-5 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4 font-body">
+              Book Your Tour
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold font-heading text-gray-800 mb-2">
+              Reserve Your Family&apos;s Spot
+            </h2>
+          </motion.div>
+
           <StepIndicator currentStep={currentStep} />
 
           <motion.div
-            className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-10"
+            className="bg-white rounded-2xl shadow-sm border border-gray-100 border-t-4 border-t-primary p-6 sm:p-10"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.4 }}
           >
-            {/* Step heading */}
             <div className="mb-8">
               <h2 className="text-xl font-bold font-heading text-gray-800 mb-1">
                 {heading.title}
@@ -722,7 +1310,6 @@ export default function TourPage() {
               <p className="text-sm text-gray-500 font-body">{heading.sub}</p>
             </div>
 
-            {/* Animated step content */}
             <AnimatePresence mode="wait" custom={stepDirection.current}>
               <motion.div
                 key={currentStep}
@@ -735,32 +1322,38 @@ export default function TourPage() {
               >
                 {/* ── Step 1: Date & Time ── */}
                 {currentStep === 1 && (
-                  <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-                    <div className="lg:col-span-3">
-                      <CalendarGrid
-                        selectedDate={selectedDate}
-                        onSelectDate={handleSelectDate}
-                        calendarMonth={calendarMonth}
-                        calendarYear={calendarYear}
-                        onPrevMonth={handlePrevMonth}
-                        onNextMonth={handleNextMonth}
-                        blockedDates={blockedDates}
-                      />
+                  <div>
+                    <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                      <div className="lg:col-span-3">
+                        <CalendarGrid
+                          selectedDate={selectedDate}
+                          onSelectDate={handleSelectDate}
+                          calendarMonth={calendarMonth}
+                          calendarYear={calendarYear}
+                          onPrevMonth={handlePrevMonth}
+                          onNextMonth={handleNextMonth}
+                          blockedDates={blockedDates}
+                        />
+                      </div>
+                      <div className="lg:col-span-2 lg:border-l lg:border-gray-100 lg:pl-8">
+                        <TimeSlotPicker
+                          selectedDate={selectedDate}
+                          selectedTime={selectedTime}
+                          onSelectTime={setSelectedTime}
+                          blockedTimes={blockedTimesForDate}
+                        />
+                      </div>
                     </div>
-                    <div className="lg:col-span-2 lg:border-l lg:border-gray-100 lg:pl-8">
-                      <TimeSlotPicker
-                        selectedDate={selectedDate}
-                        selectedTime={selectedTime}
-                        onSelectTime={setSelectedTime}
-                        blockedTimes={blockedTimesForDate}
-                      />
-                    </div>
+                    <SelectedSlotChip date={selectedDate} time={selectedTime} />
                   </div>
                 )}
 
                 {/* ── Step 2: Your Information ── */}
                 {currentStep === 2 && (
                   <div className="space-y-5">
+                    <p className="text-xs text-gray-400 uppercase tracking-widest font-body mb-4">
+                      About You
+                    </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-semibold text-text-gray mb-2 font-body">
@@ -819,10 +1412,15 @@ export default function TourPage() {
                       </div>
                     </div>
 
+                    <p className="text-xs text-gray-400 uppercase tracking-widest font-body mb-4 mt-6">
+                      About Your Child
+                    </p>
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-semibold text-text-gray mb-2 font-body">
-                          Child&apos;s Name <span className="text-red-500">*</span>
+                          Child&apos;s Name{" "}
+                          <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -900,6 +1498,10 @@ export default function TourPage() {
                       </div>
                     </div>
 
+                    <p className="text-xs text-gray-400 uppercase tracking-widest font-body mb-4 mt-6">
+                      A Few Quick Questions
+                    </p>
+
                     <div>
                       <label className="block text-sm font-semibold text-text-gray mb-2 font-body">
                         Questions or Special Accommodations
@@ -908,7 +1510,7 @@ export default function TourPage() {
                         name="notes"
                         value={formData.notes}
                         onChange={handleFormChange}
-                        placeholder="Anything you'd like us to know before your visit…"
+                        placeholder="Anything you'd like Ms. Sabrina to know before you arrive — questions, concerns, or a little about your child…"
                         rows={4}
                         className={`${inputClass} resize-y`}
                       />
@@ -960,7 +1562,6 @@ export default function TourPage() {
               </div>
             )}
 
-            {/* Back button on step 3 */}
             {currentStep === 3 && (
               <div className="flex items-center mt-8 pt-6 border-t border-gray-100">
                 <button
@@ -976,117 +1577,57 @@ export default function TourPage() {
         </div>
       </section>
 
-      {/* ── What to Expect ── */}
-      <section className="py-20 px-6 sm:px-12 lg:px-16 bg-sage-50/60">
-        <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10">
-          {/* Expectations */}
+      {/* ── Tour Walkthrough ── */}
+      <TourWalkthrough />
+
+      {/* ── FAQ ── */}
+      <TourFAQ />
+
+      {/* ── Location Bar ── */}
+      <section className="py-16 px-6 sm:px-12 lg:px-16 bg-sage-50/60">
+        <div className="max-w-5xl mx-auto">
           <motion.div
-            className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100"
+            className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.4 }}
           >
-            <h3 className="text-xl font-bold font-heading text-sage-700 mb-6">
-              What to Expect
-            </h3>
-            <ul className="space-y-4">
-              {TOUR_EXPECTATIONS.map(({ icon: Icon, text }, i) => (
-                <motion.li
-                  key={i}
-                  className="flex items-start gap-3"
-                  initial={{ opacity: 0, x: -10 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.3, delay: i * 0.07 }}
-                >
-                  <Icon className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm text-gray-700 font-body leading-relaxed">
-                    {text}
-                  </span>
-                </motion.li>
-              ))}
-            </ul>
-
-            {/* Chips */}
-            <div className="flex flex-wrap gap-3 mt-7">
-              {[
-                { icon: Clock, label: "~45 min" },
-                { icon: Users, label: "Private tour" },
-                { icon: Calendar, label: "Mon–Sat" },
-              ].map(({ icon: Icon, label }) => (
-                <span
-                  key={label}
-                  className="flex items-center gap-2 bg-sage-50 rounded-full px-4 py-2 text-xs text-gray-600 font-body border border-sage-200"
-                >
-                  <Icon className="w-3.5 h-3.5 text-sage-600" />
-                  {label}
-                </span>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Location */}
-          <motion.div
-            className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-          >
-            <h3 className="text-xl font-bold font-heading text-sage-700 mb-6">
-              Tour Availability
-            </h3>
-
-            <div className="space-y-5">
-              <div className="flex items-start gap-3">
-                <Calendar className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-xs text-gray-400 uppercase tracking-wide font-body mb-1">
-                    Available Days
-                  </p>
-                  <p className="text-sm font-semibold text-gray-800 font-body">
-                    Monday – Saturday
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <Clock className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-xs text-gray-400 uppercase tracking-wide font-body mb-1">
-                    Available Times
-                  </p>
-                  <p className="text-sm font-semibold text-gray-800 font-body">
-                    9:00 AM – 5:00 PM
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-xs text-gray-400 uppercase tracking-wide font-body mb-1">
-                    Location
-                  </p>
-                  <p className="text-sm font-semibold text-gray-800 font-body">
-                    Sage Field School Campus
-                  </p>
-                  <p className="text-sm text-gray-500 font-body mt-0.5">
-                    2760 Gattis School Rd, Round Rock, TX 78664
-                  </p>
-                </div>
+            <div className="flex items-center gap-4">
+              <MapPin className="w-5 h-5 text-primary flex-shrink-0" />
+              <div>
+                <p className="text-xs text-gray-400 uppercase tracking-wide font-body mb-0.5">
+                  Location
+                </p>
+                <p className="text-sm font-semibold text-gray-800 font-body">
+                  2760 Gattis School Rd, Round Rock, TX 78664
+                </p>
               </div>
             </div>
 
-            <div className="mt-8 p-4 bg-badge-bg rounded-xl border border-primary/20">
-              <p className="text-sm text-gray-700 font-body leading-relaxed mb-3">
-                <span className="font-semibold text-primary">Have questions first?</span>{" "}
-                Reach out to us directly — we&apos;re happy to chat before your visit.
+            <div className="hidden sm:block h-12 w-px bg-gray-200" />
+
+            <div className="flex items-center gap-4">
+              <Clock className="w-5 h-5 text-primary flex-shrink-0" />
+              <div>
+                <p className="text-xs text-gray-400 uppercase tracking-wide font-body mb-0.5">
+                  Available
+                </p>
+                <p className="text-sm font-semibold text-gray-800 font-body">
+                  Mon – Sat · 9:00 AM – 5:00 PM
+                </p>
+              </div>
+            </div>
+
+            <div className="hidden sm:block h-12 w-px bg-gray-200" />
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <p className="text-sm text-gray-600 font-body whitespace-nowrap">
+                Questions before booking?
               </p>
               <button
                 onClick={() => setIsContactOpen(true)}
-                className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold font-body px-4 py-2.5 rounded-lg transition-colors duration-200"
+                className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold font-body px-5 py-2.5 rounded-lg transition-colors duration-200"
               >
                 <MessageCircle className="w-4 h-4" />
                 Contact Us
@@ -1098,7 +1639,10 @@ export default function TourPage() {
 
       <Footer />
       <FloatingSMSButton />
-      <ContactDialog isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
+      <ContactDialog
+        isOpen={isContactOpen}
+        onClose={() => setIsContactOpen(false)}
+      />
     </div>
   );
 }
