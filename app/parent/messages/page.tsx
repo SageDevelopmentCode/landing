@@ -39,7 +39,7 @@ export default async function MessagesRoute({
   return (
     <div className="bg-welcome-bg h-screen overflow-hidden">
       <div className="h-full flex flex-col">
-        <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-3 items-center">
+        <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-[auto_1fr_auto] items-center">
           <div className="flex items-center">
             <Link href="/">
               <Image

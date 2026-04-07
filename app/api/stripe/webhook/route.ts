@@ -5,6 +5,8 @@ import Stripe from "stripe";
 import {
   createRegistrationFeeEmbed,
   createSummerTuitionEmbed,
+  createAftercareTuitionEmbed,
+  createFunFridayTuitionEmbed,
   createDonationEmbed,
   createErrorEmbed,
   sendDiscordNotification,
@@ -357,6 +359,110 @@ export async function POST(request: NextRequest) {
           ).catch(() => {});
         }
       })();
+    } else if (session.metadata?.payment_type === "aftercare_tuition") {
+      const applicationId = session.metadata?.application_id;
+      const studentId = session.metadata?.student_id;
+      const planType = (session.metadata?.plan_type ?? "monthly") as "monthly" | "daily";
+      const selectedMonths = session.metadata?.selected_months
+        ? session.metadata.selected_months.split(",").filter(Boolean)
+        : [];
+      const selectedDays = session.metadata?.selected_days
+        ? session.metadata.selected_days.split(",").filter(Boolean)
+        : [];
+      const amountCents = session.amount_total ?? 0;
+
+      // Fetch parent/child names
+      let parentName = "N/A";
+      let parentEmailAddr = session.customer_email ?? "N/A";
+      let childName = "N/A";
+
+      if (applicationId) {
+        const { data: application } = await supabase
+          .schema("parent_app")
+          .from("applications")
+          .select("g1_full_name, g1_email, child_legal_name")
+          .eq("id", applicationId)
+          .single();
+
+        if (application) {
+          parentName = application.g1_full_name ?? "N/A";
+          parentEmailAddr = application.g1_email ?? session.customer_email ?? "N/A";
+          childName = application.child_legal_name ?? "N/A";
+        }
+      } else if (studentId) {
+        const { data: student } = await supabase
+          .schema("admin")
+          .from("students")
+          .select("child_legal_name")
+          .eq("id", studentId)
+          .single();
+        if (student) childName = student.child_legal_name ?? "N/A";
+      }
+
+      // Discord notification (non-blocking)
+      sendDiscordNotification(
+        createAftercareTuitionEmbed({
+          parentName,
+          parentEmail: parentEmailAddr,
+          childName,
+          planType,
+          amountCents,
+          selectedMonths: selectedMonths.length > 0 ? selectedMonths : undefined,
+          selectedDays: selectedDays.length > 0 ? selectedDays : undefined,
+        }),
+      ).catch((err) => console.error("Aftercare Discord notification failed:", err));
+    } else if (session.metadata?.payment_type === "fun_friday_tuition") {
+      const applicationId = session.metadata?.application_id;
+      const studentId = session.metadata?.student_id;
+      const planType = (session.metadata?.plan_type ?? "monthly") as "monthly" | "dropin";
+      const selectedMonths = session.metadata?.selected_months
+        ? session.metadata.selected_months.split(",").filter(Boolean)
+        : [];
+      const selectedFridays = session.metadata?.selected_fridays
+        ? session.metadata.selected_fridays.split(",").filter(Boolean)
+        : [];
+      const amountCents = session.amount_total ?? 0;
+
+      // Fetch parent/child names
+      let parentName = "N/A";
+      let parentEmailAddr = session.customer_email ?? "N/A";
+      let childName = "N/A";
+
+      if (applicationId) {
+        const { data: application } = await supabase
+          .schema("parent_app")
+          .from("applications")
+          .select("g1_full_name, g1_email, child_legal_name")
+          .eq("id", applicationId)
+          .single();
+
+        if (application) {
+          parentName = application.g1_full_name ?? "N/A";
+          parentEmailAddr = application.g1_email ?? session.customer_email ?? "N/A";
+          childName = application.child_legal_name ?? "N/A";
+        }
+      } else if (studentId) {
+        const { data: student } = await supabase
+          .schema("admin")
+          .from("students")
+          .select("child_legal_name")
+          .eq("id", studentId)
+          .single();
+        if (student) childName = student.child_legal_name ?? "N/A";
+      }
+
+      // Discord notification (non-blocking)
+      sendDiscordNotification(
+        createFunFridayTuitionEmbed({
+          parentName,
+          parentEmail: parentEmailAddr,
+          childName,
+          planType,
+          amountCents,
+          selectedMonths: selectedMonths.length > 0 ? selectedMonths : undefined,
+          selectedFridays: selectedFridays.length > 0 ? selectedFridays : undefined,
+        }),
+      ).catch((err) => console.error("Fun Friday Discord notification failed:", err));
     } else {
       const donorEmail =
         session.metadata?.donor_email || session.customer_email || "";

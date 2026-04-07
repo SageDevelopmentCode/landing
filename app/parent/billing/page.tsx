@@ -36,6 +36,11 @@ export type NonEnrolledApp = {
   name: string | null;
 };
 
+export type StudentInfo = {
+  name: string;
+  profileImageUrl: string | null;
+};
+
 export type StripeTransaction = {
   id: string;
   stripe_session_id: string | null;
@@ -152,22 +157,27 @@ export default async function BillingRoute() {
     ].filter(Boolean)),
   ] as string[];
 
-  let studentMap: Record<string, string> = {};
+  let studentMap: Record<string, StudentInfo> = {};
   if (studentIds.length > 0) {
     const { data: students } = await adminClient
       .schema("admin")
       .from("students")
-      .select("id, child_legal_name")
+      .select("id, child_legal_name, profile_image_url")
       .in("id", studentIds);
     for (const s of students ?? []) {
-      if (s.id && s.child_legal_name) studentMap[s.id] = s.child_legal_name;
+      if (s.id && s.child_legal_name) {
+        studentMap[s.id] = {
+          name: s.child_legal_name,
+          profileImageUrl: s.profile_image_url ?? null,
+        };
+      }
     }
   }
 
   return (
     <div className="bg-welcome-bg">
       <div className="min-h-screen flex flex-col">
-        <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-3 items-center">
+        <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-[auto_1fr_auto] items-center">
           <div className="flex items-center">
             <Link href="/">
               <Image

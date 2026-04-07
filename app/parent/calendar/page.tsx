@@ -45,7 +45,7 @@ export default async function ParentCalendarPage() {
 
   return (
     <div className="bg-welcome-bg min-h-screen flex flex-col">
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-3 items-center">
+      <header className="sticky top-0 z-50 bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-[auto_1fr_auto] items-center">
         <div className="flex items-center">
           <Link href="/">
             <Image

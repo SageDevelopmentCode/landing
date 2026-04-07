@@ -311,6 +311,82 @@ export function createSummerTuitionEmbed(data: {
 }
 
 /**
+ * Creates a Discord embed for after care tuition payments
+ */
+export function createAftercareTuitionEmbed(data: {
+  parentName: string;
+  parentEmail: string;
+  childName: string;
+  planType: "monthly" | "daily";
+  amountCents: number;
+  selectedMonths?: string[];
+  selectedDays?: string[];
+}): DiscordEmbed {
+  const amountDollars = (data.amountCents / 100).toFixed(2);
+  const MONTH_LABELS: Record<string, string> = {
+    may: "May 2026",
+    jun: "June 2026",
+    jul: "July 2026",
+    aug: "August 2026",
+  };
+  const planLabel =
+    data.planType === "monthly"
+      ? `Monthly — ${data.selectedMonths?.map((k) => MONTH_LABELS[k] ?? k).join(", ") ?? ""}`
+      : `Daily — ${data.selectedDays?.length ?? 0} day${(data.selectedDays?.length ?? 0) !== 1 ? "s" : ""}`;
+
+  return {
+    title: "🕒 After Care Tuition Paid",
+    color: 0xe07a3a,
+    fields: [
+      { name: "Parent", value: data.parentName || "N/A", inline: true },
+      { name: "Email", value: data.parentEmail || "N/A", inline: true },
+      { name: "Child", value: data.childName || "N/A", inline: true },
+      { name: "Plan", value: planLabel, inline: true },
+      { name: "Amount Paid", value: `$${amountDollars}`, inline: true },
+    ],
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * Creates a Discord embed for Fun Friday payments
+ */
+export function createFunFridayTuitionEmbed(data: {
+  parentName: string;
+  parentEmail: string;
+  childName: string;
+  planType: "monthly" | "dropin";
+  amountCents: number;
+  selectedMonths?: string[];
+  selectedFridays?: string[];
+}): DiscordEmbed {
+  const amountDollars = (data.amountCents / 100).toFixed(2);
+  const MONTH_LABELS: Record<string, string> = {
+    may: "May 2026",
+    jun: "June 2026",
+    jul: "July 2026",
+    aug: "August 2026",
+  };
+  const planLabel =
+    data.planType === "monthly"
+      ? `Monthly — ${data.selectedMonths?.map((k) => MONTH_LABELS[k] ?? k).join(", ") ?? ""}`
+      : `Drop-in — ${data.selectedFridays?.length ?? 0} session${(data.selectedFridays?.length ?? 0) !== 1 ? "s" : ""}`;
+
+  return {
+    title: "🎉 Fun Friday Payment",
+    color: 0x7c3aed,
+    fields: [
+      { name: "Parent", value: data.parentName || "N/A", inline: true },
+      { name: "Email", value: data.parentEmail || "N/A", inline: true },
+      { name: "Child", value: data.childName || "N/A", inline: true },
+      { name: "Plan", value: planLabel, inline: true },
+      { name: "Amount Paid", value: `$${amountDollars}`, inline: true },
+    ],
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
  * Creates a Discord embed for new parent account creation
  */
 export function createParentSignupEmbed(data: {

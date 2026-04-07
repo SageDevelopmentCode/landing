@@ -1,7 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Receipt, CheckCircle2, Sun, X, Check, ChevronRight, Clock } from "lucide-react";
+import {
+  Receipt,
+  CheckCircle2,
+  Sun,
+  X,
+  Check,
+  ChevronRight,
+  Clock,
+  PartyPopper,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 function getInitials(name: string | null): string {
@@ -19,11 +28,18 @@ import {
   SidebarField,
   SidebarSection,
 } from "@/app/components/SidebarPrimitives";
-import type { StripeTransaction, PendingPaymentRequest, SummerEnrollment, PaidWeeksByStudent, NonEnrolledApp } from "./page";
+import type {
+  StripeTransaction,
+  PendingPaymentRequest,
+  SummerEnrollment,
+  PaidWeeksByStudent,
+  NonEnrolledApp,
+  StudentInfo,
+} from "./page";
 
 interface Props {
   transactions: StripeTransaction[];
-  studentMap: Record<string, string>;
+  studentMap: Record<string, StudentInfo>;
   pendingRequests: PendingPaymentRequest[];
   summerEnrollments: SummerEnrollment[];
   unpaidSummerEnrollments: SummerEnrollment[];
@@ -43,13 +59,21 @@ const SUMMER_WEEKS = [
   { week: 1, dates: "May 26\u201329", theme: "Welcome to Camp" },
   { week: 2, dates: "Jun 1\u20134", theme: "Mystery Camp Escape Challenge" },
   { week: 3, dates: "Jun 8\u201311", theme: "Beach Day Bash" },
-  { week: 4, dates: "Jun 15\u201318", theme: "Scientist and Space Engineering Lab" },
+  {
+    week: 4,
+    dates: "Jun 15\u201318",
+    theme: "Scientist and Space Engineering Lab",
+  },
   { week: 5, dates: "Jun 22\u201325", theme: "Safari Escape" },
   { week: 6, dates: "Jun 29\u2013Jul 2", theme: "Splash Into Summer" },
   { week: 7, dates: "Jul 6\u20139", theme: "Dino Hunt" },
   { week: 8, dates: "Jul 13\u201316", theme: "Pirate Adventure" },
   { week: 9, dates: "Jul 20\u201323", theme: "You are a Superhero!" },
-  { week: 10, dates: "Jul 27\u201330", theme: "Space Explorers: Mission to the Stars" },
+  {
+    week: 10,
+    dates: "Jul 27\u201330",
+    theme: "Space Explorers: Mission to the Stars",
+  },
   { week: 11, dates: "Aug 3\u20136", theme: "Down on the Farm" },
   { week: 12, dates: "Aug 10\u201313", theme: "Finale of Camp" },
 ];
@@ -146,10 +170,60 @@ const AFTERCARE_MONTHS = [
   },
 ];
 
+// --- Fun Friday pricing ---
+const FUN_FRIDAY_MONTHLY_CENTS = 20000; // $200/month (4 sessions)
+const FUN_FRIDAY_DROPIN_CENTS = 6000; // $60/session
+
+const FUN_FRIDAY_MONTHS = [
+  {
+    key: "may",
+    label: "May 2026",
+    fridays: [{ label: "Fri May 29", date: "2026-05-29" }],
+  },
+  {
+    key: "jun",
+    label: "June 2026",
+    fridays: [
+      { label: "Fri Jun 5", date: "2026-06-05" },
+      { label: "Fri Jun 12", date: "2026-06-12" },
+      { label: "Fri Jun 19", date: "2026-06-19" },
+      { label: "Fri Jun 26", date: "2026-06-26" },
+    ],
+  },
+  {
+    key: "jul",
+    label: "July 2026",
+    fridays: [
+      { label: "Fri Jul 3", date: "2026-07-03" },
+      { label: "Fri Jul 10", date: "2026-07-10" },
+      { label: "Fri Jul 17", date: "2026-07-17" },
+      { label: "Fri Jul 24", date: "2026-07-24" },
+      { label: "Fri Jul 31", date: "2026-07-31" },
+    ],
+  },
+  {
+    key: "aug",
+    label: "August 2026",
+    fridays: [{ label: "Fri Aug 7", date: "2026-08-07" }],
+  },
+];
+
 function getGradeTier(grade: string | null): "primary" | "upper" {
   if (!grade) return "upper";
   const g = grade.toLowerCase().trim();
-  if (["pre-k", "prek", "pre k", "kindergarten", "k", "1st", "1", "1st grade"].includes(g)) return "primary";
+  if (
+    [
+      "pre-k",
+      "prek",
+      "pre k",
+      "kindergarten",
+      "k",
+      "1st",
+      "1",
+      "1st grade",
+    ].includes(g)
+  )
+    return "primary";
   return "upper";
 }
 
@@ -215,19 +289,15 @@ function PendingPaymentCard({
       className="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 px-5 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
       onClick={onClick}
     >
-      <div
-        className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full text-sm font-semibold"
-        style={{ backgroundColor: "#d4e6d0", color: "#4a7c59" }}
-      >
-        {getInitials(studentName)}
-      </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-semibold text-gray-800">
             {request.label}
           </span>
           <span className="text-xs text-gray-400">&mdash;</span>
-          <span className="text-xs text-gray-500">{formatProgram(request.program)}</span>
+          <span className="text-xs text-gray-500">
+            {formatProgram(request.program)}
+          </span>
         </div>
         {studentName && (
           <div className="text-xs text-gray-400 mt-0.5">
@@ -236,13 +306,16 @@ function PendingPaymentCard({
         )}
       </div>
       <div className="flex-shrink-0 flex items-center gap-1.5">
-        <span
-          className="text-sm font-semibold"
-          style={{ color: "#4a7c59" }}
-        >
-          {request.amount_cents != null ? `Pay ${formatCents(request.amount_cents)}` : "Pay Now"}
+        <span className="text-sm font-semibold" style={{ color: "#4a7c59" }}>
+          {request.amount_cents != null
+            ? `Pay ${formatCents(request.amount_cents)}`
+            : "Pay Now"}
         </span>
-        <ChevronRight className="w-4 h-4" style={{ color: "#4a7c59" }} strokeWidth={2} />
+        <ChevronRight
+          className="w-4 h-4"
+          style={{ color: "#4a7c59" }}
+          strokeWidth={2}
+        />
       </div>
     </div>
   );
@@ -263,15 +336,11 @@ function SummerTuitionCard({
       className="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 px-5 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
       onClick={onClick}
     >
-      <div
-        className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full text-sm font-semibold"
-        style={{ backgroundColor: "#d4e6d0", color: "#4a7c59" }}
-      >
-        {getInitials(studentName)}
-      </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-semibold text-gray-800">Summer Program Tuition</span>
+          <span className="text-sm font-semibold text-gray-800">
+            Summer Program Tuition
+          </span>
           <span className="text-xs text-gray-400">&mdash;</span>
           <span className="text-xs text-gray-500">Summer 2026</span>
         </div>
@@ -287,7 +356,11 @@ function SummerTuitionCard({
         <span className="text-sm font-semibold" style={{ color: "#e07a3a" }}>
           {hasPaidWeeks ? "Pay for more weeks" : "Select plan"}
         </span>
-        <ChevronRight className="w-4 h-4" style={{ color: "#e07a3a" }} strokeWidth={2} />
+        <ChevronRight
+          className="w-4 h-4"
+          style={{ color: "#e07a3a" }}
+          strokeWidth={2}
+        />
       </div>
     </div>
   );
@@ -309,10 +382,14 @@ function NonEnrolledCard({ app }: { app: NonEnrolledApp }) {
         <div className="text-sm font-semibold text-gray-800">
           {app.name ?? "Student"}
         </div>
-        <div className="text-xs text-amber-600 mt-0.5">Enrollment not complete</div>
+        <div className="text-xs text-amber-600 mt-0.5">
+          Enrollment not complete
+        </div>
       </div>
       <div className="flex-shrink-0 flex items-center gap-1.5">
-        <span className="text-sm font-semibold text-amber-700">Complete enrollment</span>
+        <span className="text-sm font-semibold text-amber-700">
+          Complete enrollment
+        </span>
         <ChevronRight className="w-4 h-4 text-amber-700" strokeWidth={2} />
       </div>
     </a>
@@ -358,12 +435,17 @@ function SummerPaymentModal({
   const feeCents = coverFees
     ? paymentMethod === "ach"
       ? Math.min(Math.round(intendedAmountCents * 0.008), 500)
-      : Math.round((intendedAmountCents + 30) / (1 - 0.029)) - intendedAmountCents
+      : Math.round((intendedAmountCents + 30) / (1 - 0.029)) -
+        intendedAmountCents
     : 0;
   const totalWithFees = intendedAmountCents + feeCents;
 
-  const cardFeeDisplay = Math.round(((intendedAmountCents / 100) * 0.029 + 0.3) * 100) / 100;
-  const achFeeDisplay  = Math.min(Math.round((intendedAmountCents / 100) * 0.008 * 100) / 100, 5.0);
+  const cardFeeDisplay =
+    Math.round(((intendedAmountCents / 100) * 0.029 + 0.3) * 100) / 100;
+  const achFeeDisplay = Math.min(
+    Math.round((intendedAmountCents / 100) * 0.008 * 100) / 100,
+    5.0,
+  );
 
   function toggleWeek(week: number) {
     if (paidWeeks.includes(week)) return; // no-op for already-paid weeks
@@ -444,7 +526,11 @@ function SummerPaymentModal({
                   className="flex items-center justify-center w-7 h-7 rounded-full"
                   style={{ backgroundColor: "#fde8d8" }}
                 >
-                  <Sun className="w-3.5 h-3.5" style={{ color: "#e07a3a" }} strokeWidth={2} />
+                  <Sun
+                    className="w-3.5 h-3.5"
+                    style={{ color: "#e07a3a" }}
+                    strokeWidth={2}
+                  />
                 </div>
                 <h2 className="text-lg font-bold font-heading text-gray-800">
                   Summer 2026 Tuition
@@ -452,13 +538,17 @@ function SummerPaymentModal({
               </div>
               {studentName && (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500 font-body">{studentName}</span>
+                  <span className="text-sm text-gray-500 font-body">
+                    {studentName}
+                  </span>
                   {enrollment.child_grade && (
                     <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
                       {enrollment.child_grade}
                     </span>
                   )}
-                  <span className="text-xs text-gray-400">· {gradeTierLabel(tier)}</span>
+                  <span className="text-xs text-gray-400">
+                    · {gradeTierLabel(tier)}
+                  </span>
                 </div>
               )}
             </div>
@@ -471,298 +561,376 @@ function SummerPaymentModal({
           </div>
 
           {/* Tab switcher — only shown on plan selection step */}
-          {step === "plan" && <div className="flex gap-2 mt-4">
-            <button
-              onClick={() => setTab("weekly")}
-              className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
-                tab === "weekly"
-                  ? "text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-              style={tab === "weekly" ? { backgroundColor: "#4a7c59" } : {}}
-            >
-              Pay Weekly
-            </button>
-            <button
-              onClick={() => { if (!isOnWeeklyPlan) setTab("full"); }}
-              title={isOnWeeklyPlan ? "Not available — you're on the weekly plan" : undefined}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold transition-colors ${
-                isOnWeeklyPlan
-                  ? "bg-gray-100 text-gray-400 opacity-40 cursor-not-allowed"
-                  : tab === "full"
-                  ? "text-white cursor-pointer"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200 cursor-pointer"
-              }`}
-              style={!isOnWeeklyPlan && tab === "full" ? { backgroundColor: "#4a7c59" } : {}}
-            >
-              Full Summer
-              <span
-                className="px-1.5 py-0.5 rounded-full text-xs font-semibold"
+          {step === "plan" && (
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={() => setTab("weekly")}
+                className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
+                  tab === "weekly"
+                    ? "text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+                style={tab === "weekly" ? { backgroundColor: "#4a7c59" } : {}}
+              >
+                Pay Weekly
+              </button>
+              <button
+                onClick={() => {
+                  if (!isOnWeeklyPlan) setTab("full");
+                }}
+                title={
+                  isOnWeeklyPlan
+                    ? "Not available — you're on the weekly plan"
+                    : undefined
+                }
+                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold transition-colors ${
+                  isOnWeeklyPlan
+                    ? "bg-gray-100 text-gray-400 opacity-40 cursor-not-allowed"
+                    : tab === "full"
+                      ? "text-white cursor-pointer"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200 cursor-pointer"
+                }`}
                 style={
                   !isOnWeeklyPlan && tab === "full"
-                    ? { backgroundColor: "rgba(255,255,255,0.25)", color: "#fff" }
-                    : { backgroundColor: "#d4e6d0", color: "#4a7c59" }
+                    ? { backgroundColor: "#4a7c59" }
+                    : {}
                 }
               >
-                10% off
-              </span>
-            </button>
-          </div>}
+                Full Summer
+                <span
+                  className="px-1.5 py-0.5 rounded-full text-xs font-semibold"
+                  style={
+                    !isOnWeeklyPlan && tab === "full"
+                      ? {
+                          backgroundColor: "rgba(255,255,255,0.25)",
+                          color: "#fff",
+                        }
+                      : { backgroundColor: "#d4e6d0", color: "#4a7c59" }
+                  }
+                >
+                  10% off
+                </span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-6 py-5">
           <AnimatePresence mode="wait">
-          {step === "payment" ? (
-            <motion.div
-              key="payment"
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              transition={{ duration: 0.2, ease: "easeInOut" }}
-              className="space-y-5"
-            >
-              {/* Payment method toggle */}
-              <div className="mb-4">
-                <p className="text-sm font-medium text-gray-700 font-body mb-2">
-                  How will you be paying?
-                </p>
-                <div className="flex gap-2">
-                  <button type="button" onClick={() => setPaymentMethod("card")}
-                    className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${
-                      paymentMethod === "card"
-                        ? "border-emerald-600 bg-emerald-50 text-emerald-700"
-                        : "border-gray-200 text-gray-600 hover:bg-gray-50"
-                    }`}>
-                    Credit/Debit Card
-                  </button>
-                  <button type="button" onClick={() => setPaymentMethod("ach")}
-                    className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${
-                      paymentMethod === "ach"
-                        ? "border-emerald-600 bg-emerald-50 text-emerald-700"
-                        : "border-gray-200 text-gray-600 hover:bg-gray-50"
-                    }`}>
-                    ACH / US bank account
-                  </button>
-                </div>
-                <p className="text-xs text-gray-400 font-body mt-1.5">
-                  {paymentMethod === "card"
-                    ? `Processing fee (est.): ~$${cardFeeDisplay.toFixed(2)}`
-                    : `Processing fee (est.): ~$${achFeeDisplay.toFixed(2)} (0.8%, max $5.00)`}
-                </p>
-              </div>
-
-              <label className="flex items-start gap-3 mb-5 cursor-pointer group">
-                <input type="checkbox" checked={coverFees}
-                  onChange={(e) => setCoverFees(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 rounded accent-emerald-600 cursor-pointer" />
-                <span className="text-sm text-gray-600 font-body group-hover:text-gray-800 transition-colors">
-                  I agree to pay the processing fee
-                </span>
-              </label>
-
-              <p className="text-xs text-gray-400 font-body mb-5">
-                Prefer to pay by check? Email us at{" "}
-                <a href="mailto:sabrina@sagefield.co"
-                  className="underline hover:text-gray-600 transition-colors">
-                  sabrina@sagefield.co
-                </a>{" "}
-                and we&apos;ll send you instructions.
-              </p>
-
-              {error && <p className="text-sm text-red-600 font-body mb-4">{error}</p>}
-
-              <p className="text-xs text-gray-400 font-body mb-4">
-                Summer tuition payments are non-refundable.
-              </p>
-            </motion.div>
-          ) : tab === "weekly" ? (
-            <motion.div
-              key="weekly"
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 10 }}
-              transition={{ duration: 0.2, ease: "easeInOut" }}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-sm text-gray-500 font-body">
-                  Select the weeks you&apos;d like to pay for
-                </p>
-                <button
-                  onClick={() => {
-                    if (selectedWeeks.size === TOTAL_WEEKS) {
-                      setSelectedWeeks(new Set());
-                    } else {
-                      setSelectedWeeks(new Set(SUMMER_WEEKS.map((w) => w.week)));
-                    }
-                  }}
-                  className="text-xs font-semibold cursor-pointer transition-colors"
-                  style={{ color: "#4a7c59" }}
-                >
-                  {selectedWeeks.size === TOTAL_WEEKS ? "Deselect All" : "Select All"}
-                </button>
-              </div>
-
-              {/* Week list */}
-              <div className="grid grid-cols-3 gap-2 mb-4">
-                {SUMMER_WEEKS.map((w) => {
-                  const isPaid = paidWeeks.includes(w.week);
-                  const selected = isPaid || selectedWeeks.has(w.week);
-                  return (
-                    <motion.button
-                      key={w.week}
-                      onClick={() => toggleWeek(w.week)}
-                      className={`flex flex-col gap-1.5 rounded-xl px-3 py-3 text-left transition-colors ${isPaid ? "cursor-default" : "cursor-pointer"}`}
-                      animate={{
-                        backgroundColor: isPaid ? "#f0fdf4" : selected ? "#f0f7f1" : "#f9fafb",
-                      }}
-                      whileTap={isPaid ? {} : { scale: 0.99 }}
-                      transition={{ duration: 0.15 }}
-                      style={isPaid ? { boxShadow: "inset 3px 0 0 #16a34a" } : selected ? { boxShadow: "inset 3px 0 0 #4a7c59" } : {}}
-                    >
-                      <div className="flex items-center gap-2">
-                        {/* Checkbox */}
-                        <div
-                          className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-colors"
-                          style={
-                            isPaid
-                              ? { backgroundColor: "#16a34a" }
-                              : selected
-                              ? { backgroundColor: "#4a7c59" }
-                              : { backgroundColor: "transparent", border: "2px solid #d1d5db" }
-                          }
-                        >
-                          {(isPaid || selected) && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
-                        </div>
-                        <span className={`text-sm font-semibold font-heading ${isPaid ? "text-green-700" : "text-gray-800"}`}>
-                          Week {w.week}
-                        </span>
-                      </div>
-                      <p className={`text-xs font-body ${isPaid ? "text-green-600" : "text-gray-400"}`}>{w.dates}</p>
-                      {isPaid ? (
-                        <p className="text-xs font-semibold text-green-600 font-body">Paid ✓</p>
-                      ) : (
-                        <p className="text-xs text-gray-500 font-body truncate">{w.theme}</p>
-                      )}
-                    </motion.button>
-                  );
-                })}
-              </div>
-
-              {/* Running total */}
+            {step === "payment" ? (
               <motion.div
-                className="rounded-xl px-4 py-3 flex items-center justify-between"
-                style={{ backgroundColor: allWeeksSelected ? "#f0f7f1" : "#f6faf7" }}
-                layout
-                transition={{ duration: 0.2 }}
+                key="payment"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+                className="space-y-5"
               >
-                <div className="flex flex-col gap-0.5">
-                  {isOnWeeklyPlan && paidWeeks.length > 0 && (
-                    <span className="text-xs text-green-600 font-body">
-                      {paidWeeks.length} week{paidWeeks.length !== 1 ? "s" : ""} already paid
-                    </span>
-                  )}
-                  <span className="text-sm text-gray-500 font-body">
-                    {selectedWeeks.size === 0
-                      ? isOnWeeklyPlan ? "Select more weeks to pay for" : "No weeks selected"
-                      : allWeeksSelected
-                      ? "All 12 weeks · Full Summer discount applied"
-                      : isOnWeeklyPlan
-                      ? `paying for ${selectedWeeks.size} more week${selectedWeeks.size !== 1 ? "s" : ""} × ${formatCents(weeklyRate)}/wk`
-                      : `${selectedWeeks.size} week${selectedWeeks.size !== 1 ? "s" : ""} × ${formatCents(weeklyRate)}/wk`}
-                  </span>
-                  {allWeeksSelected && (
-                    <span className="text-xs text-gray-400 font-body line-through">
-                      {formatCents(weeklyTotal)}
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  {allWeeksSelected && (
-                    <span
-                      className="px-2 py-0.5 rounded-full text-xs font-semibold text-white"
-                      style={{ backgroundColor: "#4a7c59" }}
+                {/* Payment method toggle */}
+                <div className="mb-4">
+                  <p className="text-sm font-medium text-gray-700 font-body mb-2">
+                    How will you be paying?
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("card")}
+                      className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${
+                        paymentMethod === "card"
+                          ? "border-emerald-600 bg-emerald-50 text-emerald-700"
+                          : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                      }`}
                     >
-                      Save 10%
-                    </span>
-                  )}
-                  <span
-                    className="text-base font-bold font-heading"
+                      Credit/Debit Card
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("ach")}
+                      className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${
+                        paymentMethod === "ach"
+                          ? "border-emerald-600 bg-emerald-50 text-emerald-700"
+                          : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      ACH / US bank account
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-400 font-body mt-1.5">
+                    {paymentMethod === "card"
+                      ? `Processing fee (est.): ~$${cardFeeDisplay.toFixed(2)}`
+                      : `Processing fee (est.): ~$${achFeeDisplay.toFixed(2)} (0.8%, max $5.00)`}
+                  </p>
+                </div>
+
+                <label className="flex items-start gap-3 mb-5 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={coverFees}
+                    onChange={(e) => setCoverFees(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded accent-emerald-600 cursor-pointer"
+                  />
+                  <span className="text-sm text-gray-600 font-body group-hover:text-gray-800 transition-colors">
+                    I agree to pay the processing fee
+                  </span>
+                </label>
+
+                <p className="text-xs text-gray-400 font-body mb-5">
+                  Prefer to pay by check? Email us at{" "}
+                  <a
+                    href="mailto:sabrina@sagefield.co"
+                    className="underline hover:text-gray-600 transition-colors"
+                  >
+                    sabrina@sagefield.co
+                  </a>{" "}
+                  and we&apos;ll send you instructions.
+                </p>
+
+                {error && (
+                  <p className="text-sm text-red-600 font-body mb-4">{error}</p>
+                )}
+
+                <p className="text-xs text-gray-400 font-body mb-4">
+                  Summer tuition payments are non-refundable.
+                </p>
+              </motion.div>
+            ) : tab === "weekly" ? (
+              <motion.div
+                key="weekly"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm text-gray-500 font-body">
+                    Select the weeks you&apos;d like to pay for
+                  </p>
+                  <button
+                    onClick={() => {
+                      if (selectedWeeks.size === TOTAL_WEEKS) {
+                        setSelectedWeeks(new Set());
+                      } else {
+                        setSelectedWeeks(
+                          new Set(SUMMER_WEEKS.map((w) => w.week)),
+                        );
+                      }
+                    }}
+                    className="text-xs font-semibold cursor-pointer transition-colors"
                     style={{ color: "#4a7c59" }}
                   >
-                    {selectedWeeks.size > 0 ? formatCents(effectiveTotal) : "—"}
+                    {selectedWeeks.size === TOTAL_WEEKS
+                      ? "Deselect All"
+                      : "Select All"}
+                  </button>
+                </div>
+
+                {/* Week list */}
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  {SUMMER_WEEKS.map((w) => {
+                    const isPaid = paidWeeks.includes(w.week);
+                    const selected = isPaid || selectedWeeks.has(w.week);
+                    return (
+                      <motion.button
+                        key={w.week}
+                        onClick={() => toggleWeek(w.week)}
+                        className={`flex flex-col gap-1.5 rounded-xl px-3 py-3 text-left transition-colors ${isPaid ? "cursor-default" : "cursor-pointer"}`}
+                        animate={{
+                          backgroundColor: isPaid
+                            ? "#f0fdf4"
+                            : selected
+                              ? "#f0f7f1"
+                              : "#f9fafb",
+                        }}
+                        whileTap={isPaid ? {} : { scale: 0.99 }}
+                        transition={{ duration: 0.15 }}
+                        style={
+                          isPaid
+                            ? { boxShadow: "inset 3px 0 0 #16a34a" }
+                            : selected
+                              ? { boxShadow: "inset 3px 0 0 #4a7c59" }
+                              : {}
+                        }
+                      >
+                        <div className="flex items-center gap-2">
+                          {/* Checkbox */}
+                          <div
+                            className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-colors"
+                            style={
+                              isPaid
+                                ? { backgroundColor: "#16a34a" }
+                                : selected
+                                  ? { backgroundColor: "#4a7c59" }
+                                  : {
+                                      backgroundColor: "transparent",
+                                      border: "2px solid #d1d5db",
+                                    }
+                            }
+                          >
+                            {(isPaid || selected) && (
+                              <Check
+                                className="w-3 h-3 text-white"
+                                strokeWidth={3}
+                              />
+                            )}
+                          </div>
+                          <span
+                            className={`text-sm font-semibold font-heading ${isPaid ? "text-green-700" : "text-gray-800"}`}
+                          >
+                            Week {w.week}
+                          </span>
+                        </div>
+                        <p
+                          className={`text-xs font-body ${isPaid ? "text-green-600" : "text-gray-400"}`}
+                        >
+                          {w.dates}
+                        </p>
+                        {isPaid ? (
+                          <p className="text-xs font-semibold text-green-600 font-body">
+                            Paid ✓
+                          </p>
+                        ) : (
+                          <p className="text-xs text-gray-500 font-body truncate">
+                            {w.theme}
+                          </p>
+                        )}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+
+                {/* Running total */}
+                <motion.div
+                  className="rounded-xl px-4 py-3 flex items-center justify-between"
+                  style={{
+                    backgroundColor: allWeeksSelected ? "#f0f7f1" : "#f6faf7",
+                  }}
+                  layout
+                  transition={{ duration: 0.2 }}
+                >
+                  <div className="flex flex-col gap-0.5">
+                    {isOnWeeklyPlan && paidWeeks.length > 0 && (
+                      <span className="text-xs text-green-600 font-body">
+                        {paidWeeks.length} week
+                        {paidWeeks.length !== 1 ? "s" : ""} already paid
+                      </span>
+                    )}
+                    <span className="text-sm text-gray-500 font-body">
+                      {selectedWeeks.size === 0
+                        ? isOnWeeklyPlan
+                          ? "Select more weeks to pay for"
+                          : "No weeks selected"
+                        : allWeeksSelected
+                          ? "All 12 weeks · Full Summer discount applied"
+                          : isOnWeeklyPlan
+                            ? `paying for ${selectedWeeks.size} more week${selectedWeeks.size !== 1 ? "s" : ""} × ${formatCents(weeklyRate)}/wk`
+                            : `${selectedWeeks.size} week${selectedWeeks.size !== 1 ? "s" : ""} × ${formatCents(weeklyRate)}/wk`}
+                    </span>
+                    {allWeeksSelected && (
+                      <span className="text-xs text-gray-400 font-body line-through">
+                        {formatCents(weeklyTotal)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {allWeeksSelected && (
+                      <span
+                        className="px-2 py-0.5 rounded-full text-xs font-semibold text-white"
+                        style={{ backgroundColor: "#4a7c59" }}
+                      >
+                        Save 10%
+                      </span>
+                    )}
+                    <span
+                      className="text-base font-bold font-heading"
+                      style={{ color: "#4a7c59" }}
+                    >
+                      {selectedWeeks.size > 0
+                        ? formatCents(effectiveTotal)
+                        : "—"}
+                    </span>
+                  </div>
+                </motion.div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="full"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+              >
+                {/* Pricing summary card */}
+                <div className="relative rounded-xl border border-gray-200 bg-white p-5 mb-4">
+                  <span
+                    className="absolute top-3.5 right-3.5 px-2.5 py-0.5 rounded-full text-xs font-semibold text-white"
+                    style={{ backgroundColor: "#4a7c59" }}
+                  >
+                    Save 10%
                   </span>
+
+                  <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">
+                    Full Summer &middot; 12 Weeks
+                  </p>
+                  <p className="text-xs text-gray-500 font-body mb-0.5">
+                    {gradeTierLabel(tier)}
+                  </p>
+                  <p className="text-3xl font-bold font-heading text-gray-800 mb-1">
+                    {formatCents(fullRate)}
+                  </p>
+                  <p className="text-sm text-gray-400 font-body">
+                    <span className="line-through">
+                      {formatCents(fullOriginal)}
+                    </span>
+                    <span className="ml-1.5 text-gray-500">
+                      &middot; {formatCents(savings)} off
+                    </span>
+                  </p>
+                  <p className="text-xs text-gray-400 font-body mt-3">
+                    Monday&ndash;Thursday, 9am&ndash;3pm &middot; May 26 &ndash;
+                    Aug 13, 2026
+                  </p>
+                </div>
+
+                {/* Week breakdown */}
+                <p className="text-sm text-gray-500 font-body mb-3">
+                  Your child will experience all 12 weeks of adventure:
+                </p>
+                <div className="space-y-1.5">
+                  {SUMMER_WEEKS.map((w) => (
+                    <div
+                      key={w.week}
+                      className="flex items-center gap-3 rounded-lg px-3 py-2"
+                      style={{ backgroundColor: "#f9fafb" }}
+                    >
+                      <span
+                        className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: "#d4e6d0" }}
+                      >
+                        <Check
+                          className="w-3 h-3"
+                          style={{ color: "#4a7c59" }}
+                          strokeWidth={3}
+                        />
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-semibold text-gray-700 font-heading">
+                            Week {w.week}
+                          </span>
+                          <span className="text-xs text-gray-400 font-body">
+                            {w.dates}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 font-body truncate">
+                          {w.theme}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </motion.div>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="full"
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              transition={{ duration: 0.2, ease: "easeInOut" }}
-            >
-              {/* Pricing summary card */}
-              <div className="relative rounded-xl border border-gray-200 bg-white p-5 mb-4">
-                <span
-                  className="absolute top-3.5 right-3.5 px-2.5 py-0.5 rounded-full text-xs font-semibold text-white"
-                  style={{ backgroundColor: "#4a7c59" }}
-                >
-                  Save 10%
-                </span>
-
-                <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">
-                  Full Summer &middot; 12 Weeks
-                </p>
-                <p className="text-xs text-gray-500 font-body mb-0.5">{gradeTierLabel(tier)}</p>
-                <p className="text-3xl font-bold font-heading text-gray-800 mb-1">
-                  {formatCents(fullRate)}
-                </p>
-                <p className="text-sm text-gray-400 font-body">
-                  <span className="line-through">{formatCents(fullOriginal)}</span>
-                  <span className="ml-1.5 text-gray-500">&middot; {formatCents(savings)} off</span>
-                </p>
-                <p className="text-xs text-gray-400 font-body mt-3">
-                  Monday&ndash;Thursday, 9am&ndash;3pm &middot; May 26 &ndash; Aug 13, 2026
-                </p>
-              </div>
-
-              {/* Week breakdown */}
-              <p className="text-sm text-gray-500 font-body mb-3">
-                Your child will experience all 12 weeks of adventure:
-              </p>
-              <div className="space-y-1.5">
-                {SUMMER_WEEKS.map((w) => (
-                  <div
-                    key={w.week}
-                    className="flex items-center gap-3 rounded-lg px-3 py-2"
-                    style={{ backgroundColor: "#f9fafb" }}
-                  >
-                    <span
-                      className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
-                      style={{ backgroundColor: "#d4e6d0" }}
-                    >
-                      <Check className="w-3 h-3" style={{ color: "#4a7c59" }} strokeWidth={3} />
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-gray-700 font-heading">
-                          Week {w.week}
-                        </span>
-                        <span className="text-xs text-gray-400 font-body">
-                          {w.dates}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-500 font-body truncate">
-                        {w.theme}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          )}
+            )}
           </AnimatePresence>
         </div>
 
@@ -785,8 +953,8 @@ function SummerPaymentModal({
             {step === "plan"
               ? continueLabel
               : loading
-              ? "Processing…"
-              : `Pay Now · ${formatCents(totalWithFees)}`}
+                ? "Processing…"
+                : `Pay Now · ${formatCents(totalWithFees)}`}
           </button>
         </div>
       </motion.div>
@@ -806,15 +974,11 @@ function AftercareCard({
       className="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 px-5 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
       onClick={onClick}
     >
-      <div
-        className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full"
-        style={{ backgroundColor: "#fde8d8", color: "#e07a3a" }}
-      >
-        <Clock className="w-5 h-5" />
-      </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-semibold text-gray-800">After Care</span>
+          <span className="text-sm font-semibold text-gray-800">
+            After Care
+          </span>
           <span className="text-xs text-gray-400">&mdash;</span>
           <span className="text-xs text-gray-500">Summer 2026</span>
           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-400">
@@ -822,14 +986,63 @@ function AftercareCard({
           </span>
         </div>
         {studentName && (
-          <div className="text-xs text-gray-400 mt-0.5">Student: {studentName}</div>
+          <div className="text-xs text-gray-400 mt-0.5">
+            Student: {studentName}
+          </div>
         )}
       </div>
       <div className="flex-shrink-0 flex items-center gap-1.5">
         <span className="text-sm font-semibold" style={{ color: "#e07a3a" }}>
           Select plan
         </span>
-        <ChevronRight className="w-4 h-4" style={{ color: "#e07a3a" }} strokeWidth={2} />
+        <ChevronRight
+          className="w-4 h-4"
+          style={{ color: "#e07a3a" }}
+          strokeWidth={2}
+        />
+      </div>
+    </div>
+  );
+}
+
+function FunFridayCard({
+  studentName,
+  onClick,
+}: {
+  studentName: string | null;
+  onClick: () => void;
+}) {
+  return (
+    <div
+      className="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 px-5 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
+      onClick={onClick}
+    >
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm font-semibold text-gray-800">
+            Fun Friday
+          </span>
+          <span className="text-xs text-gray-400">&mdash;</span>
+          <span className="text-xs text-gray-500">Summer 2026</span>
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-400">
+            Optional
+          </span>
+        </div>
+        {studentName && (
+          <div className="text-xs text-gray-400 mt-0.5">
+            Student: {studentName}
+          </div>
+        )}
+      </div>
+      <div className="flex-shrink-0 flex items-center gap-1.5">
+        <span className="text-sm font-semibold" style={{ color: "#7c3aed" }}>
+          Select plan
+        </span>
+        <ChevronRight
+          className="w-4 h-4"
+          style={{ color: "#7c3aed" }}
+          strokeWidth={2}
+        />
       </div>
     </div>
   );
@@ -838,10 +1051,14 @@ function AftercareCard({
 function AftercarePaymentModal({
   enrollment,
   studentName,
+  parentId,
+  parentEmail,
   onClose,
 }: {
   enrollment: SummerEnrollment;
   studentName: string | null;
+  parentId: string;
+  parentEmail: string;
   onClose: () => void;
 }) {
   const [step, setStep] = useState<"plan" | "payment">("plan");
@@ -849,10 +1066,12 @@ function AftercarePaymentModal({
   const [selectedMonths, setSelectedMonths] = useState<Set<string>>(new Set());
   const [selectedDays, setSelectedDays] = useState<Set<string>>(new Set());
   const [expandedMonths, setExpandedMonths] = useState<Set<string>>(
-    new Set(AFTERCARE_MONTHS.map((m) => m.key))
+    new Set(AFTERCARE_MONTHS.map((m) => m.key)),
   );
   const [paymentMethod, setPaymentMethod] = useState<"card" | "ach">("card");
   const [coverFees, setCoverFees] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const monthlyTotal = selectedMonths.size * AFTERCARE_MONTHLY_CENTS;
   const dailyTotal = selectedDays.size * AFTERCARE_DAILY_CENTS;
@@ -863,7 +1082,8 @@ function AftercarePaymentModal({
   const feeCents = coverFees
     ? paymentMethod === "ach"
       ? Math.min(Math.round(intendedAmountCents * 0.008), 500)
-      : Math.round((intendedAmountCents + 30) / (1 - 0.029)) - intendedAmountCents
+      : Math.round((intendedAmountCents + 30) / (1 - 0.029)) -
+        intendedAmountCents
     : 0;
   const totalWithFees = intendedAmountCents + feeCents;
 
@@ -871,7 +1091,7 @@ function AftercarePaymentModal({
     Math.round(((intendedAmountCents / 100) * 0.029 + 0.3) * 100) / 100;
   const achFeeDisplay = Math.min(
     Math.round((intendedAmountCents / 100) * 0.008 * 100) / 100,
-    5.0
+    5.0,
   );
 
   function toggleMonth(key: string) {
@@ -907,8 +1127,41 @@ function AftercarePaymentModal({
         ? `Continue · ${formatCents(monthlyTotal)}`
         : "Select months to continue"
       : selectedDays.size > 0
-      ? `Continue · ${formatCents(dailyTotal)}`
-      : "Select days to continue";
+        ? `Continue · ${formatCents(dailyTotal)}`
+        : "Select days to continue";
+
+  async function handlePayNow() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/stripe/create-aftercare-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          parentId,
+          parentEmail,
+          studentId: enrollment.student_id,
+          applicationId: enrollment.id,
+          planType: tab,
+          selectedMonths: Array.from(selectedMonths),
+          selectedDays: Array.from(selectedDays).sort(),
+          intendedAmountCents,
+          coverFees,
+          paymentMethod,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Something went wrong. Please try again.");
+        return;
+      }
+      window.location.href = data.url;
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -939,7 +1192,11 @@ function AftercarePaymentModal({
                   className="flex items-center justify-center w-7 h-7 rounded-full"
                   style={{ backgroundColor: "#fde8d8" }}
                 >
-                  <Clock className="w-3.5 h-3.5" style={{ color: "#e07a3a" }} strokeWidth={2} />
+                  <Clock
+                    className="w-3.5 h-3.5"
+                    style={{ color: "#e07a3a" }}
+                    strokeWidth={2}
+                  />
                 </div>
                 <h2 className="text-lg font-bold font-heading text-gray-800">
                   After Care — Summer 2026
@@ -947,7 +1204,9 @@ function AftercarePaymentModal({
               </div>
               {studentName && (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500 font-body">{studentName}</span>
+                  <span className="text-sm text-gray-500 font-body">
+                    {studentName}
+                  </span>
                   {enrollment.child_grade && (
                     <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
                       {enrollment.child_grade}
@@ -970,7 +1229,9 @@ function AftercarePaymentModal({
               <button
                 onClick={() => setTab("monthly")}
                 className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
-                  tab === "monthly" ? "text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  tab === "monthly"
+                    ? "text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
                 style={tab === "monthly" ? { backgroundColor: "#e07a3a" } : {}}
               >
@@ -979,7 +1240,9 @@ function AftercarePaymentModal({
               <button
                 onClick={() => setTab("daily")}
                 className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
-                  tab === "daily" ? "text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  tab === "daily"
+                    ? "text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
                 style={tab === "daily" ? { backgroundColor: "#e07a3a" } : {}}
               >
@@ -1061,6 +1324,10 @@ function AftercarePaymentModal({
                   and we&apos;ll send you instructions.
                 </p>
 
+                {error && (
+                  <p className="text-sm text-red-600 font-body mb-4">{error}</p>
+                )}
+
                 <p className="text-xs text-gray-400 font-body mb-4">
                   After care payments are non-refundable.
                 </p>
@@ -1089,7 +1356,9 @@ function AftercarePaymentModal({
                         }}
                         whileTap={{ scale: 0.99 }}
                         transition={{ duration: 0.15 }}
-                        style={selected ? { boxShadow: "inset 3px 0 0 #e07a3a" } : {}}
+                        style={
+                          selected ? { boxShadow: "inset 3px 0 0 #e07a3a" } : {}
+                        }
                       >
                         <div className="flex items-center gap-2">
                           <div
@@ -1097,17 +1366,26 @@ function AftercarePaymentModal({
                             style={
                               selected
                                 ? { backgroundColor: "#e07a3a" }
-                                : { backgroundColor: "transparent", border: "2px solid #d1d5db" }
+                                : {
+                                    backgroundColor: "transparent",
+                                    border: "2px solid #d1d5db",
+                                  }
                             }
                           >
-                            {selected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                            {selected && (
+                              <Check
+                                className="w-3 h-3 text-white"
+                                strokeWidth={3}
+                              />
+                            )}
                           </div>
                           <span className="text-sm font-semibold font-heading text-gray-800">
                             {m.label}
                           </span>
                         </div>
                         <p className="text-xs text-gray-400 font-body mt-1 ml-7">
-                          {m.days.length} days · {formatCents(AFTERCARE_MONTHLY_CENTS)}/mo
+                          {m.days.length} days ·{" "}
+                          {formatCents(AFTERCARE_MONTHLY_CENTS)}/mo
                         </p>
                       </motion.button>
                     );
@@ -1117,7 +1395,10 @@ function AftercarePaymentModal({
                 {/* Running total */}
                 <motion.div
                   className="rounded-xl px-4 py-3 flex items-center justify-between"
-                  style={{ backgroundColor: selectedMonths.size > 0 ? "#fff7f3" : "#f9fafb" }}
+                  style={{
+                    backgroundColor:
+                      selectedMonths.size > 0 ? "#fff7f3" : "#f9fafb",
+                  }}
                   layout
                   transition={{ duration: 0.2 }}
                 >
@@ -1148,7 +1429,9 @@ function AftercarePaymentModal({
                 <div className="space-y-3 mb-4">
                   {AFTERCARE_MONTHS.map((m) => {
                     const isExpanded = expandedMonths.has(m.key);
-                    const selectedInMonth = m.days.filter((d) => selectedDays.has(d.date)).length;
+                    const selectedInMonth = m.days.filter((d) =>
+                      selectedDays.has(d.date),
+                    ).length;
                     return (
                       <div
                         key={m.key}
@@ -1203,7 +1486,14 @@ function AftercarePaymentModal({
                                           ? "text-white border-transparent"
                                           : "bg-white text-gray-600 border-gray-200 hover:border-orange-300 hover:text-orange-600"
                                       }`}
-                                      style={sel ? { backgroundColor: "#e07a3a", borderColor: "#e07a3a" } : {}}
+                                      style={
+                                        sel
+                                          ? {
+                                              backgroundColor: "#e07a3a",
+                                              borderColor: "#e07a3a",
+                                            }
+                                          : {}
+                                      }
                                     >
                                       {d.label}
                                     </button>
@@ -1221,7 +1511,10 @@ function AftercarePaymentModal({
                 {/* Running total */}
                 <motion.div
                   className="rounded-xl px-4 py-3 flex items-center justify-between"
-                  style={{ backgroundColor: selectedDays.size > 0 ? "#fff7f3" : "#f9fafb" }}
+                  style={{
+                    backgroundColor:
+                      selectedDays.size > 0 ? "#fff7f3" : "#f9fafb",
+                  }}
                   layout
                   transition={{ duration: 0.2 }}
                 >
@@ -1253,14 +1546,541 @@ function AftercarePaymentModal({
             </button>
           )}
           <button
-            disabled={step === "plan" ? !canContinue : !coverFees}
+            disabled={step === "plan" ? !canContinue : loading || !coverFees}
             className="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             style={{ backgroundColor: "#e07a3a" }}
-            onClick={step === "plan" ? () => setStep("payment") : undefined}
+            onClick={step === "plan" ? () => setStep("payment") : handlePayNow}
           >
             {step === "plan"
               ? continueLabel
-              : `Pay Now · ${formatCents(totalWithFees)}`}
+              : loading
+                ? "Processing…"
+                : `Pay Now · ${formatCents(totalWithFees)}`}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function FunFridayPaymentModal({
+  enrollment,
+  studentName,
+  parentId,
+  parentEmail,
+  onClose,
+}: {
+  enrollment: SummerEnrollment;
+  studentName: string | null;
+  parentId: string;
+  parentEmail: string;
+  onClose: () => void;
+}) {
+  const [step, setStep] = useState<"plan" | "payment">("plan");
+  const [tab, setTab] = useState<"monthly" | "dropin">("monthly");
+  const [selectedMonths, setSelectedMonths] = useState<Set<string>>(new Set());
+  const [selectedFridays, setSelectedFridays] = useState<Set<string>>(
+    new Set(),
+  );
+  const [expandedMonths, setExpandedMonths] = useState<Set<string>>(
+    new Set(FUN_FRIDAY_MONTHS.map((m) => m.key)),
+  );
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "ach">("card");
+  const [coverFees, setCoverFees] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const monthlyTotal = selectedMonths.size * FUN_FRIDAY_MONTHLY_CENTS;
+  const dropinTotal = selectedFridays.size * FUN_FRIDAY_DROPIN_CENTS;
+  const intendedAmountCents = tab === "monthly" ? monthlyTotal : dropinTotal;
+  const canContinue =
+    tab === "monthly" ? selectedMonths.size > 0 : selectedFridays.size > 0;
+
+  const feeCents = coverFees
+    ? paymentMethod === "ach"
+      ? Math.min(Math.round(intendedAmountCents * 0.008), 500)
+      : Math.round((intendedAmountCents + 30) / (1 - 0.029)) -
+        intendedAmountCents
+    : 0;
+  const totalWithFees = intendedAmountCents + feeCents;
+
+  const cardFeeDisplay =
+    Math.round(((intendedAmountCents / 100) * 0.029 + 0.3) * 100) / 100;
+  const achFeeDisplay = Math.min(
+    Math.round((intendedAmountCents / 100) * 0.008 * 100) / 100,
+    5.0,
+  );
+
+  function toggleMonth(key: string) {
+    setSelectedMonths((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  function toggleFriday(date: string) {
+    setSelectedFridays((prev) => {
+      const next = new Set(prev);
+      if (next.has(date)) next.delete(date);
+      else next.add(date);
+      return next;
+    });
+  }
+
+  function toggleExpandedMonth(key: string) {
+    setExpandedMonths((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  const continueLabel =
+    tab === "monthly"
+      ? selectedMonths.size > 0
+        ? `Continue · ${formatCents(monthlyTotal)}`
+        : "Select months to continue"
+      : selectedFridays.size > 0
+        ? `Continue · ${formatCents(dropinTotal)}`
+        : "Select Fridays to continue";
+
+  async function handlePayNow() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/stripe/create-fun-friday-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          parentId,
+          parentEmail,
+          studentId: enrollment.student_id,
+          applicationId: enrollment.id,
+          planType: tab,
+          selectedMonths: Array.from(selectedMonths),
+          selectedFridays: Array.from(selectedFridays).sort(),
+          intendedAmountCents,
+          coverFees,
+          paymentMethod,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Something went wrong. Please try again.");
+        return;
+      }
+      window.location.href = data.url;
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <motion.div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        onClick={onClose}
+      />
+
+      {/* Modal card */}
+      <motion.div
+        className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+        transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+      >
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 border-b border-gray-100">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <div
+                  className="flex items-center justify-center w-7 h-7 rounded-full"
+                  style={{ backgroundColor: "#ede9fe" }}
+                >
+                  <PartyPopper
+                    className="w-3.5 h-3.5"
+                    style={{ color: "#7c3aed" }}
+                    strokeWidth={2}
+                  />
+                </div>
+                <h2 className="text-lg font-bold font-heading text-gray-800">
+                  Fun Friday — Summer 2026
+                </h2>
+              </div>
+              {studentName && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500 font-body">
+                    {studentName}
+                  </span>
+                  {enrollment.child_grade && (
+                    <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
+                      {enrollment.child_grade}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+            <button
+              onClick={onClose}
+              className="flex-shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Tab switcher — only on plan step */}
+          {step === "plan" && (
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={() => setTab("monthly")}
+                className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
+                  tab === "monthly"
+                    ? "text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+                style={tab === "monthly" ? { backgroundColor: "#7c3aed" } : {}}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setTab("dropin")}
+                className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
+                  tab === "dropin"
+                    ? "text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+                style={tab === "dropin" ? { backgroundColor: "#7c3aed" } : {}}
+              >
+                Drop-in
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto px-6 py-5">
+          <AnimatePresence mode="wait">
+            {step === "payment" ? (
+              <motion.div
+                key="payment"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+                className="space-y-5"
+              >
+                {/* Payment method toggle */}
+                <div className="mb-4">
+                  <p className="text-sm font-medium text-gray-700 font-body mb-2">
+                    How will you be paying?
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("card")}
+                      className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${
+                        paymentMethod === "card"
+                          ? "border-violet-400 bg-violet-50 text-violet-700"
+                          : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      Credit/Debit Card
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("ach")}
+                      className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${
+                        paymentMethod === "ach"
+                          ? "border-violet-400 bg-violet-50 text-violet-700"
+                          : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      ACH / US bank account
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-400 font-body mt-1.5">
+                    {paymentMethod === "card"
+                      ? `Processing fee (est.): ~$${cardFeeDisplay.toFixed(2)}`
+                      : `Processing fee (est.): ~$${achFeeDisplay.toFixed(2)} (0.8%, max $5.00)`}
+                  </p>
+                </div>
+
+                <label className="flex items-start gap-3 mb-5 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={coverFees}
+                    onChange={(e) => setCoverFees(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded cursor-pointer"
+                    style={{ accentColor: "#7c3aed" }}
+                  />
+                  <span className="text-sm text-gray-600 font-body group-hover:text-gray-800 transition-colors">
+                    I agree to pay the processing fee
+                  </span>
+                </label>
+
+                <p className="text-xs text-gray-400 font-body mb-5">
+                  Prefer to pay by check? Email us at{" "}
+                  <a
+                    href="mailto:sabrina@sagefield.co"
+                    className="underline hover:text-gray-600 transition-colors"
+                  >
+                    sabrina@sagefield.co
+                  </a>{" "}
+                  and we&apos;ll send you instructions.
+                </p>
+
+                {error && (
+                  <p className="text-sm text-red-600 font-body mb-4">{error}</p>
+                )}
+
+                <p className="text-xs text-gray-400 font-body mb-4">
+                  Fun Friday payments are non-refundable.
+                </p>
+              </motion.div>
+            ) : tab === "monthly" ? (
+              <motion.div
+                key="monthly"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+              >
+                <p className="text-sm text-gray-500 font-body mb-1">
+                  Select the months you&apos;d like Fun Friday coverage for.
+                </p>
+                <p className="text-xs text-gray-400 font-body mb-4">
+                  9:00am – 1:00pm · Package of 4 Fridays per month
+                </p>
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  {FUN_FRIDAY_MONTHS.map((m) => {
+                    const selected = selectedMonths.has(m.key);
+                    return (
+                      <motion.button
+                        key={m.key}
+                        onClick={() => toggleMonth(m.key)}
+                        className="flex flex-col gap-1 rounded-xl px-4 py-4 text-left cursor-pointer transition-colors"
+                        animate={{
+                          backgroundColor: selected ? "#f5f3ff" : "#f9fafb",
+                        }}
+                        whileTap={{ scale: 0.99 }}
+                        transition={{ duration: 0.15 }}
+                        style={
+                          selected ? { boxShadow: "inset 3px 0 0 #7c3aed" } : {}
+                        }
+                      >
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-colors"
+                            style={
+                              selected
+                                ? { backgroundColor: "#7c3aed" }
+                                : {
+                                    backgroundColor: "transparent",
+                                    border: "2px solid #d1d5db",
+                                  }
+                            }
+                          >
+                            {selected && (
+                              <Check
+                                className="w-3 h-3 text-white"
+                                strokeWidth={3}
+                              />
+                            )}
+                          </div>
+                          <span className="text-sm font-semibold font-heading text-gray-800">
+                            {m.label}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-400 font-body mt-1 ml-7">
+                          {m.fridays.length} Friday
+                          {m.fridays.length !== 1 ? "s" : ""} ·{" "}
+                          {formatCents(FUN_FRIDAY_MONTHLY_CENTS)}/mo
+                        </p>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+
+                {/* Running total */}
+                <motion.div
+                  className="rounded-xl px-4 py-3 flex items-center justify-between"
+                  style={{
+                    backgroundColor:
+                      selectedMonths.size > 0 ? "#f5f3ff" : "#f9fafb",
+                  }}
+                  layout
+                  transition={{ duration: 0.2 }}
+                >
+                  <span className="text-sm text-gray-500 font-body">
+                    {selectedMonths.size === 0
+                      ? "No months selected"
+                      : `${selectedMonths.size} month${selectedMonths.size !== 1 ? "s" : ""} × ${formatCents(FUN_FRIDAY_MONTHLY_CENTS)}/mo`}
+                  </span>
+                  <span
+                    className="text-base font-bold font-heading"
+                    style={{ color: "#7c3aed" }}
+                  >
+                    {selectedMonths.size > 0 ? formatCents(monthlyTotal) : "—"}
+                  </span>
+                </motion.div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="dropin"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+              >
+                <p className="text-sm text-gray-500 font-body mb-1">
+                  Select individual Fridays you&apos;d like to attend.
+                  $60/session.
+                </p>
+                <p className="text-xs text-gray-400 font-body mb-4">
+                  9:00am – 1:00pm
+                </p>
+                <div className="space-y-3 mb-4">
+                  {FUN_FRIDAY_MONTHS.map((m) => {
+                    const isExpanded = expandedMonths.has(m.key);
+                    const selectedInMonth = m.fridays.filter((d) =>
+                      selectedFridays.has(d.date),
+                    ).length;
+                    return (
+                      <div
+                        key={m.key}
+                        className="rounded-xl border border-gray-100 overflow-hidden"
+                      >
+                        {/* Month header */}
+                        <button
+                          onClick={() => toggleExpandedMonth(m.key)}
+                          className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold font-heading text-gray-700">
+                              {m.label}
+                            </span>
+                            {selectedInMonth > 0 && (
+                              <span
+                                className="px-2 py-0.5 rounded-full text-xs font-semibold text-white"
+                                style={{ backgroundColor: "#7c3aed" }}
+                              >
+                                {selectedInMonth} selected
+                              </span>
+                            )}
+                          </div>
+                          <motion.span
+                            animate={{ rotate: isExpanded ? 90 : 0 }}
+                            transition={{ duration: 0.15 }}
+                            className="text-gray-400"
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </motion.span>
+                        </button>
+
+                        {/* Friday chips */}
+                        <AnimatePresence initial={false}>
+                          {isExpanded && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2, ease: "easeInOut" }}
+                              className="overflow-hidden"
+                            >
+                              <div className="px-4 py-3 flex flex-wrap gap-2">
+                                {m.fridays.map((d) => {
+                                  const sel = selectedFridays.has(d.date);
+                                  return (
+                                    <button
+                                      key={d.date}
+                                      onClick={() => toggleFriday(d.date)}
+                                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold font-body transition-colors cursor-pointer border ${
+                                        sel
+                                          ? "text-white border-transparent"
+                                          : "bg-white text-gray-600 border-gray-200 hover:border-violet-300 hover:text-violet-600"
+                                      }`}
+                                      style={
+                                        sel
+                                          ? {
+                                              backgroundColor: "#7c3aed",
+                                              borderColor: "#7c3aed",
+                                            }
+                                          : {}
+                                      }
+                                    >
+                                      {d.label}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Running total */}
+                <motion.div
+                  className="rounded-xl px-4 py-3 flex items-center justify-between"
+                  style={{
+                    backgroundColor:
+                      selectedFridays.size > 0 ? "#f5f3ff" : "#f9fafb",
+                  }}
+                  layout
+                  transition={{ duration: 0.2 }}
+                >
+                  <span className="text-sm text-gray-500 font-body">
+                    {selectedFridays.size === 0
+                      ? "No Fridays selected"
+                      : `${selectedFridays.size} session${selectedFridays.size !== 1 ? "s" : ""} × ${formatCents(FUN_FRIDAY_DROPIN_CENTS)}/session`}
+                  </span>
+                  <span
+                    className="text-base font-bold font-heading"
+                    style={{ color: "#7c3aed" }}
+                  >
+                    {selectedFridays.size > 0 ? formatCents(dropinTotal) : "—"}
+                  </span>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
+          {step === "payment" && (
+            <button
+              onClick={() => setStep("plan")}
+              className="px-4 py-3 rounded-xl text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer"
+            >
+              Back
+            </button>
+          )}
+          <button
+            disabled={step === "plan" ? !canContinue : loading || !coverFees}
+            className="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ backgroundColor: "#7c3aed" }}
+            onClick={step === "plan" ? () => setStep("payment") : handlePayNow}
+          >
+            {step === "plan"
+              ? continueLabel
+              : loading
+                ? "Processing…"
+                : `Pay Now · ${formatCents(totalWithFees)}`}
           </button>
         </div>
       </motion.div>
@@ -1291,6 +2111,51 @@ function AllCaughtUpCard() {
   );
 }
 
+const STUDENT_AVATAR_COLORS = [
+  "bg-[#4a7c59]",
+  "bg-[#7c6b4a]",
+  "bg-[#5a6b8a]",
+  "bg-[#8a5a6b]",
+  "bg-[#6b7c4a]",
+  "bg-[#4a6b7c]",
+];
+function colorForStudentId(id: string): string {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++)
+    hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  return STUDENT_AVATAR_COLORS[Math.abs(hash) % STUDENT_AVATAR_COLORS.length];
+}
+
+function StudentTabAvatar({
+  id,
+  name,
+  profileImageUrl,
+  isActive,
+}: {
+  id: string;
+  name: string;
+  profileImageUrl: string | null;
+  isActive: boolean;
+}) {
+  if (profileImageUrl) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return (
+      <img
+        src={profileImageUrl}
+        alt={name}
+        className="w-7 h-7 rounded-full object-cover shrink-0"
+      />
+    );
+  }
+  return (
+    <div
+      className={`w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-semibold shrink-0 ${isActive ? "bg-white/30" : colorForStudentId(id)}`}
+    >
+      {getInitials(name)}
+    </div>
+  );
+}
+
 function PendingPaymentsSection({
   summerEnrollments,
   unpaidSummerEnrollments,
@@ -1300,16 +2165,18 @@ function PendingPaymentsSection({
   onSelectSummer,
   onSelectPending,
   onSelectAftercare,
+  onSelectFunFriday,
   nonEnrolledApps,
 }: {
   summerEnrollments: SummerEnrollment[];
   unpaidSummerEnrollments: SummerEnrollment[];
   pendingRequests: PendingPaymentRequest[];
-  studentMap: Record<string, string>;
+  studentMap: Record<string, StudentInfo>;
   paidWeeksByStudent: PaidWeeksByStudent;
   onSelectSummer: (e: SummerEnrollment) => void;
   onSelectPending: (r: PendingPaymentRequest) => void;
   onSelectAftercare: (e: SummerEnrollment) => void;
+  onSelectFunFriday: (e: SummerEnrollment) => void;
   nonEnrolledApps: NonEnrolledApp[];
 }) {
   const nonEnrolledMap = new Map(nonEnrolledApps.map((a) => [a.student_id, a]));
@@ -1318,16 +2185,21 @@ function PendingPaymentsSection({
   const allStudentIds = [
     ...new Set([
       ...summerEnrollments.map((e) => e.student_id),
-      ...pendingRequests.map((r) => r.student_id).filter(Boolean) as string[],
+      ...(pendingRequests.map((r) => r.student_id).filter(Boolean) as string[]),
       ...nonEnrolledApps.map((a) => a.student_id),
     ]),
   ];
 
   const [activeStudentId, setActiveStudentId] = useState<string | null>(
-    allStudentIds[0] ?? null
+    allStudentIds[0] ?? null,
   );
 
-  if (unpaidSummerEnrollments.length === 0 && pendingRequests.length === 0 && nonEnrolledApps.length === 0 && summerEnrollments.length === 0) {
+  if (
+    unpaidSummerEnrollments.length === 0 &&
+    pendingRequests.length === 0 &&
+    nonEnrolledApps.length === 0 &&
+    summerEnrollments.length === 0
+  ) {
     return <AllCaughtUpCard />;
   }
 
@@ -1337,26 +2209,29 @@ function PendingPaymentsSection({
 
   // Items for the active student
   const activeSummerEnrollments = unpaidSummerEnrollments.filter(
-    (e) => e.student_id === activeStudentId
+    (e) => e.student_id === activeStudentId,
   );
   // All summer enrollments for aftercare (including fully-paid)
   const activeAllSummerEnrollments = summerEnrollments.filter(
-    (e) => e.student_id === activeStudentId
+    (e) => e.student_id === activeStudentId,
   );
   const activePendingRequests = pendingRequests.filter(
-    (r) => r.student_id === activeStudentId
+    (r) => r.student_id === activeStudentId,
   );
 
   // Total owed (only pending requests with known amounts)
-  const totalCents = (activeStudentId === "__other__" ? orphanRequests : activePendingRequests)
-    .reduce((sum, r) => sum + (r.amount_cents ?? 0), 0);
+  const totalCents = (
+    activeStudentId === "__other__" ? orphanRequests : activePendingRequests
+  ).reduce((sum, r) => sum + (r.amount_cents ?? 0), 0);
 
   const isOtherTab = activeStudentId === "__other__";
   const currentItems = isOtherTab ? orphanRequests : activePendingRequests;
   const currentSummer = isOtherTab ? [] : activeSummerEnrollments;
   const currentAllSummer = isOtherTab ? [] : activeAllSummerEnrollments;
 
-  const activeNonEnrolled = activeStudentId ? nonEnrolledMap.get(activeStudentId) : undefined;
+  const activeNonEnrolled = activeStudentId
+    ? nonEnrolledMap.get(activeStudentId)
+    : undefined;
 
   return (
     <div>
@@ -1364,19 +2239,31 @@ function PendingPaymentsSection({
       <div className="flex gap-2 mb-4 flex-wrap">
         {allStudentIds.map((id) => {
           const isNonEnrolled = nonEnrolledMap.has(id);
-          const name = isNonEnrolled ? (nonEnrolledMap.get(id)!.name ?? "Student") : (studentMap[id] ?? "Unknown");
+          const studentInfo = studentMap[id];
+          const name = isNonEnrolled
+            ? (nonEnrolledMap.get(id)!.name ?? "Student")
+            : (studentInfo?.name ?? "Unknown");
+          const profileImageUrl = isNonEnrolled
+            ? null
+            : (studentInfo?.profileImageUrl ?? null);
           const isActive = activeStudentId === id;
           return (
             <button
               key={id}
               onClick={() => setActiveStudentId(id)}
-              className={`relative px-4 py-1.5 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
+              className={`relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
                 isActive
                   ? "text-white"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
               style={isActive ? { backgroundColor: "#4a7c59" } : {}}
             >
+              <StudentTabAvatar
+                id={id}
+                name={name}
+                profileImageUrl={profileImageUrl}
+                isActive={isActive}
+              />
               {name}
               {isNonEnrolled && (
                 <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-400 border-2 border-white" />
@@ -1411,14 +2298,16 @@ function PendingPaymentsSection({
         >
           {activeNonEnrolled ? (
             <NonEnrolledCard app={activeNonEnrolled} />
-          ) : currentSummer.length === 0 && currentItems.length === 0 && currentAllSummer.length === 0 ? (
+          ) : currentSummer.length === 0 &&
+            currentItems.length === 0 &&
+            currentAllSummer.length === 0 ? (
             <AllCaughtUpCard />
           ) : (
             <>
               {currentSummer.map((enrollment) => (
                 <SummerTuitionCard
                   key={enrollment.student_id}
-                  studentName={studentMap[enrollment.student_id] ?? null}
+                  studentName={studentMap[enrollment.student_id]?.name ?? null}
                   paidWeeks={paidWeeksByStudent[enrollment.student_id] ?? []}
                   onClick={() => onSelectSummer(enrollment)}
                 />
@@ -1426,15 +2315,26 @@ function PendingPaymentsSection({
               {currentAllSummer.map((enrollment) => (
                 <AftercareCard
                   key={`aftercare-${enrollment.student_id}`}
-                  studentName={studentMap[enrollment.student_id] ?? null}
+                  studentName={studentMap[enrollment.student_id]?.name ?? null}
                   onClick={() => onSelectAftercare(enrollment)}
+                />
+              ))}
+              {currentAllSummer.map((enrollment) => (
+                <FunFridayCard
+                  key={`funfriday-${enrollment.student_id}`}
+                  studentName={studentMap[enrollment.student_id]?.name ?? null}
+                  onClick={() => onSelectFunFriday(enrollment)}
                 />
               ))}
               {currentItems.map((req) => (
                 <PendingPaymentCard
                   key={req.id}
                   request={req}
-                  studentName={req.student_id ? (studentMap[req.student_id] ?? null) : null}
+                  studentName={
+                    req.student_id
+                      ? (studentMap[req.student_id]?.name ?? null)
+                      : null
+                  }
                   onClick={() => onSelectPending(req)}
                 />
               ))}
@@ -1445,7 +2345,9 @@ function PendingPaymentsSection({
                   className="rounded-xl px-4 py-3 flex items-center justify-between"
                   style={{ backgroundColor: "#f6faf7" }}
                 >
-                  <span className="text-sm text-gray-500 font-body">Total owed</span>
+                  <span className="text-sm text-gray-500 font-body">
+                    Total owed
+                  </span>
                   <span
                     className="text-base font-bold font-heading"
                     style={{ color: "#4a7c59" }}
@@ -1488,14 +2390,29 @@ function PendingDetailSidebar({
           </button>
           <SidebarSection title="Payment Details">
             <SidebarField label="Label" value={pending.label} />
-            <SidebarField label="Program" value={formatProgram(pending.program)} />
-            <SidebarField label="Payment Type" value={formatPaymentType(pending.payment_type)} />
+            <SidebarField
+              label="Program"
+              value={formatProgram(pending.program)}
+            />
+            <SidebarField
+              label="Payment Type"
+              value={formatPaymentType(pending.payment_type)}
+            />
             <SidebarField
               label="Amount"
-              value={pending.amount_cents != null ? formatCents(pending.amount_cents) : "—"}
+              value={
+                pending.amount_cents != null
+                  ? formatCents(pending.amount_cents)
+                  : "—"
+              }
             />
-            <SidebarField label="Requested On" value={formatDate(pending.created_at)} />
-            {studentName && <SidebarField label="Student" value={studentName} />}
+            <SidebarField
+              label="Requested On"
+              value={formatDate(pending.created_at)}
+            />
+            {studentName && (
+              <SidebarField label="Student" value={studentName} />
+            )}
           </SidebarSection>
         </div>
       )}
@@ -1503,84 +2420,128 @@ function PendingDetailSidebar({
   );
 }
 
-export default function BillingPage({ transactions, studentMap, pendingRequests, summerEnrollments, unpaidSummerEnrollments, paidWeeksByStudent, parentId, parentEmail, nonEnrolledApps }: Props) {
+export default function BillingPage({
+  transactions,
+  studentMap,
+  pendingRequests,
+  summerEnrollments,
+  unpaidSummerEnrollments,
+  paidWeeksByStudent,
+  parentId,
+  parentEmail,
+  nonEnrolledApps,
+}: Props) {
   const [selectedTx, setSelectedTx] = useState<StripeTransaction | null>(null);
-  const [selectedPending, setSelectedPending] = useState<PendingPaymentRequest | null>(null);
-  const [selectedSummerEnrollment, setSelectedSummerEnrollment] = useState<SummerEnrollment | null>(null);
-  const [selectedAftercareEnrollment, setSelectedAftercareEnrollment] = useState<SummerEnrollment | null>(null);
+  const [selectedPending, setSelectedPending] =
+    useState<PendingPaymentRequest | null>(null);
+  const [selectedSummerEnrollment, setSelectedSummerEnrollment] =
+    useState<SummerEnrollment | null>(null);
+  const [selectedAftercareEnrollment, setSelectedAftercareEnrollment] =
+    useState<SummerEnrollment | null>(null);
+  const [selectedFunFridayEnrollment, setSelectedFunFridayEnrollment] =
+    useState<SummerEnrollment | null>(null);
 
-  const nonEnrolledStudentIds = new Set(nonEnrolledApps.map((a) => a.student_id));
-  const visibleTransactions = transactions.filter((tx) => !tx.student_id || !nonEnrolledStudentIds.has(tx.student_id));
+  const nonEnrolledStudentIds = new Set(
+    nonEnrolledApps.map((a) => a.student_id),
+  );
+  const visibleTransactions = transactions.filter(
+    (tx) => !tx.student_id || !nonEnrolledStudentIds.has(tx.student_id),
+  );
 
   if (visibleTransactions.length === 0) {
     return (
       <>
-      <div className="space-y-8">
-        <div>
-          <h2 className="text-lg font-semibold font-heading text-gray-700 mb-4">
-            Pending Payments
-          </h2>
-          <PendingPaymentsSection
-            summerEnrollments={summerEnrollments}
-            unpaidSummerEnrollments={unpaidSummerEnrollments}
-            pendingRequests={pendingRequests}
-            studentMap={studentMap}
-            paidWeeksByStudent={paidWeeksByStudent}
-            onSelectSummer={setSelectedSummerEnrollment}
-            onSelectPending={setSelectedPending}
-            onSelectAftercare={setSelectedAftercareEnrollment}
-            nonEnrolledApps={nonEnrolledApps}
-          />
-        </div>
-        <div>
-          <h2 className="text-lg font-semibold font-heading text-gray-700 mb-4">
-            Payment History
-          </h2>
-          <div className="flex flex-col items-center justify-center bg-white rounded-2xl border border-gray-100 p-16 text-center">
-            <div
-              className="flex items-center justify-center w-14 h-14 rounded-full mb-4"
-              style={{ backgroundColor: "#d4e6d0" }}
-            >
-              <Receipt
-                className="w-6 h-6"
-                style={{ color: "#4a7c59" }}
-                strokeWidth={1.5}
-              />
+        <div className="space-y-8">
+          <div>
+            <h2 className="text-lg font-semibold font-heading text-gray-700 mb-4">
+              Pending Payments
+            </h2>
+            <PendingPaymentsSection
+              summerEnrollments={summerEnrollments}
+              unpaidSummerEnrollments={unpaidSummerEnrollments}
+              pendingRequests={pendingRequests}
+              studentMap={studentMap}
+              paidWeeksByStudent={paidWeeksByStudent}
+              onSelectSummer={setSelectedSummerEnrollment}
+              onSelectPending={setSelectedPending}
+              onSelectAftercare={setSelectedAftercareEnrollment}
+              onSelectFunFriday={setSelectedFunFridayEnrollment}
+              nonEnrolledApps={nonEnrolledApps}
+            />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold font-heading text-gray-700 mb-4">
+              Payment History
+            </h2>
+            <div className="flex flex-col items-center justify-center bg-white rounded-2xl border border-gray-100 p-16 text-center">
+              <div
+                className="flex items-center justify-center w-14 h-14 rounded-full mb-4"
+                style={{ backgroundColor: "#d4e6d0" }}
+              >
+                <Receipt
+                  className="w-6 h-6"
+                  style={{ color: "#4a7c59" }}
+                  strokeWidth={1.5}
+                />
+              </div>
+              <p className="text-base font-semibold font-heading text-gray-700 mb-1">
+                No transactions yet
+              </p>
+              <p className="text-sm font-body text-gray-400">
+                Your payment history will appear here once a transaction is
+                processed.
+              </p>
             </div>
-            <p className="text-base font-semibold font-heading text-gray-700 mb-1">
-              No transactions yet
-            </p>
-            <p className="text-sm font-body text-gray-400">
-              Your payment history will appear here once a transaction is processed.
-            </p>
           </div>
         </div>
-      </div>
 
-      <PendingDetailSidebar
-        pending={selectedPending}
-        studentName={selectedPending?.student_id ? (studentMap[selectedPending.student_id] ?? null) : null}
-        onClose={() => setSelectedPending(null)}
-      />
-      <AnimatePresence>
-        {selectedSummerEnrollment && (
-          <SummerPaymentModal
-            enrollment={selectedSummerEnrollment}
-            studentName={studentMap[selectedSummerEnrollment.student_id] ?? null}
-            parentId={parentId}
-            parentEmail={parentEmail}
-            paidWeeks={paidWeeksByStudent[selectedSummerEnrollment.student_id] ?? []}
-            onClose={() => setSelectedSummerEnrollment(null)}
-          />
-        )}
-        {selectedAftercareEnrollment && (
-          <AftercarePaymentModal
-            enrollment={selectedAftercareEnrollment}
-            studentName={studentMap[selectedAftercareEnrollment.student_id] ?? null}
-            onClose={() => setSelectedAftercareEnrollment(null)}
-          />
-        )}
-      </AnimatePresence>
+        <PendingDetailSidebar
+          pending={selectedPending}
+          studentName={
+            selectedPending?.student_id
+              ? (studentMap[selectedPending.student_id]?.name ?? null)
+              : null
+          }
+          onClose={() => setSelectedPending(null)}
+        />
+        <AnimatePresence>
+          {selectedSummerEnrollment && (
+            <SummerPaymentModal
+              enrollment={selectedSummerEnrollment}
+              studentName={
+                studentMap[selectedSummerEnrollment.student_id]?.name ?? null
+              }
+              parentId={parentId}
+              parentEmail={parentEmail}
+              paidWeeks={
+                paidWeeksByStudent[selectedSummerEnrollment.student_id] ?? []
+              }
+              onClose={() => setSelectedSummerEnrollment(null)}
+            />
+          )}
+          {selectedAftercareEnrollment && (
+            <AftercarePaymentModal
+              enrollment={selectedAftercareEnrollment}
+              studentName={
+                studentMap[selectedAftercareEnrollment.student_id]?.name ?? null
+              }
+              parentId={parentId}
+              parentEmail={parentEmail}
+              onClose={() => setSelectedAftercareEnrollment(null)}
+            />
+          )}
+          {selectedFunFridayEnrollment && (
+            <FunFridayPaymentModal
+              enrollment={selectedFunFridayEnrollment}
+              studentName={
+                studentMap[selectedFunFridayEnrollment.student_id]?.name ?? null
+              }
+              parentId={parentId}
+              parentEmail={parentEmail}
+              onClose={() => setSelectedFunFridayEnrollment(null)}
+            />
+          )}
+        </AnimatePresence>
       </>
     );
   }
@@ -1601,6 +2562,7 @@ export default function BillingPage({ transactions, studentMap, pendingRequests,
             onSelectSummer={setSelectedSummerEnrollment}
             onSelectPending={setSelectedPending}
             onSelectAftercare={setSelectedAftercareEnrollment}
+            onSelectFunFriday={setSelectedFunFridayEnrollment}
             nonEnrolledApps={nonEnrolledApps}
           />
         </div>
@@ -1608,66 +2570,70 @@ export default function BillingPage({ transactions, studentMap, pendingRequests,
           <h2 className="text-lg font-semibold font-heading text-gray-700 mb-4">
             Payment History
           </h2>
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-        <table className="w-full text-sm font-body">
-          <thead>
-            <tr className="border-b border-gray-100 text-left">
-              <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                Date
-              </th>
-              <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                Description
-              </th>
-              <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                Student
-              </th>
-              <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                Type
-              </th>
-              <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide text-right">
-                Amount
-              </th>
-              <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                Status
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {visibleTransactions.map((tx) => (
-              <tr
-                key={tx.id}
-                onClick={() => setSelectedTx(tx)}
-                className="border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer transition-colors"
-              >
-                <td className="px-5 py-4 text-gray-600 whitespace-nowrap">
-                  {formatDate(tx.created_at)}
-                </td>
-                <td className="px-5 py-4 text-gray-800 max-w-[240px] truncate">
-                  {tx.description ?? "—"}
-                </td>
-                <td className="px-5 py-4 text-gray-600">
-                  {studentMap[tx.student_id ?? ""] ?? "—"}
-                </td>
-                <td className="px-5 py-4 text-gray-600 whitespace-nowrap">
-                  {formatPaymentType(tx.payment_type)}
-                </td>
-                <td className="px-5 py-4 text-gray-800 text-right whitespace-nowrap font-semibold">
-                  {formatCents(tx.amount_cents)}
-                </td>
-                <td className="px-5 py-4">
-                  <StatusBadge status={tx.status} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <table className="w-full text-sm font-body">
+              <thead>
+                <tr className="border-b border-gray-100 text-left">
+                  <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                    Date
+                  </th>
+                  <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                    Description
+                  </th>
+                  <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                    Student
+                  </th>
+                  <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                    Type
+                  </th>
+                  <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide text-right">
+                    Amount
+                  </th>
+                  <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {visibleTransactions.map((tx) => (
+                  <tr
+                    key={tx.id}
+                    onClick={() => setSelectedTx(tx)}
+                    className="border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer transition-colors"
+                  >
+                    <td className="px-5 py-4 text-gray-600 whitespace-nowrap">
+                      {formatDate(tx.created_at)}
+                    </td>
+                    <td className="px-5 py-4 text-gray-800 max-w-[240px] truncate">
+                      {tx.description ?? "—"}
+                    </td>
+                    <td className="px-5 py-4 text-gray-600">
+                      {studentMap[tx.student_id ?? ""]?.name ?? "—"}
+                    </td>
+                    <td className="px-5 py-4 text-gray-600 whitespace-nowrap">
+                      {formatPaymentType(tx.payment_type)}
+                    </td>
+                    <td className="px-5 py-4 text-gray-800 text-right whitespace-nowrap font-semibold">
+                      {formatCents(tx.amount_cents)}
+                    </td>
+                    <td className="px-5 py-4">
+                      <StatusBadge status={tx.status} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
       <PendingDetailSidebar
         pending={selectedPending}
-        studentName={selectedPending?.student_id ? (studentMap[selectedPending.student_id] ?? null) : null}
+        studentName={
+          selectedPending?.student_id
+            ? (studentMap[selectedPending.student_id]?.name ?? null)
+            : null
+        }
         onClose={() => setSelectedPending(null)}
       />
 
@@ -1698,7 +2664,7 @@ export default function BillingPage({ transactions, studentMap, pendingRequests,
                 label="Student"
                 value={
                   selectedTx.student_id
-                    ? (studentMap[selectedTx.student_id] ?? "—")
+                    ? (studentMap[selectedTx.student_id]?.name ?? "—")
                     : "—"
                 }
               />
@@ -1739,18 +2705,37 @@ export default function BillingPage({ transactions, studentMap, pendingRequests,
         {selectedSummerEnrollment && (
           <SummerPaymentModal
             enrollment={selectedSummerEnrollment}
-            studentName={studentMap[selectedSummerEnrollment.student_id] ?? null}
+            studentName={
+              studentMap[selectedSummerEnrollment.student_id]?.name ?? null
+            }
             parentId={parentId}
             parentEmail={parentEmail}
-            paidWeeks={paidWeeksByStudent[selectedSummerEnrollment.student_id] ?? []}
+            paidWeeks={
+              paidWeeksByStudent[selectedSummerEnrollment.student_id] ?? []
+            }
             onClose={() => setSelectedSummerEnrollment(null)}
           />
         )}
         {selectedAftercareEnrollment && (
           <AftercarePaymentModal
             enrollment={selectedAftercareEnrollment}
-            studentName={studentMap[selectedAftercareEnrollment.student_id] ?? null}
+            studentName={
+              studentMap[selectedAftercareEnrollment.student_id]?.name ?? null
+            }
+            parentId={parentId}
+            parentEmail={parentEmail}
             onClose={() => setSelectedAftercareEnrollment(null)}
+          />
+        )}
+        {selectedFunFridayEnrollment && (
+          <FunFridayPaymentModal
+            enrollment={selectedFunFridayEnrollment}
+            studentName={
+              studentMap[selectedFunFridayEnrollment.student_id]?.name ?? null
+            }
+            parentId={parentId}
+            parentEmail={parentEmail}
+            onClose={() => setSelectedFunFridayEnrollment(null)}
           />
         )}
       </AnimatePresence>
