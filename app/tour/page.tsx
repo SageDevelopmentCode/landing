@@ -478,7 +478,7 @@ function TimeSlotPicker({
   blockedTimes: Set<string>;
 }) {
   return (
-    <div>
+    <div className="flex flex-col h-full">
       <div className="flex items-center gap-2 mb-4">
         <Clock className="w-4 h-4 text-primary" />
         <p className="text-sm font-semibold text-gray-700 font-body uppercase tracking-wide">
@@ -491,7 +491,7 @@ function TimeSlotPicker({
           Pick a date on the calendar to see available times.
         </p>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 overflow-y-auto flex-1 pr-1">
           {TIME_SLOTS.map((slot) => {
             const isBlocked = blockedTimes.has(slot);
             return (
@@ -514,6 +514,108 @@ function TimeSlotPicker({
         </div>
       )}
     </div>
+  );
+}
+
+// ─── Time Bottom Sheet (mobile only) ─────────────────────────────────────────
+
+function TimeBottomSheet({
+  open,
+  onClose,
+  selectedDate,
+  selectedTime,
+  onSelectTime,
+  blockedTimes,
+}: {
+  open: boolean;
+  onClose: () => void;
+  selectedDate: Date | null;
+  selectedTime: string | null;
+  onSelectTime: (time: string) => void;
+  blockedTimes: Set<string>;
+}) {
+  function handlePick(slot: string) {
+    onSelectTime(slot);
+    onClose();
+  }
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            key="backdrop"
+            className="fixed inset-0 bg-black/40 z-40 lg:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={onClose}
+          />
+
+          {/* Sheet */}
+          <motion.div
+            key="sheet"
+            className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl lg:hidden flex flex-col"
+            style={{ maxHeight: "75vh" }}
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+          >
+            {/* Drag handle */}
+            <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+              <div className="w-10 h-1 rounded-full bg-gray-300" />
+            </div>
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-primary" />
+                <p className="text-sm font-semibold text-gray-700 font-body uppercase tracking-wide">
+                  {selectedDate ? formatShortDate(selectedDate) : "Pick a time"}
+                </p>
+              </div>
+              <button
+                onClick={onClose}
+                className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+                aria-label="Close"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Scrollable time slots */}
+            <div className="overflow-y-auto flex-1 px-6 py-4">
+              <div className="flex flex-col gap-2 pb-6">
+                {TIME_SLOTS.map((slot) => {
+                  const isBlocked = blockedTimes.has(slot);
+                  return (
+                    <button
+                      key={slot}
+                      onClick={() => !isBlocked && handlePick(slot)}
+                      disabled={isBlocked}
+                      className={`w-full text-left px-4 py-3 rounded-xl border-2 text-sm font-body transition-all duration-150 ${
+                        isBlocked
+                          ? "border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed line-through"
+                          : selectedTime === slot
+                            ? "border-primary bg-primary/10 text-primary font-semibold"
+                            : "border-gray-200 text-gray-700 hover:border-primary/50 hover:bg-primary/5"
+                      }`}
+                    >
+                      {slot}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -667,12 +769,12 @@ function TourWalkthrough() {
           </p>
         </motion.div>
 
-        <div className="flex flex-col lg:flex-row items-stretch">
+        <div className="flex flex-row items-stretch overflow-x-auto lg:overflow-x-visible snap-x snap-mandatory pb-2 lg:pb-0">
           {TOUR_STEPS_WALKTHROUGH.map(
             ({ icon: Icon, label, description }, i) => (
               <div
                 key={label}
-                className="flex flex-col lg:flex-row items-center lg:items-start flex-1"
+                className="flex flex-col lg:flex-row items-center lg:items-start flex-shrink-0 w-[160px] lg:w-auto lg:flex-1 snap-center"
               >
                 <motion.div
                   className="flex flex-col items-center text-center px-4 py-6 flex-1"
@@ -827,6 +929,7 @@ export default function TourPage() {
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [timeSheetOpen, setTimeSheetOpen] = useState(false);
 
   const now = new Date();
   const [calendarMonth, setCalendarMonth] = useState(now.getMonth());
@@ -888,6 +991,9 @@ export default function TourPage() {
   function handleSelectDate(date: Date) {
     setSelectedDate(date);
     setSelectedTime(null);
+    if (window.innerWidth < 1024) {
+      setTimeSheetOpen(true);
+    }
   }
 
   function handleFormChange(
@@ -1203,7 +1309,6 @@ export default function TourPage() {
                 Schedule My Tour
                 <ArrowDown className="w-4 h-4" />
               </a>
-              <TrustBadgeRow />
             </motion.div>
           </div>
 
@@ -1244,31 +1349,6 @@ export default function TourPage() {
               </span>
             </div>
           </motion.div>
-        </div>
-      </section>
-
-      {/* ── Trust Trio ── */}
-      <section className="py-16 px-6 sm:px-12 lg:px-16 bg-white border-y border-gray-100">
-        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-          {TRUST_BENEFITS.map(({ emoji, headline, body, accentClass }, i) => (
-            <motion.div
-              key={headline}
-              className={`rounded-2xl p-7 border-2 ${accentClass} flex flex-col gap-4 ${i === 1 ? "shadow-md" : "shadow-sm"}`}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.45, delay: i * 0.1 }}
-              whileHover={{ y: -4, transition: { duration: 0.2 } }}
-            >
-              <span className="text-3xl">{emoji}</span>
-              <h3 className="text-lg font-bold font-heading text-gray-800">
-                {headline}
-              </h3>
-              <p className="text-sm text-gray-600 font-body leading-relaxed">
-                {body}
-              </p>
-            </motion.div>
-          ))}
         </div>
       </section>
 
@@ -1323,7 +1403,7 @@ export default function TourPage() {
                 {/* ── Step 1: Date & Time ── */}
                 {currentStep === 1 && (
                   <div>
-                    <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:items-start">
                       <div className="lg:col-span-3">
                         <CalendarGrid
                           selectedDate={selectedDate}
@@ -1334,8 +1414,21 @@ export default function TourPage() {
                           onNextMonth={handleNextMonth}
                           blockedDates={blockedDates}
                         />
+                        {/* Mobile: hint to open time sheet after date selected */}
+                        {selectedDate && (
+                          <button
+                            onClick={() => setTimeSheetOpen(true)}
+                            className="lg:hidden mt-4 w-full flex items-center justify-between px-4 py-3 rounded-xl border-2 border-primary/30 bg-primary/5 text-sm font-body text-primary font-semibold"
+                          >
+                            <span className="flex items-center gap-2">
+                              <Clock className="w-4 h-4" />
+                              {selectedTime ? selectedTime : "Pick a time"}
+                            </span>
+                            <ChevronDown className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
-                      <div className="lg:col-span-2 lg:border-l lg:border-gray-100 lg:pl-8">
+                      <div className="hidden lg:flex lg:col-span-2 lg:border-l lg:border-gray-100 lg:pl-8 lg:h-[420px] flex-col">
                         <TimeSlotPicker
                           selectedDate={selectedDate}
                           selectedTime={selectedTime}
@@ -1345,6 +1438,14 @@ export default function TourPage() {
                       </div>
                     </div>
                     <SelectedSlotChip date={selectedDate} time={selectedTime} />
+                    <TimeBottomSheet
+                      open={timeSheetOpen}
+                      onClose={() => setTimeSheetOpen(false)}
+                      selectedDate={selectedDate}
+                      selectedTime={selectedTime}
+                      onSelectTime={setSelectedTime}
+                      blockedTimes={blockedTimesForDate}
+                    />
                   </div>
                 )}
 
@@ -1585,7 +1686,7 @@ export default function TourPage() {
 
       {/* ── Location Bar ── */}
       <section className="py-16 px-6 sm:px-12 lg:px-16 bg-sage-50/60">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <motion.div
             className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6"
             initial={{ opacity: 0, y: 20 }}
