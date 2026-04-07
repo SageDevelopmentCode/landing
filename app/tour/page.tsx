@@ -492,25 +492,25 @@ function TimeSlotPicker({
         </p>
       ) : (
         <div className="flex flex-col gap-2 overflow-y-auto flex-1 pr-1">
-          {TIME_SLOTS.map((slot) => {
-            const isBlocked = blockedTimes.has(slot);
-            return (
+          {TIME_SLOTS.filter((slot) => !blockedTimes.has(slot)).length === 0 ? (
+            <p className="text-sm text-gray-400 font-body italic">
+              No times available for this date — please select another day.
+            </p>
+          ) : (
+            TIME_SLOTS.filter((slot) => !blockedTimes.has(slot)).map((slot) => (
               <button
                 key={slot}
-                onClick={() => !isBlocked && onSelectTime(slot)}
-                disabled={isBlocked}
+                onClick={() => onSelectTime(slot)}
                 className={`w-full text-left px-4 py-3 rounded-xl border-2 text-sm font-body transition-all duration-150 ${
-                  isBlocked
-                    ? "border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed line-through"
-                    : selectedTime === slot
-                      ? "border-primary bg-primary/10 text-primary font-semibold"
-                      : "border-gray-200 text-gray-700 hover:border-primary/50 hover:bg-primary/5"
+                  selectedTime === slot
+                    ? "border-primary bg-primary/10 text-primary font-semibold"
+                    : "border-gray-200 text-gray-700 hover:border-primary/50 hover:bg-primary/5"
                 }`}
               >
                 {slot}
               </button>
-            );
-          })}
+            ))
+          )}
         </div>
       )}
     </div>
@@ -591,25 +591,19 @@ function TimeBottomSheet({
             {/* Scrollable time slots */}
             <div className="overflow-y-auto flex-1 px-6 py-4">
               <div className="flex flex-col gap-2 pb-6">
-                {TIME_SLOTS.map((slot) => {
-                  const isBlocked = blockedTimes.has(slot);
-                  return (
-                    <button
-                      key={slot}
-                      onClick={() => !isBlocked && handlePick(slot)}
-                      disabled={isBlocked}
-                      className={`w-full text-left px-4 py-3 rounded-xl border-2 text-sm font-body transition-all duration-150 ${
-                        isBlocked
-                          ? "border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed line-through"
-                          : selectedTime === slot
-                            ? "border-primary bg-primary/10 text-primary font-semibold"
-                            : "border-gray-200 text-gray-700 hover:border-primary/50 hover:bg-primary/5"
-                      }`}
-                    >
-                      {slot}
-                    </button>
-                  );
-                })}
+                {TIME_SLOTS.filter((slot) => !blockedTimes.has(slot)).map((slot) => (
+                  <button
+                    key={slot}
+                    onClick={() => handlePick(slot)}
+                    className={`w-full text-left px-4 py-3 rounded-xl border-2 text-sm font-body transition-all duration-150 ${
+                      selectedTime === slot
+                        ? "border-primary bg-primary/10 text-primary font-semibold"
+                        : "border-gray-200 text-gray-700 hover:border-primary/50 hover:bg-primary/5"
+                    }`}
+                  >
+                    {slot}
+                  </button>
+                ))}
               </div>
             </div>
           </motion.div>
