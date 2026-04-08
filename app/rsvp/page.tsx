@@ -629,7 +629,7 @@ export default function OpenHousePage() {
       <section className="pb-16 px-6 sm:px-12 lg:px-16">
         <div className="max-w-6xl mx-auto">
           <motion.div
-            className="text-center mb-10"
+            className="text-center mb-4"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -638,6 +638,18 @@ export default function OpenHousePage() {
             <h2 className="text-3xl md:text-4xl font-bold font-heading text-gray-800">
               Our Space
             </h2>
+          </motion.div>
+
+          <motion.div
+            className="flex justify-center mb-10"
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
+          >
+            <p className="text-xs text-gray-500 font-body max-w-xl text-center bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3">
+              These photos are renderings of our property! We should be about 75% complete in building our vision to life by open house! Thank you for your grace and patience as we cultivate this beautiful environment for your children. Small changes such as changes in table colors or style of rugs may change, but our mission for a wholistic, outdoor focused, love for learning school is firm.
+            </p>
           </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
