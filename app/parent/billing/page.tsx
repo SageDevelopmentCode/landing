@@ -37,6 +37,14 @@ export type NonEnrolledApp = {
   name: string | null;
 };
 
+export type HomeschoolDropInApp = {
+  id: string;
+  student_id: string;
+  drop_in_program: string | null; // "summer_26" | "school_year_26_27" | "both"
+  child_grade: string | null;
+  name: string | null;
+};
+
 export type StudentInfo = {
   name: string;
   profileImageUrl: string | null;
@@ -100,7 +108,7 @@ export default async function BillingRoute() {
     adminClient
       .schema("parent_app")
       .from("applications")
-      .select("id, student_id, child_grade, status, child_legal_name, program")
+      .select("id, student_id, child_grade, status, child_legal_name, program, drop_in_program")
       .eq("user_id", user.id)
       .eq("approved", true)
       .in("program", ["summer_26", "both", "homeschool_drop_in"]),
@@ -118,6 +126,7 @@ export default async function BillingRoute() {
     status: string | null;
     child_legal_name: string | null;
     program: string | null;
+    drop_in_program: string | null;
   }[]).filter((e) => !!e.student_id && !!e.id);
 
   const summerEnrollments: SummerEnrollment[] = allSummerApps
@@ -125,8 +134,18 @@ export default async function BillingRoute() {
     .map((e) => ({ id: e.id, student_id: e.student_id!, child_grade: e.child_grade, program: e.program ?? null }));
 
   const nonEnrolledApps: NonEnrolledApp[] = allSummerApps
-    .filter((e) => e.status !== "enrolled")
+    .filter((e) => e.status !== "enrolled" && e.program !== "homeschool_drop_in")
     .map((e) => ({ id: e.id, student_id: e.student_id!, name: e.child_legal_name }));
+
+  const homeschoolDropInApps: HomeschoolDropInApp[] = allSummerApps
+    .filter((e) => e.program === "homeschool_drop_in" && e.status === "enrolled")
+    .map((e) => ({
+      id: e.id,
+      student_id: e.student_id!,
+      drop_in_program: e.drop_in_program,
+      child_grade: e.child_grade,
+      name: e.child_legal_name,
+    }));
 
   // Build paid-weeks map per student from all completed summer_tuition transactions
   const paidWeeksByStudent: PaidWeeksByStudent = {};
@@ -157,6 +176,7 @@ export default async function BillingRoute() {
       ...transactions.map((t) => t.student_id),
       ...pendingRequests.map((p) => p.student_id),
       ...summerEnrollments.map((e) => e.student_id),
+      ...homeschoolDropInApps.map((e) => e.student_id),
     ].filter(Boolean)),
   ] as string[];
 
@@ -208,7 +228,7 @@ export default async function BillingRoute() {
               Tuition &amp; Billing
             </h1>
           </div>
-          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} unpaidSummerEnrollments={unpaidSummerEnrollments} paidWeeksByStudent={paidWeeksByStudent} parentId={user.id} parentEmail={user.email ?? ""} nonEnrolledApps={nonEnrolledApps} />
+          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} unpaidSummerEnrollments={unpaidSummerEnrollments} paidWeeksByStudent={paidWeeksByStudent} parentId={user.id} parentEmail={user.email ?? ""} nonEnrolledApps={nonEnrolledApps} homeschoolDropInApps={homeschoolDropInApps} />
         </main>
       </div>
       <Footer />

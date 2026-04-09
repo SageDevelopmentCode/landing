@@ -507,7 +507,7 @@ export default function HomeschoolDropInPage() {
               Flexible Enrollment Options
             </h2>
             <p className="text-lg font-semibold text-primary font-heading mb-8">
-              Join our community 2–5 days/week
+              Join our community 1–3 days/week
             </p>
 
             {/* Tab Switcher */}
@@ -535,7 +535,7 @@ export default function HomeschoolDropInPage() {
             </div>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {/* Tier 1 — Explorer Day Pass */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -640,42 +640,6 @@ export default function HomeschoolDropInPage() {
               )}
             </motion.div>
 
-            {/* Tier 3 — Full-Time */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" as const }}
-              className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col relative"
-            >
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-full">
-                Best Value
-              </span>
-              <h3 className="text-base font-bold text-black font-heading mb-1">Full-Time</h3>
-              <p className="text-xs text-gray-400 font-body mb-4">5 Days/Week</p>
-              {activePricingTab === "summer" ? (
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-sm font-body">
-                    <span className="text-gray-600">2nd–4th</span>
-                    <span className="font-semibold text-black">$350/wk</span>
-                  </div>
-                  <div className="flex justify-between text-sm font-body">
-                    <span className="text-gray-600">Primary</span>
-                    <span className="font-semibold text-black">$375/wk</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-sm font-body">
-                    <span className="text-gray-600">2nd–4th</span>
-                    <span className="font-semibold text-black">$1,095/mo</span>
-                  </div>
-                  <div className="flex justify-between text-sm font-body">
-                    <span className="text-gray-600">Primary</span>
-                    <span className="font-semibold text-black">$1,195/mo</span>
-                  </div>
-                </div>
-              )}
-            </motion.div>
           </div>
         </div>
       </section>
