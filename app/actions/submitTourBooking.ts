@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { createAdminClient } from "@/app/lib/supabase-server";
-import { sendDiscordNotification, createTourBookingEmbed } from "@/app/lib/discord";
+import { sendDiscordNotification, createTourBookingEmbed, createErrorEmbed } from "@/app/lib/discord";
 import { sendZohoEmail, buildTourConfirmationEmail } from "@/app/lib/zoho";
 
 const schema = z.object({
@@ -60,6 +60,17 @@ export async function submitTourBooking(
 
     if (error) {
       console.error("Supabase error:", error);
+      sendDiscordNotification(
+        createErrorEmbed({
+          context: "Tour booking submission",
+          error: error.message,
+          details: {
+            email: validated.email,
+            tour_date: validated.tour_date,
+            tour_time: validated.tour_time,
+          },
+        }),
+      ).catch(() => {});
       return { success: false, message: "Failed to submit booking. Please try again." };
     }
 

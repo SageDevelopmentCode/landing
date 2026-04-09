@@ -941,8 +941,30 @@ export default function TourPage() {
   useEffect(() => {
     fetch("/api/tour-unavailability")
       .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data)) setUnavailability(data);
+      .then((data: UnavailabilityEntry[]) => {
+        if (Array.isArray(data)) {
+          setUnavailability(data);
+
+          // Auto-select first available date on desktop only
+          if (window.innerWidth >= 1024) {
+            const blockedDates = new Set(
+              data
+                .filter((e) => e.unavailable_time === null)
+                .map((e) => e.unavailable_date),
+            );
+            const candidate = new Date(TODAY);
+            for (let i = 0; i < 365; i++) {
+              const dateStr = `${candidate.getFullYear()}-${String(candidate.getMonth() + 1).padStart(2, "0")}-${String(candidate.getDate()).padStart(2, "0")}`;
+              if (isAvailableDay(candidate) && !blockedDates.has(dateStr)) {
+                setSelectedDate(new Date(candidate));
+                setCalendarMonth(candidate.getMonth());
+                setCalendarYear(candidate.getFullYear());
+                break;
+              }
+              candidate.setDate(candidate.getDate() + 1);
+            }
+          }
+        }
       })
       .catch(() => {});
   }, []);

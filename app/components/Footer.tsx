@@ -213,9 +213,25 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-gray-800">
           <div className="flex flex-col md:grid md:grid-cols-3 items-center gap-4">
-            <p className="text-gray-400 text-sm font-body text-center md:text-left">
-              © 2026 Sage Field. All rights reserved.
-            </p>
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-3 gap-y-1">
+              <p className="text-gray-400 text-sm font-body">
+                © 2026 Sage Field. All rights reserved.
+              </p>
+              <span className="text-gray-600 text-sm hidden md:inline">·</span>
+              <Link
+                href="/privacy"
+                className="text-gray-400 hover:text-white transition-colors font-body text-sm"
+              >
+                Privacy Policy
+              </Link>
+              <span className="text-gray-600 text-sm">·</span>
+              <Link
+                href="/terms"
+                className="text-gray-400 hover:text-white transition-colors font-body text-sm"
+              >
+                Terms of Use
+              </Link>
+            </div>
 
             {/* Social Media Links */}
             <div className="flex items-center justify-center gap-4">
