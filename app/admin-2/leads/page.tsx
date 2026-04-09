@@ -9,7 +9,7 @@ import { PageHeader } from '../components/PageHeader'
 import { DataTable, Column } from '../components/DataTable'
 import { MOCK_LEADS } from '../mock-data'
 
-type Lead = typeof MOCK_LEADS[number]
+type Lead = typeof MOCK_LEADS[number] & Record<string, unknown>
 
 const STATUSES = ['all', 'new', 'contacted', 'emailed', 'application_sent', 'enrolled', 'nurture', 'lost']
 
@@ -189,7 +189,7 @@ export default function Admin2Leads() {
           overflow: 'hidden',
         }}
       >
-        <DataTable columns={COLUMNS} rows={filtered as unknown as Record<string, unknown>[]} />
+        <DataTable columns={COLUMNS} rows={filtered as Lead[]} />
       </motion.div>
     </div>
   )

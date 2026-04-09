@@ -9,7 +9,7 @@ import { PageHeader } from '../components/PageHeader'
 import { DataTable, Column } from '../components/DataTable'
 import { MOCK_STUDENTS } from '../mock-data'
 
-type Student = typeof MOCK_STUDENTS[number]
+type Student = typeof MOCK_STUDENTS[number] & Record<string, unknown>
 
 const COLUMNS: Column<Student>[] = [
   {
@@ -105,7 +105,7 @@ export default function Admin2Students() {
       >
         <DataTable
           columns={COLUMNS}
-          rows={MOCK_STUDENTS as unknown as Record<string, unknown>[]}
+          rows={MOCK_STUDENTS as Student[]}
           onRowClick={(row) => setSelectedStudent(row as unknown as Student)}
         />
       </motion.div>

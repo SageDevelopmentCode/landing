@@ -2322,12 +2322,36 @@ function ExpensesTab({
                           setEditValues({ ...exp });
                         }}
                       >
-                        <TableCell>{exp.expense_name}</TableCell>
+                        <TableCell style={{ maxWidth: "160px" }}>
+                          <span
+                            style={{
+                              display: "block",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                            title={exp.expense_name}
+                          >
+                            {exp.expense_name}
+                          </span>
+                        </TableCell>
                         <TableCell>{exp.category ?? "—"}</TableCell>
                         <TableCell>{fmt(Number(exp.amount))}</TableCell>
                         <TableCell>{exp.payment_method ?? "—"}</TableCell>
                         <TableCell>{exp.expense_date}</TableCell>
-                        <TableCell>{exp.notes ?? "—"}</TableCell>
+                        <TableCell style={{ maxWidth: "140px" }}>
+                          <span
+                            style={{
+                              display: "block",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                            title={exp.notes ?? undefined}
+                          >
+                            {exp.notes ?? "—"}
+                          </span>
+                        </TableCell>
                         <TableCell>
                           {exp.tax_deductible ? "Yes" : "No"}
                         </TableCell>
@@ -5509,7 +5533,7 @@ export default function BudgetPage() {
       className="flex-1 overflow-auto"
       style={{ backgroundColor: colors.softCloud }}
     >
-      <div className="max-w-6xl mx-auto px-6 py-8">
+      <div className="max-w-6xl mx-auto px-3 py-8">
         {/* Header */}
         <div className="mb-8">
           <h1

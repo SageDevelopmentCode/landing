@@ -9,7 +9,7 @@ import { StatCard } from '../components/StatCard'
 import { DataTable, Column } from '../components/DataTable'
 import { MOCK_TRANSACTIONS, MOCK_MONTHLY_REVENUE } from '../mock-data'
 
-type Transaction = typeof MOCK_TRANSACTIONS[number]
+type Transaction = typeof MOCK_TRANSACTIONS[number] & Record<string, unknown>
 
 const MONTHS_SHORT = ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr']
 
@@ -179,7 +179,7 @@ export default function Admin2Transactions() {
           marginBottom: '24px',
         }}
       >
-        <DataTable columns={COLUMNS} rows={MOCK_TRANSACTIONS as unknown as Record<string, unknown>[]} />
+        <DataTable columns={COLUMNS} rows={MOCK_TRANSACTIONS as Transaction[]} />
       </motion.div>
 
       {/* Monthly chart */}
