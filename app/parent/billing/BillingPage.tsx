@@ -238,7 +238,6 @@ const WEEKDAYS = [
   { key: "tue", label: "Tue" },
   { key: "wed", label: "Wed" },
   { key: "thu", label: "Thu" },
-  { key: "fri", label: "Fri" },
 ] as const;
 
 function getGradeTier(grade: string | null): "primary" | "upper" {
@@ -485,10 +484,14 @@ function HomeschoolDropInCard({
 function HomeschoolPaymentModal({
   app,
   studentName,
+  parentId,
+  parentEmail,
   onClose,
 }: {
   app: HomeschoolDropInApp;
   studentName: string | null;
+  parentId: string;
+  parentEmail: string;
   onClose: () => void;
 }) {
   const gradeTier = getGradeTier(app.child_grade);
@@ -500,13 +503,15 @@ function HomeschoolPaymentModal({
   const [activeTab, setActiveTab] = useState<"summer" | "school-year">(defaultTab);
   const [selectedTier, setSelectedTier] = useState<HomeschoolTier | null>(null);
   const [selectedDays, setSelectedDays] = useState<Set<string>>(new Set());
+  const [selectedWeeks, setSelectedWeeks] = useState<Set<number>>(new Set());
   const [step, setStep] = useState<"plan" | "payment">("plan");
   const [paymentMethod, setPaymentMethod] = useState<"card" | "ach">("card");
   const [coverFees, setCoverFees] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const isSummer = activeTab === "summer";
   const pricing = isSummer ? HOMESCHOOL_SUMMER_PRICING : HOMESCHOOL_SCHOOL_YEAR_PRICING;
-  const rateLabel = isSummer ? "/ week" : "/ month";
   const tierDays = selectedTier ? HOMESCHOOL_TIERS.find((t) => t.key === selectedTier)?.days ?? 0 : 0;
 
   // Reset selections when tab changes
@@ -514,6 +519,7 @@ function HomeschoolPaymentModal({
     setActiveTab(tab);
     setSelectedTier(null);
     setSelectedDays(new Set());
+    setSelectedWeeks(new Set());
   };
 
   const toggleDay = (dayKey: string) => {
@@ -527,7 +533,25 @@ function HomeschoolPaymentModal({
     setSelectedDays(next);
   };
 
-  const baseAmountCents = selectedTier ? pricing[selectedTier][gradeTier] : 0;
+  const toggleWeek = (weekNum: number) => {
+    const next = new Set(selectedWeeks);
+    if (next.has(weekNum)) next.delete(weekNum);
+    else next.add(weekNum);
+    setSelectedWeeks(next);
+  };
+
+  const toggleAllWeeks = () => {
+    if (selectedWeeks.size === SUMMER_WEEKS.length) {
+      setSelectedWeeks(new Set());
+    } else {
+      setSelectedWeeks(new Set(SUMMER_WEEKS.map((w) => w.week)));
+    }
+  };
+
+  // For summer: total = weekly-rate × weeks (or day-rate × weeks for dropin)
+  const weeklyRate = selectedTier ? pricing[selectedTier][gradeTier] : 0;
+  const summerTotal = isSummer ? weeklyRate * selectedWeeks.size : 0;
+  const baseAmountCents = isSummer ? summerTotal : weeklyRate;
 
   // Fee estimates
   const cardFeeRate = 0.029;
@@ -539,10 +563,46 @@ function HomeschoolPaymentModal({
   const feeAmount = paymentMethod === "card" ? cardFee : achFee;
   const totalWithFees = coverFees ? baseAmountCents + feeAmount : baseAmountCents;
 
+  const daysComplete = selectedTier === "dropin" || selectedDays.size === tierDays;
   const canContinuePlan =
-    selectedTier === "dropin"
-      ? true
-      : selectedTier !== null && selectedDays.size === tierDays;
+    selectedTier !== null &&
+    daysComplete &&
+    (!isSummer || selectedWeeks.size > 0);
+
+  const handlePayNow = async () => {
+    if (!selectedTier) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const program = activeTab === "summer" ? "summer_26" : "school_year_26_27";
+      const res = await fetch("/api/stripe/create-homeschool-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          parentId,
+          parentEmail,
+          studentId: app.student_id,
+          applicationId: app.id,
+          program,
+          tier: selectedTier,
+          gradeTier,
+          selectedDays: Array.from(selectedDays),
+          selectedWeeks: isSummer ? Array.from(selectedWeeks).sort((a, b) => a - b) : [],
+          intendedAmountCents: baseAmountCents,
+          coverFees,
+          paymentMethod,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.url) {
+        throw new Error(data.error ?? "Failed to create checkout session");
+      }
+      window.location.href = data.url;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
@@ -667,7 +727,7 @@ function HomeschoolPaymentModal({
                         <span className="text-sm font-bold text-gray-800">
                           {formatCents(rate)}
                           <span className="text-xs font-normal text-gray-400 ml-1">
-                            {tier.key === "dropin" ? "/ day" : rateLabel}
+                            {tier.key === "dropin" ? "/ day" : isSummer ? "/ week" : "/ month"}
                           </span>
                         </span>
                       </button>
@@ -713,25 +773,84 @@ function HomeschoolPaymentModal({
                 )}
               </AnimatePresence>
 
+              {/* Week picker — summer only, appears after tier (and days) are selected */}
+              <AnimatePresence>
+                {selectedTier && isSummer && daysComplete && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                        Which weeks? ({selectedWeeks.size} selected)
+                      </p>
+                      <button
+                        onClick={toggleAllWeeks}
+                        className="text-xs font-semibold cursor-pointer transition-colors"
+                        style={{ color: "#4a7c59" }}
+                      >
+                        {selectedWeeks.size === SUMMER_WEEKS.length ? "Deselect all" : "Select all"}
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {SUMMER_WEEKS.map((w) => {
+                        const isSel = selectedWeeks.has(w.week);
+                        return (
+                          <button
+                            key={w.week}
+                            onClick={() => toggleWeek(w.week)}
+                            className={`flex flex-col items-start px-3 py-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                              isSel
+                                ? "border-primary bg-primary/5"
+                                : "border-gray-100 bg-white hover:border-gray-300"
+                            }`}
+                          >
+                            <span className={`text-xs font-bold ${isSel ? "text-primary" : "text-gray-400"}`}>
+                              Wk {w.week}
+                            </span>
+                            <span className="text-[10px] text-gray-500 leading-tight mt-0.5">
+                              {w.dates}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {/* Rate summary */}
               <AnimatePresence>
-                {selectedTier && (
+                {selectedTier && (!isSummer || selectedWeeks.size > 0) && (
                   <motion.div
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 8 }}
-                    className="rounded-xl px-4 py-3 flex items-center justify-between"
+                    className="rounded-xl px-4 py-3 space-y-1"
                     style={{ backgroundColor: "#f6faf7" }}
                   >
-                    <span className="text-sm text-gray-500 font-body">
-                      {selectedTier === "dropin" ? "Rate" : isSummer ? "Weekly rate" : "Monthly rate"}
-                    </span>
-                    <span className="text-base font-bold font-heading" style={{ color: "#4a7c59" }}>
-                      {formatCents(baseAmountCents)}
-                      <span className="text-xs font-normal text-gray-400 ml-1">
-                        {selectedTier === "dropin" ? "/ day" : rateLabel}
+                    {isSummer && selectedWeeks.size > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-400 font-body">
+                          {formatCents(weeklyRate)} × {selectedWeeks.size} week{selectedWeeks.size !== 1 ? "s" : ""}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500 font-body">
+                        {isSummer ? "Total" : selectedTier === "dropin" ? "Rate" : "Monthly rate"}
                       </span>
-                    </span>
+                      <span className="text-base font-bold font-heading" style={{ color: "#4a7c59" }}>
+                        {formatCents(baseAmountCents)}
+                        {!isSummer && (
+                          <span className="text-xs font-normal text-gray-400 ml-1">
+                            {selectedTier === "dropin" ? "/ day" : "/ month"}
+                          </span>
+                        )}
+                      </span>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -746,58 +865,56 @@ function HomeschoolPaymentModal({
                 <div className="flex gap-2">
                   <button
                     onClick={() => setPaymentMethod("card")}
-                    className={`flex-1 py-3 rounded-xl text-sm font-semibold border transition-all cursor-pointer ${
+                    className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${
                       paymentMethod === "card"
                         ? "border-primary bg-primary/5 text-primary"
-                        : "border-gray-200 text-gray-600 hover:border-gray-300"
+                        : "border-gray-200 text-gray-600 hover:bg-gray-50"
                     }`}
                   >
-                    Credit / Debit Card
+                    Credit/Debit Card
                   </button>
                   <button
                     onClick={() => setPaymentMethod("ach")}
-                    className={`flex-1 py-3 rounded-xl text-sm font-semibold border transition-all cursor-pointer ${
+                    className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${
                       paymentMethod === "ach"
                         ? "border-primary bg-primary/5 text-primary"
-                        : "border-gray-200 text-gray-600 hover:border-gray-300"
+                        : "border-gray-200 text-gray-600 hover:bg-gray-50"
                     }`}
                   >
-                    ACH / US Bank
+                    ACH / US bank account
                   </button>
                 </div>
+                <p className="text-xs text-gray-400 font-body mt-1.5">
+                  {paymentMethod === "card"
+                    ? `Processing fee (est.): ~${formatCents(cardFee)}`
+                    : `Processing fee (est.): ~${formatCents(achFee)} (0.8%, max $5.00)`}
+                </p>
               </div>
 
-              {/* Fee info */}
-              <div className="bg-gray-50 rounded-xl px-4 py-3 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500 font-body">Subtotal</span>
-                  <span className="font-semibold text-gray-800">{formatCents(baseAmountCents)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500 font-body">
-                    Processing fee ({paymentMethod === "card" ? "2.9% + $0.30" : "0.8%, max $5"})
-                  </span>
-                  <span className="font-semibold text-gray-800">{formatCents(feeAmount)}</span>
-                </div>
-              </div>
-
-              {/* Cover fees toggle */}
-              <button
-                onClick={() => setCoverFees((v) => !v)}
-                className="flex items-center gap-3 w-full text-left cursor-pointer"
-              >
-                <div
-                  className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border-2 transition-colors ${
-                    coverFees ? "border-primary bg-primary" : "border-gray-300"
-                  }`}
-                >
-                  {coverFees && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
-                </div>
-                <span className="text-sm text-gray-600 font-body">
-                  Cover the processing fee ({formatCents(feeAmount)}) — total becomes{" "}
-                  <span className="font-semibold text-gray-800">{formatCents(totalWithFees)}</span>
+              {/* Cover fees checkbox */}
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={coverFees}
+                  onChange={(e) => setCoverFees(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded cursor-pointer"
+                  style={{ accentColor: "#4a7c59" }}
+                />
+                <span className="text-sm text-gray-600 font-body group-hover:text-gray-800 transition-colors">
+                  I agree to pay the processing fee
                 </span>
-              </button>
+              </label>
+
+              <p className="text-xs text-gray-400 font-body">
+                Prefer to pay by check? Email us at{" "}
+                <a
+                  href="mailto:sabrina@sagefield.co"
+                  className="underline hover:text-gray-600 transition-colors"
+                >
+                  sabrina@sagefield.co
+                </a>{" "}
+                and we&apos;ll send you instructions.
+              </p>
 
               {/* Total */}
               <div
@@ -813,6 +930,13 @@ function HomeschoolPaymentModal({
           )}
         </div>
 
+        {/* Error */}
+        {error && (
+          <div className="px-6 pb-2">
+            <p className="text-xs text-red-500 font-body">{error}</p>
+          </div>
+        )}
+
         {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
           {step === "payment" && (
@@ -824,14 +948,19 @@ function HomeschoolPaymentModal({
             </button>
           )}
           <button
-            disabled={step === "plan" ? !canContinuePlan : false}
+            disabled={step === "plan" ? !canContinuePlan : loading || !coverFees}
             className="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             style={{ backgroundColor: "#4a7c59" }}
             onClick={() => {
               if (step === "plan") setStep("payment");
+              else handlePayNow();
             }}
           >
-            {step === "plan" ? "Continue" : `Pay Now · ${formatCents(totalWithFees)}`}
+            {step === "plan"
+              ? "Continue"
+              : loading
+                ? "Processing…"
+                : `Pay Now · ${formatCents(totalWithFees)}`}
           </button>
         </div>
       </motion.div>
@@ -3014,6 +3143,8 @@ export default function BillingPage({
               studentName={
                 studentMap[selectedHomeschoolApp.student_id]?.name ?? null
               }
+              parentId={parentId}
+              parentEmail={parentEmail}
               onClose={() => setSelectedHomeschoolApp(null)}
             />
           )}
@@ -3222,6 +3353,8 @@ export default function BillingPage({
             studentName={
               studentMap[selectedHomeschoolApp.student_id]?.name ?? null
             }
+            parentId={parentId}
+            parentEmail={parentEmail}
             onClose={() => setSelectedHomeschoolApp(null)}
           />
         )}

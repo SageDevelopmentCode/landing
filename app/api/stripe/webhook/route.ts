@@ -7,6 +7,7 @@ import {
   createSummerTuitionEmbed,
   createAftercareTuitionEmbed,
   createFunFridayTuitionEmbed,
+  createHomeschoolDropInEmbed,
   createDonationEmbed,
   createErrorEmbed,
   sendDiscordNotification,
@@ -14,6 +15,7 @@ import {
 import {
   buildRegistrationFeeConfirmationEmail,
   buildSummerTuitionConfirmationEmail,
+  buildHomeschoolDropInConfirmationEmail,
   buildDonationConfirmationEmail,
   sendZohoEmail,
 } from "@/app/lib/zoho";
@@ -411,6 +413,102 @@ export async function POST(request: NextRequest) {
           selectedDays: selectedDays.length > 0 ? selectedDays : undefined,
         }),
       ).catch((err) => console.error("Aftercare Discord notification failed:", err));
+    } else if (session.metadata?.payment_type === "homeschool_dropin") {
+      const applicationId = session.metadata?.application_id;
+      const studentId = session.metadata?.student_id;
+      const program = session.metadata?.program ?? "summer_26";
+      const tier = session.metadata?.tier ?? "dropin";
+      const selectedDays = session.metadata?.selected_days
+        ? session.metadata.selected_days.split(",").filter(Boolean)
+        : [];
+      const selectedWeeks = session.metadata?.selected_weeks
+        ? session.metadata.selected_weeks.split(",").map(Number).filter(Boolean)
+        : [];
+      const amountCents = session.amount_total ?? 0;
+      const amountDollars = (amountCents / 100).toFixed(2);
+
+      // Fetch parent/child names
+      let parentName = "N/A";
+      let parentEmailAddr = session.customer_email ?? "N/A";
+      let childName = "N/A";
+
+      if (applicationId) {
+        const { data: application } = await supabase
+          .schema("parent_app")
+          .from("applications")
+          .select("g1_full_name, g1_email, child_legal_name")
+          .eq("id", applicationId)
+          .single();
+
+        if (application) {
+          parentName = application.g1_full_name ?? "N/A";
+          parentEmailAddr = application.g1_email ?? session.customer_email ?? "N/A";
+          childName = application.child_legal_name ?? "N/A";
+        }
+      } else if (studentId) {
+        const { data: student } = await supabase
+          .schema("admin")
+          .from("students")
+          .select("child_legal_name")
+          .eq("id", studentId)
+          .single();
+        if (student) childName = student.child_legal_name ?? "N/A";
+      }
+
+      // Discord notification (non-blocking)
+      sendDiscordNotification(
+        createHomeschoolDropInEmbed({
+          parentName,
+          parentEmail: parentEmailAddr,
+          childName,
+          program,
+          tier,
+          selectedDays: selectedDays.length > 0 ? selectedDays : undefined,
+          selectedWeeks: selectedWeeks.length > 0 ? selectedWeeks : undefined,
+          amountCents,
+        }),
+      ).catch((err) => console.error("Homeschool drop-in Discord notification failed:", err));
+
+      // Email confirmation (non-blocking, with error embed fallback)
+      (async () => {
+        try {
+          const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
+          if (!toAddress) return;
+
+          const { subject, content } = await buildHomeschoolDropInConfirmationEmail({
+            g1FullName: parentName !== "N/A" ? parentName : "Parent",
+            childLegalName: childName !== "N/A" ? childName : "your child",
+            program,
+            tier,
+            selectedDays,
+            selectedWeeks,
+            amountDollars,
+          });
+
+          const emailResult = await sendZohoEmail({ toAddress, subject, content });
+
+          if (emailResult.success) {
+            await supabase.schema("email_logs").from("sends").insert({
+              to_address: toAddress,
+              subject,
+              template: "homeschool_dropin_confirmation",
+              application_id: applicationId ?? null,
+              status: "success",
+            });
+          } else {
+            throw new Error(emailResult.error ?? "Unknown email error");
+          }
+        } catch (err) {
+          console.error("Homeschool drop-in confirmation email failed:", err);
+          sendDiscordNotification(
+            createErrorEmbed({
+              context: "Homeschool drop-in confirmation email",
+              error: String(err),
+              details: { applicationId: applicationId ?? "N/A", studentId: studentId ?? "N/A" },
+            }),
+          ).catch(() => {});
+        }
+      })();
     } else if (session.metadata?.payment_type === "fun_friday_tuition") {
       const applicationId = session.metadata?.application_id;
       const studentId = session.metadata?.student_id;

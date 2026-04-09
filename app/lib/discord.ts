@@ -349,6 +349,62 @@ export function createAftercareTuitionEmbed(data: {
 }
 
 /**
+ * Creates a Discord embed for Homeschool Drop-In payments
+ */
+export function createHomeschoolDropInEmbed(data: {
+  parentName: string;
+  parentEmail: string;
+  childName: string;
+  program: string;
+  tier: string;
+  selectedDays?: string[];
+  selectedWeeks?: number[];
+  amountCents: number;
+}): DiscordEmbed {
+  const amountDollars = (data.amountCents / 100).toFixed(2);
+  const PROGRAM_LABELS: Record<string, string> = {
+    summer_26: "Summer 2026",
+    school_year_26_27: "School Year 2026–2027",
+  };
+  const TIER_LABELS: Record<string, string> = {
+    dropin: "Explorer Day Pass",
+    "2day": "2 Days / Week",
+    "3day": "3 Days / Week",
+  };
+  const programLabel = PROGRAM_LABELS[data.program] ?? data.program;
+  const tierLabel = TIER_LABELS[data.tier] ?? data.tier;
+  const daysLabel =
+    data.selectedDays && data.selectedDays.length > 0
+      ? data.selectedDays.map((d) => d.charAt(0).toUpperCase() + d.slice(1)).join(", ")
+      : "Day Pass";
+  const weeksLabel =
+    data.selectedWeeks && data.selectedWeeks.length > 0
+      ? `Weeks ${data.selectedWeeks.join(", ")}`
+      : "";
+
+  const planValue = data.tier === "dropin"
+    ? tierLabel
+    : `${tierLabel} (${daysLabel})`;
+
+  const fields = [
+    { name: "Parent", value: data.parentName || "N/A", inline: true },
+    { name: "Email", value: data.parentEmail || "N/A", inline: true },
+    { name: "Child", value: data.childName || "N/A", inline: true },
+    { name: "Program", value: programLabel, inline: true },
+    { name: "Plan", value: planValue, inline: true },
+    ...(weeksLabel ? [{ name: "Weeks", value: weeksLabel, inline: true }] : []),
+    { name: "Amount Paid", value: `$${amountDollars}`, inline: true },
+  ];
+
+  return {
+    title: "🏡 Homeschool Drop-In Payment",
+    color: 0x4a7c59,
+    fields,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
  * Creates a Discord embed for Fun Friday payments
  */
 export function createFunFridayTuitionEmbed(data: {

@@ -739,6 +739,71 @@ export async function buildSummerTuitionConfirmationEmail(opts: {
 }
 
 /**
+ * Build HTML confirmation email for a Homeschool Drop-In payment
+ */
+export async function buildHomeschoolDropInConfirmationEmail(opts: {
+  g1FullName: string;
+  childLegalName: string;
+  program: string;
+  tier: string;
+  selectedDays: string[];
+  selectedWeeks: number[];
+  amountDollars: string;
+}): Promise<{ subject: string; content: string }> {
+  const PROGRAM_LABELS: Record<string, string> = {
+    summer_26: "Summer 2026",
+    school_year_26_27: "School Year 2026–2027",
+  };
+  const TIER_LABELS: Record<string, string> = {
+    dropin: "Explorer Day Pass (Drop-In)",
+    "2day": "2 Days / Week",
+    "3day": "3 Days / Week",
+  };
+
+  const isSummer = opts.program === "summer_26";
+  const programLabel = PROGRAM_LABELS[opts.program] ?? opts.program;
+  const tierLabel = TIER_LABELS[opts.tier] ?? opts.tier;
+  const daysLabel =
+    opts.selectedDays.length > 0
+      ? opts.selectedDays.map((d) => d.charAt(0).toUpperCase() + d.slice(1)).join(", ")
+      : "";
+  const weeksLabel =
+    opts.selectedWeeks.length > 0
+      ? `${opts.selectedWeeks.length} week${opts.selectedWeeks.length !== 1 ? "s" : ""} (Weeks ${opts.selectedWeeks.join(", ")})`
+      : "";
+
+  const planDetail =
+    opts.tier === "dropin"
+      ? tierLabel
+      : `${tierLabel}${daysLabel ? ` — ${daysLabel}` : ""}`;
+
+  const subject = `Homeschool Drop-In Payment Confirmed — ${programLabel}`;
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${opts.g1FullName},</p>
+
+  <p>We are delighted to confirm that your Homeschool Drop-In payment of <strong>$${opts.amountDollars}</strong> has been received for <strong>${opts.childLegalName}</strong>!</p>
+
+  <p><strong>Program:</strong> ${programLabel}</p>
+  <p><strong>Plan:</strong> ${planDetail}</p>
+  ${isSummer && weeksLabel ? `<p><strong>Weeks:</strong> ${weeksLabel}</p>` : ""}
+  ${!isSummer ? `<p><strong>Rate:</strong> $${opts.amountDollars}/month</p>` : ""}
+
+  <p>We look forward to welcoming ${opts.childLegalName} to Sage Field. If you have any questions, please don&apos;t hesitate to reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a>.</p>
+
+  <p style="margin-top: 32px;">See you soon!</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field Private School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
+/**
  * Build HTML approval email for an approved application
  */
 export async function buildApprovalEmail(opts: {
