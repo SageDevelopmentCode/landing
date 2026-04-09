@@ -17,25 +17,25 @@ export type LeadStatus =
 
 export const leadStatusStyles: Record<LeadStatus, { bg: string; text: string }> = {
   // Success statuses - positive outcomes
-  enrolled: { bg: colors.success, text: colors.successText },
-  enrollment_offered: { bg: colors.success, text: colors.successText },
-  application_submitted: { bg: colors.success, text: colors.successText },
+  enrolled:              { bg: colors.successBg,   text: colors.success  },
+  enrollment_offered:    { bg: colors.successBg,   text: colors.success  },
+  application_submitted: { bg: colors.accentLight, text: colors.accentBright },
 
   // Info statuses - active engagement
-  contacted: { bg: colors.info, text: colors.infoText },
-  emailed: { bg: colors.info, text: colors.infoText },
-  application_sent: { bg: colors.info, text: colors.infoText },
+  contacted:        { bg: colors.infoBg,      text: colors.info     },
+  emailed:          { bg: colors.infoBg,      text: colors.info     },
+  application_sent: { bg: colors.accentLight, text: colors.accentBright },
 
   // Warning statuses - needs attention or in progress
-  new_inquiry: { bg: colors.warning, text: colors.warningText },
-  not_contacted: { bg: colors.warning, text: colors.warningText },
-  waitlist: { bg: colors.warning, text: colors.warningText },
-  nurture: { bg: colors.warning, text: colors.warningText },
-  on_hold: { bg: colors.warning, text: colors.warningText },
+  new_inquiry:   { bg: colors.warningBg,  text: colors.warning  },
+  not_contacted: { bg: colors.warningBg,  text: colors.warning  },
+  waitlist:      { bg: colors.purpleBg,   text: colors.purple   },
+  nurture:       { bg: colors.purpleBg,   text: colors.purple   },
+  on_hold:       { bg: colors.warningBg,  text: colors.warning  },
 
   // Error statuses - negative outcomes
-  not_fit: { bg: colors.error, text: colors.errorText },
-  lost: { bg: colors.error, text: colors.errorText },
+  not_fit: { bg: colors.errorBg, text: colors.error },
+  lost:     { bg: colors.errorBg, text: colors.error },
 }
 
 export const leadStatusLabels: Record<LeadStatus, string> = {

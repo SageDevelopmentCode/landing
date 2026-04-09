@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
+import { CalendarDays } from 'lucide-react'
 import { colors, radius, shadows } from '../design-system'
 
 interface CountdownCardProps {
@@ -15,7 +16,6 @@ interface CountdownCardProps {
 function getDaysRemaining(isoDate: string): number | null {
   const target = new Date(isoDate)
   const now = new Date()
-  // Zero out time portions for a clean day diff
   target.setHours(0, 0, 0, 0)
   now.setHours(0, 0, 0, 0)
   const diff = target.getTime() - now.getTime()
@@ -48,34 +48,34 @@ export function CountdownCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay, ease: 'easeOut' }}
-      className="p-6"
+      className="p-5"
       style={{
-        backgroundColor: 'white',
+        backgroundColor: colors.elevated,
         borderRadius: radius.lg,
-        boxShadow: shadows.soft,
+        boxShadow: shadows.card,
         border: `1px solid ${colors.border}`,
       }}
     >
       <div className="flex items-start justify-between">
         <div>
           <p
-            className="text-sm font-medium mb-1"
-            style={{ color: colors.textSecondary }}
+            className="text-xs font-medium uppercase tracking-wide mb-1"
+            style={{ color: colors.textTertiary }}
           >
             {programName}
           </p>
           <p
             className="text-xs mb-3"
-            style={{ color: colors.textTertiary }}
+            style={{ color: colors.textQuaternary }}
           >
             {formatDate(date)}
           </p>
           {started ? (
             <p
-              className="text-lg font-semibold"
+              className="text-base font-semibold"
               style={{ color: accentColor }}
             >
               Program started
@@ -83,41 +83,29 @@ export function CountdownCard({
           ) : (
             <div className="flex items-baseline gap-1.5">
               <p
-                className="text-3xl font-semibold"
+                className="text-3xl font-bold"
                 style={{ color: colors.textPrimary }}
               >
                 {daysRemaining ?? '—'}
               </p>
               <p
                 className="text-sm font-medium"
-                style={{ color: colors.textSecondary }}
+                style={{ color: colors.textTertiary }}
               >
-                days
+                days away
               </p>
             </div>
           )}
         </div>
         <div
-          className="p-3"
+          className="p-2.5"
           style={{
             backgroundColor: iconBgColor,
             color: accentColor,
-            borderRadius: '12px',
+            borderRadius: radius.md,
           }}
         >
-          <svg
-            className="h-6 w-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-            />
-          </svg>
+          <CalendarDays className="w-5 h-5" />
         </div>
       </div>
     </motion.div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -16,20 +16,15 @@ import {
   Mail,
   BookOpen,
   Megaphone,
-  TreePine,
   MessageSquare,
   CalendarDays,
   School,
+  ChevronRight,
+  Menu,
+  X,
 } from "lucide-react";
-import { colors, radius, shadows, spacing } from "../design-system";
-import { Tooltip } from "./Tooltip";
-import { Merriweather } from "next/font/google";
+import { colors, radius, shadows } from "../design-system";
 import { signOut } from "@/app/actions/auth";
-
-const merriweather = Merriweather({
-  weight: ["300", "400", "700", "900"],
-  subsets: ["latin"],
-});
 
 interface NavItem {
   name: string;
@@ -38,79 +33,111 @@ interface NavItem {
   newTab?: boolean;
 }
 
-const navItems: NavItem[] = [
+const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   {
-    name: "Dashboard",
-    href: "/admin",
-    icon: <LayoutDashboard className="w-4 h-4" />,
+    label: "Main",
+    items: [
+      { name: "Dashboard",    href: "/admin",               icon: <LayoutDashboard className="w-4 h-4" /> },
+      { name: "Leads",        href: "/admin/leads",         icon: <TrendingUp className="w-4 h-4" /> },
+      { name: "Parents",      href: "/admin/parents",       icon: <Users className="w-4 h-4" /> },
+      { name: "Students",     href: "/admin/students",      icon: <GraduationCap className="w-4 h-4" /> },
+      { name: "Programs",     href: "/admin/programs",      icon: <BookOpen className="w-4 h-4" /> },
+      { name: "Applications", href: "/admin/applications",  icon: <ClipboardList className="w-4 h-4" /> },
+      { name: "Transactions", href: "/admin/transactions",  icon: <CreditCard className="w-4 h-4" /> },
+    ],
   },
   {
-    name: "Leads",
-    href: "/admin/leads",
-    icon: <TrendingUp className="w-4 h-4" />,
+    label: "Tools",
+    items: [
+      { name: "Budget",    href: "/admin/budget",    icon: <DollarSign className="w-4 h-4" /> },
+      { name: "Messages",  href: "/admin/messages",  icon: <MessageSquare className="w-4 h-4" /> },
+      { name: "Calendar",  href: "/admin/calendar",  icon: <CalendarDays className="w-4 h-4" /> },
+      { name: "Emails",    href: "/admin/emails",    icon: <Mail className="w-4 h-4" /> },
+      { name: "Marketing", href: "/admin/marketing", icon: <Megaphone className="w-4 h-4" /> },
+    ],
   },
   {
-    name: "Parents",
-    href: "/admin/parents",
-    icon: <Users className="w-4 h-4" />,
+    label: "External",
+    items: [
+      { name: "Teacher View", href: "/teacher/dashboard", icon: <School className="w-4 h-4" />, newTab: true },
+    ],
   },
-  {
-    name: "Students",
-    href: "/admin/students",
-    icon: <GraduationCap className="w-4 h-4" />,
-  },
-  {
-    name: "Programs",
-    href: "/admin/programs",
-    icon: <BookOpen className="w-4 h-4" />,
-  },
-  {
-    name: "Applications",
-    href: "/admin/applications",
-    icon: <ClipboardList className="w-4 h-4" />,
-  },
-  {
-    name: "Transactions",
-    href: "/admin/transactions",
-    icon: <CreditCard className="w-4 h-4" />,
-  },
-  {
-    name: "Budget",
-    href: "/admin/budget",
-    icon: <DollarSign className="w-4 h-4" />,
-  },
-  {
-    name: "Messages",
-    href: "/admin/messages",
-    icon: <MessageSquare className="w-4 h-4" />,
-  },
-  {
-    name: "Calendar",
-    href: "/admin/calendar",
-    icon: <CalendarDays className="w-4 h-4" />,
-  },
-  {
-    name: "Emails",
-    href: "/admin/emails",
-    icon: <Mail className="w-4 h-4" />,
-  },
-  {
-    name: "Marketing",
-    href: "/admin/marketing",
-    icon: <Megaphone className="w-4 h-4" />,
-  },
-  {
-    name: "Teacher View",
-    href: "/teacher/dashboard",
-    icon: <School className="w-4 h-4" />,
-    newTab: true,
-  },
-  // {
-  //   name: "Property",
-  //   href: "/admin/property",
-  //   icon: <TreePine className="w-4 h-4" />,
-  // },
 ];
+
+function NavLink({
+  item,
+  active,
+  expanded,
+  pendingApplications,
+  onClick,
+}: {
+  item: NavItem;
+  active: boolean;
+  expanded: boolean;
+  pendingApplications: number;
+  onClick?: () => void;
+}) {
+  const showBadge = item.href === "/admin/applications" && pendingApplications > 0 && !active;
+
+  return (
+    <Link
+      href={item.href}
+      target={item.newTab ? "_blank" : undefined}
+      rel={item.newTab ? "noopener noreferrer" : undefined}
+      onClick={onClick}
+      title={!expanded ? item.name : undefined}
+      className="flex items-center gap-2.5 rounded-lg text-sm font-medium transition-all duration-150 relative"
+      style={{
+        padding: expanded ? "8px 12px" : "8px",
+        justifyContent: expanded ? "flex-start" : "center",
+        backgroundColor: active ? colors.accentLight : "transparent",
+        color: active ? colors.accent : colors.textTertiary,
+        borderLeft: expanded ? (active ? `2px solid ${colors.accent}` : "2px solid transparent") : "none",
+      }}
+    >
+      <span style={{ color: active ? colors.accent : colors.textTertiary, flexShrink: 0, position: "relative" }}>
+        {item.icon}
+        {/* Badge dot when collapsed */}
+        {!expanded && showBadge && (
+          <span
+            style={{
+              position: "absolute",
+              top: -3,
+              right: -3,
+              width: 7,
+              height: 7,
+              borderRadius: "50%",
+              backgroundColor: "#DC2626",
+            }}
+          />
+        )}
+      </span>
+      {expanded && (
+        <>
+          <span className="flex-1 truncate">{item.name}</span>
+          {showBadge && (
+            <span
+              className="flex items-center justify-center text-white font-bold rounded-full flex-shrink-0"
+              style={{
+                backgroundColor: "#DC2626",
+                fontSize: "10px",
+                minWidth: "18px",
+                height: "18px",
+                padding: "0 4px",
+                lineHeight: 1,
+              }}
+            >
+              {pendingApplications}
+            </span>
+          )}
+          {item.newTab && (
+            <ChevronRight className="w-3 h-3 opacity-40 flex-shrink-0" />
+          )}
+        </>
+      )}
+    </Link>
+  );
+}
 
 export function Sidebar({
   pendingApplications = 0,
@@ -120,31 +147,133 @@ export function Sidebar({
   userEmail?: string;
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const pathname = usePathname();
-  const profileRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleMouseDown(e: MouseEvent) {
-      if (
-        profileRef.current &&
-        !profileRef.current.contains(e.target as Node)
-      ) {
-        setProfileOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleMouseDown);
-    return () => document.removeEventListener("mousedown", handleMouseDown);
-  }, []);
 
   const isActive = (href: string) => {
-    if (href === "/admin") {
-      return pathname === "/admin";
-    }
+    if (href === "/admin") return pathname === "/admin";
     return pathname?.startsWith(href);
   };
 
   const avatarLetter = userEmail ? userEmail.charAt(0).toUpperCase() : "A";
+
+  const SidebarContent = ({
+    expanded,
+    onLinkClick,
+  }: {
+    expanded: boolean;
+    onLinkClick?: () => void;
+  }) => (
+    <div className="flex flex-col h-full">
+      {/* Logo */}
+      <div
+        className="flex items-center py-5 overflow-hidden"
+        style={{
+          borderBottom: `1px solid ${colors.border}`,
+          padding: expanded ? "20px 16px" : "20px 0",
+          justifyContent: expanded ? "flex-start" : "center",
+          gap: expanded ? "12px" : 0,
+        }}
+      >
+        <Image
+          src="/assets/Logo.png"
+          alt="Sagefield School"
+          width={28}
+          height={28}
+          priority
+          style={{ flexShrink: 0 }}
+        />
+        {expanded && (
+          <div>
+            <div className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
+              Sagefield
+            </div>
+            <div className="text-xs" style={{ color: colors.textTertiary }}>
+              Admin Portal
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 py-4 space-y-5 overflow-y-auto" style={{ padding: expanded ? "16px 12px" : "16px 6px" }}>
+        {NAV_GROUPS.map((group) => (
+          <div key={group.label}>
+            {expanded && (
+              <div
+                className="text-xs font-semibold uppercase tracking-wider px-3 mb-1.5"
+                style={{ color: colors.textQuaternary }}
+              >
+                {group.label}
+              </div>
+            )}
+            {!expanded && (
+              <div
+                style={{
+                  height: "1px",
+                  backgroundColor: colors.border,
+                  margin: "0 6px 8px",
+                  display: group.label === "Main" ? "none" : "block",
+                }}
+              />
+            )}
+            <div className="space-y-0.5">
+              {group.items.map((item) => (
+                <NavLink
+                  key={item.href}
+                  item={item}
+                  active={isActive(item.href)}
+                  expanded={expanded}
+                  pendingApplications={pendingApplications}
+                  onClick={onLinkClick}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </nav>
+
+      {/* Footer */}
+      <div
+        style={{
+          borderTop: `1px solid ${colors.border}`,
+          padding: expanded ? "16px" : "12px 6px",
+        }}
+      >
+        <div
+          className="flex items-center mb-3"
+          style={{ justifyContent: expanded ? "flex-start" : "center", gap: expanded ? "12px" : 0 }}
+        >
+          <div
+            className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0"
+            style={{ backgroundColor: colors.accentLight, color: colors.accent }}
+          >
+            {avatarLetter}
+          </div>
+          {expanded && userEmail && (
+            <span className="text-xs truncate flex-1" style={{ color: colors.textTertiary }}>
+              {userEmail}
+            </span>
+          )}
+        </div>
+        {expanded && (
+          <form action={signOut}>
+            <button
+              type="submit"
+              className="w-full text-left px-3 py-2 text-xs font-medium rounded-lg transition-colors duration-150 cursor-pointer"
+              style={{
+                color: colors.textSecondary,
+                backgroundColor: colors.elevated,
+                border: `1px solid ${colors.border}`,
+              }}
+            >
+              Sign out
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -153,43 +282,16 @@ export function Sidebar({
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg"
         style={{
-          backgroundColor: colors.warmLinen,
-          boxShadow: shadows.soft,
+          backgroundColor: colors.surface,
+          boxShadow: shadows.medium,
+          border: `1px solid ${colors.border}`,
         }}
         aria-label="Toggle menu"
       >
-        <motion.div
-          animate={isMobileMenuOpen ? "open" : "closed"}
-          className="w-6 h-5 flex flex-col justify-between"
-        >
-          <motion.span
-            className="w-full h-0.5 block origin-left"
-            style={{ backgroundColor: colors.mistyForest }}
-            variants={{
-              closed: { rotate: 0, y: 0 },
-              open: { rotate: 45, y: -1 },
-            }}
-            transition={{ duration: 0.2 }}
-          />
-          <motion.span
-            className="w-full h-0.5 block"
-            style={{ backgroundColor: colors.mistyForest }}
-            variants={{
-              closed: { opacity: 1 },
-              open: { opacity: 0 },
-            }}
-            transition={{ duration: 0.2 }}
-          />
-          <motion.span
-            className="w-full h-0.5 block origin-left"
-            style={{ backgroundColor: colors.mistyForest }}
-            variants={{
-              closed: { rotate: 0, y: 0 },
-              open: { rotate: -45, y: 1 },
-            }}
-            transition={{ duration: 0.2 }}
-          />
-        </motion.div>
+        {isMobileMenuOpen
+          ? <X className="w-5 h-5" style={{ color: colors.textSecondary }} />
+          : <Menu className="w-5 h-5" style={{ color: colors.textSecondary }} />
+        }
       </button>
 
       {/* Mobile Overlay */}
@@ -206,160 +308,20 @@ export function Sidebar({
         )}
       </AnimatePresence>
 
-      {/* Desktop Sidebar - Icon Only */}
-      <aside
-        className="hidden lg:flex flex-col w-16 h-screen sticky top-0 py-6 z-10"
+      {/* Desktop Sidebar — collapsible on hover */}
+      <motion.aside
+        className="hidden lg:flex flex-col h-screen sticky top-0 z-10 flex-shrink-0 overflow-hidden"
+        animate={{ width: isExpanded ? 224 : 52 }}
+        transition={{ duration: 0.2, ease: "easeInOut" }}
+        onMouseEnter={() => setIsExpanded(true)}
+        onMouseLeave={() => setIsExpanded(false)}
         style={{
-          backgroundColor: colors.warmLinen,
+          backgroundColor: colors.surface,
           borderRight: `1px solid ${colors.border}`,
         }}
       >
-        <div className="mb-8 flex flex-col items-center">
-          <Image
-            src="/assets/Logo.png"
-            alt="Sagefield School Logo"
-            width={32}
-            height={32}
-            priority
-          />
-        </div>
-
-        <nav className="flex-1 flex flex-col items-center space-y-2">
-          {navItems.map((item) => {
-            const active = isActive(item.href);
-            return (
-              <Tooltip key={item.href} content={item.name} side="right">
-                <Link
-                  href={item.href}
-                  target={item.newTab ? "_blank" : undefined}
-                  rel={item.newTab ? "noopener noreferrer" : undefined}
-                  className="relative flex items-center justify-center p-2 transition-all duration-200"
-                  style={{
-                    backgroundColor: active ? colors.pastelSage : "transparent",
-                    color: active ? colors.mistyForest : colors.textSecondary,
-                    borderRadius: "12px",
-                  }}
-                >
-                  {item.icon}
-                  {item.href === "/admin/applications" &&
-                    pendingApplications > 0 &&
-                    !active && (
-                      <span
-                        className="absolute top-1 right-1 flex items-center justify-center text-white font-bold rounded"
-                        style={{
-                          backgroundColor: "#dc2626",
-                          fontSize: "10px",
-                          minWidth: "16px",
-                          height: "16px",
-                          padding: "0 3px",
-                          lineHeight: 1,
-                        }}
-                      >
-                        {pendingApplications}
-                      </span>
-                    )}
-                </Link>
-              </Tooltip>
-            );
-          })}
-        </nav>
-
-        {/* Bottom: Notifications + Profile */}
-        <div className="flex flex-col items-center gap-3 mt-4">
-          {/* Notification Bell */}
-          <Tooltip content="Notifications" side="right">
-            <button
-              className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95"
-              style={{
-                backgroundColor: "white",
-                border: `1px solid ${colors.border}`,
-                boxShadow: shadows.soft,
-                cursor: "pointer",
-              }}
-              disabled
-              aria-label="Notifications"
-            >
-              <svg
-                className="w-4 h-4"
-                style={{ color: colors.textSecondary }}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                />
-              </svg>
-            </button>
-          </Tooltip>
-
-          {/* Profile Avatar with dropdown */}
-          <div className="relative" ref={profileRef}>
-            <Tooltip content="Account" side="right">
-              <button
-                onClick={() => setProfileOpen((v) => !v)}
-                className="flex items-center justify-center w-10 h-10 rounded-full font-medium text-sm transition-all duration-200 hover:scale-105 active:scale-95"
-                style={{
-                  backgroundColor: colors.pastelSage,
-                  color: colors.mistyForest,
-                  boxShadow: shadows.soft,
-                  cursor: "pointer",
-                }}
-                aria-label="Account menu"
-              >
-                {avatarLetter}
-              </button>
-            </Tooltip>
-
-            <AnimatePresence>
-              {profileOpen && (
-                <motion.div
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -8 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute z-50"
-                  style={{
-                    left: "calc(100% + 12px)",
-                    bottom: 0,
-                    width: "220px",
-                    backgroundColor: "white",
-                    borderRadius: radius.lg,
-                    border: `1px solid ${colors.border}`,
-                    boxShadow: shadows.large,
-                    padding: "12px",
-                  }}
-                >
-                  {userEmail && (
-                    <p
-                      className="text-xs font-medium mb-3 truncate"
-                      style={{ color: colors.textSecondary }}
-                    >
-                      {userEmail}
-                    </p>
-                  )}
-                  <form action={signOut}>
-                    <button
-                      type="submit"
-                      className="w-full text-left px-3 py-2 text-sm font-medium transition-all duration-200 rounded-lg hover:opacity-80 cursor-pointer"
-                      style={{
-                        color: colors.mistyForest,
-                        backgroundColor: colors.warmLinen,
-                        border: `1px solid ${colors.border}`,
-                      }}
-                    >
-                      Sign out
-                    </button>
-                  </form>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-      </aside>
+        <SidebarContent expanded={isExpanded} />
+      </motion.aside>
 
       {/* Mobile Sidebar */}
       <AnimatePresence>
@@ -369,99 +331,15 @@ export function Sidebar({
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="lg:hidden fixed top-0 left-0 bottom-0 w-64 z-50 p-6 flex flex-col"
+            className="lg:hidden fixed top-0 left-0 bottom-0 w-64 z-50 flex flex-col"
             style={{
-              backgroundColor: colors.warmLinen,
+              backgroundColor: colors.surface,
               borderRight: `1px solid ${colors.border}`,
               boxShadow: shadows.large,
             }}
           >
-            <div className="mb-10 mt-16 flex flex-col items-center">
-              <Image
-                src="/assets/Logo.png"
-                alt="Sagefield School Logo"
-                width={48}
-                height={48}
-                priority
-              />
-              <p
-                className={`text-sm mt-3 ${merriweather.className}`}
-                style={{ color: colors.textSecondary }}
-              >
-                Admin Portal
-              </p>
-            </div>
-
-            <nav className="flex-1 space-y-2">
-              {navItems.map((item) => {
-                const active = isActive(item.href);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    target={item.newTab ? "_blank" : undefined}
-                    rel={item.newTab ? "noopener noreferrer" : undefined}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 transition-all duration-200"
-                    style={{
-                      backgroundColor: active
-                        ? colors.pastelSage
-                        : "transparent",
-                      color: active ? colors.mistyForest : colors.textSecondary,
-                      fontWeight: active ? 600 : 500,
-                      borderRadius: "12px",
-                    }}
-                  >
-                    {item.icon}
-                    <span>{item.name}</span>
-                    {item.href === "/admin/applications" &&
-                      pendingApplications > 0 &&
-                      !active && (
-                        <span
-                          className="flex items-center justify-center text-white font-bold rounded-full ml-auto"
-                          style={{
-                            backgroundColor: "#dc2626",
-                            fontSize: "10px",
-                            minWidth: "18px",
-                            height: "18px",
-                            padding: "0 4px",
-                            lineHeight: 1,
-                          }}
-                        >
-                          {pendingApplications}
-                        </span>
-                      )}
-                  </Link>
-                );
-              })}
-            </nav>
-
-            {/* Mobile bottom: email + sign out */}
-            <div
-              className="mt-6 pt-4"
-              style={{ borderTop: `1px solid ${colors.border}` }}
-            >
-              {userEmail && (
-                <p
-                  className="text-xs mb-3 truncate"
-                  style={{ color: colors.textSecondary }}
-                >
-                  {userEmail}
-                </p>
-              )}
-              <form action={signOut}>
-                <button
-                  type="submit"
-                  className="w-full text-left px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-xl hover:opacity-80"
-                  style={{
-                    color: colors.mistyForest,
-                    backgroundColor: "white",
-                    border: `1px solid ${colors.border}`,
-                  }}
-                >
-                  Sign out
-                </button>
-              </form>
+            <div className="pt-16">
+              <SidebarContent expanded={true} onLinkClick={() => setIsMobileMenuOpen(false)} />
             </div>
           </motion.aside>
         )}

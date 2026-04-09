@@ -35,11 +35,12 @@ export default async function AdminLayout({
     return (
       <div
         className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: colors.softCloud }}
+        style={{ backgroundColor: colors.bg }}
       >
         <div
-          className="bg-white p-8 max-w-md w-full text-center"
+          className="p-8 max-w-md w-full text-center"
           style={{
+            backgroundColor: colors.surface,
             borderRadius: radius.lg,
             boxShadow: shadows.medium,
             border: `1px solid ${colors.border}`,
@@ -47,7 +48,7 @@ export default async function AdminLayout({
         >
           <h1
             className="text-2xl font-bold mb-4"
-            style={{ color: colors.errorText }}
+            style={{ color: colors.error }}
           >
             Access Denied
           </h1>
@@ -57,11 +58,11 @@ export default async function AdminLayout({
           <form action={signOut}>
             <button
               type="submit"
-              className="px-6 py-4 text-white text-base font-medium transition-all duration-200 hover:opacity-90"
+              className="px-6 py-3 text-white text-sm font-medium transition-all duration-200 hover:opacity-90"
               style={{
-                backgroundColor: colors.mistyForest,
-                borderRadius: "16px",
-                boxShadow: shadows.soft,
+                backgroundColor: colors.accent,
+                borderRadius: radius.lg,
+                boxShadow: shadows.medium,
                 border: "none",
               }}
             >
@@ -82,13 +83,13 @@ export default async function AdminLayout({
   return (
     <div
       className="h-screen flex overflow-hidden"
-      style={{ backgroundColor: colors.softCloud }}
+      style={{ backgroundColor: colors.bg }}
     >
       <Sidebar
         pendingApplications={pendingApplications ?? 0}
         userEmail={user.email}
       />
-      <main className="flex-1 px-3 sm:px-4 lg:px-6 w-full overflow-auto">
+      <main className="flex-1 px-4 sm:px-6 lg:px-8 w-full overflow-auto">
         {children}
       </main>
     </div>

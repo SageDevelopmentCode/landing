@@ -457,8 +457,8 @@ export default function LeadsPage() {
                 )}
                 {!hiddenColumns.has('contact') && (
                   <TableCell>
-                    <div>{lead.email}</div>
-                    <div className="text-xs text-gray-400 font-body">
+                    <div className="max-w-[160px] truncate">{lead.email}</div>
+                    <div className="text-xs text-gray-400 font-body max-w-[160px] truncate">
                       {lead.phone}
                     </div>
                   </TableCell>
@@ -467,7 +467,7 @@ export default function LeadsPage() {
                   <TableCell>
                     {isWaitlist ? (
                       <>
-                        <div>{lead.child_name}</div>
+                        <div className="max-w-[120px] truncate">{lead.child_name}</div>
                         <div className="text-xs text-gray-400 font-body">
                           Age: {lead.child_age || 'N/A'}
                         </div>
@@ -480,11 +480,11 @@ export default function LeadsPage() {
                 {!hiddenColumns.has('message') && (
                   <TableCell>
                     {isContact ? (
-                      <div className="max-w-xs truncate" title={lead.message}>
+                      <div className="max-w-[160px] truncate" title={lead.message}>
                         {lead.message}
                       </div>
                     ) : isWaitlist && lead.special_interests ? (
-                      <div className="max-w-xs truncate" title={lead.special_interests}>
+                      <div className="max-w-[160px] truncate" title={lead.special_interests}>
                         {lead.special_interests}
                       </div>
                     ) : (
