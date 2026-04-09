@@ -171,7 +171,7 @@ const btnGhost = {
 
 const btnDanger = {
   backgroundColor: colors.error,
-  color: colors.errorText,
+  color: "#ffffff",
   border: "none",
   borderRadius: radius.sm,
   padding: "6px 10px",
@@ -1602,7 +1602,9 @@ function ExpensesTab({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<Partial<BudgetExpense>>({});
   const [showAdd, setShowAdd] = useState(false);
-  const [filterMonth, setFilterMonth] = useState("");
+  const [filterMonth, setFilterMonth] = useState(() =>
+    new Date().toISOString().slice(0, 7),
+  );
   const [filterCat, setFilterCat] = useState("");
   const [view, setView] = useState<"monthly" | "category" | "trend">("monthly");
   const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(
@@ -1775,23 +1777,20 @@ function ExpensesTab({
     return acc;
   }, {});
 
-  const budgetRows = Object.entries(byCat)
-    .sort(([, a], [, b]) => b - a)
-    .map(([cat, actual], i) => {
+  const allBudgetCats = Array.from(
+    new Set([...Object.keys(plannedByCat), ...Object.keys(byCat)]),
+  );
+  const budgetRows = allBudgetCats
+    .map((cat) => {
+      const actual = byCat[cat] ?? 0;
       const planned = plannedByCat[cat] ?? 0;
       const variance = planned - actual;
       const pct = planned > 0 ? actual / planned : null;
       const over = planned > 0 && actual > planned;
-      return {
-        cat,
-        actual,
-        planned,
-        variance,
-        pct,
-        over,
-        color: SLICE_COLORS[i % SLICE_COLORS.length],
-      };
-    });
+      return { cat, actual, planned, variance, pct, over };
+    })
+    .sort((a, b) => b.actual - a.actual)
+    .map((row, i) => ({ ...row, color: SLICE_COLORS[i % SLICE_COLORS.length] }));
 
   const totalBudgetPlanned = budgetRows.reduce((s, r) => s + r.planned, 0);
   const totalBudgetActual = budgetRows.reduce((s, r) => s + r.actual, 0);
@@ -2442,14 +2441,35 @@ function ExpensesTab({
       )}
 
       {/* Monthly view — Spend vs. Budget by Category */}
-      {view === "monthly" && budgetRows.length > 0 && (
+      {view === "monthly" && (
         <div style={{ ...cardStyle, padding: "24px" }}>
-          <p
-            className="text-sm font-semibold mb-4"
-            style={{ color: colors.textPrimary }}
-          >
-            Spend vs. Budget by Category
-          </p>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p
+                className="text-sm font-semibold"
+                style={{ color: colors.textPrimary }}
+              >
+                Spend vs. Budget by Category
+              </p>
+              {filterMonth && (
+                <p className="text-xs mt-0.5" style={{ color: colors.textSecondary }}>
+                  {new Date(
+                    Number(filterMonth.slice(0, 4)),
+                    Number(filterMonth.slice(5, 7)) - 1,
+                  ).toLocaleString("default", { month: "long", year: "numeric" })}
+                </p>
+              )}
+            </div>
+          </div>
+          {!filterMonth ? (
+            <p className="text-sm" style={{ color: colors.textSecondary }}>
+              Select a month above to compare spending against your monthly budget.
+            </p>
+          ) : budgetRows.length === 0 ? (
+            <p className="text-sm" style={{ color: colors.textSecondary }}>
+              No expenses recorded for this month.
+            </p>
+          ) :
           <div style={{ overflowX: "auto" }}>
             <table
               style={{
@@ -2660,6 +2680,7 @@ function ExpensesTab({
               </tfoot>
             </table>
           </div>
+          }
         </div>
       )}
 
