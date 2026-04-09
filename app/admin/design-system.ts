@@ -104,6 +104,72 @@ export const transitions = {
   spring: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
 } as const
 
+// CSS-variable-based tokens — use these so components respond to the
+// data-admin-theme attribute toggled by ThemeProvider.
+export const cssColors = {
+  bg:              'var(--admin-bg)',
+  surface:         'var(--admin-surface)',
+  elevated:        'var(--admin-elevated)',
+  border:          'var(--admin-border)',
+  borderStrong:    'var(--admin-border-strong)',
+  borderHover:     'var(--admin-border-hover)',
+  accent:          'var(--admin-accent)',
+  accentBright:    'var(--admin-accent-bright)',
+  accentLight:     'var(--admin-accent-light)',
+  accentMid:       'var(--admin-accent-mid)',
+  accentDark:      'var(--admin-accent-dark)',
+  accentGlow:      'var(--admin-accent-glow)',
+  textPrimary:     'var(--admin-text-primary)',
+  textSecondary:   'var(--admin-text-secondary)',
+  textTertiary:    'var(--admin-text-tertiary)',
+  textQuaternary:  'var(--admin-text-quaternary)',
+  textInverse:     'var(--admin-text-inverse)',
+  success:         'var(--admin-success)',
+  successText:     'var(--admin-success-text)',
+  successBg:       'var(--admin-success-bg)',
+  successBorder:   'var(--admin-success-border)',
+  warning:         'var(--admin-warning)',
+  warningText:     'var(--admin-warning-text)',
+  warningBg:       'var(--admin-warning-bg)',
+  warningBorder:   'var(--admin-warning-border)',
+  error:           'var(--admin-error)',
+  errorText:       'var(--admin-error-text)',
+  errorBg:         'var(--admin-error-bg)',
+  errorBorder:     'var(--admin-error-border)',
+  danger:          'var(--admin-danger)',
+  dangerBg:        'var(--admin-danger-bg)',
+  info:            'var(--admin-info)',
+  infoText:        'var(--admin-info-text)',
+  infoBg:          'var(--admin-info-bg)',
+  infoBorder:      'var(--admin-info-border)',
+  purple:          'var(--admin-purple)',
+  purpleBg:        'var(--admin-purple-bg)',
+  purpleBorder:    'var(--admin-purple-border)',
+  // Legacy aliases
+  pastelSage:      'var(--admin-accent-light)',
+  mistyForest:     'var(--admin-accent)',
+  warmLinen:       'var(--admin-elevated)',
+  softCloud:       'var(--admin-bg)',
+  dustyRose:       'var(--admin-error-bg)',
+  powderBlue:      'var(--admin-info-bg)',
+  paleMarigold:    'var(--admin-warning-bg)',
+  lightClay:       'var(--admin-purple-bg)',
+  divider:         'var(--admin-border)',
+  // chart stays hardcoded — SVG presentation attrs don't resolve CSS vars in all browsers
+  chart: ['#5E7C68', '#38BDF8', '#22C55E', '#F59E0B', '#EF4444', '#EC4899'],
+} as const
+
+export const cssShadows = {
+  soft:     'var(--admin-shadow-soft)',
+  card:     'var(--admin-shadow-soft)',
+  medium:   'var(--admin-shadow-medium)',
+  large:    'var(--admin-shadow-large)',
+  elevated: 'var(--admin-shadow-medium)',
+  glow:     '0 0 0 1px var(--admin-accent-glow), 0 0 20px var(--admin-accent-glow)',
+  focus:    '0 0 0 3px var(--admin-accent-light)',
+  inner:    'inset 0 1px 2px rgba(0,0,0,0.1)',
+} as const
+
 export const animations = {
   fadeIn: {
     initial: { opacity: 0, y: 8 },

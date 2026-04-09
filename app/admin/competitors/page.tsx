@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Merriweather } from "next/font/google";
 import { ExternalLink } from "lucide-react";
-import { colors, radius, shadows, spacing } from "../design-system";
+import { cssColors as colors, radius, cssShadows as shadows, spacing } from "../design-system";
 
 const merriweather = Merriweather({
   weight: ["400", "700", "900"],

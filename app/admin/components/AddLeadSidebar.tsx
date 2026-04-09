@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from 'react'
 import { DetailSidebar } from './DetailSidebar'
-import { colors, radius, shadows } from '../design-system'
+import { cssColors as colors, radius, cssShadows as shadows } from '../design-system'
 import { allLeadStatuses, leadStatusLabels, LeadStatus } from '../../types/lead-status'
 import { addAdminLead } from '../../actions/addAdminLead'
 

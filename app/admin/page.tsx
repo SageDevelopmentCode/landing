@@ -1,5 +1,5 @@
 import { CountdownCard } from './components/CountdownCard'
-import { colors } from './design-system'
+import { cssColors as colors } from './design-system'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 
 const jakarta = Plus_Jakarta_Sans({

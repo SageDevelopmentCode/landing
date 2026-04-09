@@ -10,7 +10,7 @@ import { toggleTransactionExclusion } from '@/app/actions/toggleTransactionExclu
 import { getParentDetail } from '@/app/actions/getParentDetail'
 import { getStudentDetail } from '@/app/actions/getStudentDetail'
 import { SidebarField, SidebarSection } from '../../components/SidebarPrimitives'
-import { colors } from '../design-system'
+import { cssColors as colors } from '../design-system'
 import { ApplicationDetailSidebar } from './ApplicationDetailSidebar'
 import { ParentDetailSidebar } from './ParentDetailSidebar'
 import { StudentDetailSidebar } from './StudentDetailSidebar'

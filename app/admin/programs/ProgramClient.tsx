@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { Merriweather } from 'next/font/google'
-import { colors, shadows, radius } from '../design-system'
+import { cssColors as colors, cssShadows as shadows, radius } from '../design-system'
 import { StudentDetailSidebar } from '../components/StudentDetailSidebar'
 
 const merriweather = Merriweather({

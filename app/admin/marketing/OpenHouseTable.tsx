@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { colors, radius, shadows } from '../design-system'
+import { cssColors as colors, radius, cssShadows as shadows } from '../design-system'
 import { Table, TableRow, TableCell } from '../components/Table'
 import type { OpenHouseRsvp } from './page'
 import { AddRsvpSidebar } from './AddRsvpSidebar'

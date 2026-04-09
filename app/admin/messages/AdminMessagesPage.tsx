@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Search, Send, ChevronLeft, Loader2, ImageIcon, X } from "lucide-react";
 import { Merriweather } from "next/font/google";
 import { createClient } from "@/app/lib/supabase-browser";
-import { colors, shadows } from "@/app/admin/design-system";
+import { cssColors as colors, cssShadows as shadows } from "@/app/admin/design-system";
 import {
   getConversations,
   getMessages,

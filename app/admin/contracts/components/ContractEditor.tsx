@@ -9,7 +9,7 @@ import { TextStyle } from '@tiptap/extension-text-style'
 import { Color } from '@tiptap/extension-color'
 import Highlight from '@tiptap/extension-highlight'
 import TextAlign from '@tiptap/extension-text-align'
-import { colors, radius, shadows } from '../../design-system'
+import { cssColors as colors, radius, cssShadows as shadows } from '../../design-system'
 import { ContractFieldNode } from './ContractFieldExtension'
 
 const FULL_SIGNATURE_HTML =

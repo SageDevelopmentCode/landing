@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Merriweather } from 'next/font/google'
-import { colors, radius, shadows, spacing } from '../design-system'
+import { cssColors as colors, radius, cssShadows as shadows, spacing } from '../design-system'
 import { OpenHouseTable } from './OpenHouseTable'
 import { TourUnavailabilityView } from './TourUnavailabilityView'
 import type { OpenHouseRsvp, TourBooking } from './page'

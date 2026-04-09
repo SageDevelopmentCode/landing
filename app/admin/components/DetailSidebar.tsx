@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
-import { colors, radius, shadows } from '../design-system'
+import { cssColors as colors, radius, cssShadows as shadows } from '../design-system'
 
 interface DetailSidebarProps {
   isOpen: boolean

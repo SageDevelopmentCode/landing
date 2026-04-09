@@ -3,7 +3,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { ReactNode } from 'react'
-import { colors, radius, shadows } from '../design-system'
+import { cssColors as colors, radius, cssShadows as shadows } from '../design-system'
 
 interface TableProps {
   headers: string[]

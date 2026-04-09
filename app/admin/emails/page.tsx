@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Table, TableRow, TableCell } from '../components/Table'
 import { EmailDetailSidebar } from '../components/EmailDetailSidebar'
-import { colors, shadows } from '../design-system'
+import { cssColors as colors, cssShadows as shadows } from '../design-system'
 import { Merriweather } from 'next/font/google'
 
 const merriweather = Merriweather({

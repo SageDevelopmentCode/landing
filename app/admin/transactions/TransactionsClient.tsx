@@ -9,7 +9,7 @@ import {
   formatPaymentType,
   stripeUrl,
 } from "../components/TransactionDetailSidebar";
-import { colors } from "../design-system";
+import { cssColors as colors } from "../design-system";
 
 type StripeTransaction = {
   id: string;

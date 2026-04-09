@@ -22,8 +22,13 @@ import {
   ChevronRight,
   Menu,
   X,
+  Sun,
+  Moon,
+  PanelLeftOpen,
+  PanelLeftClose,
 } from "lucide-react";
-import { colors, radius, shadows } from "../design-system";
+import { cssColors as colors, radius, cssShadows as shadows } from "../design-system";
+import { useTheme } from "./ThemeProvider";
 import { signOut } from "@/app/actions/auth";
 
 interface NavItem {
@@ -149,6 +154,7 @@ export function Sidebar({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const pathname = usePathname();
+  const { theme, toggleTheme } = useTheme();
 
   const isActive = (href: string) => {
     if (href === "/admin") return pathname === "/admin";
@@ -160,9 +166,11 @@ export function Sidebar({
   const SidebarContent = ({
     expanded,
     onLinkClick,
+    onToggleExpand,
   }: {
     expanded: boolean;
     onLinkClick?: () => void;
+    onToggleExpand?: () => void;
   }) => (
     <div className="flex flex-col h-full">
       {/* Logo */}
@@ -240,6 +248,66 @@ export function Sidebar({
           padding: expanded ? "16px" : "12px 6px",
         }}
       >
+        {/* Expand/collapse toggle */}
+        <button
+          onClick={onToggleExpand}
+          title={expanded ? 'Collapse sidebar' : 'Expand sidebar'}
+          className="transition-colors duration-150"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: expanded ? 'flex-start' : 'center',
+            gap: expanded ? '10px' : 0,
+            width: '100%',
+            padding: expanded ? '6px 8px' : '6px',
+            borderRadius: radius.md,
+            border: 'none',
+            backgroundColor: 'transparent',
+            color: colors.textTertiary,
+            cursor: 'pointer',
+            marginBottom: '4px',
+          }}
+        >
+          {expanded
+            ? <PanelLeftClose className="w-4 h-4" style={{ flexShrink: 0 }} />
+            : <PanelLeftOpen className="w-4 h-4" style={{ flexShrink: 0 }} />
+          }
+          {expanded && (
+            <span className="text-xs font-medium">Collapse</span>
+          )}
+        </button>
+
+        {/* Theme toggle */}
+        <button
+          onClick={toggleTheme}
+          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          className="transition-colors duration-150"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: expanded ? 'flex-start' : 'center',
+            gap: expanded ? '10px' : 0,
+            width: '100%',
+            padding: expanded ? '6px 8px' : '6px',
+            borderRadius: radius.md,
+            border: 'none',
+            backgroundColor: 'transparent',
+            color: colors.textTertiary,
+            cursor: 'pointer',
+            marginBottom: '8px',
+          }}
+        >
+          {theme === 'dark'
+            ? <Sun className="w-4 h-4" style={{ flexShrink: 0 }} />
+            : <Moon className="w-4 h-4" style={{ flexShrink: 0 }} />
+          }
+          {expanded && (
+            <span className="text-xs font-medium">
+              {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+            </span>
+          )}
+        </button>
+
         <div
           className="flex items-center mb-3"
           style={{ justifyContent: expanded ? "flex-start" : "center", gap: expanded ? "12px" : 0 }}
@@ -308,19 +376,20 @@ export function Sidebar({
         )}
       </AnimatePresence>
 
-      {/* Desktop Sidebar — collapsible on hover */}
+      {/* Desktop Sidebar — manually collapsible */}
       <motion.aside
         className="hidden lg:flex flex-col h-screen sticky top-0 z-10 flex-shrink-0 overflow-hidden"
         animate={{ width: isExpanded ? 224 : 52 }}
         transition={{ duration: 0.2, ease: "easeInOut" }}
-        onMouseEnter={() => setIsExpanded(true)}
-        onMouseLeave={() => setIsExpanded(false)}
         style={{
           backgroundColor: colors.surface,
           borderRight: `1px solid ${colors.border}`,
         }}
       >
-        <SidebarContent expanded={isExpanded} />
+        <SidebarContent
+          expanded={isExpanded}
+          onToggleExpand={() => setIsExpanded((v) => !v)}
+        />
       </motion.aside>
 
       {/* Mobile Sidebar */}
@@ -339,7 +408,11 @@ export function Sidebar({
             }}
           >
             <div className="pt-16">
-              <SidebarContent expanded={true} onLinkClick={() => setIsMobileMenuOpen(false)} />
+              <SidebarContent
+                expanded={true}
+                onLinkClick={() => setIsMobileMenuOpen(false)}
+                onToggleExpand={() => setIsMobileMenuOpen(false)}
+              />
             </div>
           </motion.aside>
         )}

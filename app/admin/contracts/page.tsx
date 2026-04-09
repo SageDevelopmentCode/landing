@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 import { motion, AnimatePresence } from "framer-motion";
-import { colors, radius, shadows, animations } from "../design-system";
+import { cssColors as colors, radius, cssShadows as shadows, animations } from "../design-system";
 import { Merriweather } from "next/font/google";
 
 const merriweather = Merriweather({

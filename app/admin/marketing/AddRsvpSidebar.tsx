@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from 'react'
 import { DetailSidebar } from '../components/DetailSidebar'
-import { colors, radius, shadows } from '../design-system'
+import { cssColors as colors, radius, cssShadows as shadows } from '../design-system'
 import { addAdminRsvp } from '../../actions/addAdminRsvp'
 import type { OpenHouseRsvp } from './page'
 

@@ -6,7 +6,7 @@ import { DetailSidebar } from './DetailSidebar'
 import { SidebarField, SidebarSection } from '../../components/SidebarPrimitives'
 import type { Tables } from '../../types/database.types'
 type BudgetIncome = Tables<{ schema: "budget" }, "income">
-import { colors, radius } from '../design-system'
+import { cssColors as colors, radius } from '../design-system'
 
 const SOURCE_LABELS: Record<string, string> = {
   tuition:          'Tuition',

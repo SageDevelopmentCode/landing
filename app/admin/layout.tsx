@@ -1,8 +1,12 @@
 import { createServerSupabaseClient, createAdminClient } from "@/app/lib/supabase-server";
 import { redirect } from "next/navigation";
 import { signOut } from "@/app/actions/auth";
+import { Inter } from "next/font/google";
 import { Sidebar } from "./components/Sidebar";
-import { colors, radius, shadows } from "./design-system";
+import { ThemeProvider } from "./components/ThemeProvider";
+import { cssColors as colors, radius, cssShadows as shadows } from "./design-system";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-admin-inter" });
 
 export default async function AdminLayout({
   children,
@@ -81,17 +85,19 @@ export default async function AdminLayout({
     .eq('status', 'in_review')
 
   return (
-    <div
-      className="h-screen flex overflow-hidden"
-      style={{ backgroundColor: colors.bg }}
-    >
-      <Sidebar
-        pendingApplications={pendingApplications ?? 0}
-        userEmail={user.email}
-      />
-      <main className="flex-1 px-4 sm:px-6 lg:px-8 w-full overflow-auto">
-        {children}
-      </main>
-    </div>
+    <ThemeProvider>
+      <div
+        className={`${inter.variable} h-screen flex overflow-hidden`}
+        style={{ backgroundColor: colors.bg, fontFamily: "var(--font-admin-inter, Inter, sans-serif)" }}
+      >
+        <Sidebar
+          pendingApplications={pendingApplications ?? 0}
+          userEmail={user.email}
+        />
+        <main className="flex-1 px-4 sm:px-6 lg:px-8 w-full overflow-auto">
+          {children}
+        </main>
+      </div>
+    </ThemeProvider>
   );
 }

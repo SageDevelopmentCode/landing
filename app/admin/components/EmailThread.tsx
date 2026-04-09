@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { colors, radius } from '../design-system'
+import { cssColors as colors, radius } from '../design-system'
 
 interface EmailMessage {
   messageId: string

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { LeadStatus, allLeadStatuses, leadStatusLabels } from '../../types/lead-status'
-import { colors, radius } from '../design-system'
+import { cssColors as colors, radius } from '../design-system'
 
 interface StatusDropdownProps {
   currentStatus: LeadStatus

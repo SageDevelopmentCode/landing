@@ -8,7 +8,7 @@ import { ApplicationDetailSidebar } from '../components/ApplicationDetailSidebar
 import type { CachedEnrollmentData } from '../components/ApplicationDetailSidebar'
 import { AdminEnrollmentItemDrawer } from '../components/AdminEnrollmentItemDrawer'
 import { EnrollmentPipelineView } from '../components/EnrollmentPipelineView'
-import { colors } from '../design-system'
+import { cssColors as colors } from '../design-system'
 import { Merriweather } from 'next/font/google'
 import { approveApplication } from '../../actions/approveApplication'
 import { denyApplication } from '../../actions/denyApplication'

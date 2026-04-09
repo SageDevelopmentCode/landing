@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { Merriweather } from "next/font/google";
-import { colors, shadows, radius } from "../design-system";
+import { cssColors as colors, cssShadows as shadows, radius } from "../design-system";
 
 const merriweather = Merriweather({
   weight: ["300", "400", "700", "900"],

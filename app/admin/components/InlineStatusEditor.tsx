@@ -5,7 +5,7 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { ChevronDown, Loader2 } from 'lucide-react'
 import { LeadStatus, allLeadStatuses, leadStatusLabels, leadStatusStyles } from '../../types/lead-status'
 import { updateWaitlistStatus, updateContactStatus } from '../../actions/updateLeadStatus'
-import { colors } from '../design-system'
+import { cssColors as colors } from '../design-system'
 
 interface InlineStatusEditorProps {
   status: LeadStatus

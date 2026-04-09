@@ -1,5 +1,5 @@
 import { createAdminClient } from '@/app/lib/supabase-server'
-import { colors } from '../design-system'
+import { cssColors as colors } from '../design-system'
 import { Merriweather } from 'next/font/google'
 import { TransactionsClient } from './TransactionsClient'
 

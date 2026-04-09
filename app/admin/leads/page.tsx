@@ -7,7 +7,7 @@ import { InlineStatusEditor } from '../components/InlineStatusEditor'
 import { TagEditor, PREDEFINED_TAGS, getTagColor } from '../components/TagEditor'
 import { LeadsDetailSidebar } from '../components/LeadsDetailSidebar'
 import { AddLeadSidebar } from '../components/AddLeadSidebar'
-import { colors, radius, shadows } from '../design-system'
+import { cssColors as colors, radius, cssShadows as shadows } from '../design-system'
 import { Merriweather } from 'next/font/google'
 import { LeadStatus, allLeadStatuses, leadStatusLabels, leadStatusStyles } from '../../types/lead-status'
 
