@@ -28,6 +28,7 @@ export type SummerEnrollment = {
   id: string;
   student_id: string;
   child_grade: string | null;
+  program: string | null;
 };
 
 export type NonEnrolledApp = {
@@ -99,10 +100,10 @@ export default async function BillingRoute() {
     adminClient
       .schema("parent_app")
       .from("applications")
-      .select("id, student_id, child_grade, status, child_legal_name")
+      .select("id, student_id, child_grade, status, child_legal_name, program")
       .eq("user_id", user.id)
       .eq("approved", true)
-      .in("program", ["summer_26", "both"]),
+      .in("program", ["summer_26", "both", "homeschool_drop_in"]),
   ]);
 
   const transactions = (txData ?? []) as StripeTransaction[];
@@ -116,11 +117,12 @@ export default async function BillingRoute() {
     child_grade: string | null;
     status: string | null;
     child_legal_name: string | null;
+    program: string | null;
   }[]).filter((e) => !!e.student_id && !!e.id);
 
   const summerEnrollments: SummerEnrollment[] = allSummerApps
     .filter((e) => e.status === "enrolled")
-    .map((e) => ({ id: e.id, student_id: e.student_id!, child_grade: e.child_grade }));
+    .map((e) => ({ id: e.id, student_id: e.student_id!, child_grade: e.child_grade, program: e.program ?? null }));
 
   const nonEnrolledApps: NonEnrolledApp[] = allSummerApps
     .filter((e) => e.status !== "enrolled")
@@ -145,8 +147,9 @@ export default async function BillingRoute() {
   }
 
   // Show enrollment if parent has paid fewer than 12 weeks (weekly plan with room to add more)
+  // Exclude homeschool_drop_in — they don't have summer tuition
   const unpaidSummerEnrollments = summerEnrollments.filter(
-    (e) => (paidWeeksByStudent[e.student_id]?.length ?? 0) < 12
+    (e) => e.program !== "homeschool_drop_in" && (paidWeeksByStudent[e.student_id]?.length ?? 0) < 12
   );
 
   const studentIds = [
