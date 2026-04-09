@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Merriweather } from 'next/font/google'
+import { Poppins } from 'next/font/google'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cssColors as colors, radius, cssShadows as shadows } from '../design-system'
 import { DetailSidebar } from '../components/DetailSidebar'
@@ -15,7 +15,7 @@ import {
 } from '@/app/actions/tourUnavailability'
 import type { TourBooking } from './page'
 
-const merriweather = Merriweather({ weight: ['300', '400', '700', '900'], subsets: ['latin'] })
+const merriweather = Poppins({ weight: ['300', '400', '700', '900'], subsets: ['latin'] })
 
 const TIME_SLOTS = [
   '9:00 AM', '9:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM',

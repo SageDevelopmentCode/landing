@@ -1,8 +1,8 @@
 import Image from "next/image";
-import { Merriweather } from "next/font/google";
+import { Poppins } from 'next/font/google'
 import { cssColors as colors, cssShadows as shadows, radius } from "../design-system";
 
-const merriweather = Merriweather({
+const merriweather = Poppins({
   weight: ["300", "400", "700", "900"],
   subsets: ["latin"],
 });

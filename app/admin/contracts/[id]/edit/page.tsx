@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
-import { Merriweather } from 'next/font/google'
+import { Poppins } from 'next/font/google'
 import { cssColors as colors, radius, cssShadows as shadows } from '../../../design-system'
 import ContractEditor from '../../components/ContractEditor'
 
-const merriweather = Merriweather({
+const merriweather = Poppins({
   weight: ['300', '400', '700', '900'],
   subsets: ['latin'],
 })

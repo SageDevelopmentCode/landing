@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 import { motion, AnimatePresence } from "framer-motion";
 import { cssColors as colors, radius, cssShadows as shadows, animations } from "../design-system";
-import { Merriweather } from "next/font/google";
+import { Poppins } from 'next/font/google'
 
-const merriweather = Merriweather({
+const merriweather = Poppins({
   weight: ["300", "400", "700", "900"],
   subsets: ["latin"],
 });

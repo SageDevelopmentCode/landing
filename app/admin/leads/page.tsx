@@ -8,7 +8,7 @@ import { TagEditor, PREDEFINED_TAGS, getTagColor } from '../components/TagEditor
 import { LeadsDetailSidebar } from '../components/LeadsDetailSidebar'
 import { AddLeadSidebar } from '../components/AddLeadSidebar'
 import { cssColors as colors, radius, cssShadows as shadows } from '../design-system'
-import { Merriweather } from 'next/font/google'
+import { Poppins } from 'next/font/google'
 import { LeadStatus, allLeadStatuses, leadStatusLabels, leadStatusStyles } from '../../types/lead-status'
 
 const COLUMNS = [
@@ -23,7 +23,7 @@ const COLUMNS = [
   { key: 'submitted',  label: 'Submitted' },
 ]
 
-const merriweather = Merriweather({
+const merriweather = Poppins({
   weight: ['300', '400', '700', '900'],
   subsets: ['latin'],
 })

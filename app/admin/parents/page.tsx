@@ -1,9 +1,9 @@
 import { createAdminClient } from '@/app/lib/supabase-server'
 import { cssColors as colors } from '../design-system'
-import { Merriweather } from 'next/font/google'
+import { Poppins } from 'next/font/google'
 import { ParentsClient } from './ParentsClient'
 
-const merriweather = Merriweather({
+const merriweather = Poppins({
   weight: ['300', '400', '700', '900'],
   subsets: ['latin'],
 })

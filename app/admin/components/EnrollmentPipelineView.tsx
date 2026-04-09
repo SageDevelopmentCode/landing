@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Merriweather } from 'next/font/google'
+import { Poppins } from 'next/font/google'
 import { getAdminEnrollmentDataBulk } from '../../actions/getAdminEnrollmentDataBulk'
 import type { AdminEnrollmentData } from '../../actions/getAdminEnrollmentData'
 import {
@@ -15,7 +15,7 @@ import {
 } from '@/app/types/enrollment-signatures'
 import type { SignatureMap } from '@/app/types/enrollment-signatures'
 
-const merriweather = Merriweather({
+const merriweather = Poppins({
   weight: ['700'],
   subsets: ['latin'],
 })

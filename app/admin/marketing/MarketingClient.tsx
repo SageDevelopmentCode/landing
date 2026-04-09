@@ -1,14 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { Merriweather } from 'next/font/google'
+import { Poppins } from 'next/font/google'
 import { cssColors as colors, radius, cssShadows as shadows, spacing } from '../design-system'
 import { OpenHouseTable } from './OpenHouseTable'
 import { TourUnavailabilityView } from './TourUnavailabilityView'
 import type { OpenHouseRsvp, TourBooking } from './page'
 import type { TourUnavailability } from '@/app/actions/tourUnavailability'
 
-const merriweather = Merriweather({
+const merriweather = Poppins({
   weight: ['300', '400', '700', '900'],
   subsets: ['latin'],
 })

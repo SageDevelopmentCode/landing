@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react'
 import { Table, TableRow, TableCell } from '../components/Table'
 import { EmailDetailSidebar } from '../components/EmailDetailSidebar'
 import { cssColors as colors, cssShadows as shadows } from '../design-system'
-import { Merriweather } from 'next/font/google'
+import { Poppins } from 'next/font/google'
 
-const merriweather = Merriweather({
+const merriweather = Poppins({
   weight: ['300', '400', '700', '900'],
   subsets: ['latin'],
 })

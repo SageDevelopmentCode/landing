@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import { motion, AnimatePresence } from "framer-motion";
-import { Merriweather } from "next/font/google";
+import { Poppins } from 'next/font/google'
 import { cssColors as colors, radius, cssShadows as shadows } from "../design-system";
 import type { Tables } from "../../types/database.types";
 type BudgetLineItem = Tables<{ schema: "budget" }, "line_items">;
@@ -47,7 +47,7 @@ type StripeTransaction = {
   exclude_from_revenue: boolean
 }
 
-const merriweather = Merriweather({
+const merriweather = Poppins({
   weight: ["300", "400", "700", "900"],
   subsets: ["latin"],
 });

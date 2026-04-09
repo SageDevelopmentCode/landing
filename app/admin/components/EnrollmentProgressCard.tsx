@@ -241,7 +241,7 @@ function StudentChecklist({
           <div className="flex items-start gap-3">
             <span className="text-2xl leading-none mt-0.5">🎉</span>
             <div>
-              <h3 className="text-base font-bold font-heading text-emerald-800 mb-0.5">
+              <h3 className="text-base font-bold font-body text-emerald-800 mb-0.5">
                 Enrollment Confirmed!
               </h3>
               <p className="text-sm font-body text-emerald-700/90">
@@ -254,7 +254,7 @@ function StudentChecklist({
 
       <div className="mb-5 bg-white border border-gray-200 rounded-2xl px-5 py-4 shadow-sm">
         <div className="mb-3">
-          <h2 className="text-base font-semibold font-heading text-gray-800 mb-0.5">
+          <h2 className="text-base font-semibold font-body text-gray-800 mb-0.5">
             Enrollment Checklist
           </h2>
           <p className="text-xs text-gray-400 font-body mt-0.5">
@@ -321,7 +321,7 @@ function StudentChecklist({
               </div>
               <div className="flex-1 min-w-0">
                 <p
-                  className={`text-sm font-semibold font-heading truncate ${isComplete ? 'text-emerald-800' : 'text-gray-800'}`}
+                  className={`text-sm font-semibold font-body truncate ${isComplete ? 'text-emerald-800' : 'text-gray-800'}`}
                 >
                   {item.title}
                 </p>
@@ -433,7 +433,7 @@ export function EnrollmentProgressCard({
               <button
                 key={app.id}
                 onClick={() => setActiveIndex(index)}
-                className={`px-4 py-1.5 rounded-xl text-sm font-semibold font-heading transition-colors cursor-pointer flex items-center gap-1.5 ${
+                className={`px-4 py-1.5 rounded-xl text-sm font-semibold font-body transition-colors cursor-pointer flex items-center gap-1.5 ${
                   isActive
                     ? isComplete
                       ? 'bg-emerald-600 text-white'

@@ -2,14 +2,14 @@
 
 import { useState, useRef, useEffect } from "react";
 import { ChevronLeft, ChevronRight, ChevronDown, Plus, X, Link2, Upload, Pencil, MapPin, Users, RefreshCw, Bell, StickyNote, Trash2, Calendar, Sun, BookOpen, Clock, Paperclip } from "lucide-react";
-import { Merriweather } from "next/font/google";
+import { Poppins } from 'next/font/google'
 import { motion, AnimatePresence } from "framer-motion";
 import { cssColors as colors, radius, cssShadows as shadows } from "../design-system";
 import { saveCalendarEvent } from "@/app/actions/saveCalendarEvent";
 import { updateCalendarEvent } from "@/app/actions/updateCalendarEvent";
 import { deleteCalendarEvent } from "@/app/actions/deleteCalendarEvent";
 
-const merriweather = Merriweather({
+const merriweather = Poppins({
   weight: ["300", "400", "700", "900"],
   subsets: ["latin"],
 });

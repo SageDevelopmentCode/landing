@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Search, Send, ChevronLeft, Loader2, ImageIcon, X } from "lucide-react";
-import { Merriweather } from "next/font/google";
+import { Poppins } from 'next/font/google'
 import { createClient } from "@/app/lib/supabase-browser";
 import { cssColors as colors, cssShadows as shadows } from "@/app/admin/design-system";
 import {
@@ -15,7 +15,7 @@ import {
   type MessageRow,
 } from "@/app/parent/messages/actions";
 
-const merriweather = Merriweather({
+const merriweather = Poppins({
   weight: ["400", "700"],
   subsets: ["latin"],
 });

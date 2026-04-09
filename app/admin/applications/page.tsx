@@ -9,11 +9,11 @@ import type { CachedEnrollmentData } from '../components/ApplicationDetailSideba
 import { AdminEnrollmentItemDrawer } from '../components/AdminEnrollmentItemDrawer'
 import { EnrollmentPipelineView } from '../components/EnrollmentPipelineView'
 import { cssColors as colors } from '../design-system'
-import { Merriweather } from 'next/font/google'
+import { Poppins } from 'next/font/google'
 import { approveApplication } from '../../actions/approveApplication'
 import { denyApplication } from '../../actions/denyApplication'
 
-const merriweather = Merriweather({
+const merriweather = Poppins({
   weight: ['300', '400', '700', '900'],
   subsets: ['latin'],
 })
@@ -434,7 +434,7 @@ export default function ApplicationsPage() {
                         onClick={() => setSelectedApp(app)}
                         className="bg-white rounded-xl border border-gray-100 p-4 cursor-pointer hover:shadow-md transition-shadow"
                       >
-                        {/* Child name — Merriweather serif */}
+                        {/* Child name */}
                         <div className={`text-sm font-bold text-gray-900 leading-snug ${merriweather.className}`}>
                           {app.child_legal_name ?? '—'}
                         </div>

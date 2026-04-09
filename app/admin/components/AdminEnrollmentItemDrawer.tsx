@@ -178,7 +178,7 @@ function ReadOnlyField({
 
 function SectionHeader({ title, number }: { title: string; number?: string }) {
   return (
-    <h3 className="text-sm font-bold font-heading text-gray-800 pb-2 border-b border-gray-100">
+    <h3 className="text-sm font-bold font-body text-gray-800 pb-2 border-b border-gray-100">
       {number ? `${number}. ${title}` : title}
     </h3>
   );
@@ -247,7 +247,7 @@ function ContractContent({
         const sig = signatureMap[`${contractId}-${section.id}`];
         return (
           <div key={section.id} className="flex flex-col">
-            <h3 className="text-sm font-bold font-heading text-gray-800 mb-3 pb-2 border-b border-gray-100">
+            <h3 className="text-sm font-bold font-body text-gray-800 mb-3 pb-2 border-b border-gray-100">
               {section.title}
             </h3>
             <div className="flex flex-col gap-2 text-sm text-gray-600 font-body">
@@ -837,7 +837,7 @@ function PhotoReleaseContent({
       {/* Sections 1–4, 6–7: text only */}
       {CONTRACT_5_SECTIONS.filter((s) => s.id !== 5).map((section) => (
         <div key={section.id} className="flex flex-col gap-3">
-          <h3 className="text-sm font-bold font-heading text-gray-800 pb-2 border-b border-gray-100">
+          <h3 className="text-sm font-bold font-body text-gray-800 pb-2 border-b border-gray-100">
             {section.title}
           </h3>
           {section.paragraphs.map((p, i) => (
@@ -853,7 +853,7 @@ function PhotoReleaseContent({
 
       {/* Section 5: Consent level */}
       <div className="flex flex-col gap-4">
-        <h3 className="text-sm font-bold font-heading text-gray-800 pb-2 border-b border-gray-100">
+        <h3 className="text-sm font-bold font-body text-gray-800 pb-2 border-b border-gray-100">
           {sec5.title}
         </h3>
         <p className="text-sm text-gray-600 font-body leading-relaxed">
@@ -881,7 +881,7 @@ function PhotoReleaseContent({
                 )}
               </span>
               <div>
-                <p className="text-sm font-semibold font-heading text-gray-800">
+                <p className="text-sm font-semibold font-body text-gray-800">
                   {opt.label}
                 </p>
                 <p className="text-xs text-gray-500 font-body mt-0.5 leading-relaxed">
@@ -901,7 +901,7 @@ function PhotoReleaseContent({
 
       {/* Parent/Guardian Acknowledgment */}
       <div className="flex flex-col gap-4">
-        <h3 className="text-sm font-bold font-heading text-gray-800 pb-2 border-b border-gray-100">
+        <h3 className="text-sm font-bold font-body text-gray-800 pb-2 border-b border-gray-100">
           Parent/Guardian Acknowledgment
         </h3>
         <p className="text-sm text-gray-600 font-body leading-relaxed">
@@ -939,7 +939,7 @@ function AssumptionOfRiskContent({
     <div className="flex flex-col gap-10">
       {/* School header */}
       <div className="flex flex-col gap-1">
-        <p className="text-sm font-semibold font-heading text-gray-800">
+        <p className="text-sm font-semibold font-body text-gray-800">
           Sage Field Private School
         </p>
         <p className="text-xs text-gray-500 font-body">EIN: 93-4410750</p>
@@ -1078,7 +1078,7 @@ function AuthorizedPickupContent({
     <div className="flex flex-col gap-10">
       {/* School header */}
       <div className="flex flex-col gap-1">
-        <p className="text-sm font-semibold font-heading text-gray-800">
+        <p className="text-sm font-semibold font-body text-gray-800">
           Sage Field LLC
         </p>
         <p className="text-xs text-gray-500 font-body">EIN: 41-4605989</p>
@@ -1203,7 +1203,7 @@ function HealthStatementContent({
 
       {/* Selected option */}
       <div className="flex flex-col gap-3">
-        <p className="text-sm font-semibold font-heading text-gray-800">
+        <p className="text-sm font-semibold font-body text-gray-800">
           Selected option:
         </p>
         <div
@@ -1251,7 +1251,7 @@ function HealthStatementContent({
         {/* Option A info */}
         {optionType === "professional" && (
           <div className="flex flex-col gap-3 p-4 rounded-xl border border-teal-100 bg-teal-50/40">
-            <p className="text-sm font-semibold font-heading text-gray-800">
+            <p className="text-sm font-semibold font-body text-gray-800">
               Option A: Health Care Professional Examination
             </p>
             <p className="text-sm text-gray-600 font-body leading-relaxed">
@@ -1276,7 +1276,7 @@ function HealthStatementContent({
         {/* Option B info */}
         {optionType === "religious" && (
           <div className="flex flex-col gap-3 p-4 rounded-xl border border-purple-100 bg-purple-50/30">
-            <p className="text-sm font-semibold font-heading text-gray-800">
+            <p className="text-sm font-semibold font-body text-gray-800">
               Option B: Religious Exemption Affidavit
             </p>
             <p className="text-sm text-gray-600 font-body leading-relaxed">
@@ -1301,7 +1301,7 @@ function HealthStatementContent({
       {/* Signature section */}
       {optionType !== null && (
         <div className="flex flex-col gap-3">
-          <h3 className="text-sm font-bold font-heading text-gray-800 pb-2 border-b border-gray-100">
+          <h3 className="text-sm font-bold font-body text-gray-800 pb-2 border-b border-gray-100">
             Parent / Guardian Signature
           </h3>
           <p className="text-sm text-gray-600 font-body leading-relaxed">
@@ -1577,7 +1577,7 @@ export function AdminEnrollmentItemDrawer({
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <h2 className="text-sm font-semibold font-heading text-gray-900 leading-snug pr-4 line-clamp-2">
+              <h2 className="text-sm font-semibold font-body text-gray-900 leading-snug pr-4 line-clamp-2">
                 {title}
               </h2>
               <button

@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Merriweather } from "next/font/google";
+import { Poppins } from 'next/font/google'
 import { ExternalLink } from "lucide-react";
 import { cssColors as colors, radius, cssShadows as shadows, spacing } from "../design-system";
 
-const merriweather = Merriweather({
+const merriweather = Poppins({
   weight: ["400", "700", "900"],
   subsets: ["latin"],
 });

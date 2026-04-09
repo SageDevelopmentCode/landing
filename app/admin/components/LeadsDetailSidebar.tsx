@@ -369,7 +369,7 @@ export function LeadsDetailSidebar({
         <>
           {/* Header — expanded */}
           <div className="px-6 py-5 flex items-center justify-between border-b border-gray-100 flex-shrink-0">
-            <h2 className="text-lg font-bold font-heading text-gray-800 whitespace-nowrap">Call Notes</h2>
+            <h2 className="text-lg font-bold font-body text-gray-800 whitespace-nowrap">Call Notes</h2>
             <div className="flex items-center gap-2">
               {callNotesSaving && <span className="text-xs text-gray-400">Saving…</span>}
               {callNotesSaved && !callNotesSaving && <span className="text-xs text-green-600">Saved</span>}
