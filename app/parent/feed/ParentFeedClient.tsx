@@ -827,7 +827,7 @@ export default function ParentFeedClient({
   return (
     <div className="flex-1 flex overflow-hidden">
       {/* ── Left: Teachers panel ── */}
-      <aside className="hidden md:flex flex-col w-56 flex-shrink-0 overflow-y-auto px-3 pt-8 gap-1">
+      <aside className="hidden md:flex flex-col w-56 flex-shrink-0 overflow-y-auto px-3 pt-8 gap-1 bg-white">
         <p className="text-xs font-semibold font-body text-gray-400 uppercase tracking-wider px-2 pb-2">
           Teachers
         </p>

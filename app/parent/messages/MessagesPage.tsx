@@ -378,7 +378,7 @@ export default function MessagesPage({
   return (
     <div className="flex flex-1 min-h-0 bg-white overflow-hidden">
       {/* Conversation list */}
-      <div className={`w-full md:w-80 md:min-w-[320px] border-r border-gray-100 flex flex-col min-h-0 overflow-hidden ${mobileShowChat ? "hidden md:flex" : "flex"}`}>
+      <div className={`w-full md:w-80 md:min-w-[320px] bg-white border-r border-gray-100 flex flex-col min-h-0 overflow-hidden ${mobileShowChat ? "hidden md:flex" : "flex"}`}>
         {/* Search + New Message */}
         <div className="p-3 border-b border-gray-100 shrink-0">
           <div className="relative mb-2">

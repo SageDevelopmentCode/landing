@@ -321,36 +321,33 @@ function PendingPaymentCard({
 }) {
   return (
     <div
-      className="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 px-5 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
+      className="rounded-2xl overflow-hidden cursor-pointer group bg-white border border-gray-100 flex flex-col"
       onClick={onClick}
     >
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-semibold text-gray-800">
-            {request.label}
+      {/* Photo banner */}
+      <div className="relative h-28 overflow-hidden">
+        <img
+          src="/assets/ImageTen.jpg"
+          alt=""
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-black/10" />
+      </div>
+      {/* Card body */}
+      <div className="p-3.5 flex flex-col gap-2.5">
+        <div>
+          <div className="text-xs font-medium text-gray-400 mb-0.5">{formatProgram(request.program)}</div>
+          <div className="text-sm font-semibold text-gray-800 leading-snug">{request.label}</div>
+        </div>
+        <div className="flex items-center justify-between mt-auto">
+          <span className="text-sm font-bold" style={{ color: "#4a7c59" }}>
+            {request.amount_cents != null ? formatCents(request.amount_cents) : "—"}
           </span>
-          <span className="text-xs text-gray-400">&mdash;</span>
-          <span className="text-xs text-gray-500">
-            {formatProgram(request.program)}
+          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: "#4a7c59" }}>
+            Pay Now
+            <ChevronRight className="w-3 h-3" strokeWidth={2.5} />
           </span>
         </div>
-        {studentName && (
-          <div className="text-xs text-gray-400 mt-0.5">
-            Student: {studentName}
-          </div>
-        )}
-      </div>
-      <div className="flex-shrink-0 flex items-center gap-1.5">
-        <span className="text-sm font-semibold" style={{ color: "#4a7c59" }}>
-          {request.amount_cents != null
-            ? `Pay ${formatCents(request.amount_cents)}`
-            : "Pay Now"}
-        </span>
-        <ChevronRight
-          className="w-4 h-4"
-          style={{ color: "#4a7c59" }}
-          strokeWidth={2}
-        />
       </div>
     </div>
   );
@@ -368,34 +365,33 @@ function SummerTuitionCard({
   const hasPaidWeeks = paidWeeks.length > 0;
   return (
     <div
-      className="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 px-5 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
+      className="rounded-2xl overflow-hidden cursor-pointer group bg-white border border-gray-100 flex flex-col"
       onClick={onClick}
     >
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-semibold text-gray-800">
-            Summer Program Tuition
-          </span>
-          <span className="text-xs text-gray-400">&mdash;</span>
-          <span className="text-xs text-gray-500">Summer 2026</span>
-        </div>
+      <div className="relative h-28 overflow-hidden">
+        <img
+          src="/assets/ImageFive.jpg"
+          alt=""
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-black/10" />
         {hasPaidWeeks && (
-          <div className="mt-1">
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">
-              {paidWeeks.length} week{paidWeeks.length !== 1 ? "s" : ""} paid
-            </span>
-          </div>
+          <span className="absolute top-2.5 right-2.5 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500 text-white shadow-sm">
+            {paidWeeks.length}w paid
+          </span>
         )}
       </div>
-      <div className="flex-shrink-0 flex items-center gap-1.5">
-        <span className="text-sm font-semibold" style={{ color: "#e07a3a" }}>
-          {hasPaidWeeks ? "Pay for more weeks" : "Select plan"}
-        </span>
-        <ChevronRight
-          className="w-4 h-4"
-          style={{ color: "#e07a3a" }}
-          strokeWidth={2}
-        />
+      <div className="p-3.5 flex flex-col gap-2.5">
+        <div>
+          <div className="text-xs font-medium text-gray-400 mb-0.5">Summer 2026</div>
+          <div className="text-sm font-semibold text-gray-800 leading-snug">Summer Program Tuition</div>
+        </div>
+        <div className="flex items-center justify-between mt-auto">
+          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: "#e07a3a" }}>
+            {hasPaidWeeks ? "Add weeks" : "Select plan"}
+            <ChevronRight className="w-3 h-3" strokeWidth={2.5} />
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -405,7 +401,7 @@ function NonEnrolledCard({ app }: { app: NonEnrolledApp }) {
   return (
     <a
       href={`/parent/dashboard?app=${app.id}`}
-      className="flex items-center gap-4 bg-amber-50 border border-amber-100 rounded-2xl px-5 py-4 hover:bg-amber-100 transition-colors no-underline"
+      className="col-span-2 flex items-center gap-4 bg-amber-50 border border-amber-100 rounded-2xl px-5 py-4 hover:bg-amber-100 transition-colors no-underline"
     >
       <div
         className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full text-sm font-semibold"
@@ -436,11 +432,13 @@ function HomeschoolPlanHistoryModal({
   studentName,
   paidData,
   onClose,
+  onAddMore,
 }: {
   app: HomeschoolDropInApp;
   studentName: string | null;
   paidData: PaidHomeschoolByStudent[string];
   onClose: () => void;
+  onAddMore: () => void;
 }) {
   const tierLabel = (tier: string) => {
     if (tier === "dropin") return "Explorer Day Pass";
@@ -527,6 +525,15 @@ function HomeschoolPlanHistoryModal({
               </div>
             </div>
           )}
+          <div className="pt-2">
+            <button
+              onClick={onAddMore}
+              className="w-full py-3 rounded-xl text-sm font-semibold transition-colors cursor-pointer"
+              style={{ backgroundColor: "#d4e6d0", color: "#4a7c59" }}
+            >
+              Add more days / weeks
+            </button>
+          </div>
         </div>
       </motion.div>
     </div>
@@ -575,52 +582,41 @@ function HomeschoolDropInCard({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-      <div
-        className="flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
-        onClick={onClick}
-      >
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-semibold text-gray-800">
-              Homeschool Drop-In
-            </span>
-            <span className="text-xs text-gray-400">&mdash;</span>
-            <span className="text-xs text-gray-500">{programLabel}</span>
-          </div>
-          {studentName && (
-            <div className="text-xs text-gray-400 mt-0.5">
-              Student: {studentName}
-            </div>
-          )}
-          <div className="mt-1">
-            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${badgeColor}`}>
-              {badgeLabel}
-            </span>
-          </div>
+    <div
+      className="rounded-2xl overflow-hidden cursor-pointer group bg-white border border-gray-100 flex flex-col"
+      onClick={onClick}
+    >
+      <div className="relative h-28 overflow-hidden">
+        <img
+          src="/assets/Homeschool.jpg"
+          alt=""
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-black/10" />
+        <span className={`absolute top-2.5 right-2.5 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold shadow-sm ${hasPriorPayment ? "bg-emerald-500 text-white" : "bg-white/80 backdrop-blur-sm text-gray-600"}`}>
+          {badgeLabel}
+        </span>
+      </div>
+      <div className="p-3.5 flex flex-col gap-2.5">
+        <div>
+          <div className="text-xs font-medium text-gray-400 mb-0.5">{programLabel}</div>
+          <div className="text-sm font-semibold text-gray-800 leading-snug">Homeschool Drop-In</div>
         </div>
-        <div className="flex-shrink-0 flex items-center gap-1.5">
-          <span className="text-sm font-semibold" style={{ color: "#4a7c59" }}>
+        <div className="flex items-center justify-between mt-auto">
+          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: "#4a7c59" }}>
             {ctaLabel}
+            <ChevronRight className="w-3 h-3" strokeWidth={2.5} />
           </span>
-          <ChevronRight
-            className="w-4 h-4"
-            style={{ color: "#4a7c59" }}
-            strokeWidth={2}
-          />
+          {hasPriorPayment && onViewHistory && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onViewHistory(); }}
+              className="text-xs font-semibold text-gray-400 hover:text-gray-600 transition-colors cursor-pointer underline underline-offset-2"
+            >
+              View current plan
+            </button>
+          )}
         </div>
       </div>
-      {hasPriorPayment && onViewHistory && (
-        <div className="border-t border-gray-100 px-5 py-2.5">
-          <button
-            onClick={(e) => { e.stopPropagation(); onViewHistory(); }}
-            className="text-xs font-semibold text-gray-400 hover:text-gray-600 transition-colors cursor-pointer flex items-center gap-1"
-          >
-            View current plan
-            <ChevronRight className="w-3 h-3" strokeWidth={2} />
-          </button>
-        </div>
-      )}
     </div>
   );
 }
@@ -1700,35 +1696,31 @@ function AftercareCard({
 }) {
   return (
     <div
-      className="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 px-5 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
+      className="rounded-2xl overflow-hidden cursor-pointer group bg-white border border-gray-100 flex flex-col"
       onClick={onClick}
     >
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-semibold text-gray-800">
-            After Care
-          </span>
-          <span className="text-xs text-gray-400">&mdash;</span>
-          <span className="text-xs text-gray-500">Summer 2026</span>
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-400">
-            Optional
+      <div className="relative h-28 overflow-hidden">
+        <img
+          src="/assets/ImageNine.jpg"
+          alt=""
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-black/10" />
+        <span className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/80 text-gray-600 shadow-sm backdrop-blur-sm">
+          Optional
+        </span>
+      </div>
+      <div className="p-3.5 flex flex-col gap-2.5">
+        <div>
+          <div className="text-xs font-medium text-gray-400 mb-0.5">Summer 2026</div>
+          <div className="text-sm font-semibold text-gray-800 leading-snug">After School Care</div>
+        </div>
+        <div className="flex items-center justify-between mt-auto">
+          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: "#e07a3a" }}>
+            Select plan
+            <ChevronRight className="w-3 h-3" strokeWidth={2.5} />
           </span>
         </div>
-        {studentName && (
-          <div className="text-xs text-gray-400 mt-0.5">
-            Student: {studentName}
-          </div>
-        )}
-      </div>
-      <div className="flex-shrink-0 flex items-center gap-1.5">
-        <span className="text-sm font-semibold" style={{ color: "#e07a3a" }}>
-          Select plan
-        </span>
-        <ChevronRight
-          className="w-4 h-4"
-          style={{ color: "#e07a3a" }}
-          strokeWidth={2}
-        />
       </div>
     </div>
   );
@@ -1743,35 +1735,31 @@ function FunFridayCard({
 }) {
   return (
     <div
-      className="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 px-5 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
+      className="rounded-2xl overflow-hidden cursor-pointer group bg-white border border-gray-100 flex flex-col"
       onClick={onClick}
     >
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-semibold text-gray-800">
-            Fun Friday
-          </span>
-          <span className="text-xs text-gray-400">&mdash;</span>
-          <span className="text-xs text-gray-500">Summer 2026</span>
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-400">
-            Optional
+      <div className="relative h-28 overflow-hidden">
+        <img
+          src="/assets/ImageEleven.jpg"
+          alt=""
+          className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-black/10" />
+        <span className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/80 text-gray-600 shadow-sm backdrop-blur-sm">
+          Optional
+        </span>
+      </div>
+      <div className="p-3.5 flex flex-col gap-2.5">
+        <div>
+          <div className="text-xs font-medium text-gray-400 mb-0.5">Summer 2026</div>
+          <div className="text-sm font-semibold text-gray-800 leading-snug">Friday Enrichment Day</div>
+        </div>
+        <div className="flex items-center justify-between mt-auto">
+          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: "#7c3aed" }}>
+            Select plan
+            <ChevronRight className="w-3 h-3" strokeWidth={2.5} />
           </span>
         </div>
-        {studentName && (
-          <div className="text-xs text-gray-400 mt-0.5">
-            Student: {studentName}
-          </div>
-        )}
-      </div>
-      <div className="flex-shrink-0 flex items-center gap-1.5">
-        <span className="text-sm font-semibold" style={{ color: "#7c3aed" }}>
-          Select plan
-        </span>
-        <ChevronRight
-          className="w-4 h-4"
-          style={{ color: "#7c3aed" }}
-          strokeWidth={2}
-        />
       </div>
     </div>
   );
@@ -2819,7 +2807,7 @@ function FunFridayPaymentModal({
 
 function AllCaughtUpCard() {
   return (
-    <div className="flex flex-col items-center justify-center bg-white rounded-2xl border border-gray-100 p-8 text-center">
+    <div className="col-span-2 flex flex-col items-center justify-center bg-white rounded-2xl border border-gray-100 p-8 text-center">
       <div
         className="flex items-center justify-center w-14 h-14 rounded-full mb-4"
         style={{ backgroundColor: "#d4e6d0" }}
@@ -3037,7 +3025,7 @@ function PendingPaymentsSection({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -6 }}
           transition={{ duration: 0.15, ease: "easeInOut" as const }}
-          className="space-y-3"
+          className="grid grid-cols-2 gap-3"
         >
           {activeNonEnrolled ? (
             <NonEnrolledCard app={activeNonEnrolled} />
@@ -3096,7 +3084,7 @@ function PendingPaymentsSection({
               {/* Total bar */}
               {totalCents > 0 && (
                 <div
-                  className="rounded-xl px-4 py-3 flex items-center justify-between"
+                  className="col-span-2 rounded-xl px-4 py-3 flex items-center justify-between"
                   style={{ backgroundColor: "#f6faf7" }}
                 >
                   <span className="text-sm text-gray-500 font-body">
@@ -3323,6 +3311,10 @@ export default function BillingPage({
               studentName={studentMap[selectedHomeschoolHistoryApp.student_id]?.name ?? null}
               paidData={paidHomeschoolByStudent[selectedHomeschoolHistoryApp.student_id]}
               onClose={() => setSelectedHomeschoolHistoryApp(null)}
+              onAddMore={() => {
+                setSelectedHomeschoolApp(selectedHomeschoolHistoryApp);
+                setSelectedHomeschoolHistoryApp(null);
+              }}
             />
           )}
         </AnimatePresence>
@@ -3544,6 +3536,10 @@ export default function BillingPage({
             studentName={studentMap[selectedHomeschoolHistoryApp.student_id]?.name ?? null}
             paidData={paidHomeschoolByStudent[selectedHomeschoolHistoryApp.student_id]}
             onClose={() => setSelectedHomeschoolHistoryApp(null)}
+            onAddMore={() => {
+              setSelectedHomeschoolApp(selectedHomeschoolHistoryApp);
+              setSelectedHomeschoolHistoryApp(null);
+            }}
           />
         )}
       </AnimatePresence>

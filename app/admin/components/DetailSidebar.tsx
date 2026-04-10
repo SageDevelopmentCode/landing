@@ -56,7 +56,7 @@ export function DetailSidebar({
             transition={{ type: 'spring', damping: 28, stiffness: 280 }}
             className="fixed top-0 right-0 bottom-0 w-full sm:w-[500px] z-50 flex flex-col overflow-hidden"
             style={{
-              background: colors.elevated,
+              background: 'var(--admin-elevated, #ffffff)',
               borderLeft: `1px solid ${colors.border}`,
               boxShadow: shadows.large,
             }}
@@ -66,7 +66,7 @@ export function DetailSidebar({
               <div
                 className="sticky top-0 z-10 px-6 py-5 flex items-center justify-between flex-shrink-0"
                 style={{
-                  background: colors.elevated,
+                  background: 'var(--admin-elevated, #ffffff)',
                   borderBottom: `1px solid ${colors.border}`,
                 }}
               >
@@ -97,7 +97,7 @@ export function DetailSidebar({
               <div
                 className="flex-shrink-0 px-6 py-4"
                 style={{
-                  background: colors.elevated,
+                  background: 'var(--admin-elevated, #ffffff)',
                   borderTop: `1px solid ${colors.border}`,
                 }}
               >

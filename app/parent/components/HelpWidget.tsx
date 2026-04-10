@@ -65,7 +65,7 @@ export default function HelpWidget() {
       {/* Floating trigger button */}
       <motion.button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2
+        className="fixed bottom-6 right-6 z-40 flex items-center gap-2
                    px-4 py-3 rounded-full bg-primary text-white
                    shadow-lg font-body font-semibold text-sm
                    hover:bg-primary-hover transition-colors cursor-pointer
