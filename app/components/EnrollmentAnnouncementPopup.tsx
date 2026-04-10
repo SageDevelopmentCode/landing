@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, ArrowRight } from "lucide-react";
 import Link from "next/link";
@@ -9,10 +9,17 @@ import Image from "next/image";
 export default function EnrollmentAnnouncementPopup() {
   const [visible, setVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const hasShown = useRef(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setVisible(true), 1000);
-    return () => clearTimeout(timer);
+    const handleScroll = () => {
+      if (!hasShown.current && window.scrollY >= document.documentElement.scrollHeight * 0.25) {
+        hasShown.current = true;
+        setVisible(true);
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
