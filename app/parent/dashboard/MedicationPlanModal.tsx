@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useTransition } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, Plus, Trash2 } from "lucide-react";
+import { X, Plus, Trash2, CheckCircle, PenLine } from "lucide-react";
 import { Dancing_Script } from "next/font/google";
 import type { Database } from "@/app/types/database.types";
 import type {
@@ -239,6 +239,7 @@ export default function MedicationPlanModal({
     { length: CONTRACT_4_TOTAL_SECTIONS },
     (_, i) => i + 1,
   ).filter((i) => !!localSigs[`${CONTRACT_4_ID}-${i}`]).length;
+  const allSigned = signedCount === CONTRACT_4_TOTAL_SECTIONS;
 
   const dobFormatted =
     [app.dob_month, app.dob_day, app.dob_year].filter(Boolean).join("/") ||
@@ -584,6 +585,39 @@ export default function MedicationPlanModal({
                   )}
                 </div>
               </fieldset>
+            </div>
+
+            {/* Sticky Footer */}
+            <div
+              className={`flex-shrink-0 sticky bottom-0 border-t px-6 py-4 flex items-center justify-between ${
+                allSigned
+                  ? "bg-emerald-50 border-emerald-200"
+                  : "bg-white border-gray-100"
+              }`}
+            >
+              {allSigned ? (
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-600" />
+                  <span className="text-sm font-semibold text-emerald-700 font-body">
+                    All sections signed — form complete
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <PenLine className="w-4 h-4 text-amber-500" />
+                  <span className="text-sm text-gray-500 font-body">
+                    {CONTRACT_4_TOTAL_SECTIONS - signedCount} section
+                    {CONTRACT_4_TOTAL_SECTIONS - signedCount !== 1 ? "s" : ""}{" "}
+                    remaining
+                  </span>
+                </div>
+              )}
+              <button
+                onClick={onClose}
+                className="px-4 py-2 text-xs font-semibold font-body text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                Close
+              </button>
             </div>
           </motion.div>
         </div>

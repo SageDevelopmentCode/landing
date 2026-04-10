@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X } from "lucide-react";
+import { X, CheckCircle, PenLine } from "lucide-react";
 import { Dancing_Script } from "next/font/google";
 import type { SignatureMap, EnrollmentSignature } from "@/app/types/enrollment-signatures";
 import { CONTRACT_5_ID, CONTRACT_5_TOTAL_SECTIONS } from "@/app/types/enrollment-signatures";
@@ -87,6 +87,7 @@ export default function PhotoReleaseModal({
     { length: CONTRACT_5_TOTAL_SECTIONS },
     (_, i) => i + 1
   ).filter((i) => !!localSigs[`${CONTRACT_5_ID}-${i}`]).length;
+  const allSigned = signedCount === CONTRACT_5_TOTAL_SECTIONS;
 
   const handleSaveConsent = () => {
     if (!selectedConsent) {
@@ -311,6 +312,39 @@ export default function PhotoReleaseModal({
                     readOnly={readOnly}
                   />
                 </div>
+              </div>
+
+              {/* Sticky Footer */}
+              <div
+                className={`flex-shrink-0 sticky bottom-0 border-t px-6 py-4 flex items-center justify-between ${
+                  allSigned
+                    ? "bg-emerald-50 border-emerald-200"
+                    : "bg-white border-gray-100"
+                }`}
+              >
+                {allSigned ? (
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-emerald-600" />
+                    <span className="text-sm font-semibold text-emerald-700 font-body">
+                      All sections signed — form complete
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <PenLine className="w-4 h-4 text-amber-500" />
+                    <span className="text-sm text-gray-500 font-body">
+                      {CONTRACT_5_TOTAL_SECTIONS - signedCount} section
+                      {CONTRACT_5_TOTAL_SECTIONS - signedCount !== 1 ? "s" : ""}{" "}
+                      remaining
+                    </span>
+                  </div>
+                )}
+                <button
+                  onClick={onClose}
+                  className="px-4 py-2 text-xs font-semibold font-body text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  Close
+                </button>
               </div>
             </div>
           </motion.div>

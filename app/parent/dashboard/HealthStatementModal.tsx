@@ -2,10 +2,10 @@
 
 import { useState, useRef, useTransition, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, Upload, Trash2, FileText, Download, Mail } from "lucide-react";
+import { X, Upload, Trash2, FileText, Download, Mail, CheckCircle, PenLine } from "lucide-react";
 import { Dancing_Script } from "next/font/google";
 import type { EnrollmentSignature } from "@/app/types/enrollment-signatures";
-import { CONTRACT_8_ID } from "@/app/types/enrollment-signatures";
+import { CONTRACT_8_ID, CONTRACT_8_TOTAL_SECTIONS } from "@/app/types/enrollment-signatures";
 import SectionSignatureBlock from "./SectionSignatureBlock";
 import { saveHealthStatement } from "@/app/actions/saveHealthStatement";
 import { uploadReligiousExemption } from "@/app/actions/uploadReligiousExemption";
@@ -224,6 +224,9 @@ export default function HealthStatementModal({
   const sigEnabled =
     (selectedOption === "professional" && hasDownloaded) ||
     (selectedOption === "religious" && religiousExemptionCount > 0);
+
+  const signedCount = localSig ? 1 : 0;
+  const allSigned = signedCount === CONTRACT_8_TOTAL_SECTIONS;
 
   return (
     <AnimatePresence>
@@ -555,6 +558,39 @@ export default function HealthStatementModal({
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Sticky Footer */}
+          <div
+            className={`flex-shrink-0 sticky bottom-0 border-t px-6 py-4 flex items-center justify-between ${
+              allSigned
+                ? "bg-emerald-50 border-emerald-200"
+                : "bg-white border-gray-100"
+            }`}
+          >
+            {allSigned ? (
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-emerald-600" />
+                <span className="text-sm font-semibold text-emerald-700 font-body">
+                  All sections signed — form complete
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <PenLine className="w-4 h-4 text-amber-500" />
+                <span className="text-sm text-gray-500 font-body">
+                  {CONTRACT_8_TOTAL_SECTIONS - signedCount} section
+                  {CONTRACT_8_TOTAL_SECTIONS - signedCount !== 1 ? "s" : ""}{" "}
+                  remaining
+                </span>
+              </div>
+            )}
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-xs font-semibold font-body text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              Close
+            </button>
           </div>
         </motion.div>
       </div>
