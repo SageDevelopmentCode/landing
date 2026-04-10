@@ -45,6 +45,19 @@ export type HomeschoolDropInApp = {
   name: string | null;
 };
 
+export type PaidHomeschoolEntry = {
+  weeks: number[];
+  tier: string;
+  days: string[];
+  amountCents: number;
+  createdAt: string;
+};
+
+export type PaidHomeschoolByStudent = Record<string, {
+  summer: PaidHomeschoolEntry[];
+  schoolYear: PaidHomeschoolEntry[];
+}>;
+
 export type StudentInfo = {
   name: string;
   profileImageUrl: string | null;
@@ -165,6 +178,27 @@ export default async function BillingRoute() {
     }
   }
 
+  // Build paid homeschool drop-in map per student
+  const paidHomeschoolByStudent: Record<string, { summer: { weeks: number[]; tier: string; days: string[]; amountCents: number; createdAt: string }[]; schoolYear: { weeks: number[]; tier: string; days: string[]; amountCents: number; createdAt: string }[] }> = {};
+  for (const tx of transactions) {
+    if (tx.payment_type === "homeschool_dropin" && tx.status === "completed" && tx.student_id) {
+      const meta = (tx.metadata ?? {}) as Record<string, string>;
+      const program = meta.program ?? "summer_26";
+      const tier = meta.tier ?? "dropin";
+      const days = meta.selected_days?.split(",").filter(Boolean) ?? [];
+      const weeks = meta.selected_weeks?.split(",").map(Number).filter(Boolean) ?? [];
+      if (!paidHomeschoolByStudent[tx.student_id]) {
+        paidHomeschoolByStudent[tx.student_id] = { summer: [], schoolYear: [] };
+      }
+      const entry = { weeks, tier, days, amountCents: tx.amount_cents, createdAt: tx.created_at };
+      if (program === "summer_26") {
+        paidHomeschoolByStudent[tx.student_id].summer.push(entry);
+      } else {
+        paidHomeschoolByStudent[tx.student_id].schoolYear.push(entry);
+      }
+    }
+  }
+
   // Show enrollment if parent has paid fewer than 12 weeks (weekly plan with room to add more)
   // Exclude homeschool_drop_in — they don't have summer tuition
   const unpaidSummerEnrollments = summerEnrollments.filter(
@@ -228,7 +262,7 @@ export default async function BillingRoute() {
               Tuition &amp; Billing
             </h1>
           </div>
-          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} unpaidSummerEnrollments={unpaidSummerEnrollments} paidWeeksByStudent={paidWeeksByStudent} parentId={user.id} parentEmail={user.email ?? ""} nonEnrolledApps={nonEnrolledApps} homeschoolDropInApps={homeschoolDropInApps} />
+          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} unpaidSummerEnrollments={unpaidSummerEnrollments} paidWeeksByStudent={paidWeeksByStudent} parentId={user.id} parentEmail={user.email ?? ""} nonEnrolledApps={nonEnrolledApps} homeschoolDropInApps={homeschoolDropInApps} paidHomeschoolByStudent={paidHomeschoolByStudent} />
         </main>
       </div>
       <Footer />

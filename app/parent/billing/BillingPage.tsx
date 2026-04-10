@@ -36,6 +36,8 @@ import type {
   NonEnrolledApp,
   StudentInfo,
   HomeschoolDropInApp,
+  PaidHomeschoolByStudent,
+  PaidHomeschoolEntry,
 } from "./page";
 
 interface Props {
@@ -49,6 +51,7 @@ interface Props {
   parentEmail: string;
   nonEnrolledApps: NonEnrolledApp[];
   homeschoolDropInApps: HomeschoolDropInApp[];
+  paidHomeschoolByStudent: PaidHomeschoolByStudent;
 }
 
 // --- Summer pricing ---
@@ -428,14 +431,120 @@ function NonEnrolledCard({ app }: { app: NonEnrolledApp }) {
   );
 }
 
-function HomeschoolDropInCard({
+function HomeschoolPlanHistoryModal({
   app,
   studentName,
-  onClick,
+  paidData,
+  onClose,
 }: {
   app: HomeschoolDropInApp;
   studentName: string | null;
+  paidData: PaidHomeschoolByStudent[string];
+  onClose: () => void;
+}) {
+  const tierLabel = (tier: string) => {
+    if (tier === "dropin") return "Explorer Day Pass";
+    if (tier === "2day") return "2 Days / Week";
+    if (tier === "3day") return "3 Days / Week";
+    return tier;
+  };
+  const dayLabel = (d: string) => d.charAt(0).toUpperCase() + d.slice(1);
+
+  const formatEntryDate = (iso: string) => {
+    try {
+      return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    } catch {
+      return iso;
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+      <motion.div
+        className="absolute inset-0 bg-black/40"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+      />
+      <motion.div
+        className="relative bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden z-10"
+        initial={{ y: 60, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 60, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      >
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div>
+            <h2 className="text-base font-bold font-heading text-gray-800">Current Plan</h2>
+            {studentName && <p className="text-xs text-gray-400 mt-0.5">{studentName}</p>}
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-full hover:bg-gray-100 transition-colors cursor-pointer">
+            <X className="w-4 h-4 text-gray-500" />
+          </button>
+        </div>
+        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-6">
+          {paidData.summer.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Summer 2026</p>
+              <div className="space-y-3">
+                {paidData.summer.map((entry, i) => (
+                  <div key={i} className="rounded-xl border border-gray-100 px-4 py-3 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold text-gray-800">{tierLabel(entry.tier)}</span>
+                      <span className="text-sm font-bold" style={{ color: "#4a7c59" }}>{formatCents(entry.amountCents)}</span>
+                    </div>
+                    {entry.days.length > 0 && (
+                      <p className="text-xs text-gray-500">Days: {entry.days.map(dayLabel).join(", ")}</p>
+                    )}
+                    {entry.weeks.length > 0 && (
+                      <p className="text-xs text-gray-500">
+                        Weeks: {entry.weeks.sort((a, b) => a - b).join(", ")} ({entry.weeks.length} week{entry.weeks.length !== 1 ? "s" : ""})
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-400">Paid {formatEntryDate(entry.createdAt)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {paidData.schoolYear.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">School Year 2026–2027</p>
+              <div className="space-y-3">
+                {paidData.schoolYear.map((entry, i) => (
+                  <div key={i} className="rounded-xl border border-gray-100 px-4 py-3 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold text-gray-800">{tierLabel(entry.tier)}</span>
+                      <span className="text-sm font-bold" style={{ color: "#4a7c59" }}>{formatCents(entry.amountCents)}</span>
+                    </div>
+                    {entry.days.length > 0 && (
+                      <p className="text-xs text-gray-500">Days: {entry.days.map(dayLabel).join(", ")}</p>
+                    )}
+                    <p className="text-xs text-gray-400">Paid {formatEntryDate(entry.createdAt)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function HomeschoolDropInCard({
+  app,
+  studentName,
+  paidData,
+  onClick,
+  onViewHistory,
+}: {
+  app: HomeschoolDropInApp;
+  studentName: string | null;
+  paidData?: PaidHomeschoolByStudent[string];
   onClick: () => void;
+  onViewHistory?: () => void;
 }) {
   const dropInProgram = app.drop_in_program;
   let programLabel = "Homeschool Drop-In";
@@ -443,40 +552,75 @@ function HomeschoolDropInCard({
   else if (dropInProgram === "school_year_26_27") programLabel = "School Year 2026–2027";
   else if (dropInProgram === "both") programLabel = "Summer & School Year";
 
+  const hasSummer = (paidData?.summer.length ?? 0) > 0;
+  const hasSchoolYear = (paidData?.schoolYear.length ?? 0) > 0;
+  const hasPriorPayment = hasSummer || hasSchoolYear;
+
+  let ctaLabel = "Set up plan";
+  let badgeLabel = "Select schedule & days";
+  let badgeColor = "bg-blue-50 text-blue-600";
+
+  if (hasSummer && hasSchoolYear) {
+    ctaLabel = "Manage Plan";
+    badgeLabel = "Plans active";
+    badgeColor = "bg-emerald-50 text-emerald-700";
+  } else if (hasSummer) {
+    ctaLabel = "Add Weeks";
+    badgeLabel = "Summer plan active";
+    badgeColor = "bg-emerald-50 text-emerald-700";
+  } else if (hasSchoolYear) {
+    ctaLabel = "Edit Plan";
+    badgeLabel = "School year plan active";
+    badgeColor = "bg-emerald-50 text-emerald-700";
+  }
+
   return (
-    <div
-      className="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 px-5 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
-      onClick={onClick}
-    >
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-semibold text-gray-800">
-            Homeschool Drop-In
-          </span>
-          <span className="text-xs text-gray-400">&mdash;</span>
-          <span className="text-xs text-gray-500">{programLabel}</span>
-        </div>
-        {studentName && (
-          <div className="text-xs text-gray-400 mt-0.5">
-            Student: {studentName}
+    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+      <div
+        className="flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
+        onClick={onClick}
+      >
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-semibold text-gray-800">
+              Homeschool Drop-In
+            </span>
+            <span className="text-xs text-gray-400">&mdash;</span>
+            <span className="text-xs text-gray-500">{programLabel}</span>
           </div>
-        )}
-        <div className="mt-1">
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-600">
-            Select schedule &amp; days
+          {studentName && (
+            <div className="text-xs text-gray-400 mt-0.5">
+              Student: {studentName}
+            </div>
+          )}
+          <div className="mt-1">
+            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${badgeColor}`}>
+              {badgeLabel}
+            </span>
+          </div>
+        </div>
+        <div className="flex-shrink-0 flex items-center gap-1.5">
+          <span className="text-sm font-semibold" style={{ color: "#4a7c59" }}>
+            {ctaLabel}
           </span>
+          <ChevronRight
+            className="w-4 h-4"
+            style={{ color: "#4a7c59" }}
+            strokeWidth={2}
+          />
         </div>
       </div>
-      <div className="flex-shrink-0 flex items-center gap-1.5">
-        <span className="text-sm font-semibold" style={{ color: "#4a7c59" }}>
-          Set up plan
-        </span>
-        <ChevronRight
-          className="w-4 h-4"
-          style={{ color: "#4a7c59" }}
-          strokeWidth={2}
-        />
-      </div>
+      {hasPriorPayment && onViewHistory && (
+        <div className="border-t border-gray-100 px-5 py-2.5">
+          <button
+            onClick={(e) => { e.stopPropagation(); onViewHistory(); }}
+            className="text-xs font-semibold text-gray-400 hover:text-gray-600 transition-colors cursor-pointer flex items-center gap-1"
+          >
+            View current plan
+            <ChevronRight className="w-3 h-3" strokeWidth={2} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -486,12 +630,14 @@ function HomeschoolPaymentModal({
   studentName,
   parentId,
   parentEmail,
+  paidData,
   onClose,
 }: {
   app: HomeschoolDropInApp;
   studentName: string | null;
   parentId: string;
   parentEmail: string;
+  paidData?: PaidHomeschoolByStudent[string];
   onClose: () => void;
 }) {
   const gradeTier = getGradeTier(app.child_grade);
@@ -513,6 +659,11 @@ function HomeschoolPaymentModal({
   const isSummer = activeTab === "summer";
   const pricing = isSummer ? HOMESCHOOL_SUMMER_PRICING : HOMESCHOOL_SCHOOL_YEAR_PRICING;
   const tierDays = selectedTier ? HOMESCHOOL_TIERS.find((t) => t.key === selectedTier)?.days ?? 0 : 0;
+
+  // Weeks already paid for this student (summer only)
+  const alreadyPaidWeeks = new Set(
+    (paidData?.summer ?? []).flatMap((s) => s.weeks)
+  );
 
   // Reset selections when tab changes
   const handleTabChange = (tab: "summer" | "school-year") => {
@@ -540,11 +691,13 @@ function HomeschoolPaymentModal({
     setSelectedWeeks(next);
   };
 
+  const unpaidSummerWeeks = SUMMER_WEEKS.filter((w) => !alreadyPaidWeeks.has(w.week));
+
   const toggleAllWeeks = () => {
-    if (selectedWeeks.size === SUMMER_WEEKS.length) {
+    if (selectedWeeks.size === unpaidSummerWeeks.length) {
       setSelectedWeeks(new Set());
     } else {
-      setSelectedWeeks(new Set(SUMMER_WEEKS.map((w) => w.week)));
+      setSelectedWeeks(new Set(unpaidSummerWeeks.map((w) => w.week)));
     }
   };
 
@@ -791,27 +944,31 @@ function HomeschoolPaymentModal({
                         className="text-xs font-semibold cursor-pointer transition-colors"
                         style={{ color: "#4a7c59" }}
                       >
-                        {selectedWeeks.size === SUMMER_WEEKS.length ? "Deselect all" : "Select all"}
+                        {selectedWeeks.size === unpaidSummerWeeks.length && unpaidSummerWeeks.length > 0 ? "Deselect all" : "Select all"}
                       </button>
                     </div>
                     <div className="grid grid-cols-3 gap-2">
                       {SUMMER_WEEKS.map((w) => {
                         const isSel = selectedWeeks.has(w.week);
+                        const isPaid = alreadyPaidWeeks.has(w.week);
                         return (
                           <button
                             key={w.week}
-                            onClick={() => toggleWeek(w.week)}
-                            className={`flex flex-col items-start px-3 py-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-                              isSel
-                                ? "border-primary bg-primary/5"
-                                : "border-gray-100 bg-white hover:border-gray-300"
+                            onClick={() => !isPaid && toggleWeek(w.week)}
+                            disabled={isPaid}
+                            className={`flex flex-col items-start px-3 py-2.5 rounded-xl border text-left transition-all ${
+                              isPaid
+                                ? "border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed"
+                                : isSel
+                                  ? "border-primary bg-primary/5 cursor-pointer"
+                                  : "border-gray-100 bg-white hover:border-gray-300 cursor-pointer"
                             }`}
                           >
-                            <span className={`text-xs font-bold ${isSel ? "text-primary" : "text-gray-400"}`}>
+                            <span className={`text-xs font-bold ${isPaid ? "text-gray-400 line-through" : isSel ? "text-primary" : "text-gray-400"}`}>
                               Wk {w.week}
                             </span>
                             <span className="text-[10px] text-gray-500 leading-tight mt-0.5">
-                              {w.dates}
+                              {isPaid ? "Paid" : w.dates}
                             </span>
                           </button>
                         );
@@ -2739,8 +2896,10 @@ function PendingPaymentsSection({
   onSelectAftercare,
   onSelectFunFriday,
   onSelectHomeschool,
+  onViewHomeschoolHistory,
   nonEnrolledApps,
   homeschoolDropInApps,
+  paidHomeschoolByStudent,
 }: {
   summerEnrollments: SummerEnrollment[];
   unpaidSummerEnrollments: SummerEnrollment[];
@@ -2752,8 +2911,10 @@ function PendingPaymentsSection({
   onSelectAftercare: (e: SummerEnrollment) => void;
   onSelectFunFriday: (e: SummerEnrollment) => void;
   onSelectHomeschool: (app: HomeschoolDropInApp) => void;
+  onViewHomeschoolHistory: (app: HomeschoolDropInApp) => void;
   nonEnrolledApps: NonEnrolledApp[];
   homeschoolDropInApps: HomeschoolDropInApp[];
+  paidHomeschoolByStudent: PaidHomeschoolByStudent;
 }) {
   const nonEnrolledMap = new Map(nonEnrolledApps.map((a) => [a.student_id, a]));
 
@@ -2892,7 +3053,9 @@ function PendingPaymentsSection({
                   key={app.id}
                   app={app}
                   studentName={studentMap[app.student_id]?.name ?? null}
+                  paidData={paidHomeschoolByStudent[app.student_id]}
                   onClick={() => onSelectHomeschool(app)}
+                  onViewHistory={() => onViewHomeschoolHistory(app)}
                 />
               ))}
               {currentSummer.map((enrollment) => (
@@ -3022,6 +3185,7 @@ export default function BillingPage({
   parentEmail,
   nonEnrolledApps,
   homeschoolDropInApps,
+  paidHomeschoolByStudent,
 }: Props) {
   const [selectedTx, setSelectedTx] = useState<StripeTransaction | null>(null);
   const [selectedPending, setSelectedPending] =
@@ -3033,6 +3197,8 @@ export default function BillingPage({
   const [selectedFunFridayEnrollment, setSelectedFunFridayEnrollment] =
     useState<SummerEnrollment | null>(null);
   const [selectedHomeschoolApp, setSelectedHomeschoolApp] =
+    useState<HomeschoolDropInApp | null>(null);
+  const [selectedHomeschoolHistoryApp, setSelectedHomeschoolHistoryApp] =
     useState<HomeschoolDropInApp | null>(null);
 
   const nonEnrolledStudentIds = new Set(
@@ -3061,8 +3227,10 @@ export default function BillingPage({
               onSelectAftercare={setSelectedAftercareEnrollment}
               onSelectFunFriday={setSelectedFunFridayEnrollment}
               onSelectHomeschool={setSelectedHomeschoolApp}
+              onViewHomeschoolHistory={setSelectedHomeschoolHistoryApp}
               nonEnrolledApps={nonEnrolledApps}
               homeschoolDropInApps={homeschoolDropInApps}
+              paidHomeschoolByStudent={paidHomeschoolByStudent}
             />
           </div>
           <div>
@@ -3145,7 +3313,16 @@ export default function BillingPage({
               }
               parentId={parentId}
               parentEmail={parentEmail}
+              paidData={paidHomeschoolByStudent[selectedHomeschoolApp.student_id]}
               onClose={() => setSelectedHomeschoolApp(null)}
+            />
+          )}
+          {selectedHomeschoolHistoryApp && paidHomeschoolByStudent[selectedHomeschoolHistoryApp.student_id] && (
+            <HomeschoolPlanHistoryModal
+              app={selectedHomeschoolHistoryApp}
+              studentName={studentMap[selectedHomeschoolHistoryApp.student_id]?.name ?? null}
+              paidData={paidHomeschoolByStudent[selectedHomeschoolHistoryApp.student_id]}
+              onClose={() => setSelectedHomeschoolHistoryApp(null)}
             />
           )}
         </AnimatePresence>
@@ -3171,8 +3348,10 @@ export default function BillingPage({
             onSelectAftercare={setSelectedAftercareEnrollment}
             onSelectFunFriday={setSelectedFunFridayEnrollment}
             onSelectHomeschool={setSelectedHomeschoolApp}
+            onViewHomeschoolHistory={setSelectedHomeschoolHistoryApp}
             nonEnrolledApps={nonEnrolledApps}
             homeschoolDropInApps={homeschoolDropInApps}
+            paidHomeschoolByStudent={paidHomeschoolByStudent}
           />
         </div>
         <div>
@@ -3355,7 +3534,16 @@ export default function BillingPage({
             }
             parentId={parentId}
             parentEmail={parentEmail}
+            paidData={paidHomeschoolByStudent[selectedHomeschoolApp.student_id]}
             onClose={() => setSelectedHomeschoolApp(null)}
+          />
+        )}
+        {selectedHomeschoolHistoryApp && paidHomeschoolByStudent[selectedHomeschoolHistoryApp.student_id] && (
+          <HomeschoolPlanHistoryModal
+            app={selectedHomeschoolHistoryApp}
+            studentName={studentMap[selectedHomeschoolHistoryApp.student_id]?.name ?? null}
+            paidData={paidHomeschoolByStudent[selectedHomeschoolHistoryApp.student_id]}
+            onClose={() => setSelectedHomeschoolHistoryApp(null)}
           />
         )}
       </AnimatePresence>
