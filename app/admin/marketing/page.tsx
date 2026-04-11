@@ -35,7 +35,7 @@ export type TourBooking = {
 export default async function MarketingPage() {
   const supabase = createAdminClient()
 
-  const [{ data: rsvps }, { data: tourUnavailability }, { data: tourBookings }] = await Promise.all([
+  const [{ data: rsvps }, { data: tourUnavailability }, { data: tourBookings }, { data: enrolledApps }] = await Promise.all([
     supabase
       .schema('marketing')
       .from('open_house_rsvps')
@@ -52,13 +52,26 @@ export default async function MarketingPage() {
       .select('*')
       .eq('is_deleted', false)
       .order('tour_date', { ascending: true }),
+    supabase
+      .schema('parent_app')
+      .from('applications')
+      .select('g1_email, g2_email, status')
+      .in('status', ['enrolled', 'enrolling']),
   ])
+
+  const enrolledEmailsArr: { email: string; status: string }[] = (enrolledApps ?? []).flatMap((app) => {
+    const entries: { email: string; status: string }[] = []
+    if (app.g1_email) entries.push({ email: app.g1_email.toLowerCase(), status: app.status })
+    if (app.g2_email) entries.push({ email: app.g2_email.toLowerCase(), status: app.status })
+    return entries
+  })
 
   return (
     <MarketingClient
       rsvps={(rsvps as OpenHouseRsvp[]) ?? []}
       tourUnavailability={(tourUnavailability as TourUnavailability[]) ?? []}
       tourBookings={(tourBookings as TourBooking[]) ?? []}
+      enrolledEmailsArr={enrolledEmailsArr}
     />
   )
 }

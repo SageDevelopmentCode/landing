@@ -19,7 +19,7 @@ function formatDate(iso: string) {
   })
 }
 
-export function OpenHouseTable({ rsvps }: { rsvps: OpenHouseRsvp[] }) {
+export function OpenHouseTable({ rsvps, enrolledEmailsArr }: { rsvps: OpenHouseRsvp[], enrolledEmailsArr: { email: string; status: string }[] }) {
   const [localRsvps, setLocalRsvps] = useState(rsvps)
   const [showSubmitted, setShowSubmitted] = useState(false)
   const [selectedRsvp, setSelectedRsvp] = useState<OpenHouseRsvp | null>(null)
@@ -27,6 +27,8 @@ export function OpenHouseTable({ rsvps }: { rsvps: OpenHouseRsvp[] }) {
   const [reminderSending, setReminderSending] = useState(false)
   const [reminderSent, setReminderSent] = useState(false)
   const [reminderError, setReminderError] = useState<string | null>(null)
+  const enrollmentMap = new Map(enrolledEmailsArr.map(({ email, status }) => [email, status]))
+  const getEnrollmentStatus = (email: string) => enrollmentMap.get(email.toLowerCase()) ?? null
   const totalAdults = localRsvps.reduce((sum, r) => sum + (r.adults_attending ?? 0), 0)
   const totalChildren = localRsvps.reduce((sum, r) => sum + (r.children_attending ?? 0), 0)
   const totalAttendees = totalAdults + totalChildren
@@ -171,7 +173,7 @@ export function OpenHouseTable({ rsvps }: { rsvps: OpenHouseRsvp[] }) {
       </div>
 
       <Table
-        headers={['Name', 'Email', 'Phone', 'Adults', 'Children', 'Notes', ...(showSubmitted ? ['Submitted'] : [])]}
+        headers={['Name', 'Status', 'Email', 'Phone', 'Adults', 'Children', 'Notes', ...(showSubmitted ? ['Submitted'] : [])]}
       >
         {localRsvps.map((rsvp, i) => (
           <TableRow key={rsvp.id} index={i} onClick={() => { setSelectedRsvp(rsvp); setReminderSent(false); setReminderError(null) }} style={{ cursor: 'pointer' }}>
@@ -179,6 +181,29 @@ export function OpenHouseTable({ rsvps }: { rsvps: OpenHouseRsvp[] }) {
               <span style={{ fontWeight: 500, color: colors.textPrimary }}>
                 {rsvp.name}
               </span>
+            </TableCell>
+            <TableCell>
+              {(() => {
+                const s = getEnrollmentStatus(rsvp.email)
+                if (!s) return null
+                const isEnrolled = s === 'enrolled'
+                return (
+                  <span style={{
+                    display: 'inline-block',
+                    backgroundColor: isEnrolled ? colors.successBg : 'rgba(59, 130, 246, 0.08)',
+                    color: isEnrolled ? colors.successText : '#3B82F6',
+                    border: `1px solid ${isEnrolled ? colors.successBorder : 'rgba(59, 130, 246, 0.25)'}`,
+                    borderRadius: radius.full,
+                    padding: '2px 8px',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    letterSpacing: '0.04em',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {isEnrolled ? 'Enrolled' : 'Enrolling'}
+                  </span>
+                )
+              })()}
             </TableCell>
             <TableCell>
               <span style={{
@@ -262,6 +287,27 @@ export function OpenHouseTable({ rsvps }: { rsvps: OpenHouseRsvp[] }) {
                 </div>
                 <button onClick={() => setSelectedRsvp(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.textTertiary, fontSize: '20px', lineHeight: 1 }}>×</button>
               </div>
+
+              {(() => {
+                const s = getEnrollmentStatus(selectedRsvp.email)
+                if (!s) return null
+                const isEnrolled = s === 'enrolled'
+                return (
+                  <div style={{ borderBottom: `1px solid ${colors.divider}`, paddingBottom: '14px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{
+                      display: 'inline-block',
+                      backgroundColor: isEnrolled ? colors.successBg : 'rgba(59, 130, 246, 0.08)',
+                      color: isEnrolled ? colors.successText : '#3B82F6',
+                      border: `1px solid ${isEnrolled ? colors.successBorder : 'rgba(59, 130, 246, 0.25)'}`,
+                      borderRadius: radius.full,
+                      padding: '3px 10px',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                    }}>{isEnrolled ? 'Enrolled' : 'Enrolling'}</span>
+                    <span style={{ fontSize: '12px', color: colors.textSecondary }}>Active application found</span>
+                  </div>
+                )
+              })()}
 
               {[
                 { label: 'Email', value: selectedRsvp.email },

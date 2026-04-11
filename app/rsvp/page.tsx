@@ -11,6 +11,7 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
+  ChevronDown,
 } from "lucide-react";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
@@ -143,7 +144,35 @@ const kidsStations = [
   },
 ];
 
+const faqs = [
+  {
+    q: "Do I need to bring anything if I want to enroll at the open house?",
+    a: "Nope — nothing at all! If you decide you'd like to enroll on the spot, we'll walk you through a short online application right there and you can pay the enrollment fee using our devices.",
+  },
+  {
+    q: "Is the open house free to attend?",
+    a: "Yes, completely free! Come as you are — no cost, no commitment. It's just a chance to meet us, see the space, and ask all your questions in person.",
+  },
+  {
+    q: "Do I need to RSVP, or can I just show up?",
+    a: "RSVPs are appreciated so we can plan snacks and seating, but walk-ins are always welcome. The more the merrier!",
+  },
+  {
+    q: "Can I bring siblings or other family members?",
+    a: "Absolutely. Bring the whole family! We'd love to meet everyone. Kids are welcome to explore the activity stations while parents chat with the team.",
+  },
+  {
+    q: "What age range is Sage Field for?",
+    a: "Our programs are designed for children ages 4–11. We currently offer a Summer 2026 program, a School Year 2026–2027 program, and a Homeschool Drop-In option.",
+  },
+  {
+    q: "What programs are available for enrollment?",
+    a: "We offer three programs: Summer 2026 (May 26–Aug 13, Mon–Thu, ages 4–11), School Year 2026–2027 (Aug 17, 2026–March 2027, Mon–Thu, ages 4–11), and Homeschool Drop-In (flexible weekly sessions). You can apply for one or more at the same time.",
+  },
+];
+
 export default function OpenHousePage() {
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -864,6 +893,57 @@ export default function OpenHousePage() {
               </form>
             )}
           </motion.div>
+        </div>
+      </section>
+
+      {/* ── FAQ ── */}
+      <section className="pb-20 px-6 sm:px-12 lg:px-16">
+        <div className="max-w-2xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
+            className="text-center mb-10"
+          >
+            <span className="inline-block px-4 py-1.5 bg-badge-bg text-black text-xs font-semibold rounded-full mb-4">
+              FAQ
+            </span>
+            <h2 className="text-2xl md:text-3xl font-bold font-heading text-gray-800">
+              Frequently Asked Questions
+            </h2>
+          </motion.div>
+
+          <div className="divide-y divide-gray-100 border border-gray-100 rounded-2xl overflow-hidden bg-white shadow-sm">
+            {faqs.map((faq, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: i * 0.05, ease: "easeOut" as const }}
+              >
+                <button
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  className="w-full text-left px-6 py-5 flex items-center justify-between gap-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  <span className="font-semibold text-gray-800 font-body text-sm">
+                    {faq.q}
+                  </span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-primary shrink-0 transition-transform duration-200 ${
+                      openFaq === i ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+                {openFaq === i && (
+                  <div className="px-6 pb-5 text-sm text-gray-600 font-body leading-relaxed">
+                    {faq.a}
+                  </div>
+                )}
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 

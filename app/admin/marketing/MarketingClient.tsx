@@ -24,10 +24,12 @@ export function MarketingClient({
   rsvps,
   tourUnavailability,
   tourBookings,
+  enrolledEmailsArr,
 }: {
   rsvps: OpenHouseRsvp[]
   tourUnavailability: TourUnavailability[]
   tourBookings: TourBooking[]
+  enrolledEmailsArr: { email: string; status: string }[]
 }) {
   const [active, setActive] = useState<SubMenuItem>('open-house')
 
@@ -130,7 +132,7 @@ export function MarketingClient({
                 RSVPs from the landing page form
               </p>
             </div>
-            <OpenHouseTable rsvps={rsvps} />
+            <OpenHouseTable rsvps={rsvps} enrolledEmailsArr={enrolledEmailsArr} />
           </div>
         )}
 
