@@ -765,7 +765,9 @@ export async function buildHomeschoolDropInConfirmationEmail(opts: {
   const tierLabel = TIER_LABELS[opts.tier] ?? opts.tier;
   const daysLabel =
     opts.selectedDays.length > 0
-      ? opts.selectedDays.map((d) => d.charAt(0).toUpperCase() + d.slice(1)).join(", ")
+      ? opts.selectedDays
+          .map((d) => d.charAt(0).toUpperCase() + d.slice(1))
+          .join(", ")
       : "";
   const weeksLabel =
     opts.selectedWeeks.length > 0
@@ -1072,13 +1074,17 @@ export async function buildWaitlistConfirmationEmail(opts: {
   };
 
   const programDetails: Record<string, string> = {
-    "summer-2026": "May 26 – Aug 13 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Mon–Thu, ~6 hrs/day &nbsp;·&nbsp; Group of ~10",
-    "school-year-2026": "Starts Aug 17, 2026 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Up to 4 days/week &nbsp;·&nbsp; 6-month commitment",
+    "summer-2026":
+      "May 26 – Aug 13 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Mon–Thu, ~6 hrs/day &nbsp;·&nbsp; Group of ~10",
+    "school-year-2026":
+      "Starts Aug 17, 2026 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Up to 4 days/week &nbsp;·&nbsp; 6-month commitment",
     both: "Summer 2026 (May 26–Aug 13) + School Year 2026–2027 (starts Aug 17)",
-    homeschool_drop_in: "1–5 Days/Week &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Fridays Are Field Days &nbsp;·&nbsp; Group of ~10",
+    homeschool_drop_in:
+      "1–5 Days/Week &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Fridays Are Field Days &nbsp;·&nbsp; Group of ~10",
   };
 
-  const selectedLabel = programLabels[opts.programInterest] || opts.programInterest;
+  const selectedLabel =
+    programLabels[opts.programInterest] || opts.programInterest;
   const selectedDetails = programDetails[opts.programInterest] || "";
 
   const subject = "We received your interest form — Sage Field School";
@@ -1328,7 +1334,7 @@ export async function buildOpenHouseReminderEmail(opts: {
   name: string;
 }): Promise<{ subject: string; content: string }> {
   const firstName = opts.name.split(" ")[0] || opts.name;
-  const subject = "Open House is 3 weeks away — see you April 25th";
+  const subject = "See you in two weeks! Sage Field Open House, April 25th";
   const content = `
 <!DOCTYPE html>
 <html>
@@ -1336,28 +1342,27 @@ export async function buildOpenHouseReminderEmail(opts: {
 <body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
   <p style="margin-bottom: 24px;">Dear ${firstName},</p>
 
-  <p>Just a friendly reminder — our Open House is <strong>Saturday, April 25th from 2:00–4:00 PM</strong> at <a href="https://maps.google.com/?q=2760+Gattis+School+Rd,+Round+Rock,+TX+78664" style="color: #5a7a5a;">2760 Gattis School Rd, Round Rock, TX 78664</a> and we're so excited to meet you! It's going to be a wonderful afternoon and a great chance to see Sage Field in person.</p>
+  <p>It's just two weeks away! Our Open House is <strong>Saturday, April 25th from 2:00–4:00 PM</strong> at:<br />
+  2760 Gattis School Rd, Round Rock, TX 78664</p>
+
+  <p>We are an all weather school! Whether it rains or shines, we will be there enjoying the day!</p>
+
+  <p>We're so excited to meet you! It's going to be a wonderful afternoon and a great chance to see Sage Field in person.</p>
 
   <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; margin: 28px 0;">
-    <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 15px;">A Little Something for Attendees</p>
-    <p style="margin: 0 0 8px 0;">Everyone who comes to the Open House will be entered into a raffle. One lucky family will win both:</p>
-    <ul style="padding-left: 20px; margin: 8px 0;">
-      <li style="margin-bottom: 6px;"><strong>1 free month of Field Day Fridays</strong> — every Friday, 9:00am–1:00pm (a $200/month value)</li>
-      <li style="margin-bottom: 6px;"><strong>A gift basket prize</strong> worth up to $200</li>
-    </ul>
-    <p style="margin: 8px 0 0 0; font-size: 14px; color: #555;">No entry needed — just show up!</p>
+    <p style="margin: 0;">🎉 Anyone who is enrolled for a program by the end of Open House <strong>(April 25, 2026, 11:59pm)</strong> will be given <strong>2 free Field Day Fridays! ($120 value)</strong></p>
   </div>
 
   <div style="background: #f0f4f7; border-left: 3px solid #a0b8c5; padding: 16px 20px; margin: 28px 0;">
     <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 15px;">A Note on Our Space</p>
-    <p style="margin: 0;">We want to be upfront with you — our vision is actively coming to life. By the time of the Open House, we anticipate being around 80% complete with our building development. Things are progressing beautifully, and we're so grateful for your support as we carefully curate this intentionally crafted environment. Thank you for growing with us.</p>
+    <p style="margin: 0;">We are parting from a different nature school, bringing our same staff and students, but we are so excited that our vision is actively coming to life at our new location! By the time of the Open House, we anticipate being around 75% complete with our building development. Things are progressing beautifully, and we're so grateful for your support as we carefully curate this intentional environment! Thank you so much for growing with us.</p>
   </div>
 
   <h2 style="font-size: 18px; margin-top: 36px; margin-bottom: 12px; color: #2c2c2c;">Our Programs</h2>
 
   <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin-bottom: 12px;">
     <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;">Summer 2026</p>
-    <p style="margin: 4px 0; color: #555; font-size: 14px;">May 26 – Aug 13 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Mon–Thu, ~6 hrs/day &nbsp;·&nbsp; Group of ~10</p>
+    <p style="margin: 4px 0; color: #555; font-size: 14px;">May 26 – Aug 13 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; ~6 hrs/day &nbsp;·&nbsp; Group of ~10</p>
     <p style="margin: 10px 0 0 0; font-size: 14px;">Twelve weeks of themed adventures, hands-on projects, nature play, art, music, and academic enrichment in a small, nurturing group setting.</p>
     <p style="margin: 10px 0 0 0; font-size: 14px;"><a href="https://www.sagefield.co/summer-2026" style="color: #5a7a5a;">Learn more about Summer 2026 →</a></p>
   </div>
@@ -1365,22 +1370,29 @@ export async function buildOpenHouseReminderEmail(opts: {
   <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin-bottom: 12px;">
     <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;">School Year 2026–2027</p>
     <p style="margin: 4px 0; color: #555; font-size: 14px;">Starts Aug 17, 2026 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Up to 4 days/week &nbsp;·&nbsp; 6-month commitment</p>
-    <p style="margin: 10px 0 0 0; font-size: 14px;">A full-year microschool experience blending Montessori, Waldorf, and Reggio Emilia philosophies with TEKS-aligned academics — in a small, nature-connected environment.</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;">A full-year microschool experience blending Montessori, Waldorf, and Reggio Emilia philosophies with TEKS-aligned academics, in a small, nature-connected environment.</p>
     <p style="margin: 10px 0 0 0; font-size: 14px;"><a href="https://www.sagefield.co/school-year-2026-2027" style="color: #5a7a5a;">Learn more about the School Year →</a></p>
   </div>
 
   <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin-bottom: 28px;">
     <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;">Homeschool Drop-In</p>
-    <p style="margin: 4px 0; color: #555; font-size: 14px;">1–5 Days/Week &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Fridays Are Field Days</p>
-    <p style="margin: 10px 0 0 0; font-size: 14px;">Flexible enriching support for homeschooling families — choose 1 to 5 days per week with ability-based grouping and all enrichments included every day.</p>
+    <p style="margin: 4px 0; color: #555; font-size: 14px;">1–5 Days/Week &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Fridays are Field Days</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;">Flexible enriching support for homeschooling families. Choose 1 to 5 days per week with ability-based grouping and all enrichments included every day.</p>
     <p style="margin: 10px 0 0 0; font-size: 14px;"><a href="https://www.sagefield.co/homeschool" style="color: #5a7a5a;">Learn more about Homeschool Drop-In →</a></p>
   </div>
 
-  <p style="text-align: center; margin: 32px 0;">
-    <a href="https://www.sagefield.co/apply" style="display: inline-block; background: #5a7a5a; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 4px; font-family: Georgia, serif; font-size: 15px;">Learn More &amp; Apply</a>
-  </p>
+  <div style="border: 1px solid #a8c5a0; border-radius: 4px; padding: 20px 24px; margin: 28px 0; text-align: center; background: #f7f4f0;">
+    <p style="margin: 0 0 10px 0; font-weight: bold; font-size: 15px;">Ready to enroll?</p>
+    <a href="https://www.sagefield.co/apply" style="display: inline-block; background: #5a7a5a; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 4px; font-family: Georgia, serif; font-size: 15px;">Apply Here →</a>
+  </div>
 
-  <p>We can't wait to see you on April 25. If anything comes up or you have questions before then, feel free to reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> or call/text <a href="tel:5126775872" style="color: #5a7a5a;">(512) 677-5872</a>.</p>
+  <p>We can't wait to see you on April 25! If anything comes up or you have questions before then, feel free to reach out:</p>
+  <ul style="padding-left: 20px; margin: 8px 0;">
+    <li style="margin-bottom: 6px;">📧 Email: <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></li>
+    <li style="margin-bottom: 6px;">📱 Call/Text: <a href="tel:5126775872" style="color: #5a7a5a;">(512) 677-5872</a></li>
+  </ul>
+
+  <p>Additionally, we are so thankful for the number of expected guests who have RSVP'd. Please stay tuned as we will send you a separate email about parking.</p>
 
   <p style="margin-top: 32px;">With warmth,</p>
   <p style="margin-top: 4px;"><strong>Sabrina Obnamia</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
