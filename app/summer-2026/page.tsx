@@ -11,6 +11,7 @@ import FloatingSMSButton from "../components/FloatingSMSButton";
 import SummerProgramCard from "../components/SummerProgramCard";
 import AfterCareCard from "../components/AfterCareCard";
 import FieldDayFridayCard from "../components/FieldDayFridayCard";
+import MeetTheTeamSection from "../components/MeetTheTeamSection";
 
 const details = [
   { label: "Dates", value: "May 26 – Aug 13, 2026" },
@@ -487,6 +488,9 @@ export default function Summer2026Page() {
           </motion.div>
         </div>
       </section> */}
+
+      {/* Meet the Team */}
+      <MeetTheTeamSection featured={false} exclude={["Paige Wood"]} />
 
       {/* Summer Tuition */}
       <section className="pb-16 px-8 sm:px-12 lg:px-16">

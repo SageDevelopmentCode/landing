@@ -11,6 +11,7 @@ import FloatingSMSButton from "../components/FloatingSMSButton";
 import FullEnrollmentCard from "../components/FullEnrollmentCard";
 import AfterCareCard from "../components/AfterCareCard";
 import FieldDayFridayCard from "../components/FieldDayFridayCard";
+import MeetTheTeamSection from "../components/MeetTheTeamSection";
 
 const details = [
   { label: "Start Date", value: "August 17, 2026" },
@@ -314,6 +315,9 @@ export default function SchoolYear20262027Page() {
           </motion.div>
         </div>
       </section>
+
+      {/* Meet the Team */}
+      <MeetTheTeamSection featured={false} exclude={["Nicole Elias", "Taylor Elias"]} />
 
       {/* Full Enrollment Tuition */}
       <section className="pb-16 px-8 sm:px-12 lg:px-16">
