@@ -256,12 +256,7 @@ export default async function BillingRoute() {
           </div>
         </header>
 
-        <main className="flex-1 max-w-4xl mx-auto px-6 py-12 w-full">
-          <div className="mb-10">
-            <h1 className="text-3xl font-bold font-heading text-gray-800 mb-2">
-              Tuition &amp; Billing
-            </h1>
-          </div>
+        <main className="flex-1 flex overflow-hidden">
           <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} unpaidSummerEnrollments={unpaidSummerEnrollments} paidWeeksByStudent={paidWeeksByStudent} parentId={user.id} parentEmail={user.email ?? ""} nonEnrolledApps={nonEnrolledApps} homeschoolDropInApps={homeschoolDropInApps} paidHomeschoolByStudent={paidHomeschoolByStudent} />
         </main>
       </div>

@@ -779,13 +779,15 @@ export default function ChildrenPage({ children, teachersByStudent, nonEnrolledA
 
   if (children.length === 0) {
     return (
-      <div className="text-center py-24">
-        <p className="text-gray-400 font-body text-lg">
-          No enrolled children found.
-        </p>
-        <p className="text-gray-300 font-body text-sm mt-1">
-          If you believe this is an error, please contact us.
-        </p>
+      <div className="flex-1 flex items-center justify-center text-center py-24">
+        <div>
+          <p className="text-gray-400 font-body text-lg">
+            No enrolled children found.
+          </p>
+          <p className="text-gray-300 font-body text-sm mt-1">
+            If you believe this is an error, please contact us.
+          </p>
+        </div>
       </div>
     );
   }
@@ -793,36 +795,68 @@ export default function ChildrenPage({ children, teachersByStudent, nonEnrolledA
   const activeChild = children[activeIndex];
 
   return (
-    <div>
-      {/* Child switcher — only shown if >1 child */}
-      {children.length > 1 && (
-        <div className="flex flex-wrap gap-2 mb-6">
-          {children.map((child, i) => (
+    <div className="flex-1 flex overflow-hidden">
+      {/* ── Left: Children sidebar ── */}
+      <aside className="hidden md:flex flex-col w-56 flex-shrink-0 overflow-y-auto px-3 pt-8 gap-1 bg-white border-r border-gray-100">
+        <p className="text-xs font-semibold font-body text-gray-400 uppercase tracking-wider px-2 pb-2">
+          Children
+        </p>
+        {children.map((child, i) => {
+          const isActive = i === activeIndex;
+          const profileImageUrl = (child as Record<string, unknown>).profile_image_url as string | null ?? null;
+          const name = child.child_legal_name ?? `Child ${i + 1}`;
+          return (
             <button
               key={child.id}
               onClick={() => setActiveIndex(i)}
-              className={`relative px-4 py-1.5 text-sm rounded-full border transition-colors cursor-pointer whitespace-nowrap ${
-                i === activeIndex
-                  ? "bg-[#4a7c59] text-white border-[#4a7c59] font-semibold"
-                  : "bg-white border-gray-200 text-gray-600 hover:border-[#4a7c59]"
+              className={`relative w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-colors cursor-pointer ${
+                isActive
+                  ? "bg-[#4a7c59]/10 text-gray-800"
+                  : "text-gray-400 hover:text-gray-600 hover:bg-black/5"
               }`}
             >
-              {child.child_legal_name ?? `Child ${i + 1}`}
+              {profileImageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={profileImageUrl}
+                  alt={name}
+                  className="w-7 h-7 rounded-full object-cover shrink-0"
+                />
+              ) : (
+                <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-semibold shrink-0 bg-[#4a7c59]">
+                  {getInitials(name)}
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-body font-medium truncate leading-tight">
+                  {name}
+                </p>
+              </div>
               {nonEnrolledAppByStudent[child.id] && (
-                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-400 border-2 border-white" />
+                <span className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0" />
               )}
             </button>
-          ))}
-        </div>
-      )}
+          );
+        })}
+      </aside>
 
-      <ChildProfile
-        key={activeChild.id}
-        child={activeChild}
-        teachers={teachersByStudent[activeChild.id] ?? []}
-        enrollmentAppId={nonEnrolledAppByStudent[activeChild.id]}
-        initialProfileImageUrl={(activeChild as Record<string, unknown>).profile_image_url as string | null ?? null}
-      />
+      {/* ── Right: Main content ── */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-4xl mx-auto px-6 py-12">
+          <div className="mb-10">
+            <h1 className="text-3xl font-bold font-heading text-gray-800 mb-2">
+              My Children
+            </h1>
+          </div>
+          <ChildProfile
+            key={activeChild.id}
+            child={activeChild}
+            teachers={teachersByStudent[activeChild.id] ?? []}
+            enrollmentAppId={nonEnrolledAppByStudent[activeChild.id]}
+            initialProfileImageUrl={(activeChild as Record<string, unknown>).profile_image_url as string | null ?? null}
+          />
+        </div>
+      </div>
     </div>
   );
 }

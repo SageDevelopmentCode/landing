@@ -2866,7 +2866,7 @@ function StudentTabAvatar({
   }
   return (
     <div
-      className={`w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-semibold shrink-0 ${isActive ? "bg-white/30" : colorForStudentId(id)}`}
+      className={`w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-semibold shrink-0 ${colorForStudentId(id)}`}
     >
       {getInitials(name)}
     </div>
@@ -2888,6 +2888,7 @@ function PendingPaymentsSection({
   nonEnrolledApps,
   homeschoolDropInApps,
   paidHomeschoolByStudent,
+  activeStudentId,
 }: {
   summerEnrollments: SummerEnrollment[];
   unpaidSummerEnrollments: SummerEnrollment[];
@@ -2903,22 +2904,9 @@ function PendingPaymentsSection({
   nonEnrolledApps: NonEnrolledApp[];
   homeschoolDropInApps: HomeschoolDropInApp[];
   paidHomeschoolByStudent: PaidHomeschoolByStudent;
+  activeStudentId: string | null;
 }) {
   const nonEnrolledMap = new Map(nonEnrolledApps.map((a) => [a.student_id, a]));
-
-  // Collect all unique student IDs (enrolled + pending + non-enrolled + homeschool)
-  const allStudentIds = [
-    ...new Set([
-      ...summerEnrollments.map((e) => e.student_id),
-      ...(pendingRequests.map((r) => r.student_id).filter(Boolean) as string[]),
-      ...nonEnrolledApps.map((a) => a.student_id),
-      ...homeschoolDropInApps.map((a) => a.student_id),
-    ]),
-  ];
-
-  const [activeStudentId, setActiveStudentId] = useState<string | null>(
-    allStudentIds[0] ?? null,
-  );
 
   if (
     unpaidSummerEnrollments.length === 0 &&
@@ -2932,7 +2920,6 @@ function PendingPaymentsSection({
 
   // Items with no student_id
   const orphanRequests = pendingRequests.filter((r) => !r.student_id);
-  const hasOrphans = orphanRequests.length > 0;
 
   // Items for the active student
   const activeSummerEnrollments = unpaidSummerEnrollments.filter(
@@ -2965,144 +2952,90 @@ function PendingPaymentsSection({
     : undefined;
 
   return (
-    <div>
-      {/* Child tabs */}
-      <div className="flex gap-2 mb-4 flex-wrap">
-        {allStudentIds.map((id) => {
-          const isNonEnrolled = nonEnrolledMap.has(id);
-          const studentInfo = studentMap[id];
-          const name = isNonEnrolled
-            ? (nonEnrolledMap.get(id)!.name ?? "Student")
-            : (studentInfo?.name ?? "Unknown");
-          const profileImageUrl = isNonEnrolled
-            ? null
-            : (studentInfo?.profileImageUrl ?? null);
-          const isActive = activeStudentId === id;
-          return (
-            <button
-              key={id}
-              onClick={() => setActiveStudentId(id)}
-              className={`relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
-                isActive
-                  ? "text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-              style={isActive ? { backgroundColor: "#4a7c59" } : {}}
-            >
-              <StudentTabAvatar
-                id={id}
-                name={name}
-                profileImageUrl={profileImageUrl}
-                isActive={isActive}
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={activeStudentId}
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -6 }}
+        transition={{ duration: 0.15, ease: "easeInOut" as const }}
+        className="grid grid-cols-2 gap-3"
+      >
+        {activeNonEnrolled ? (
+          <NonEnrolledCard app={activeNonEnrolled} />
+        ) : currentSummer.length === 0 &&
+          currentItems.length === 0 &&
+          currentAllSummer.length === 0 &&
+          currentHomeschool.length === 0 ? (
+          <AllCaughtUpCard />
+        ) : (
+          <>
+            {currentHomeschool.map((app) => (
+              <HomeschoolDropInCard
+                key={app.id}
+                app={app}
+                studentName={studentMap[app.student_id]?.name ?? null}
+                paidData={paidHomeschoolByStudent[app.student_id]}
+                onClick={() => onSelectHomeschool(app)}
+                onViewHistory={() => onViewHomeschoolHistory(app)}
               />
-              {name}
-              {isNonEnrolled && (
-                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-400 border-2 border-white" />
-              )}
-            </button>
-          );
-        })}
-        {hasOrphans && (
-          <button
-            onClick={() => setActiveStudentId("__other__")}
-            className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
-              isOtherTab
-                ? "text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-            style={isOtherTab ? { backgroundColor: "#4a7c59" } : {}}
-          >
-            Other
-          </button>
-        )}
-      </div>
+            ))}
+            {currentSummer.map((enrollment) => (
+              <SummerTuitionCard
+                key={enrollment.student_id}
+                studentName={studentMap[enrollment.student_id]?.name ?? null}
+                paidWeeks={paidWeeksByStudent[enrollment.student_id] ?? []}
+                onClick={() => onSelectSummer(enrollment)}
+              />
+            ))}
+            {currentAllSummer.map((enrollment) => (
+              <AftercareCard
+                key={`aftercare-${enrollment.student_id}`}
+                studentName={studentMap[enrollment.student_id]?.name ?? null}
+                onClick={() => onSelectAftercare(enrollment)}
+              />
+            ))}
+            {currentAllSummer.map((enrollment) => (
+              <FunFridayCard
+                key={`funfriday-${enrollment.student_id}`}
+                studentName={studentMap[enrollment.student_id]?.name ?? null}
+                onClick={() => onSelectFunFriday(enrollment)}
+              />
+            ))}
+            {currentItems.map((req) => (
+              <PendingPaymentCard
+                key={req.id}
+                request={req}
+                studentName={
+                  req.student_id
+                    ? (studentMap[req.student_id]?.name ?? null)
+                    : null
+                }
+                onClick={() => onSelectPending(req)}
+              />
+            ))}
 
-      {/* Items for active child */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeStudentId}
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.15, ease: "easeInOut" as const }}
-          className="grid grid-cols-2 gap-3"
-        >
-          {activeNonEnrolled ? (
-            <NonEnrolledCard app={activeNonEnrolled} />
-          ) : currentSummer.length === 0 &&
-            currentItems.length === 0 &&
-            currentAllSummer.length === 0 &&
-            currentHomeschool.length === 0 ? (
-            <AllCaughtUpCard />
-          ) : (
-            <>
-              {currentHomeschool.map((app) => (
-                <HomeschoolDropInCard
-                  key={app.id}
-                  app={app}
-                  studentName={studentMap[app.student_id]?.name ?? null}
-                  paidData={paidHomeschoolByStudent[app.student_id]}
-                  onClick={() => onSelectHomeschool(app)}
-                  onViewHistory={() => onViewHomeschoolHistory(app)}
-                />
-              ))}
-              {currentSummer.map((enrollment) => (
-                <SummerTuitionCard
-                  key={enrollment.student_id}
-                  studentName={studentMap[enrollment.student_id]?.name ?? null}
-                  paidWeeks={paidWeeksByStudent[enrollment.student_id] ?? []}
-                  onClick={() => onSelectSummer(enrollment)}
-                />
-              ))}
-              {currentAllSummer.map((enrollment) => (
-                <AftercareCard
-                  key={`aftercare-${enrollment.student_id}`}
-                  studentName={studentMap[enrollment.student_id]?.name ?? null}
-                  onClick={() => onSelectAftercare(enrollment)}
-                />
-              ))}
-              {currentAllSummer.map((enrollment) => (
-                <FunFridayCard
-                  key={`funfriday-${enrollment.student_id}`}
-                  studentName={studentMap[enrollment.student_id]?.name ?? null}
-                  onClick={() => onSelectFunFriday(enrollment)}
-                />
-              ))}
-              {currentItems.map((req) => (
-                <PendingPaymentCard
-                  key={req.id}
-                  request={req}
-                  studentName={
-                    req.student_id
-                      ? (studentMap[req.student_id]?.name ?? null)
-                      : null
-                  }
-                  onClick={() => onSelectPending(req)}
-                />
-              ))}
-
-              {/* Total bar */}
-              {totalCents > 0 && (
-                <div
-                  className="col-span-2 rounded-xl px-4 py-3 flex items-center justify-between"
-                  style={{ backgroundColor: "#f6faf7" }}
+            {/* Total bar */}
+            {totalCents > 0 && (
+              <div
+                className="col-span-2 rounded-xl px-4 py-3 flex items-center justify-between"
+                style={{ backgroundColor: "#f6faf7" }}
+              >
+                <span className="text-sm text-gray-500 font-body">
+                  Total owed
+                </span>
+                <span
+                  className="text-base font-bold font-heading"
+                  style={{ color: "#4a7c59" }}
                 >
-                  <span className="text-sm text-gray-500 font-body">
-                    Total owed
-                  </span>
-                  <span
-                    className="text-base font-bold font-heading"
-                    style={{ color: "#4a7c59" }}
-                  >
-                    {formatCents(totalCents)}
-                  </span>
-                </div>
-              )}
-            </>
-          )}
-        </motion.div>
-      </AnimatePresence>
-    </div>
+                  {formatCents(totalCents)}
+                </span>
+              </div>
+            )}
+          </>
+        )}
+      </motion.div>
+    </AnimatePresence>
   );
 }
 
@@ -3189,6 +3122,24 @@ export default function BillingPage({
   const [selectedHomeschoolHistoryApp, setSelectedHomeschoolHistoryApp] =
     useState<HomeschoolDropInApp | null>(null);
 
+  const nonEnrolledMap = new Map(nonEnrolledApps.map((a) => [a.student_id, a]));
+
+  // Collect all unique student IDs for the sidebar
+  const allStudentIds = [
+    ...new Set([
+      ...summerEnrollments.map((e) => e.student_id),
+      ...(pendingRequests.map((r) => r.student_id).filter(Boolean) as string[]),
+      ...nonEnrolledApps.map((a) => a.student_id),
+      ...homeschoolDropInApps.map((a) => a.student_id),
+    ]),
+  ];
+  const orphanRequests = pendingRequests.filter((r) => !r.student_id);
+  const hasOrphans = orphanRequests.length > 0;
+
+  const [activeStudentId, setActiveStudentId] = useState<string | null>(
+    allStudentIds[0] ?? null,
+  );
+
   const nonEnrolledStudentIds = new Set(
     nonEnrolledApps.map((a) => a.student_id),
   );
@@ -3196,213 +3147,193 @@ export default function BillingPage({
     (tx) => !tx.student_id || !nonEnrolledStudentIds.has(tx.student_id),
   );
 
-  if (visibleTransactions.length === 0) {
-    return (
-      <>
-        <div className="space-y-8">
+  const hasPendingContent =
+    unpaidSummerEnrollments.length > 0 ||
+    pendingRequests.length > 0 ||
+    nonEnrolledApps.length > 0 ||
+    summerEnrollments.length > 0 ||
+    homeschoolDropInApps.length > 0;
+
+  const showSidebar = allStudentIds.length > 0 || hasOrphans;
+
+  return (
+    <div className="flex-1 flex overflow-hidden">
+      {/* ── Left: Children sidebar ── */}
+      {showSidebar && (
+        <aside className="hidden md:flex flex-col w-56 flex-shrink-0 overflow-y-auto px-3 pt-8 gap-1 bg-white border-r border-gray-100">
+          <p className="text-xs font-semibold font-body text-gray-400 uppercase tracking-wider px-2 pb-2">
+            Children
+          </p>
+          {allStudentIds.map((id) => {
+            const isNonEnrolled = nonEnrolledMap.has(id);
+            const studentInfo = studentMap[id];
+            const name = isNonEnrolled
+              ? (nonEnrolledMap.get(id)!.name ?? "Student")
+              : (studentInfo?.name ?? "Unknown");
+            const profileImageUrl = isNonEnrolled
+              ? null
+              : (studentInfo?.profileImageUrl ?? null);
+            const isActive = activeStudentId === id;
+            return (
+              <button
+                key={id}
+                onClick={() => setActiveStudentId(id)}
+                className={`relative w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-colors cursor-pointer ${
+                  isActive
+                    ? "bg-[#4a7c59]/10 text-gray-800"
+                    : "text-gray-400 hover:text-gray-600 hover:bg-black/5"
+                }`}
+              >
+                <StudentTabAvatar
+                  id={id}
+                  name={name}
+                  profileImageUrl={profileImageUrl}
+                  isActive={isActive}
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-body font-medium truncate leading-tight">
+                    {name}
+                  </p>
+                </div>
+                {isNonEnrolled && (
+                  <span className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0" />
+                )}
+              </button>
+            );
+          })}
+          {hasOrphans && (
+            <button
+              onClick={() => setActiveStudentId("__other__")}
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-colors cursor-pointer ${
+                activeStudentId === "__other__"
+                  ? "bg-[#4a7c59]/10 text-gray-800"
+                  : "text-gray-400 hover:text-gray-600 hover:bg-black/5"
+              }`}
+            >
+              <span className="text-sm font-body font-medium">Other</span>
+            </button>
+          )}
+        </aside>
+      )}
+
+      {/* ── Right: Main content ── */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-5xl mx-auto px-6 py-10 space-y-8">
           <div>
-            <h2 className="text-lg font-semibold font-heading text-gray-700 mb-4">
-              Pending Payments
-            </h2>
-            <PendingPaymentsSection
-              summerEnrollments={summerEnrollments}
-              unpaidSummerEnrollments={unpaidSummerEnrollments}
-              pendingRequests={pendingRequests}
-              studentMap={studentMap}
-              paidWeeksByStudent={paidWeeksByStudent}
-              onSelectSummer={setSelectedSummerEnrollment}
-              onSelectPending={setSelectedPending}
-              onSelectAftercare={setSelectedAftercareEnrollment}
-              onSelectFunFriday={setSelectedFunFridayEnrollment}
-              onSelectHomeschool={setSelectedHomeschoolApp}
-              onViewHomeschoolHistory={setSelectedHomeschoolHistoryApp}
-              nonEnrolledApps={nonEnrolledApps}
-              homeschoolDropInApps={homeschoolDropInApps}
-              paidHomeschoolByStudent={paidHomeschoolByStudent}
-            />
+            <h1 className="text-3xl font-bold font-heading text-gray-800 mb-2">
+              Tuition &amp; Billing
+            </h1>
           </div>
+
+          {hasPendingContent && (
+            <div>
+              <h2 className="text-lg font-semibold font-heading text-gray-700 mb-4">
+                Pending Payments
+              </h2>
+              <PendingPaymentsSection
+                summerEnrollments={summerEnrollments}
+                unpaidSummerEnrollments={unpaidSummerEnrollments}
+                pendingRequests={pendingRequests}
+                studentMap={studentMap}
+                paidWeeksByStudent={paidWeeksByStudent}
+                onSelectSummer={setSelectedSummerEnrollment}
+                onSelectPending={setSelectedPending}
+                onSelectAftercare={setSelectedAftercareEnrollment}
+                onSelectFunFriday={setSelectedFunFridayEnrollment}
+                onSelectHomeschool={setSelectedHomeschoolApp}
+                onViewHomeschoolHistory={setSelectedHomeschoolHistoryApp}
+                nonEnrolledApps={nonEnrolledApps}
+                homeschoolDropInApps={homeschoolDropInApps}
+                paidHomeschoolByStudent={paidHomeschoolByStudent}
+                activeStudentId={activeStudentId}
+              />
+            </div>
+          )}
+
           <div>
             <h2 className="text-lg font-semibold font-heading text-gray-700 mb-4">
               Payment History
             </h2>
-            <div className="flex flex-col items-center justify-center bg-white rounded-2xl border border-gray-100 p-16 text-center">
-              <div
-                className="flex items-center justify-center w-14 h-14 rounded-full mb-4"
-                style={{ backgroundColor: "#d4e6d0" }}
-              >
-                <Receipt
-                  className="w-6 h-6"
-                  style={{ color: "#4a7c59" }}
-                  strokeWidth={1.5}
-                />
+            {visibleTransactions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center bg-white rounded-2xl border border-gray-100 p-16 text-center">
+                <div
+                  className="flex items-center justify-center w-14 h-14 rounded-full mb-4"
+                  style={{ backgroundColor: "#d4e6d0" }}
+                >
+                  <Receipt
+                    className="w-6 h-6"
+                    style={{ color: "#4a7c59" }}
+                    strokeWidth={1.5}
+                  />
+                </div>
+                <p className="text-base font-semibold font-heading text-gray-700 mb-1">
+                  No transactions yet
+                </p>
+                <p className="text-sm font-body text-gray-400">
+                  Your payment history will appear here once a transaction is
+                  processed.
+                </p>
               </div>
-              <p className="text-base font-semibold font-heading text-gray-700 mb-1">
-                No transactions yet
-              </p>
-              <p className="text-sm font-body text-gray-400">
-                Your payment history will appear here once a transaction is
-                processed.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <PendingDetailSidebar
-          pending={selectedPending}
-          studentName={
-            selectedPending?.student_id
-              ? (studentMap[selectedPending.student_id]?.name ?? null)
-              : null
-          }
-          onClose={() => setSelectedPending(null)}
-        />
-        <AnimatePresence>
-          {selectedSummerEnrollment && (
-            <SummerPaymentModal
-              enrollment={selectedSummerEnrollment}
-              studentName={
-                studentMap[selectedSummerEnrollment.student_id]?.name ?? null
-              }
-              parentId={parentId}
-              parentEmail={parentEmail}
-              paidWeeks={
-                paidWeeksByStudent[selectedSummerEnrollment.student_id] ?? []
-              }
-              onClose={() => setSelectedSummerEnrollment(null)}
-            />
-          )}
-          {selectedAftercareEnrollment && (
-            <AftercarePaymentModal
-              enrollment={selectedAftercareEnrollment}
-              studentName={
-                studentMap[selectedAftercareEnrollment.student_id]?.name ?? null
-              }
-              parentId={parentId}
-              parentEmail={parentEmail}
-              onClose={() => setSelectedAftercareEnrollment(null)}
-            />
-          )}
-          {selectedFunFridayEnrollment && (
-            <FunFridayPaymentModal
-              enrollment={selectedFunFridayEnrollment}
-              studentName={
-                studentMap[selectedFunFridayEnrollment.student_id]?.name ?? null
-              }
-              parentId={parentId}
-              parentEmail={parentEmail}
-              onClose={() => setSelectedFunFridayEnrollment(null)}
-            />
-          )}
-          {selectedHomeschoolApp && (
-            <HomeschoolPaymentModal
-              app={selectedHomeschoolApp}
-              studentName={
-                studentMap[selectedHomeschoolApp.student_id]?.name ?? null
-              }
-              parentId={parentId}
-              parentEmail={parentEmail}
-              paidData={paidHomeschoolByStudent[selectedHomeschoolApp.student_id]}
-              onClose={() => setSelectedHomeschoolApp(null)}
-            />
-          )}
-          {selectedHomeschoolHistoryApp && paidHomeschoolByStudent[selectedHomeschoolHistoryApp.student_id] && (
-            <HomeschoolPlanHistoryModal
-              app={selectedHomeschoolHistoryApp}
-              studentName={studentMap[selectedHomeschoolHistoryApp.student_id]?.name ?? null}
-              paidData={paidHomeschoolByStudent[selectedHomeschoolHistoryApp.student_id]}
-              onClose={() => setSelectedHomeschoolHistoryApp(null)}
-              onAddMore={() => {
-                setSelectedHomeschoolApp(selectedHomeschoolHistoryApp);
-                setSelectedHomeschoolHistoryApp(null);
-              }}
-            />
-          )}
-        </AnimatePresence>
-      </>
-    );
-  }
-
-  return (
-    <>
-      <div className="space-y-8">
-        <div>
-          <h2 className="text-lg font-semibold font-heading text-gray-700 mb-4">
-            Pending Payments
-          </h2>
-          <PendingPaymentsSection
-            summerEnrollments={summerEnrollments}
-            unpaidSummerEnrollments={unpaidSummerEnrollments}
-            pendingRequests={pendingRequests}
-            studentMap={studentMap}
-            paidWeeksByStudent={paidWeeksByStudent}
-            onSelectSummer={setSelectedSummerEnrollment}
-            onSelectPending={setSelectedPending}
-            onSelectAftercare={setSelectedAftercareEnrollment}
-            onSelectFunFriday={setSelectedFunFridayEnrollment}
-            onSelectHomeschool={setSelectedHomeschoolApp}
-            onViewHomeschoolHistory={setSelectedHomeschoolHistoryApp}
-            nonEnrolledApps={nonEnrolledApps}
-            homeschoolDropInApps={homeschoolDropInApps}
-            paidHomeschoolByStudent={paidHomeschoolByStudent}
-          />
-        </div>
-        <div>
-          <h2 className="text-lg font-semibold font-heading text-gray-700 mb-4">
-            Payment History
-          </h2>
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-            <table className="w-full text-sm font-body">
-              <thead>
-                <tr className="border-b border-gray-100 text-left">
-                  <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                    Date
-                  </th>
-                  <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                    Description
-                  </th>
-                  <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                    Student
-                  </th>
-                  <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                    Type
-                  </th>
-                  <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide text-right">
-                    Amount
-                  </th>
-                  <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {visibleTransactions.map((tx) => (
-                  <tr
-                    key={tx.id}
-                    onClick={() => setSelectedTx(tx)}
-                    className="border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer transition-colors"
-                  >
-                    <td className="px-5 py-4 text-gray-600 whitespace-nowrap">
-                      {formatDate(tx.created_at)}
-                    </td>
-                    <td className="px-5 py-4 text-gray-800 max-w-[240px] truncate">
-                      {tx.description ?? "—"}
-                    </td>
-                    <td className="px-5 py-4 text-gray-600">
-                      {studentMap[tx.student_id ?? ""]?.name ?? "—"}
-                    </td>
-                    <td className="px-5 py-4 text-gray-600 whitespace-nowrap">
-                      {formatPaymentType(tx.payment_type)}
-                    </td>
-                    <td className="px-5 py-4 text-gray-800 text-right whitespace-nowrap font-semibold">
-                      {formatCents(tx.amount_cents)}
-                    </td>
-                    <td className="px-5 py-4">
-                      <StatusBadge status={tx.status} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            ) : (
+              <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                <table className="w-full text-xs font-body">
+                  <thead>
+                    <tr className="border-b border-gray-100 text-left">
+                      <th className="px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide whitespace-nowrap">
+                        Date
+                      </th>
+                      <th className="px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                        Description
+                      </th>
+                      <th className="px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                        Student
+                      </th>
+                      <th className="px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide whitespace-nowrap">
+                        Type
+                      </th>
+                      <th className="px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide text-right whitespace-nowrap">
+                        Amount
+                      </th>
+                      <th className="px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                        Status
+                      </th>
+                      <th className="px-4 py-3" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {visibleTransactions.map((tx) => (
+                      <tr
+                        key={tx.id}
+                        onClick={() => setSelectedTx(tx)}
+                        className="border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer transition-colors group"
+                      >
+                        <td className="px-4 py-3.5 text-gray-500 whitespace-nowrap">
+                          {formatDate(tx.created_at)}
+                        </td>
+                        <td className="px-4 py-3.5 text-gray-800 max-w-[220px] truncate">
+                          {tx.description ?? "—"}
+                        </td>
+                        <td className="px-4 py-3.5 text-gray-600 whitespace-nowrap">
+                          {studentMap[tx.student_id ?? ""]?.name ?? "—"}
+                        </td>
+                        <td className="px-4 py-3.5 text-gray-600 whitespace-nowrap">
+                          {formatPaymentType(tx.payment_type)}
+                        </td>
+                        <td className="px-4 py-3.5 text-gray-800 text-right whitespace-nowrap font-semibold">
+                          {formatCents(tx.amount_cents)}
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <StatusBadge status={tx.status} />
+                        </td>
+                        <td className="px-4 py-3.5 text-gray-300 group-hover:text-gray-400 transition-colors">
+                          <ChevronRight className="w-4 h-4" />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -3465,17 +3396,6 @@ export default function BillingPage({
             <SidebarSection title="Payer">
               <SidebarField label="Name" value={selectedTx.payer_name} />
               <SidebarField label="Email" value={selectedTx.payer_email} />
-            </SidebarSection>
-
-            <SidebarSection title="Stripe IDs">
-              <SidebarField
-                label="Session ID"
-                value={selectedTx.stripe_session_id}
-              />
-              <SidebarField
-                label="Payment Intent ID"
-                value={selectedTx.stripe_payment_intent_id}
-              />
             </SidebarSection>
           </div>
         )}
@@ -3543,6 +3463,6 @@ export default function BillingPage({
           />
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 }
