@@ -1444,18 +1444,21 @@ export async function buildInfoSessionRSVPEmail(opts: {
     <p style="margin: 0 0 6px 0; font-weight: bold; font-size: 15px;">Summer 2026</p>
     <p style="margin: 4px 0; color: #555; font-size: 14px;">May 26 – Aug 13 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Mon–Thu &nbsp;·&nbsp; 12 Weeks &nbsp;·&nbsp; ~10 children</p>
     <p style="margin: 10px 0 0 0; font-size: 14px;">Twelve weeks of themed adventures, hands-on projects, nature play, art, and academic enrichment in a small, nurturing group.</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;"><a href="https://www.sagefield.co/summer-2026" style="color: #5a7a5a;">Learn more about Summer 2026 →</a></p>
   </div>
 
   <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin-bottom: 16px;">
     <p style="margin: 0 0 6px 0; font-weight: bold; font-size: 15px;">School Year 2026–2027</p>
     <p style="margin: 4px 0; color: #555; font-size: 14px;">Aug 17, 2026 – March 2027 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Mon–Thu &nbsp;·&nbsp; 6-month commitment</p>
     <p style="margin: 10px 0 0 0; font-size: 14px;">A full school-year microschool experience blending Montessori, Waldorf, and Reggio-inspired methods with TEKS-aligned academics.</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;"><a href="https://www.sagefield.co/school-year-2026-2027" style="color: #5a7a5a;">Learn more about the School Year →</a></p>
   </div>
 
   <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin-bottom: 28px;">
     <p style="margin: 0 0 6px 0; font-weight: bold; font-size: 15px;">Homeschool Drop-In</p>
     <p style="margin: 4px 0; color: #555; font-size: 14px;">Ages 4–11 &nbsp;·&nbsp; 1–5 Days/Week &nbsp;·&nbsp; Flexible Scheduling</p>
     <p style="margin: 10px 0 0 0; font-size: 14px;">Flexible drop-in program for homeschool families — choose 1 to 5 days per week with ability-based learning, enrichments, and Friday Field Days.</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;"><a href="https://www.sagefield.co/homeschool" style="color: #5a7a5a;">Learn more about Homeschool Drop-In →</a></p>
   </div>
 
   <p style="text-align: center; margin: 32px 0;">

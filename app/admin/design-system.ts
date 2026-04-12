@@ -27,17 +27,17 @@ export const colors = {
 
   // Status Colors
   success:       '#22C55E',
-  successText:   '#22C55E',
+  successText:   '#FFFFFF',
   successBg:     'rgba(34, 197, 94, 0.08)',
   successBorder: 'rgba(34, 197, 94, 0.25)',
 
   warning:       '#F59E0B',
-  warningText:   '#F59E0B',
+  warningText:   '#FFFFFF',
   warningBg:     'rgba(245, 158, 11, 0.08)',
   warningBorder: 'rgba(245, 158, 11, 0.25)',
 
   error:         '#EF4444',
-  errorText:     '#EF4444',
+  errorText:     '#FFFFFF',
   errorBg:       'rgba(239, 68, 68, 0.08)',
   errorBorder:   'rgba(239, 68, 68, 0.25)',
 
@@ -45,7 +45,7 @@ export const colors = {
   dangerBg:  'rgba(239, 68, 68, 0.08)',
 
   info:      '#38BDF8',
-  infoText:  '#38BDF8',
+  infoText:  '#FFFFFF',
   infoBg:    'rgba(56, 189, 248, 0.08)',
   infoBorder:'rgba(56, 189, 248, 0.25)',
 
