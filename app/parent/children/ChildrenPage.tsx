@@ -28,6 +28,17 @@ interface Props {
   children: Student[];
   teachersByStudent: Record<string, TeacherAssignment[]>;
   nonEnrolledAppByStudent: Record<string, string>;
+  studentProgramMap: Record<string, string>;
+}
+
+function formatProgramLabel(program: string | undefined | null): string | null {
+  switch (program) {
+    case "summer_26": return "Summer 2026";
+    case "school_year_26_27": return "School Year 26–27";
+    case "both": return "Summer & School Year";
+    case "homeschool_drop_in": return "Homeschool Drop-In";
+    default: return null;
+  }
 }
 
 function getInitials(name: string | null): string {
@@ -774,7 +785,15 @@ function ChildProfile({
   );
 }
 
-export default function ChildrenPage({ children, teachersByStudent, nonEnrolledAppByStudent }: Props) {
+export default function ChildrenPage({ children, teachersByStudent, nonEnrolledAppByStudent, studentProgramMap }: Props) {
+  // Sort: enrolled children first, non-enrolled last
+  const sortedChildren = [...children].sort((a, b) => {
+    const aEnrolled = !nonEnrolledAppByStudent[a.id];
+    const bEnrolled = !nonEnrolledAppByStudent[b.id];
+    if (aEnrolled === bEnrolled) return 0;
+    return aEnrolled ? -1 : 1;
+  });
+
   const [activeIndex, setActiveIndex] = useState(0);
 
   if (children.length === 0) {
@@ -792,7 +811,7 @@ export default function ChildrenPage({ children, teachersByStudent, nonEnrolledA
     );
   }
 
-  const activeChild = children[activeIndex];
+  const activeChild = sortedChildren[activeIndex];
 
   return (
     <div className="flex-1 flex overflow-hidden">
@@ -801,10 +820,11 @@ export default function ChildrenPage({ children, teachersByStudent, nonEnrolledA
         <p className="text-xs font-semibold font-body text-gray-400 uppercase tracking-wider px-2 pb-2">
           Children
         </p>
-        {children.map((child, i) => {
+        {sortedChildren.map((child, i) => {
           const isActive = i === activeIndex;
           const profileImageUrl = (child as Record<string, unknown>).profile_image_url as string | null ?? null;
           const name = child.child_legal_name ?? `Child ${i + 1}`;
+          const programLabel = formatProgramLabel(studentProgramMap[child.id]);
           return (
             <button
               key={child.id}
@@ -831,6 +851,11 @@ export default function ChildrenPage({ children, teachersByStudent, nonEnrolledA
                 <p className="text-sm font-body font-medium truncate leading-tight">
                   {name}
                 </p>
+                {programLabel && (
+                  <p className="text-xs font-body text-gray-400 truncate leading-tight">
+                    {programLabel}
+                  </p>
+                )}
               </div>
               {nonEnrolledAppByStudent[child.id] && (
                 <span className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0" />

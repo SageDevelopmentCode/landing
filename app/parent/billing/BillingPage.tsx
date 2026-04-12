@@ -13,6 +13,16 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+function formatProgramLabel(program: string | undefined | null): string | null {
+  switch (program) {
+    case "summer_26": return "Summer 2026";
+    case "school_year_26_27": return "School Year 26–27";
+    case "both": return "Summer & School Year";
+    case "homeschool_drop_in": return "Homeschool Drop-In";
+    default: return null;
+  }
+}
+
 function getInitials(name: string | null): string {
   if (!name) return "?";
   return name
@@ -2970,16 +2980,6 @@ function PendingPaymentsSection({
           <AllCaughtUpCard />
         ) : (
           <>
-            {currentHomeschool.map((app) => (
-              <HomeschoolDropInCard
-                key={app.id}
-                app={app}
-                studentName={studentMap[app.student_id]?.name ?? null}
-                paidData={paidHomeschoolByStudent[app.student_id]}
-                onClick={() => onSelectHomeschool(app)}
-                onViewHistory={() => onViewHomeschoolHistory(app)}
-              />
-            ))}
             {currentSummer.map((enrollment) => (
               <SummerTuitionCard
                 key={enrollment.student_id}
@@ -3012,6 +3012,16 @@ function PendingPaymentsSection({
                     : null
                 }
                 onClick={() => onSelectPending(req)}
+              />
+            ))}
+            {currentHomeschool.map((app) => (
+              <HomeschoolDropInCard
+                key={app.id}
+                app={app}
+                studentName={studentMap[app.student_id]?.name ?? null}
+                paidData={paidHomeschoolByStudent[app.student_id]}
+                onClick={() => onSelectHomeschool(app)}
+                onViewHistory={() => onViewHomeschoolHistory(app)}
               />
             ))}
 
@@ -3124,6 +3134,22 @@ export default function BillingPage({
 
   const nonEnrolledMap = new Map(nonEnrolledApps.map((a) => [a.student_id, a]));
 
+  const studentProgramMap = new Map<string, string>();
+  for (const e of summerEnrollments) {
+    if (e.program) studentProgramMap.set(e.student_id, e.program);
+  }
+  for (const e of homeschoolDropInApps) {
+    // Only set from homeschoolDropInApps if the student's primary program is actually
+    // a homeschool/drop-in variant — don't overwrite a summer_26-only enrollment
+    const prog = e.drop_in_program ?? e.program ?? "homeschool_drop_in";
+    if (!studentProgramMap.has(e.student_id) || e.program === "homeschool_drop_in") {
+      studentProgramMap.set(e.student_id, prog);
+    }
+  }
+  for (const a of nonEnrolledApps) {
+    if (a.program) studentProgramMap.set(a.student_id, a.program);
+  }
+
   // Collect all unique student IDs for the sidebar
   const allStudentIds = [
     ...new Set([
@@ -3174,6 +3200,7 @@ export default function BillingPage({
               ? null
               : (studentInfo?.profileImageUrl ?? null);
             const isActive = activeStudentId === id;
+            const programLabel = formatProgramLabel(studentProgramMap.get(id));
             return (
               <button
                 key={id}
@@ -3194,6 +3221,11 @@ export default function BillingPage({
                   <p className="text-sm font-body font-medium truncate leading-tight">
                     {name}
                   </p>
+                  {programLabel && (
+                    <p className="text-xs font-body text-gray-400 truncate leading-tight">
+                      {programLabel}
+                    </p>
+                  )}
                 </div>
                 {isNonEnrolled && (
                   <span className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0" />

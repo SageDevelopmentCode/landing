@@ -56,18 +56,25 @@ export default async function ChildrenRoute() {
   }
 
   const nonEnrolledAppByStudent: Record<string, string> = {};
+  const studentProgramMap: Record<string, string> = {};
   if (studentIds.length > 0) {
     const { data: appsData } = await adminClient
       .schema("parent_app")
       .from("applications")
-      .select("id, student_id, status")
+      .select("id, student_id, status, program, drop_in_program")
       .eq("user_id", user.id)
       .eq("approved", true)
       .in("student_id", studentIds);
 
     for (const app of appsData ?? []) {
-      if (app.student_id && app.status !== "enrolled") {
+      if (!app.student_id) continue;
+      if (app.status !== "enrolled") {
         nonEnrolledAppByStudent[app.student_id] = app.id;
+      }
+      // Set program label — prefer the primary program, fall back to drop_in_program
+      const prog = app.program ?? app.drop_in_program;
+      if (prog && !studentProgramMap[app.student_id]) {
+        studentProgramMap[app.student_id] = prog;
       }
     }
   }
@@ -98,7 +105,7 @@ export default async function ChildrenRoute() {
         </header>
 
         <main className="flex-1 flex overflow-hidden">
-          <ChildrenPage children={children} teachersByStudent={teachersByStudent} nonEnrolledAppByStudent={nonEnrolledAppByStudent} />
+          <ChildrenPage children={children} teachersByStudent={teachersByStudent} nonEnrolledAppByStudent={nonEnrolledAppByStudent} studentProgramMap={studentProgramMap} />
         </main>
       </div>
       <Footer />
