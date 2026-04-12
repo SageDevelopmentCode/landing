@@ -1402,3 +1402,77 @@ export async function buildOpenHouseReminderEmail(opts: {
 
   return { subject, content };
 }
+
+/**
+ * Build HTML confirmation email for an info session RSVP (April 18, 2026 virtual)
+ */
+export async function buildInfoSessionRSVPEmail(opts: {
+  firstName: string;
+}): Promise<{ subject: string; content: string }> {
+  const subject = "You're registered — Sage Field Virtual Info Session, April 18";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${opts.firstName},</p>
+
+  <p>You're all set! We've received your RSVP for our upcoming Virtual Parent Info Session and we're so glad you'll be joining us.</p>
+
+  <p>This is a great opportunity to learn all about Sage Field — our programs, philosophy, daily life, and what makes our school a special place for kids.</p>
+
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; margin: 28px 0;">
+    <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 15px;">Event Details</p>
+    <p style="margin: 4px 0;"><strong>Date:</strong> Saturday, April 18, 2026</p>
+    <p style="margin: 4px 0;"><strong>Time:</strong> 11:00 AM CST</p>
+    <p style="margin: 4px 0;"><strong>Format:</strong> Virtual via Zoom</p>
+    <p style="margin: 12px 0 0 0; font-size: 14px; color: #555;">We'll send you the Zoom link a few days before the session — keep an eye on your inbox!</p>
+  </div>
+
+  <h2 style="font-size: 18px; margin-top: 32px; margin-bottom: 8px; color: #2c2c2c;">What We'll Cover</h2>
+  <ul style="padding-left: 20px;">
+    <li style="margin-bottom: 8px;">Overview of Sage Field and our educational philosophy</li>
+    <li style="margin-bottom: 8px;">Breakdown of our Summer 2026 and School Year 2026–2027 programs</li>
+    <li style="margin-bottom: 8px;">A peek into daily life — movement, art, music, outdoor exploration, and more</li>
+    <li style="margin-bottom: 8px;">Transparent pricing and enrollment process</li>
+    <li style="margin-bottom: 8px;">Live Q&amp;A — bring your questions!</li>
+  </ul>
+
+  <h2 style="font-size: 18px; margin-top: 32px; margin-bottom: 12px; color: #2c2c2c;">Our Programs</h2>
+
+  <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin-bottom: 16px;">
+    <p style="margin: 0 0 6px 0; font-weight: bold; font-size: 15px;">Summer 2026</p>
+    <p style="margin: 4px 0; color: #555; font-size: 14px;">May 26 – Aug 13 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Mon–Thu &nbsp;·&nbsp; 12 Weeks &nbsp;·&nbsp; ~10 children</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;">Twelve weeks of themed adventures, hands-on projects, nature play, art, and academic enrichment in a small, nurturing group.</p>
+  </div>
+
+  <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin-bottom: 16px;">
+    <p style="margin: 0 0 6px 0; font-weight: bold; font-size: 15px;">School Year 2026–2027</p>
+    <p style="margin: 4px 0; color: #555; font-size: 14px;">Aug 17, 2026 – March 2027 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Mon–Thu &nbsp;·&nbsp; 6-month commitment</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;">A full school-year microschool experience blending Montessori, Waldorf, and Reggio-inspired methods with TEKS-aligned academics.</p>
+  </div>
+
+  <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin-bottom: 28px;">
+    <p style="margin: 0 0 6px 0; font-weight: bold; font-size: 15px;">Homeschool Drop-In</p>
+    <p style="margin: 4px 0; color: #555; font-size: 14px;">Ages 4–11 &nbsp;·&nbsp; 1–5 Days/Week &nbsp;·&nbsp; Flexible Scheduling</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;">Flexible drop-in program for homeschool families — choose 1 to 5 days per week with ability-based learning, enrichments, and Friday Field Days.</p>
+  </div>
+
+  <p style="text-align: center; margin: 32px 0;">
+    <a href="https://www.sagefield.co/apply" style="display: inline-block; background: #5a7a5a; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 4px; font-family: Georgia, serif; font-size: 15px;">Apply for a Program</a>
+  </p>
+
+  <p>We look forward to seeing you on April 18! If you have any questions before then, don't hesitate to reach out:</p>
+  <ul style="padding-left: 20px; margin: 8px 0;">
+    <li style="margin-bottom: 6px;">📧 Email: <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></li>
+    <li style="margin-bottom: 6px;">📱 Call/Text: <a href="tel:5126775872" style="color: #5a7a5a;">(512) 677-5872</a></li>
+  </ul>
+
+  <p style="margin-top: 32px;">With warmth,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina Obnamia</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}

@@ -92,6 +92,7 @@ const NAV_TABS: NavTab[] = [
         label: "Academic Calendar",
         action: { kind: "link", href: "/academic-calendar" },
       },
+      { label: "Tour", action: { kind: "link", href: "/tour" } },
       { label: "FAQ", action: { kind: "link", href: "/faq" } },
       { label: "Donate", action: { kind: "link", href: "/donate" } },
     ],
@@ -187,7 +188,8 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
       pathname === "/rsvp" ||
       pathname === "/our-story" ||
       pathname === "/what-we-offer" ||
-      pathname === "/educational-philosophy");
+      pathname === "/educational-philosophy" ||
+      pathname === "/tour");
 
   // Close everything on route change
   useEffect(() => {

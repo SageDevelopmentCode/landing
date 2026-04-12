@@ -642,6 +642,61 @@ export function createHelpRequestEmbed(data: {
 }
 
 /**
+ * Creates a Discord embed for info session RSVP submissions
+ */
+export function createInfoSessionRSVPEmbed(data: {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  children: Array<{ name: string; age: string }>;
+  programs: string[];
+  hearAboutUs?: string;
+  questions?: string;
+}): DiscordEmbed {
+  const programLabels: Record<string, string> = {
+    "summer-2026": "Summer 2026",
+    "school-year": "School Year 2026–2027",
+    homeschool: "Homeschool Drop-In",
+  };
+
+  const programsFormatted =
+    data.programs.map((p) => programLabels[p] ?? p).join(", ") || "None selected";
+
+  const childrenFormatted =
+    data.children.length > 0
+      ? data.children.map((c) => `${c.name} (age ${c.age})`).join(", ")
+      : "None listed";
+
+  const fields: DiscordEmbedField[] = [
+    { name: "Parent", value: `${data.firstName} ${data.lastName}`, inline: true },
+    { name: "Email", value: data.email, inline: true },
+    { name: "Phone", value: data.phone, inline: true },
+    { name: "Programs Interested In", value: programsFormatted, inline: false },
+    { name: "Children", value: childrenFormatted, inline: false },
+    { name: "How They Heard", value: data.hearAboutUs || "Not provided", inline: true },
+  ];
+
+  if (data.questions) {
+    fields.push({
+      name: "Questions / Topics",
+      value:
+        data.questions.length > 1024
+          ? data.questions.substring(0, 1021) + "..."
+          : data.questions,
+      inline: false,
+    });
+  }
+
+  return {
+    title: "📋 New Info Session RSVP",
+    color: 0xa8c5a0, // Sage green
+    fields,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
  * Creates a Discord embed for campus tour booking submissions
  */
 export function createTourBookingEmbed(data: {
