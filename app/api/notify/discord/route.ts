@@ -4,6 +4,8 @@ import {
   sendDiscordNotification,
   createTeacherClockInEmbed,
   createTeacherClockOutEmbed,
+  createStudentCheckInEmbed,
+  createStudentCheckOutEmbed,
 } from '@/app/lib/discord'
 
 export async function POST(request: NextRequest) {
@@ -53,6 +55,32 @@ export async function POST(request: NextRequest) {
       }
       const embed = createTeacherClockOutEmbed({ teacherName, clockInAt, clockOutAt })
       await sendDiscordNotification(embed, process.env.DISCORD_EMPLOYEE_WEBHOOK_URL)
+      return NextResponse.json({ success: true })
+    }
+
+    if (type === 'student_check_in') {
+      const { studentName, checkedInAt, program, classroom } = data
+      if (!studentName || !checkedInAt) {
+        return NextResponse.json(
+          { error: 'student_check_in requires studentName and checkedInAt' },
+          { status: 400 }
+        )
+      }
+      const embed = createStudentCheckInEmbed({ studentName, checkedInAt, program, classroom })
+      await sendDiscordNotification(embed, process.env.DISCORD_STUDENT_WEBHOOK_URL)
+      return NextResponse.json({ success: true })
+    }
+
+    if (type === 'student_check_out') {
+      const { studentName, checkedInAt, checkedOutAt, program, classroom } = data
+      if (!studentName || !checkedInAt || !checkedOutAt) {
+        return NextResponse.json(
+          { error: 'student_check_out requires studentName, checkedInAt, and checkedOutAt' },
+          { status: 400 }
+        )
+      }
+      const embed = createStudentCheckOutEmbed({ studentName, checkedInAt, checkedOutAt, program, classroom })
+      await sendDiscordNotification(embed, process.env.DISCORD_STUDENT_WEBHOOK_URL)
       return NextResponse.json({ success: true })
     }
 
