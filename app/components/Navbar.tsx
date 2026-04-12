@@ -19,7 +19,7 @@ type NavAction =
 interface NavLeaf {
   label: string;
   action: NavAction;
-  badge?: "Coming Soon";
+  badge?: "Coming Soon" | "Apr 18" | "New!";
 }
 
 type NavTab =
@@ -92,7 +92,12 @@ const NAV_TABS: NavTab[] = [
         label: "Academic Calendar",
         action: { kind: "link", href: "/academic-calendar" },
       },
-      { label: "Tour", action: { kind: "link", href: "/tour" } },
+      { label: "Tour", action: { kind: "link", href: "/tour" }, badge: "New!" },
+      {
+        label: "Info Session",
+        action: { kind: "link", href: "/info-session" },
+        badge: "Apr 18",
+      },
       { label: "FAQ", action: { kind: "link", href: "/faq" } },
       { label: "Donate", action: { kind: "link", href: "/donate" } },
     ],
@@ -256,7 +261,13 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
       : "text-gray-700 hover:bg-gray-50 hover:text-gray-900";
 
     const badge = leaf.badge ? (
-      <span className="ml-2 text-[10px] font-semibold uppercase bg-gray-100 text-gray-400 rounded-full px-2 py-0.5 shrink-0">
+      <span className={`ml-2 text-[10px] font-semibold uppercase rounded-full px-2 py-0.5 shrink-0 ${
+        leaf.badge === "Coming Soon"
+          ? "bg-gray-100 text-gray-400"
+          : leaf.badge === "New!"
+          ? "bg-green-100 text-green-700"
+          : "bg-amber-100 text-amber-700"
+      }`}>
         {leaf.badge}
       </span>
     ) : null;
