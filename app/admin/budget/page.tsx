@@ -266,8 +266,8 @@ function CategoryBudgetRings({
           const emoji = CATEGORY_EMOJI[row.cat] ?? "💰";
           const clampedPct = Math.min(row.pct, 1);
           const dashLen = clampedPct * RING_CIRC;
-          const strokeColor = row.over ? colors.errorText : SLICE_COLORS[i % SLICE_COLORS.length];
-          const textColor = row.over ? colors.errorText : colors.mistyForest;
+          const strokeColor = row.over ? colors.error : SLICE_COLORS[i % SLICE_COLORS.length];
+          const textColor = "#ffffff";
           const bgColor = row.over ? colors.error : colors.success;
 
           return (
@@ -573,7 +573,7 @@ function OverviewTab({
       return s + net / 100;
     }, 0);
   const netProfit = totalRevenue - totalExpenses;
-  const profitColor = netProfit >= 0 ? colors.successText : colors.errorText;
+  const profitColor = netProfit >= 0 ? colors.success : colors.error;
 
   // All-time totals (unfiltered)
   const allTimeRevenue = stripeTransactions
@@ -584,7 +584,7 @@ function OverviewTab({
     }, 0);
   const allTimeExpenses = expenses.reduce((s, e) => s + Number(e.amount), 0);
   const allTimeNet = allTimeRevenue - allTimeExpenses;
-  const allTimeNetColor = allTimeNet >= 0 ? colors.successText : colors.errorText;
+  const allTimeNetColor = allTimeNet >= 0 ? colors.success : colors.error;
 
   const monthLabel = new Date(
     Number(selectedMonth.slice(0, 4)),
@@ -621,13 +621,13 @@ function OverviewTab({
         <MiniStat
           label={`Actual Expenses · ${monthLabel}`}
           value={fmt(totalExpenses)}
-          color={colors.errorText}
+          color={colors.error}
           delay={0.05}
         />
         <MiniStat
           label={`Revenue · ${monthLabel}`}
           value={fmt(totalRevenue)}
-          color={colors.successText}
+          color={colors.success}
           delay={0.1}
         />
         <MiniStat
@@ -677,11 +677,11 @@ function OverviewTab({
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span style={{ color: colors.textSecondary }}>Revenue</span>
-                    <span style={{ color: colors.successText, fontWeight: 600 }}>{fmt(revenue)}</span>
+                    <span style={{ color: colors.success, fontWeight: 600 }}>{fmt(revenue)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span style={{ color: colors.textSecondary }}>Expenses</span>
-                    <span style={{ color: colors.errorText, fontWeight: 600 }}>{fmt(exp)}</span>
+                    <span style={{ color: colors.error, fontWeight: 600 }}>{fmt(exp)}</span>
                   </div>
                   <div
                     className="flex justify-between pt-2 mt-1"
@@ -743,7 +743,7 @@ function OverviewTab({
           </p>
           <p
             className="text-xl font-semibold"
-            style={{ color: colors.warningText }}
+            style={{ color: colors.warning }}
           >
             {fmt(Math.max(netProfit * 0.25, 0))}
           </p>
@@ -1045,7 +1045,7 @@ function BudgetVsActual({
                 <td
                   className="py-3 px-3"
                   style={{
-                    color: row.over ? colors.errorText : colors.successText,
+                    color: row.over ? colors.error : colors.success,
                     fontWeight: 600,
                   }}
                 >
@@ -1070,7 +1070,7 @@ function BudgetVsActual({
                           height: "100%",
                           borderRadius: "99px",
                           backgroundColor: row.over
-                            ? colors.errorText
+                            ? colors.error
                             : SLICE_COLORS[i % SLICE_COLORS.length],
                           transition: "width 0.4s ease",
                         }}
@@ -1079,7 +1079,7 @@ function BudgetVsActual({
                     <span
                       style={{
                         color: row.over
-                          ? colors.errorText
+                          ? colors.error
                           : colors.textSecondary,
                         fontSize: "12px",
                         minWidth: "38px",
@@ -1117,7 +1117,7 @@ function BudgetVsActual({
                 className="py-3 px-3 font-bold"
                 style={{
                   color:
-                    totalVariance < 0 ? colors.errorText : colors.successText,
+                    totalVariance < 0 ? colors.error : colors.success,
                 }}
               >
                 {totalVariance < 0 ? "-" : "+"}
@@ -1141,7 +1141,7 @@ function BudgetVsActual({
                         borderRadius: "99px",
                         backgroundColor:
                           totalActual > totalPlanned
-                            ? colors.errorText
+                            ? colors.error
                             : colors.mistyForest,
                       }}
                     />
@@ -2303,7 +2303,7 @@ function ExpensesTab({
                         </div>
                         <span
                           className="text-sm font-bold"
-                          style={{ color: colors.errorText }}
+                          style={{ color: colors.error }}
                         >
                           {fmt(monthTotal)}
                         </span>
@@ -2431,7 +2431,7 @@ function ExpensesTab({
             </td>
             <td
               className="px-4 py-3 text-sm font-bold"
-              style={{ color: colors.errorText }}
+              style={{ color: colors.error }}
             >
               {fmt(total)}
             </td>
@@ -2541,8 +2541,8 @@ function ExpensesTab({
                           row.planned === 0
                             ? colors.textTertiary
                             : row.over
-                              ? colors.errorText
-                              : colors.successText,
+                              ? colors.error
+                              : colors.success,
                         fontWeight: 600,
                       }}
                     >
@@ -2577,7 +2577,7 @@ function ExpensesTab({
                                 height: "100%",
                                 borderRadius: "99px",
                                 backgroundColor: row.over
-                                  ? colors.errorText
+                                  ? colors.error
                                   : colors.mistyForest,
                                 transition: "width 0.4s ease",
                               }}
@@ -2586,7 +2586,7 @@ function ExpensesTab({
                           <span
                             style={{
                               color: row.over
-                                ? colors.errorText
+                                ? colors.error
                                 : colors.textSecondary,
                               fontSize: "12px",
                               minWidth: "38px",
@@ -2626,8 +2626,8 @@ function ExpensesTab({
                     style={{
                       color:
                         totalBudgetVariance < 0
-                          ? colors.errorText
-                          : colors.successText,
+                          ? colors.error
+                          : colors.success,
                     }}
                   >
                     {totalBudgetPlanned === 0
@@ -2654,7 +2654,7 @@ function ExpensesTab({
                               borderRadius: "99px",
                               backgroundColor:
                                 totalBudgetActual > totalBudgetPlanned
-                                  ? colors.errorText
+                                  ? colors.error
                                   : colors.mistyForest,
                             }}
                           />
@@ -2786,7 +2786,7 @@ function ExpensesTab({
                     </div>
                     <span
                       className="text-sm font-bold"
-                      style={{ color: colors.errorText }}
+                      style={{ color: colors.error }}
                     >
                       {fmt(monthTotal)}
                     </span>
@@ -3056,8 +3056,8 @@ function ExpensesTab({
                                           row.planned === 0
                                             ? colors.textTertiary
                                             : row.over
-                                              ? colors.errorText
-                                              : colors.successText,
+                                              ? colors.error
+                                              : colors.success,
                                         fontWeight: 600,
                                       }}
                                     >
@@ -3096,7 +3096,7 @@ function ExpensesTab({
                                                 height: "100%",
                                                 borderRadius: "99px",
                                                 backgroundColor: row.over
-                                                  ? colors.errorText
+                                                  ? colors.error
                                                   : colors.mistyForest,
                                                 transition: "width 0.4s ease",
                                               }}
@@ -3105,7 +3105,7 @@ function ExpensesTab({
                                           <span
                                             style={{
                                               color: row.over
-                                                ? colors.errorText
+                                                ? colors.error
                                                 : colors.textSecondary,
                                               fontSize: "12px",
                                               minWidth: "38px",
@@ -3149,8 +3149,8 @@ function ExpensesTab({
                                     style={{
                                       color:
                                         monthBudgetVariance < 0
-                                          ? colors.errorText
-                                          : colors.successText,
+                                          ? colors.error
+                                          : colors.success,
                                     }}
                                   >
                                     {monthBudgetPlanned === 0
@@ -3178,7 +3178,7 @@ function ExpensesTab({
                                               backgroundColor:
                                                 monthBudgetActual >
                                                 monthBudgetPlanned
-                                                  ? colors.errorText
+                                                  ? colors.error
                                                   : colors.mistyForest,
                                             }}
                                           />
@@ -3807,7 +3807,7 @@ function RevenueTab({
                                 ({monthTxs.length} transaction{monthTxs.length !== 1 ? "s" : ""})
                               </span>
                             </div>
-                            <span className="text-sm font-bold" style={{ color: colors.successText }}>
+                            <span className="text-sm font-bold" style={{ color: colors.success }}>
                               {fmt(monthTotal)}
                             </span>
                           </div>
@@ -3852,7 +3852,7 @@ function RevenueTab({
                           </TableCell>
                           <TableCell
                             className="font-semibold"
-                            style={{ color: tx.exclude_from_revenue ? '#9CA3AF' : colors.successText }}
+                            style={{ color: tx.exclude_from_revenue ? '#9CA3AF' : colors.success }}
                           >
                             <span className="flex items-center gap-2">
                               {formatCents(tx.cover_fees ? tx.intended_amount_cents : tx.amount_cents, tx.currency)}
@@ -3883,7 +3883,7 @@ function RevenueTab({
             <td colSpan={5} className="px-4 py-3 text-sm font-bold" style={{ color: colors.textPrimary }}>
               Total
             </td>
-            <td className="px-4 py-3 text-sm font-bold" style={{ color: colors.successText }}>
+            <td className="px-4 py-3 text-sm font-bold" style={{ color: colors.success }}>
               {fmt(totalActual)}
             </td>
           </tr>
@@ -4036,7 +4036,7 @@ function RevenueTab({
                 value={(enrollment as Record<string, number>)[key]}
                 onChange={(e) => setEnrollment((p) => ({ ...p, [key]: parseInt(e.target.value) || 0 }))}
               />
-              <span className="ml-2 text-xs" style={{ color: colors.successText }}>
+              <span className="ml-2 text-xs" style={{ color: colors.success }}>
                 = {fmt((enrollment as Record<string, number>)[key] * rate)}
               </span>
             </div>
@@ -4053,7 +4053,7 @@ function RevenueTab({
           </div>
           <div className="text-right">
             <p className="text-xs font-medium" style={{ color: colors.mistyForest }}>Difference</p>
-            <p className="text-2xl font-bold" style={{ color: totalActual >= projectedRevenue ? colors.successText : colors.errorText }}>
+            <p className="text-2xl font-bold" style={{ color: totalActual >= projectedRevenue ? colors.success : colors.error }}>
               {fmt(totalActual - projectedRevenue)}
             </p>
           </div>
@@ -4185,12 +4185,12 @@ function TaxesTab({
         <MiniStat
           label="Current Month Profit"
           value={fmt(netProfit)}
-          color={netProfit >= 0 ? colors.successText : colors.errorText}
+          color={netProfit >= 0 ? colors.success : colors.error}
         />
         <MiniStat
           label={`Tax Reserve (${totalTaxRate}% of profit)`}
           value={fmt(taxReserve)}
-          color={colors.warningText}
+          color={colors.warning}
           delay={0.05}
         />
         <MiniStat
@@ -4228,7 +4228,7 @@ function TaxesTab({
                 </span>
                 <span
                   className="text-sm font-bold"
-                  style={{ color: colors.warningText }}
+                  style={{ color: colors.warning }}
                 >
                   {fmt(amount)}
                 </span>
@@ -4298,7 +4298,7 @@ function TaxesTab({
                     </p>
                     <p
                       className="text-sm font-bold"
-                      style={{ color: colors.errorText }}
+                      style={{ color: colors.error }}
                     >
                       Tax: {fmt(tax)}
                     </p>
@@ -4360,10 +4360,10 @@ function MixSummary({
       : "#C0524A";
   const profitColor =
     mixProfit >= targetProfit
-      ? colors.successText
+      ? colors.success
       : mixProfit >= targetProfit * 0.85
         ? "#C07A4A"
-        : colors.errorText;
+        : colors.error;
   return (
     <div
       style={{
@@ -4448,7 +4448,7 @@ function MixSummary({
       </div>
       <p
         className="text-xs mt-2 font-medium"
-        style={{ color: surplus ? colors.successText : colors.errorText }}
+        style={{ color: surplus ? colors.success : colors.error }}
       >
         {surplus ? `+${fmt(diff)} above goal` : `${fmt(diff)} below goal`}
       </p>
@@ -4550,7 +4550,7 @@ function RevenueGoalHeader({
         </span>
         <span
           className="text-xs font-semibold"
-          style={{ color: surplus ? colors.successText : colors.errorText }}
+          style={{ color: surplus ? colors.success : colors.error }}
         >
           {surplus
             ? `+${fmt(diff)} above goal`
@@ -4726,7 +4726,7 @@ function CoreSliderRow({
         />
       </div>
       {covered && (
-        <p className="text-xs mt-1" style={{ color: colors.successText }}>
+        <p className="text-xs mt-1" style={{ color: colors.success }}>
           ✓ Budget covered by this program alone
         </p>
       )}
@@ -4822,7 +4822,7 @@ function SummerAnalysisTab({
     () => Object.fromEntries(SUMMER_SEASON_RATES.map((r) => [r.key, 0]))
   );
 
-  const netProfitColor = netProfit >= 0 ? colors.successText : colors.errorText;
+  const netProfitColor = netProfit >= 0 ? colors.success : colors.error;
 
   const SEASON_WEEKS = 12;
   const SEASON_MONTHS = SEASON_WEEKS / 4.33; // ≈ 2.77
@@ -5048,7 +5048,7 @@ function AnalysisTab({
     fun_friday: 0,
   });
 
-  const netProfitColor = netProfit >= 0 ? colors.successText : colors.errorText;
+  const netProfitColor = netProfit >= 0 ? colors.success : colors.error;
 
   const CORE_SY_RATES = SCHOOL_YEAR_RATES.slice(0, 2);
   const SUPPL_SY_RATES = SCHOOL_YEAR_RATES.slice(2);
@@ -5295,8 +5295,8 @@ function MercuryTab() {
         className="p-6 rounded-xl text-sm"
         style={{
           backgroundColor: colors.error,
-          color: colors.errorText,
-          border: `1px solid ${colors.errorText}33`,
+          color: "#ffffff",
+          border: `1px solid ${colors.error}33`,
         }}
       >
         {error}
@@ -5337,7 +5337,7 @@ function MercuryTab() {
             </p>
             <p
               className="text-xl font-semibold mt-1 tabular-nums"
-              style={{ color: total >= 0 ? colors.successText : colors.errorText }}
+              style={{ color: total >= 0 ? colors.success : colors.error }}
             >
               {fmtCurrency(total)}
             </p>
@@ -5355,7 +5355,7 @@ function MercuryTab() {
           </p>
           <p
             className="text-xl font-semibold mt-1 tabular-nums"
-            style={{ color: overallTotal >= 0 ? colors.successText : colors.errorText }}
+            style={{ color: overallTotal >= 0 ? colors.success : colors.error }}
           >
             {fmtCurrency(overallTotal)}
           </p>
@@ -5439,7 +5439,7 @@ function MercuryTab() {
                     </td>
                     <td
                       className="px-4 py-3 font-medium tabular-nums"
-                      style={{ color: isCredit ? colors.successText : colors.errorText }}
+                      style={{ color: isCredit ? colors.success : colors.error }}
                     >
                       {amountDisplay}
                     </td>
@@ -5461,7 +5461,7 @@ function MercuryTab() {
                               : colors.info,
                           color:
                             tx.status === "sent" || tx.status === "posted"
-                              ? colors.successText
+                              ? colors.success
                               : tx.status === "pending"
                               ? colors.warningText
                               : colors.infoText,
@@ -5621,8 +5621,8 @@ export default function BudgetPage() {
             className="p-6 rounded-xl text-sm"
             style={{
               backgroundColor: colors.error,
-              color: colors.errorText,
-              border: `1px solid ${colors.errorText}33`,
+              color: "#ffffff",
+              border: `1px solid ${colors.error}33`,
             }}
           >
             {error}
