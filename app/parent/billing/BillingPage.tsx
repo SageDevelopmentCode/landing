@@ -3141,8 +3141,8 @@ export default function BillingPage({
   for (const e of homeschoolDropInApps) {
     // Only set from homeschoolDropInApps if the student's primary program is actually
     // a homeschool/drop-in variant — don't overwrite a summer_26-only enrollment
-    const prog = e.drop_in_program ?? e.program ?? "homeschool_drop_in";
-    if (!studentProgramMap.has(e.student_id) || e.program === "homeschool_drop_in") {
+    const prog = e.drop_in_program ?? "homeschool_drop_in";
+    if (!studentProgramMap.has(e.student_id) || e.drop_in_program === "homeschool_drop_in") {
       studentProgramMap.set(e.student_id, prog);
     }
   }
