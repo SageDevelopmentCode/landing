@@ -82,6 +82,8 @@ const FOOTER_COLUMNS: NavColumn[] = [
         label: "Academic Calendar",
         action: { kind: "link", href: "/academic-calendar" },
       },
+      { label: "Tour", action: { kind: "link", href: "/tour" } },
+      { label: "Info Session", action: { kind: "link", href: "/info" } },
       { label: "FAQ", action: { kind: "link", href: "/faq" } },
       { label: "Donate", action: { kind: "link", href: "/donate" } },
     ],
