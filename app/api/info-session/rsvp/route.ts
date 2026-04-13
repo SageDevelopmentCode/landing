@@ -56,45 +56,46 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to save RSVP" }, { status: 500 });
     }
 
-    // Non-blocking: email + Discord
-    (async () => {
-      try {
-        const { subject, content } = await buildInfoSessionRSVPEmail({ firstName });
-        const emailResult = await sendZohoEmail({ toAddress: email, subject, content });
+    // Send confirmation email
+    try {
+      const { subject, content } = await buildInfoSessionRSVPEmail({ firstName });
+      const emailResult = await sendZohoEmail({ toAddress: email, subject, content });
 
-        if (emailResult.success) {
-          await supabase
-            .schema("email_logs")
-            .from("sends")
-            .insert({
-              to_address: email,
-              subject,
-              status: "success",
-              sent_at: new Date().toISOString(),
-            });
-        } else {
-          await supabase
-            .schema("email_logs")
-            .from("sends")
-            .insert({
-              to_address: email,
-              subject,
-              status: "error",
-              error_message: emailResult.error ?? "Unknown error",
-              sent_at: new Date().toISOString(),
-            });
-        }
-      } catch (err) {
-        sendDiscordNotification(
-          createErrorEmbed({
-            context: "Info Session RSVP — email send",
-            error: String(err),
-            details: { email },
-          })
-        ).catch(() => {});
+      if (emailResult.success) {
+        await supabase
+          .schema("email_logs")
+          .from("sends")
+          .insert({
+            to_address: email,
+            subject,
+            status: "success",
+            sent_at: new Date().toISOString(),
+          });
+      } else {
+        await supabase
+          .schema("email_logs")
+          .from("sends")
+          .insert({
+            to_address: email,
+            subject,
+            status: "error",
+            error_message: emailResult.error ?? "Unknown error",
+            sent_at: new Date().toISOString(),
+          });
       }
-
+    } catch (err) {
       sendDiscordNotification(
+        createErrorEmbed({
+          context: "Info Session RSVP — email send",
+          error: String(err),
+          details: { email },
+        })
+      ).catch(() => {});
+    }
+
+    // Send Discord notification
+    try {
+      await sendDiscordNotification(
         createInfoSessionRSVPEmbed({
           firstName,
           lastName,
@@ -105,8 +106,10 @@ export async function POST(request: NextRequest) {
           hearAboutUs,
           questions,
         })
-      ).catch((err) => console.error("Discord notification failed:", err));
-    })();
+      );
+    } catch (err) {
+      console.error("Discord notification failed:", err);
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
