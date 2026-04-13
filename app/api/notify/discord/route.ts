@@ -1,98 +1,169 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createAdminClient } from '@/app/lib/supabase-server'
+import { NextRequest, NextResponse } from "next/server";
+import { createAdminClient } from "@/app/lib/supabase-server";
 import {
   sendDiscordNotification,
   createTeacherClockInEmbed,
   createTeacherClockOutEmbed,
   createStudentCheckInEmbed,
   createStudentCheckOutEmbed,
-} from '@/app/lib/discord'
+  createHelpRequestEmbed,
+} from "@/app/lib/discord";
 
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('Authorization')
-    const token = authHeader?.replace('Bearer ', '')
+    const authHeader = request.headers.get("Authorization");
+    const token = authHeader?.replace("Bearer ", "");
 
     if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const supabase = createAdminClient()
+    const supabase = createAdminClient();
     const {
       data: { user },
-    } = await supabase.auth.getUser(token)
+    } = await supabase.auth.getUser(token);
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { type, data } = await request.json()
+    const { type, data } = await request.json();
 
     if (!type || !data) {
-      return NextResponse.json({ error: 'Missing type or data' }, { status: 400 })
+      return NextResponse.json(
+        { error: "Missing type or data" },
+        { status: 400 },
+      );
     }
 
-    if (type === 'clock_in') {
-      const { teacherName, clockInAt } = data
+    if (type === "clock_in") {
+      const { teacherName, clockInAt } = data;
       if (!teacherName || !clockInAt) {
         return NextResponse.json(
-          { error: 'clock_in requires teacherName and clockInAt' },
-          { status: 400 }
-        )
+          { error: "clock_in requires teacherName and clockInAt" },
+          { status: 400 },
+        );
       }
-      const embed = createTeacherClockInEmbed({ teacherName, clockInAt })
-      await sendDiscordNotification(embed, process.env.DISCORD_EMPLOYEE_WEBHOOK_URL)
-      return NextResponse.json({ success: true })
+      const embed = createTeacherClockInEmbed({ teacherName, clockInAt });
+      await sendDiscordNotification(
+        embed,
+        process.env.DISCORD_EMPLOYEE_WEBHOOK_URL,
+      );
+      return NextResponse.json({ success: true });
     }
 
-    if (type === 'clock_out') {
-      const { teacherName, clockInAt, clockOutAt } = data
+    if (type === "clock_out") {
+      const { teacherName, clockInAt, clockOutAt } = data;
       if (!teacherName || !clockInAt || !clockOutAt) {
         return NextResponse.json(
-          { error: 'clock_out requires teacherName, clockInAt, and clockOutAt' },
-          { status: 400 }
-        )
+          {
+            error: "clock_out requires teacherName, clockInAt, and clockOutAt",
+          },
+          { status: 400 },
+        );
       }
-      const embed = createTeacherClockOutEmbed({ teacherName, clockInAt, clockOutAt })
-      await sendDiscordNotification(embed, process.env.DISCORD_EMPLOYEE_WEBHOOK_URL)
-      return NextResponse.json({ success: true })
+      const embed = createTeacherClockOutEmbed({
+        teacherName,
+        clockInAt,
+        clockOutAt,
+      });
+      await sendDiscordNotification(
+        embed,
+        process.env.DISCORD_EMPLOYEE_WEBHOOK_URL,
+      );
+      return NextResponse.json({ success: true });
     }
 
-    if (type === 'student_check_in') {
-      const { studentName, checkedInAt, program, classroom } = data
+    if (type === "student_check_in") {
+      const { studentName, checkedInAt, program, classroom } = data;
       if (!studentName || !checkedInAt) {
         return NextResponse.json(
-          { error: 'student_check_in requires studentName and checkedInAt' },
-          { status: 400 }
-        )
+          { error: "student_check_in requires studentName and checkedInAt" },
+          { status: 400 },
+        );
       }
-      const embed = createStudentCheckInEmbed({ studentName, checkedInAt, program, classroom })
-      await sendDiscordNotification(embed, process.env.DISCORD_STUDENT_WEBHOOK_URL)
-      return NextResponse.json({ success: true })
+      const embed = createStudentCheckInEmbed({
+        studentName,
+        checkedInAt,
+        program,
+        classroom,
+      });
+      await sendDiscordNotification(
+        embed,
+        process.env.DISCORD_STUDENT_WEBHOOK_URL,
+      );
+      return NextResponse.json({ success: true });
     }
 
-    if (type === 'student_check_out') {
-      const { studentName, checkedInAt, checkedOutAt, program, classroom } = data
+    if (type === "student_check_out") {
+      const { studentName, checkedInAt, checkedOutAt, program, classroom } =
+        data;
       if (!studentName || !checkedInAt || !checkedOutAt) {
         return NextResponse.json(
-          { error: 'student_check_out requires studentName, checkedInAt, and checkedOutAt' },
-          { status: 400 }
-        )
+          {
+            error:
+              "student_check_out requires studentName, checkedInAt, and checkedOutAt",
+          },
+          { status: 400 },
+        );
       }
-      const embed = createStudentCheckOutEmbed({ studentName, checkedInAt, checkedOutAt, program, classroom })
-      await sendDiscordNotification(embed, process.env.DISCORD_STUDENT_WEBHOOK_URL)
-      return NextResponse.json({ success: true })
+      const embed = createStudentCheckOutEmbed({
+        studentName,
+        checkedInAt,
+        checkedOutAt,
+        program,
+        classroom,
+      });
+      await sendDiscordNotification(
+        embed,
+        process.env.DISCORD_STUDENT_WEBHOOK_URL,
+      );
+      return NextResponse.json({ success: true });
     }
 
-    return NextResponse.json({ error: `Unknown type: ${type}` }, { status: 400 })
+    if (type === "help_request") {
+      const {
+        parentName,
+        parentEmail,
+        description,
+        helpRequestId,
+        screenName,
+        attachmentCount,
+      } = data;
+      if (!parentName || !parentEmail || !description || !helpRequestId) {
+        return NextResponse.json(
+          {
+            error:
+              "help_request requires parentName, parentEmail, description, and helpRequestId",
+          },
+          { status: 400 },
+        );
+      }
+      const embed = createHelpRequestEmbed({
+        parentName,
+        parentEmail,
+        description,
+        helpRequestId,
+        pageUrl: screenName ?? null,
+        attachmentCount:
+          typeof attachmentCount === "number" ? attachmentCount : 0,
+      });
+      await sendDiscordNotification(embed, process.env.DISCORD_WEBHOOK_URL);
+      return NextResponse.json({ success: true });
+    }
+
+    return NextResponse.json(
+      { error: `Unknown type: ${type}` },
+      { status: 400 },
+    );
   } catch (error) {
-    console.error('Error sending Discord notification:', error)
+    console.error("Error sending Discord notification:", error);
     return NextResponse.json(
       {
-        error: 'Failed to send Discord notification',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        error: "Failed to send Discord notification",
+        details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }
