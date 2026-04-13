@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, Trash2 } from "lucide-react";
+import { formatPhone } from "@/app/utils/formatPhone";
 
 interface Child {
   name: string;
@@ -54,7 +55,11 @@ export default function InfoSessionRSVPForm() {
     >
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === "phone") {
+      setFormData((prev) => ({ ...prev, phone: formatPhone(value) }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleProgramToggle = (programId: string) => {
