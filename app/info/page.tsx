@@ -155,9 +155,10 @@ export default function InfoSessionPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
-            <span className="inline-block px-6 py-2 bg-white/20 backdrop-blur-sm text-white text-sm font-semibold rounded-full border border-white/30">
-              Virtual Info Session
-            </span>
+            <div className="flex items-center gap-2 px-6 py-2 bg-white/20 backdrop-blur-sm text-white text-sm font-semibold rounded-full border border-white/30">
+              <span>📅</span>
+              <span>Saturday, April 18, 2026 · 10:00 AM CST · Google Meet</span>
+            </div>
           </motion.div>
 
           <motion.h1
@@ -179,17 +180,18 @@ export default function InfoSessionPage() {
             philosophy, and what makes our school unique. Ask us anything!
           </motion.p>
 
-          {/* Date/time pill */}
           <motion.div
             className="flex justify-center"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
           >
-            <div className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-full font-semibold font-body shadow-md text-sm">
-              <span>📅</span>
-              <span>Saturday, April 18, 2026 · 10:00 AM CST · Google Meet</span>
-            </div>
+            <a
+              href="#rsvp"
+              className="px-8 py-3 bg-white text-primary font-semibold font-body rounded-full shadow-md hover:bg-white/90 transition-colors text-sm"
+            >
+              Reserve My Spot →
+            </a>
           </motion.div>
         </div>
       </section>
@@ -324,6 +326,9 @@ export default function InfoSessionPage() {
         </div>
       </section>
 
+      {/* RSVP Form */}
+      <InfoSessionRSVPForm />
+
       {/* Programs Snapshot */}
       <section className="pb-16 px-6 sm:px-12 lg:px-16">
         <div className="max-w-6xl mx-auto">
@@ -445,9 +450,6 @@ export default function InfoSessionPage() {
           </div>
         </div>
       </section>
-
-      {/* RSVP Form */}
-      <InfoSessionRSVPForm />
 
       {/* Contact nudge */}
       <section className="pb-20 px-8 sm:px-12 lg:px-16">

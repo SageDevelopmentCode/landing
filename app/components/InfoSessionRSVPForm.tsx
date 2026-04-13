@@ -114,7 +114,7 @@ export default function InfoSessionRSVPForm() {
   const labelClass = "block text-sm font-semibold text-gray-700 mb-2 font-body";
 
   return (
-    <section className="py-16 px-8 sm:px-12 lg:px-16">
+    <section id="rsvp" className="py-16 px-8 sm:px-12 lg:px-16">
       <div className="max-w-2xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -159,6 +159,19 @@ export default function InfoSessionRSVPForm() {
                 meet.google.com/epm-ashp-tyf
               </a>
             </p>
+            <div className="mt-6">
+              <a
+                href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Sage+Field+Parent+Info+Session&dates=20260418T150000Z/20260418T160000Z&details=Join+us+on+Google+Meet%3A+https%3A%2F%2Fmeet.google.com%2Fepm-ashp-tyf&location=https%3A%2F%2Fmeet.google.com%2Fepm-ashp-tyf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors font-body"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19 4h-1V2h-2v2H8V2H6v2H5C3.9 4 3 4.9 3 6v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zm0-13H5V6h14v1z"/>
+                </svg>
+                Add to Google Calendar
+              </a>
+            </div>
           </motion.div>
         ) : (
         <motion.div
