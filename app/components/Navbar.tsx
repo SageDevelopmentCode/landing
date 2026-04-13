@@ -95,7 +95,7 @@ const NAV_TABS: NavTab[] = [
       { label: "Tour", action: { kind: "link", href: "/tour" }, badge: "New!" },
       {
         label: "Info Session",
-        action: { kind: "link", href: "/info-session" },
+        action: { kind: "link", href: "/info" },
         badge: "Apr 18",
       },
       { label: "FAQ", action: { kind: "link", href: "/faq" } },
