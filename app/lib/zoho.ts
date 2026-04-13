@@ -1424,9 +1424,9 @@ export async function buildInfoSessionRSVPEmail(opts: {
   <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; margin: 28px 0;">
     <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 15px;">Event Details</p>
     <p style="margin: 4px 0;"><strong>Date:</strong> Saturday, April 18, 2026</p>
-    <p style="margin: 4px 0;"><strong>Time:</strong> 11:00 AM CST</p>
-    <p style="margin: 4px 0;"><strong>Format:</strong> Virtual via Zoom</p>
-    <p style="margin: 12px 0 0 0; font-size: 14px; color: #555;">We'll send you the Zoom link a few days before the session — keep an eye on your inbox!</p>
+    <p style="margin: 4px 0;"><strong>Time:</strong> 10:00 AM CST</p>
+    <p style="margin: 4px 0;"><strong>Format:</strong> Virtual via Google Meet</p>
+    <p style="margin: 12px 0 0 0; font-size: 14px;"><strong>Video call link:</strong> <a href="https://meet.google.com/epm-ashp-tyf" style="color: #5a7a5a;">https://meet.google.com/epm-ashp-tyf</a></p>
   </div>
 
   <h2 style="font-size: 18px; margin-top: 32px; margin-bottom: 8px; color: #2c2c2c;">What We'll Cover</h2>

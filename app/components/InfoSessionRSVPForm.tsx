@@ -130,8 +130,8 @@ export default function InfoSessionRSVPForm() {
             RSVP for the Info Session
           </h2>
           <p className="text-gray-500 font-body text-base">
-            Fill out the form below and we&apos;ll send you the Zoom link closer
-            to the date.
+            Fill out the form below to reserve your spot. The Google Meet link
+            is included in your confirmation email.
           </p>
         </motion.div>
 
@@ -152,7 +152,12 @@ export default function InfoSessionRSVPForm() {
               A confirmation email is on its way to <span className="font-semibold text-gray-700">{formData.email}</span>.
             </p>
             <p className="text-gray-400 font-body text-sm">
-              We&apos;ll send you the Zoom link a few days before April 18 — see you there!
+              Join via Google Meet on April 18 · 10:00 AM CST
+            </p>
+            <p className="text-gray-400 font-body text-sm mt-1">
+              <a href="https://meet.google.com/epm-ashp-tyf" className="text-primary hover:underline font-semibold">
+                meet.google.com/epm-ashp-tyf
+              </a>
             </p>
           </motion.div>
         ) : (
@@ -375,7 +380,7 @@ export default function InfoSessionRSVPForm() {
             </button>
 
             <p className="text-xs text-gray-400 text-center font-body">
-              We&apos;ll send the Zoom link to your email before April 18.
+              The Google Meet link will be included in your confirmation email.
             </p>
           </form>
         </motion.div>

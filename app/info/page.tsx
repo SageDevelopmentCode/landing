@@ -12,8 +12,8 @@ import InfoSessionRSVPForm from "../components/InfoSessionRSVPForm";
 
 const eventDetails = [
   { icon: "📅", label: "Date", value: "Saturday, April 18, 2026" },
-  { icon: "⏰", label: "Time", value: "11:00 AM CST" },
-  { icon: "💻", label: "Format", value: "Virtual via Zoom" },
+  { icon: "⏰", label: "Time", value: "10:00 AM CST" },
+  { icon: "💻", label: "Format", value: "Virtual via Google Meet" },
   { icon: "🎯", label: "Who It's For", value: "New & enrolled families" },
 ];
 
@@ -175,7 +175,7 @@ export default function InfoSessionPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
           >
-            Join us on Zoom to learn all about Sage Field — our programs,
+            Join us on Google Meet to learn all about Sage Field — our programs,
             philosophy, and what makes our school unique. Ask us anything!
           </motion.p>
 
@@ -188,7 +188,7 @@ export default function InfoSessionPage() {
           >
             <div className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-full font-semibold font-body shadow-md text-sm">
               <span>📅</span>
-              <span>Saturday, April 18, 2026 · 11:00 AM CST · Zoom</span>
+              <span>Saturday, April 18, 2026 · 10:00 AM CST · Google Meet</span>
             </div>
           </motion.div>
         </div>
