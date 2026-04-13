@@ -1427,6 +1427,9 @@ export async function buildInfoSessionRSVPEmail(opts: {
     <p style="margin: 4px 0;"><strong>Time:</strong> 10:00 AM CST</p>
     <p style="margin: 4px 0;"><strong>Format:</strong> Virtual via Google Meet</p>
     <p style="margin: 12px 0 0 0; font-size: 14px;"><strong>Video call link:</strong> <a href="https://meet.google.com/epm-ashp-tyf" style="color: #5a7a5a;">https://meet.google.com/epm-ashp-tyf</a></p>
+    <p style="margin: 16px 0 0 0;">
+      <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Sage+Field+Parent+Info+Session&dates=20260418T150000Z/20260418T160000Z&details=Join+us+on+Google+Meet%3A+https%3A%2F%2Fmeet.google.com%2Fepm-ashp-tyf&location=https%3A%2F%2Fmeet.google.com%2Fepm-ashp-tyf" style="display: inline-block; background: #4285f4; color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-family: Georgia, serif; font-size: 14px;">Add to Google Calendar</a>
+    </p>
   </div>
 
   <h2 style="font-size: 18px; margin-top: 32px; margin-bottom: 8px; color: #2c2c2c;">What We'll Cover</h2>
@@ -1461,11 +1464,7 @@ export async function buildInfoSessionRSVPEmail(opts: {
     <p style="margin: 10px 0 0 0; font-size: 14px;"><a href="https://www.sagefield.co/homeschool" style="color: #5a7a5a;">Learn more about Homeschool Drop-In →</a></p>
   </div>
 
-  <p style="text-align: center; margin: 32px 0 16px 0;">
-    <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Sage+Field+Parent+Info+Session&dates=20260418T150000Z/20260418T160000Z&details=Join+us+on+Google+Meet%3A+https%3A%2F%2Fmeet.google.com%2Fepm-ashp-tyf&location=https%3A%2F%2Fmeet.google.com%2Fepm-ashp-tyf" style="display: inline-block; background: #4285f4; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 4px; font-family: Georgia, serif; font-size: 15px;">Add to Google Calendar</a>
-  </p>
-
-  <p style="text-align: center; margin: 0 0 32px 0;">
+  <p style="text-align: center; margin: 32px 0;">
     <a href="https://www.sagefield.co/apply" style="display: inline-block; background: #5a7a5a; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 4px; font-family: Georgia, serif; font-size: 15px;">Apply for a Program</a>
   </p>
 
