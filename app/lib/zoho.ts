@@ -1419,7 +1419,7 @@ export async function buildInfoSessionInviteEmail(opts: {
 <body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
   <p style="margin-bottom: 24px;">Hi ${firstName},</p>
 
-  <p>We're hosting a <a href="https://sagefield.co/info" style="color: #5a7a5a;">virtual Parent Info Session</a> on <strong>Saturday, April 18th at 10:00 AM CST</strong>, and we'd love for you to join us — whether you're a new family curious about Sage Field or already enrolled and want to learn more about what's coming up.</p>
+  <p>As we get closer to our Open House on April 25th, we're hosting a <a href="https://sagefield.co/info" style="color: #5a7a5a;">virtual Parent Info Session</a> on <strong>Saturday, April 18th at 10:00 AM CST</strong>, and we'd love for you to join us. Whether you're a new family curious about Sage Field or already enrolled and want to learn more about what's coming up, this one's for you.</p>
 
   <p>Sage Field is a small private microschool in Round Rock, TX for children ages 4–11. We're outdoor-focused with hands-on learning, movement, art, music, and real academic work, all in a small group of about 10 kids. It's the kind of place where children actually look forward to school.</p>
 

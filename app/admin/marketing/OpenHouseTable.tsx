@@ -8,6 +8,7 @@ import type { OpenHouseRsvp } from './page'
 import { AddRsvpSidebar } from './AddRsvpSidebar'
 import { EmailThread } from '../components/EmailThread'
 import { sendOpenHouseReminderEmail } from '../../actions/sendOpenHouseReminderEmail'
+import { sendInfoSessionInviteEmail } from '../../actions/sendInfoSessionInviteEmail'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -27,6 +28,9 @@ export function OpenHouseTable({ rsvps, enrolledEmailsArr }: { rsvps: OpenHouseR
   const [reminderSending, setReminderSending] = useState(false)
   const [reminderSent, setReminderSent] = useState(false)
   const [reminderError, setReminderError] = useState<string | null>(null)
+  const [infoEmailSending, setInfoEmailSending] = useState(false)
+  const [infoEmailSent, setInfoEmailSent] = useState(false)
+  const [infoEmailError, setInfoEmailError] = useState<string | null>(null)
   const enrollmentMap = new Map(enrolledEmailsArr.map(({ email, status }) => [email, status]))
   const getEnrollmentStatus = (email: string) => enrollmentMap.get(email.toLowerCase()) ?? null
   const totalAdults = localRsvps.reduce((sum, r) => sum + (r.adults_attending ?? 0), 0)
@@ -77,6 +81,20 @@ export function OpenHouseTable({ rsvps, enrolledEmailsArr }: { rsvps: OpenHouseR
         />
       </>
     )
+  }
+
+  const handleSendInfoSessionEmail = async (rsvp: OpenHouseRsvp) => {
+    if (infoEmailSending || infoEmailSent) return
+    setInfoEmailSending(true)
+    setInfoEmailError(null)
+    const result = await sendInfoSessionInviteEmail({ name: rsvp.name, email: rsvp.email })
+    setInfoEmailSending(false)
+    if (result.success) {
+      setInfoEmailSent(true)
+      setTimeout(() => setInfoEmailSent(false), 3000)
+    } else {
+      setInfoEmailError(result.error ?? 'Failed to send email')
+    }
   }
 
   const handleSendReminder = async (rsvp: OpenHouseRsvp) => {
@@ -176,7 +194,7 @@ export function OpenHouseTable({ rsvps, enrolledEmailsArr }: { rsvps: OpenHouseR
         headers={['Name', 'Status', 'Email', 'Phone', 'Adults', 'Children', 'Notes', ...(showSubmitted ? ['Submitted'] : [])]}
       >
         {localRsvps.map((rsvp, i) => (
-          <TableRow key={rsvp.id} index={i} onClick={() => { setSelectedRsvp(rsvp); setReminderSent(false); setReminderError(null) }} style={{ cursor: 'pointer' }}>
+          <TableRow key={rsvp.id} index={i} onClick={() => { setSelectedRsvp(rsvp); setReminderSent(false); setReminderError(null); setInfoEmailSent(false); setInfoEmailError(null) }} style={{ cursor: 'pointer' }}>
             <TableCell>
               <span style={{ fontWeight: 500, color: colors.textPrimary }}>
                 {rsvp.name}
@@ -345,6 +363,24 @@ export function OpenHouseTable({ rsvps, enrolledEmailsArr }: { rsvps: OpenHouseR
                     {reminderSending ? 'Sending…' : reminderSent ? '✓ Sent!' : 'Send Reminder 1'}
                   </button>
                   {reminderError && <span style={{ fontSize: '12px', color: '#DC2626' }}>{reminderError}</span>}
+                  <button
+                    onClick={() => handleSendInfoSessionEmail(selectedRsvp)}
+                    disabled={infoEmailSending || infoEmailSent}
+                    style={{
+                      backgroundColor: '#2C5F2E',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '6px 12px',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      cursor: infoEmailSending || infoEmailSent ? 'not-allowed' : 'pointer',
+                      opacity: infoEmailSending || infoEmailSent ? 0.5 : 1,
+                    }}
+                  >
+                    {infoEmailSending ? 'Sending…' : infoEmailSent ? '✓ Sent!' : 'Send Info Session Invite'}
+                  </button>
+                  {infoEmailError && <span style={{ fontSize: '12px', color: '#DC2626' }}>{infoEmailError}</span>}
                 </div>
               </div>
 
