@@ -1406,10 +1406,59 @@ export async function buildOpenHouseReminderEmail(opts: {
 /**
  * Build HTML confirmation email for an info session RSVP (April 18, 2026 virtual)
  */
+export async function buildInfoSessionInviteEmail(opts: {
+  name: string;
+}): Promise<{ subject: string; content: string }> {
+  const firstName = opts.name.split(" ")[0];
+  const subject =
+    "Sage Field Virtual Parent Info Session — April 18th at 10am CST";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Hi ${firstName},</p>
+
+  <p>We're hosting a <a href="https://sagefield.co/info" style="color: #5a7a5a;">virtual Parent Info Session</a> on <strong>Saturday, April 18th at 10:00 AM CST</strong>, and we'd love for you to join us — whether you're a new family curious about Sage Field or already enrolled and want to learn more about what's coming up.</p>
+
+  <p>Sage Field is a small private microschool in Round Rock, TX for children ages 4–11. We're outdoor-focused with hands-on learning, movement, art, music, and real academic work, all in a small group of about 10 kids. It's the kind of place where children actually look forward to school.</p>
+
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; margin: 28px 0;">
+    <p style="margin: 0 0 10px 0; font-weight: bold; font-size: 15px;">We'll walk through everything:</p>
+    <ul style="padding-left: 20px; margin: 0;">
+      <li style="margin-bottom: 6px;"><strong>Summer 2026</strong> — May 26 through Aug 13, Mon–Thu, ages 4–11</li>
+      <li style="margin-bottom: 6px;"><strong>School Year 2026–2027</strong> — Full microschool experience starting August</li>
+      <li style="margin-bottom: 6px;"><strong>Homeschool Drop-In</strong> — Flexible 1–5 days/week for homeschool families</li>
+    </ul>
+    <p style="margin: 12px 0 0 0; font-size: 14px; color: #555;">Our philosophy, a peek at a typical day, pricing, and plenty of time for your questions.</p>
+  </div>
+
+  <p>It's a casual virtual meetup on Google Meet and a chance to see if Sage Field might be a good fit for your family.</p>
+
+  <p style="text-align: center; margin: 32px 0;">
+    <a href="https://sagefield.co/info" style="display: inline-block; background: #5a7a5a; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 4px; font-family: Georgia, serif; font-size: 15px;">RSVP Here →</a>
+  </p>
+
+  <p>If you have any questions before then, feel free to reach out directly:</p>
+  <ul style="padding-left: 20px; margin: 8px 0;">
+    <li style="margin-bottom: 6px;">📧 <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></li>
+    <li style="margin-bottom: 6px;">📱 <a href="tel:5126775872" style="color: #5a7a5a;">(512) 677-5872</a></li>
+  </ul>
+
+  <p style="margin-top: 32px;">Hope to see you there!</p>
+  <p style="margin-top: 4px;"><strong>Sabrina Obnamia</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
 export async function buildInfoSessionRSVPEmail(opts: {
   firstName: string;
 }): Promise<{ subject: string; content: string }> {
-  const subject = "You're registered — Sage Field Virtual Info Session, April 18";
+  const subject =
+    "You're registered — Sage Field Virtual Info Session, April 18";
   const content = `
 <!DOCTYPE html>
 <html>

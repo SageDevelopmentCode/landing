@@ -9,6 +9,7 @@ import { updateWaitlistStatus, updateContactStatus } from '../../actions/updateL
 import { updateWaitlistLead, updateContactLead, updateCallNotes } from '../../actions/updateLeadFields'
 import { deleteWaitlistLead, deleteContactLead } from '../../actions/deleteLead'
 import { sendFacebookLeadEmail } from '../../actions/sendFacebookLeadEmail'
+import { sendInfoSessionInviteEmail } from '../../actions/sendInfoSessionInviteEmail'
 import { TagEditor } from './TagEditor'
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
@@ -125,6 +126,9 @@ export function LeadsDetailSidebar({
   const [fbEmailSending, setFbEmailSending] = useState(false)
   const [fbEmailSent, setFbEmailSent] = useState(false)
   const [fbEmailError, setFbEmailError] = useState<string | null>(null)
+  const [infoEmailSending, setInfoEmailSending] = useState(false)
+  const [infoEmailSent, setInfoEmailSent] = useState(false)
+  const [infoEmailError, setInfoEmailError] = useState<string | null>(null)
 
   const callNotesEditor = useEditor({
     extensions: [StarterKit, Highlight, TextStyle],
@@ -154,6 +158,8 @@ export function LeadsDetailSidebar({
       setCallNotesDirty(false)
       setFbEmailSent(false)
       setFbEmailError(null)
+      setInfoEmailSent(false)
+      setInfoEmailError(null)
     }
   }, [submission?.id])
 
@@ -302,6 +308,21 @@ export function LeadsDetailSidebar({
       setTimeout(() => setFbEmailSent(false), 3000)
     } else {
       setFbEmailError(result.error ?? 'Failed to send email')
+    }
+  }
+
+  const handleSendInfoSessionEmail = async () => {
+    if (infoEmailSending) return
+    setInfoEmailSending(true)
+    setInfoEmailError(null)
+    const name = isWaitlist ? (currentSubmission as WaitlistLead).parent_name : (currentSubmission as ContactLead).name
+    const result = await sendInfoSessionInviteEmail({ name, email: currentSubmission.email })
+    setInfoEmailSending(false)
+    if (result.success) {
+      setInfoEmailSent(true)
+      setTimeout(() => setInfoEmailSent(false), 3000)
+    } else {
+      setInfoEmailError(result.error ?? 'Failed to send email')
     }
   }
 
@@ -735,6 +756,15 @@ export function LeadsDetailSidebar({
               {fbEmailSending ? 'Sending…' : fbEmailSent ? '✓ Sent!' : 'Send Facebook Lead Email'}
             </button>
             {fbEmailError && <span className="text-xs text-red-600">{fbEmailError}</span>}
+            <button
+              onClick={handleSendInfoSessionEmail}
+              disabled={infoEmailSending || infoEmailSent}
+              className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+            >
+              {infoEmailSending ? 'Sending…' : infoEmailSent ? '✓ Sent!' : 'Send Info Session Invite'}
+            </button>
+            {infoEmailError && <span className="text-xs text-red-600">{infoEmailError}</span>}
           </div>
         </div>
 
