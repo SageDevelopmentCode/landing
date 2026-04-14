@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { motion } from 'framer-motion'
 import { createBrowserClient } from '@supabase/ssr'
 import { Table, TableRow, TableCell } from '../components/Table'
 import { InlineStatusEditor } from '../components/InlineStatusEditor'
@@ -213,7 +214,7 @@ export default function LeadsPage() {
           </p>
         </div>
         <div className="flex gap-3">
-          <div className="relative" ref={columnsDropdownRef}>
+          <div className="relative hidden md:block" ref={columnsDropdownRef}>
             <button
               onClick={() => setColumnsDropdownOpen((o) => !o)}
               className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-all duration-200 hover:scale-105 active:scale-95"
@@ -294,16 +295,17 @@ export default function LeadsPage() {
           </button>
           <a
             href="/api/admin/export-leads"
-            className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:scale-105 active:scale-95"
+            className="inline-flex items-center justify-center px-2.5 py-2.5 md:px-4 md:py-2 text-sm font-medium text-white transition-all duration-200 hover:scale-105 active:scale-95"
             style={{
               backgroundColor: colors.mistyForest,
               borderRadius: radius.md,
               boxShadow: shadows.soft,
               border: 'none',
             }}
+            title="Export to CSV"
           >
             <svg
-              className="-ml-1 mr-1.5 h-4 w-4"
+              className="h-4 w-4 md:-ml-1 md:mr-1.5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -315,12 +317,13 @@ export default function LeadsPage() {
                 d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
               />
             </svg>
-            Export to CSV
+            <span className="hidden md:inline">Export to CSV</span>
           </a>
         </div>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="relative">
+        <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <button
           onClick={() => setStatusFilter('all')}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-all duration-150 hover:scale-105 active:scale-95"
@@ -372,6 +375,11 @@ export default function LeadsPage() {
             </button>
           )
         })}
+        </div>
+        <div
+          className="absolute right-0 top-0 bottom-1 w-8 pointer-events-none"
+          style={{ background: `linear-gradient(to right, transparent, ${colors.bg})` }}
+        />
       </div>
 
       {Object.keys(tagCounts).length > 0 && (
@@ -379,36 +387,42 @@ export default function LeadsPage() {
           <p className="text-xs font-medium mb-1.5" style={{ color: colors.textSecondary }}>
             Filter by tag
           </p>
-          <div className="flex gap-2 overflow-x-auto pb-1">
-          {Object.keys(tagCounts).map((tag) => {
-            const isActive = tagFilters.has(tag)
-            const color = getTagColor(tag)
-            return (
-              <button
-                key={tag}
-                onClick={() => toggleTag(tag)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-all duration-150 hover:scale-105 active:scale-95"
-                style={{
-                  borderRadius: radius.full,
-                  backgroundColor: isActive ? color.bg : colors.warmLinen,
-                  color: isActive ? color.text : colors.textSecondary,
-                  border: `1px solid ${isActive ? color.border : colors.border}`,
-                  cursor: 'pointer',
-                }}
-              >
-                {tag}
-                <span
-                  className="inline-flex items-center justify-center w-4 h-4 text-xs font-semibold rounded-full"
+          <div className="relative">
+            <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {Object.keys(tagCounts).map((tag) => {
+              const isActive = tagFilters.has(tag)
+              const color = getTagColor(tag)
+              return (
+                <button
+                  key={tag}
+                  onClick={() => toggleTag(tag)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-all duration-150 hover:scale-105 active:scale-95"
                   style={{
-                    backgroundColor: isActive ? 'rgba(0,0,0,0.08)' : colors.border,
+                    borderRadius: radius.full,
+                    backgroundColor: isActive ? color.bg : colors.warmLinen,
                     color: isActive ? color.text : colors.textSecondary,
+                    border: `1px solid ${isActive ? color.border : colors.border}`,
+                    cursor: 'pointer',
                   }}
                 >
-                  {tagCounts[tag]}
-                </span>
-              </button>
-            )
-          })}
+                  {tag}
+                  <span
+                    className="inline-flex items-center justify-center w-4 h-4 text-xs font-semibold rounded-full"
+                    style={{
+                      backgroundColor: isActive ? 'rgba(0,0,0,0.08)' : colors.border,
+                      color: isActive ? color.text : colors.textSecondary,
+                    }}
+                  >
+                    {tagCounts[tag]}
+                  </span>
+                </button>
+              )
+            })}
+            </div>
+            <div
+              className="absolute right-0 top-0 bottom-1 w-8 pointer-events-none"
+              style={{ background: `linear-gradient(to right, transparent, ${colors.bg})` }}
+            />
           </div>
         </div>
       )}
@@ -422,116 +436,224 @@ export default function LeadsPage() {
           <p className="text-gray-500">No leads match this filter</p>
         </div>
       ) : (
-        <Table
-          headers={COLUMNS.filter((c) => !hiddenColumns.has(c.key)).map((c) => c.label)}
-        >
-          {filteredLeads.map((lead, index) => {
-            const isWaitlist = lead.type === 'waitlist'
-            const isContact = lead.type === 'contact'
+        <>
+          {/* Desktop: table view */}
+          <div className="hidden md:block">
+            <Table
+              headers={COLUMNS.filter((c) => !hiddenColumns.has(c.key)).map((c) => c.label)}
+            >
+              {filteredLeads.map((lead, index) => {
+                const isWaitlist = lead.type === 'waitlist'
+                const isContact = lead.type === 'contact'
 
-            return (
-              <TableRow
-                key={lead.id}
-                index={index}
-                onClick={() => setSelectedLead(lead)}
-              >
-                {!hiddenColumns.has('type') && (
-                  <TableCell>
-                    <span
-                      className={`inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full border ${
-                        isWaitlist
-                          ? 'bg-amber-50 text-amber-700 border-amber-200'
-                          : 'bg-blue-50 text-blue-700 border-blue-200'
-                      }`}
-                    >
-                      {isWaitlist ? 'Waitlist' : 'Contact'}
-                    </span>
-                  </TableCell>
-                )}
-                {!hiddenColumns.has('name') && (
-                  <TableCell>
-                    <div className="font-medium">
-                      {isWaitlist ? lead.parent_name : lead.name}
-                    </div>
-                  </TableCell>
-                )}
-                {!hiddenColumns.has('contact') && (
-                  <TableCell>
-                    <div className="max-w-[160px] truncate">{lead.email}</div>
-                    <div className="text-xs text-gray-400 font-body max-w-[160px] truncate">
-                      {lead.phone}
-                    </div>
-                  </TableCell>
-                )}
-                {!hiddenColumns.has('child') && (
-                  <TableCell>
-                    {isWaitlist ? (
-                      <>
-                        <div className="max-w-[120px] truncate">{lead.child_name}</div>
-                        <div className="text-xs text-gray-400 font-body">
-                          Age: {lead.child_age || 'N/A'}
+                return (
+                  <TableRow
+                    key={lead.id}
+                    index={index}
+                    onClick={() => setSelectedLead(lead)}
+                  >
+                    {!hiddenColumns.has('type') && (
+                      <TableCell>
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full border ${
+                            isWaitlist
+                              ? 'bg-amber-50 text-amber-700 border-amber-200'
+                              : 'bg-blue-50 text-blue-700 border-blue-200'
+                          }`}
+                        >
+                          {isWaitlist ? 'Waitlist' : 'Contact'}
+                        </span>
+                      </TableCell>
+                    )}
+                    {!hiddenColumns.has('name') && (
+                      <TableCell>
+                        <div className="font-medium">
+                          {isWaitlist ? lead.parent_name : lead.name}
                         </div>
-                      </>
-                    ) : (
-                      <div className="text-gray-400">—</div>
+                      </TableCell>
                     )}
-                  </TableCell>
-                )}
-                {!hiddenColumns.has('message') && (
-                  <TableCell>
-                    {isContact ? (
-                      <div className="max-w-[160px] truncate" title={lead.message}>
-                        {lead.message}
-                      </div>
-                    ) : isWaitlist && lead.special_interests ? (
-                      <div className="max-w-[160px] truncate" title={lead.special_interests}>
-                        {lead.special_interests}
-                      </div>
-                    ) : (
-                      <div className="text-gray-400">—</div>
+                    {!hiddenColumns.has('contact') && (
+                      <TableCell>
+                        <div className="max-w-[160px] truncate">{lead.email}</div>
+                        <div className="text-xs text-gray-400 font-body max-w-[160px] truncate">
+                          {lead.phone}
+                        </div>
+                      </TableCell>
                     )}
-                  </TableCell>
-                )}
-                {!hiddenColumns.has('start_date') && (
-                  <TableCell>
-                    <div className="text-gray-600">
-                      {isWaitlist && lead.preferred_start_date
-                        ? lead.preferred_start_date
-                        : '—'}
+                    {!hiddenColumns.has('child') && (
+                      <TableCell>
+                        {isWaitlist ? (
+                          <>
+                            <div className="max-w-[120px] truncate">{lead.child_name}</div>
+                            <div className="text-xs text-gray-400 font-body">
+                              Age: {lead.child_age || 'N/A'}
+                            </div>
+                          </>
+                        ) : (
+                          <div className="text-gray-400">—</div>
+                        )}
+                      </TableCell>
+                    )}
+                    {!hiddenColumns.has('message') && (
+                      <TableCell>
+                        {isContact ? (
+                          <div className="max-w-[160px] truncate" title={lead.message}>
+                            {lead.message}
+                          </div>
+                        ) : isWaitlist && lead.special_interests ? (
+                          <div className="max-w-[160px] truncate" title={lead.special_interests}>
+                            {lead.special_interests}
+                          </div>
+                        ) : (
+                          <div className="text-gray-400">—</div>
+                        )}
+                      </TableCell>
+                    )}
+                    {!hiddenColumns.has('start_date') && (
+                      <TableCell>
+                        <div className="text-gray-600">
+                          {isWaitlist && lead.preferred_start_date
+                            ? lead.preferred_start_date
+                            : '—'}
+                        </div>
+                      </TableCell>
+                    )}
+                    {!hiddenColumns.has('status') && (
+                      <TableCell>
+                        <InlineStatusEditor
+                          status={lead.status}
+                          leadId={lead.id}
+                          leadType={lead.type}
+                          onStatusChange={handleLeadUpdate}
+                        />
+                      </TableCell>
+                    )}
+                    {!hiddenColumns.has('tags') && (
+                      <TableCell>
+                        <TagEditor
+                          tags={lead.tags ?? []}
+                          leadId={lead.id}
+                          leadType={lead.type}
+                          onTagsChange={handleTagsUpdate}
+                        />
+                      </TableCell>
+                    )}
+                    {!hiddenColumns.has('submitted') && (
+                      <TableCell>
+                        <div className="text-gray-600">
+                          {new Date(lead.created_at).toLocaleDateString()}
+                        </div>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                )
+              })}
+            </Table>
+          </div>
+
+          {/* Mobile: card list view */}
+          <motion.div
+            className="block md:hidden space-y-2"
+            initial="hidden"
+            animate="visible"
+            variants={{ visible: { transition: { staggerChildren: 0.04 } } }}
+          >
+            {filteredLeads.map((lead) => {
+              const isWaitlist = lead.type === 'waitlist'
+              return (
+                <motion.button
+                  key={lead.id}
+                  variants={{
+                    hidden: { opacity: 0, y: 8 },
+                    visible: { opacity: 1, y: 0, transition: { duration: 0.2, ease: 'easeOut' } },
+                  }}
+                  onClick={() => setSelectedLead(lead)}
+                  className="w-full text-left active:scale-[0.99] transition-transform"
+                  style={{
+                    background: colors.surface,
+                    border: `1px solid ${colors.border}`,
+                    borderRadius: radius.lg,
+                    boxShadow: shadows.card,
+                    padding: '14px 16px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {/* Row 1: Type badge + Status + Date */}
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full border ${
+                          isWaitlist
+                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : 'bg-blue-50 text-blue-700 border-blue-200'
+                        }`}
+                      >
+                        {isWaitlist ? 'Waitlist' : 'Contact'}
+                      </span>
+                      <span
+                        className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full"
+                        style={{
+                          backgroundColor: leadStatusStyles[lead.status].bg,
+                          color: leadStatusStyles[lead.status].text,
+                        }}
+                      >
+                        {leadStatusLabels[lead.status]}
+                      </span>
                     </div>
-                  </TableCell>
-                )}
-                {!hiddenColumns.has('status') && (
-                  <TableCell>
-                    <InlineStatusEditor
-                      status={lead.status}
-                      leadId={lead.id}
-                      leadType={lead.type}
-                      onStatusChange={handleLeadUpdate}
-                    />
-                  </TableCell>
-                )}
-                {!hiddenColumns.has('tags') && (
-                  <TableCell>
-                    <TagEditor
-                      tags={lead.tags ?? []}
-                      leadId={lead.id}
-                      leadType={lead.type}
-                      onTagsChange={handleTagsUpdate}
-                    />
-                  </TableCell>
-                )}
-                {!hiddenColumns.has('submitted') && (
-                  <TableCell>
-                    <div className="text-gray-600">
+                    <span className="text-xs flex-shrink-0" style={{ color: colors.textTertiary }}>
                       {new Date(lead.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+
+                  {/* Row 2: Name */}
+                  <p className="text-sm font-semibold mb-1 truncate" style={{ color: colors.textPrimary }}>
+                    {isWaitlist ? lead.parent_name : lead.name}
+                  </p>
+
+                  {/* Row 3: Email + phone */}
+                  <p className="text-xs truncate mb-0.5" style={{ color: colors.textSecondary }}>{lead.email}</p>
+                  {lead.phone && (
+                    <p className="text-xs mb-2" style={{ color: colors.textTertiary }}>{lead.phone}</p>
+                  )}
+
+                  {/* Row 4: Child info (waitlist) or message snippet (contact) */}
+                  {isWaitlist && lead.child_name && (
+                    <p className="text-xs mb-1.5" style={{ color: colors.textTertiary }}>
+                      Child: {lead.child_name}{lead.child_age ? `, age ${lead.child_age}` : ''}
+                    </p>
+                  )}
+                  {!isWaitlist && (lead as ContactLead).message && (
+                    <p className="text-xs mb-1.5 line-clamp-2" style={{ color: colors.textTertiary }}>
+                      {(lead as ContactLead).message}
+                    </p>
+                  )}
+
+                  {/* Row 5: Tags */}
+                  {(lead.tags ?? []).length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {(lead.tags ?? []).map((tag) => {
+                        const color = getTagColor(tag)
+                        return (
+                          <span
+                            key={tag}
+                            className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded-full border"
+                            style={{
+                              backgroundColor: color.bg,
+                              color: color.text,
+                              borderColor: color.border,
+                            }}
+                          >
+                            {tag}
+                          </span>
+                        )
+                      })}
                     </div>
-                  </TableCell>
-                )}
-              </TableRow>
-            )
-          })}
-        </Table>
+                  )}
+                </motion.button>
+              )
+            })}
+          </motion.div>
+        </>
       )}
 
       <LeadsDetailSidebar
