@@ -1796,11 +1796,24 @@ function ExpensesTab({
   const totalBudgetActual = budgetRows.reduce((s, r) => s + r.actual, 0);
   const totalBudgetVariance = totalBudgetPlanned - totalBudgetActual;
 
-  // Trend: monthly totals sorted chronologically
-  const trendMonths = Object.keys(byMonth).sort();
+  // Trend: group by month across ALL months (ignore filterMonth), respect filterCat
+  const trendFiltered = expenses.filter((e) => {
+    if (e.is_deleted) return false;
+    if (filterCat && e.category !== filterCat) return false;
+    return true;
+  });
+  const trendByMonth = trendFiltered.reduce<Record<string, BudgetExpense[]>>(
+    (acc, e) => {
+      const key = e.expense_date.slice(0, 7);
+      (acc[key] ??= []).push(e);
+      return acc;
+    },
+    {},
+  );
+  const trendMonths = Object.keys(trendByMonth).sort();
   const maxMonthTotal = Math.max(
     ...trendMonths.map((m) =>
-      byMonth[m].reduce((s, e) => s + Number(e.amount), 0),
+      trendByMonth[m].reduce((s, e) => s + Number(e.amount), 0),
     ),
     1,
   );
@@ -3236,7 +3249,7 @@ function ExpensesTab({
           ) : (
             <div className="space-y-4">
               {trendMonths.map((monthKey) => {
-                const monthTotal = byMonth[monthKey].reduce(
+                const monthTotal = trendByMonth[monthKey].reduce(
                   (s, e) => s + Number(e.amount),
                   0,
                 );
