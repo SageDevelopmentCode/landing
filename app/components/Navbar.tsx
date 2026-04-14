@@ -119,6 +119,12 @@ const NAV_TABS: NavTab[] = [
 
 const ANNOUNCEMENTS = [
   {
+    short: "🎙️ Parent Info Session this Sat!",
+    full: "🎙️ Parent Info Session — this Saturday, April 18 at 10 AM CST!",
+    buttonLabel: "RSVP Now",
+    href: "/info",
+  },
+  {
     short: "🎉 Open House on April 25!",
     full: "🎉 We are hosting an Open House on April 25!",
     buttonLabel: "Join Us!",
