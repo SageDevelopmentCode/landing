@@ -5,7 +5,8 @@ import { Poppins } from 'next/font/google'
 import { cssColors as colors, radius, cssShadows as shadows, spacing } from '../design-system'
 import { OpenHouseTable } from './OpenHouseTable'
 import { TourUnavailabilityView } from './TourUnavailabilityView'
-import type { OpenHouseRsvp, TourBooking } from './page'
+import { InfoSessionTable } from './InfoSessionTable'
+import type { OpenHouseRsvp, TourBooking, InfoSessionRsvp } from './page'
 import type { TourUnavailability } from '@/app/actions/tourUnavailability'
 
 const merriweather = Poppins({
@@ -13,11 +14,12 @@ const merriweather = Poppins({
   subsets: ['latin'],
 })
 
-type SubMenuItem = 'open-house' | 'tour-unavailability'
+type SubMenuItem = 'open-house' | 'tour-unavailability' | 'info-session'
 
 const subMenuItems: { id: SubMenuItem; label: string; sublabel: string }[] = [
   { id: 'open-house', label: 'Open House', sublabel: 'April 25' },
   { id: 'tour-unavailability', label: 'Campus Tours', sublabel: 'Manage availability' },
+  { id: 'info-session', label: 'Info Session', sublabel: 'April 18 RSVPs' },
 ]
 
 export function MarketingClient({
@@ -25,11 +27,13 @@ export function MarketingClient({
   tourUnavailability,
   tourBookings,
   enrolledEmailsArr,
+  infoSessionRsvps,
 }: {
   rsvps: OpenHouseRsvp[]
   tourUnavailability: TourUnavailability[]
   tourBookings: TourBooking[]
   enrolledEmailsArr: { email: string; status: string }[]
+  infoSessionRsvps: InfoSessionRsvp[]
 }) {
   const [active, setActive] = useState<SubMenuItem>('open-house')
 
@@ -138,6 +142,28 @@ export function MarketingClient({
 
         {active === 'tour-unavailability' && (
           <TourUnavailabilityView initial={tourUnavailability} tourBookings={tourBookings} />
+        )}
+
+        {active === 'info-session' && (
+          <div>
+            <div style={{ marginBottom: '28px' }}>
+              <h1
+                className={merriweather.className}
+                style={{
+                  fontSize: '22px',
+                  fontWeight: 900,
+                  color: colors.textPrimary,
+                  marginBottom: '6px',
+                }}
+              >
+                Info Session — April 18
+              </h1>
+              <p style={{ fontSize: '13px', color: colors.textSecondary }}>
+                RSVPs from the parent info session form
+              </p>
+            </div>
+            <InfoSessionTable rsvps={infoSessionRsvps} />
+          </div>
         )}
       </main>
     </div>
