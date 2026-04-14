@@ -85,6 +85,7 @@ export function TagEditor({
     if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
       addTag(inputValue);
+      setIsEditing(false);
     } else if (e.key === "Escape") {
       setIsEditing(false);
       setInputValue("");

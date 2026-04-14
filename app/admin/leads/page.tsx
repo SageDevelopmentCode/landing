@@ -374,13 +374,13 @@ export default function LeadsPage() {
         })}
       </div>
 
-      {PREDEFINED_TAGS.filter((t) => (tagCounts[t] || 0) > 0).length > 0 && (
+      {Object.keys(tagCounts).length > 0 && (
         <div>
           <p className="text-xs font-medium mb-1.5" style={{ color: colors.textSecondary }}>
             Filter by tag
           </p>
           <div className="flex gap-2 overflow-x-auto pb-1">
-          {PREDEFINED_TAGS.filter((t) => (tagCounts[t] || 0) > 0).map((tag) => {
+          {Object.keys(tagCounts).map((tag) => {
             const isActive = tagFilters.has(tag)
             const color = getTagColor(tag)
             return (
