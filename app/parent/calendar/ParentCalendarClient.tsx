@@ -18,7 +18,23 @@ import {
 } from "lucide-react";
 import { Merriweather } from "next/font/google";
 import { motion, AnimatePresence } from "framer-motion";
-import { colors, radius, shadows } from "@/app/admin/design-system";
+// ─── Parent-only design tokens (light mode, fully standalone) ─────────────────
+const colors = {
+  bg:           '#F0F4F1',
+  surface:      '#FFFFFF',
+  elevated:     '#F7FAF8',
+  border:       '#E4EDE7',
+  borderStrong: '#C8DAD0',
+  textPrimary:   '#1A2A20',
+  textSecondary: '#4B6356',
+  textTertiary:  '#8FA898',
+  mistyForest:  '#5E7C68',
+  pastelSage:   '#EBF3EE',
+  accentLight:  'rgba(94,124,104,0.12)',
+  warmLinen:    '#F7FAF8',
+};
+const radius = { sm: '6px', md: '8px', lg: '12px', xl: '16px', full: '9999px' };
+const shadows = { soft: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)' };
 
 const merriweather = Merriweather({
   weight: ["300", "400", "700", "900"],
