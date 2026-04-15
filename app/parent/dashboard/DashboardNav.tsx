@@ -18,8 +18,10 @@ import {
   Bus,
   Receipt,
   Rss,
+  HelpCircle,
 } from "lucide-react";
 import { LucideIcon } from "lucide-react";
+import HelpWidget from "../components/HelpWidget";
 
 const primaryNavItems: { label: string; icon: LucideIcon; href: string }[] = [
   { label: "Enrollment", icon: ClipboardCheck, href: "/parent/dashboard" },
@@ -30,7 +32,7 @@ const primaryNavItems: { label: string; icon: LucideIcon; href: string }[] = [
   { label: "Feed", icon: Rss, href: "/parent/feed" },
 ];
 
-const moreItems: { label: string; icon: LucideIcon; href?: string }[] = [
+const moreItems: { label: string; icon: LucideIcon; href?: string; action?: string }[] = [
   { label: "Forms & Documents", icon: FileText, href: "/parent/forms" },
   { label: "Resources", icon: BookOpen },
   { label: "Photos/Updates", icon: Image },
@@ -38,10 +40,12 @@ const moreItems: { label: string; icon: LucideIcon; href?: string }[] = [
   { label: "Emergency Contacts", icon: Phone, href: "/parent/emergency-contacts" },
   { label: "Transportation", icon: Bus },
   { label: "Reimbursement", icon: Receipt },
+  { label: "Need Help", icon: HelpCircle, action: "help" },
 ];
 
 export default function DashboardNav() {
   const [moreOpen, setMoreOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
@@ -92,13 +96,25 @@ export default function DashboardNav() {
 
         {moreOpen && (
           <div className="absolute left-1/2 -translate-x-1/2 mt-1.5 w-52 bg-white border border-gray-100 rounded-xl shadow-sm z-50 py-1.5">
-            {moreItems.map(({ label, icon: Icon, href }) => {
+            {moreItems.map(({ label, icon: Icon, href, action }) => {
               const isActive = !!href && pathname === href;
               const baseClass = `flex items-center gap-1.5 w-full text-left px-4 py-2 text-sm font-body transition-colors cursor-pointer ${
                 isActive
                   ? "text-[#4a7c59] bg-[#4a7c59]/8 font-semibold"
                   : "text-gray-700 hover:bg-gray-50 hover:text-[#4a7c59]"
               }`;
+              if (action === "help") {
+                return (
+                  <button
+                    key={label}
+                    onClick={() => { setMoreOpen(false); setHelpOpen(true); }}
+                    className={baseClass}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {label}
+                  </button>
+                );
+              }
               return href ? (
                 <Link
                   key={label}
@@ -123,6 +139,7 @@ export default function DashboardNav() {
           </div>
         )}
       </div>
+      <HelpWidget hideFloatingButton open={helpOpen} onOpenChange={setHelpOpen} />
     </nav>
   );
 }

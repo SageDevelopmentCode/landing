@@ -1,6 +1,6 @@
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
 import { redirect } from 'next/navigation'
-import HelpWidget from './components/HelpWidget'
+import HelpWidgetWrapper from './components/HelpWidgetWrapper'
 
 export default async function ParentLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createServerSupabaseClient()
@@ -25,7 +25,7 @@ export default async function ParentLayout({ children }: { children: React.React
   return (
     <>
       {children}
-      <HelpWidget />
+      <HelpWidgetWrapper />
     </>
   )
 }

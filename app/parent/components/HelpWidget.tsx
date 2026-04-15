@@ -6,9 +6,21 @@ import { AnimatePresence, motion } from "framer-motion";
 import { X, HelpCircle, Paperclip, Send, Loader2 } from "lucide-react";
 import { submitHelpRequest } from "@/app/actions/submitHelpRequest";
 
-export default function HelpWidget() {
+interface HelpWidgetProps {
+  hideFloatingButton?: boolean;
+  open?: boolean;
+  onOpenChange?: (v: boolean) => void;
+}
+
+export default function HelpWidget({ hideFloatingButton, open, onOpenChange }: HelpWidgetProps = {}) {
   const [mounted, setMounted] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  const isOpen = open !== undefined ? open : internalOpen;
+  const setIsOpen = (v: boolean) => {
+    setInternalOpen(v);
+    onOpenChange?.(v);
+  };
   const [description, setDescription] = useState("");
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [submitted, setSubmitted] = useState(false);
@@ -63,23 +75,25 @@ export default function HelpWidget() {
   return (
     <>
       {/* Floating trigger button */}
-      <motion.button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-40 flex items-center gap-2
-                   px-4 py-3 rounded-full bg-primary text-white
-                   shadow-lg font-body font-semibold text-sm
-                   hover:bg-primary-hover transition-colors cursor-pointer
-                   focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
-        aria-label="Open help widget"
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: "spring", damping: 20, stiffness: 300, delay: 0.4 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <HelpCircle className="w-4 h-4 flex-shrink-0" />
-        Need Help?
-      </motion.button>
+      {!hideFloatingButton && (
+        <motion.button
+          onClick={() => setIsOpen(true)}
+          className="fixed bottom-6 right-6 z-40 flex items-center gap-2
+                     px-4 py-3 rounded-full bg-primary text-white
+                     shadow-lg font-body font-semibold text-sm
+                     hover:bg-primary-hover transition-colors cursor-pointer
+                     focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+          aria-label="Open help widget"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", damping: 20, stiffness: 300, delay: 0.4 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <HelpCircle className="w-4 h-4 flex-shrink-0" />
+          Need Help?
+        </motion.button>
+      )}
 
       {/* Modal portal */}
       {createPortal(
