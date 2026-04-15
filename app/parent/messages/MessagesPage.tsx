@@ -340,6 +340,8 @@ export default function MessagesPage({
       created_at: new Date().toISOString(),
       read_at: null,
       image_url: imageUrl ?? null,
+      file_url: null,
+      file_name: null,
     };
     setMessages((prev) => [...prev, optimistic]);
 

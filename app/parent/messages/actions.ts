@@ -28,6 +28,8 @@ export type MessageRow = {
   created_at: string;
   read_at: string | null;
   image_url: string | null;
+  file_url: string | null;
+  file_name: string | null;
 };
 
 export async function getConversations(userId: string): Promise<ConversationWithMeta[]> {
@@ -140,7 +142,7 @@ export async function getMessages(conversationId: string): Promise<MessageRow[]>
   const { data, error } = await supabase
     .schema("messaging")
     .from("messages")
-    .select("id, conversation_id, sender_id, body, created_at, read_at, image_url")
+    .select("id, conversation_id, sender_id, body, created_at, read_at, image_url, file_url, file_name")
     .eq("conversation_id", conversationId)
     .order("created_at", { ascending: true });
 
@@ -148,7 +150,13 @@ export async function getMessages(conversationId: string): Promise<MessageRow[]>
   return data ?? [];
 }
 
-export async function sendMessage(conversationId: string, body: string, imageUrl?: string): Promise<MessageRow | null> {
+export async function sendMessage(
+  conversationId: string,
+  body: string,
+  imageUrl?: string,
+  fileUrl?: string,
+  fileName?: string,
+): Promise<MessageRow | null> {
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
@@ -161,6 +169,7 @@ export async function sendMessage(conversationId: string, body: string, imageUrl
       sender_id: user.id,
       body,
       ...(imageUrl ? { image_url: imageUrl } : {}),
+      ...(fileUrl  ? { file_url: fileUrl, file_name: fileName ?? "attachment" } : {}),
     })
     .select()
     .single();
@@ -299,6 +308,39 @@ export async function uploadMessageImage(
 
   console.log("[uploadMessageImage] success:", publicUrl);
   return { url: publicUrl };
+}
+
+export async function uploadMessageFile(
+  formData: FormData
+): Promise<{ url: string; name: string } | { error: string }> {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) return { error: "Not authenticated" };
+
+  const file = formData.get("file") as File;
+  const conversationId = formData.get("conversationId") as string;
+  if (!file || !conversationId) return { error: "Missing fields" };
+
+  const timestamp = Date.now();
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const path = `${user.id}/${conversationId}/${timestamp}-${safeName}`;
+
+  const adminClient = createAdminClient();
+  const { error: uploadError } = await adminClient.storage
+    .from("message-files")
+    .upload(path, file, { contentType: file.type, upsert: false });
+
+  if (uploadError) {
+    console.error("[uploadMessageFile] storage upload error:", uploadError);
+    return { error: uploadError.message };
+  }
+
+  const { data: { publicUrl } } = adminClient.storage
+    .from("message-files")
+    .getPublicUrl(path);
+
+  console.log("[uploadMessageFile] success:", publicUrl);
+  return { url: publicUrl, name: file.name };
 }
 
 export async function markMessagesRead(conversationId: string, userId: string): Promise<void> {

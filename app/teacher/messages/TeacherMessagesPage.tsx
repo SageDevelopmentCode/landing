@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Search, Send, ChevronLeft, SquarePen, X, Loader2, ImageIcon } from "lucide-react";
+import { Search, Send, ChevronLeft, SquarePen, X, Loader2, ImageIcon, Paperclip, FileText, Download } from "lucide-react";
 import { createClient } from "@/app/lib/supabase-browser";
 import {
   getConversations,
@@ -10,6 +10,7 @@ import {
   createConversation,
   markMessagesRead,
   uploadMessageImage,
+  uploadMessageFile,
   type ConversationWithMeta,
   type MessageRow,
 } from "@/app/parent/messages/actions";
@@ -90,8 +91,10 @@ export default function TeacherMessagesPage({
   const [sending, setSending] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [sendError, setSendError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const attachmentInputRef = useRef<HTMLInputElement>(null);
 
   const [isComposingNew, setIsComposingNew] = useState(false);
   const [selectedRecipient, setSelectedRecipient] = useState<{ id: string; full_name: string; profile_image_url: string | null } | null>(null);
@@ -217,7 +220,7 @@ export default function TeacherMessagesPage({
   };
 
   const handleSendNew = async () => {
-    if (!selectedRecipient || (!draft.trim() && !imageFile) || sending) return;
+    if (!selectedRecipient || (!draft.trim() && !imageFile && !attachedFile) || sending) return;
     const body = draft.trim();
     setDraft("");
     setSendError(null);
@@ -250,7 +253,25 @@ export default function TeacherMessagesPage({
       setImagePreview(null);
     }
 
-    const saved = await sendMessage(convoId, body, imageUrl);
+    let fileUrl: string | undefined;
+    let fileName: string | undefined;
+    if (attachedFile) {
+      const fd = new FormData();
+      fd.append("file", attachedFile);
+      fd.append("conversationId", convoId);
+      const result = await uploadMessageFile(fd);
+      if ("url" in result) {
+        fileUrl = result.url;
+        fileName = result.name;
+      } else {
+        setSendError(`File upload failed: ${result.error}`);
+        setSending(false);
+        return;
+      }
+      setAttachedFile(null);
+    }
+
+    const saved = await sendMessage(convoId, body, imageUrl, fileUrl, fileName);
     const updated = await getConversations(userId);
     setConversations(updated);
     if (saved) setMessages([saved]);
@@ -291,8 +312,15 @@ export default function TeacherMessagesPage({
     setImagePreview(URL.createObjectURL(file));
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    setAttachedFile(file);
+  };
+
   const handleSend = async () => {
-    if ((!draft.trim() && !imageFile) || !activeId || sending) return;
+    if ((!draft.trim() && !imageFile && !attachedFile) || !activeId || sending) return;
     const body = draft.trim();
     setDraft("");
     setSendError(null);
@@ -315,6 +343,24 @@ export default function TeacherMessagesPage({
       setImagePreview(null);
     }
 
+    let fileUrl: string | undefined;
+    let fileName: string | undefined;
+    if (attachedFile) {
+      const fd = new FormData();
+      fd.append("file", attachedFile);
+      fd.append("conversationId", activeId);
+      const result = await uploadMessageFile(fd);
+      if ("url" in result) {
+        fileUrl = result.url;
+        fileName = result.name;
+      } else {
+        setSendError(`File upload failed: ${result.error}`);
+        setSending(false);
+        return;
+      }
+      setAttachedFile(null);
+    }
+
     const tempId = `temp-${Date.now()}`;
     const optimistic: MessageRow = {
       id: tempId,
@@ -324,10 +370,12 @@ export default function TeacherMessagesPage({
       created_at: new Date().toISOString(),
       read_at: null,
       image_url: imageUrl ?? null,
+      file_url: fileUrl ?? null,
+      file_name: fileName ?? null,
     };
     setMessages((prev) => [...prev, optimistic]);
 
-    const saved = await sendMessage(activeId, body, imageUrl);
+    const saved = await sendMessage(activeId, body, imageUrl, fileUrl, fileName);
 
     if (saved) {
       setMessages((prev) => {
@@ -538,6 +586,20 @@ export default function TeacherMessagesPage({
                   </div>
                 </div>
               )}
+              {attachedFile && (
+                <div className="px-4 pt-2 flex items-center gap-2">
+                  <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 max-w-xs">
+                    <FileText className="w-4 h-4 text-gray-400 shrink-0" />
+                    <span className="text-xs font-body text-gray-700 truncate">{attachedFile.name}</span>
+                    <button
+                      onClick={() => setAttachedFile(null)}
+                      className="text-gray-400 hover:text-gray-600 cursor-pointer shrink-0"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              )}
               <div className="px-4 py-3 flex items-center gap-2">
                 <input
                   ref={fileInputRef}
@@ -546,12 +608,28 @@ export default function TeacherMessagesPage({
                   className="hidden"
                   onChange={handleImageSelect}
                 />
+                <input
+                  ref={attachmentInputRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
+                  className="hidden"
+                  onChange={handleFileSelect}
+                />
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={!selectedRecipient}
                   className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-[#4a7c59] transition-colors cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                  title="Attach image"
                 >
                   <ImageIcon className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => attachmentInputRef.current?.click()}
+                  disabled={!selectedRecipient}
+                  className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-[#4a7c59] transition-colors cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                  title="Attach file"
+                >
+                  <Paperclip className="w-5 h-5" />
                 </button>
                 <input
                   type="text"
@@ -569,7 +647,7 @@ export default function TeacherMessagesPage({
                 />
                 <button
                   onClick={handleSendNew}
-                  disabled={!selectedRecipient || (!draft.trim() && !imageFile) || sending || creatingConvo}
+                  disabled={!selectedRecipient || (!draft.trim() && !imageFile && !attachedFile) || sending || creatingConvo}
                   className="w-10 h-10 rounded-xl bg-[#4a7c59] hover:bg-[#3d6849] disabled:opacity-50 text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
                 >
                   {(sending || creatingConvo) ? (
@@ -637,6 +715,20 @@ export default function TeacherMessagesPage({
                             onClick={() => window.open(msg.image_url!, "_blank")}
                           />
                         )}
+                        {msg.file_url && msg.file_name && (
+                          <a
+                            href={msg.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`flex items-center gap-2 mb-1 px-3 py-2 rounded-xl border ${fromMe ? "border-white/20 bg-white/10 hover:bg-white/20" : "border-gray-200 bg-white hover:bg-gray-50"} transition-colors`}
+                          >
+                            <FileText className={`w-4 h-4 shrink-0 ${fromMe ? "text-white/80" : "text-gray-400"}`} />
+                            <span className={`text-xs font-body truncate max-w-[160px] ${fromMe ? "text-white" : "text-gray-700"}`}>
+                              {msg.file_name}
+                            </span>
+                            <Download className={`w-3.5 h-3.5 shrink-0 ${fromMe ? "text-white/70" : "text-gray-400"}`} />
+                          </a>
+                        )}
                         {msg.body && <p>{msg.body}</p>}
                         <p className={`text-[10px] mt-1 ${fromMe ? "text-white/60" : "text-gray-400"}`}>
                           {formatTime(msg.created_at)}
@@ -667,6 +759,20 @@ export default function TeacherMessagesPage({
                   </div>
                 </div>
               )}
+              {attachedFile && (
+                <div className="px-4 pt-2 flex items-center gap-2">
+                  <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 max-w-xs">
+                    <FileText className="w-4 h-4 text-gray-400 shrink-0" />
+                    <span className="text-xs font-body text-gray-700 truncate">{attachedFile.name}</span>
+                    <button
+                      onClick={() => setAttachedFile(null)}
+                      className="text-gray-400 hover:text-gray-600 cursor-pointer shrink-0"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              )}
               <div className="px-4 py-3 flex items-center gap-2">
                 <input
                   ref={fileInputRef}
@@ -675,11 +781,26 @@ export default function TeacherMessagesPage({
                   className="hidden"
                   onChange={handleImageSelect}
                 />
+                <input
+                  ref={attachmentInputRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
+                  className="hidden"
+                  onChange={handleFileSelect}
+                />
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-[#4a7c59] transition-colors cursor-pointer shrink-0"
+                  title="Attach image"
                 >
                   <ImageIcon className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => attachmentInputRef.current?.click()}
+                  className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-[#4a7c59] transition-colors cursor-pointer shrink-0"
+                  title="Attach file"
+                >
+                  <Paperclip className="w-5 h-5" />
                 </button>
                 <input
                   type="text"
@@ -696,7 +817,7 @@ export default function TeacherMessagesPage({
                 />
                 <button
                   onClick={handleSend}
-                  disabled={(!draft.trim() && !imageFile) || sending}
+                  disabled={(!draft.trim() && !imageFile && !attachedFile) || sending}
                   className="w-10 h-10 rounded-xl bg-[#4a7c59] hover:bg-[#3d6849] disabled:opacity-50 text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
                 >
                   <Send className="w-4 h-4" />
