@@ -16,6 +16,41 @@ import {
 } from "@/app/parent/messages/actions";
 import { searchParents } from "./actions";
 
+// Renders images, converting HEIC/HEIF URLs on-the-fly for browsers that can't display them natively
+function HeicImage({ src, className, onClick }: { src: string; className?: string; onClick?: () => void }) {
+  const [displaySrc, setDisplaySrc] = useState<string | null>(null);
+  const [error, setError] = useState(false);
+
+  const isHeic = /\.(heic|heif)(\?|$)/i.test(src);
+
+  useEffect(() => {
+    if (!isHeic) {
+      setDisplaySrc(src);
+      return;
+    }
+    let objectUrl: string | null = null;
+    (async () => {
+      try {
+        const res = await fetch(src);
+        const blob = await res.blob();
+        const heic2any = (await import("heic2any")).default;
+        const converted = await heic2any({ blob, toType: "image/jpeg", quality: 0.85 });
+        const out = Array.isArray(converted) ? converted[0] : converted;
+        objectUrl = URL.createObjectURL(out);
+        setDisplaySrc(objectUrl);
+      } catch {
+        setError(true);
+      }
+    })();
+    return () => { if (objectUrl) URL.revokeObjectURL(objectUrl); };
+  }, [src, isHeic]);
+
+  if (error) return <span className="text-xs text-gray-400">Image could not be displayed</span>;
+  if (!displaySrc) return <div className="h-20 w-20 rounded-xl bg-gray-100 animate-pulse" />;
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={displaySrc} alt="attachment" className={className} onClick={onClick} />;
+}
+
 const AVATAR_COLORS = [
   "bg-[#4a7c59]",
   "bg-[#7c6b4a]",
@@ -707,10 +742,8 @@ export default function TeacherMessagesPage({
                         }`}
                       >
                         {msg.image_url && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
+                          <HeicImage
                             src={msg.image_url}
-                            alt="attachment"
                             className="rounded-xl max-w-full max-h-60 object-cover cursor-pointer mb-1"
                             onClick={() => window.open(msg.image_url!, "_blank")}
                           />
