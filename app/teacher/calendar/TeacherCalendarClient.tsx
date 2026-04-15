@@ -4,7 +4,26 @@ import { useState, useRef, useEffect } from "react";
 import { ChevronLeft, ChevronRight, ChevronDown, Plus, X, Link2, Upload, Pencil, MapPin, Users, RefreshCw, Bell, Trash2, Calendar, Sun, BookOpen, Clock, Paperclip } from "lucide-react";
 import { Merriweather } from "next/font/google";
 import { motion, AnimatePresence } from "framer-motion";
-import { colors, radius, shadows } from "@/app/admin/design-system";
+// ─── Teacher-only design tokens (light mode, fully standalone) ────────────────
+const colors = {
+  bg:           '#F0F4F1',
+  surface:      '#FFFFFF',
+  elevated:     '#F7FAF8',
+  border:       '#E4EDE7',
+  borderStrong: '#C8DAD0',
+  textPrimary:   '#1A2A20',
+  textSecondary: '#4B6356',
+  textTertiary:  '#8FA898',
+  mistyForest:  '#5E7C68',
+  pastelSage:   '#EBF3EE',
+  accentLight:  'rgba(94,124,104,0.12)',
+  warmLinen:    '#F7FAF8',
+  softCloud:    '#F7FAF8',
+  divider:      '#E4EDE7',
+};
+const radius = { sm: '6px', md: '8px', lg: '12px', xl: '16px', full: '9999px' };
+const shadows = { soft: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)' };
+
 import { saveCalendarEvent } from "@/app/actions/saveCalendarEvent";
 import { updateCalendarEvent } from "@/app/actions/updateCalendarEvent";
 import { deleteCalendarEvent } from "@/app/actions/deleteCalendarEvent";
@@ -1543,7 +1562,7 @@ export default function TeacherCalendarClient({
   const [viewEvent, setViewEvent] = useState<CalendarEvent | null>(null);
   const [editEvent, setEditEvent] = useState<CalendarEvent | null>(null);
   const [selectedProgram, setSelectedProgram] = useState<ProgramKey>("summer");
-  const [view, setView] = useState<ViewMode>("monthly");
+  const [view, setView] = useState<ViewMode>("weekly");
   const [currentDate, setCurrentDate] = useState<Date>(
     new Date(programs.summer.start)
   );
