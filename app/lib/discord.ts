@@ -804,41 +804,83 @@ export function createBudgetSummaryEmbed(data: {
   const fmt = (n: number) =>
     n.toLocaleString("en-US", { style: "currency", currency: "USD" });
 
-  const overBudget = data.categories.filter(
-    (r) => r.pct !== null && r.pct > 100,
-  );
+  const CATEGORY_EMOJI: Record<string, string> = {
+    Tuition: "🎓",
+    Donations: "🎁",
+    "Teacher Pay": "👩‍🏫",
+    "Staff Pay": "👥",
+    "Contractor / 1099": "🔧",
+    "Payroll Taxes": "📋",
+    Rent: "🏠",
+    Utilities: "💡",
+    "Maintenance & Repairs": "🛠️",
+    "Furniture & Equipment": "🪑",
+    "Supplies & Materials": "📦",
+    Curriculum: "📚",
+    "Field Trips": "🚌",
+    "Technology & Software": "💻",
+    Insurance: "🛡️",
+    Marketing: "📣",
+    "Professional Services": "💼",
+    Administrative: "📁",
+    Savings: "🏦",
+    Other: "📎",
+  };
 
-  const fields: DiscordEmbedField[] = data.categories.map((r) => {
-    const pctStr = r.pct !== null ? ` (${r.pct}%)` : "";
-    const flag = r.pct !== null && r.pct > 100 ? " ⚠️" : "";
-    return {
-      name: r.category + flag,
-      value: `${fmt(r.actual)} / ${fmt(r.planned)}${pctStr}`,
-      inline: true,
-    };
-  });
+  const SECTIONS: Array<{ label: string; categories: string[] }> = [
+    { label: "Personnel", categories: ["Teacher Pay", "Staff Pay", "Contractor / 1099", "Payroll Taxes"] },
+    { label: "Facilities", categories: ["Rent", "Utilities", "Maintenance & Repairs", "Furniture & Equipment"] },
+    { label: "Program", categories: ["Supplies & Materials", "Curriculum", "Field Trips", "Technology & Software"] },
+    { label: "Operations", categories: ["Insurance", "Marketing", "Professional Services", "Administrative"] },
+    { label: "Other", categories: ["Savings", "Other"] },
+  ];
+
+  const byCategory = Object.fromEntries(data.categories.map((r) => [r.category, r]));
+  const overBudget = data.categories.filter((r) => r.pct !== null && r.pct > 100);
+
+  const fields: DiscordEmbedField[] = [];
+
+  for (const section of SECTIONS) {
+    const rows = section.categories
+      .map((cat) => byCategory[cat])
+      .filter(Boolean);
+    if (rows.length === 0) continue;
+
+    const lines = rows.map((r) => {
+      const emoji = CATEGORY_EMOJI[r.category] ?? "•";
+      const bar = r.pct !== null ? `${r.pct}%` : "—";
+      const flag = r.pct !== null && r.pct > 100 ? " ⚠️" : "";
+      return `${emoji} **${r.category}**${flag}\n  └ ${fmt(r.actual)} spent of ${fmt(r.planned)} (${bar})`;
+    });
+
+    fields.push({
+      name: `── ${section.label} ──`,
+      value: lines.join("\n\n"),
+      inline: false,
+    });
+  }
+
+  const overallPct = data.totals.totalPlanned > 0
+    ? Math.round((data.totals.totalActual / data.totals.totalPlanned) * 100)
+    : 0;
 
   fields.push({
-    name: "─────────────────",
-    value: "\u200b",
+    name: "── Summary ──",
+    value: [
+      `💰 **Spent:** ${fmt(data.totals.totalActual)} (${overallPct}% of budget)`,
+      `📋 **Budgeted:** ${fmt(data.totals.totalPlanned)}`,
+      `✅ **Remaining:** ${fmt(data.totals.totalRemaining)}`,
+    ].join("\n"),
     inline: false,
   });
 
-  fields.push({
-    name: "Total Spent",
-    value: fmt(data.totals.totalActual),
-    inline: true,
-  });
-  fields.push({
-    name: "Total Budgeted",
-    value: fmt(data.totals.totalPlanned),
-    inline: true,
-  });
-  fields.push({
-    name: "Remaining",
-    value: fmt(data.totals.totalRemaining),
-    inline: true,
-  });
+  if (overBudget.length > 0) {
+    fields.push({
+      name: "⚠️ Over Budget",
+      value: overBudget.map((r) => `• ${r.category} (${r.pct}%)`).join("\n"),
+      inline: false,
+    });
+  }
 
   const isOverall = data.totals.totalActual > data.totals.totalPlanned;
   const color = isOverall ? 0xe74c3c : overBudget.length > 0 ? 0xe07a3a : 0x27ae60;
