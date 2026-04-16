@@ -623,6 +623,7 @@ export function TransactionDetailSidebar({ transaction, onClose, onDeleted, onEx
           onApproved={() => {}}
           onDenied={() => {}}
           onDeactivated={() => {}}
+          onEnrolled={() => {}}
           onItemClick={() => {}}
         />
       )}
