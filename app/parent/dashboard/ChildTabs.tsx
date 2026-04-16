@@ -686,6 +686,7 @@ function Checklist({
   registrationFeePaid,
   program,
   applicationId,
+  applicationStatus,
 }: {
   childName: string;
   signatureMap: SignatureMap;
@@ -697,6 +698,7 @@ function Checklist({
   registrationFeePaid: boolean;
   program: string | null;
   applicationId: string;
+  applicationStatus: string | null;
 }) {
   const completedCount = checklistItems.filter((item) => {
     if (item.id === 5) return immunizationFileCount > 0;
@@ -711,7 +713,7 @@ function Checklist({
     return false;
   }).length;
 
-  const isEnrollmentComplete = computeIsEnrollmentComplete(
+  const isEnrollmentComplete = applicationStatus === 'enrolled' || computeIsEnrollmentComplete(
     signatureMap,
     immunizationFileCount,
     registrationFeePaid,
@@ -1306,6 +1308,7 @@ export default function ChildTabs({
       registrationFeePaid={localRegistrationFeePaid[activeStudentId] ?? false}
       program={activeApprovedApp.program ?? null}
       applicationId={activeApprovedApp.id}
+      applicationStatus={activeApprovedApp.status ?? null}
     />
   );
 

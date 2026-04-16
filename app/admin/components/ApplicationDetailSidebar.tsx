@@ -19,6 +19,7 @@ import { EnrollmentProgressCard, type ApprovedApplication } from './EnrollmentPr
 import { EmailThread } from './EmailThread'
 import { sendEnrollmentReminderEmail } from '../../actions/sendEnrollmentReminderEmail'
 import { sendEnrollmentConfirmationEmail } from '../../actions/sendEnrollmentConfirmationEmail'
+import { enrollApplication } from '../../actions/enrollApplication'
 
 export type CachedEnrollmentData = AdminEnrollmentData & {
   registrationFeePaidByStudent: Record<string, boolean>
@@ -113,6 +114,7 @@ interface ApplicationDetailSidebarProps {
   onDenied: (id: string, reason: string) => void
   onDeactivated: (id: string) => void
   onItemClick: (itemId: number, studentId: string, data: CachedEnrollmentData | null) => void
+  onEnrolled: (id: string) => void
 }
 
 
@@ -124,6 +126,7 @@ export function ApplicationDetailSidebar({
   onDenied,
   onDeactivated,
   onItemClick,
+  onEnrolled,
 }: ApplicationDetailSidebarProps) {
   const [notes, setNotes] = useState<{ id: string; content: string; created_at: string }[]>([])
   const [newNote, setNewNote] = useState('')
@@ -145,6 +148,8 @@ export function ApplicationDetailSidebar({
   const [enrollmentData, setEnrollmentData] = useState<AdminEnrollmentData & { registrationFeePaidByStudent: Record<string, boolean> } | null>(null)
   const [enrollmentLoading, setEnrollmentLoading] = useState(false)
   const [siblingApps, setSiblingApps] = useState<ApprovedApplication[]>([])
+  const [isEnrolling, setIsEnrolling] = useState(false)
+  const [enrollError, setEnrollError] = useState<string | null>(null)
   const [emailThreadKey, setEmailThreadKey] = useState(0)
 
   const [healthForms, setHealthForms] = useState<FileObject[]>([])
@@ -368,6 +373,19 @@ export function ApplicationDetailSidebar({
     }
   }
 
+  const handleEnroll = async () => {
+    if (isEnrolling) return
+    setIsEnrolling(true)
+    setEnrollError(null)
+    const result = await enrollApplication(application.id)
+    setIsEnrolling(false)
+    if (result.success) {
+      onEnrolled(application.id)
+    } else {
+      setEnrollError(result.error ?? 'Failed to enroll')
+    }
+  }
+
   const handleSendEnrollmentConfirmation = async () => {
     if (confirmationSending || !application.g1_email) return
     setConfirmationSending(true)
@@ -584,16 +602,30 @@ export function ApplicationDetailSidebar({
               ))}
             </div>
           ) : enrollmentData ? (
-            <EnrollmentProgressCard
-              apps={siblingApps}
-              signaturesByStudent={enrollmentData.signaturesByStudent}
-              immunizationFileCountByStudent={enrollmentData.immunizationFileCountByStudent}
-              registrationFeePaidByStudent={enrollmentData.registrationFeePaidByStudent}
-              initialActiveStudentId={application.student_id ?? undefined}
-              onItemClick={(itemId, studentId) => {
-                onItemClick(itemId, studentId, enrollmentData ? { ...enrollmentData, siblingApps } : null)
-              }}
-            />
+            <>
+              <EnrollmentProgressCard
+                apps={siblingApps}
+                signaturesByStudent={enrollmentData.signaturesByStudent}
+                immunizationFileCountByStudent={enrollmentData.immunizationFileCountByStudent}
+                registrationFeePaidByStudent={enrollmentData.registrationFeePaidByStudent}
+                initialActiveStudentId={application.student_id ?? undefined}
+                onItemClick={(itemId, studentId) => {
+                  onItemClick(itemId, studentId, enrollmentData ? { ...enrollmentData, siblingApps } : null)
+                }}
+              />
+              {application.status !== 'enrolled' && (
+                <div className="flex items-center gap-2 mt-2">
+                  <button
+                    onClick={handleEnroll}
+                    disabled={isEnrolling}
+                    className="text-xs text-gray-500 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  >
+                    {isEnrolling ? 'Enrolling…' : 'Mark as Enrolled'}
+                  </button>
+                  {enrollError && <span className="text-xs text-red-600">{enrollError}</span>}
+                </div>
+              )}
+            </>
           ) : null
         )}
 
