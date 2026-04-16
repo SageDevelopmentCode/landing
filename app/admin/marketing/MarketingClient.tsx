@@ -6,6 +6,7 @@ import { cssColors as colors, radius, cssShadows as shadows, spacing } from '../
 import { OpenHouseTable } from './OpenHouseTable'
 import { TourUnavailabilityView } from './TourUnavailabilityView'
 import { InfoSessionTable } from './InfoSessionTable'
+import { InfoSessionFAQView } from './InfoSessionFAQView'
 import type { OpenHouseRsvp, TourBooking, InfoSessionRsvp } from './page'
 import type { TourUnavailability } from '@/app/actions/tourUnavailability'
 
@@ -14,12 +15,13 @@ const merriweather = Poppins({
   subsets: ['latin'],
 })
 
-type SubMenuItem = 'open-house' | 'tour-unavailability' | 'info-session'
+type SubMenuItem = 'open-house' | 'tour-unavailability' | 'info-session' | 'info-session-faq'
 
 const subMenuItems: { id: SubMenuItem; label: string; sublabel: string }[] = [
   { id: 'open-house', label: 'Open House', sublabel: 'April 25' },
   { id: 'tour-unavailability', label: 'Campus Tours', sublabel: 'Manage availability' },
   { id: 'info-session', label: 'Info Session', sublabel: 'April 18 RSVPs' },
+  { id: 'info-session-faq', label: 'Session FAQ', sublabel: 'April 18 prep' },
 ]
 
 export function MarketingClient({
@@ -165,6 +167,8 @@ export function MarketingClient({
             <InfoSessionTable rsvps={infoSessionRsvps} />
           </div>
         )}
+
+        {active === 'info-session-faq' && <InfoSessionFAQView />}
       </main>
     </div>
   )
