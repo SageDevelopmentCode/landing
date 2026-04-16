@@ -157,7 +157,8 @@ export default async function ParentTeacherProfilePage({
           experience={expRows ?? []}
           students={students}
           canEdit={false}
-          backHref="/parent/feed"
+          backHref="__back__"
+          messageHref={`/parent/messages?recipientId=${teacherId}&recipientName=${encodeURIComponent(teacherUser.full_name ?? "")}`}
         />
       </main>
     </div>

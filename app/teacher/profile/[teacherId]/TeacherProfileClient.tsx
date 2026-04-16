@@ -56,6 +56,7 @@ type Props = {
   students: Student[];
   canEdit: boolean;
   backHref: string;
+  messageHref: string | null;
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -165,6 +166,7 @@ export default function TeacherProfileClient({
   students,
   canEdit,
   backHref,
+  messageHref,
 }: Props) {
   const router = useRouter();
 
@@ -253,7 +255,7 @@ export default function TeacherProfileClient({
       {/* Top bar */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-100 px-6 py-3 flex items-center justify-between">
         <button
-          onClick={() => router.push(backHref)}
+          onClick={() => backHref === "__back__" ? router.back() : router.push(backHref)}
           className="flex items-center gap-1.5 text-sm font-body text-gray-500 hover:text-gray-800 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -342,10 +344,15 @@ export default function TeacherProfileClient({
                     Edit Profile
                   </button>
                 )}
-                <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-200 text-gray-600 hover:text-gray-800 hover:border-gray-300 text-sm font-semibold font-body rounded-xl transition-colors">
-                  <MessageCircle className="w-3.5 h-3.5" />
-                  Send a Message
-                </button>
+                {messageHref && (
+                  <button
+                    onClick={() => router.push(messageHref)}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#4a7c59] hover:bg-[#3d6649] text-white text-sm font-semibold font-body rounded-xl transition-colors cursor-pointer"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    Send a Message
+                  </button>
+                )}
               </div>
             </div>
           </aside>
@@ -377,10 +384,15 @@ export default function TeacherProfileClient({
                     Edit Profile
                   </button>
                 )}
-                <button className="flex items-center gap-1.5 px-3 py-2 border border-gray-200 text-gray-600 text-sm font-semibold font-body rounded-xl transition-colors">
-                  <MessageCircle className="w-3.5 h-3.5" />
-                  Message
-                </button>
+                {messageHref && (
+                  <button
+                    onClick={() => router.push(messageHref)}
+                    className="flex items-center gap-1.5 px-3 py-2 bg-[#4a7c59] hover:bg-[#3d6649] text-white text-sm font-semibold font-body rounded-xl transition-colors cursor-pointer"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    Message
+                  </button>
+                )}
               </div>
             </div>
 

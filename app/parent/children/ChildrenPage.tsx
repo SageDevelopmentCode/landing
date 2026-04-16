@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Image as ImageIcon,
   Mail,
@@ -11,6 +12,7 @@ import {
   ChevronRight,
   Camera,
   Loader2,
+  User,
 } from "lucide-react";
 import { uploadStudentProfileImage } from "@/app/actions/uploadStudentProfileImage";
 import { getParentStudentAttendance, type ParentCheckInRecord } from "@/app/actions/getParentStudentAttendance";
@@ -184,6 +186,7 @@ function TeacherCard({
   about,
   imageSrc,
   email,
+  teacherId,
   onMessage,
 }: {
   name: string;
@@ -191,6 +194,7 @@ function TeacherCard({
   about: string;
   imageSrc?: string;
   email: string;
+  teacherId: string;
   onMessage: () => void;
 }) {
   return (
@@ -242,6 +246,13 @@ function TeacherCard({
             <Mail className="w-3.5 h-3.5" />
             Email
           </a>
+          <Link
+            href={`/parent/profile/${teacherId}`}
+            className="flex items-center gap-1.5 flex-1 justify-center px-3 py-2 rounded-xl text-xs font-semibold bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+          >
+            <User className="w-3.5 h-3.5" />
+            View Profile
+          </Link>
         </div>
       </div>
     </div>
@@ -347,6 +358,7 @@ function TeacherTab({
               imageSrc={card?.image}
               about={card?.about ?? ""}
               email={card?.email ?? ""}
+              teacherId={t.teacher_id}
               onMessage={() => onMessage(t.teacher_id, t.teacher_name ?? "")}
             />
           );

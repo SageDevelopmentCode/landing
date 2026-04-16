@@ -1606,10 +1606,12 @@ function ExpensesTab({
     new Date().toISOString().slice(0, 7),
   );
   const [filterCat, setFilterCat] = useState("");
-  const [view, setView] = useState<"monthly" | "category" | "trend">("monthly");
+  const [view, setView] = useState<"monthly" | "daily" | "category" | "trend">("monthly");
   const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(
     new Set(),
   );
+  const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set());
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [collapsedCatMonths, setCollapsedCatMonths] = useState<Set<string>>(
     new Set(),
   );
@@ -1738,6 +1740,35 @@ function ExpensesTab({
     return acc;
   }, {});
   const months = Object.keys(byMonth).sort().reverse();
+
+  // Group by day for daily view
+  const byDay = filtered.reduce<Record<string, BudgetExpense[]>>((acc, e) => {
+    (acc[e.expense_date] ??= []).push(e);
+    return acc;
+  }, {});
+
+  // All days in the selected month up to today (only days that have actually passed)
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const daysInView: string[] = (() => {
+    if (!filterMonth) return Object.keys(byDay).filter((d) => d <= todayStr).sort().reverse();
+    const [y, m] = filterMonth.split("-").map(Number);
+    const count = new Date(y, m, 0).getDate();
+    return Array.from({ length: count }, (_, i) => {
+      const d = String(i + 1).padStart(2, "0");
+      return `${filterMonth}-${d}`;
+    })
+      .filter((d) => d <= todayStr)
+      .reverse();
+  })();
+
+  function toggleDay(key: string) {
+    setCollapsedDays((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
 
   function toggleMonth(key: string) {
     setCollapsedMonths((prev) => {
@@ -2207,7 +2238,7 @@ function ExpensesTab({
           backgroundColor: colors.warmLinen,
         }}
       >
-        {(["monthly", "category", "trend"] as const).map((v) => (
+        {(["monthly", "daily", "category", "trend"] as const).map((v) => (
           <button
             key={v}
             onClick={() => setView(v)}
@@ -2224,9 +2255,11 @@ function ExpensesTab({
           >
             {v === "monthly"
               ? "Monthly"
-              : v === "category"
-                ? "By Category"
-                : "Trend"}
+              : v === "daily"
+                ? "Daily"
+                : v === "category"
+                  ? "By Category"
+                  : "Trend"}
           </button>
         ))}
       </div>
@@ -2451,6 +2484,312 @@ function ExpensesTab({
             <td colSpan={5} />
           </tr>
         </Table>
+      )}
+
+      {/* Daily view */}
+      {view === "daily" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {!filterMonth ? (
+            <div style={{ ...cardStyle, padding: "24px" }}>
+              <p className="text-sm text-center py-8" style={{ color: colors.textTertiary }}>
+                Select a month above to view daily expenses.
+              </p>
+            </div>
+          ) : daysInView.length === 0 ? (
+            <div style={{ ...cardStyle, padding: "24px" }}>
+              <p className="text-sm text-center py-8" style={{ color: colors.textTertiary }}>
+                No days to show yet for this month.
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Calendar grid picker */}
+              {(() => {
+                const [y, m] = filterMonth!.split("-").map(Number);
+                // day-of-week the 1st falls on (0=Sun)
+                const firstDow = new Date(y, m - 1, 1).getDay();
+                const daysInMonth = new Date(y, m, 0).getDate();
+                const DOW_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+                // build cells: leading nulls + day numbers
+                const cells: (number | null)[] = [
+                  ...Array(firstDow).fill(null),
+                  ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+                ];
+                // pad to full weeks
+                while (cells.length % 7 !== 0) cells.push(null);
+
+                return (
+                  <div style={{ ...cardStyle, padding: "16px 20px" }}>
+                    {/* "All" link */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                      <p style={{ fontSize: 12, fontWeight: 600, color: colors.textSecondary, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                        {new Date(y, m - 1, 1).toLocaleString("default", { month: "long", year: "numeric" })}
+                      </p>
+                      <button
+                        onClick={() => setSelectedDay(null)}
+                        style={{
+                          fontSize: 12,
+                          fontWeight: selectedDay === null ? 700 : 400,
+                          color: selectedDay === null ? colors.mistyForest : colors.textSecondary,
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          padding: 0,
+                        }}
+                      >
+                        {selectedDay === null ? `All (${filtered.length})` : "Show all"}
+                      </button>
+                    </div>
+
+                    {/* DOW header */}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 4 }}>
+                      {DOW_LABELS.map((d) => (
+                        <div key={d} style={{ textAlign: "center", fontSize: 10, fontWeight: 600, color: colors.textSecondary, textTransform: "uppercase", letterSpacing: "0.04em", padding: "2px 0" }}>
+                          {d}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Day cells */}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
+                      {cells.map((dayNum, idx) => {
+                        if (dayNum === null) {
+                          return <div key={`empty-${idx}`} />;
+                        }
+                        const dayKey = `${filterMonth}-${String(dayNum).padStart(2, "0")}`;
+                        const isFuture = dayKey > todayStr;
+                        const isToday = dayKey === todayStr;
+                        const isSelected = selectedDay === dayKey;
+                        const dayExps = byDay[dayKey] ?? [];
+                        const hasExpenses = dayExps.length > 0;
+
+                        return (
+                          <button
+                            key={dayKey}
+                            disabled={isFuture}
+                            onClick={() => setSelectedDay(isSelected ? null : dayKey)}
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              padding: "6px 4px",
+                              borderRadius: radius.md,
+                              border: `1px solid ${isSelected ? colors.mistyForest : isToday ? colors.mistyForest + "50" : colors.border}`,
+                              backgroundColor: isSelected ? colors.mistyForest : isToday ? colors.mistyForest + "10" : "transparent",
+                              cursor: isFuture ? "default" : "pointer",
+                              opacity: isFuture ? 0.3 : 1,
+                              transition: "all 0.15s",
+                              minHeight: 52,
+                              gap: 2,
+                            }}
+                          >
+                            <span style={{ fontSize: 14, fontWeight: 700, lineHeight: 1, color: isSelected ? "white" : isToday ? colors.mistyForest : colors.textPrimary }}>
+                              {dayNum}
+                            </span>
+                            {hasExpenses ? (
+                              <span style={{
+                                fontSize: 10,
+                                fontWeight: 600,
+                                backgroundColor: isSelected ? "rgba(255,255,255,0.25)" : colors.warmLinen,
+                                color: isSelected ? "white" : colors.textSecondary,
+                                borderRadius: 8,
+                                padding: "1px 5px",
+                                lineHeight: 1.5,
+                                marginTop: 2,
+                              }}>
+                                {dayExps.length}
+                              </span>
+                            ) : (
+                              <span style={{ fontSize: 10, lineHeight: 1.5, color: "transparent", marginTop: 2 }}>·</span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Expense cards — filtered to selectedDay or all */}
+              {(() => {
+                const visibleDays = selectedDay ? [selectedDay] : daysInView;
+                return visibleDays.map((dayKey) => {
+                  const dayExps = byDay[dayKey] ?? [];
+                  if (dayExps.length === 0) return null;
+                  const dayTotal = dayExps.reduce((s, e) => s + Number(e.amount), 0);
+                  const isToday = dayKey === todayStr;
+                  const dateObj = new Date(dayKey + "T00:00:00");
+                  const weekday = dateObj.toLocaleDateString("default", { weekday: "long" });
+                  const dateLabel = dateObj.toLocaleDateString("default", { month: "long", day: "numeric" });
+                  return (
+                    <div key={dayKey} style={{ ...cardStyle, overflow: "hidden" }}>
+                      {/* Day header */}
+                      <div
+                        style={{
+                          padding: "12px 20px",
+                          backgroundColor: isToday ? colors.mistyForest : "#F6F1E8",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <div
+                            style={{
+                              width: 36,
+                              height: 36,
+                              borderRadius: radius.md,
+                              backgroundColor: isToday ? "rgba(255,255,255,0.2)" : colors.border,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexShrink: 0,
+                            }}
+                          >
+                            <span style={{ fontSize: 14, fontWeight: 700, lineHeight: 1, color: isToday ? "white" : colors.textPrimary }}>
+                              {dateObj.getDate()}
+                            </span>
+                          </div>
+                          <div>
+                            <p style={{ fontSize: 13, fontWeight: 700, color: isToday ? "white" : colors.textPrimary, lineHeight: 1.2 }}>
+                              {weekday}
+                              {isToday && (
+                                <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 500, backgroundColor: "rgba(255,255,255,0.25)", borderRadius: 4, padding: "1px 5px" }}>
+                                  Today
+                                </span>
+                              )}
+                            </p>
+                            <p style={{ fontSize: 11, color: isToday ? "rgba(255,255,255,0.75)" : colors.textSecondary, marginTop: 1 }}>
+                              {dateLabel} · {dayExps.length} expense{dayExps.length !== 1 ? "s" : ""}
+                            </p>
+                          </div>
+                        </div>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: isToday ? "white" : colors.error }}>
+                          {fmt(dayTotal)}
+                        </span>
+                      </div>
+
+                      {/* Expense items */}
+                      <div style={{ padding: "8px 0" }}>
+                        {dayExps.map((exp, i) => (
+                          <div
+                            key={exp.id}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              padding: "10px 20px",
+                              borderBottom: i < dayExps.length - 1 ? `1px solid ${colors.border}` : "none",
+                              cursor: "pointer",
+                              transition: "background 0.1s",
+                            }}
+                            onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = colors.warmLinen; }}
+                            onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = "transparent"; }}
+                            onClick={() => {
+                              setEditingId(exp.id);
+                              setEditValues({ ...exp });
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: "50%",
+                                backgroundColor: SLICE_COLORS[CATEGORIES.indexOf(exp.category) % SLICE_COLORS.length] ?? colors.textSecondary,
+                                flexShrink: 0,
+                                marginRight: 12,
+                              }}
+                            />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <p style={{ fontSize: 13, fontWeight: 600, color: colors.textPrimary, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                {exp.expense_name}
+                              </p>
+                              <p style={{ fontSize: 11, color: colors.textSecondary, marginTop: 1 }}>
+                                {exp.category ?? "Uncategorized"}
+                                {exp.payment_method ? ` · ${exp.payment_method}` : ""}
+                                {exp.tax_deductible ? " · Tax ded." : ""}
+                              </p>
+                            </div>
+                            {exp.notes && (
+                              <p
+                                style={{ fontSize: 11, color: colors.textTertiary, marginLeft: 12, maxWidth: 140, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flexShrink: 0 }}
+                                title={exp.notes}
+                              >
+                                {exp.notes}
+                              </p>
+                            )}
+                            <span style={{ fontSize: 13, fontWeight: 700, color: colors.error, marginLeft: 16, flexShrink: 0 }}>
+                              {fmt(Number(exp.amount))}
+                            </span>
+                            <div className="flex gap-1 items-center" style={{ marginLeft: 12, flexShrink: 0 }}>
+                              <button
+                                title="Edit"
+                                style={{ ...btnGhost, padding: "4px 6px", lineHeight: 1 }}
+                                onClick={(ev) => {
+                                  ev.stopPropagation();
+                                  setEditingId(exp.id);
+                                  setEditValues({ ...exp });
+                                }}
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                </svg>
+                              </button>
+                              <button
+                                title="Delete"
+                                style={btnDanger}
+                                onClick={(ev) => {
+                                  ev.stopPropagation();
+                                  deleteExpense(exp.id);
+                                }}
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="3 6 5 6 21 6" />
+                                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                                  <path d="M10 11v6" />
+                                  <path d="M14 11v6" />
+                                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+
+              {/* Total bar */}
+              <div
+                style={{
+                  ...cardStyle,
+                  padding: "14px 20px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  backgroundColor: "#F6F1E8",
+                }}
+              >
+                <span className="text-sm font-bold" style={{ color: colors.textPrimary }}>
+                  {selectedDay
+                    ? `${new Date(selectedDay + "T00:00:00").toLocaleDateString("default", { month: "long", day: "numeric" })} total`
+                    : `Month total`}{" "}
+                  ({(selectedDay ? (byDay[selectedDay] ?? []) : filtered).length} expense
+                  {(selectedDay ? (byDay[selectedDay] ?? []) : filtered).length !== 1 ? "s" : ""})
+                </span>
+                <span className="text-sm font-bold" style={{ color: colors.error }}>
+                  {fmt(selectedDay
+                    ? (byDay[selectedDay] ?? []).reduce((s, e) => s + Number(e.amount), 0)
+                    : total
+                  )}
+                </span>
+              </div>
+            </>
+          )}
+        </div>
       )}
 
       {/* Monthly view — Spend vs. Budget by Category */}

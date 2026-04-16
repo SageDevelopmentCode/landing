@@ -170,6 +170,7 @@ export default async function TeacherProfilePage({
           students={students}
           canEdit={canEdit}
           backHref="/teacher/feed"
+          messageHref={null}
         />
       </main>
     </div>
