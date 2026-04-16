@@ -148,6 +148,12 @@ const ANNOUNCEMENTS = [
     buttonLabel: "Learn More",
     href: "/homeschool",
   },
+  {
+    short: "📖 View all our Programs!",
+    full: "📖 Explore all of our programs — Summer, School Year, and Homeschool Drop-In!",
+    buttonLabel: "View Programs",
+    href: "/programs",
+  },
 ];
 
 // ─── Component ──────────────────────────────────────────────────────────────
