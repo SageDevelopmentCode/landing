@@ -11,12 +11,8 @@ import {
   Calendar,
   FileText,
   ClipboardCheck,
-  BookOpen,
-  Image,
   Heart,
   Phone,
-  Bus,
-  Receipt,
   Rss,
   HelpCircle,
 } from "lucide-react";
@@ -34,12 +30,8 @@ const primaryNavItems: { label: string; icon: LucideIcon; href: string }[] = [
 
 const moreItems: { label: string; icon: LucideIcon; href?: string; action?: string }[] = [
   { label: "Forms & Documents", icon: FileText, href: "/parent/forms" },
-  { label: "Resources", icon: BookOpen },
-  { label: "Photos/Updates", icon: Image },
   { label: "Volunteer Opportunities", icon: Heart, href: "/parent/volunteer" },
   { label: "Emergency Contacts", icon: Phone, href: "/parent/emergency-contacts" },
-  { label: "Transportation", icon: Bus },
-  { label: "Reimbursement", icon: Receipt },
   { label: "Need Help", icon: HelpCircle, action: "help" },
 ];
 

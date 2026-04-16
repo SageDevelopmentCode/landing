@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useRef, useEffect } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MoreHorizontal,
@@ -311,11 +312,13 @@ function PostCard({
   currentUserId,
   onReactionToggle,
   onClick,
+  profileHref,
 }: {
   post: FeedPost;
   currentUserId: string | undefined;
   onReactionToggle: (postId: string, emoji: string) => void;
   onClick: () => void;
+  profileHref: string;
 }) {
   // Parents are never post owners — the menu will never show, but keep
   // the isOwner check for structural parity.
@@ -338,19 +341,23 @@ function PostCard({
 
   return (
     <motion.div
-      whileHover={{ y: -2 }}
-      transition={{ duration: 0.18, ease: "easeOut" as const }}
       onClick={onClick}
       className="bg-white rounded-2xl border border-gray-100 overflow-hidden cursor-pointer hover:border-gray-200 transition-colors duration-200 group"
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-3 pt-5 px-5">
         <div className="flex items-center gap-2.5">
-          <AuthorAvatar
-            initials={getInitials(post.teacher_name)}
-            color={avatarColor(post.teacher_id)}
-            imageUrl={post.teacher_profile_image_url}
-          />
+          <Link
+            href={profileHref}
+            onClick={(e) => e.stopPropagation()}
+            className="flex-shrink-0 hover:opacity-80 transition-opacity"
+          >
+            <AuthorAvatar
+              initials={getInitials(post.teacher_name)}
+              color={avatarColor(post.teacher_id)}
+              imageUrl={post.teacher_profile_image_url}
+            />
+          </Link>
           <div>
             <p className="text-sm font-semibold font-body text-gray-800 leading-tight">
               {post.teacher_name}
@@ -849,30 +856,38 @@ export default function ParentFeedClient({
         {teachers.map((teacher) => {
           const isSelected = selectedTeacherId === teacher.id;
           return (
-            <button
+            <div
               key={teacher.id}
-              onClick={() => setSelectedTeacherId(isSelected ? null : teacher.id)}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-colors cursor-pointer ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition-colors ${
                 isSelected
                   ? "bg-[#4a7c59]/8 text-gray-800"
                   : "text-gray-400 hover:text-gray-600 hover:bg-black/5"
               }`}
             >
-              <AuthorAvatar
-                initials={getInitials(teacher.full_name)}
-                color={avatarColor(teacher.id)}
-                size="sm"
-                imageUrl={teacher.profile_image_url}
-              />
-              <div className="min-w-0 flex-1">
+              <Link
+                href={`/parent/profile/${teacher.id}`}
+                className="flex-shrink-0 hover:opacity-80 transition-opacity"
+                title={`View ${teacher.full_name}'s profile`}
+              >
+                <AuthorAvatar
+                  initials={getInitials(teacher.full_name)}
+                  color={avatarColor(teacher.id)}
+                  size="sm"
+                  imageUrl={teacher.profile_image_url}
+                />
+              </Link>
+              <button
+                onClick={() => setSelectedTeacherId(isSelected ? null : teacher.id)}
+                className="min-w-0 flex-1 text-left cursor-pointer"
+              >
                 <p className="text-sm font-body font-medium truncate leading-tight">
                   {teacher.full_name}
                 </p>
                 <p className="text-[11px] font-body text-gray-400 truncate">
                   {formatRole(teacher.role)}
                 </p>
-              </div>
-            </button>
+              </button>
+            </div>
           );
         })}
       </aside>
@@ -933,6 +948,7 @@ export default function ParentFeedClient({
                         currentUserId={currentUser?.id}
                         onReactionToggle={handleReactionToggle}
                         onClick={() => setSelectedPost(post)}
+                        profileHref={`/parent/profile/${post.teacher_id}`}
                       />
                     </motion.div>
                   ))}
