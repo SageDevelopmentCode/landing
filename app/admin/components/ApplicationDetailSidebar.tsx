@@ -602,31 +602,30 @@ export function ApplicationDetailSidebar({
               ))}
             </div>
           ) : enrollmentData ? (
-            <>
-              <EnrollmentProgressCard
-                apps={siblingApps}
-                signaturesByStudent={enrollmentData.signaturesByStudent}
-                immunizationFileCountByStudent={enrollmentData.immunizationFileCountByStudent}
-                registrationFeePaidByStudent={enrollmentData.registrationFeePaidByStudent}
-                initialActiveStudentId={application.student_id ?? undefined}
-                onItemClick={(itemId, studentId) => {
-                  onItemClick(itemId, studentId, enrollmentData ? { ...enrollmentData, siblingApps } : null)
-                }}
-              />
-              {application.status !== 'enrolled' && (
-                <div className="flex items-center gap-2 mt-2">
-                  <button
-                    onClick={handleEnroll}
-                    disabled={isEnrolling}
-                    className="text-xs text-gray-500 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition-colors disabled:opacity-50"
-                  >
-                    {isEnrolling ? 'Enrolling…' : 'Mark as Enrolled'}
-                  </button>
-                  {enrollError && <span className="text-xs text-red-600">{enrollError}</span>}
-                </div>
-              )}
-            </>
+            <EnrollmentProgressCard
+              apps={siblingApps}
+              signaturesByStudent={enrollmentData.signaturesByStudent}
+              immunizationFileCountByStudent={enrollmentData.immunizationFileCountByStudent}
+              registrationFeePaidByStudent={enrollmentData.registrationFeePaidByStudent}
+              initialActiveStudentId={application.student_id ?? undefined}
+              onItemClick={(itemId, studentId) => {
+                onItemClick(itemId, studentId, enrollmentData ? { ...enrollmentData, siblingApps } : null)
+              }}
+            />
           ) : null
+        )}
+
+        {application.approved && application.status !== 'enrolled' && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleEnroll}
+              disabled={isEnrolling}
+              className="text-xs text-gray-500 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              {isEnrolling ? 'Enrolling…' : 'Mark as Enrolled'}
+            </button>
+            {enrollError && <span className="text-xs text-red-600">{enrollError}</span>}
+          </div>
         )}
 
         {application.approved && application.student_id && (
