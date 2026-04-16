@@ -1295,6 +1295,7 @@ export default function ChildTabs({
 
   const checklist = (
     <Checklist
+      key={activeApprovedApp.id}
       childName={childName}
       signatureMap={localSigs[activeStudentId] ?? {}}
       onContractClick={handleContractClick}

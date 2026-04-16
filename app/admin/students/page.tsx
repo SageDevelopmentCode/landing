@@ -35,6 +35,7 @@ type Student = {
   activities_to_avoid: string | null
   child_grade: string | null
   parent_name?: string | null
+  profile_image_url?: string | null
 }
 
 async function fetchStudentDetail(studentId: string): Promise<Student> {
