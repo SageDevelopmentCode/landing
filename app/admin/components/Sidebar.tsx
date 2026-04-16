@@ -21,6 +21,7 @@ import {
   School,
   ChevronRight,
   Menu,
+  Eye,
   X,
   Sun,
   Moon,
@@ -59,6 +60,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { name: "Calendar",  href: "/admin/calendar",  icon: <CalendarDays className="w-4 h-4" /> },
       { name: "Emails",    href: "/admin/emails",    icon: <Mail className="w-4 h-4" /> },
       { name: "Marketing", href: "/admin/marketing", icon: <Megaphone className="w-4 h-4" /> },
+      { name: "Impersonate", href: "/admin/impersonate", icon: <Eye className="w-4 h-4" /> },
     ],
   },
   {
