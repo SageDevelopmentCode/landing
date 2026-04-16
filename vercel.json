@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/budget/monthly-summary?notify=true",
+      "schedule": "0 23 * * *"
+    }
+  ]
+}

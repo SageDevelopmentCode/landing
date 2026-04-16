@@ -783,6 +783,75 @@ export function createStudentCheckOutEmbed(data: {
 }
 
 /**
+ * Creates a Discord embed for the daily budget monthly summary report
+ */
+export function createBudgetSummaryEmbed(data: {
+  month: string;
+  year: number;
+  categories: Array<{
+    category: string;
+    planned: number;
+    actual: number;
+    remaining: number;
+    pct: number | null;
+  }>;
+  totals: {
+    totalPlanned: number;
+    totalActual: number;
+    totalRemaining: number;
+  };
+}): DiscordEmbed {
+  const fmt = (n: number) =>
+    n.toLocaleString("en-US", { style: "currency", currency: "USD" });
+
+  const overBudget = data.categories.filter(
+    (r) => r.pct !== null && r.pct > 100,
+  );
+
+  const fields: DiscordEmbedField[] = data.categories.map((r) => {
+    const pctStr = r.pct !== null ? ` (${r.pct}%)` : "";
+    const flag = r.pct !== null && r.pct > 100 ? " ⚠️" : "";
+    return {
+      name: r.category + flag,
+      value: `${fmt(r.actual)} / ${fmt(r.planned)}${pctStr}`,
+      inline: true,
+    };
+  });
+
+  fields.push({
+    name: "─────────────────",
+    value: "\u200b",
+    inline: false,
+  });
+
+  fields.push({
+    name: "Total Spent",
+    value: fmt(data.totals.totalActual),
+    inline: true,
+  });
+  fields.push({
+    name: "Total Budgeted",
+    value: fmt(data.totals.totalPlanned),
+    inline: true,
+  });
+  fields.push({
+    name: "Remaining",
+    value: fmt(data.totals.totalRemaining),
+    inline: true,
+  });
+
+  const isOverall = data.totals.totalActual > data.totals.totalPlanned;
+  const color = isOverall ? 0xe74c3c : overBudget.length > 0 ? 0xe07a3a : 0x27ae60;
+
+  return {
+    title: `📊 Budget Report — ${data.month} ${data.year}`,
+    color,
+    fields,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
  * Creates a Discord embed for campus tour booking submissions
  */
 export function createTourBookingEmbed(data: {
