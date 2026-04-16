@@ -47,11 +47,19 @@ type PendingPaymentRequest = {
   created_at: string;
 };
 
+type EnrolledChild = {
+  studentId: string;
+  name: string;
+  program: string;
+  applicationId: string;
+};
+
 interface TransactionsClientProps {
   transactions: StripeTransaction[];
   studentMap: Record<string, string>;
   parentNameMap: Record<string, string>;
   pendingRequests: PendingPaymentRequest[];
+  enrolledChildrenMap: Record<string, EnrolledChild[]>;
 }
 
 type ChildGroup = {
@@ -118,6 +126,7 @@ function isTxMatch(
   tx: StripeTransaction,
   item: ChecklistItem,
   program: "summer_26" | "school_year_26_27",
+  enrolledChild?: EnrolledChild,
 ): boolean {
   if (tx.payment_type !== item.payment_type) return false;
   const meta = parseMeta(tx);
@@ -132,6 +141,17 @@ function isTxMatch(
   }
 
   const prog = meta.program as string | undefined;
+  // Combined registration_fee: no program in metadata, use application_ids to verify
+  // the transaction covers an application for this child's program
+  if (!prog && item.payment_type === "registration_fee") {
+    if (!enrolledChild) return true; // no context, assume match
+    const appIds = ((meta.application_ids as string | undefined) ?? "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (appIds.length === 0) return true; // old tx format, assume match
+    return appIds.includes(enrolledChild.applicationId);
+  }
   if (prog !== program && prog !== "both") return false;
   if (item.week && (meta.week as string | undefined) !== item.week) return false;
   if (item.month && (meta.month as string | undefined) !== item.month) return false;
@@ -176,6 +196,7 @@ function ProgramChecklist({
   parentId,
   studentId,
   pendingRequests,
+  enrolledChild,
 }: {
   title: string;
   items: ChecklistItem[];
@@ -185,6 +206,7 @@ function ProgramChecklist({
   parentId: string | null;
   studentId: string | null;
   pendingRequests: PendingPaymentRequest[];
+  enrolledChild?: EnrolledChild;
 }) {
   const [sentItems, setSentItems] = useState<Set<string>>(() =>
     new Set(
@@ -205,7 +227,7 @@ function ProgramChecklist({
 
   const resolved = items.map((item) => ({
     item,
-    match: txs.find((tx) => isTxMatch(tx, item, program)) ?? null,
+    match: txs.find((tx) => isTxMatch(tx, item, program, enrolledChild)) ?? null,
   }));
 
   const paidCount = resolved.filter((r) => r.match !== null).length;
@@ -392,6 +414,7 @@ export function TransactionsClient({
   studentMap,
   parentNameMap,
   pendingRequests,
+  enrolledChildrenMap,
 }: TransactionsClientProps) {
   const [activeTab, setActiveTab] = useState<"list" | "by-parent">("by-parent");
   const [selectedTransaction, setSelectedTransaction] =
@@ -418,7 +441,12 @@ export function TransactionsClient({
     >();
     for (const tx of localTransactions) {
       const meta = parseMeta(tx);
-      if (!meta.program && tx.payment_type !== "summer_tuition") continue;
+      if (
+        !meta.program &&
+        tx.payment_type !== "summer_tuition" &&
+        tx.payment_type !== "registration_fee" &&
+        tx.payment_type !== "supply_fee"
+      ) continue;
       const key = tx.parent_id ?? tx.payer_email ?? "unknown";
       if (!map.has(key)) {
         const resolvedName = tx.parent_id
@@ -455,26 +483,49 @@ export function TransactionsClient({
       }
       map.get(key)!.txs.push(tx);
     }
+    // If all txs have no student_id (e.g. combined registration_fee), fall back
+    // to enrolled children from applications so we get proper per-child tabs
+    if (map.size === 1 && map.has("unknown")) {
+      const enrolled = enrolledChildrenMap[selectedGroup.key] ?? [];
+      if (enrolled.length > 0) {
+        const unknownTxs = map.get("unknown")!.txs;
+        map.clear();
+        for (const child of enrolled) {
+          map.set(child.studentId, { key: child.studentId, name: child.name, txs: unknownTxs });
+        }
+      }
+    }
     return Array.from(map.values());
-  }, [selectedGroup, studentMap]);
+  }, [selectedGroup, studentMap, enrolledChildrenMap]);
 
   const effectiveChildKey = selectedChildKey ?? childGroups[0]?.key ?? null;
   const selectedChildGroup =
     childGroups.find((c) => c.key === effectiveChildKey) ?? null;
 
-  // Determine which programs the selected child has
+  // Determine which programs the selected child has — fall back to enrolled
+  // application program when transactions have no program metadata (combined payment)
+  const enrolledProgram = effectiveChildKey
+    ? (enrolledChildrenMap[selectedGroup?.key ?? ""] ?? []).find(
+        (c) => c.studentId === effectiveChildKey
+      )?.program ?? null
+    : null;
+
   const hasSummer =
-    selectedChildGroup?.txs.some((tx) => {
+    (selectedChildGroup?.txs.some((tx) => {
       if (tx.payment_type === "summer_tuition") return true;
       const prog = parseMeta(tx).program as string | undefined;
       return prog === "summer_26" || prog === "both";
-    }) ?? false;
+    }) ?? false) ||
+    enrolledProgram === "summer_26" ||
+    enrolledProgram === "both";
 
   const hasSchoolYear =
-    selectedChildGroup?.txs.some((tx) => {
+    (selectedChildGroup?.txs.some((tx) => {
       const prog = parseMeta(tx).program as string | undefined;
       return prog === "school_year_26_27" || prog === "both";
-    }) ?? false;
+    }) ?? false) ||
+    enrolledProgram === "school_year_26_27" ||
+    enrolledProgram === "both";
 
   return (
     <>
@@ -709,6 +760,9 @@ export function TransactionsClient({
                           r.parent_id === selectedGroup?.key &&
                           r.student_id === (effectiveChildKey !== "unknown" ? effectiveChildKey : null)
                       )}
+                      enrolledChild={(enrolledChildrenMap[selectedGroup?.key ?? ""] ?? []).find(
+                        (c) => c.studentId === effectiveChildKey
+                      )}
                     />
                   )}
                   {hasSchoolYear && (
@@ -725,6 +779,9 @@ export function TransactionsClient({
                         (r) =>
                           r.parent_id === selectedGroup?.key &&
                           r.student_id === (effectiveChildKey !== "unknown" ? effectiveChildKey : null)
+                      )}
+                      enrolledChild={(enrolledChildrenMap[selectedGroup?.key ?? ""] ?? []).find(
+                        (c) => c.studentId === effectiveChildKey
                       )}
                     />
                   )}

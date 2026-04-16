@@ -21,6 +21,13 @@ type PendingPaymentRequest = {
   created_at: string
 }
 
+type EnrolledChild = {
+  studentId: string
+  name: string
+  program: string
+  applicationId: string
+}
+
 type StripeTransaction = {
   id: string
   stripe_session_id: string | null
@@ -84,6 +91,31 @@ export default async function TransactionsPage() {
     if (p.full_name) parentNameMap[p.id] = p.full_name
   }
 
+  // Fetch enrolled applications so we can resolve children/programs for parents
+  // whose registration_fee transaction has no student_id (combined payment flow)
+  const { data: enrolledApps } = await client
+    .schema('parent_app')
+    .from('applications')
+    .select('id, user_id, student_id, child_legal_name, program')
+    .eq('approved', true)
+    .eq('status', 'enrolled')
+
+  const enrolledChildrenMap: Record<string, EnrolledChild[]> = {}
+  for (const app of enrolledApps ?? []) {
+    if (!app.user_id || !app.student_id) continue
+    enrolledChildrenMap[app.user_id] ??= []
+    enrolledChildrenMap[app.user_id].push({
+      studentId: app.student_id,
+      name: app.child_legal_name ?? app.student_id.slice(0, 8),
+      program: app.program ?? 'school_year_26_27',
+      applicationId: app.id,
+    })
+    // Ensure studentMap includes these students
+    if (app.student_id && app.child_legal_name && !studentMap[app.student_id]) {
+      studentMap[app.student_id] = app.child_legal_name
+    }
+  }
+
   const { data: pendingData } = parentIds.length > 0
     ? await client
         .schema('billing')
@@ -108,7 +140,7 @@ export default async function TransactionsPage() {
         </p>
       </div>
 
-      <TransactionsClient transactions={rows} studentMap={studentMap} parentNameMap={parentNameMap} pendingRequests={pendingRequests} />
+      <TransactionsClient transactions={rows} studentMap={studentMap} parentNameMap={parentNameMap} pendingRequests={pendingRequests} enrolledChildrenMap={enrolledChildrenMap} />
     </div>
   )
 }
