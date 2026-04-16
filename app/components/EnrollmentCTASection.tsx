@@ -83,7 +83,7 @@ export default function EnrollmentCTASection() {
   };
 
   return (
-    <section className="bg-welcome-bg min-h-[80vh] py-16 px-8 sm:px-12 lg:px-16 flex items-center justify-center">
+    <section className="bg-white min-h-[80vh] py-16 px-8 sm:px-12 lg:px-16 flex items-center justify-center">
       <div className="max-w-7xl mx-auto w-full text-center">
         {/* Badge */}
         <motion.div

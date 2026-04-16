@@ -200,7 +200,8 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
       pathname === "/our-story" ||
       pathname === "/what-we-offer" ||
       pathname === "/educational-philosophy" ||
-      pathname === "/tour");
+      pathname === "/tour" ||
+      pathname === "/programs");
 
   // Close everything on route change
   useEffect(() => {
