@@ -414,6 +414,182 @@ function CategoryBudgetRings({
   );
 }
 
+// ─── Revenue vs Expenses Line Chart ──────────────────────────────────────────
+
+function RevenueExpensesLineChart({
+  stripeTransactions,
+  expenses,
+}: {
+  stripeTransactions: StripeTransaction[];
+  expenses: BudgetExpense[];
+}) {
+  const PAD = { top: 20, right: 24, bottom: 40, left: 72 };
+  const SVG_W = 800;
+  const SVG_H = 220;
+  const chartW = SVG_W - PAD.left - PAD.right;
+  const chartH = SVG_H - PAD.top - PAD.bottom;
+
+  // Collect all months from both data sources
+  const monthSet = new Set<string>();
+  stripeTransactions.forEach((tx) => monthSet.add(tx.created_at.slice(0, 7)));
+  expenses.forEach((e) => monthSet.add(e.expense_date.slice(0, 7)));
+  const allMonths = Array.from(monthSet).sort();
+
+  // Need at least 2 points to draw lines
+  if (allMonths.length < 2) return null;
+
+  const data = allMonths.map((m) => {
+    const revenue = stripeTransactions
+      .filter((tx) => !tx.exclude_from_revenue && tx.created_at.slice(0, 7) === m)
+      .reduce((s, tx) => {
+        const net = tx.cover_fees ? (tx.intended_amount_cents ?? tx.amount_cents) : tx.amount_cents;
+        return s + net / 100;
+      }, 0);
+    const expenseTotal = expenses
+      .filter((e) => e.expense_date.startsWith(m))
+      .reduce((s, e) => s + Number(e.amount), 0);
+    return { month: m, revenue, expenses: expenseTotal };
+  });
+
+  const maxVal = Math.max(...data.map((d) => Math.max(d.revenue, d.expenses)), 1);
+
+  const x = (i: number) =>
+    allMonths.length > 1
+      ? PAD.left + (i / (allMonths.length - 1)) * chartW
+      : PAD.left + chartW / 2;
+
+  const y = (val: number) => PAD.top + chartH - (val / maxVal) * chartH;
+
+  const revPath = data.map((d, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(d.revenue)}`).join(" ");
+  const expPath = data.map((d, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(d.expenses)}`).join(" ");
+
+  // Area fill under revenue line back to baseline
+  const revArea =
+    `M ${x(0)} ${y(data[0].revenue)} ` +
+    data.slice(1).map((d, i) => `L ${x(i + 1)} ${y(d.revenue)}`).join(" ") +
+    ` L ${x(data.length - 1)} ${PAD.top + chartH} L ${x(0)} ${PAD.top + chartH} Z`;
+
+  const fmtMo = (m: string) =>
+    new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)) - 1).toLocaleString("default", {
+      month: "short",
+    });
+
+  const GRIDLINES = 4;
+  const gridVals = Array.from({ length: GRIDLINES + 1 }, (_, i) => (maxVal / GRIDLINES) * i);
+
+  const fmtShort = (n: number) => {
+    if (n >= 1000) return `$${(n / 1000).toFixed(0)}k`;
+    return `$${n.toFixed(0)}`;
+  };
+
+  return (
+    <div style={{ ...cardStyle, padding: "24px" }}>
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
+          Revenue vs. Expenses
+        </p>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5">
+            <div style={{ width: 10, height: 10, borderRadius: "50%", backgroundColor: colors.success }} />
+            <span style={{ fontSize: "12px", color: colors.textSecondary }}>Revenue</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div style={{ width: 10, height: 10, borderRadius: "50%", backgroundColor: colors.error }} />
+            <span style={{ fontSize: "12px", color: colors.textSecondary }}>Expenses</span>
+          </div>
+        </div>
+      </div>
+
+      <svg
+        viewBox={`0 0 ${SVG_W} ${SVG_H}`}
+        style={{ width: "100%", height: "auto", overflow: "visible" }}
+      >
+        <defs>
+          <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={colors.success} stopOpacity={0.18} />
+            <stop offset="100%" stopColor={colors.success} stopOpacity={0} />
+          </linearGradient>
+        </defs>
+
+        {/* Gridlines + Y-axis labels */}
+        {gridVals.map((v) => (
+          <g key={v}>
+            <line
+              x1={PAD.left}
+              y1={y(v)}
+              x2={PAD.left + chartW}
+              y2={y(v)}
+              stroke={colors.border}
+              strokeWidth={1}
+              strokeDasharray="4 3"
+            />
+            <text
+              x={PAD.left - 8}
+              y={y(v) + 4}
+              textAnchor="end"
+              fontSize={10}
+              fill={colors.textSecondary}
+            >
+              {fmtShort(v)}
+            </text>
+          </g>
+        ))}
+
+        {/* Revenue area fill */}
+        <path d={revArea} fill="url(#revGrad)" />
+
+        {/* Expense line */}
+        <motion.path
+          d={expPath}
+          fill="none"
+          stroke={colors.error}
+          strokeWidth={2.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={{ pathLength: 1, opacity: 1 }}
+          transition={{ duration: 1.0, ease: "easeOut" }}
+        />
+
+        {/* Revenue line (drawn on top) */}
+        <motion.path
+          d={revPath}
+          fill="none"
+          stroke={colors.success}
+          strokeWidth={2.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={{ pathLength: 1, opacity: 1 }}
+          transition={{ duration: 1.0, ease: "easeOut", delay: 0.1 }}
+        />
+
+        {/* Dots */}
+        {data.map((d, i) => (
+          <g key={d.month}>
+            <circle cx={x(i)} cy={y(d.revenue)} r={4} fill={colors.success} />
+            <circle cx={x(i)} cy={y(d.expenses)} r={4} fill={colors.error} />
+          </g>
+        ))}
+
+        {/* X-axis labels */}
+        {data.map((d, i) => (
+          <text
+            key={d.month}
+            x={x(i)}
+            y={PAD.top + chartH + 18}
+            textAnchor="middle"
+            fontSize={10}
+            fill={colors.textSecondary}
+          >
+            {fmtMo(d.month)}
+          </text>
+        ))}
+      </svg>
+    </div>
+  );
+}
+
 // ─── Revenue Trend ────────────────────────────────────────────────────────────
 
 function RevenueTrend({
@@ -609,6 +785,12 @@ function OverviewTab({
           onChange={(e) => setSelectedMonth(e.target.value)}
         />
       </div>
+
+      {/* Revenue vs Expenses line chart */}
+      <RevenueExpensesLineChart
+        stripeTransactions={stripeTransactions}
+        expenses={expenses}
+      />
 
       {/* Stat row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
