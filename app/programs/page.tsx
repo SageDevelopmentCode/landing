@@ -1,13 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import FloatingSMSButton from "../components/FloatingSMSButton";
-import WaitlistDialog from "../components/WaitlistDialog";
 import EnrollmentCTASection from "../components/EnrollmentCTASection";
 
 const programs = [
@@ -49,6 +47,7 @@ const programs = [
     image: "/assets/ImageTwo.jpg",
     dateBg: "bg-lavender/40",
     dateText: "text-purple-700",
+    ctaHref: "/apply?tab=school-year",
   },
   {
     badge: "Homeschool",
@@ -67,13 +66,11 @@ const programs = [
     image: "/assets/After1.png",
     dateBg: "bg-emerald-50",
     dateText: "text-emerald-700",
-    ctaLabel: "Request Info",
+    ctaHref: "/apply?tab=homeschool",
   },
 ];
 
 export default function ProgramsPage() {
-  const [isWaitlistOpen, setIsWaitlistOpen] = useState(false);
-
   return (
     <div className="min-h-screen bg-welcome-bg">
       <Navbar />
@@ -188,21 +185,12 @@ export default function ProgramsPage() {
                       >
                         Learn More
                       </Link>
-                      {program.ctaLabel ? (
-                        <button
-                          onClick={() => setIsWaitlistOpen(true)}
-                          className="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
-                        >
-                          {program.ctaLabel}
-                        </button>
-                      ) : (
-                        <Link
-                          href="/apply"
-                          className="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
-                        >
-                          Enroll Now
-                        </Link>
-                      )}
+                      <Link
+                        href={program.ctaHref ?? "/apply"}
+                        className="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+                      >
+                        Enroll Now
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -216,10 +204,6 @@ export default function ProgramsPage() {
 
       <Footer />
       <FloatingSMSButton />
-      <WaitlistDialog
-        isOpen={isWaitlistOpen}
-        onClose={() => setIsWaitlistOpen(false)}
-      />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Navbar from "../components/Navbar";
@@ -325,7 +325,12 @@ const tabContent = {
 };
 
 export default function ApplyPage() {
-  const [activeTab, setActiveTab] = useState<Tab>("summer");
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const initialTab: Tab = (["summer", "school-year", "homeschool"] as Tab[]).includes(tabParam as Tab)
+    ? (tabParam as Tab)
+    : "summer";
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
   const [contactOpen, setContactOpen] = useState(false);
   const [waitlistOpen, setWaitlistOpen] = useState(false);
   const router = useRouter();

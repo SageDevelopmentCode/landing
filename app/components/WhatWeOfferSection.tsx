@@ -1,8 +1,6 @@
 "use client";
 
-import { useState } from "react";
 import WeeklySchedule from "./WeeklySchedule";
-import WaitlistDialog from "./WaitlistDialog";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
@@ -46,6 +44,7 @@ const programs = [
     image: "/assets/ImageTwo.jpg",
     dateBg: "bg-lavender/40",
     dateText: "text-purple-700",
+    ctaHref: "/apply?tab=school-year",
   },
   {
     badge: "Homeschool",
@@ -64,13 +63,11 @@ const programs = [
     image: "/assets/After1.png",
     dateBg: "bg-emerald-50",
     dateText: "text-emerald-700",
-    ctaLabel: "Request Info",
+    ctaHref: "/apply?tab=homeschool",
   },
 ];
 
 export default function WhatWeOfferSection() {
-  const [isWaitlistOpen, setIsWaitlistOpen] = useState(false);
-
   return (
     <section
       id="what-we-offer"
@@ -278,21 +275,12 @@ export default function WhatWeOfferSection() {
                       >
                         Learn More
                       </Link>
-                      {program.ctaLabel ? (
-                        <button
-                          onClick={() => setIsWaitlistOpen(true)}
-                          className="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
-                        >
-                          {program.ctaLabel}
-                        </button>
-                      ) : (
-                        <Link
-                          href="/apply"
-                          className="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
-                        >
-                          Enroll Now
-                        </Link>
-                      )}
+                      <Link
+                        href={program.ctaHref ?? "/apply"}
+                        className="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+                      >
+                        Enroll Now
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -302,10 +290,6 @@ export default function WhatWeOfferSection() {
         </div>
       </div>
 
-      <WaitlistDialog
-        isOpen={isWaitlistOpen}
-        onClose={() => setIsWaitlistOpen(false)}
-      />
     </section>
   );
 }
