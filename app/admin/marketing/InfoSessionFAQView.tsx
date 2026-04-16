@@ -53,12 +53,22 @@ const faqSections: FAQSection[] = [
       {
         question: 'Is there an aftercare option? What does it cost?',
         answer:
-          'Yes — After Care runs 3:00pm–6:00pm. Drop-in: $35/day. Monthly for enrolled students: $375/month. After Care Only (non-enrolled families): $475/month.',
+          'Yes — After Care runs 3:00pm–6:00pm. Drop-in: $35/day. Monthly for enrolled students: $375/month (~$23/day). After Care Only (non-enrolled families): $475/month (~$10/hour).',
       },
       {
         question: 'What is Field Day Friday and what does it cost?',
         answer:
           'Field Day Fridays are optional Fridays from 9:00am–1:00pm with outdoor adventures and activities. Package of 4 sessions: $200/month ($50/session, expires monthly). Drop-in per session: $60.',
+      },
+      {
+        question: 'What happens if we need to withdraw mid-term?',
+        answer:
+          "Withdrawing mid-term does not automatically release outstanding tuition obligations — the terms in the signed Enrollment Agreement govern what is owed. Registration and materials fees are non-refundable. If there's a billing dispute, contact sabrina@sagefield.co before initiating a chargeback.",
+      },
+      {
+        question: 'How is payment processed?',
+        answer:
+          'Payments are processed through Stripe. A payment method stays on file and is charged according to the enrollment plan. Failed payments trigger a notification; unresolved balances may suspend portal access and affect enrollment status.',
       },
     ],
   },
@@ -91,6 +101,26 @@ const faqSections: FAQSection[] = [
         answer:
           'No. Sage Field is a full drop-off program. Families do not need to provide or supplement any academic curriculum at home unless they personally choose to.',
       },
+      {
+        question: 'What does "ability-based grouping" actually mean in practice?',
+        answer:
+          "Children are assessed on where they are in literacy and numeracy, then grouped with peers at a similar level — regardless of age or grade. A 6-year-old who reads at a 3rd-grade level works alongside older children in reading. A 9-year-old who needs more support in math isn't left behind or singled out. Groups shift as children grow.",
+      },
+      {
+        question: 'What does the summer academic block look like specifically?',
+        answer:
+          'Each morning has three ~15-minute academic blocks: one for ELA/reading, one for math, one for writing/journaling. These are short and targeted by design — kids stay engaged because the blocks end before attention fades. The rest of the day is activity-based and theme-driven.',
+      },
+      {
+        question: "What are the summer 2026 weekly themes?",
+        answer:
+          "Week 1 (May 26–29): Welcome to Camp · Week 2 (Jun 1–4): Mystery Camp Escape Challenge · Week 3 (Jun 8–11): Beach Day Bash · Week 4 (Jun 15–18): Scientist & Space Engineering Lab · Week 5 (Jun 22–25): Safari Escape · Week 6 (Jun 29–Jul 2): Splash Into Summer · Week 7 (Jul 6–9): Dino Hunt · Week 8 (Jul 13–16): Pirate Adventure · Week 9 (Jul 20–23): You Are a Superhero! · Week 10 (Jul 27–30): Space Explorers: Mission to the Stars · Week 11 (Aug 3–6): Down on the Farm · Week 12 (Aug 10–13): Finale of Camp.",
+      },
+      {
+        question: 'Does Sage Field give grades, report cards, or transcripts?',
+        answer:
+          'No — we are a private microschool operating under Texas private school law, not a traditionally accredited institution. We provide descriptive, portfolio-based feedback on each child\'s growth. Families manage any additional records they personally want to keep.',
+      },
     ],
   },
   {
@@ -103,14 +133,24 @@ const faqSections: FAQSection[] = [
           'Mornings (9am–noon): focused academic blocks in literacy, math, and writing — short, engaging, ability-grouped. Afternoons (noon–3pm): nature exploration, science, art, movement, sports-style games, and social-emotional learning. The day is designed to feel calm, connected, and full of curiosity.',
       },
       {
+        question: 'What is the exact daily schedule for Summer 2026?',
+        answer:
+          '8:30–9:00 AM: Check-In & Free Play\n9:00–9:15 AM: Good Citizenship Meeting\n9:15–9:30 AM: ELA/Reading Block\n9:30–9:45 AM: Math Block\n9:45–10:15 AM: Morning Snack Break\n10:15–10:45 AM: Daily Themed Activity\n10:45–11:15 AM: Art\n11:15–11:30 AM: Music\n11:30 AM–12:15 PM: Lunch\n12:15–1:15 PM: Water Play\n1:15–1:45 PM: Journaling & Reflection\n1:45–2:30 PM: Homesteading\n2:30–3:30 PM: Outdoor Exploration & Dismissal',
+      },
+      {
         question: 'What are the school hours?',
         answer:
-          '9:00am–3:00pm, Monday through Thursday. Optional After Care is available from 3:00pm–6:00pm.',
+          '9:00am–3:00pm, Monday through Thursday (doors open at 8:30am). Optional After Care is available from 3:00pm–6:00pm.',
       },
       {
         question: 'What happens on Fridays?',
         answer:
-          'Fridays are optional Field Days (9am–1pm) available as an add-on. They are not part of the core Mon–Thu program.',
+          'Fridays are optional Field Days (9am–1pm) available as an add-on. They are not part of the core Mon–Thu program. Each Friday is a unique outdoor/nature experience — themes change weekly.',
+      },
+      {
+        question: 'What does drop-off and pick-up look like?',
+        answer:
+          'Doors open at 8:30am for check-in and free play. The structured day begins at 9:00am. Dismissal is at 3:30pm (end of outdoor exploration block). After Care extends to 6:00pm for families who need it.',
       },
     ],
   },
@@ -132,6 +172,21 @@ const faqSections: FAQSection[] = [
         question: 'Do you support neurodivergent children?',
         answer:
           "Yes — our small class size, clear rhythms, and relationship-based environment work well for many neurodivergent and high-sensitivity children. We are not a therapeutic program or medical provider. For very high-support needs, families may need to provide a 1:1 aide. In some cases we may determine Sage Field isn't the right fit to keep everyone safe.",
+      },
+      {
+        question: 'What specific behaviors can Sage Field NOT accommodate?',
+        answer:
+          "We cannot safely accommodate ongoing elopement/running away, significant medical fragility requiring clinical intervention, or repeated violent outbursts toward others. These are the clear lines — not because we don't care, but because keeping the whole community safe is the priority.",
+      },
+      {
+        question: 'Do you handle medications or medical needs?',
+        answer:
+          "We do not administer routine or over-the-counter medications. The only exception is life-saving emergency medications (EpiPens, rescue inhalers) provided and documented by parents — staff may assist in good faith during emergencies. Families send all snacks and lunches from home; no food sharing except between siblings/household members.",
+      },
+      {
+        question: "What's the process before a child is disenrolled for behavior?",
+        answer:
+          'We always work with the child and family first — regulation, connection, problem-solving. If unsafe behavior is repeated, we issue a formal written warning. Only if that doesn\'t resolve the situation do we consider ending enrollment. It is never a first response.',
       },
     ],
   },
@@ -159,6 +214,16 @@ const faqSections: FAQSection[] = [
         answer:
           '~10 children per class with 2 adults. This ratio means truly individualized attention — teachers know every child well.',
       },
+      {
+        question: 'Who are the teachers and what are their qualifications?',
+        answer:
+          "Sabrina Grace Obnamia (Lead Teacher & Director) — B.S. in Elementary Education with a concentration in Early Childhood Development from Biola University, plus a Teaching Credential. Her experience spans special education, preschool, homeschooling, tutoring, traditional schooling, and nature school guiding in the U.S. and internationally.\n\nPaige Wood (Primary Lead Teacher) — experienced in Montessori-style education and outdoor learning.\n\nZelinda Melo (Teacher Aide) — focused on nurturing, safe, and encouraging environments.\n\nNicole Elias & Taylor Elias (Summer Program Coordinators) — education backgrounds with focus on child development, outdoor learning, and nature-inspired curriculum.",
+      },
+      {
+        question: 'What does Montessori vs. Waldorf vs. Reggio Emilia actually look like in the classroom?',
+        answer:
+          "Montessori: children choose activities from curated materials, work at their own pace, and build independence. Waldorf: rhythm and routine matter — art, music, and storytelling are woven through academics, not treated as extras. Reggio Emilia: the environment itself is a teacher; projects emerge from children's questions and curiosity rather than a fixed syllabus. We pull from all three based on what each moment calls for.",
+      },
     ],
   },
   {
@@ -179,6 +244,26 @@ const faqSections: FAQSection[] = [
         question: 'When does enrollment close?',
         answer:
           'Enrollment is currently open for Summer 2026 and School Year 2026–2027. We keep classes at ~10 children, so spots fill quickly.',
+      },
+      {
+        question: 'What does the application and enrollment process look like step by step?',
+        answer:
+          '1. Complete the online application at sagefieldschool.com/apply (choose Summer, School Year, or Homeschool Drop-In).\n2. We schedule a mutual-fit conversation to make sure Sage Field is the right environment for your child.\n3. If we offer a spot, you sign the Enrollment Agreement, complete risk/medical/media consent forms, and pay the registration fee.\n4. Your child\'s spot is held once all three steps are complete.',
+      },
+      {
+        question: 'What is the School Year 2026–2027 commitment, and what happens after March 2027?',
+        answer:
+          "The School Year is a 6-month commitment running August 17, 2026 – March 2027. What happens beyond March 2027 has not yet been announced on the site — families interested in continuing should ask directly at the session.",
+      },
+      {
+        question: 'Can a homeschool drop-in child join a class mid-week alongside full-enrolled students?',
+        answer:
+          'Yes — drop-in children join the same class as enrolled students. Every drop-in child gets access to all enrichments (art, music, movement, science, SEL) on the days they attend. They are part of the same community, not a separate track.',
+      },
+      {
+        question: 'Where is Sage Field located?',
+        answer:
+          '2760 Gattis School Rd, Round Rock, TX 78664. Contact: sabrina@sagefield.co or (512) 677-5872.',
       },
     ],
   },
