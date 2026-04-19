@@ -162,13 +162,13 @@ function isTxMatch(
 
 function StatusBadge({ status }: { status: string }) {
   const isSuccess =
-    status === "complete" || status === "paid" || status === "succeeded";
+    status === "complete" || status === "paid" || status === "succeeded" || status === "completed";
   return (
     <span
       className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold"
       style={{
-        backgroundColor: isSuccess ? colors.pastelSage : colors.paleMarigold,
-        color: isSuccess ? colors.mistyForest : colors.warningText,
+        backgroundColor: isSuccess ? "#166534" : "#92400e",
+        color: "#ffffff",
       }}
     >
       {status}
@@ -582,14 +582,19 @@ export function TransactionsClient({
               </TableCell>
               <TableCell>
                 <div>
-                  {tx.payment_type !== "donation" && tx.payer_name && (
+                  {tx.payment_type !== "donation" && (
                     <div className="font-medium text-gray-800">
-                      {tx.payer_name}
+                      {tx.payer_name ?? (tx.parent_id ? (parentNameMap[tx.parent_id] ?? null) : null) ?? "—"}
                     </div>
                   )}
-                  <div className="text-gray-500 text-xs">
-                    {tx.payer_email ?? "—"}
-                  </div>
+                  {tx.payer_email && (
+                    <div className="text-gray-500 text-xs">{tx.payer_email}</div>
+                  )}
+                  {!tx.student_id && tx.parent_id && (enrolledChildrenMap[tx.parent_id] ?? []).length > 0 && (
+                    <div className="text-gray-400 text-xs">
+                      {(enrolledChildrenMap[tx.parent_id] ?? []).map(c => c.name).join(", ")}
+                    </div>
+                  )}
                 </div>
               </TableCell>
               <TableCell>{formatCents(tx.amount_cents, tx.currency)}</TableCell>

@@ -59,6 +59,7 @@ export default async function TransactionsPage() {
     .from('stripe_transactions')
     .select('*')
     .eq('is_deleted', false)
+    .eq('exclude_from_revenue', false)
     .order('created_at', { ascending: false })
 
   const rows = (transactions ?? []) as StripeTransaction[]

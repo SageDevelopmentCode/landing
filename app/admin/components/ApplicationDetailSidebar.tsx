@@ -19,6 +19,7 @@ import { EnrollmentProgressCard, type ApprovedApplication } from './EnrollmentPr
 import { EmailThread } from './EmailThread'
 import { sendEnrollmentReminderEmail } from '../../actions/sendEnrollmentReminderEmail'
 import { sendEnrollmentConfirmationEmail } from '../../actions/sendEnrollmentConfirmationEmail'
+import { sendInfoSessionInviteEmail } from '../../actions/sendInfoSessionInviteEmail'
 import { enrollApplication } from '../../actions/enrollApplication'
 
 export type CachedEnrollmentData = AdminEnrollmentData & {
@@ -145,6 +146,9 @@ export function ApplicationDetailSidebar({
   const [confirmationSending, setConfirmationSending] = useState(false)
   const [confirmationSent, setConfirmationSent] = useState(false)
   const [confirmationError, setConfirmationError] = useState<string | null>(null)
+  const [infoSessionSending, setInfoSessionSending] = useState(false)
+  const [infoSessionSent, setInfoSessionSent] = useState(false)
+  const [infoSessionError, setInfoSessionError] = useState<string | null>(null)
   const [enrollmentData, setEnrollmentData] = useState<AdminEnrollmentData & { registrationFeePaidByStudent: Record<string, boolean> } | null>(null)
   const [enrollmentLoading, setEnrollmentLoading] = useState(false)
   const [siblingApps, setSiblingApps] = useState<ApprovedApplication[]>([])
@@ -403,6 +407,24 @@ export function ApplicationDetailSidebar({
       setTimeout(() => setConfirmationSent(false), 3000)
     } else {
       setConfirmationError(result.error ?? 'Failed to send')
+    }
+  }
+
+  const handleSendInfoSessionInvite = async () => {
+    if (infoSessionSending || !application.g1_email) return
+    setInfoSessionSending(true)
+    setInfoSessionError(null)
+    const result = await sendInfoSessionInviteEmail({
+      name: application.g1_full_name ?? '',
+      email: application.g1_email,
+    })
+    setInfoSessionSending(false)
+    if (result.success) {
+      setInfoSessionSent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setInfoSessionSent(false), 3000)
+    } else {
+      setInfoSessionError(result.error ?? 'Failed to send')
     }
   }
 
@@ -726,6 +748,17 @@ export function ApplicationDetailSidebar({
                   {confirmationSending ? 'Sending…' : confirmationSent ? '✓ Sent!' : 'Send Enrollment Confirmation'}
                 </button>
                 {confirmationError && <span className="text-xs text-red-600">{confirmationError}</span>}
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleSendInfoSessionInvite}
+                  disabled={infoSessionSending || infoSessionSent}
+                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                >
+                  {infoSessionSending ? 'Sending…' : infoSessionSent ? '✓ Sent!' : 'Send Info Session Invite'}
+                </button>
+                {infoSessionError && <span className="text-xs text-red-600">{infoSessionError}</span>}
               </div>
             </div>
           </SidebarSection>

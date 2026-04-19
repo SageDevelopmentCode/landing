@@ -23,7 +23,7 @@ interface NavLeaf {
 }
 
 type NavTab =
-  | { kind: "single"; label: string; action: NavAction; highlight?: boolean }
+  | { kind: "single"; label: string; action: NavAction; highlight?: boolean; badge?: string }
   | { kind: "dropdown"; label: string; items: NavLeaf[] };
 
 const NAV_TABS: NavTab[] = [
@@ -93,14 +93,15 @@ const NAV_TABS: NavTab[] = [
         action: { kind: "link", href: "/academic-calendar" },
       },
       { label: "Tour", action: { kind: "link", href: "/tour" }, badge: "New!" },
-      {
-        label: "Info Session",
-        action: { kind: "link", href: "/info" },
-        badge: "Apr 18",
-      },
       { label: "FAQ", action: { kind: "link", href: "/faq" } },
       { label: "Donate", action: { kind: "link", href: "/donate" } },
     ],
+  },
+  {
+    kind: "single",
+    label: "Open House",
+    action: { kind: "link", href: "/rsvp" },
+    badge: "This Sat!",
   },
   {
     kind: "single",
@@ -118,12 +119,6 @@ const NAV_TABS: NavTab[] = [
 // ─── Announcement data ───────────────────────────────────────────────────────
 
 const ANNOUNCEMENTS = [
-  {
-    short: "🎙️ Parent Info Session this Sat!",
-    full: "🎙️ Parent Info Session — this Saturday, April 18 at 10 AM CST!",
-    buttonLabel: "RSVP Now",
-    href: "/info",
-  },
   {
     short: "🎉 Open House on April 25!",
     full: "🎉 We are hosting an Open House on April 25!",
@@ -274,13 +269,15 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
       : "text-gray-700 hover:bg-gray-50 hover:text-gray-900";
 
     const badge = leaf.badge ? (
-      <span className={`ml-2 text-[10px] font-semibold uppercase rounded-full px-2 py-0.5 shrink-0 ${
-        leaf.badge === "Coming Soon"
-          ? "bg-gray-100 text-gray-400"
-          : leaf.badge === "New!"
-          ? "bg-green-100 text-green-700"
-          : "bg-amber-100 text-amber-700"
-      }`}>
+      <span
+        className={`ml-2 text-[10px] font-semibold uppercase rounded-full px-2 py-0.5 shrink-0 ${
+          leaf.badge === "Coming Soon"
+            ? "bg-gray-100 text-gray-400"
+            : leaf.badge === "New!"
+              ? "bg-green-100 text-green-700"
+              : "bg-amber-100 text-amber-700"
+        }`}
+      >
         {leaf.badge}
       </span>
     ) : null;
@@ -438,13 +435,34 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
                     </Link>
                   );
                 }
+                if (tab.action.kind === "link") {
+                  return (
+                    <Link
+                      key={tab.label}
+                      href={tab.action.href}
+                      className={`flex items-center gap-1.5 px-3 py-2 font-semibold text-sm transition-colors duration-200 ${triggerClass} focus:outline-none`}
+                    >
+                      {tab.label}
+                      {tab.badge && (
+                        <span className="bg-amber-100 text-amber-700 text-[10px] font-semibold uppercase rounded-full px-2 py-0.5">
+                          {tab.badge}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                }
                 return (
                   <button
                     key={tab.label}
                     onClick={() => handleLeafAction(tab.action)}
-                    className={`px-3 py-2 font-semibold text-sm transition-colors duration-200 ${triggerClass} cursor-pointer focus:outline-none`}
+                    className={`flex items-center gap-1.5 px-3 py-2 font-semibold text-sm transition-colors duration-200 ${triggerClass} cursor-pointer focus:outline-none`}
                   >
                     {tab.label}
+                    {tab.badge && (
+                      <span className="bg-amber-100 text-amber-700 text-[10px] font-semibold uppercase rounded-full px-2 py-0.5">
+                        {tab.badge}
+                      </span>
+                    )}
                   </button>
                 );
               }
@@ -477,7 +495,10 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
                         initial={{ opacity: 0, y: -6, scale: 0.97 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -6, scale: 0.97 }}
-                        transition={{ duration: 0.15, ease: "easeOut" as const }}
+                        transition={{
+                          duration: 0.15,
+                          ease: "easeOut" as const,
+                        }}
                         className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50"
                       >
                         <div className="px-2 py-1 flex flex-col gap-0.5">
@@ -534,7 +555,9 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
       </div>
 
       {/* Mobile CTA strip — slides in when scrolled */}
-      <div className={`lg:hidden overflow-hidden transition-all duration-200 px-4 flex gap-2 ${scrolled ? "max-h-20 opacity-100 pb-3" : "max-h-0 opacity-0"}`}>
+      <div
+        className={`lg:hidden overflow-hidden transition-all duration-200 px-4 flex gap-2 ${scrolled ? "max-h-20 opacity-100 pb-3" : "max-h-0 opacity-0"}`}
+      >
         <Link
           href="/apply"
           className="flex-1 flex items-center justify-center px-4 py-2.5 bg-sage-600 text-white text-sm font-semibold rounded-2xl"
@@ -595,13 +618,41 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
                         </div>
                       );
                     }
+                    if (tab.action.kind === "link") {
+                      return (
+                        <div key={tab.label} className="py-2">
+                          <Link
+                            href={tab.action.href}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className={`w-full flex items-center justify-between py-3 font-semibold text-sm ${mobileTextBase} focus:outline-none`}
+                          >
+                            <span className="flex items-center gap-2">
+                              {tab.label}
+                              {tab.badge && (
+                                <span className="bg-amber-100 text-amber-700 text-[10px] font-semibold uppercase rounded-full px-2 py-0.5">
+                                  {tab.badge}
+                                </span>
+                              )}
+                            </span>
+                            <ChevronRight className="w-4 h-4 opacity-50" strokeWidth={2} />
+                          </Link>
+                        </div>
+                      );
+                    }
                     return (
                       <div key={tab.label} className="py-2">
                         <button
                           onClick={() => handleLeafAction(tab.action)}
                           className={`w-full flex items-center justify-between py-3 font-semibold text-sm ${mobileTextBase} cursor-pointer focus:outline-none`}
                         >
-                          {tab.label}
+                          <span className="flex items-center gap-2">
+                            {tab.label}
+                            {tab.badge && (
+                              <span className="bg-amber-100 text-amber-700 text-[10px] font-semibold uppercase rounded-full px-2 py-0.5">
+                                {tab.badge}
+                              </span>
+                            )}
+                          </span>
                           <ChevronRight
                             className="w-4 h-4 opacity-50"
                             strokeWidth={2}
@@ -640,7 +691,10 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: "auto", opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.25, ease: "easeInOut" as const }}
+                            transition={{
+                              duration: 0.25,
+                              ease: "easeInOut" as const,
+                            }}
                             className="overflow-hidden"
                           >
                             <div className="border-l-2 border-primary/30 pl-4 pb-2 flex flex-col gap-0.5">

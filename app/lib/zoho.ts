@@ -1531,3 +1531,42 @@ export async function buildInfoSessionRSVPEmail(opts: {
 
   return { subject, content };
 }
+
+export async function buildInfoSessionReminderEmail(opts: {
+  firstName: string;
+}): Promise<{ subject: string; content: string }> {
+  const subject =
+    "Reminder: Virtual Parent Info Session today, April 18 at 10 AM";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${opts.firstName},</p>
+
+  <p>Just a quick reminder that our <strong>Virtual Parent Info Session</strong> is today! We're so excited to connect with you and share everything about Sage Field.</p>
+
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; margin: 28px 0;">
+    <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 15px;">Event Details</p>
+    <p style="margin: 4px 0;"><strong>Date:</strong> Saturday, April 18, 2026</p>
+    <p style="margin: 4px 0;"><strong>Time:</strong> 10:00 AM CST</p>
+    <p style="margin: 4px 0;"><strong>Format:</strong> Virtual via Google Meet</p>
+    <p style="margin: 12px 0 0 0; font-size: 14px;"><strong>Join here:</strong> <a href="https://meet.google.com/epm-ashp-tyf" style="color: #5a7a5a;">https://meet.google.com/epm-ashp-tyf</a></p>
+  </div>
+
+  <p>We'll cover our programs, philosophy, daily life at Sage Field, pricing, enrollment, and leave plenty of time for your questions.</p>
+
+  <p>We look forward to seeing you today! If anything comes up, feel free to reach out:</p>
+  <ul style="padding-left: 20px; margin: 8px 0;">
+    <li style="margin-bottom: 6px;">📧 Email: <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></li>
+    <li style="margin-bottom: 6px;">📱 Call/Text: <a href="tel:5126775872" style="color: #5a7a5a;">(512) 677-5872</a></li>
+  </ul>
+
+  <p style="margin-top: 32px;">With warmth,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina Obnamia</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}

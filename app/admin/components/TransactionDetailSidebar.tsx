@@ -249,6 +249,7 @@ interface TransactionDetailSidebarProps {
 
 export function TransactionDetailSidebar({ transaction, onClose, onDeleted, onExclusionToggled }: TransactionDetailSidebarProps) {
   const [studentRecord, setStudentRecord] = useState<StudentRecord | null>(null)
+  const [multiStudentRecords, setMultiStudentRecords] = useState<StudentRecord[] | null>(null)
   const [applicationRecord, setApplicationRecord] = useState<ApplicationRecord | null>(null)
   const [userRecord, setUserRecord] = useState<UserRecord | null>(null)
 
@@ -301,6 +302,7 @@ export function TransactionDetailSidebar({ transaction, onClose, onDeleted, onEx
 
   useEffect(() => {
     setStudentRecord(null)
+    setMultiStudentRecords(null)
     setApplicationRecord(null)
     setUserRecord(null)
     setOpenApplication(null)
@@ -324,14 +326,20 @@ export function TransactionDetailSidebar({ transaction, onClose, onDeleted, onEx
         transaction.application_id ?? (transaction.metadata?.application_id as string | null) ?? null
       const effectiveParentId =
         transaction.parent_id ?? (transaction.metadata?.parent_id as string | null) ?? null
+      const applicationIdsStr = transaction.metadata?.application_ids as string | undefined
+      const effectiveApplicationIds = applicationIdsStr
+        ? applicationIdsStr.split(',').map(s => s.trim()).filter(Boolean)
+        : undefined
 
       const result = await getTransactionRelatedRecords({
         studentId: effectiveStudentId,
         applicationId: effectiveApplicationId,
+        applicationIds: effectiveApplicationIds,
         parentId: effectiveParentId,
       })
 
       if (result.student) setStudentRecord(result.student as StudentRecord)
+      if (result.multiStudents) setMultiStudentRecords(result.multiStudents as StudentRecord[])
       if (result.application) setApplicationRecord(result.application as ApplicationRecord)
       if (result.parent) setUserRecord(result.parent as UserRecord)
     }
@@ -513,10 +521,10 @@ export function TransactionDetailSidebar({ transaction, onClose, onDeleted, onEx
             </SidebarSection>
 
             <SidebarSection title="Payer">
-              {transaction.payer_name && (
-                <SidebarField label="Name" value={transaction.payer_name} />
+              {(transaction.payer_name ?? userRecord?.full_name) && (
+                <SidebarField label="Name" value={transaction.payer_name ?? userRecord?.full_name ?? null} />
               )}
-              <SidebarField label="Email" value={transaction.payer_email} />
+              <SidebarField label="Email" value={transaction.payer_email ?? userRecord?.email ?? null} />
             </SidebarSection>
 
             <SidebarSection title="References">
@@ -560,6 +568,42 @@ export function TransactionDetailSidebar({ transaction, onClose, onDeleted, onEx
                   </div>
                   <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: colors.mistyForest }} />
                 </button>
+              </SidebarSection>
+            )}
+            {!studentRecord && multiStudentRecords && multiStudentRecords.length > 0 && (
+              <SidebarSection title="Students">
+                <div className="space-y-2">
+                  {multiStudentRecords.map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={async () => {
+                        setStudentDetailLoading(true)
+                        const data = await getStudentDetail(s.id)
+                        setStudentDetailLoading(false)
+                        if (data) { setOpenStudent(data as FullStudent); setShowTransactionSidebar(false) }
+                      }}
+                      disabled={studentDetailLoading}
+                      style={{ backgroundColor: colors.pastelSage + '33' }}
+                      className="w-full text-left rounded-xl px-4 py-3 hover:brightness-95 transition-all flex items-center gap-3 disabled:opacity-60 cursor-pointer"
+                    >
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{ backgroundColor: colors.pastelSage }}
+                      >
+                        <span className="text-xs font-semibold" style={{ color: colors.mistyForest }}>{getInitials(s.child_legal_name)}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-800">{s.child_legal_name ?? '—'}</p>
+                        <p className="text-xs text-gray-500">
+                          {s.dob_month && s.dob_day && s.dob_year
+                            ? `DOB: ${s.dob_month}/${s.dob_day}/${s.dob_year}`
+                            : 'No DOB'}
+                        </p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: colors.mistyForest }} />
+                    </button>
+                  ))}
+                </div>
               </SidebarSection>
             )}
 

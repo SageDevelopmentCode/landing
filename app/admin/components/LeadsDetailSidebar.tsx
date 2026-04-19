@@ -10,6 +10,7 @@ import { updateWaitlistLead, updateContactLead, updateCallNotes } from '../../ac
 import { deleteWaitlistLead, deleteContactLead } from '../../actions/deleteLead'
 import { sendFacebookLeadEmail } from '../../actions/sendFacebookLeadEmail'
 import { sendInfoSessionInviteEmail } from '../../actions/sendInfoSessionInviteEmail'
+import { sendInfoSessionReminderEmail } from '../../actions/sendInfoSessionReminderEmail'
 import { TagEditor } from './TagEditor'
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
@@ -129,6 +130,9 @@ export function LeadsDetailSidebar({
   const [infoEmailSending, setInfoEmailSending] = useState(false)
   const [infoEmailSent, setInfoEmailSent] = useState(false)
   const [infoEmailError, setInfoEmailError] = useState<string | null>(null)
+  const [reminderSending, setReminderSending] = useState(false)
+  const [reminderSent, setReminderSent] = useState(false)
+  const [reminderError, setReminderError] = useState<string | null>(null)
 
   const callNotesEditor = useEditor({
     extensions: [StarterKit, Highlight, TextStyle],
@@ -160,6 +164,8 @@ export function LeadsDetailSidebar({
       setFbEmailError(null)
       setInfoEmailSent(false)
       setInfoEmailError(null)
+      setReminderSent(false)
+      setReminderError(null)
     }
   }, [submission?.id])
 
@@ -323,6 +329,21 @@ export function LeadsDetailSidebar({
       setTimeout(() => setInfoEmailSent(false), 3000)
     } else {
       setInfoEmailError(result.error ?? 'Failed to send email')
+    }
+  }
+
+  const handleSendReminderEmail = async () => {
+    if (reminderSending || reminderSent) return
+    setReminderSending(true)
+    setReminderError(null)
+    const firstName = isWaitlist ? (currentSubmission as WaitlistLead).parent_name.split(' ')[0] : (currentSubmission as ContactLead).name.split(' ')[0]
+    const result = await sendInfoSessionReminderEmail({ firstName, email: currentSubmission.email })
+    setReminderSending(false)
+    if (result.success) {
+      setReminderSent(true)
+      setTimeout(() => setReminderSent(false), 3000)
+    } else {
+      setReminderError(result.error ?? 'Failed to send email')
     }
   }
 
@@ -765,6 +786,15 @@ export function LeadsDetailSidebar({
               {infoEmailSending ? 'Sending…' : infoEmailSent ? '✓ Sent!' : 'Send Info Session Invite'}
             </button>
             {infoEmailError && <span className="text-xs text-red-600">{infoEmailError}</span>}
+            <button
+              onClick={handleSendReminderEmail}
+              disabled={reminderSending || reminderSent}
+              className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+            >
+              {reminderSending ? 'Sending…' : reminderSent ? '✓ Sent!' : 'Send Info Session Reminder'}
+            </button>
+            {reminderError && <span className="text-xs text-red-600">{reminderError}</span>}
           </div>
         </div>
 
