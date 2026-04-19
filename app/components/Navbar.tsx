@@ -101,7 +101,7 @@ const NAV_TABS: NavTab[] = [
     kind: "single",
     label: "Open House",
     action: { kind: "link", href: "/rsvp" },
-    badge: "This Sat!",
+    badge: "RSVP!",
   },
   {
     kind: "single",
