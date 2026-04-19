@@ -22,7 +22,11 @@ const summerWeeks = [
   { week: 7, dates: "Jul 6–9", theme: "Dino Hunt" },
   { week: 8, dates: "Jul 13–16", theme: "Pirate Adventure" },
   { week: 9, dates: "Jul 20–23", theme: "You are a Superhero!" },
-  { week: 10, dates: "Jul 27–30", theme: "Space Explorers: Mission to the Stars" },
+  {
+    week: 10,
+    dates: "Jul 27–30",
+    theme: "Space Explorers: Mission to the Stars",
+  },
   { week: 11, dates: "Aug 3–6", theme: "Down on the Farm" },
   { week: 12, dates: "Aug 10–13", theme: "Finale of Camp" },
 ];
@@ -35,40 +39,197 @@ const schoolYearDetails = [
 ];
 
 const schoolYearPillars = [
-  { icon: "🌱", title: "Hands-on Learning", description: "Experiential activities that engage curiosity" },
-  { icon: "🧘", title: "Emotional Regulation", description: "Mindfulness practices for students & educators" },
-  { icon: "🎨", title: "Creative Expression", description: "Artistic and musical creativity flourish" },
-  { icon: "🌳", title: "Movement & Nature", description: "Movement-based and outdoor education" },
+  {
+    icon: "🌱",
+    title: "Hands-on Learning",
+    description: "Experiential activities that engage curiosity",
+  },
+  {
+    icon: "🧘",
+    title: "Emotional Regulation",
+    description: "Mindfulness practices for students & educators",
+  },
+  {
+    icon: "🎨",
+    title: "Creative Expression",
+    description: "Artistic and musical creativity flourish",
+  },
+  {
+    icon: "🌳",
+    title: "Movement & Nature",
+    description: "Movement-based and outdoor education",
+  },
 ];
 
 const homeschoolTiers = [
-  { days: "1x/week", title: "Light Touch", description: "A taste of microschool enrichment without disrupting your home rhythm." },
-  { days: "2x/week", title: "Balanced Rhythm", description: "Two structured days create a consistent routine with plenty of flexibility." },
-  { days: "3x/week", title: "Regular Learner", description: "Deep engagement with academics, enrichments, and peer connection each week." },
+  {
+    days: "1x/week",
+    title: "Light Touch",
+    description:
+      "A taste of microschool enrichment without disrupting your home rhythm.",
+  },
+  {
+    days: "2x/week",
+    title: "Balanced Rhythm",
+    description:
+      "Two structured days create a consistent routine with plenty of flexibility.",
+  },
+  {
+    days: "3x/week",
+    title: "Regular Learner",
+    description:
+      "Deep engagement with academics, enrichments, and peer connection each week.",
+  },
 ];
 
 const homeschoolPillars = [
-  { icon: "🎯", title: "Ability-Based Learning", description: "We group by ability and interest, not grade." },
-  { icon: "👥", title: "Tiny Class Sizes", description: "~10 kids per class — real attention and genuine community." },
-  { icon: "🌱", title: "Interest-Led Academics", description: "Curiosity drives the curriculum." },
-  { icon: "🤝", title: "Real Socialization", description: "Mixed-age groups build authentic friendships." },
+  {
+    icon: "🎯",
+    title: "Ability-Based Learning",
+    description: "We group by ability and interest, not grade.",
+  },
+  {
+    icon: "👥",
+    title: "Tiny Class Sizes",
+    description: "~10 kids per class — real attention and genuine community.",
+  },
+  {
+    icon: "🌱",
+    title: "Interest-Led Academics",
+    description: "Curiosity drives the curriculum.",
+  },
+  {
+    icon: "🤝",
+    title: "Real Socialization",
+    description: "Mixed-age groups build authentic friendships.",
+  },
+];
+
+const faqItems = [
+  {
+    question: "What is Sage Field?",
+    answer:
+      "Sage Field Private School is an outdoor-focused private microschool in Round Rock, Texas — a small-group, outdoor-centered education that fosters curiosity, confidence, and wisdom. A structured drop-off program without the rigidity of traditional school.",
+    category: "About Sage Field",
+    bg: "#F2F7F3",
+    accent: "#7FA888",
+  },
+  {
+    question: "What is a microschool?",
+    answer:
+      "A microschool is a small, independent private school — typically no more than 10–12 students — that offers a personalized, flexible alternative to traditional schooling. Sage Field fits this model: we're a private school with intentional, outdoor-based education at our core.",
+    category: "About Sage Field",
+    bg: "#FFF4EC",
+    accent: "#f29a8f",
+  },
+  {
+    question: "What ages do you serve and how big are the groups?",
+    answer:
+      "We serve ages 4–11 in mixed-age groups. We keep groups small — typically no more than 10–12 children per class — so two adults can stay closely attuned to each child's needs and every student gets genuine attention.",
+    category: "Program Details",
+    bg: "#EEF4FF",
+    accent: "#7B9FE0",
+  },
+  {
+    question: "What does a typical day at Sage Field look like?",
+    answer:
+      "Mornings focus on reading, writing, fluency, and math — individualized to each child's abilities. Afternoons flow into nature exploration, science, art, movement, and social-emotional learning. We prioritize real-world, hands-on experiences over worksheets.",
+    category: "Program Details",
+    bg: "#F2F7F3",
+    accent: "#7FA888",
+  },
+  {
+    question: "Do you support neurodivergent or high-sensitivity children?",
+    answer:
+      "We intentionally create a gentle, regulated environment that works well for many neurodivergent and outside-the-box thinkers. We focus on emotional regulation, clear rhythms, and relationship-based support — though we are not a therapeutic program.",
+    category: "Supporting All Learners",
+    bg: "#FFF9EC",
+    accent: "#D4A96A",
+  },
+  {
+    question: "What is your approach to play, safety, and behavior?",
+    answer:
+      "We believe children grow when they're trusted to 'try risky things safely' with strong boundaries and supervision. We teach children to notice their bodies, respect their own limits, and consider others' safety. When behavior challenges arise, we prioritize regulation and connection.",
+    category: "Supporting All Learners",
+    bg: "#F5F0FF",
+    accent: "#9B7FD4",
+  },
+  {
+    question: "What role do parents play?",
+    answer:
+      "Sage Field handles the in-school program. We ask that families stay engaged and communicative: share important updates about your child, attend check-ins when scheduled, and support a culture of curiosity at home. We see parents as partners in their child's growth — not as co-teachers.",
+    category: "Enrollment & Partnership",
+    bg: "#FFF4EC",
+    accent: "#f29a8f",
+  },
+  {
+    question: "How do we enroll?",
+    answer:
+      "Start by completing the application at sagefield.co/apply. We'll reach out to schedule a mutual-fit conversation. If it's a great match, you'll receive an enrollment offer. Submit the enrollment fee to secure your child's spot — welcome to Sage Field!",
+    category: "Enrollment & Partnership",
+    bg: "#F2F7F3",
+    accent: "#7FA888",
+  },
 ];
 
 const teamMembers = [
-  { name: "Sabrina Grace Obnamia", role: "Lead Teacher & Director", image: "/assets/Headshot.jpeg", objectPosition: "center 20%" },
-  { name: "Paige Wood", role: "Primary Lead Teacher", image: "/assets/team/Paige.webp", objectPosition: "center 25%" },
-  { name: "Zelinda Melo", role: "Teacher Aide", image: "/assets/team/Zelinda.webp", objectPosition: "center 25%" },
-  { name: "Julius Cecilia", role: "Director of Operations & Technology", image: "/assets/team/JuliusC.jpg", objectPosition: "center 20%" },
+  {
+    name: "Sabrina Grace Obnamia",
+    role: "Lead Teacher & Director",
+    image: "/assets/Headshot.jpeg",
+    objectPosition: "center 20%",
+  },
+  {
+    name: "Paige Wood",
+    role: "Primary Lead Teacher",
+    image: "/assets/team/Paige.webp",
+    objectPosition: "center 25%",
+  },
+  {
+    name: "Zelinda Melo",
+    role: "Teacher Aide",
+    image: "/assets/team/Zelinda.webp",
+    objectPosition: "center 25%",
+  },
+  {
+    name: "Julius Cecilia",
+    role: "Director of Operations & Technology",
+    image: "/assets/team/JuliusC.jpg",
+    objectPosition: "center 20%",
+  },
 ];
 
 const INTERVAL_MS = 18000;
-const TOTAL_SLIDES = 6;
+const TOTAL_SLIDES = 14;
 
 const enrollSteps = [
-  { num: "1", icon: "📋", title: "Fill Out the Application", detail: "Visit sagefield.co/apply and complete the short application form." },
-  { num: "2", icon: "💬", title: "Mutual-Fit Conversation", detail: "We'll reach out to schedule a quick call to make sure Sage Field is the right fit for your family." },
-  { num: "3", icon: "✅", title: "Receive Your Offer", detail: "If it's a great match, you'll receive an enrollment offer with next steps." },
-  { num: "4", icon: "🎉", title: "Confirm & Enroll", detail: "Submit your enrollment fee to secure your child's spot. Welcome to Sage Field!" },
+  {
+    num: "1",
+    icon: "📋",
+    title: "Fill Out the Application",
+    detail: "Visit sagefield.co/apply and complete the short application form.",
+  },
+  {
+    num: "2",
+    icon: "💬",
+    title: "Mutual-Fit Conversation",
+    detail:
+      "We'll reach out to schedule a quick call to make sure Sage Field is the right fit for your family.",
+  },
+  {
+    num: "3",
+    icon: "✅",
+    title: "Receive Your Offer",
+    detail:
+      "If it's a great match, you'll receive an enrollment offer with next steps.",
+  },
+  {
+    num: "4",
+    icon: "🎉",
+    title: "Confirm & Enroll",
+    detail:
+      "Submit your enrollment fee to secure your child's spot. Welcome to Sage Field!",
+  },
 ];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -79,9 +240,17 @@ function QRCode({ url, label }: { url: string; label: string }) {
     <div className="flex flex-col items-center gap-3">
       <div className="bg-white p-4 rounded-2xl shadow-md">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={apiUrl} alt={`QR code for ${label}`} width={220} height={220} className="rounded-lg" />
+        <img
+          src={apiUrl}
+          alt={`QR code for ${label}`}
+          width={220}
+          height={220}
+          className="rounded-lg"
+        />
       </div>
-      <p className="text-base font-semibold text-gray-500 font-body text-center">{label}</p>
+      <p className="text-base font-semibold text-gray-500 font-body text-center">
+        {label}
+      </p>
     </div>
   );
 }
@@ -89,7 +258,9 @@ function QRCode({ url, label }: { url: string; label: string }) {
 function DetailCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-white rounded-2xl p-4 text-center shadow-sm border border-gray-100">
-      <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-1 font-body">{label}</p>
+      <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-1 font-body">
+        {label}
+      </p>
       <p className="text-xl font-bold text-gray-800 font-body">{value}</p>
     </div>
   );
@@ -121,8 +292,18 @@ function Slide1Summer() {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          {["Outdoor Adventures", "Daily Water Play", "Art & Music", "Nature Exploration", "Academic Enrichment", "Field Day Fridays"].map((tag) => (
-            <span key={tag} className="px-5 py-2 bg-primary/10 text-primary font-semibold rounded-full font-body text-lg">
+          {[
+            "Outdoor Adventures",
+            "Daily Water Play",
+            "Art & Music",
+            "Nature Exploration",
+            "Academic Enrichment",
+            "Field Day Fridays",
+          ].map((tag) => (
+            <span
+              key={tag}
+              className="px-5 py-2 bg-primary/10 text-primary font-semibold rounded-full font-body text-lg"
+            >
               {tag}
             </span>
           ))}
@@ -132,8 +313,12 @@ function Slide1Summer() {
       {/* Right */}
       <div className="w-72 flex flex-col items-center justify-center gap-5 shrink-0">
         <QRCode url="https://sagefield.co/apply" label="sagefield.co/apply" />
-        <p className="text-xl font-bold text-primary font-heading text-center">Apply Now</p>
-        <p className="text-base text-gray-400 font-body text-center">Spots are limited</p>
+        <p className="text-xl font-bold text-primary font-heading text-center">
+          Apply Now
+        </p>
+        <p className="text-base text-gray-400 font-body text-center">
+          Spots are limited
+        </p>
       </div>
     </div>
   );
@@ -161,11 +346,16 @@ function Slide2SchoolYear() {
 
         <div className="grid grid-cols-2 gap-4">
           {schoolYearPillars.map((p) => (
-            <div key={p.title} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex gap-4 items-center">
+            <div
+              key={p.title}
+              className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex gap-4 items-center"
+            >
               <div className="w-14 h-14 bg-primary/20 rounded-full flex items-center justify-center shrink-0">
                 <span className="text-3xl">{p.icon}</span>
               </div>
-              <p className="text-xl font-semibold text-gray-800 font-heading">{p.title}</p>
+              <p className="text-xl font-semibold text-gray-800 font-heading">
+                {p.title}
+              </p>
             </div>
           ))}
         </div>
@@ -173,12 +363,21 @@ function Slide2SchoolYear() {
 
       {/* Right */}
       <div className="w-64 flex flex-col items-center justify-center gap-6 shrink-0">
-        <div className="rounded-2xl overflow-hidden shadow-md w-full" style={{ height: "40%" }}>
+        <div
+          className="rounded-2xl overflow-hidden shadow-md w-full"
+          style={{ height: "40%" }}
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assets/After1.png" alt="School year program" className="w-full h-full object-cover" />
+          <img
+            src="/assets/After1.png"
+            alt="School year program"
+            className="w-full h-full object-cover"
+          />
         </div>
         <QRCode url="https://sagefield.co/apply" label="sagefield.co/apply" />
-        <p className="text-xl font-bold text-primary font-heading text-center">Apply Now</p>
+        <p className="text-xl font-bold text-primary font-heading text-center">
+          Apply Now
+        </p>
       </div>
     </div>
   );
@@ -198,14 +397,21 @@ function Slide3Homeschool() {
 
       {/* Schedule tiers */}
       <div>
-        <p className="text-xl font-semibold text-gray-400 mb-4 font-body uppercase tracking-wide">Choose Your Schedule</p>
+        <p className="text-xl font-semibold text-gray-400 mb-4 font-body uppercase tracking-wide">
+          Choose Your Schedule
+        </p>
         <div className="grid grid-cols-3 gap-6">
           {homeschoolTiers.map((t) => (
-            <div key={t.days} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col gap-2">
+            <div
+              key={t.days}
+              className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col gap-2"
+            >
               <span className="inline-block px-3 py-1.5 bg-primary/10 rounded-full text-base font-bold text-primary font-body self-start">
                 {t.days}
               </span>
-              <p className="text-xl font-semibold text-gray-800 font-heading">{t.title}</p>
+              <p className="text-xl font-semibold text-gray-800 font-heading">
+                {t.title}
+              </p>
             </div>
           ))}
         </div>
@@ -213,14 +419,21 @@ function Slide3Homeschool() {
 
       {/* Why pillars — icon + title only */}
       <div>
-        <p className="text-xl font-semibold text-gray-400 mb-4 font-body uppercase tracking-wide">Why Sage Field?</p>
+        <p className="text-xl font-semibold text-gray-400 mb-4 font-body uppercase tracking-wide">
+          Why Sage Field?
+        </p>
         <div className="grid grid-cols-4 gap-4">
           {homeschoolPillars.map((p) => (
-            <div key={p.title} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center gap-4">
+            <div
+              key={p.title}
+              className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center gap-4"
+            >
               <div className="w-14 h-14 bg-primary/20 rounded-full flex items-center justify-center shrink-0">
                 <span className="text-3xl">{p.icon}</span>
               </div>
-              <p className="text-xl font-semibold text-gray-800 font-heading">{p.title}</p>
+              <p className="text-xl font-semibold text-gray-800 font-heading">
+                {p.title}
+              </p>
             </div>
           ))}
         </div>
@@ -245,17 +458,33 @@ function Slide4Tuition() {
           </span>
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-[#FFF9F5] rounded-xl p-4">
-              <p className="text-base text-gray-500 font-body mb-1">Weekly · 2nd–4th</p>
-              <p className="text-4xl font-bold text-primary font-heading">$350<span className="text-xl text-gray-400 font-normal">/wk</span></p>
+              <p className="text-base text-gray-500 font-body mb-1">
+                Weekly · 2nd–4th
+              </p>
+              <p className="text-4xl font-bold text-primary font-heading">
+                $350
+                <span className="text-xl text-gray-400 font-normal">/wk</span>
+              </p>
               <p className="text-base text-gray-500 font-body mt-2">Primary</p>
-              <p className="text-4xl font-bold text-primary font-heading">$375<span className="text-xl text-gray-400 font-normal">/wk</span></p>
+              <p className="text-4xl font-bold text-primary font-heading">
+                $375
+                <span className="text-xl text-gray-400 font-normal">/wk</span>
+              </p>
             </div>
             <div className="bg-primary rounded-xl p-4 relative">
-              <span className="absolute top-3 right-3 px-2 py-0.5 bg-white text-primary text-sm font-bold rounded-full">Save 10%</span>
-              <p className="text-base text-white/70 font-body mb-1">Full Summer · 2nd–4th</p>
-              <p className="text-4xl font-bold text-white font-heading">$3,780</p>
+              <span className="absolute top-3 right-3 px-2 py-0.5 bg-white text-primary text-sm font-bold rounded-full">
+                Save 10%
+              </span>
+              <p className="text-base text-white/70 font-body mb-1">
+                Full Summer · 2nd–4th
+              </p>
+              <p className="text-4xl font-bold text-white font-heading">
+                $3,780
+              </p>
               <p className="text-base text-white/70 font-body mt-2">Primary</p>
-              <p className="text-4xl font-bold text-white font-heading">$4,050</p>
+              <p className="text-4xl font-bold text-white font-heading">
+                $4,050
+              </p>
             </div>
           </div>
         </div>
@@ -267,12 +496,22 @@ function Slide4Tuition() {
           </span>
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-[#FFF9F5] rounded-xl p-4">
-              <p className="text-base text-gray-500 font-body mb-1">2nd–4th Grade</p>
-              <p className="text-4xl font-bold text-primary font-heading">$1,095<span className="text-xl text-gray-400 font-normal">/mo</span></p>
+              <p className="text-base text-gray-500 font-body mb-1">
+                2nd–4th Grade
+              </p>
+              <p className="text-4xl font-bold text-primary font-heading">
+                $1,095
+                <span className="text-xl text-gray-400 font-normal">/mo</span>
+              </p>
             </div>
             <div className="bg-[#FFF9F5] rounded-xl p-4">
-              <p className="text-base text-gray-500 font-body mb-1">Primary (Pre-K–1st)</p>
-              <p className="text-4xl font-bold text-primary font-heading">$1,195<span className="text-xl text-gray-400 font-normal">/mo</span></p>
+              <p className="text-base text-gray-500 font-body mb-1">
+                Primary (Pre-K–1st)
+              </p>
+              <p className="text-4xl font-bold text-primary font-heading">
+                $1,195
+                <span className="text-xl text-gray-400 font-normal">/mo</span>
+              </p>
             </div>
           </div>
         </div>
@@ -282,15 +521,23 @@ function Slide4Tuition() {
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center gap-3">
             <span className="text-3xl">🕒</span>
             <div>
-              <p className="text-lg font-bold text-gray-800 font-heading">After Care</p>
-              <p className="text-base text-primary font-semibold font-body">$35/day · $375/mo</p>
+              <p className="text-lg font-bold text-gray-800 font-heading">
+                After Care
+              </p>
+              <p className="text-base text-primary font-semibold font-body">
+                $35/day · $375/mo
+              </p>
             </div>
           </div>
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center gap-3">
             <span className="text-3xl">🎉</span>
             <div>
-              <p className="text-lg font-bold text-gray-800 font-heading">Field Day Friday</p>
-              <p className="text-base text-primary font-semibold font-body">$200/mo · $60 drop-in</p>
+              <p className="text-lg font-bold text-gray-800 font-heading">
+                Field Day Friday
+              </p>
+              <p className="text-base text-primary font-semibold font-body">
+                $200/mo · $60 drop-in
+              </p>
             </div>
           </div>
         </div>
@@ -298,8 +545,13 @@ function Slide4Tuition() {
 
       {/* Right: QR */}
       <div className="w-64 flex flex-col items-center justify-center gap-4 shrink-0">
-        <QRCode url="https://sagefield.co/tuition" label="sagefield.co/tuition" />
-        <p className="text-xl font-bold text-primary font-heading text-center">Full Pricing</p>
+        <QRCode
+          url="https://sagefield.co/tuition"
+          label="sagefield.co/tuition"
+        />
+        <p className="text-xl font-bold text-primary font-heading text-center">
+          Full Pricing
+        </p>
       </div>
     </div>
   );
@@ -316,7 +568,10 @@ function Slide5Team() {
 
       <div className="grid grid-cols-2 grid-rows-2 gap-5 flex-1 min-h-0">
         {teamMembers.map((member) => (
-          <div key={member.name} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex gap-0 min-h-0">
+          <div
+            key={member.name}
+            className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex gap-0 min-h-0"
+          >
             {/* Photo — fixed width, full height */}
             <div className="w-2/5 shrink-0 overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -329,7 +584,9 @@ function Slide5Team() {
             </div>
             {/* Info */}
             <div className="flex-1 flex flex-col justify-center px-6 py-5">
-              <p className="text-3xl font-bold text-gray-800 font-heading leading-tight">{member.name}</p>
+              <p className="text-3xl font-bold text-gray-800 font-heading leading-tight">
+                {member.name}
+              </p>
               <span className="inline-block mt-3 px-4 py-2 bg-primary/10 text-primary text-lg font-semibold rounded-full font-body self-start">
                 {member.role}
               </span>
@@ -360,13 +617,22 @@ function Slide6Apply() {
 
         <div className="grid grid-cols-2 gap-5">
           {enrollSteps.map((step) => (
-            <div key={step.num} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex gap-5 items-start">
+            <div
+              key={step.num}
+              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex gap-5 items-start"
+            >
               <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center shrink-0">
-                <span className="text-3xl font-bold text-white font-heading">{step.num}</span>
+                <span className="text-3xl font-bold text-white font-heading">
+                  {step.num}
+                </span>
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-800 font-heading mb-2">{step.title}</p>
-                <p className="text-lg text-gray-500 font-body leading-snug">{step.detail}</p>
+                <p className="text-2xl font-bold text-gray-800 font-heading mb-2">
+                  {step.title}
+                </p>
+                <p className="text-lg text-gray-500 font-body leading-snug">
+                  {step.detail}
+                </p>
               </div>
             </div>
           ))}
@@ -376,12 +642,76 @@ function Slide6Apply() {
       {/* Right */}
       <div className="w-72 flex flex-col items-center justify-center gap-5 shrink-0">
         <QRCode url="https://sagefield.co/apply" label="sagefield.co/apply" />
-        <p className="text-2xl font-bold text-primary font-heading text-center">Apply Today</p>
-        <p className="text-lg text-gray-400 font-body text-center">Spots are limited</p>
+        <p className="text-2xl font-bold text-primary font-heading text-center">
+          Apply Today
+        </p>
+        <p className="text-lg text-gray-400 font-body text-center">
+          Spots are limited
+        </p>
         <div className="bg-primary/10 rounded-2xl px-6 py-4 text-center">
-          <p className="text-lg font-semibold text-gray-700 font-body">Questions?</p>
-          <p className="text-base text-primary font-semibold font-body mt-1">sabrina@sagefield.co</p>
+          <p className="text-lg font-semibold text-gray-700 font-body">
+            Questions?
+          </p>
+          <p className="text-base text-primary font-semibold font-body mt-1">
+            sabrina@sagefield.co
+          </p>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function SlideFAQ({ item }: { item: (typeof faqItems)[number] }) {
+  return (
+    <div className="flex h-full items-center justify-center gap-16">
+      {/* Main Q&A block */}
+      <div className="flex-1 flex flex-col justify-center gap-8 max-w-4xl">
+        <div className="flex items-center gap-4">
+          <span
+            className="inline-block px-5 py-2 text-white text-base font-semibold rounded-full font-body"
+            style={{ backgroundColor: item.accent }}
+          >
+            {item.category}
+          </span>
+          <span className="text-base text-gray-400 font-body">FAQ</span>
+        </div>
+
+        {/* Question */}
+        <div
+          className="rounded-3xl px-10 py-8 border"
+          style={{ backgroundColor: item.bg, borderColor: `${item.accent}40` }}
+        >
+          <p
+            className="text-sm font-bold uppercase tracking-widest mb-4 font-body"
+            style={{ color: item.accent }}
+          >
+            Question
+          </p>
+          <p className="text-5xl font-bold text-gray-800 font-heading leading-tight">
+            {item.question}
+          </p>
+        </div>
+
+        {/* Answer */}
+        <div className="bg-white rounded-3xl px-10 py-8 shadow-sm border border-gray-100">
+          <p className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-4 font-body">
+            Answer
+          </p>
+          <p className="text-3xl text-gray-600 font-body leading-relaxed">
+            {item.answer}
+          </p>
+        </div>
+      </div>
+
+      {/* Right: QR */}
+      <div className="w-56 flex flex-col items-center justify-center gap-5 shrink-0">
+        <QRCode url="https://sagefield.co/faq" label="sagefield.co/faq" />
+        <p
+          className="text-lg font-bold font-heading text-center"
+          style={{ color: item.accent }}
+        >
+          Full FAQ
+        </p>
       </div>
     </div>
   );
@@ -390,12 +720,48 @@ function Slide6Apply() {
 // ── Main Page ────────────────────────────────────────────────────────────────
 
 const slides = [
-  { id: "summer", label: "Summer 2026", component: <Slide1Summer /> },
-  { id: "school-year", label: "School Year", component: <Slide2SchoolYear /> },
-  { id: "homeschool", label: "Homeschool", component: <Slide3Homeschool /> },
-  { id: "tuition", label: "Tuition", component: <Slide4Tuition /> },
-  { id: "team", label: "Meet the Team", component: <Slide5Team /> },
-  { id: "apply", label: "How to Enroll", component: <Slide6Apply /> },
+  {
+    id: "summer",
+    label: "Summer 2026",
+    bg: "#FFF9F5",
+    component: <Slide1Summer />,
+  },
+  {
+    id: "school-year",
+    label: "School Year",
+    bg: "#F2F7F3",
+    component: <Slide2SchoolYear />,
+  },
+  {
+    id: "homeschool",
+    label: "Homeschool",
+    bg: "#FFF4EC",
+    component: <Slide3Homeschool />,
+  },
+  {
+    id: "tuition",
+    label: "Tuition",
+    bg: "#F5F0FF",
+    component: <Slide4Tuition />,
+  },
+  {
+    id: "team",
+    label: "Meet the Team",
+    bg: "#EEF4FF",
+    component: <Slide5Team />,
+  },
+  {
+    id: "apply",
+    label: "How to Enroll",
+    bg: "#FFF9EC",
+    component: <Slide6Apply />,
+  },
+  ...faqItems.map((item, i) => ({
+    id: `faq-${i + 1}`,
+    label: `FAQ`,
+    bg: item.bg,
+    component: <SlideFAQ item={item} />,
+  })),
 ];
 
 const variants = {
@@ -460,7 +826,8 @@ export default function TVPage() {
 
   return (
     <div
-      className="w-screen h-screen bg-[#FFF9F5] overflow-hidden flex flex-col select-none"
+      className="w-screen h-screen overflow-hidden flex flex-col select-none transition-colors duration-700"
+      style={{ backgroundColor: slides[current].bg }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
@@ -478,12 +845,18 @@ export default function TVPage() {
       {/* Top chrome */}
       <div className="flex items-center justify-between px-10 py-4 shrink-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/assets/Logo.png" alt="Sage Field" className="h-12 object-contain" />
+        <img
+          src="/assets/Logo.png"
+          alt="Sage Field"
+          className="h-12 object-contain"
+        />
         <div className="flex items-center gap-3">
           <span className="px-5 py-2 bg-badge-bg text-black text-base font-semibold rounded-full font-body">
             {slides[current].label}
           </span>
-          <span className="text-sm text-gray-400 font-body">{current + 1} / {TOTAL_SLIDES}</span>
+          <span className="text-sm text-gray-400 font-body">
+            {current + 1} / {TOTAL_SLIDES}
+          </span>
         </div>
       </div>
 
