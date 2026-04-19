@@ -200,7 +200,7 @@ const teamMembers = [
 ];
 
 const INTERVAL_MS = 18000;
-const TOTAL_SLIDES = 14;
+const TOTAL_SLIDES = 15;
 
 const enrollSteps = [
   {
@@ -267,6 +267,68 @@ function DetailCard({ label, value }: { label: string; value: string }) {
 }
 
 // ── Slides ───────────────────────────────────────────────────────────────────
+
+function Slide0OpenHouse() {
+  return (
+    <div className="flex h-full gap-12 items-center">
+      {/* Left */}
+      <div className="flex-1 flex flex-col justify-center gap-8">
+        <div>
+          <span className="inline-block px-5 py-2 bg-primary text-white text-base font-semibold rounded-full mb-6 font-body">
+            Today · April 25, 2026
+          </span>
+          <h1 className="text-8xl font-bold text-gray-800 font-heading leading-tight mb-5">
+            Welcome to Our<br />Open House!
+          </h1>
+          <p className="text-3xl text-gray-500 font-body leading-relaxed">
+            We&apos;re so glad you&apos;re here. Look around, meet the team, and let us know if you have any questions.
+          </p>
+        </div>
+
+        {/* Event detail cards */}
+        <div className="grid grid-cols-3 gap-5">
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col gap-2">
+            <span className="text-3xl">🕑</span>
+            <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide font-body">Time</p>
+            <p className="text-2xl font-bold text-gray-800 font-heading">2:00 – 4:00 PM</p>
+          </div>
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col gap-2">
+            <span className="text-3xl">📍</span>
+            <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide font-body">Location</p>
+            <p className="text-xl font-bold text-gray-800 font-heading leading-snug">2760 Gattis School Rd<br />Round Rock, TX</p>
+          </div>
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col gap-2">
+            <span className="text-3xl">✉️</span>
+            <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide font-body">Questions?</p>
+            <p className="text-xl font-bold text-primary font-heading">sabrina@sagefield.co</p>
+          </div>
+        </div>
+
+        {/* What to expect pills */}
+        <div className="flex flex-wrap gap-3">
+          {["Tour the Space", "Meet the Educators", "See the Curriculum", "Kids Activity Stations", "Snacks & Drinks"].map((tag) => (
+            <span key={tag} className="px-5 py-2 bg-primary/10 text-primary font-semibold rounded-full font-body text-lg">
+              {tag}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Right */}
+      <div className="w-72 flex flex-col items-center justify-center gap-6 shrink-0">
+        <div className="bg-primary rounded-3xl px-8 py-10 flex flex-col items-center gap-4 w-full text-center shadow-lg">
+          <span className="text-6xl">🌿</span>
+          <p className="text-3xl font-bold text-white font-heading leading-tight">Sage Field<br />Private School</p>
+          <p className="text-lg text-white/80 font-body">Outdoor · Curious · Small</p>
+        </div>
+        <div className="bg-white rounded-2xl px-6 py-5 w-full text-center shadow-sm border border-gray-100">
+          <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide font-body mb-1">More info</p>
+          <p className="text-xl font-bold text-primary font-heading">sagefield.co</p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function Slide1Summer() {
   return (
@@ -720,6 +782,12 @@ function SlideFAQ({ item }: { item: (typeof faqItems)[number] }) {
 // ── Main Page ────────────────────────────────────────────────────────────────
 
 const slides = [
+  {
+    id: "open-house",
+    label: "Open House",
+    bg: "#FFF9F5",
+    component: <Slide0OpenHouse />,
+  },
   {
     id: "summer",
     label: "Summer 2026",
