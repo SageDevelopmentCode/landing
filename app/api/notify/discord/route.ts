@@ -7,6 +7,7 @@ import {
   createStudentCheckInEmbed,
   createStudentCheckOutEmbed,
   createHelpRequestEmbed,
+  createVolunteerInterestEmbed,
 } from "@/app/lib/discord";
 
 export async function POST(request: NextRequest) {
@@ -147,6 +148,28 @@ export async function POST(request: NextRequest) {
         pageUrl: screenName ?? null,
         attachmentCount:
           typeof attachmentCount === "number" ? attachmentCount : 0,
+      });
+      await sendDiscordNotification(embed, process.env.DISCORD_WEBHOOK_URL);
+      return NextResponse.json({ success: true });
+    }
+
+    if (type === "volunteer_interest") {
+      const { parentName, skills, helpAreas, availability, notes } = data;
+      if (!parentName || !skills || !helpAreas || !availability) {
+        return NextResponse.json(
+          {
+            error:
+              "volunteer_interest requires parentName, skills, helpAreas, and availability",
+          },
+          { status: 400 },
+        );
+      }
+      const embed = createVolunteerInterestEmbed({
+        parentName,
+        skills,
+        helpAreas,
+        availability,
+        notes: notes ?? null,
       });
       await sendDiscordNotification(embed, process.env.DISCORD_WEBHOOK_URL);
       return NextResponse.json({ success: true });

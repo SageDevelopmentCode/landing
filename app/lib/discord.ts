@@ -894,6 +894,43 @@ export function createBudgetSummaryEmbed(data: {
 }
 
 /**
+ * Creates a Discord embed for volunteer interest submissions
+ */
+export function createVolunteerInterestEmbed(data: {
+  parentName: string;
+  skills: string;
+  helpAreas: string[];
+  availability: string[];
+  notes?: string | null;
+}): DiscordEmbed {
+  const fields: DiscordEmbedField[] = [
+    { name: "Parent", value: data.parentName, inline: true },
+    {
+      name: "Skills & Experience",
+      value: data.skills.length > 1024 ? data.skills.substring(0, 1021) + "..." : data.skills,
+      inline: false,
+    },
+    { name: "How They'd Like to Help", value: data.helpAreas.join(", "), inline: false },
+    { name: "Availability", value: data.availability.join(", "), inline: false },
+  ];
+
+  if (data.notes) {
+    fields.push({
+      name: "Additional Notes",
+      value: data.notes.length > 1024 ? data.notes.substring(0, 1021) + "..." : data.notes,
+      inline: false,
+    });
+  }
+
+  return {
+    title: "🙋 New Volunteer Interest",
+    color: 0x4a7c59,
+    fields,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
  * Creates a Discord embed for campus tour booking submissions
  */
 export function createTourBookingEmbed(data: {
