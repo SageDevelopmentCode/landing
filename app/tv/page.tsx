@@ -45,8 +45,6 @@ const homeschoolTiers = [
   { days: "1x/week", title: "Light Touch", description: "A taste of microschool enrichment without disrupting your home rhythm." },
   { days: "2x/week", title: "Balanced Rhythm", description: "Two structured days create a consistent routine with plenty of flexibility." },
   { days: "3x/week", title: "Regular Learner", description: "Deep engagement with academics, enrichments, and peer connection each week." },
-  { days: "4x/week", title: "Deep Immersion", description: "Near-full-week immersion with the freedom of homeschooling still intact." },
-  { days: "5x/week", title: "Full Experience", description: "The complete Sage Field experience — every day, every enrichment." },
 ];
 
 const homeschoolPillars = [
@@ -194,14 +192,14 @@ function Slide3Homeschool() {
           Homeschool Drop-In
         </h1>
         <p className="text-3xl text-gray-500 font-body">
-          1–5 Days/Week · Ages 4–11 · Fridays Are Field Days
+          1–3 Days/Week · Ages 4–11 · Fridays Are Field Days
         </p>
       </div>
 
       {/* Schedule tiers */}
       <div>
         <p className="text-xl font-semibold text-gray-400 mb-4 font-body uppercase tracking-wide">Choose Your Schedule</p>
-        <div className="grid grid-cols-5 gap-4">
+        <div className="grid grid-cols-3 gap-6">
           {homeschoolTiers.map((t) => (
             <div key={t.days} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col gap-2">
               <span className="inline-block px-3 py-1.5 bg-primary/10 rounded-full text-base font-bold text-primary font-body self-start">
