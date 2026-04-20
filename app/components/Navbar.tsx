@@ -23,7 +23,13 @@ interface NavLeaf {
 }
 
 type NavTab =
-  | { kind: "single"; label: string; action: NavAction; highlight?: boolean; badge?: string }
+  | {
+      kind: "single";
+      label: string;
+      action: NavAction;
+      highlight?: boolean;
+      badge?: string;
+    }
   | { kind: "dropdown"; label: string; items: NavLeaf[] };
 
 const NAV_TABS: NavTab[] = [
@@ -97,12 +103,12 @@ const NAV_TABS: NavTab[] = [
       { label: "Donate", action: { kind: "link", href: "/donate" } },
     ],
   },
-  {
-    kind: "single",
-    label: "Open House",
-    action: { kind: "link", href: "/rsvp" },
-    badge: "RSVP!",
-  },
+  // {
+  //   kind: "single",
+  //   label: "Open House",
+  //   action: { kind: "link", href: "/rsvp" },
+  //   badge: "RSVP!",
+  // },
   {
     kind: "single",
     label: "Contact",
@@ -634,7 +640,10 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
                                 </span>
                               )}
                             </span>
-                            <ChevronRight className="w-4 h-4 opacity-50" strokeWidth={2} />
+                            <ChevronRight
+                              className="w-4 h-4 opacity-50"
+                              strokeWidth={2}
+                            />
                           </Link>
                         </div>
                       );
