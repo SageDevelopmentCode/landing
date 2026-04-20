@@ -25,6 +25,12 @@ import {
   X,
   Trash2,
   LayoutGrid,
+  Search,
+  Send,
+  SquarePen,
+  MoreHorizontal,
+  Plus,
+  Heart,
 } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 
@@ -1342,6 +1348,774 @@ function HoursPage() {
   );
 }
 
+// ─── Messages Demo Data ───────────────────────────────────────────────────────
+
+type DemoConvo = {
+  id: string; name: string; role: string; color: string;
+  lastMsg: string; lastTime: string; unread: number;
+};
+type DemoMsg = { id: string; from: "me" | "them"; body: string; time: string };
+
+const DEMO_CONVOS: DemoConvo[] = [
+  { id: "c1", name: "Sarah Rivera", role: "Parent", color: "#7FA888", lastMsg: "Thank you so much, that's great to hear!", lastTime: "2m ago", unread: 2 },
+  { id: "c2", name: "David Chen", role: "Parent", color: "#6b8db5", lastMsg: "Could we reschedule our conference?", lastTime: "Yesterday", unread: 1 },
+  { id: "c3", name: "Ms. Paige Sun", role: "Teacher", color: "#c9a96e", lastMsg: "I'll cover your 10am on Friday.", lastTime: "Apr 18", unread: 0 },
+  { id: "c4", name: "Sage Field Office", role: "Admin", color: "#4a7c59", lastMsg: "PD day reminder: May 2nd, no students.", lastTime: "Apr 17", unread: 0 },
+];
+
+const DEMO_THREADS: Record<string, DemoMsg[]> = {
+  c1: [
+    { id: "m1", from: "them", body: "Hi Jordan! Just checking in — Emma seemed a bit tired this morning.", time: "9:02 AM" },
+    { id: "m2", from: "me", body: "Hi Sarah! Yes, I noticed too. She settled in really well once we started our project.", time: "9:10 AM" },
+    { id: "m3", from: "them", body: "That's a relief. Did she participate okay?", time: "9:12 AM" },
+    { id: "m4", from: "me", body: "Absolutely — she was actually one of the first to finish her watercolor piece today. Really proud of her.", time: "9:15 AM" },
+    { id: "m5", from: "them", body: "Thank you so much, that's great to hear!", time: "9:16 AM" },
+  ],
+  c2: [
+    { id: "m1", from: "them", body: "Hi! I wanted to confirm our parent-teacher conference for April 28th.", time: "Yesterday 2:00 PM" },
+    { id: "m2", from: "me", body: "Hi David! Yes, you're confirmed for 2:30 PM. Looking forward to it.", time: "Yesterday 2:30 PM" },
+    { id: "m3", from: "them", body: "Could we reschedule our conference?", time: "Yesterday 4:00 PM" },
+  ],
+  c3: [
+    { id: "m1", from: "them", body: "Hey Jordan — are you free on Friday morning? I have a conflict with my 10am.", time: "Apr 18 11:00 AM" },
+    { id: "m2", from: "me", body: "Sure thing! What time works for you?", time: "Apr 18 11:15 AM" },
+    { id: "m3", from: "them", body: "I'll cover your 10am on Friday.", time: "Apr 18 11:20 AM" },
+  ],
+  c4: [
+    { id: "m1", from: "them", body: "Reminder: Professional Development Day is May 2nd. No students on campus. Bring your curriculum planning materials.", time: "Apr 17 9:00 AM" },
+    { id: "m2", from: "me", body: "Got it, thanks for the heads-up!", time: "Apr 17 9:05 AM" },
+    { id: "m3", from: "them", body: "PD day reminder: May 2nd, no students.", time: "Apr 17 9:10 AM" },
+  ],
+};
+
+function initialsFrom(name: string) {
+  return name.trim().split(/\s+/).map((w) => w[0].toUpperCase()).slice(0, 2).join("");
+}
+
+function MessagesPage() {
+  const [activeId, setActiveId] = useState<string>("c1");
+  const [threads, setThreads] = useState<Record<string, DemoMsg[]>>(DEMO_THREADS);
+  const [search, setSearch] = useState("");
+  const [draft, setDraft] = useState("");
+  const [convos, setConvos] = useState<DemoConvo[]>(DEMO_CONVOS);
+  const [mobileView, setMobileView] = useState<"list" | "chat">("chat");
+  const endRef = useRef<HTMLDivElement>(null);
+
+  const active = convos.find((c) => c.id === activeId) ?? null;
+  const messages = threads[activeId] ?? [];
+  const filtered = convos.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()));
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [activeId, messages.length]);
+
+  function sendMsg() {
+    const body = draft.trim();
+    if (!body) return;
+    setDraft("");
+    const newMsg: DemoMsg = { id: `m-${Date.now()}`, from: "me", body, time: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) };
+    setThreads((prev) => ({ ...prev, [activeId]: [...(prev[activeId] ?? []), newMsg] }));
+    setConvos((prev) => prev.map((c) => c.id === activeId ? { ...c, lastMsg: body, lastTime: "Just now", unread: 0 } : c));
+  }
+
+  function openConvo(id: string) {
+    setActiveId(id);
+    setConvos((prev) => prev.map((c) => c.id === id ? { ...c, unread: 0 } : c));
+    setMobileView("chat");
+  }
+
+  return (
+    <div className="flex bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden" style={{ height: "600px" }}>
+      {/* Conversation list */}
+      <div className={`w-72 shrink-0 border-r border-gray-100 flex flex-col ${mobileView === "chat" ? "hidden sm:flex" : "flex"}`}>
+        <div className="p-3 border-b border-gray-100 space-y-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search conversations..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 text-sm font-body bg-gray-50 border border-gray-100 rounded-lg focus:outline-none text-gray-800 placeholder:text-gray-400"
+            />
+          </div>
+          <button className="w-full flex items-center justify-center gap-2 bg-[#4a7c59] hover:bg-[#3d6b4a] text-white text-sm font-medium py-2 rounded-lg transition-colors cursor-pointer">
+            <SquarePen className="w-4 h-4" />New Message
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          {filtered.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => openConvo(c.id)}
+              className={`w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors cursor-pointer ${c.id === activeId ? "bg-[#4a7c59]/5 border-r-2 border-[#4a7c59]" : "hover:bg-gray-50"}`}
+            >
+              <div className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-white text-xs font-semibold font-body" style={{ backgroundColor: c.color }}>
+                {initialsFrom(c.name)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold font-body text-gray-800 truncate">{c.name}</span>
+                  <span className="text-[11px] text-gray-400 font-body shrink-0 ml-2">{c.lastTime}</span>
+                </div>
+                <p className="text-[11px] text-gray-400 font-body">{c.role}</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <p className="text-xs text-gray-500 font-body truncate flex-1">{c.lastMsg}</p>
+                  {c.unread > 0 && (
+                    <span className="bg-[#4a7c59] text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shrink-0">{c.unread}</span>
+                  )}
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Chat area */}
+      <div className={`flex-1 flex flex-col min-w-0 ${mobileView === "list" ? "hidden sm:flex" : "flex"}`}>
+        {active ? (
+          <>
+            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-gray-100 shrink-0">
+              <button onClick={() => setMobileView("list")} className="sm:hidden text-gray-500 cursor-pointer">
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <div className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-white text-xs font-semibold font-body" style={{ backgroundColor: active.color }}>
+                {initialsFrom(active.name)}
+              </div>
+              <div>
+                <p className="text-sm font-semibold font-body text-gray-800">{active.name}</p>
+                <p className="text-[11px] text-gray-400 font-body">{active.role}</p>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+              {messages.map((msg) => (
+                <div key={msg.id} className={`flex ${msg.from === "me" ? "justify-end" : "justify-start"}`}>
+                  <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm font-body leading-relaxed ${msg.from === "me" ? "bg-[#4a7c59] text-white rounded-br-md" : "bg-gray-100 text-gray-800 rounded-bl-md"}`}>
+                    <p>{msg.body}</p>
+                    <p className={`text-[10px] mt-1 ${msg.from === "me" ? "text-white/60" : "text-gray-400"}`}>{msg.time}</p>
+                  </div>
+                </div>
+              ))}
+              <div ref={endRef} />
+            </div>
+
+            <div className="border-t border-gray-100 px-4 py-3 flex items-center gap-2 shrink-0">
+              <input
+                type="text"
+                placeholder="Type a message..."
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(); } }}
+                className="flex-1 px-4 py-2.5 text-sm font-body bg-gray-50 border border-gray-100 rounded-xl focus:outline-none text-gray-800 placeholder:text-gray-400"
+              />
+              <button
+                onClick={sendMsg}
+                disabled={!draft.trim()}
+                className="w-10 h-10 rounded-xl bg-[#4a7c59] hover:bg-[#3d6b4a] disabled:opacity-40 text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="flex-1 flex items-center justify-center">
+            <p className="text-sm text-gray-400 font-body">Select a conversation</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Calendar Demo Data ───────────────────────────────────────────────────────
+
+const CALENDAR_EVENTS: DemoCalendarEvent[] = [
+  ...DEMO_EVENTS,
+  {
+    id: "ce1", title: "Curriculum Planning", event_date: "2026-04-21",
+    is_all_day: false, start_time: "09:00", end_time: "11:00",
+    color: "#c9a96e", category: "Planning",
+    description: "Q3 curriculum mapping session with department heads.",
+    location: "Room 101", attachment_links: ["curriculum-map-q3.pdf"],
+  },
+  {
+    id: "ce2", title: "Spring Showcase", event_date: "2026-05-08",
+    is_all_day: false, start_time: "14:00", end_time: "16:30",
+    color: "#a78bda", category: "Community",
+    description: "Student art and project showcase for families. All parents invited.",
+    location: "Main Hall", attachment_links: null,
+  },
+  {
+    id: "ce3", title: "End-of-Month Review", event_date: "2026-04-30",
+    is_all_day: false, start_time: "15:30", end_time: "16:15",
+    color: "#5ba8c4", category: "Staff",
+    description: "Monthly wrap-up with admin team. Bring your student progress notes.",
+    location: "Conference Room B", attachment_links: null,
+  },
+];
+
+type CalView = "month" | "week";
+
+function CalendarPage() {
+  const today = new Date();
+  const [year, setYear] = useState(today.getFullYear());
+  const [month, setMonth] = useState(today.getMonth());
+  const [view, setView] = useState<CalView>("month");
+  const [selectedEvent, setSelectedEvent] = useState<DemoCalendarEvent | null>(null);
+  const currentTodayKey = todayKey(today);
+
+  const cells = getMonthDays(year, month);
+  const monthLabel = new Date(year, month, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+
+  function prevPeriod() {
+    if (view === "month") { if (month === 0) { setMonth(11); setYear((y) => y - 1); } else setMonth((m) => m - 1); }
+  }
+  function nextPeriod() {
+    if (view === "month") { if (month === 11) { setMonth(0); setYear((y) => y + 1); } else setMonth((m) => m + 1); }
+  }
+
+  function eventsForDay(d: Date) {
+    const key = todayKey(d);
+    return CALENDAR_EVENTS.filter((e) => e.event_date === key);
+  }
+
+  // Close sidebar on escape
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) { if (e.key === "Escape") setSelectedEvent(null); }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+
+  return (
+    <div className="flex gap-6">
+      <div className="flex-1 min-w-0 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <button onClick={prevPeriod} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <h2 className="text-lg font-semibold font-body text-gray-800 min-w-[160px] text-center">{monthLabel}</h2>
+            <button onClick={nextPeriod} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
+            {(["month", "week"] as CalView[]).map((v) => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold font-body transition-all cursor-pointer capitalize ${view === v ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Month grid */}
+        <div className="grid grid-cols-7 mb-1">
+          {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
+            <div key={d} className="text-center text-xs font-semibold text-gray-300 font-body py-1.5">{d}</div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7 gap-px bg-gray-100 rounded-xl overflow-hidden border border-gray-100">
+          {cells.map((d, i) => {
+            if (!d) return <div key={`e-${i}`} className="bg-white min-h-[80px]" />;
+            const key = todayKey(d);
+            const isToday = key === currentTodayKey;
+            const dayEvents = eventsForDay(d);
+            const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+            return (
+              <div
+                key={key}
+                className={`bg-white min-h-[80px] p-1.5 ${isWeekend ? "bg-gray-50/60" : ""}`}
+              >
+                <div className={`text-xs font-semibold font-body mb-1 w-6 h-6 flex items-center justify-center rounded-full ${isToday ? "bg-[#4a7c59] text-white" : "text-gray-500"}`}>
+                  {d.getDate()}
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  {dayEvents.slice(0, 3).map((ev) => (
+                    <button
+                      key={ev.id}
+                      onClick={() => setSelectedEvent(ev)}
+                      className="w-full text-left text-[10px] font-semibold font-body px-1.5 py-0.5 rounded truncate cursor-pointer hover:opacity-80 transition-opacity"
+                      style={{ backgroundColor: (ev.color ?? "#4a7c59") + "22", color: ev.color ?? "#4a7c59" }}
+                    >
+                      {ev.title}
+                    </button>
+                  ))}
+                  {dayEvents.length > 3 && (
+                    <span className="text-[10px] text-gray-400 font-body px-1.5">+{dayEvents.length - 3} more</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Legend */}
+        <div className="mt-4 flex flex-wrap gap-3">
+          {Array.from(new Set(CALENDAR_EVENTS.map((e) => e.category))).filter(Boolean).map((cat) => {
+            const ev = CALENDAR_EVENTS.find((e) => e.category === cat)!;
+            return (
+              <div key={cat} className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: ev.color ?? "#4a7c59" }} />
+                <span className="text-[11px] text-gray-500 font-body">{cat}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Upcoming events sidebar */}
+      <div className="w-64 shrink-0 flex flex-col gap-3">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col gap-3">
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body">Upcoming</p>
+          {CALENDAR_EVENTS
+            .filter((e) => e.event_date >= currentTodayKey)
+            .sort((a, b) => a.event_date.localeCompare(b.event_date))
+            .slice(0, 6)
+            .map((ev) => (
+              <button
+                key={ev.id}
+                onClick={() => setSelectedEvent(ev)}
+                className="w-full text-left relative rounded-xl border border-gray-100 overflow-hidden hover:border-gray-200 transition-colors cursor-pointer"
+              >
+                <div className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: ev.color ?? "#4a7c59" }} />
+                <div className="pl-4 pr-3 py-2.5">
+                  <p className="text-[11px] text-gray-400 font-body">{formatEventDate(ev)}</p>
+                  <p className="text-xs font-semibold text-gray-800 font-body leading-snug">{ev.title}</p>
+                </div>
+              </button>
+            ))}
+        </div>
+      </div>
+
+      {/* Event detail sidebar */}
+      <AnimatePresence>
+        {selectedEvent && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-40 backdrop-blur-sm"
+              style={{ background: "rgba(0,0,0,0.15)" }}
+              onClick={() => setSelectedEvent(null)}
+            />
+            <motion.div
+              initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 280 }}
+              className="fixed top-0 right-0 bottom-0 w-full sm:w-[420px] z-50 flex flex-col overflow-hidden bg-white border-l border-gray-100 shadow-xl"
+            >
+              <div className="sticky top-0 z-10 px-6 py-5 flex items-center justify-between border-b border-gray-100 bg-white">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: selectedEvent.color ?? "#4a7c59" }} />
+                  <h2 className="text-base font-semibold text-gray-800 font-body">{selectedEvent.title}</h2>
+                </div>
+                <button onClick={() => setSelectedEvent(null)} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-4">
+                {selectedEvent.category && (
+                  <span className="inline-block text-xs font-semibold font-body px-2.5 py-1 rounded-full w-fit" style={{ backgroundColor: (selectedEvent.color ?? "#4a7c59") + "22", color: selectedEvent.color ?? "#4a7c59" }}>
+                    {selectedEvent.category}
+                  </span>
+                )}
+                <div>
+                  <p className="text-xs text-gray-400 font-body mb-0.5">Date & Time</p>
+                  <p className="text-sm font-semibold text-gray-800 font-body">{formatEventDate(selectedEvent)}</p>
+                </div>
+                {selectedEvent.location && (
+                  <div className="flex items-start gap-2">
+                    <MapPin className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
+                    <p className="text-sm text-gray-700 font-body">{selectedEvent.location}</p>
+                  </div>
+                )}
+                {selectedEvent.description && (
+                  <div>
+                    <p className="text-xs text-gray-400 font-body mb-1">Description</p>
+                    <p className="text-sm text-gray-700 font-body leading-relaxed">{selectedEvent.description}</p>
+                  </div>
+                )}
+                {selectedEvent.attachment_links && selectedEvent.attachment_links.length > 0 && (
+                  <div>
+                    <p className="text-xs text-gray-400 font-body mb-2">Attachments</p>
+                    <div className="flex flex-col gap-2">
+                      {selectedEvent.attachment_links.map((name) => (
+                        <div key={name} className="flex items-center gap-2.5 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2">
+                          <Paperclip className="w-4 h-4 text-gray-400 shrink-0" />
+                          <span className="text-sm font-body text-gray-700 truncate">{name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ─── Feed Demo Data ───────────────────────────────────────────────────────────
+
+type DemoReaction = { emoji: string; count: number; mine: boolean };
+type DemoComment = { id: string; authorName: string; authorColor: string; body: string; time: string };
+type DemoFeedPost = {
+  id: string; authorName: string; authorId: string; authorColor: string;
+  body: string; createdAt: string; reactions: DemoReaction[]; comments: DemoComment[];
+};
+
+const DEMO_TEACHERS_FEED = [
+  { id: "t1", name: "Jordan Taylor", color: "#4a7c59" },
+  { id: "t2", name: "Ms. Paige Sun", color: "#c9a96e" },
+  { id: "t3", name: "Ms. Nicole Park", color: "#7FA888" },
+];
+
+const INITIAL_POSTS: DemoFeedPost[] = [
+  {
+    id: "p1", authorName: "Jordan Taylor", authorId: "t1", authorColor: "#4a7c59",
+    body: "What a wonderful morning in Room 3B! The students dove headfirst into our new watercolor unit today. Emma and Marcus were especially focused — watching them mix colors and experiment was such a joy. 🎨",
+    createdAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
+    reactions: [{ emoji: "❤️", count: 4, mine: false }, { emoji: "👏", count: 2, mine: false }],
+    comments: [
+      { id: "cm1", authorName: "Sarah Rivera", authorColor: "#6b8db5", body: "Emma came home and told us all about it! She was so excited.", time: "1h ago" },
+      { id: "cm2", authorName: "Ms. Paige Sun", authorColor: "#c9a96e", body: "Love the watercolor unit — we do something similar in K1. Let me know if you want to share supplies!", time: "45m ago" },
+    ],
+  },
+  {
+    id: "p2", authorName: "Ms. Paige Sun", authorId: "t2", authorColor: "#c9a96e",
+    body: "Aisha counted to 20 entirely on her own today during morning circle — completely unprompted. The whole class cheered for her. These little moments are everything. 🌟",
+    createdAt: new Date(Date.now() - 26 * 3600 * 1000).toISOString(),
+    reactions: [{ emoji: "❤️", count: 7, mine: false }, { emoji: "😊", count: 3, mine: false }, { emoji: "👏", count: 5, mine: false }],
+    comments: [
+      { id: "cm3", authorName: "Jordan Taylor", authorColor: "#4a7c59", body: "That's such a big milestone! Way to go Aisha.", time: "Yesterday" },
+    ],
+  },
+  {
+    id: "p3", authorName: "Ms. Nicole Park", authorId: "t3", authorColor: "#7FA888",
+    body: "Quick reminder to all parents — the Nature Walk field trip for elementary students is this Thursday, April 24th. Students should wear closed-toe shoes and bring a water bottle. We'll be out from 10–11:30 AM. So excited for this one!",
+    createdAt: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString(),
+    reactions: [{ emoji: "👍", count: 6, mine: false }],
+    comments: [],
+  },
+  {
+    id: "p4", authorName: "Jordan Taylor", authorId: "t1", authorColor: "#4a7c59",
+    body: "Parent-teacher conferences are next Monday, April 28th. I've sent individual time slot confirmations via Messages. Looking forward to connecting with each family and sharing how much your students have grown this semester.",
+    createdAt: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString(),
+    reactions: [{ emoji: "❤️", count: 3, mine: false }, { emoji: "👏", count: 1, mine: false }],
+    comments: [
+      { id: "cm4", authorName: "David Chen", authorColor: "#6b8db5", body: "Thanks for the heads up! Looking forward to our slot.", time: "3 days ago" },
+    ],
+  },
+];
+
+function timeAgo(iso: string): string {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  const hours = Math.floor(mins / 60);
+  const days = Math.floor(hours / 24);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  if (hours < 24) return `Today at ${new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+  if (days === 1) return "Yesterday";
+  return `${days} days ago`;
+}
+
+const DEFAULT_EMOJIS = ["❤️", "👏", "😊", "👍"];
+
+function FeedPage() {
+  const [posts, setPosts] = useState<DemoFeedPost[]>(INITIAL_POSTS);
+  const [filterTeacher, setFilterTeacher] = useState<string | null>(null);
+  const [selectedPost, setSelectedPost] = useState<DemoFeedPost | null>(null);
+  const [composing, setComposing] = useState(false);
+  const [draftBody, setDraftBody] = useState("");
+  const [commentDraft, setCommentDraft] = useState("");
+  const livePost = selectedPost ? (posts.find((p) => p.id === selectedPost.id) ?? selectedPost) : null;
+
+  const displayed = filterTeacher ? posts.filter((p) => p.authorId === filterTeacher) : posts;
+
+  function toggleReaction(postId: string, emoji: string) {
+    setPosts((prev) => prev.map((p) => {
+      if (p.id !== postId) return p;
+      const existing = p.reactions.find((r) => r.emoji === emoji);
+      let reactions: DemoReaction[];
+      if (existing) {
+        reactions = p.reactions
+          .map((r) => r.emoji === emoji ? { ...r, count: r.mine ? r.count - 1 : r.count + 1, mine: !r.mine } : r)
+          .filter((r) => r.count > 0);
+      } else {
+        reactions = [...p.reactions, { emoji, count: 1, mine: true }];
+      }
+      return { ...p, reactions };
+    }));
+  }
+
+  function addComment(postId: string, body: string) {
+    const newComment: DemoComment = {
+      id: `c-${Date.now()}`, authorName: DEMO_TEACHER.name, authorColor: "#4a7c59", body, time: "Just now",
+    };
+    setPosts((prev) => prev.map((p) => p.id === postId ? { ...p, comments: [...p.comments, newComment] } : p));
+  }
+
+  function submitPost() {
+    const body = draftBody.trim();
+    if (!body) return;
+    const newPost: DemoFeedPost = {
+      id: `p-${Date.now()}`, authorName: DEMO_TEACHER.name, authorId: "t1", authorColor: "#4a7c59",
+      body, createdAt: new Date().toISOString(), reactions: [], comments: [],
+    };
+    setPosts((prev) => [newPost, ...prev]);
+    setDraftBody("");
+    setComposing(false);
+  }
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) { if (e.key === "Escape") setSelectedPost(null); }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+
+  return (
+    <div className="flex gap-6">
+      {/* Teacher filter sidebar */}
+      <aside className="w-44 shrink-0 flex flex-col gap-1 pt-1">
+        <p className="text-xs font-semibold font-body text-gray-400 uppercase tracking-wider px-2 pb-2">Teachers</p>
+        <button
+          onClick={() => setFilterTeacher(null)}
+          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-colors cursor-pointer ${filterTeacher === null ? "bg-[#4a7c59]/8 text-gray-800" : "text-gray-400 hover:text-gray-600 hover:bg-black/5"}`}
+        >
+          <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
+            <span className="text-[10px] text-gray-500 font-bold">All</span>
+          </div>
+          <span className="text-sm font-body font-medium truncate">All Teachers</span>
+        </button>
+        {DEMO_TEACHERS_FEED.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setFilterTeacher(filterTeacher === t.id ? null : t.id)}
+            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-colors cursor-pointer ${filterTeacher === t.id ? "bg-[#4a7c59]/8 text-gray-800" : "text-gray-400 hover:text-gray-600 hover:bg-black/5"}`}
+          >
+            <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-bold shrink-0" style={{ backgroundColor: t.color }}>
+              {initialsFrom(t.name)}
+            </div>
+            <span className="text-xs font-body font-medium truncate">{t.name.split(" ")[0]}</span>
+          </button>
+        ))}
+      </aside>
+
+      {/* Feed */}
+      <div className="flex-1 min-w-0 max-w-2xl">
+        {/* Compose bar */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-4">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-full bg-[#4a7c59] flex items-center justify-center text-white text-xs font-semibold font-body shrink-0 mt-0.5">
+              {initialsFrom(DEMO_TEACHER.name)}
+            </div>
+            <div className="flex-1">
+              {!composing ? (
+                <button
+                  onClick={() => setComposing(true)}
+                  className="w-full text-left bg-gray-50 rounded-full px-4 py-2.5 border border-gray-100 text-sm font-body text-gray-400 hover:bg-gray-100 transition-colors cursor-pointer"
+                >
+                  Share something with parents...
+                </button>
+              ) : (
+                <div>
+                  <textarea
+                    autoFocus
+                    value={draftBody}
+                    onChange={(e) => setDraftBody(e.target.value)}
+                    placeholder="What's happening in the classroom today?"
+                    rows={3}
+                    className="w-full bg-gray-50 rounded-2xl px-4 py-3 border border-gray-200 text-sm font-body text-gray-700 placeholder-gray-400 outline-none resize-none focus:border-[#4a7c59]/40 transition-colors"
+                  />
+                  <div className="flex items-center justify-end gap-2 pt-2">
+                    <button onClick={() => { setComposing(false); setDraftBody(""); }} className="px-3 py-1.5 text-sm font-body text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">Cancel</button>
+                    <button
+                      onClick={submitPost}
+                      disabled={!draftBody.trim()}
+                      className="px-4 py-1.5 bg-[#4a7c59] text-white text-sm font-semibold font-body rounded-full hover:bg-[#3d6b4a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      Post
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Posts */}
+        <div className="flex flex-col gap-4">
+          {displayed.length === 0 ? (
+            <p className="text-sm text-gray-400 font-body text-center py-12">No posts yet.</p>
+          ) : displayed.map((post) => (
+            <motion.div
+              key={post.id}
+              layout
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25 }}
+              onClick={() => setSelectedPost(post)}
+              className="bg-white rounded-2xl border border-gray-100 overflow-hidden cursor-pointer hover:border-gray-200 transition-colors group"
+            >
+              <div className="flex items-start justify-between pt-5 px-5 mb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-white text-xs font-semibold font-body" style={{ backgroundColor: post.authorColor }}>
+                    {initialsFrom(post.authorName)}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold font-body text-gray-800 leading-tight">{post.authorName}</p>
+                    <p className="text-xs text-gray-400 font-body">Teacher · {timeAgo(post.createdAt)}</p>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-sm font-body text-gray-700 leading-relaxed px-5 pb-4">{post.body}</p>
+
+              <div className="px-5 pb-4 border-t border-gray-50 pt-3.5 flex items-center justify-between">
+                <div className="flex flex-wrap gap-2">
+                  {DEFAULT_EMOJIS.map((emoji) => {
+                    const r = post.reactions.find((rx) => rx.emoji === emoji);
+                    return (
+                      <button
+                        key={emoji}
+                        onClick={(e) => { e.stopPropagation(); toggleReaction(post.id, emoji); }}
+                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-sm border transition-colors cursor-pointer ${r?.mine ? "bg-[#4a7c59]/10 border-[#4a7c59]/30 text-[#4a7c59]" : "bg-white border-gray-200 text-gray-500 hover:border-gray-300"}`}
+                      >
+                        <span>{emoji}</span>
+                        {r && r.count > 0 && <span className="text-xs font-semibold">{r.count}</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setSelectedPost(post); }}
+                  className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-[#4a7c59] transition-colors font-body ml-3 shrink-0 cursor-pointer"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  {post.comments.length}
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* Post detail sidebar */}
+      <AnimatePresence>
+        {livePost && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-40 backdrop-blur-sm"
+              style={{ background: "rgba(0,0,0,0.15)" }}
+              onClick={() => setSelectedPost(null)}
+            />
+            <motion.div
+              initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 280 }}
+              className="fixed top-0 right-0 bottom-0 w-full sm:w-[480px] z-50 flex flex-col overflow-hidden bg-white border-l border-gray-100 shadow-xl"
+            >
+              <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
+                {/* Post header */}
+                <div className="flex items-center gap-2.5">
+                  <div className="w-11 h-11 rounded-full shrink-0 flex items-center justify-center text-white text-sm font-semibold font-body" style={{ backgroundColor: livePost.authorColor }}>
+                    {initialsFrom(livePost.authorName)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold font-body text-gray-800">{livePost.authorName}</p>
+                    <p className="text-xs text-gray-400 font-body">Teacher · {timeAgo(livePost.createdAt)}</p>
+                  </div>
+                  <button onClick={() => setSelectedPost(null)} className="p-2 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer shrink-0">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <p className="text-sm font-body text-gray-700 leading-relaxed">{livePost.body}</p>
+
+                {/* Reactions */}
+                <div className="border-t border-gray-100 pt-4">
+                  <p className="text-xs font-semibold font-body text-gray-400 uppercase tracking-wide mb-3">Reactions</p>
+                  <div className="flex flex-wrap gap-2">
+                    {DEFAULT_EMOJIS.map((emoji) => {
+                      const r = livePost.reactions.find((rx) => rx.emoji === emoji);
+                      return (
+                        <button
+                          key={emoji}
+                          onClick={() => toggleReaction(livePost.id, emoji)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border transition-colors cursor-pointer ${r?.mine ? "bg-[#4a7c59]/10 border-[#4a7c59]/30 text-[#4a7c59]" : "bg-white border-gray-200 text-gray-500 hover:border-gray-300"}`}
+                        >
+                          <span>{emoji}</span>
+                          {r && r.count > 0 && <span className="text-xs font-semibold">{r.count}</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Comments */}
+                <div className="border-t border-gray-100 pt-4">
+                  <p className="text-xs font-semibold font-body text-gray-400 uppercase tracking-wide mb-4">Comments · {livePost.comments.length}</p>
+                  <div className="flex flex-col gap-4">
+                    {livePost.comments.map((c) => (
+                      <div key={c.id} className="flex gap-2.5">
+                        <div className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-white text-[9px] font-bold font-body" style={{ backgroundColor: c.authorColor }}>
+                          {initialsFrom(c.authorName)}
+                        </div>
+                        <div className="flex-1">
+                          <div className="bg-[#eef4ef] rounded-2xl rounded-tl-sm px-3.5 py-2.5">
+                            <p className="text-xs font-semibold font-body text-gray-700 mb-0.5">{c.authorName}</p>
+                            <p className="text-sm font-body text-gray-600 leading-relaxed">{c.body}</p>
+                          </div>
+                          <p className="text-xs text-gray-400 font-body mt-1 ml-1">{c.time}</p>
+                        </div>
+                      </div>
+                    ))}
+                    {livePost.comments.length === 0 && (
+                      <p className="text-sm text-gray-400 font-body">No comments yet.</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Comment input */}
+                <div className="border-t border-gray-100 pt-4 flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-full bg-[#4a7c59] flex items-center justify-center text-white text-[9px] font-bold font-body shrink-0">
+                    {initialsFrom(DEMO_TEACHER.name)}
+                  </div>
+                  <div className="flex-1 flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-full px-3.5 py-2">
+                    <input
+                      type="text"
+                      value={commentDraft}
+                      onChange={(e) => setCommentDraft(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") { addComment(livePost.id, commentDraft.trim()); setCommentDraft(""); } }}
+                      placeholder="Add a comment..."
+                      className="flex-1 bg-transparent text-sm font-body text-gray-700 placeholder-gray-400 outline-none"
+                    />
+                    <button
+                      onClick={() => { addComment(livePost.id, commentDraft.trim()); setCommentDraft(""); }}
+                      disabled={!commentDraft.trim()}
+                      className="text-[#4a7c59] hover:text-[#3d6b4a] transition-colors shrink-0 disabled:opacity-40 cursor-pointer"
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 // ─── Nav Types ────────────────────────────────────────────────────────────────
 
 type NavTab = "dashboard" | "students" | "hours" | "messages" | "calendar" | "feed" | "payroll" | "forms";
@@ -1980,7 +2754,13 @@ export default function TeacherDashboardDemo() {
 
         {activeTab === "hours" && <HoursPage />}
 
-        {activeTab !== "dashboard" && activeTab !== "students" && activeTab !== "hours" && (
+        {activeTab === "messages" && <MessagesPage />}
+
+        {activeTab === "calendar" && <CalendarPage />}
+
+        {activeTab === "feed" && <FeedPage />}
+
+        {activeTab !== "dashboard" && activeTab !== "students" && activeTab !== "hours" && activeTab !== "messages" && activeTab !== "calendar" && activeTab !== "feed" && (
           <ComingSoonPage
             label={
               PRIMARY_NAV.find((n) => n.tab === activeTab)?.label ??
