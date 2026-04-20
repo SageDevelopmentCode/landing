@@ -198,6 +198,15 @@ export default function ApplicationsPage() {
     )
   }
 
+  const handleProgramChanged = (id: string, program: string) => {
+    setApplications((prev) =>
+      prev.map((app) => (app.id === id ? { ...app, program } : app))
+    )
+    setSelectedApp((prev) =>
+      prev?.id === id ? { ...prev, program } : prev
+    )
+  }
+
   function handleItemClick(itemId: number, studentId: string, data: CachedEnrollmentData | null) {
     pendingApp.current = selectedApp
     setSelectedApp(null)
@@ -508,6 +517,7 @@ export default function ApplicationsPage() {
           onDeactivated={handleDeactivated}
           onEnrolled={handleEnrolled}
           onItemClick={handleItemClick}
+          onProgramChanged={handleProgramChanged}
         />
       )}
 
