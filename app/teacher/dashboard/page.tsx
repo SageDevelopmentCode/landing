@@ -75,6 +75,20 @@ export default async function TeacherDashboard() {
       (studentRecords ?? []).map((s) => [s.id, { name: s.child_legal_name, grade: s.child_grade, profile_image_url: s.profile_image_url ?? null }])
     )
 
+    const { data: todayCheckins } = await adminClient
+      .schema('attendance')
+      .from('check_ins')
+      .select('student_id, checked_out_at')
+      .in('student_id', studentIds)
+      .gte('checked_in_at', todayISO + 'T00:00:00')
+      .lte('checked_in_at', todayISO + 'T23:59:59')
+      .eq('is_deleted', false)
+
+    const checkinMap = new Map<string, 'checked_in' | 'checked_out'>()
+    for (const c of todayCheckins ?? []) {
+      checkinMap.set(c.student_id, c.checked_out_at ? 'checked_out' : 'checked_in')
+    }
+
     myStudents = teacherStudentRows.map((r) => ({
       id: r.id,
       student_id: r.student_id,
@@ -83,6 +97,7 @@ export default async function TeacherDashboard() {
       program: r.program,
       classroom: r.classroom,
       profile_image_url: studentMap.get(r.student_id)?.profile_image_url ?? null,
+      attendance_status: checkinMap.get(r.student_id) ?? 'absent',
     }))
   }
 

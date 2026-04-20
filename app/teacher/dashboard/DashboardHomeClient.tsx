@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CalendarDays,
@@ -10,7 +11,16 @@ import {
   MapPin,
   Paperclip,
   ChevronRight,
+  Banknote,
 } from "lucide-react";
+
+const BANNER_IMAGES = [
+  "/assets/ImageTwo.jpg",
+  "/assets/ImageThree.jpg",
+  "/assets/ImageFive.jpg",
+  "/assets/ImageNine.jpg",
+  "/assets/ImageTen.jpg",
+];
 import { clockIn, clockOut } from "@/app/actions/teacherHours";
 import type { SessionsByDay } from "@/app/actions/teacherHours";
 import {
@@ -426,6 +436,48 @@ function WeeklyHoursChart({
   );
 }
 
+// ─── Payroll Card ─────────────────────────────────────────────────────────────
+
+function PayrollCard() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, delay: 0.15 }}
+      className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col gap-5"
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Banknote className="w-4 h-4 text-gray-400" />
+          <h2 className="text-sm font-semibold uppercase tracking-widest text-gray-400 font-body">
+            Payroll
+          </h2>
+        </div>
+        <span className="text-[11px] font-semibold font-body px-2.5 py-1 rounded-full bg-amber-50 text-amber-500 border border-amber-100">
+          Coming soon
+        </span>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <div className="flex-1 rounded-xl bg-[#4a7c59]/5 border border-[#4a7c59]/10 px-4 py-3.5">
+          <p className="text-[11px] text-gray-400 font-body mb-1">Next Payroll</p>
+          <p className="text-base font-semibold text-gray-800 font-body">May 2, 2026</p>
+          <p className="text-[11px] text-gray-400 font-body mt-0.5">in 12 days</p>
+        </div>
+        <div className="flex-1 rounded-xl bg-gray-50 border border-gray-100 px-4 py-3.5">
+          <p className="text-[11px] text-gray-400 font-body mb-1">Last Paid</p>
+          <p className="text-base font-semibold text-gray-800 font-body">Apr 18, 2026</p>
+          <p className="text-[11px] text-gray-400 font-body mt-0.5">2 weeks ago</p>
+        </div>
+      </div>
+
+      <p className="text-xs text-gray-300 font-body">
+        Full payroll details and history will be available here soon.
+      </p>
+    </motion.div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function DashboardHomeClient({
@@ -440,6 +492,15 @@ export default function DashboardHomeClient({
   const [sessionsByDay, setSessionsByDay] =
     useState<SessionsByDay>(initialSessions);
   const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
+  const [bannerIndex, setBannerIndex] = useState(0);
+
+  useEffect(() => {
+    setBannerIndex(Math.floor(Math.random() * BANNER_IMAGES.length));
+    const timer = setInterval(() => {
+      setBannerIndex((i) => (i + 1) % BANNER_IMAGES.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, []);
 
   async function handleClockIn() {
     const session = await clockIn();
@@ -474,14 +535,69 @@ export default function DashboardHomeClient({
 
   return (
     <div className="flex flex-col gap-6">
-      <motion.h1
-        initial={{ opacity: 0, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2 }}
-        className="text-3xl font-bold font-heading text-gray-800"
+      {/* Banner slideshow */}
+      <motion.div
+        initial={{ opacity: 0, scale: 1.01 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="relative h-44 rounded-2xl overflow-hidden shadow-sm"
       >
-        Welcome, {fullName ?? "Teacher"}.
-      </motion.h1>
+        <AnimatePresence initial={false}>
+          <motion.div
+            key={bannerIndex}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+            className="absolute inset-0"
+          >
+            <Image
+              src={BANNER_IMAGES[bannerIndex]}
+              alt=""
+              fill
+              className="object-cover"
+              priority
+            />
+          </motion.div>
+        </AnimatePresence>
+        <div className="absolute inset-0 bg-black/45" />
+
+        {/* Dot indicators */}
+        <div className="absolute bottom-3 right-5 flex gap-1.5">
+          {BANNER_IMAGES.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setBannerIndex(i)}
+              className={`w-1.5 h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                i === bannerIndex ? "bg-white scale-125" : "bg-white/40"
+              }`}
+            />
+          ))}
+        </div>
+
+        <div className="absolute inset-0 flex flex-col justify-end px-7 pb-6">
+          <motion.p
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.15 }}
+            className="text-white/70 text-sm font-body mb-1"
+          >
+            {new Date().toLocaleDateString("en-US", {
+              weekday: "long",
+              month: "long",
+              day: "numeric",
+            })}
+          </motion.p>
+          <motion.h1
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+            className="text-white text-3xl font-bold font-heading leading-tight"
+          >
+            Welcome, {fullName ?? "Teacher"}.
+          </motion.h1>
+        </div>
+      </motion.div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <ClockWidget
@@ -497,6 +613,8 @@ export default function DashboardHomeClient({
       </div>
 
       <WeeklyHoursChart sessionsByDay={sessionsByDay} />
+
+      <PayrollCard />
     </div>
   );
 }
