@@ -6,6 +6,8 @@ import ProfileDropdown from '@/app/apply/dashboard/ProfileDropdown'
 import Footer from '@/app/components/Footer'
 import TeacherNav from './TeacherNav'
 import MyStudentsSection, { type StudentRow } from './MyStudentsSection'
+import DashboardHomeClient, { type CalendarEvent } from './DashboardHomeClient'
+import { getTeacherSessions } from '@/app/actions/teacherHours'
 
 export default async function TeacherDashboard() {
   const supabase = await createServerSupabaseClient()
@@ -16,8 +18,14 @@ export default async function TeacherDashboard() {
   }
 
   const adminClient = createAdminClient()
+  const todayISO = new Date().toISOString().slice(0, 10)
 
-  const [{ data: adminUser }, { data: teacherStudentRows }] = await Promise.all([
+  const [
+    { data: adminUser },
+    { data: teacherStudentRows },
+    initialSessions,
+    { data: upcomingEventsRaw },
+  ] = await Promise.all([
     adminClient.schema('admin').from('users').select('full_name, profile_image_url').eq('id', user.id).single(),
     adminClient
       .schema('teachers')
@@ -25,10 +33,33 @@ export default async function TeacherDashboard() {
       .select('id, student_id, program, classroom')
       .eq('teacher_id', user.id)
       .eq('is_deleted', false),
+    getTeacherSessions(),
+    adminClient
+      .schema('calendar')
+      .from('events')
+      .select('id, title, event_date, is_all_day, start_time, end_time, color, category, description, location, attachment_links')
+      .or(`shared_with.cs.{"Teachers"},created_by.eq.${user.id}`)
+      .gte('event_date', todayISO)
+      .order('event_date', { ascending: true })
+      .limit(3),
   ])
 
   const fullName = adminUser?.full_name ?? null
   const profileImageUrl = adminUser?.profile_image_url ?? null
+
+  const upcomingEvents: CalendarEvent[] = (upcomingEventsRaw ?? []).map((e) => ({
+    id: e.id,
+    title: e.title,
+    event_date: e.event_date,
+    is_all_day: e.is_all_day ?? false,
+    start_time: e.start_time ?? null,
+    end_time: e.end_time ?? null,
+    color: e.color ?? null,
+    category: e.category ?? null,
+    description: e.description ?? null,
+    location: e.location ?? null,
+    attachment_links: e.attachment_links ?? null,
+  }))
 
   let myStudents: StudentRow[] = []
 
@@ -86,15 +117,13 @@ export default async function TeacherDashboard() {
           </div>
         </header>
 
-        <main className="flex-1 px-6 py-12">
-          <div className="max-w-3xl">
-            {/* Welcome */}
-            <div className="mb-10">
-              <h1 className="text-3xl font-bold font-heading text-gray-800 mb-2">
-                Welcome, {fullName ?? 'Teacher'}.
-              </h1>
-            </div>
-
+        <main className="flex-1 px-6 py-10">
+          <div className="max-w-5xl mx-auto flex flex-col gap-8">
+            <DashboardHomeClient
+              fullName={fullName}
+              initialSessions={initialSessions}
+              upcomingEvents={upcomingEvents}
+            />
             <MyStudentsSection students={myStudents} />
           </div>
         </main>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft,
@@ -20,6 +20,17 @@ import {
   updateSessionNote,
 } from "@/app/actions/teacherHours";
 import type { ClockSession, SessionsByDay } from "@/app/actions/teacherHours";
+import {
+  toISOKey,
+  getMondayOfWeek,
+  getWeekDays,
+  sessionDurationHours,
+  getDayTotalHours,
+  getWeekTotalHours,
+  formatDuration,
+  fmt12,
+  ElapsedTimer,
+} from "@/app/lib/clock-utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -28,30 +39,6 @@ type ViewMode = "day" | "week" | "month";
 const WEEKLY_GOAL = 40;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function toISOKey(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
-
-function getMondayOfWeek(date: Date): Date {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  d.setDate(d.getDate() + diff);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-function getWeekDays(monday: Date): Date[] {
-  return Array.from({ length: 5 }, (_, i) => {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    return d;
-  });
-}
 
 function getMonthDays(year: number, month: number): (Date | null)[] {
   const firstDay = new Date(year, month, 1).getDay();
@@ -63,66 +50,6 @@ function getMonthDays(year: number, month: number): (Date | null)[] {
   }
   while (cells.length % 7 !== 0) cells.push(null);
   return cells;
-}
-
-function sessionDurationHours(session: ClockSession): number {
-  if (!session.clockOutAt) return 0;
-  const diff = new Date(session.clockOutAt).getTime() - new Date(session.clockInAt).getTime();
-  return Math.max(0, diff / 1000 / 3600);
-}
-
-function getDayTotalHours(sessions: ClockSession[]): number {
-  return sessions.reduce((acc, s) => acc + sessionDurationHours(s), 0);
-}
-
-function getWeekTotalHours(monday: Date, sessionsByDay: SessionsByDay): number {
-  return getWeekDays(monday).reduce((acc, d) => {
-    return acc + getDayTotalHours(sessionsByDay[toISOKey(d)] ?? []);
-  }, 0);
-}
-
-function formatDuration(hours: number): string {
-  const h = Math.floor(hours);
-  const m = Math.round((hours - h) * 60);
-  if (h === 0 && m === 0) return "0h";
-  if (h === 0) return `${m}m`;
-  if (m === 0) return `${h}h`;
-  return `${h}h ${m}m`;
-}
-
-function fmt12(isoTimestamp: string): string {
-  const d = new Date(isoTimestamp);
-  const h = d.getHours();
-  const m = d.getMinutes();
-  const ampm = h >= 12 ? "PM" : "AM";
-  const h12 = h % 12 || 12;
-  return `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
-}
-
-function formatElapsed(seconds: number): string {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
-  if (h > 0) return `${h}h ${String(m).padStart(2, "0")}m`;
-  if (m > 0) return `${m}m ${String(s).padStart(2, "0")}s`;
-  return `${s}s`;
-}
-
-// ─── Live Elapsed Timer ───────────────────────────────────────────────────────
-
-function ElapsedTimer({ clockInAt }: { clockInAt: string }) {
-  const [elapsed, setElapsed] = useState(() =>
-    Math.floor((Date.now() - new Date(clockInAt).getTime()) / 1000)
-  );
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setElapsed(Math.floor((Date.now() - new Date(clockInAt).getTime()) / 1000));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [clockInAt]);
-
-  return <span className="tabular-nums">{formatElapsed(elapsed)}</span>;
 }
 
 // ─── Session Row ──────────────────────────────────────────────────────────────
