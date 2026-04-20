@@ -52,6 +52,7 @@ export default async function StudentsPage() {
       program: r.program,
       classroom: r.classroom,
       profile_image_url: studentMap.get(r.student_id)?.profile_image_url ?? null,
+      attendance_status: 'absent' as const,
     }))
   }
 
