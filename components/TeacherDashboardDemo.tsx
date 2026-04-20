@@ -2116,6 +2116,346 @@ function FeedPage() {
   );
 }
 
+// ─── Payroll Demo Data ────────────────────────────────────────────────────────
+
+type DemoPayStub = {
+  id: string;
+  periodStart: string;
+  periodEnd: string;
+  payDate: string;
+  regularHours: number;
+  overtimeHours: number;
+  hourlyRate: number;
+  federalTax: number;
+  stateTax: number;
+  socialSecurity: number;
+  medicare: number;
+};
+
+function grossPay(s: DemoPayStub) { return (s.regularHours * s.hourlyRate) + (s.overtimeHours * s.hourlyRate * 1.5); }
+function totalDeductions(s: DemoPayStub) { return s.federalTax + s.stateTax + s.socialSecurity + s.medicare; }
+function netPay(s: DemoPayStub) { return grossPay(s) - totalDeductions(s); }
+function fmtUSD(n: number) { return "$" + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+function fmtDate(iso: string) { return new Date(iso + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }); }
+
+const DEMO_PAY_STUBS: DemoPayStub[] = [
+  { id: "ps1", periodStart: "2026-04-06", periodEnd: "2026-04-19", payDate: "2026-04-25", regularHours: 76, overtimeHours: 2, hourlyRate: 22.50, federalTax: 198.40, stateTax: 89.20, socialSecurity: 112.36, medicare: 26.28 },
+  { id: "ps2", periodStart: "2026-03-23", periodEnd: "2026-04-05", payDate: "2026-04-11", regularHours: 80, overtimeHours: 0, hourlyRate: 22.50, federalTax: 202.10, stateTax: 90.80, socialSecurity: 111.60, medicare: 26.10 },
+  { id: "ps3", periodStart: "2026-03-09", periodEnd: "2026-03-22", payDate: "2026-03-28", regularHours: 78, overtimeHours: 3, hourlyRate: 22.50, federalTax: 210.50, stateTax: 94.20, socialSecurity: 115.42, medicare: 27.00 },
+  { id: "ps4", periodStart: "2026-02-23", periodEnd: "2026-03-08", payDate: "2026-03-14", regularHours: 80, overtimeHours: 0, hourlyRate: 22.50, federalTax: 202.10, stateTax: 90.80, socialSecurity: 111.60, medicare: 26.10 },
+  { id: "ps5", periodStart: "2026-02-09", periodEnd: "2026-02-22", payDate: "2026-02-27", regularHours: 74, overtimeHours: 1, hourlyRate: 22.50, federalTax: 191.60, stateTax: 86.10, socialSecurity: 108.81, medicare: 25.46 },
+  { id: "ps6", periodStart: "2026-01-26", periodEnd: "2026-02-08", payDate: "2026-02-13", regularHours: 80, overtimeHours: 0, hourlyRate: 22.50, federalTax: 202.10, stateTax: 90.80, socialSecurity: 111.60, medicare: 26.10 },
+];
+
+function PayrollPage() {
+  const [selectedId, setSelectedId] = useState<string>(DEMO_PAY_STUBS[0].id);
+  const selected = DEMO_PAY_STUBS.find((s) => s.id === selectedId) ?? DEMO_PAY_STUBS[0];
+
+  const ytdGross = DEMO_PAY_STUBS.reduce((sum, s) => sum + grossPay(s), 0);
+  const ytdDeductions = DEMO_PAY_STUBS.reduce((sum, s) => sum + totalDeductions(s), 0);
+  const ytdNet = ytdGross - ytdDeductions;
+  const lastNet = netPay(DEMO_PAY_STUBS[0]);
+
+  const breakdown = [
+    { label: "Regular Hours", value: `${selected.regularHours} hrs x ${fmtUSD(selected.hourlyRate)}`, amount: selected.regularHours * selected.hourlyRate, positive: true },
+    { label: "Overtime Hours", value: `${selected.overtimeHours} hrs x ${fmtUSD(selected.hourlyRate * 1.5)}`, amount: selected.overtimeHours * selected.hourlyRate * 1.5, positive: true },
+    { label: "Gross Pay", value: "", amount: grossPay(selected), positive: true, bold: true },
+    { label: "Federal Income Tax", value: "", amount: -selected.federalTax, positive: false },
+    { label: "State Income Tax", value: "", amount: -selected.stateTax, positive: false },
+    { label: "Social Security", value: "", amount: -selected.socialSecurity, positive: false },
+    { label: "Medicare", value: "", amount: -selected.medicare, positive: false },
+    { label: "Total Deductions", value: "", amount: -totalDeductions(selected), positive: false, bold: true },
+    { label: "Net Pay", value: "", amount: netPay(selected), positive: true, bold: true, highlight: true },
+  ];
+
+  return (
+    <div className="flex flex-col gap-6">
+      {/* Stat cards */}
+      <div className="grid grid-cols-3 gap-4">
+        {[
+          { label: "Next Pay Date", value: "May 2, 2026", sub: "in 12 days", accent: true },
+          { label: "Last Net Pay", value: fmtUSD(lastNet), sub: `Paid ${fmtDate(DEMO_PAY_STUBS[0].payDate)}`, accent: false },
+          { label: "YTD Earnings", value: fmtUSD(ytdNet), sub: `${fmtUSD(ytdGross)} gross`, accent: false },
+        ].map(({ label, value, sub, accent }) => (
+          <motion.div
+            key={label}
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}
+            className={`rounded-2xl border p-5 ${accent ? "bg-[#4a7c59]/5 border-[#4a7c59]/15" : "bg-white border-gray-100 shadow-sm"}`}
+          >
+            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-2">{label}</p>
+            <p className="text-2xl font-bold font-heading text-gray-800 leading-none">{value}</p>
+            <p className="text-xs text-gray-400 font-body mt-1">{sub}</p>
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="flex gap-6">
+        {/* Pay stubs list */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.05 }}
+          className="w-72 shrink-0 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
+        >
+          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-widest text-gray-400 font-body">Pay Stubs</h2>
+            <span className="text-[11px] font-semibold font-body px-2 py-0.5 rounded-full bg-amber-50 text-amber-500 border border-amber-100">Coming soon</span>
+          </div>
+          <div className="flex flex-col">
+            {DEMO_PAY_STUBS.map((s) => {
+              const isSelected = s.id === selectedId;
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => setSelectedId(s.id)}
+                  className={`w-full text-left flex items-center gap-3 px-5 py-4 border-b border-gray-50 transition-all cursor-pointer relative ${isSelected ? "bg-[#4a7c59]/5" : "hover:bg-gray-50"}`}
+                >
+                  {isSelected && <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-[#4a7c59]" />}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-gray-700 font-body">
+                      {fmtDate(s.periodStart)} – {new Date(s.periodEnd + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    </p>
+                    <p className="text-[11px] text-gray-400 font-body mt-0.5">Paid {fmtDate(s.payDate)}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className={`text-sm font-semibold font-body ${isSelected ? "text-[#4a7c59]" : "text-gray-700"}`}>{fmtUSD(netPay(s))}</p>
+                    <p className="text-[10px] text-gray-400 font-body">net</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </motion.div>
+
+        {/* Pay stub detail */}
+        <motion.div
+          key={selectedId}
+          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}
+          className="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col gap-5"
+        >
+          <div className="flex items-start justify-between">
+            <div>
+              <h2 className="text-lg font-semibold font-heading text-gray-800">Pay Stub</h2>
+              <p className="text-sm text-gray-400 font-body mt-0.5">
+                {fmtDate(selected.periodStart)} – {fmtDate(selected.periodEnd)} · Paid {fmtDate(selected.payDate)}
+              </p>
+            </div>
+            <button className="flex items-center gap-1.5 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-body text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer">
+              <ChevronDown className="w-4 h-4" />
+              Download
+            </button>
+          </div>
+
+          <div className="border border-gray-100 rounded-xl overflow-hidden">
+            {breakdown.map(({ label, value, amount, positive, bold, highlight }) => (
+              <div
+                key={label}
+                className={`flex items-center justify-between px-5 py-3 border-b border-gray-50 last:border-0 ${highlight ? "bg-[#4a7c59]/5" : bold ? "bg-gray-50/60" : ""}`}
+              >
+                <div>
+                  <p className={`text-sm font-body ${bold ? "font-semibold text-gray-800" : "text-gray-600"}`}>{label}</p>
+                  {value && <p className="text-xs text-gray-400 font-body">{value}</p>}
+                </div>
+                <p className={`text-sm tabular-nums font-body ${bold ? "font-bold" : ""} ${highlight ? "text-[#4a7c59] text-base" : positive ? "text-gray-800" : "text-gray-500"}`}>
+                  {amount < 0 ? `(${fmtUSD(Math.abs(amount))})` : fmtUSD(amount)}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-auto pt-4 border-t border-gray-100">
+            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-3">Year-to-Date Summary</p>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { label: "Gross Earnings", value: fmtUSD(ytdGross) },
+                { label: "Total Deductions", value: fmtUSD(ytdDeductions) },
+                { label: "Net Earnings", value: fmtUSD(ytdNet) },
+              ].map(({ label, value }) => (
+                <div key={label} className="bg-gray-50 border border-gray-100 rounded-xl px-4 py-3">
+                  <p className="text-[11px] text-gray-400 font-body mb-1">{label}</p>
+                  <p className="text-sm font-semibold text-gray-800 font-body tabular-nums">{value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Forms & Documents Demo Data ──────────────────────────────────────────────
+
+type DemoForm = { id: string; title: string; description: string; completed: boolean; signedDate: string | null };
+type DemoDocument = { id: string; title: string; category: string; size: string };
+
+const INITIAL_FORMS: DemoForm[] = [
+  { id: "f1", title: "Direct Deposit Authorization", description: "Set up or update your direct deposit banking information.", completed: true, signedDate: "Jan 15, 2026" },
+  { id: "f2", title: "W-4 Tax Withholding", description: "Federal tax withholding elections for the current year.", completed: true, signedDate: "Jan 15, 2026" },
+  { id: "f3", title: "Employee Handbook Acknowledgement", description: "Confirm you have read and understood the staff handbook.", completed: true, signedDate: "Jan 16, 2026" },
+  { id: "f4", title: "Emergency Contact Update", description: "Verify or update your emergency contact on file.", completed: false, signedDate: null },
+  { id: "f5", title: "Technology Use Policy", description: "Acknowledge the school's acceptable use policy for devices.", completed: false, signedDate: null },
+];
+
+const DEMO_DOCUMENTS: DemoDocument[] = [
+  { id: "d1", title: "Employee Handbook", category: "Policy", size: "2.4 MB" },
+  { id: "d2", title: "Benefits Guide 2026", category: "Benefits", size: "1.1 MB" },
+  { id: "d3", title: "PTO & Leave Policy", category: "Policy", size: "380 KB" },
+  { id: "d4", title: "Payroll Schedule 2026", category: "Payroll", size: "120 KB" },
+  { id: "d5", title: "School Calendar 2025–26", category: "Schedule", size: "540 KB" },
+];
+
+function FormsPage() {
+  const [forms, setForms] = useState<DemoForm[]>(INITIAL_FORMS);
+  const [signingId, setSigningId] = useState<string | null>(null);
+  const [nameInput, setNameInput] = useState("");
+
+  const completed = forms.filter((f) => f.completed).length;
+  const signingForm = forms.find((f) => f.id === signingId);
+
+  function sign() {
+    if (!signingId || !nameInput.trim()) return;
+    setForms((prev) => prev.map((f) => f.id === signingId
+      ? { ...f, completed: true, signedDate: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) }
+      : f
+    ));
+    setSigningId(null);
+    setNameInput("");
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      {/* Required Forms */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}
+        className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6"
+      >
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg font-semibold text-gray-700 font-body">Required Forms</h2>
+          <span className={`text-xs font-semibold font-body px-2.5 py-1 rounded-full ${completed === forms.length ? "bg-[#4a7c59]/10 text-[#4a7c59]" : "bg-amber-50 text-amber-500 border border-amber-100"}`}>
+            {completed} of {forms.length} complete
+          </span>
+        </div>
+        <div className="flex flex-col gap-2">
+          {forms.map((form) => (
+            <div key={form.id} className="flex items-center gap-4 px-4 py-3.5 rounded-xl border border-gray-100 bg-gray-50">
+              <div className={`w-5 h-5 rounded-full shrink-0 flex items-center justify-center border-2 ${form.completed ? "bg-[#4a7c59] border-[#4a7c59]" : "border-gray-300"}`}>
+                {form.completed && (
+                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 12 12">
+                    <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-800 font-body">{form.title}</p>
+                <p className="text-xs text-gray-400 font-body mt-0.5">{form.description}</p>
+              </div>
+              <div className="shrink-0">
+                {form.completed ? (
+                  <span className="flex items-center gap-1 text-xs font-semibold font-body text-[#4a7c59] bg-[#4a7c59]/8 px-2.5 py-1 rounded-full">
+                    Signed {form.signedDate}
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => { setSigningId(form.id); setNameInput(""); }}
+                    className="px-3.5 py-1.5 bg-[#4a7c59] text-white text-xs font-semibold font-body rounded-lg hover:bg-[#3d6b4a] transition-colors cursor-pointer"
+                  >
+                    Complete
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+
+      {/* Documents */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.08 }}
+        className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6"
+      >
+        <h2 className="text-lg font-semibold text-gray-700 font-body mb-5">Documents</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {DEMO_DOCUMENTS.map((doc) => (
+            <div key={doc.id} className="flex items-start gap-3 p-4 rounded-xl border border-gray-100 bg-gray-50 hover:bg-gray-100 hover:border-gray-200 transition-all">
+              <div className="w-10 h-10 rounded-lg bg-rose-50 border border-rose-100 flex items-center justify-center shrink-0">
+                <FileText className="w-4 h-4 text-rose-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-800 font-body leading-snug">{doc.title}</p>
+                <p className="text-xs text-gray-400 font-body mt-0.5">{doc.category} · PDF · {doc.size}</p>
+                <button className="mt-2 text-xs font-semibold font-body text-[#4a7c59] hover:text-[#3d6b4a] transition-colors cursor-pointer">
+                  Download
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+
+      {/* Sign modal */}
+      <AnimatePresence>
+        {signingId && signingForm && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-40 flex items-center justify-center backdrop-blur-sm"
+              style={{ background: "rgba(0,0,0,0.3)" }}
+              onClick={() => setSigningId(null)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
+            >
+              <div className="bg-white rounded-2xl shadow-xl border border-gray-100 w-full max-w-md mx-4 p-6 pointer-events-auto">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-semibold text-gray-800 font-body">Sign Form</h3>
+                  <button onClick={() => setSigningId(null)} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <p className="text-sm font-semibold text-gray-700 font-body mb-1">{signingForm.title}</p>
+                <p className="text-xs text-gray-400 font-body mb-5">{signingForm.description}</p>
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-4">
+                  <p className="text-xs text-gray-500 font-body leading-relaxed">
+                    By signing below, I confirm I have read and agree to the contents of this form. This constitutes my electronic signature.
+                  </p>
+                </div>
+                <label className="block mb-1">
+                  <span className="text-xs font-semibold text-gray-500 font-body">Type your full name to sign</span>
+                </label>
+                <input
+                  autoFocus
+                  type="text"
+                  placeholder="Jordan Taylor"
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") sign(); }}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-body text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-[#4a7c59]/40 mb-4"
+                />
+                <div className="flex items-center gap-3">
+                  <button onClick={() => setSigningId(null)} className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-body text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer">
+                    Cancel
+                  </button>
+                  <button
+                    onClick={sign}
+                    disabled={!nameInput.trim()}
+                    className="flex-1 px-4 py-2.5 bg-[#4a7c59] text-white rounded-xl text-sm font-semibold font-body hover:bg-[#3d6b4a] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Sign & Submit
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 // ─── Nav Types ────────────────────────────────────────────────────────────────
 
 type NavTab = "dashboard" | "students" | "hours" | "messages" | "calendar" | "feed" | "payroll" | "forms";
@@ -2760,7 +3100,11 @@ export default function TeacherDashboardDemo() {
 
         {activeTab === "feed" && <FeedPage />}
 
-        {activeTab !== "dashboard" && activeTab !== "students" && activeTab !== "hours" && activeTab !== "messages" && activeTab !== "calendar" && activeTab !== "feed" && (
+        {activeTab === "payroll" && <PayrollPage />}
+
+        {activeTab === "forms" && <FormsPage />}
+
+        {activeTab !== "dashboard" && activeTab !== "students" && activeTab !== "hours" && activeTab !== "messages" && activeTab !== "calendar" && activeTab !== "feed" && activeTab !== "payroll" && activeTab !== "forms" && (
           <ComingSoonPage
             label={
               PRIMARY_NAV.find((n) => n.tab === activeTab)?.label ??
