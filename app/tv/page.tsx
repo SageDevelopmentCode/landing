@@ -261,7 +261,7 @@ function DetailCard({ label, value }: { label: string; value: string }) {
       <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-1 font-body">
         {label}
       </p>
-      <p className="text-xl font-bold text-gray-800 font-body">{value}</p>
+      <p className="text-lg font-bold text-gray-800 font-body">{value}</p>
     </div>
   );
 }
@@ -277,10 +277,10 @@ function Slide0OpenHouse() {
           <span className="inline-block px-5 py-2 bg-primary text-white text-base font-semibold rounded-full mb-6 font-body">
             Today · April 25, 2026
           </span>
-          <h1 className="text-8xl font-bold text-gray-800 font-heading leading-tight mb-5">
+          <h1 className="text-6xl font-bold text-gray-800 font-heading leading-tight mb-5">
             Welcome to Our<br />Open House!
           </h1>
-          <p className="text-3xl text-gray-500 font-body leading-relaxed">
+          <p className="text-2xl text-gray-500 font-body leading-relaxed">
             We&apos;re so glad you&apos;re here. Look around, meet the team, and let us know if you have any questions.
           </p>
         </div>
@@ -288,19 +288,19 @@ function Slide0OpenHouse() {
         {/* Event detail cards */}
         <div className="grid grid-cols-3 gap-5">
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col gap-2">
-            <span className="text-3xl">🕑</span>
+            <span className="text-2xl">🕑</span>
             <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide font-body">Time</p>
-            <p className="text-2xl font-bold text-gray-800 font-heading">2:00 – 4:00 PM</p>
+            <p className="text-xl font-bold text-gray-800 font-heading">2:00 – 4:00 PM</p>
           </div>
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col gap-2">
-            <span className="text-3xl">📍</span>
+            <span className="text-2xl">📍</span>
             <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide font-body">Location</p>
-            <p className="text-xl font-bold text-gray-800 font-heading leading-snug">2760 Gattis School Rd<br />Round Rock, TX</p>
+            <p className="text-lg font-bold text-gray-800 font-heading leading-snug">2760 Gattis School Rd<br />Round Rock, TX</p>
           </div>
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col gap-2">
-            <span className="text-3xl">✉️</span>
+            <span className="text-2xl">✉️</span>
             <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide font-body">Questions?</p>
-            <p className="text-xl font-bold text-primary font-heading">sabrina@sagefield.co</p>
+            <p className="text-lg font-bold text-primary font-heading">sabrina@sagefield.co</p>
           </div>
         </div>
 
@@ -317,13 +317,13 @@ function Slide0OpenHouse() {
       {/* Right */}
       <div className="w-72 flex flex-col items-center justify-center gap-6 shrink-0">
         <div className="bg-primary rounded-3xl px-8 py-10 flex flex-col items-center gap-4 w-full text-center shadow-lg">
-          <span className="text-6xl">🌿</span>
-          <p className="text-3xl font-bold text-white font-heading leading-tight">Sage Field<br />Private School</p>
-          <p className="text-lg text-white/80 font-body">Outdoor · Curious · Small</p>
+          <span className="text-4xl">🌿</span>
+          <p className="text-2xl font-bold text-white font-heading leading-tight">Sage Field<br />Private School</p>
+          <p className="text-base text-white/80 font-body">Outdoor · Curious · Small</p>
         </div>
         <div className="bg-white rounded-2xl px-6 py-5 w-full text-center shadow-sm border border-gray-100">
           <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide font-body mb-1">More info</p>
-          <p className="text-xl font-bold text-primary font-heading">sagefield.co</p>
+          <p className="text-lg font-bold text-primary font-heading">sagefield.co</p>
         </div>
       </div>
     </div>
@@ -339,10 +339,10 @@ function Slide1Summer() {
           <span className="inline-block px-5 py-2 bg-badge-bg text-black text-base font-semibold rounded-full mb-5 font-body">
             Now Enrolling
           </span>
-          <h1 className="text-8xl font-bold text-gray-800 font-heading leading-tight mb-5">
+          <h1 className="text-6xl font-bold text-gray-800 font-heading leading-tight mb-5">
             Summer 2026
           </h1>
-          <p className="text-3xl text-gray-500 font-body">
+          <p className="text-2xl text-gray-500 font-body">
             May 26 – August 13, 2026 · 12 Weeks · Mon–Thu
           </p>
         </div>
@@ -364,7 +364,7 @@ function Slide1Summer() {
           ].map((tag) => (
             <span
               key={tag}
-              className="px-5 py-2 bg-primary/10 text-primary font-semibold rounded-full font-body text-lg"
+              className="px-5 py-2 bg-primary/10 text-primary font-semibold rounded-full font-body text-base"
             >
               {tag}
             </span>
@@ -375,7 +375,7 @@ function Slide1Summer() {
       {/* Right */}
       <div className="w-72 flex flex-col items-center justify-center gap-5 shrink-0">
         <QRCode url="https://sagefield.co/apply" label="sagefield.co/apply" />
-        <p className="text-xl font-bold text-primary font-heading text-center">
+        <p className="text-lg font-bold text-primary font-heading text-center">
           Apply Now
         </p>
         <p className="text-base text-gray-400 font-body text-center">
@@ -392,10 +392,10 @@ function Slide2SchoolYear() {
       {/* Left */}
       <div className="flex-1 flex flex-col justify-center gap-8">
         <div>
-          <h1 className="text-7xl font-bold text-gray-800 font-heading leading-tight mb-4">
+          <h1 className="text-5xl font-bold text-gray-800 font-heading leading-tight mb-4">
             School Year 2026–2027
           </h1>
-          <p className="text-3xl text-gray-500 font-body">
+          <p className="text-2xl text-gray-500 font-body">
             August 2026 – May 2027 · Ages 4–11 · Up to 4 Days/Week
           </p>
         </div>
@@ -415,7 +415,7 @@ function Slide2SchoolYear() {
               <div className="w-14 h-14 bg-primary/20 rounded-full flex items-center justify-center shrink-0">
                 <span className="text-3xl">{p.icon}</span>
               </div>
-              <p className="text-xl font-semibold text-gray-800 font-heading">
+              <p className="text-lg font-semibold text-gray-800 font-heading">
                 {p.title}
               </p>
             </div>
@@ -437,7 +437,7 @@ function Slide2SchoolYear() {
           />
         </div>
         <QRCode url="https://sagefield.co/apply" label="sagefield.co/apply" />
-        <p className="text-xl font-bold text-primary font-heading text-center">
+        <p className="text-lg font-bold text-primary font-heading text-center">
           Apply Now
         </p>
       </div>
@@ -449,17 +449,17 @@ function Slide3Homeschool() {
   return (
     <div className="flex flex-col h-full justify-center gap-10">
       <div>
-        <h1 className="text-7xl font-bold text-gray-800 font-heading leading-tight mb-4">
+        <h1 className="text-5xl font-bold text-gray-800 font-heading leading-tight mb-4">
           Homeschool Drop-In
         </h1>
-        <p className="text-3xl text-gray-500 font-body">
+        <p className="text-2xl text-gray-500 font-body">
           1–3 Days/Week · Ages 4–11 · Fridays Are Field Days
         </p>
       </div>
 
       {/* Schedule tiers */}
       <div>
-        <p className="text-xl font-semibold text-gray-400 mb-4 font-body uppercase tracking-wide">
+        <p className="text-lg font-semibold text-gray-400 mb-4 font-body uppercase tracking-wide">
           Choose Your Schedule
         </p>
         <div className="grid grid-cols-3 gap-6">
@@ -471,7 +471,7 @@ function Slide3Homeschool() {
               <span className="inline-block px-3 py-1.5 bg-primary/10 rounded-full text-base font-bold text-primary font-body self-start">
                 {t.days}
               </span>
-              <p className="text-xl font-semibold text-gray-800 font-heading">
+              <p className="text-lg font-semibold text-gray-800 font-heading">
                 {t.title}
               </p>
             </div>
@@ -481,7 +481,7 @@ function Slide3Homeschool() {
 
       {/* Why pillars — icon + title only */}
       <div>
-        <p className="text-xl font-semibold text-gray-400 mb-4 font-body uppercase tracking-wide">
+        <p className="text-lg font-semibold text-gray-400 mb-4 font-body uppercase tracking-wide">
           Why Sage Field?
         </p>
         <div className="grid grid-cols-4 gap-4">
@@ -493,7 +493,7 @@ function Slide3Homeschool() {
               <div className="w-14 h-14 bg-primary/20 rounded-full flex items-center justify-center shrink-0">
                 <span className="text-3xl">{p.icon}</span>
               </div>
-              <p className="text-xl font-semibold text-gray-800 font-heading">
+              <p className="text-lg font-semibold text-gray-800 font-heading">
                 {p.title}
               </p>
             </div>
@@ -509,7 +509,7 @@ function Slide4Tuition() {
     <div className="flex h-full gap-10">
       {/* Left: pricing */}
       <div className="flex-1 flex flex-col justify-center gap-8">
-        <h1 className="text-7xl font-bold text-gray-800 font-heading leading-tight">
+        <h1 className="text-5xl font-bold text-gray-800 font-heading leading-tight">
           Tuition &amp; Pricing
         </h1>
 
@@ -523,14 +523,14 @@ function Slide4Tuition() {
               <p className="text-base text-gray-500 font-body mb-1">
                 Weekly · 2nd–4th
               </p>
-              <p className="text-4xl font-bold text-primary font-heading">
+              <p className="text-3xl font-bold text-primary font-heading">
                 $350
-                <span className="text-xl text-gray-400 font-normal">/wk</span>
+                <span className="text-lg text-gray-400 font-normal">/wk</span>
               </p>
               <p className="text-base text-gray-500 font-body mt-2">Primary</p>
-              <p className="text-4xl font-bold text-primary font-heading">
+              <p className="text-3xl font-bold text-primary font-heading">
                 $375
-                <span className="text-xl text-gray-400 font-normal">/wk</span>
+                <span className="text-lg text-gray-400 font-normal">/wk</span>
               </p>
             </div>
             <div className="bg-primary rounded-xl p-4 relative">
@@ -540,11 +540,11 @@ function Slide4Tuition() {
               <p className="text-base text-white/70 font-body mb-1">
                 Full Summer · 2nd–4th
               </p>
-              <p className="text-4xl font-bold text-white font-heading">
+              <p className="text-3xl font-bold text-white font-heading">
                 $3,780
               </p>
               <p className="text-base text-white/70 font-body mt-2">Primary</p>
-              <p className="text-4xl font-bold text-white font-heading">
+              <p className="text-3xl font-bold text-white font-heading">
                 $4,050
               </p>
             </div>
@@ -561,18 +561,18 @@ function Slide4Tuition() {
               <p className="text-base text-gray-500 font-body mb-1">
                 2nd–4th Grade
               </p>
-              <p className="text-4xl font-bold text-primary font-heading">
+              <p className="text-3xl font-bold text-primary font-heading">
                 $1,095
-                <span className="text-xl text-gray-400 font-normal">/mo</span>
+                <span className="text-lg text-gray-400 font-normal">/mo</span>
               </p>
             </div>
             <div className="bg-[#FFF9F5] rounded-xl p-4">
               <p className="text-base text-gray-500 font-body mb-1">
                 Primary (Pre-K–1st)
               </p>
-              <p className="text-4xl font-bold text-primary font-heading">
+              <p className="text-3xl font-bold text-primary font-heading">
                 $1,195
-                <span className="text-xl text-gray-400 font-normal">/mo</span>
+                <span className="text-lg text-gray-400 font-normal">/mo</span>
               </p>
             </div>
           </div>
@@ -583,7 +583,7 @@ function Slide4Tuition() {
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center gap-3">
             <span className="text-3xl">🕒</span>
             <div>
-              <p className="text-lg font-bold text-gray-800 font-heading">
+              <p className="text-base font-bold text-gray-800 font-heading">
                 After Care
               </p>
               <p className="text-base text-primary font-semibold font-body">
@@ -594,7 +594,7 @@ function Slide4Tuition() {
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center gap-3">
             <span className="text-3xl">🎉</span>
             <div>
-              <p className="text-lg font-bold text-gray-800 font-heading">
+              <p className="text-base font-bold text-gray-800 font-heading">
                 Field Day Friday
               </p>
               <p className="text-base text-primary font-semibold font-body">
@@ -611,7 +611,7 @@ function Slide4Tuition() {
           url="https://sagefield.co/tuition"
           label="sagefield.co/tuition"
         />
-        <p className="text-xl font-bold text-primary font-heading text-center">
+        <p className="text-lg font-bold text-primary font-heading text-center">
           Full Pricing
         </p>
       </div>
@@ -623,7 +623,7 @@ function Slide5Team() {
   return (
     <div className="flex flex-col h-full gap-6">
       <div>
-        <h1 className="text-7xl font-bold text-gray-800 font-heading leading-tight">
+        <h1 className="text-5xl font-bold text-gray-800 font-heading leading-tight">
           Meet the Team
         </h1>
       </div>
@@ -646,10 +646,10 @@ function Slide5Team() {
             </div>
             {/* Info */}
             <div className="flex-1 flex flex-col justify-center px-6 py-5">
-              <p className="text-3xl font-bold text-gray-800 font-heading leading-tight">
+              <p className="text-2xl font-bold text-gray-800 font-heading leading-tight">
                 {member.name}
               </p>
-              <span className="inline-block mt-3 px-4 py-2 bg-primary/10 text-primary text-lg font-semibold rounded-full font-body self-start">
+              <span className="inline-block mt-3 px-4 py-2 bg-primary/10 text-primary text-base font-semibold rounded-full font-body self-start">
                 {member.role}
               </span>
             </div>
@@ -669,10 +669,10 @@ function Slide6Apply() {
           <span className="inline-block px-5 py-2 bg-badge-bg text-black text-base font-semibold rounded-full mb-5 font-body">
             Enrollment Open
           </span>
-          <h1 className="text-8xl font-bold text-gray-800 font-heading leading-tight mb-4">
+          <h1 className="text-6xl font-bold text-gray-800 font-heading leading-tight mb-4">
             How to Enroll
           </h1>
-          <p className="text-3xl text-gray-500 font-body">
+          <p className="text-2xl text-gray-500 font-body">
             Four simple steps to join Sage Field
           </p>
         </div>
@@ -684,15 +684,15 @@ function Slide6Apply() {
               className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex gap-5 items-start"
             >
               <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center shrink-0">
-                <span className="text-3xl font-bold text-white font-heading">
+                <span className="text-2xl font-bold text-white font-heading">
                   {step.num}
                 </span>
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-800 font-heading mb-2">
+                <p className="text-xl font-bold text-gray-800 font-heading mb-2">
                   {step.title}
                 </p>
-                <p className="text-lg text-gray-500 font-body leading-snug">
+                <p className="text-base text-gray-500 font-body leading-snug">
                   {step.detail}
                 </p>
               </div>
@@ -704,14 +704,14 @@ function Slide6Apply() {
       {/* Right */}
       <div className="w-72 flex flex-col items-center justify-center gap-5 shrink-0">
         <QRCode url="https://sagefield.co/apply" label="sagefield.co/apply" />
-        <p className="text-2xl font-bold text-primary font-heading text-center">
+        <p className="text-xl font-bold text-primary font-heading text-center">
           Apply Today
         </p>
-        <p className="text-lg text-gray-400 font-body text-center">
+        <p className="text-base text-gray-400 font-body text-center">
           Spots are limited
         </p>
         <div className="bg-primary/10 rounded-2xl px-6 py-4 text-center">
-          <p className="text-lg font-semibold text-gray-700 font-body">
+          <p className="text-base font-semibold text-gray-700 font-body">
             Questions?
           </p>
           <p className="text-base text-primary font-semibold font-body mt-1">
@@ -749,7 +749,7 @@ function SlideFAQ({ item }: { item: (typeof faqItems)[number] }) {
           >
             Question
           </p>
-          <p className="text-5xl font-bold text-gray-800 font-heading leading-tight">
+          <p className="text-4xl font-bold text-gray-800 font-heading leading-tight">
             {item.question}
           </p>
         </div>
@@ -759,7 +759,7 @@ function SlideFAQ({ item }: { item: (typeof faqItems)[number] }) {
           <p className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-4 font-body">
             Answer
           </p>
-          <p className="text-3xl text-gray-600 font-body leading-relaxed">
+          <p className="text-2xl text-gray-600 font-body leading-relaxed">
             {item.answer}
           </p>
         </div>
@@ -769,7 +769,7 @@ function SlideFAQ({ item }: { item: (typeof faqItems)[number] }) {
       <div className="w-56 flex flex-col items-center justify-center gap-5 shrink-0">
         <QRCode url="https://sagefield.co/faq" label="sagefield.co/faq" />
         <p
-          className="text-lg font-bold font-heading text-center"
+          className="text-base font-bold font-heading text-center"
           style={{ color: item.accent }}
         >
           Full FAQ
