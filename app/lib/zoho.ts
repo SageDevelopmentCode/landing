@@ -1403,6 +1403,46 @@ export async function buildOpenHouseReminderEmail(opts: {
   return { subject, content };
 }
 
+export async function buildParkingEmail(opts: {
+  name: string;
+}): Promise<{ subject: string; content: string }> {
+  const firstName = opts.name.split(" ")[0] || opts.name;
+  const subject = "Parking Info — Sage Field Open House This Saturday";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${firstName},</p>
+
+  <p>We are so excited to see you this <strong>Saturday, April 26th from 2:00–4:00 PM</strong> at Sage Field School!</p>
+
+  <p>We wanted to give you a heads-up on parking ahead of the event. Please see the details below:</p>
+
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; margin: 28px 0;">
+    <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 15px;">🅿️ Parking Instructions</p>
+    <p style="margin: 0;">Please park <strong>across the street</strong> from our school at:<br />
+    <strong>2801 Gattis School Rd, Round Rock, TX 78664</strong><br />
+    (Aquatic Center parking lot)</p>
+  </div>
+
+  <img src="https://www.sagefield.co/assets/parking-map.png" alt="Parking map showing the Aquatic Center lot across from Sage Field School" style="max-width: 100%; border-radius: 4px; margin: 8px 0 28px 0; display: block;" />
+
+  <p>If you have any questions before Saturday, feel free to reach out:</p>
+  <ul style="padding-left: 20px; margin: 8px 0;">
+    <li style="margin-bottom: 6px;">📧 Email: <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></li>
+    <li style="margin-bottom: 6px;">📱 Call/Text: <a href="tel:5126775872" style="color: #5a7a5a;">(512) 677-5872</a></li>
+  </ul>
+
+  <p style="margin-top: 32px;">Can't wait to see you there!</p>
+  <p style="margin-top: 4px;"><strong>Sabrina Obnamia</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
 /**
  * Build HTML confirmation email for an info session RSVP (April 18, 2026 virtual)
  */

@@ -9,6 +9,7 @@ import { AddRsvpSidebar } from './AddRsvpSidebar'
 import { EmailThread } from '../components/EmailThread'
 import { sendOpenHouseReminderEmail } from '../../actions/sendOpenHouseReminderEmail'
 import { sendInfoSessionInviteEmail } from '../../actions/sendInfoSessionInviteEmail'
+import { sendParkingEmail } from '../../actions/sendParkingEmail'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -31,6 +32,9 @@ export function OpenHouseTable({ rsvps, enrolledEmailsArr }: { rsvps: OpenHouseR
   const [infoEmailSending, setInfoEmailSending] = useState(false)
   const [infoEmailSent, setInfoEmailSent] = useState(false)
   const [infoEmailError, setInfoEmailError] = useState<string | null>(null)
+  const [parkingEmailSending, setParkingEmailSending] = useState(false)
+  const [parkingEmailSent, setParkingEmailSent] = useState(false)
+  const [parkingEmailError, setParkingEmailError] = useState<string | null>(null)
   const enrollmentMap = new Map(enrolledEmailsArr.map(({ email, status }) => [email, status]))
   const getEnrollmentStatus = (email: string) => enrollmentMap.get(email.toLowerCase()) ?? null
   const totalAdults = localRsvps.reduce((sum, r) => sum + (r.adults_attending ?? 0), 0)
@@ -94,6 +98,20 @@ export function OpenHouseTable({ rsvps, enrolledEmailsArr }: { rsvps: OpenHouseR
       setTimeout(() => setInfoEmailSent(false), 3000)
     } else {
       setInfoEmailError(result.error ?? 'Failed to send email')
+    }
+  }
+
+  const handleSendParkingEmail = async (rsvp: OpenHouseRsvp) => {
+    if (parkingEmailSending || parkingEmailSent) return
+    setParkingEmailSending(true)
+    setParkingEmailError(null)
+    const result = await sendParkingEmail({ name: rsvp.name, email: rsvp.email })
+    setParkingEmailSending(false)
+    if (result.success) {
+      setParkingEmailSent(true)
+      setTimeout(() => setParkingEmailSent(false), 3000)
+    } else {
+      setParkingEmailError(result.error ?? 'Failed to send email')
     }
   }
 
@@ -194,7 +212,7 @@ export function OpenHouseTable({ rsvps, enrolledEmailsArr }: { rsvps: OpenHouseR
         headers={['Name', 'Status', 'Email', 'Phone', 'Adults', 'Children', 'Notes', ...(showSubmitted ? ['Submitted'] : [])]}
       >
         {localRsvps.map((rsvp, i) => (
-          <TableRow key={rsvp.id} index={i} onClick={() => { setSelectedRsvp(rsvp); setReminderSent(false); setReminderError(null); setInfoEmailSent(false); setInfoEmailError(null) }} style={{ cursor: 'pointer' }}>
+          <TableRow key={rsvp.id} index={i} onClick={() => { setSelectedRsvp(rsvp); setReminderSent(false); setReminderError(null); setInfoEmailSent(false); setInfoEmailError(null); setParkingEmailSent(false); setParkingEmailError(null) }} style={{ cursor: 'pointer' }}>
             <TableCell>
               <span style={{ fontWeight: 500, color: colors.textPrimary }}>
                 {rsvp.name}
@@ -381,6 +399,24 @@ export function OpenHouseTable({ rsvps, enrolledEmailsArr }: { rsvps: OpenHouseR
                     {infoEmailSending ? 'Sending…' : infoEmailSent ? '✓ Sent!' : 'Send Info Session Invite'}
                   </button>
                   {infoEmailError && <span style={{ fontSize: '12px', color: '#DC2626' }}>{infoEmailError}</span>}
+                  <button
+                    onClick={() => handleSendParkingEmail(selectedRsvp)}
+                    disabled={parkingEmailSending || parkingEmailSent}
+                    style={{
+                      backgroundColor: '#2C5F2E',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '6px 12px',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      cursor: parkingEmailSending || parkingEmailSent ? 'not-allowed' : 'pointer',
+                      opacity: parkingEmailSending || parkingEmailSent ? 0.5 : 1,
+                    }}
+                  >
+                    {parkingEmailSending ? 'Sending…' : parkingEmailSent ? '✓ Sent!' : 'Send Parking Email'}
+                  </button>
+                  {parkingEmailError && <span style={{ fontSize: '12px', color: '#DC2626' }}>{parkingEmailError}</span>}
                 </div>
               </div>
 
