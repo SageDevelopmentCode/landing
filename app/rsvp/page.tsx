@@ -896,6 +896,55 @@ export default function OpenHousePage() {
         </div>
       </section>
 
+      {/* ── Parking Info ── */}
+      <section className="pb-16 px-6 sm:px-12 lg:px-16">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 sm:p-8"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <MapPin className="w-5 h-5 text-primary flex-shrink-0" />
+              <h2 className="text-xl font-bold font-heading text-gray-800">Parking Info</h2>
+            </div>
+
+            <div className="bg-[#f7f4f0] border-l-4 border-[#a8c5a0] rounded-r-lg px-5 py-4 mb-5">
+              <p className="font-semibold text-gray-800 font-body mb-1">🅿️ Parking Instructions</p>
+              <p className="text-sm text-gray-700 font-body leading-relaxed">
+                Please park <strong>across the street</strong> from our school at:{" "}
+                <a
+                  href="https://maps.app.goo.gl/Ga1wv5Cu33PTGyvM8"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-primary hover:underline"
+                >
+                  2801 Gattis School Rd, Round Rock, TX 78664
+                </a>{" "}
+                (Aquatic Center parking lot)
+              </p>
+            </div>
+
+            <Image
+              src="/assets/parking-map.png"
+              alt="Parking map showing the Aquatic Center lot across from Sage Field School"
+              width={800}
+              height={450}
+              className="w-full rounded-lg mb-5 object-cover"
+            />
+
+            <p className="text-sm text-gray-600 font-body leading-relaxed mb-1">
+              We are an all weather school! Whether it rains or shines, we will be there enjoying the day!
+            </p>
+            <p className="text-sm text-gray-600 font-body leading-relaxed">
+              We recommend kids pack some <strong>boots</strong> to enjoy whatever weather comes our way!
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
       {/* ── FAQ ── */}
       <section className="pb-20 px-6 sm:px-12 lg:px-16">
         <div className="max-w-2xl mx-auto">

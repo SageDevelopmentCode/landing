@@ -1415,18 +1415,22 @@ export async function buildParkingEmail(opts: {
 <body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
   <p style="margin-bottom: 24px;">Dear ${firstName},</p>
 
-  <p>We are so excited to see you this <strong>Saturday, April 26th from 2:00–4:00 PM</strong> at Sage Field School!</p>
+  <p>We are so excited to see you this <strong>Saturday, April 25th from 2:00–4:00 PM</strong> at <a href="https://maps.app.goo.gl/jcivTxav92yRLJSC9" style="color: #5a7a5a;">Sage Field School</a>!</p>
 
   <p>We wanted to give you a heads-up on parking ahead of the event. Please see the details below:</p>
 
   <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; margin: 28px 0;">
     <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 15px;">🅿️ Parking Instructions</p>
     <p style="margin: 0;">Please park <strong>across the street</strong> from our school at:<br />
-    <strong>2801 Gattis School Rd, Round Rock, TX 78664</strong><br />
+    <a href="https://maps.app.goo.gl/Ga1wv5Cu33PTGyvM8" style="color: #5a7a5a;"><strong>2801 Gattis School Rd, Round Rock, TX 78664</strong></a><br />
     (Aquatic Center parking lot)</p>
   </div>
 
   <img src="https://www.sagefield.co/assets/parking-map.png" alt="Parking map showing the Aquatic Center lot across from Sage Field School" style="max-width: 100%; border-radius: 4px; margin: 8px 0 28px 0; display: block;" />
+
+  <p>We are an all weather school! Whether it rains or shines, we will be there enjoying the day!</p>
+
+  <p>We recommend kids pack some <strong>boots</strong> to enjoy whatever weather comes our way!</p>
 
   <p>If you have any questions before Saturday, feel free to reach out:</p>
   <ul style="padding-left: 20px; margin: 8px 0;">
