@@ -43,13 +43,13 @@ const TEAM_MEMBERS = [
     description:
       "My name is Taylor, and I recently completed my education studies with a focus on child development and outdoor learning. I am passionate about creating meaningful experiences for children that connect them to nature and inspire a love of learning. I am thrilled to join the Sage Field team this summer.",
   },
-  {
-    name: "Julius Cecilia",
-    role: "Director of Operations & Technology",
-    image: "/assets/team/JuliusC.jpg",
-    description:
-      "Julius Cecilia, a University of Washington graduate, is a software engineer and startup builder with experience across early-stage startups and established tech companies like Adobe. He previously co-founded a sports social platform and continues to build software at the intersection of technology and schools.",
-  },
+  // {
+  //   name: "Julius Cecilia",
+  //   role: "Director of Operations & Technology",
+  //   image: "/assets/team/JuliusC.jpg",
+  //   description:
+  //     "Julius Cecilia, a University of Washington graduate, is a software engineer and startup builder with experience across early-stage startups and established tech companies like Adobe. He previously co-founded a sports social platform and continues to build software at the intersection of technology and schools.",
+  // },
 ];
 
 export default function MeetTheTeamSection({
@@ -63,8 +63,9 @@ export default function MeetTheTeamSection({
     (typeof TEAM_MEMBERS)[0] | null
   >(null);
 
-  const gridMembers = (featured ? TEAM_MEMBERS : [SABRINA, ...TEAM_MEMBERS])
-    .filter((m) => !exclude.includes(m.name));
+  const gridMembers = (
+    featured ? TEAM_MEMBERS : [SABRINA, ...TEAM_MEMBERS]
+  ).filter((m) => !exclude.includes(m.name));
 
   return (
     <section className="bg-welcome-bg py-16 px-8 sm:px-12 lg:px-16 min-h-[80vh] flex items-center">
@@ -96,78 +97,92 @@ export default function MeetTheTeamSection({
         </motion.h2>
 
         {/* Featured: Sabrina — Two-column layout */}
-        {featured && <div className="flex flex-col lg:flex-row lg:justify-between items-center gap-16 mb-20">
-          {/* Left: Headshot Image */}
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
-            className="w-full lg:w-1/2"
-          >
+        {featured && (
+          <div className="flex flex-col lg:flex-row lg:justify-between items-center gap-16 mb-20">
+            {/* Left: Headshot Image */}
             <motion.div
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.3 }}
-              className="relative h-[50vh] sm:h-[55vh] rounded-2xl overflow-hidden shadow-lg"
-            >
-              <Image
-                src="/assets/Headshot.jpeg"
-                alt="Sabrina Grace Obnamia - Lead Teacher & Director"
-                fill
-                className="object-cover"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                priority
-              />
-            </motion.div>
-          </motion.div>
-
-          {/* Right: Team Text Content */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" as const }}
-            className="w-full lg:w-1/2 space-y-8"
-          >
-            {/* Lead Tutor */}
-            <div className="space-y-4">
-              <h3 className="text-2xl md:text-3xl font-semibold text-primary font-heading">
-                Lead Teacher & Director
-              </h3>
-              <p className="text-xl md:text-2xl font-semibold text-text-gray font-heading">
-                Sabrina Grace Obnamia
-              </p>
-              <p className="text-base md:text-lg text-text-gray leading-relaxed font-body">
-                Ms. Sabrina brings a wealth of experience to SageField. She
-                holds a Bachelor&apos;s degree in Elementary Education with a
-                concentration in Early Childhood Development from Biola
-                University and a Teaching Credential. Her background includes
-                working with children in a wide range of roles both in the U.S.
-                and internationally—spanning special education, preschool,
-                homeschooling, tutoring, coaching, traditional schooling, nature
-                school guide, and more. She values movement, outdoor learning,
-                and most importantly, the joy of slowing down to be present,
-                intentional, and thankful.
-              </p>
-            </div>
-
-            {/* Description */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" as const }}
-              className="p-6 bg-primary/10 rounded-lg border-l-4 border-primary"
+              transition={{
+                duration: 0.6,
+                delay: 0.3,
+                ease: "easeOut" as const,
+              }}
+              className="w-full lg:w-1/2"
             >
-              <p className="text-base md:text-lg text-text-gray leading-relaxed font-body">
-                Together, we bring warmth, creativity, and experience to every
-                student&apos;s learning experience. We are committed to
-                continuing the supportive atmosphere families have come to
-                trust.
-              </p>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.3 }}
+                className="relative h-[50vh] sm:h-[55vh] rounded-2xl overflow-hidden shadow-lg"
+              >
+                <Image
+                  src="/assets/Headshot.jpeg"
+                  alt="Sabrina Grace Obnamia - Lead Teacher & Director"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  priority
+                />
+              </motion.div>
             </motion.div>
-          </motion.div>
-        </div>}
+
+            {/* Right: Team Text Content */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{
+                duration: 0.6,
+                delay: 0.4,
+                ease: "easeOut" as const,
+              }}
+              className="w-full lg:w-1/2 space-y-8"
+            >
+              {/* Lead Tutor */}
+              <div className="space-y-4">
+                <h3 className="text-2xl md:text-3xl font-semibold text-primary font-heading">
+                  Lead Teacher & Director
+                </h3>
+                <p className="text-xl md:text-2xl font-semibold text-text-gray font-heading">
+                  Sabrina Grace Obnamia
+                </p>
+                <p className="text-base md:text-lg text-text-gray leading-relaxed font-body">
+                  Ms. Sabrina brings a wealth of experience to SageField. She
+                  holds a Bachelor&apos;s degree in Elementary Education with a
+                  concentration in Early Childhood Development from Biola
+                  University and a Teaching Credential. Her background includes
+                  working with children in a wide range of roles both in the
+                  U.S. and internationally—spanning special education,
+                  preschool, homeschooling, tutoring, coaching, traditional
+                  schooling, nature school guide, and more. She values movement,
+                  outdoor learning, and most importantly, the joy of slowing
+                  down to be present, intentional, and thankful.
+                </p>
+              </div>
+
+              {/* Description */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{
+                  duration: 0.6,
+                  delay: 0.5,
+                  ease: "easeOut" as const,
+                }}
+                className="p-6 bg-primary/10 rounded-lg border-l-4 border-primary"
+              >
+                <p className="text-base md:text-lg text-text-gray leading-relaxed font-body">
+                  Together, we bring warmth, creativity, and experience to every
+                  student&apos;s learning experience. We are committed to
+                  continuing the supportive atmosphere families have come to
+                  trust.
+                </p>
+              </motion.div>
+            </motion.div>
+          </div>
+        )}
 
         {/* Team Grid: 4 members in 2×2 */}
         <div className="flex overflow-x-auto gap-4 pb-4 sm:grid sm:grid-cols-2 sm:gap-8 sm:overflow-visible sm:pb-0">
@@ -177,7 +192,11 @@ export default function MeetTheTeamSection({
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.1 * i, ease: "easeOut" as const }}
+              transition={{
+                duration: 0.6,
+                delay: 0.1 * i,
+                ease: "easeOut" as const,
+              }}
               className="w-[68vw] shrink-0 sm:w-auto sm:shrink bg-white rounded-2xl shadow-md overflow-hidden"
             >
               <div className="relative w-full aspect-[4/3] sm:aspect-[4/5]">

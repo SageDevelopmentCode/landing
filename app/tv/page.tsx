@@ -191,12 +191,12 @@ const teamMembers = [
     image: "/assets/team/Zelinda.webp",
     objectPosition: "center 25%",
   },
-  {
-    name: "Julius Cecilia",
-    role: "Director of Operations & Technology",
-    image: "/assets/team/JuliusC.jpg",
-    objectPosition: "center 20%",
-  },
+  // {
+  //   name: "Julius Cecilia",
+  //   role: "Director of Operations & Technology",
+  //   image: "/assets/team/JuliusC.jpg",
+  //   objectPosition: "center 20%",
+  // },
 ];
 
 const INTERVAL_MS = 18000;
@@ -278,10 +278,13 @@ function Slide0OpenHouse() {
             Today · April 25, 2026
           </span>
           <h1 className="text-6xl font-bold text-gray-800 font-heading leading-tight mb-5">
-            Welcome to Our<br />Open House!
+            Welcome to Our
+            <br />
+            Open House!
           </h1>
           <p className="text-2xl text-gray-500 font-body leading-relaxed">
-            We&apos;re so glad you&apos;re here. Look around, meet the team, and let us know if you have any questions.
+            We&apos;re so glad you&apos;re here. Look around, meet the team, and
+            let us know if you have any questions.
           </p>
         </div>
 
@@ -289,25 +292,48 @@ function Slide0OpenHouse() {
         <div className="grid grid-cols-3 gap-5">
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col gap-2">
             <span className="text-2xl">🕑</span>
-            <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide font-body">Time</p>
-            <p className="text-xl font-bold text-gray-800 font-heading">2:00 – 4:00 PM</p>
+            <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide font-body">
+              Time
+            </p>
+            <p className="text-xl font-bold text-gray-800 font-heading">
+              2:00 – 4:00 PM
+            </p>
           </div>
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col gap-2">
             <span className="text-2xl">📍</span>
-            <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide font-body">Location</p>
-            <p className="text-lg font-bold text-gray-800 font-heading leading-snug">2760 Gattis School Rd<br />Round Rock, TX</p>
+            <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide font-body">
+              Location
+            </p>
+            <p className="text-lg font-bold text-gray-800 font-heading leading-snug">
+              2760 Gattis School Rd
+              <br />
+              Round Rock, TX
+            </p>
           </div>
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col gap-2">
             <span className="text-2xl">✉️</span>
-            <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide font-body">Questions?</p>
-            <p className="text-lg font-bold text-primary font-heading">sabrina@sagefield.co</p>
+            <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide font-body">
+              Questions?
+            </p>
+            <p className="text-lg font-bold text-primary font-heading">
+              sabrina@sagefield.co
+            </p>
           </div>
         </div>
 
         {/* What to expect pills */}
         <div className="flex flex-wrap gap-3">
-          {["Tour the Space", "Meet the Educators", "See the Curriculum", "Kids Activity Stations", "Snacks & Drinks"].map((tag) => (
-            <span key={tag} className="px-5 py-2 bg-primary/10 text-primary font-semibold rounded-full font-body text-lg">
+          {[
+            "Tour the Space",
+            "Meet the Educators",
+            "See the Curriculum",
+            "Kids Activity Stations",
+            "Snacks & Drinks",
+          ].map((tag) => (
+            <span
+              key={tag}
+              className="px-5 py-2 bg-primary/10 text-primary font-semibold rounded-full font-body text-lg"
+            >
               {tag}
             </span>
           ))}
@@ -318,12 +344,22 @@ function Slide0OpenHouse() {
       <div className="w-72 flex flex-col items-center justify-center gap-6 shrink-0">
         <div className="bg-primary rounded-3xl px-8 py-10 flex flex-col items-center gap-4 w-full text-center shadow-lg">
           <span className="text-4xl">🌿</span>
-          <p className="text-2xl font-bold text-white font-heading leading-tight">Sage Field<br />Private School</p>
-          <p className="text-base text-white/80 font-body">Outdoor · Curious · Small</p>
+          <p className="text-2xl font-bold text-white font-heading leading-tight">
+            Sage Field
+            <br />
+            Private School
+          </p>
+          <p className="text-base text-white/80 font-body">
+            Outdoor · Curious · Small
+          </p>
         </div>
         <div className="bg-white rounded-2xl px-6 py-5 w-full text-center shadow-sm border border-gray-100">
-          <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide font-body mb-1">More info</p>
-          <p className="text-lg font-bold text-primary font-heading">sagefield.co</p>
+          <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide font-body mb-1">
+            More info
+          </p>
+          <p className="text-lg font-bold text-primary font-heading">
+            sagefield.co
+          </p>
         </div>
       </div>
     </div>

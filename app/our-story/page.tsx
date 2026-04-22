@@ -15,13 +15,13 @@ const FOUNDERS = [
     description:
       "Ms. Sabrina brings a wealth of experience to SageField. She holds a Bachelor's degree in Elementary Education with a concentration in Early Childhood Development from Biola University and a Teaching Credential. Her background includes working with children in a wide range of roles both in the U.S. and internationally—spanning special education, preschool, homeschooling, tutoring, coaching, traditional schooling, nature school guide, and more. She values movement, outdoor learning, and most importantly, the joy of slowing down to be present, intentional, and thankful.",
   },
-  {
-    name: "Julius Cecilia",
-    role: "Director of Operations & Technology",
-    image: "/assets/team/JuliusC.jpg",
-    description:
-      "Julius Cecilia, a University of Washington graduate, is a software engineer and startup builder with experience across early-stage startups and established tech companies like Adobe. He previously co-founded a sports social platform and continues to build software at the intersection of technology and schools.",
-  },
+  // {
+  //   name: "Julius Cecilia",
+  //   role: "Director of Operations & Technology",
+  //   image: "/assets/team/JuliusC.jpg",
+  //   description:
+  //     "Julius Cecilia, a University of Washington graduate, is a software engineer and startup builder with experience across early-stage startups and established tech companies like Adobe. He previously co-founded a sports social platform and continues to build software at the intersection of technology and schools.",
+  // },
 ];
 
 export default function OurStoryPage() {
@@ -58,7 +58,8 @@ export default function OurStoryPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
           >
-            In Sabrina&apos;s own words — the story behind why Sage Field exists.
+            In Sabrina&apos;s own words — the story behind why Sage Field
+            exists.
           </motion.p>
         </div>
       </section>
@@ -83,7 +84,9 @@ export default function OurStoryPage() {
             understood that.
           </p>
 
-          <p>For a long time, I wondered if something about me needed to change.</p>
+          <p>
+            For a long time, I wondered if something about me needed to change.
+          </p>
 
           {/* Pull quote */}
           <motion.div
@@ -102,22 +105,21 @@ export default function OurStoryPage() {
           </motion.div>
 
           <p>
-            So instead of repeating that cycle and teaching my students the
-            same thing I experienced, I am breaking that pattern!
+            So instead of repeating that cycle and teaching my students the same
+            thing I experienced, I am breaking that pattern!
           </p>
 
           <p>
-            Julius Cecilia and I are opening our school called Sage Field! We
-            are an outdoor focused school where children are allowed to be
-            children. A place where learning happens through movement,
-            hands-on discovery, and time spent outside. A place where
-            curiosity is encouraged, questions are celebrated, and the small
-            joys of childhood are protected.
+            Sage Field is an outdoor focused school where children are allowed
+            to be children. A place where learning happens through movement,
+            hands-on discovery, and time spent outside. A place where curiosity
+            is encouraged, questions are celebrated, and the small joys of
+            childhood are protected.
           </p>
 
           <p>
-            What once felt like something I needed to change about myself is
-            now the very thing shaping the kind of school I believe children
+            What once felt like something I needed to change about myself is now
+            the very thing shaping the kind of school I believe children
             deserve.
           </p>
         </motion.div>
@@ -150,7 +152,11 @@ export default function OurStoryPage() {
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.1 * i, ease: "easeOut" as const }}
+                transition={{
+                  duration: 0.6,
+                  delay: 0.1 * i,
+                  ease: "easeOut" as const,
+                }}
                 className="bg-white rounded-2xl shadow-md overflow-hidden"
               >
                 <div className="relative w-full aspect-[4/5]">
