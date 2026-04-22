@@ -11,13 +11,16 @@ const poppins = Poppins({
 });
 
 const schoolYearRows = [
-  { time: "Morning", block: "Core Subjects — English, Reading, Writing & Language Arts" },
+  {
+    time: "Morning",
+    block: "Core Subjects — English, Reading, Writing & Language Arts",
+  },
   { time: "Mid-Morning", block: "Outdoor Free Time" },
   { time: "Afternoon", block: "Enrichment Subjects" },
 ];
 
 const summerRows = [
-  { time: "8:30–9:00 AM", block: "Check-In & Free Play" },
+  { time: "8:15–9:00 AM", block: "Check-In & Free Play" },
   { time: "9:00–9:15 AM", block: "Good Citizenship Meeting" },
   { time: "9:15–9:45 AM", block: "Academic Blocks (ELA, Math)" },
   { time: "9:45–10:15 AM", block: "Morning Snack" },
@@ -162,7 +165,10 @@ export default function ScheduleImagePage() {
           maxWidth: 900,
         }}
       >
-        <ScheduleTable title="School Year Daily Schedule" rows={schoolYearRows} />
+        <ScheduleTable
+          title="School Year Daily Schedule"
+          rows={schoolYearRows}
+        />
         <ScheduleTable title="Summer 2026 Daily Schedule" rows={summerRows} />
       </div>
     </div>

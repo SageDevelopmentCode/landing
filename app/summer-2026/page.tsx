@@ -288,6 +288,64 @@ export default function Summer2026Page() {
         </div>
       </section>
 
+      {/* Daily Schedule */}
+      <section className="pb-16 px-8 sm:px-12 lg:px-16">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
+          >
+            <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6">
+              Daily Schedule
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 font-heading mb-8">
+              A Typical Day at Sage Field
+            </h2>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100">
+                <h3 className="font-heading font-bold text-lg text-gray-800">
+                  Daily Schedule
+                </h3>
+              </div>
+              <div className="divide-y divide-gray-50">
+                {[
+                  { time: "8:15 – 9:00 AM", activity: "Drop Off / Outdoor Play 🌞" },
+                  { time: "9:00 – 9:15 AM", activity: "Morning Meeting (Good Citizenship) 🌟" },
+                  { time: "9:15 – 9:30 AM", activity: "ELA Challenger Block 📚" },
+                  { time: "9:30 – 9:45 AM", activity: "Math Challenger Block 🔢" },
+                  { time: "9:45 – 10:15 AM", activity: "Snack 🍎" },
+                  { time: "10:15 – 10:45 AM", activity: "Daily Activity 🌟" },
+                  { time: "10:45 – 11:15 AM", activity: "Art 🎨" },
+                  { time: "11:15 – 11:30 AM", activity: "Music 🎵" },
+                  { time: "11:30 AM – 12:15 PM", activity: "Lunch 🍱" },
+                  { time: "12:15 – 1:15 PM", activity: "Water Play 💦" },
+                  { time: "1:15 – 1:45 PM", activity: "Journaling & Reflection 📝" },
+                  { time: "1:45 – 2:30 PM", activity: "Cooking / Homesteading (Animal & Garden Care) 🌱" },
+                  { time: "1:45 – 2:45 PM", activity: "Outdoor Free Choice 🧸" },
+                  { time: "2:45 – 3:00 PM", activity: "Afternoon Meeting 🌤️" },
+                  { time: "2:45 – 3:00 PM", activity: "Pick Up / Outdoor Play 🌳" },
+                ].map((row, i) => (
+                  <div
+                    key={i}
+                    className={`flex items-center gap-4 px-6 py-3 ${
+                      i % 2 === 0 ? "bg-white" : "bg-gray-50/60"
+                    }`}
+                  >
+                    <span className="text-xs text-gray-400 font-body whitespace-nowrap w-36 shrink-0">
+                      {row.time}
+                    </span>
+                    <span className="text-sm font-semibold text-gray-800 font-body">
+                      {row.activity}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Weekly Activity Breakdown */}
       <section className="pb-16 px-8 sm:px-12 lg:px-16">
         <div className="max-w-6xl mx-auto">

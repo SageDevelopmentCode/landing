@@ -327,7 +327,9 @@ const tabContent = {
 export default function ApplyPage() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
-  const initialTab: Tab = (["summer", "school-year", "homeschool"] as Tab[]).includes(tabParam as Tab)
+  const initialTab: Tab = (
+    ["summer", "school-year", "homeschool"] as Tab[]
+  ).includes(tabParam as Tab)
     ? (tabParam as Tab)
     : "summer";
   const [activeTab, setActiveTab] = useState<Tab>(initialTab);
@@ -380,19 +382,25 @@ export default function ApplyPage() {
               <div className="lg:col-span-7">
                 {/* Tab Switcher */}
                 <div className="flex gap-3 flex-wrap mb-6">
-                  {(["summer", "school-year", "homeschool"] as Tab[]).map((tab) => (
-                    <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab)}
-                      className={`px-6 py-3 rounded-full font-semibold font-body transition-all duration-200 cursor-pointer ${
-                        activeTab === tab
-                          ? "bg-primary text-white shadow-md"
-                          : "border-2 border-gray-300 text-gray-600 bg-white hover:border-primary"
-                      }`}
-                    >
-                      {tab === "summer" ? "Summer 2026" : tab === "school-year" ? "School Year 2026" : "Homeschool Drop-In"}
-                    </button>
-                  ))}
+                  {(["summer", "school-year", "homeschool"] as Tab[]).map(
+                    (tab) => (
+                      <button
+                        key={tab}
+                        onClick={() => setActiveTab(tab)}
+                        className={`px-6 py-3 rounded-full font-semibold font-body transition-all duration-200 cursor-pointer ${
+                          activeTab === tab
+                            ? "bg-primary text-white shadow-md"
+                            : "border-2 border-gray-300 text-gray-600 bg-white hover:border-primary"
+                        }`}
+                      >
+                        {tab === "summer"
+                          ? "Summer 2026"
+                          : tab === "school-year"
+                            ? "School Year 2026"
+                            : "Homeschool Drop-In"}
+                      </button>
+                    ),
+                  )}
                 </div>
 
                 {/* Program Title */}
@@ -455,7 +463,10 @@ export default function ApplyPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     {tabContent[activeTab].images.slice(1).map((src, i) => (
-                      <div key={i} className="aspect-[4/3] rounded-xl overflow-hidden shadow-md">
+                      <div
+                        key={i}
+                        className="aspect-[4/3] rounded-xl overflow-hidden shadow-md"
+                      >
                         <img
                           src={src}
                           alt="Program photo"
@@ -503,24 +514,24 @@ export default function ApplyPage() {
                       <div className="divide-y divide-gray-50">
                         {[
                           {
-                            time: "8:30 – 9:00 AM",
-                            activity: "Check-In & Free Play 🌞",
+                            time: "8:15 – 9:00 AM",
+                            activity: "Drop Off / Outdoor Play 🌞",
                           },
                           {
                             time: "9:00 – 9:15 AM",
-                            activity: "Good Citizenship Meeting 🌟",
+                            activity: "Morning Meeting (Good Citizenship) 🌟",
                           },
                           {
                             time: "9:15 – 9:30 AM",
-                            activity: "ELA Math Challenger Block 📚",
+                            activity: "ELA Challenger Block 📚",
                           },
                           {
                             time: "9:30 – 9:45 AM",
-                            activity: "Math Academic Block 🔢",
+                            activity: "Math Challenger Block 🔢",
                           },
                           {
                             time: "9:45 – 10:15 AM",
-                            activity: "Morning Snack Break 🍎",
+                            activity: "Snack 🍎",
                           },
                           {
                             time: "10:15 – 10:45 AM",
@@ -539,11 +550,19 @@ export default function ApplyPage() {
                           },
                           {
                             time: "1:45 – 2:30 PM",
-                            activity: "Homesteading 🌱",
+                            activity: "Cooking / Homesteading (Animal & Garden Care) 🌱",
                           },
                           {
-                            time: "2:30 – 3:30 PM",
-                            activity: "Outdoor Exploration & Dismissal 🧸",
+                            time: "1:45 – 2:45 PM",
+                            activity: "Outdoor Free Choice 🧸",
+                          },
+                          {
+                            time: "2:45 – 3:00 PM",
+                            activity: "Afternoon Meeting 🌤️",
+                          },
+                          {
+                            time: "2:45 – 3:00 PM",
+                            activity: "Pick Up / Outdoor Play 🌳",
                           },
                         ].map((row, i) => (
                           <div
@@ -651,7 +670,8 @@ export default function ApplyPage() {
                         },
                         {
                           title: "Emotional Regulation",
-                          image: "/assets/kelly-sikkema-_4WVngcGz5Q-unsplash.jpg",
+                          image:
+                            "/assets/kelly-sikkema-_4WVngcGz5Q-unsplash.jpg",
                           description:
                             "Mindfulness practices for students & educators",
                         },
@@ -680,7 +700,12 @@ export default function ApplyPage() {
                           }}
                         >
                           <div className="relative w-full h-40 rounded-t-lg overflow-hidden">
-                            <Image src={pillar.image} alt={pillar.title} fill className="object-cover" />
+                            <Image
+                              src={pillar.image}
+                              alt={pillar.title}
+                              fill
+                              className="object-cover"
+                            />
                           </div>
                           <div className="p-5">
                             <h3 className="text-base font-semibold text-black mb-1 font-heading">
@@ -930,8 +955,9 @@ export default function ApplyPage() {
                         <span className="text-primary">Field Day</span> Fridays
                       </h2>
                       <p className="text-gray-500 font-body text-base mb-8 max-w-xl mx-auto">
-                        Every Friday is a unique, themed adventure — included for all
-                        families who attend on Fridays. No two Fridays are ever the same.
+                        Every Friday is a unique, themed adventure — included
+                        for all families who attend on Fridays. No two Fridays
+                        are ever the same.
                       </p>
                       <div className="flex flex-wrap justify-center gap-4">
                         {[
@@ -964,10 +990,11 @@ export default function ApplyPage() {
                       The best of both worlds
                     </p>
                     <p className="text-base text-text-gray mb-8 leading-relaxed font-body">
-                      Sage Field is a microschool built specifically for flexibility.
-                      With tiny class sizes and a family-centered approach, you get the
-                      structure and socialization of school — while your family keeps
-                      full control of the learning journey.
+                      Sage Field is a microschool built specifically for
+                      flexibility. With tiny class sizes and a family-centered
+                      approach, you get the structure and socialization of
+                      school — while your family keeps full control of the
+                      learning journey.
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
                       {homeschoolPillars.map((pillar, index) => (
@@ -1018,8 +1045,8 @@ export default function ApplyPage() {
                     Have any questions?
                   </h2>
                   <p className="text-gray-500 font-body text-sm mb-6 max-w-md mx-auto">
-                    We&apos;d love to hear from you. Reach out directly or
-                    send us a message.
+                    We&apos;d love to hear from you. Reach out directly or send
+                    us a message.
                   </p>
                   <a
                     href="mailto:sabrina@sagefield.co"
