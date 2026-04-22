@@ -9,6 +9,10 @@ import { getAdminImmunizationFiles } from '../../actions/getAdminImmunizationFil
 import { getAdminImmunizationDownloadUrl } from '../../actions/getAdminImmunizationDownloadUrl'
 import { adminUploadImmunizationRecord } from '../../actions/adminUploadImmunizationRecord'
 import { adminDeleteImmunizationRecord } from '../../actions/adminDeleteImmunizationRecord'
+import { listHealthInfoForms } from '../../actions/listHealthInfoForms'
+import { uploadHealthInfoForm } from '../../actions/uploadHealthInfoForm'
+import { deleteHealthInfoForm } from '../../actions/deleteHealthInfoForm'
+import { getHealthInfoFormUrl } from '../../actions/getHealthInfoFormUrl'
 import {
   ShieldCheck,
   Pill,
@@ -59,7 +63,7 @@ interface StudentDetailSidebarProps {
   onStudentDeleted?: (studentId: string) => void
 }
 
-type ActivePanel = 'immunizations' | 'medications' | 'pickup' | null
+type ActivePanel = 'immunizations' | 'medications' | 'pickup' | 'healthForms' | null
 
 function getInitials(name: string | null | undefined): string {
   if (!name) return '?'
@@ -314,6 +318,139 @@ function ImmunizationPanel({ student }: { student: Student }) {
       />
 
       {error && <p style={{ fontSize: 11, color: '#DC2626', marginTop: 6 }}>{error}</p>}
+    </div>
+  )
+}
+
+function HealthInfoFormsPanel({ student }: { student: Student }) {
+  const [healthForms, setHealthForms] = useState<FileObject[]>([])
+  const [isLoadingHealthForms, setIsLoadingHealthForms] = useState(true)
+  const [isUploadingHealthForm, setIsUploadingHealthForm] = useState(false)
+  const [isDraggingHealthForm, setIsDraggingHealthForm] = useState(false)
+  const [deletingHealthFormPath, setDeletingHealthFormPath] = useState<string | null>(null)
+  const [healthFormError, setHealthFormError] = useState<string | null>(null)
+  const [loadingHealthFormPreviewPath, setLoadingHealthFormPreviewPath] = useState<string | null>(null)
+  const healthFormInputRef = useRef<HTMLInputElement>(null)
+
+  const MAX_HEALTH_FORM_FILES = 10
+  const HEALTH_FORM_MAX_FILE_SIZE = 10 * 1024 * 1024
+  const HEALTH_FORM_ACCEPTED_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/heic']
+
+  const loadHealthForms = async () => {
+    setIsLoadingHealthForms(true)
+    const res = await listHealthInfoForms(student.id)
+    if ('error' in res) setHealthFormError(res.error ?? 'Failed to load files')
+    else setHealthForms(res.files as FileObject[])
+    setIsLoadingHealthForms(false)
+  }
+
+  useEffect(() => { loadHealthForms() }, [student.id])
+
+  const handleHealthFormUpload = async (file: File) => {
+    setHealthFormError(null)
+    if (!HEALTH_FORM_ACCEPTED_TYPES.includes(file.type)) { setHealthFormError('Unsupported file type. Use PDF, JPEG, PNG, WEBP, or HEIC.'); return }
+    if (file.size > HEALTH_FORM_MAX_FILE_SIZE) { setHealthFormError('File exceeds 10 MB.'); return }
+    if (healthForms.length >= MAX_HEALTH_FORM_FILES) { setHealthFormError('Maximum 10 files allowed.'); return }
+    setIsUploadingHealthForm(true)
+    const fd = new FormData()
+    fd.append('studentId', student.id)
+    fd.append('file', file)
+    const result = await uploadHealthInfoForm(fd)
+    if ('error' in result && result.error) setHealthFormError(result.error)
+    else await loadHealthForms()
+    setIsUploadingHealthForm(false)
+  }
+
+  const handleDeleteHealthForm = async (path: string) => {
+    setDeletingHealthFormPath(path)
+    const result = await deleteHealthInfoForm(path)
+    if ('error' in result && result.error) setHealthFormError(result.error)
+    else await loadHealthForms()
+    setDeletingHealthFormPath(null)
+  }
+
+  const handleOpenHealthForm = async (path: string) => {
+    setLoadingHealthFormPreviewPath(path)
+    const result = await getHealthInfoFormUrl(path)
+    setLoadingHealthFormPreviewPath(null)
+    if ('error' in result) { setHealthFormError(result.error ?? 'Failed to get URL'); return }
+    if ('url' in result && result.url) window.open(result.url, '_blank')
+  }
+
+  if (isLoadingHealthForms) {
+    return <p style={{ fontSize: 12, color: '#94A3B8', padding: '8px 0' }}>Loading files…</p>
+  }
+
+  return (
+    <div style={{ paddingTop: 4 }}>
+      {healthForms.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
+          {healthForms.map((f) => {
+            const path = `forms/${student.id}/${f.name}`
+            return (
+              <div key={f.name} style={{ display: 'flex', alignItems: 'center', gap: 8, backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 8, padding: '7px 10px' }}>
+                <span style={{ flex: 1, fontSize: 12, color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {f.name.replace(/^\d+-/, '')}
+                </span>
+                <button
+                  onClick={() => handleOpenHealthForm(path)}
+                  disabled={loadingHealthFormPreviewPath === path}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4A6354', padding: 0, display: 'flex', alignItems: 'center', opacity: loadingHealthFormPreviewPath === path ? 0.4 : 1 }}
+                  title="Open"
+                >
+                  <ExternalLink size={13} />
+                </button>
+                <button
+                  onClick={() => handleDeleteHealthForm(path)}
+                  disabled={deletingHealthFormPath === path}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', padding: 0, display: 'flex', alignItems: 'center', opacity: deletingHealthFormPath === path ? 0.4 : 1 }}
+                  title="Delete"
+                >
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {healthForms.length === 0 && !isUploadingHealthForm && (
+        <p style={{ fontSize: 12, color: '#94A3B8', marginBottom: 8 }}>No health info forms on file.</p>
+      )}
+
+      {healthForms.length < MAX_HEALTH_FORM_FILES && (
+        <div
+          onDragOver={(e) => { e.preventDefault(); setIsDraggingHealthForm(true) }}
+          onDragLeave={() => setIsDraggingHealthForm(false)}
+          onDrop={(e) => { e.preventDefault(); setIsDraggingHealthForm(false); const f = e.dataTransfer.files[0]; if (f) handleHealthFormUpload(f) }}
+          onClick={() => { if (!isUploadingHealthForm) healthFormInputRef.current?.click() }}
+          style={{
+            border: `2px dashed ${isDraggingHealthForm ? '#4A6354' : '#CBD5E1'}`,
+            borderRadius: 8,
+            padding: '10px 12px',
+            textAlign: 'center',
+            cursor: isUploadingHealthForm ? 'not-allowed' : 'pointer',
+            opacity: isUploadingHealthForm ? 0.6 : 1,
+            backgroundColor: isDraggingHealthForm ? 'rgba(74,99,84,0.05)' : '#F8FAFC',
+            transition: 'border-color 0.15s, background-color 0.15s',
+          }}
+        >
+          <p style={{ fontSize: 12, color: '#64748B', margin: 0 }}>
+            {isUploadingHealthForm ? 'Uploading…' : 'Drop file or click to upload'}
+          </p>
+          <p style={{ fontSize: 11, color: '#94A3B8', margin: '2px 0 0' }}>PDF, JPEG, PNG, WEBP, HEIC · max 10 MB</p>
+        </div>
+      )}
+
+      <input
+        ref={healthFormInputRef}
+        type="file"
+        accept=".pdf,.jpg,.jpeg,.png,.webp,.heic"
+        style={{ display: 'none' }}
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) handleHealthFormUpload(f); e.target.value = '' }}
+      />
+
+      {healthFormError && <p style={{ fontSize: 11, color: '#DC2626', marginTop: 6 }}>{healthFormError}</p>}
     </div>
   )
 }
@@ -624,6 +761,31 @@ export function StudentDetailSidebar({ student, loading, onClose, onStudentDelet
                 {activePanel === 'immunizations' ? <ChevronUp size={10} color="#4A6354" /> : <ChevronDown size={10} color="#94A3B8" />}
               </button>
 
+              {/* Health Info Forms */}
+              <button
+                onClick={() => togglePanel('healthForms')}
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 5,
+                  padding: '10px 6px',
+                  backgroundColor: activePanel === 'healthForms' ? '#F0F5F1' : '#F8FAFC',
+                  border: `1px solid ${activePanel === 'healthForms' ? '#4A6354' : '#E2E8F0'}`,
+                  borderRadius: 10,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                  position: 'relative',
+                }}
+              >
+                <ShieldCheck size={18} color={activePanel === 'healthForms' ? '#4A6354' : '#64748B'} />
+                <span style={{ fontSize: 10, fontWeight: 600, color: activePanel === 'healthForms' ? '#4A6354' : '#64748B', textAlign: 'center', lineHeight: 1.2 }}>
+                  Health Forms
+                </span>
+                {activePanel === 'healthForms' ? <ChevronUp size={10} color="#4A6354" /> : <ChevronDown size={10} color="#94A3B8" />}
+              </button>
+
               {/* Medications */}
               <button
                 onClick={() => togglePanel('medications')}
@@ -697,6 +859,16 @@ export function StudentDetailSidebar({ student, loading, onClose, onStudentDelet
                   Immunization Records
                 </p>
                 <ImmunizationPanel student={student} />
+              </div>
+            )}
+
+            {/* Inline Panel: Health Info Forms */}
+            {activePanel === 'healthForms' && (
+              <div style={{ backgroundColor: '#F0F5F1', border: '1px solid #C6D9C8', borderRadius: 10, padding: '12px 14px', marginBottom: 20 }}>
+                <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#4A6354', marginBottom: 10 }}>
+                  Health Information Forms
+                </p>
+                <HealthInfoFormsPanel student={student} />
               </div>
             )}
 
