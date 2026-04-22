@@ -70,6 +70,7 @@ export default function LeadsPage() {
   const [tagFilters, setTagFilters] = useState<Set<string>>(new Set())
   const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(new Set(['start_date']))
   const [columnsDropdownOpen, setColumnsDropdownOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const columnsDropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -165,6 +166,20 @@ export default function LeadsPage() {
   const filteredLeads = leads
     .filter((l) => statusFilter === 'all' || l.status === statusFilter)
     .filter((l) => tagFilters.size === 0 || [...tagFilters].every((t) => (l.tags ?? []).includes(t)))
+    .filter((l) => {
+      if (!searchQuery) return true
+      const q = searchQuery.toLowerCase()
+      const name = l.type === 'waitlist' ? l.parent_name : l.name
+      const msg = l.type === 'contact' ? l.message : (l as WaitlistLead).special_interests ?? ''
+      const childName = l.type === 'waitlist' ? (l as WaitlistLead).child_name : ''
+      return (
+        name?.toLowerCase().includes(q) ||
+        l.email?.toLowerCase().includes(q) ||
+        l.phone?.toLowerCase().includes(q) ||
+        childName?.toLowerCase().includes(q) ||
+        msg?.toLowerCase().includes(q)
+      )
+    })
 
   const statusCounts = leads.reduce((acc, lead) => {
     acc[lead.status] = (acc[lead.status] || 0) + 1
@@ -323,6 +338,19 @@ export default function LeadsPage() {
       </div>
 
       <div className="relative">
+        <div className="flex items-center gap-1.5 p-1 rounded-xl w-fit mb-3" style={{ backgroundColor: colors.warmLinen, border: `1px solid ${colors.border}` }}>
+          <svg className="ml-1.5 w-3.5 h-3.5 flex-shrink-0" style={{ color: colors.textSecondary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="pr-2 py-0.5 text-xs font-semibold bg-transparent border-none outline-none w-40 placeholder:font-normal"
+            style={{ color: colors.textSecondary }}
+          />
+        </div>
         <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <button
           onClick={() => setStatusFilter('all')}

@@ -45,6 +45,7 @@ interface StudentsClientProps {
 export function StudentsClient({ students: initialStudents, fetchStudentDetail, assignmentsByStudentId }: StudentsClientProps) {
   const router = useRouter()
   const [students, setStudents] = useState<Student[]>(initialStudents)
+  const [searchQuery, setSearchQuery] = useState('')
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
   const [studentDetail, setStudentDetail] = useState<Student | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
@@ -75,12 +76,35 @@ export function StudentsClient({ students: initialStudents, fetchStudentDetail, 
     router.refresh()
   }
 
+  const filteredStudents = searchQuery
+    ? students.filter((s) => {
+        const q = searchQuery.toLowerCase()
+        return (
+          s.child_legal_name?.toLowerCase().includes(q) ||
+          s.child_grade?.toLowerCase().includes(q) ||
+          s.parent_name?.toLowerCase().includes(q)
+        )
+      })
+    : students
+
   return (
     <>
+      <div className="flex items-center gap-1.5 p-1 rounded-xl w-fit mb-4" style={{ backgroundColor: '#F5F0E8', border: '1px solid #E8E0D0' }}>
+        <svg className="ml-1.5 w-3.5 h-3.5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+        </svg>
+        <input
+          type="text"
+          placeholder="Search..."
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          className="pr-2 py-0.5 text-xs font-semibold bg-transparent border-none outline-none w-40 placeholder:font-normal text-gray-500"
+        />
+      </div>
       <Table
         headers={['Name', 'Grade', 'DOB', 'Parent', 'Teacher']}
       >
-        {students.map((student, index) => {
+        {filteredStudents.map((student, index) => {
           const dob =
             student.dob_month && student.dob_day && student.dob_year
               ? `${student.dob_month}/${student.dob_day}/${student.dob_year}`

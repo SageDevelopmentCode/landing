@@ -130,6 +130,7 @@ export default function ApplicationsPage() {
   const [approvingId, setApprovingId] = useState<string | null>(null)
   const [view, setView] = useState<'table' | 'kanban' | 'pipeline'>('table')
   const [activeTab, setActiveTab] = useState<'active' | 'inactive'>('active')
+  const [searchQuery, setSearchQuery] = useState('')
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null)
   const [selectedItemStudentId, setSelectedItemStudentId] = useState<string | null>(null)
   const [drawerApp, setDrawerApp] = useState<Application | null>(null)
@@ -240,6 +241,20 @@ export default function ApplicationsPage() {
     }
   }
 
+  const filteredApplications = searchQuery
+    ? applications.filter((app) => {
+        const q = searchQuery.toLowerCase()
+        return (
+          app.g1_full_name?.toLowerCase().includes(q) ||
+          app.g1_email?.toLowerCase().includes(q) ||
+          app.child_legal_name?.toLowerCase().includes(q) ||
+          app.preferred_name?.toLowerCase().includes(q) ||
+          app.child_grade?.toLowerCase().includes(q) ||
+          app.program?.toLowerCase().includes(q)
+        )
+      })
+    : applications
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -261,15 +276,28 @@ export default function ApplicationsPage() {
             Applications
           </h1>
           <p className="mt-2" style={{ color: colors.textSecondary }}>
-            {applications.length} total application{applications.length !== 1 ? 's' : ''}
+            {filteredApplications.length}{searchQuery ? ` of ${applications.length}` : ''} application{filteredApplications.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <div className="flex items-center gap-2 mt-1">
+        <div className="flex items-center gap-2 mt-1 flex-wrap">
+          <div className="flex items-center gap-1.5 p-1 rounded-xl" style={{ backgroundColor: colors.warmLinen, border: `1px solid ${colors.border}` }}>
+            <svg className="ml-1.5 w-3.5 h-3.5 flex-shrink-0" style={{ color: colors.textSecondary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="pr-2 py-0.5 text-xs font-semibold bg-transparent border-none outline-none w-40 placeholder:font-normal"
+              style={{ color: colors.textSecondary }}
+            />
+          </div>
           <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ backgroundColor: colors.warmLinen, border: `1px solid ${colors.border}` }}>
             {(['active', 'inactive'] as const).map(tab => (
               <button
                 key={tab}
-                onClick={() => { setActiveTab(tab); setSelectedApp(null) }}
+                onClick={() => { setActiveTab(tab); setSelectedApp(null); setSearchQuery('') }}
                 className="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all capitalize"
                 style={activeTab === tab
                   ? { backgroundColor: '#fff', color: colors.mistyForest, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }
@@ -307,7 +335,7 @@ export default function ApplicationsPage() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
           >
-            {applications.length > 0 ? (
+            {filteredApplications.length > 0 ? (
               <Table
                 headers={[
                   'Parent',
@@ -320,7 +348,7 @@ export default function ApplicationsPage() {
                   'Actions',
                 ]}
               >
-                {applications.map((app, index) => {
+                {filteredApplications.map((app, index) => {
                   const isApproving = approvingId === app.id
 
                   return (
@@ -419,7 +447,7 @@ export default function ApplicationsPage() {
             transition={{ duration: 0.15 }}
           >
             <EnrollmentPipelineView
-              applications={applications as Parameters<typeof EnrollmentPipelineView>[0]['applications']}
+              applications={filteredApplications as Parameters<typeof EnrollmentPipelineView>[0]['applications']}
               setSelectedApp={(app) => setSelectedApp(app as Application)}
             />
           </motion.div>
@@ -433,7 +461,7 @@ export default function ApplicationsPage() {
             className="flex gap-4 overflow-x-auto pb-4"
           >
             {KANBAN_COLUMNS.map(col => {
-              const cards = col.filter(applications)
+              const cards = col.filter(filteredApplications)
               return (
                 <div key={col.key} className="flex-shrink-0 w-72 flex flex-col gap-3 bg-gray-50 rounded-2xl p-3 border border-gray-200">
                   <div
