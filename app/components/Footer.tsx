@@ -69,10 +69,14 @@ const FOOTER_COLUMNS: NavColumn[] = [
         label: "Interest Form",
         action: { kind: "dialog", target: "waitlist" },
       },
+      {
+        label: "Continue Application",
+        action: { kind: "link", href: "/apply/start" },
+      },
     ],
   },
   {
-    heading: "Resources & Support",
+    heading: "Resources & Login",
     items: [
       {
         label: "Community & Education Resources",
@@ -86,6 +90,8 @@ const FOOTER_COLUMNS: NavColumn[] = [
       { label: "Info Session", action: { kind: "link", href: "/info" } },
       { label: "FAQ", action: { kind: "link", href: "/faq" } },
       { label: "Donate", action: { kind: "link", href: "/donate" } },
+      { label: "Parent Login", action: { kind: "link", href: "/login" } },
+      { label: "Teacher Login", action: { kind: "link", href: "/login" } },
     ],
   },
 ];

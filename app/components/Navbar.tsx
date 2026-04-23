@@ -20,6 +20,7 @@ interface NavLeaf {
   label: string;
   action: NavAction;
   badge?: "Coming Soon" | "Apr 18" | "New!";
+  colorClass?: string;
 }
 
 type NavTab =
@@ -83,11 +84,15 @@ const NAV_TABS: NavTab[] = [
         label: "Interest Form",
         action: { kind: "dialog", target: "waitlist" },
       },
+      {
+        label: "Continue Application",
+        action: { kind: "link", href: "/apply/start" },
+      },
     ],
   },
   {
     kind: "dropdown",
-    label: "Resources & Support",
+    label: "Resources & Login",
     items: [
       {
         label: "Community & Education Resources",
@@ -101,6 +106,16 @@ const NAV_TABS: NavTab[] = [
       { label: "Tour", action: { kind: "link", href: "/tour" }, badge: "New!" },
       { label: "FAQ", action: { kind: "link", href: "/faq" } },
       { label: "Donate", action: { kind: "link", href: "/donate" } },
+      {
+        label: "Parent Login",
+        action: { kind: "link", href: "/login" },
+        colorClass: "bg-blue-50 text-blue-700 hover:bg-blue-100",
+      },
+      {
+        label: "Teacher Login",
+        action: { kind: "link", href: "/login" },
+        colorClass: "bg-amber-50 text-amber-700 hover:bg-amber-100",
+      },
     ],
   },
   // {
@@ -270,9 +285,11 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
       ? "flex items-center justify-between w-full text-left py-3 px-2 rounded-lg text-sm font-medium"
       : "flex items-center justify-between w-full text-left px-4 py-2.5 rounded-lg text-sm transition-colors duration-150";
 
-    const colorClass = mobile
-      ? "text-white/80 hover:bg-white/10 hover:text-white"
-      : "text-gray-700 hover:bg-gray-50 hover:text-gray-900";
+    const colorClass = leaf.colorClass
+      ? leaf.colorClass
+      : mobile
+        ? "text-white/80 hover:bg-white/10 hover:text-white"
+        : "text-gray-700 hover:bg-gray-50 hover:text-gray-900";
 
     const badge = leaf.badge ? (
       <span
