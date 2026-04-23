@@ -10,6 +10,7 @@ import { EmailThread } from '../components/EmailThread'
 import { sendOpenHouseReminderEmail } from '../../actions/sendOpenHouseReminderEmail'
 import { sendInfoSessionInviteEmail } from '../../actions/sendInfoSessionInviteEmail'
 import { sendParkingEmail } from '../../actions/sendParkingEmail'
+import { sendOpenHouseTwoDayReminderEmail } from '../../actions/sendOpenHouseTwoDayReminderEmail'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -35,6 +36,9 @@ export function OpenHouseTable({ rsvps, enrolledEmailsArr }: { rsvps: OpenHouseR
   const [parkingEmailSending, setParkingEmailSending] = useState(false)
   const [parkingEmailSent, setParkingEmailSent] = useState(false)
   const [parkingEmailError, setParkingEmailError] = useState<string | null>(null)
+  const [reminder2Sending, setReminder2Sending] = useState(false)
+  const [reminder2Sent, setReminder2Sent] = useState(false)
+  const [reminder2Error, setReminder2Error] = useState<string | null>(null)
   const enrollmentMap = new Map(enrolledEmailsArr.map(({ email, status }) => [email, status]))
   const getEnrollmentStatus = (email: string) => enrollmentMap.get(email.toLowerCase()) ?? null
   const totalAdults = localRsvps.reduce((sum, r) => sum + (r.adults_attending ?? 0), 0)
@@ -85,6 +89,20 @@ export function OpenHouseTable({ rsvps, enrolledEmailsArr }: { rsvps: OpenHouseR
         />
       </>
     )
+  }
+
+  const handleSendReminder2 = async (rsvp: OpenHouseRsvp) => {
+    if (reminder2Sending || reminder2Sent) return
+    setReminder2Sending(true)
+    setReminder2Error(null)
+    const result = await sendOpenHouseTwoDayReminderEmail({ name: rsvp.name, email: rsvp.email })
+    setReminder2Sending(false)
+    if (result.success) {
+      setReminder2Sent(true)
+      setTimeout(() => setReminder2Sent(false), 3000)
+    } else {
+      setReminder2Error(result.error ?? 'Failed to send email')
+    }
   }
 
   const handleSendInfoSessionEmail = async (rsvp: OpenHouseRsvp) => {
@@ -212,7 +230,7 @@ export function OpenHouseTable({ rsvps, enrolledEmailsArr }: { rsvps: OpenHouseR
         headers={['Name', 'Status', 'Email', 'Phone', 'Adults', 'Children', 'Notes', ...(showSubmitted ? ['Submitted'] : [])]}
       >
         {localRsvps.map((rsvp, i) => (
-          <TableRow key={rsvp.id} index={i} onClick={() => { setSelectedRsvp(rsvp); setReminderSent(false); setReminderError(null); setInfoEmailSent(false); setInfoEmailError(null); setParkingEmailSent(false); setParkingEmailError(null) }} style={{ cursor: 'pointer' }}>
+          <TableRow key={rsvp.id} index={i} onClick={() => { setSelectedRsvp(rsvp); setReminderSent(false); setReminderError(null); setReminder2Sent(false); setReminder2Error(null); setInfoEmailSent(false); setInfoEmailError(null); setParkingEmailSent(false); setParkingEmailError(null) }} style={{ cursor: 'pointer' }}>
             <TableCell>
               <span style={{ fontWeight: 500, color: colors.textPrimary }}>
                 {rsvp.name}
@@ -381,6 +399,24 @@ export function OpenHouseTable({ rsvps, enrolledEmailsArr }: { rsvps: OpenHouseR
                     {reminderSending ? 'Sending…' : reminderSent ? '✓ Sent!' : 'Send Reminder 1'}
                   </button>
                   {reminderError && <span style={{ fontSize: '12px', color: '#DC2626' }}>{reminderError}</span>}
+                  <button
+                    onClick={() => handleSendReminder2(selectedRsvp)}
+                    disabled={reminder2Sending || reminder2Sent}
+                    style={{
+                      backgroundColor: '#2C5F2E',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '6px 12px',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      cursor: reminder2Sending || reminder2Sent ? 'not-allowed' : 'pointer',
+                      opacity: reminder2Sending || reminder2Sent ? 0.5 : 1,
+                    }}
+                  >
+                    {reminder2Sending ? 'Sending…' : reminder2Sent ? '✓ Sent!' : 'Send Reminder 2'}
+                  </button>
+                  {reminder2Error && <span style={{ fontSize: '12px', color: '#DC2626' }}>{reminder2Error}</span>}
                   <button
                     onClick={() => handleSendInfoSessionEmail(selectedRsvp)}
                     disabled={infoEmailSending || infoEmailSent}
