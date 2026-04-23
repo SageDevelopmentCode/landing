@@ -51,6 +51,11 @@ export default function Step5Form({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  const isFormValid =
+    g1SignatureName.trim() !== "" &&
+    g1Signature.trim() !== "" &&
+    (!hasG2 || (g2SignatureName.trim() !== "" && g2Signature.trim() !== ""));
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -264,7 +269,7 @@ export default function Step5Form({
 
             <button
               type="submit"
-              disabled={isPending}
+              disabled={isPending || !isFormValid}
               className="w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isPending ? "Submitting..." : "Submit Application"}

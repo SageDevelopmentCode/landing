@@ -273,6 +273,22 @@ export default function Step2Form({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  const isGuardianValid = (g: typeof g1) =>
+    g.fullName.trim() !== "" &&
+    g.relationship !== "" &&
+    (g.relationship !== "other" || g.relationshipOther.trim() !== "") &&
+    g.email.trim() !== "" &&
+    g.cellPhone !== "" &&
+    g.preferredContact !== "" &&
+    g.livesWithChild !== "" &&
+    g.hasCustody !== "";
+
+  const isFormValid =
+    isGuardianValid(g1) &&
+    (!showG2 || isGuardianValid(g2)) &&
+    hasCustodyOrders !== "" &&
+    (hasCustodyOrders !== "yes" || custodyOrdersDescription.trim() !== "");
+
   const updateG1 = (field: string, value: string) =>
     setG1((prev) => ({ ...prev, [field]: value }));
   const updateG2 = (field: string, value: string) =>
@@ -470,7 +486,7 @@ export default function Step2Form({
 
             <button
               type="submit"
-              disabled={isPending}
+              disabled={isPending || !isFormValid}
               className="w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isPending ? "Saving..." : "Save & Continue"}

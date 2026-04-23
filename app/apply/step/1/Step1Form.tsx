@@ -90,6 +90,24 @@ export default function Step1Form({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  const isFormValid =
+    program !== "" &&
+    (program !== "homeschool_drop_in" || dropInProgram !== "") &&
+    childLegalName.trim() !== "" &&
+    dobMonth !== "" &&
+    dobDay !== "" &&
+    dobYear !== "" &&
+    childAge !== "" &&
+    childGrade !== "" &&
+    addressStreet.trim() !== "" &&
+    addressCity.trim() !== "" &&
+    addressState !== "" &&
+    addressZip !== "" &&
+    isHomeschooled !== "" &&
+    (isHomeschooled !== "no" || homeschoolExplanation.trim() !== "") &&
+    previousSchools !== "" &&
+    (previousSchools !== "yes" || previousSchoolsList.trim() !== "");
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -568,7 +586,7 @@ export default function Step1Form({
 
             <button
               type="submit"
-              disabled={isPending}
+              disabled={isPending || !isFormValid}
               className="w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isPending ? "Saving..." : "Save & Continue"}
