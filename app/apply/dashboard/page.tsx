@@ -5,10 +5,13 @@ import {
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { Suspense } from "react";
 import ApplicationList from "./ApplicationList";
 import ProfileDropdown from "./ProfileDropdown";
 import Footer from "@/app/components/Footer";
 import EnrollmentCodeEntry from "./EnrollmentCodeEntry";
+import ReviewStatusCard from "./ReviewStatusCard";
+import SubmittedConfetti from "./SubmittedConfetti";
 import HelpWidget from "@/app/parent/components/HelpWidget";
 
 export default async function ApplicationDashboard() {
@@ -83,6 +86,11 @@ export default async function ApplicationDashboard() {
       </header>
 
       <main className="flex-1 max-w-4xl mx-auto px-6 py-12">
+        {/* Confetti on first load after submission */}
+        <Suspense>
+          <SubmittedConfetti />
+        </Suspense>
+
         {/* Review notice — only shown when at least one app is submitted */}
         {hasSubmitted && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 mb-6">
@@ -116,16 +124,9 @@ export default async function ApplicationDashboard() {
         {/* Application List */}
         <ApplicationList apps={apps} />
 
-        {/* Start another application — only shown when apps exist */}
-        {apps.length > 0 && (
-          <Link
-            href="/apply/step/1?new=1"
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm text-sm font-semibold text-gray-700 font-body hover:bg-gray-50 transition-colors"
-          >
-            <span className="text-lg leading-none">+</span>
-            Start another application
-          </Link>
-        )}
+        {/* Progress tracker + what happens next */}
+        {hasSubmitted && <ReviewStatusCard />}
+
       </main>
       </div>
       <Footer />

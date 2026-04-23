@@ -20,6 +20,44 @@ function formatProgram(value: string | null | boolean | undefined) {
   return PROGRAM_LABELS[value] ?? value;
 }
 
+function getContinueStep(app: App): number {
+  if (!app.g1_full_name) return 2;
+  if (!app.has_medical_conditions && !app.medical_conditions_description) return 3;
+  if (!app.learning_style) return 4;
+  if (!app.g1_signature_name) return 5;
+  return 1;
+}
+
+function StatusBadge({ status }: { status: string | null | boolean | undefined }) {
+  const isInProgress = status === "in_progress";
+  const isInReview = status === "in_review";
+
+  if (isInProgress || isInReview) {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 text-amber-700 text-xs font-semibold rounded-full font-body border border-amber-200">
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />
+        {isInProgress ? "In Progress" : "In Review"}
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-50 text-green-700 text-xs font-semibold rounded-full font-body border border-green-200">
+      <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
+      Enrolling
+    </span>
+  );
+}
+
+function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join("");
+}
+
 // ─── Read-only field ────────────────────────────────────────────────────────
 function field(label: string, value: string | null | boolean | undefined) {
   if (value == null || value === false || value === "") return null;
@@ -425,6 +463,103 @@ function SlideOver({
   );
 }
 
+// ─── ChildCard ───────────────────────────────────────────────────────────────
+function ChildCard({
+  app,
+  index,
+  onView,
+}: {
+  app: App;
+  index: number;
+  onView: (app: App) => void;
+}) {
+  const childName =
+    (app.preferred_name as string | null) ??
+    (app.child_legal_name as string | null) ??
+    "—";
+  const isInProgress = app.status === "in_progress";
+
+  return (
+    <motion.div
+      className="bg-white border border-gray-200 rounded-2xl shadow-sm flex flex-col p-5 gap-4"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: "easeOut", delay: index * 0.07 }}
+    >
+      <div className="flex flex-col items-center gap-3 pt-2">
+        <div className="w-14 h-14 rounded-full bg-[#E0EDE2] flex items-center justify-center flex-shrink-0">
+          <span className="text-lg font-bold text-[#2C5F2E] font-heading leading-none">
+            {getInitials(childName === "—" ? "?" : childName)}
+          </span>
+        </div>
+        <div className="text-center">
+          <p className="text-sm font-semibold text-gray-800 font-body leading-tight">
+            {childName}
+          </p>
+          {app.child_grade && (
+            <p className="text-xs text-gray-500 font-body mt-0.5">
+              Grade {app.child_grade as string}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        {app.program && (
+          <span className="inline-block text-xs text-[#4A6354] bg-[#F5F9F5] border border-[#C8DFCB] rounded-full px-3 py-1 font-body">
+            {formatProgram(app.program) ?? (app.program as string)}
+          </span>
+        )}
+        <StatusBadge status={app.status} />
+      </div>
+
+      <div className="flex-1" />
+
+      {isInProgress ? (
+        <Link
+          href={`/apply/step/${getContinueStep(app)}?appId=${app.id as string}`}
+          className="w-full text-center text-xs font-semibold text-white font-body bg-[#2C5F2E] hover:bg-[#234d25] rounded-lg px-3 py-2 transition-colors"
+        >
+          Continue
+        </Link>
+      ) : (
+        <button
+          onClick={() => onView(app)}
+          className="w-full text-xs font-semibold text-gray-500 font-body hover:text-gray-800 border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors cursor-pointer"
+        >
+          View / Edit
+        </button>
+      )}
+    </motion.div>
+  );
+}
+
+// ─── StartApplicationCard ────────────────────────────────────────────────────
+function StartApplicationCard({ index }: { index: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: "easeOut", delay: index * 0.07 }}
+    >
+      <Link
+        href="/apply/step/1?new=1"
+        className="flex flex-col items-center justify-center gap-3 h-full min-h-[220px] bg-white border-2 border-dashed border-gray-200 rounded-2xl p-5 hover:border-[#2C5F2E] hover:bg-[#F5F9F5] transition-colors group"
+      >
+        <div className="w-12 h-12 rounded-full bg-[#E0EDE2] flex items-center justify-center group-hover:bg-[#C8DFCB] transition-colors">
+          <span className="text-2xl font-light text-[#2C5F2E] leading-none select-none">+</span>
+        </div>
+        <div className="text-center">
+          <p className="text-sm font-semibold text-gray-600 font-body group-hover:text-[#2C5F2E] transition-colors">
+            Start Application
+          </p>
+          <p className="text-xs text-gray-400 font-body mt-0.5">Add another child</p>
+        </div>
+      </Link>
+    </motion.div>
+  );
+}
+
 // ─── EmptyState ─────────────────────────────────────────────────────────────
 const STEPS = [
   { num: 1, label: "Tell us about your child" },
@@ -572,77 +707,16 @@ export default function ApplicationList({
 
   return (
     <>
-      <div className="flex flex-col gap-3 mb-6">
-        {/* Column headers */}
-        <div className="grid grid-cols-[1fr_120px_1fr_140px_80px] px-5 text-xs font-semibold text-gray-400 font-body uppercase tracking-wide">
-          <span>Child Name</span>
-          <span>Grade</span>
-          <span>Program</span>
-          <span>Status</span>
-          <span>Action</span>
-        </div>
-
-        {apps.map((app, i) => {
-          const childName = app.preferred_name ?? app.child_legal_name ?? "—";
-          const isInProgress = app.status === "in_progress";
-          const isInReview = app.status === "in_review";
-
-          function getContinueStep(): number {
-            if (!app.g1_full_name) return 2;
-            if (!app.has_medical_conditions && !app.medical_conditions_description) return 3;
-            if (!app.learning_style) return 4;
-            if (!app.g1_signature_name) return 5;
-            return 1;
-          }
-
-          return (
-            <div
-              key={(app.id as string | null | undefined) ?? i}
-              className="grid grid-cols-[1fr_120px_1fr_140px_80px] items-center gap-4 bg-white border border-gray-200 rounded-xl px-5 py-4 shadow-sm"
-            >
-              <span className="text-sm font-medium text-gray-800 font-body">
-                {childName}
-              </span>
-              <span className="text-sm text-gray-600 font-body">
-                {app.child_grade ?? "—"}
-              </span>
-              <span className="text-sm text-gray-600 font-body">
-                {formatProgram(app.program) ?? "—"}
-              </span>
-              {isInProgress ? (
-                <span className="inline-flex items-center gap-1.5 w-fit px-2.5 py-1 bg-amber-50 text-amber-700 text-xs font-semibold rounded-full font-body border border-amber-200">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                  In Progress
-                </span>
-              ) : isInReview ? (
-                <span className="inline-flex items-center gap-1.5 w-fit px-2.5 py-1 bg-amber-50 text-amber-700 text-xs font-semibold rounded-full font-body border border-amber-200">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                  In Review
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 w-fit px-2.5 py-1 bg-green-50 text-green-700 text-xs font-semibold rounded-full font-body border border-green-200">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                  Enrolling
-                </span>
-              )}
-              {isInProgress ? (
-                <Link
-                  href={`/apply/step/${getContinueStep()}?appId=${app.id}`}
-                  className="text-xs font-semibold text-white font-body bg-[#2C5F2E] hover:bg-[#234d25] rounded-lg px-3 py-1.5 transition-colors whitespace-nowrap"
-                >
-                  Continue
-                </Link>
-              ) : (
-                <button
-                  onClick={() => setSelectedApp(app)}
-                  className="text-xs font-semibold text-gray-500 font-body hover:text-gray-800 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition-colors cursor-pointer"
-                >
-                  View/Edit
-                </button>
-              )}
-            </div>
-          );
-        })}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+        {apps.map((app, i) => (
+          <ChildCard
+            key={(app.id as string | null | undefined) ?? i}
+            app={app}
+            index={i}
+            onView={setSelectedApp}
+          />
+        ))}
+        <StartApplicationCard index={apps.length} />
       </div>
 
       <AnimatePresence>
