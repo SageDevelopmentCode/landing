@@ -4,7 +4,28 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Info,
+  BookOpen,
+  Users,
+  HelpCircle,
+  Eye,
+  Sparkles,
+  GraduationCap,
+  Sun,
+  School,
+  Home,
+  DollarSign,
+  ClipboardList,
+  Heart,
+  ArrowRight,
+  BookMarked,
+  CalendarDays,
+  MapPin,
+  User,
+} from "lucide-react";
 import ContactDialog from "./ContactDialog";
 import WaitlistDialog from "./WaitlistDialog";
 
@@ -21,6 +42,8 @@ interface NavLeaf {
   action: NavAction;
   badge?: "Coming Soon" | "Apr 18" | "New!";
   colorClass?: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  iconClass?: string;
 }
 
 type NavTab =
@@ -38,18 +61,47 @@ const NAV_TABS: NavTab[] = [
     kind: "dropdown",
     label: "About Us",
     items: [
-      { label: "About Us", action: { kind: "link", href: "/about" } },
-      { label: "Our Story", action: { kind: "link", href: "/our-story" } },
-      { label: "Our Team", action: { kind: "link", href: "/team" } },
-      { label: "FAQ", action: { kind: "link", href: "/faq" } },
-      { label: "Our Vision", action: { kind: "link", href: "/vision" } },
+      {
+        label: "About Us",
+        action: { kind: "link", href: "/about" },
+        icon: Info,
+        iconClass: "text-sky-500",
+      },
+      {
+        label: "Our Story",
+        action: { kind: "link", href: "/our-story" },
+        icon: BookOpen,
+        iconClass: "text-amber-500",
+      },
+      {
+        label: "Our Team",
+        action: { kind: "link", href: "/team" },
+        icon: Users,
+        iconClass: "text-violet-500",
+      },
+      {
+        label: "FAQ",
+        action: { kind: "link", href: "/faq" },
+        icon: HelpCircle,
+        iconClass: "text-slate-400",
+      },
+      {
+        label: "Our Vision",
+        action: { kind: "link", href: "/vision" },
+        icon: Eye,
+        iconClass: "text-teal-500",
+      },
       {
         label: "What We Offer",
         action: { kind: "link", href: "/what-we-offer" },
+        icon: Sparkles,
+        iconClass: "text-pink-400",
       },
       {
         label: "Educational Philosophy",
         action: { kind: "link", href: "/educational-philosophy" },
+        icon: GraduationCap,
+        iconClass: "text-indigo-500",
       },
     ],
   },
@@ -60,16 +112,27 @@ const NAV_TABS: NavTab[] = [
       {
         label: "Summer Program 2026",
         action: { kind: "link", href: "/summer-2026" },
+        icon: Sun,
+        iconClass: "text-yellow-400",
       },
       {
         label: "School Year 2026-2027",
         action: { kind: "link", href: "/school-year-2026-2027" },
+        icon: School,
+        iconClass: "text-blue-500",
       },
       {
         label: "Homeschool Drop-In",
         action: { kind: "link", href: "/homeschool" },
+        icon: Home,
+        iconClass: "text-green-500",
       },
-      { label: "Tuition", action: { kind: "link", href: "/tuition" } },
+      {
+        label: "Tuition",
+        action: { kind: "link", href: "/tuition" },
+        icon: DollarSign,
+        iconClass: "text-emerald-500",
+      },
     ],
   },
   {
@@ -79,14 +142,20 @@ const NAV_TABS: NavTab[] = [
       {
         label: "Apply for a Program",
         action: { kind: "link", href: "/apply" },
+        icon: ClipboardList,
+        iconClass: "text-orange-500",
       },
       {
         label: "Interest Form",
         action: { kind: "dialog", target: "waitlist" },
+        icon: Heart,
+        iconClass: "text-rose-400",
       },
       {
         label: "Continue Application",
         action: { kind: "link", href: "/apply/start" },
+        icon: ArrowRight,
+        iconClass: "text-indigo-400",
       },
     ],
   },
@@ -94,27 +163,50 @@ const NAV_TABS: NavTab[] = [
     kind: "dropdown",
     label: "Resources & Login",
     items: [
-      {
-        label: "Community & Education Resources",
-        action: { kind: "disabled" },
-        badge: "Coming Soon",
-      },
+      // {
+      //   label: "Community & Education Resources",
+      //   action: { kind: "disabled" },
+      //   badge: "Coming Soon",
+      //   icon: BookMarked,
+      // },
       {
         label: "Academic Calendar",
         action: { kind: "link", href: "/academic-calendar" },
+        icon: CalendarDays,
+        iconClass: "text-blue-400",
       },
-      { label: "Tour", action: { kind: "link", href: "/tour" }, badge: "New!" },
-      { label: "FAQ", action: { kind: "link", href: "/faq" } },
-      { label: "Donate", action: { kind: "link", href: "/donate" } },
+      {
+        label: "Tour",
+        action: { kind: "link", href: "/tour" },
+        badge: "New!",
+        icon: MapPin,
+        iconClass: "text-rose-500",
+      },
+      {
+        label: "FAQ",
+        action: { kind: "link", href: "/faq" },
+        icon: HelpCircle,
+        iconClass: "text-slate-400",
+      },
+      {
+        label: "Donate",
+        action: { kind: "link", href: "/donate" },
+        icon: Heart,
+        iconClass: "text-red-400",
+      },
       {
         label: "Parent Login",
         action: { kind: "link", href: "/login" },
         colorClass: "bg-blue-50 text-blue-700 hover:bg-blue-100",
+        icon: User,
+        iconClass: "text-blue-500",
       },
       {
         label: "Teacher Login",
         action: { kind: "link", href: "/login" },
         colorClass: "bg-amber-50 text-amber-700 hover:bg-amber-100",
+        icon: GraduationCap,
+        iconClass: "text-amber-500",
       },
     ],
   },
@@ -312,13 +404,20 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
       />
     ) : null;
 
+    const iconEl = leaf.icon ? (
+      <leaf.icon className={`w-4 h-4 shrink-0 ${leaf.iconClass ?? "opacity-60"}`} />
+    ) : null;
+
     if (leaf.action.kind === "disabled") {
       return (
         <span
           key={leaf.label}
           className={`${base} text-gray-400 opacity-50 cursor-not-allowed select-none`}
         >
-          <span>{leaf.label}</span>
+          <span className="flex items-center gap-2">
+            {iconEl}
+            {leaf.label}
+          </span>
           {badge}
         </span>
       );
@@ -332,7 +431,10 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
           onClick={() => handleLeafAction(leaf.action)}
           className={`${base} ${colorClass}`}
         >
-          <span>{leaf.label}</span>
+          <span className="flex items-center gap-2">
+            {iconEl}
+            {leaf.label}
+          </span>
           <span className="flex items-center gap-1">
             {badge}
             {arrow}
@@ -348,7 +450,10 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
         onClick={() => handleLeafAction(leaf.action)}
         className={`${base} ${colorClass} cursor-pointer`}
       >
-        <span>{leaf.label}</span>
+        <span className="flex items-center gap-2">
+          {iconEl}
+          {leaf.label}
+        </span>
         <span className="flex items-center gap-1">
           {badge}
           {arrow}
