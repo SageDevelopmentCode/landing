@@ -640,6 +640,63 @@ function RegistrationFeeModal({
   );
 }
 
+const STUDENT_AVATAR_COLORS = [
+  "bg-[#4a7c59]",
+  "bg-[#7c6b4a]",
+  "bg-[#5a6b8a]",
+  "bg-[#8a5a6b]",
+  "bg-[#6b7c4a]",
+  "bg-[#4a6b7c]",
+];
+
+function colorForStudentId(id: string): string {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++)
+    hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  return STUDENT_AVATAR_COLORS[Math.abs(hash) % STUDENT_AVATAR_COLORS.length];
+}
+
+function getInitials(name: string | null): string {
+  if (!name) return "?";
+  return name
+    .trim()
+    .split(/\s+/)
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
+function StudentTabAvatar({
+  id,
+  name,
+  profileImageUrl,
+  size = "sm",
+}: {
+  id: string;
+  name: string;
+  profileImageUrl?: string | null;
+  size?: "sm" | "md";
+}) {
+  const dims = size === "md" ? "w-9 h-9 text-xs" : "w-7 h-7 text-[10px]";
+  if (profileImageUrl) {
+    return (
+      <img
+        src={profileImageUrl}
+        alt={name}
+        className={`${dims} rounded-full object-cover shrink-0`}
+      />
+    );
+  }
+  return (
+    <div
+      className={`${dims} rounded-full flex items-center justify-center text-white font-semibold shrink-0 ${colorForStudentId(id)}`}
+    >
+      {getInitials(name)}
+    </div>
+  );
+}
+
 function getProgramLabel(program: string | null): string {
   if (program === "summer_26") return "Summer '26";
   if (program === "school_year_26_27") return "School Yr '26–'27";
@@ -687,6 +744,7 @@ function Checklist({
   program,
   applicationId,
   applicationStatus,
+  profileImageUrl,
 }: {
   childName: string;
   signatureMap: SignatureMap;
@@ -699,6 +757,7 @@ function Checklist({
   program: string | null;
   applicationId: string;
   applicationStatus: string | null;
+  profileImageUrl: string | null;
 }) {
   const completedCount = checklistItems.filter((item) => {
     if (item.id === 5) return immunizationFileCount > 0;
@@ -800,13 +859,16 @@ function Checklist({
       )}
       <div className="mb-5 bg-white border border-gray-200 rounded-2xl px-5 py-4 shadow-sm">
         <div className="flex items-start justify-between gap-4 mb-3">
-          <div>
-            <h2 className="text-xl font-semibold font-heading text-gray-800 mb-0.5">
-              Enrollment Checklist
-            </h2>
-            <p className="text-xs text-gray-400 font-body mt-0.5">
-              {completedCount} of {totalCount} steps completed
-            </p>
+          <div className="flex items-center gap-3">
+            <StudentTabAvatar id={applicationId} name={childName} profileImageUrl={profileImageUrl} size="md" />
+            <div>
+              <h2 className="text-xl font-semibold font-heading text-gray-800 mb-0.5">
+                Enrollment Checklist
+              </h2>
+              <p className="text-xs text-gray-400 font-body mt-0.5">
+                {completedCount} of {totalCount} steps completed
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             {programLabelWithEmoji && (
@@ -1001,6 +1063,7 @@ interface ChildTabsProps {
   registrationFeePaidByStudent: Record<string, boolean>;
   healthStatementByStudent: Record<string, { option_type: string } | null>;
   religiousExemptionCountByStudent: Record<string, number>;
+  profileImageByStudent: Record<string, string | null>;
 }
 
 export default function ChildTabs({
@@ -1018,6 +1081,7 @@ export default function ChildTabs({
   registrationFeePaidByStudent,
   healthStatementByStudent,
   religiousExemptionCountByStudent,
+  profileImageByStudent,
 }: ChildTabsProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -1309,12 +1373,18 @@ export default function ChildTabs({
       program={activeApprovedApp.program ?? null}
       applicationId={activeApprovedApp.id}
       applicationStatus={activeApprovedApp.status ?? null}
+      profileImageUrl={profileImageByStudent[activeStudentId] ?? null}
     />
   );
 
   return (
-    <div>
-      <div className="flex gap-2 mb-6 flex-wrap items-center">
+    <div className="flex-1 flex overflow-hidden">
+      {/* ── Left: Children sidebar ── */}
+      <aside className="hidden md:flex flex-col w-56 flex-shrink-0 overflow-y-auto px-3 pt-8 gap-1 bg-white border-r border-gray-100">
+        <p className="text-xs font-semibold font-body text-gray-400 uppercase tracking-wider px-2 pb-2">
+          Children
+        </p>
+
         {apps.map((app) => {
           const label = app.preferred_name ?? app.child_legal_name ?? "Student";
           const programLabel = getProgramLabel(app.program ?? null);
@@ -1329,21 +1399,32 @@ export default function ChildTabs({
             <button
               key={app.id}
               onClick={() => setActiveTabId(app.id)}
-              className={`px-4 py-1.5 rounded-xl text-sm font-semibold font-heading transition-colors cursor-pointer flex items-center gap-1.5 ${
+              className={`relative w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-colors cursor-pointer ${
                 isActive
-                  ? isComplete
-                    ? "bg-emerald-600 text-white"
-                    : "bg-gray-800 text-white"
-                  : isComplete
-                    ? "bg-emerald-50 border border-emerald-300 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-400"
-                    : "bg-white border border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  ? "bg-[#4a7c59]/10 text-gray-800"
+                  : "text-gray-400 hover:text-gray-600 hover:bg-black/5"
               }`}
             >
-              {isComplete && <CheckCircle className="w-3.5 h-3.5" />}
-              {label}
+              <StudentTabAvatar id={app.id} name={label} profileImageUrl={profileImageByStudent[app.student_id ?? ""] ?? null} />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-body font-medium truncate leading-tight">
+                  {label}
+                </p>
+                {programLabel && programLabel !== "the program" && (
+                  <p className="text-xs font-body text-gray-400 truncate leading-tight">
+                    {programLabel}
+                  </p>
+                )}
+              </div>
+              {isComplete ? (
+                <CheckCircle className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+              ) : (
+                <span className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0" />
+              )}
             </button>
           );
         })}
+
         {pendingApps.map((app) => {
           const label = app.preferred_name ?? app.child_legal_name ?? "Student";
           const isActive = app.id === activeTabId;
@@ -1351,26 +1432,50 @@ export default function ChildTabs({
             <button
               key={app.id}
               onClick={() => setActiveTabId(app.id)}
-              className={`px-4 py-1.5 rounded-xl text-sm font-semibold font-heading transition-colors cursor-pointer flex items-center gap-1.5 ${
+              className={`relative w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-colors cursor-pointer ${
                 isActive
-                  ? "bg-amber-500 text-white"
-                  : "bg-amber-50 border border-amber-300 text-amber-700 hover:bg-amber-100 hover:border-amber-400"
+                  ? "bg-[#4a7c59]/10 text-gray-800"
+                  : "text-gray-400 hover:text-gray-600 hover:bg-black/5"
               }`}
             >
-              <Clock className="w-3.5 h-3.5" />
-              {label}
+              <StudentTabAvatar id={app.id} name={label} profileImageUrl={profileImageByStudent[app.student_id ?? ""] ?? null} />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-body font-medium truncate leading-tight">
+                  {label}
+                </p>
+                <p className="text-xs font-body text-gray-400 truncate leading-tight">
+                  Under Review
+                </p>
+              </div>
+              <Clock className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
             </button>
           );
         })}
+
         <Link
           href="/apply/step/1?new=1"
-          className="px-4 py-1.5 rounded-xl text-sm font-semibold font-heading transition-colors flex items-center gap-1.5 bg-white border border-dashed border-gray-300 text-gray-400 hover:text-gray-600 hover:border-gray-400"
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-colors text-gray-400 hover:text-gray-600 hover:bg-black/5 border border-dashed border-gray-200 mt-1"
         >
-          <PlusCircle className="w-3.5 h-3.5" />
-          New Application
+          <div className="w-7 h-7 rounded-full flex items-center justify-center border border-dashed border-gray-300 shrink-0">
+            <PlusCircle className="w-3.5 h-3.5" />
+          </div>
+          <p className="text-sm font-body font-medium truncate leading-tight">
+            New Application
+          </p>
         </Link>
-      </div>
+      </aside>
 
+      {/* ── Right: Main content ── */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-3xl mx-auto px-6 py-10">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTabId}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18 }}
+            >
       {activePendingApp
         ? (() => {
             const app = activePendingApp;
@@ -1448,7 +1553,8 @@ export default function ChildTabs({
             );
           })()
         : checklist}
-
+            </motion.div>
+          </AnimatePresence>
 
       {openContractId !== null && openStudentId !== null && (
         <ContractModal
@@ -1630,6 +1736,8 @@ export default function ChildTabs({
           />
         )}
       </AnimatePresence>
+        </div>
+      </div>
     </div>
   );
 }

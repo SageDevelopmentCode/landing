@@ -93,6 +93,7 @@ export default async function ParentDashboard() {
     { option_type: string } | null
   > = {};
   const religiousExemptionCountByStudent: Record<string, number> = {};
+  const profileImageByStudent: Record<string, string | null> = {};
 
   const teachersByStudent: Record<string, TeacherAssignment[]> = {};
   if (studentIds.length > 0) {
@@ -112,6 +113,7 @@ export default async function ParentDashboard() {
       { data: authorizedPickupPlanRows },
       { data: authorizedPickupPersonRows },
       { data: healthStatementRows },
+      { data: studentsData },
     ] = await Promise.all([
       adminClient
         .schema("parent_app")
@@ -161,7 +163,16 @@ export default async function ParentDashboard() {
         .select("*")
         .eq("parent_id", user.id)
         .in("student_id", studentIds),
+      adminClient
+        .schema("admin")
+        .from("students")
+        .select("id, profile_image_url")
+        .in("id", studentIds),
     ]);
+
+    for (const s of studentsData ?? []) {
+      profileImageByStudent[s.id] = s.profile_image_url ?? null;
+    }
 
     // Fetch immunization file counts for each student
     const [immunizationCounts, religiousExemptionCounts] = await Promise.all([
@@ -278,14 +289,7 @@ export default async function ParentDashboard() {
           </div>
         </header>
 
-        <main className="flex-1 max-w-4xl mx-auto px-6 py-12">
-          {/* Welcome */}
-          <div className="mb-10">
-            <h1 className="text-3xl font-bold font-heading text-gray-800 mb-2">
-              Welcome, {fullName ?? "Parent"}.
-            </h1>
-          </div>
-
+        <main className="flex-1 flex overflow-hidden">
           <ChildTabs
             apps={approvedApps}
             pendingApps={pendingApps}
@@ -301,6 +305,7 @@ export default async function ParentDashboard() {
             registrationFeePaidByStudent={registrationFeePaidByStudent}
             healthStatementByStudent={healthStatementByStudent}
             religiousExemptionCountByStudent={religiousExemptionCountByStudent}
+            profileImageByStudent={profileImageByStudent}
           />
         </main>
       </div>

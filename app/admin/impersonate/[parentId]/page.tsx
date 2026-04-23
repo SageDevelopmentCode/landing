@@ -252,6 +252,7 @@ export default async function ImpersonateParentPage({
             registrationFeePaidByStudent={registrationFeePaidByStudent}
             healthStatementByStudent={healthStatementByStudent}
             religiousExemptionCountByStudent={religiousExemptionCountByStudent}
+            profileImageByStudent={{}}
           />
         </div>
       </div>
