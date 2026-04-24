@@ -1407,7 +1407,8 @@ export async function buildOpenHouseTwoDayReminderEmail(opts: {
   name: string;
 }): Promise<{ subject: string; content: string }> {
   const firstName = opts.name.split(" ")[0] || opts.name;
-  const subject = "This Saturday! Sage Field Open House, April 25th, 2–4 PM + Parking Info";
+  const subject =
+    "This Saturday! Sage Field Open House, April 25th, 2–4 PM + Parking Info";
   const content = `
 <!DOCTYPE html>
 <html>
@@ -1415,7 +1416,7 @@ export async function buildOpenHouseTwoDayReminderEmail(opts: {
 <body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
   <p style="margin-bottom: 24px;">Dear ${firstName},</p>
 
-  <p>We are just two days away! We can't wait to see you <strong>this Saturday, April 25th from 2:00–4:00 PM</strong> at:<br />
+  <p>We are just one day away! We can't wait to see you <strong>this Saturday, April 25th from 2:00–4:00 PM</strong> at:<br />
   <a href="https://maps.app.goo.gl/qjgRZjberhZMzEBd7" style="color: #5a7a5a;">2760 Gattis School Rd, Round Rock, TX 78664</a></p>
 
   <p>We're so excited to welcome you this Saturday. It's going to be a wonderful afternoon — a great chance to see Sage Field in person, meet our educators, and get a real feel for what learning here looks like.</p>

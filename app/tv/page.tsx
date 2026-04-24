@@ -277,12 +277,12 @@ function Slide0OpenHouse() {
           <span className="inline-block px-5 py-2 bg-primary text-white text-base font-semibold rounded-full mb-6 font-body">
             Today · April 25, 2026
           </span>
-          <h1 className="text-6xl font-bold text-gray-800 font-heading leading-tight mb-5">
+          <h1 className="text-5xl font-bold text-gray-800 font-heading leading-tight mb-5">
             Welcome to Our
             <br />
             Open House!
           </h1>
-          <p className="text-2xl text-gray-500 font-body leading-relaxed">
+          <p className="text-xl text-gray-500 font-body leading-relaxed">
             We&apos;re so glad you&apos;re here. Look around, meet the team, and
             let us know if you have any questions.
           </p>
@@ -295,7 +295,7 @@ function Slide0OpenHouse() {
             <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide font-body">
               Time
             </p>
-            <p className="text-xl font-bold text-gray-800 font-heading">
+            <p className="text-lg font-bold text-gray-800 font-heading">
               2:00 – 4:00 PM
             </p>
           </div>
@@ -344,7 +344,7 @@ function Slide0OpenHouse() {
       <div className="w-72 flex flex-col items-center justify-center gap-6 shrink-0">
         <div className="bg-primary rounded-3xl px-8 py-10 flex flex-col items-center gap-4 w-full text-center shadow-lg">
           <span className="text-4xl">🌿</span>
-          <p className="text-2xl font-bold text-white font-heading leading-tight">
+          <p className="text-xl font-bold text-white font-heading leading-tight">
             Sage Field
             <br />
             Private School
@@ -375,10 +375,10 @@ function Slide1Summer() {
           <span className="inline-block px-5 py-2 bg-badge-bg text-black text-base font-semibold rounded-full mb-5 font-body">
             Now Enrolling
           </span>
-          <h1 className="text-6xl font-bold text-gray-800 font-heading leading-tight mb-5">
+          <h1 className="text-5xl font-bold text-gray-800 font-heading leading-tight mb-5">
             Summer 2026
           </h1>
-          <p className="text-2xl text-gray-500 font-body">
+          <p className="text-xl text-gray-500 font-body">
             May 26 – August 13, 2026 · 12 Weeks · Mon–Thu
           </p>
         </div>
@@ -428,10 +428,10 @@ function Slide2SchoolYear() {
       {/* Left */}
       <div className="flex-1 flex flex-col justify-center gap-8">
         <div>
-          <h1 className="text-5xl font-bold text-gray-800 font-heading leading-tight mb-4">
+          <h1 className="text-4xl font-bold text-gray-800 font-heading leading-tight mb-4">
             School Year 2026–2027
           </h1>
-          <p className="text-2xl text-gray-500 font-body">
+          <p className="text-xl text-gray-500 font-body">
             August 2026 – May 2027 · Ages 4–11 · Up to 4 Days/Week
           </p>
         </div>
@@ -485,10 +485,10 @@ function Slide3Homeschool() {
   return (
     <div className="flex flex-col h-full justify-center gap-10">
       <div>
-        <h1 className="text-5xl font-bold text-gray-800 font-heading leading-tight mb-4">
+        <h1 className="text-4xl font-bold text-gray-800 font-heading leading-tight mb-4">
           Homeschool Drop-In
         </h1>
-        <p className="text-2xl text-gray-500 font-body">
+        <p className="text-xl text-gray-500 font-body">
           1–3 Days/Week · Ages 4–11 · Fridays Are Field Days
         </p>
       </div>
@@ -545,7 +545,7 @@ function Slide4Tuition() {
     <div className="flex h-full gap-10">
       {/* Left: pricing */}
       <div className="flex-1 flex flex-col justify-center gap-8">
-        <h1 className="text-5xl font-bold text-gray-800 font-heading leading-tight">
+        <h1 className="text-4xl font-bold text-gray-800 font-heading leading-tight">
           Tuition &amp; Pricing
         </h1>
 
@@ -559,14 +559,14 @@ function Slide4Tuition() {
               <p className="text-base text-gray-500 font-body mb-1">
                 Weekly · 2nd–4th
               </p>
-              <p className="text-3xl font-bold text-primary font-heading">
+              <p className="text-2xl font-bold text-primary font-heading">
                 $350
-                <span className="text-lg text-gray-400 font-normal">/wk</span>
+                <span className="text-base text-gray-400 font-normal">/wk</span>
               </p>
               <p className="text-base text-gray-500 font-body mt-2">Primary</p>
-              <p className="text-3xl font-bold text-primary font-heading">
+              <p className="text-2xl font-bold text-primary font-heading">
                 $375
-                <span className="text-lg text-gray-400 font-normal">/wk</span>
+                <span className="text-base text-gray-400 font-normal">/wk</span>
               </p>
             </div>
             <div className="bg-primary rounded-xl p-4 relative">
@@ -576,11 +576,11 @@ function Slide4Tuition() {
               <p className="text-base text-white/70 font-body mb-1">
                 Full Summer · 2nd–4th
               </p>
-              <p className="text-3xl font-bold text-white font-heading">
+              <p className="text-2xl font-bold text-white font-heading">
                 $3,780
               </p>
               <p className="text-base text-white/70 font-body mt-2">Primary</p>
-              <p className="text-3xl font-bold text-white font-heading">
+              <p className="text-2xl font-bold text-white font-heading">
                 $4,050
               </p>
             </div>
@@ -597,18 +597,18 @@ function Slide4Tuition() {
               <p className="text-base text-gray-500 font-body mb-1">
                 2nd–4th Grade
               </p>
-              <p className="text-3xl font-bold text-primary font-heading">
+              <p className="text-2xl font-bold text-primary font-heading">
                 $1,095
-                <span className="text-lg text-gray-400 font-normal">/mo</span>
+                <span className="text-base text-gray-400 font-normal">/mo</span>
               </p>
             </div>
             <div className="bg-[#FFF9F5] rounded-xl p-4">
               <p className="text-base text-gray-500 font-body mb-1">
                 Primary (Pre-K–1st)
               </p>
-              <p className="text-3xl font-bold text-primary font-heading">
+              <p className="text-2xl font-bold text-primary font-heading">
                 $1,195
-                <span className="text-lg text-gray-400 font-normal">/mo</span>
+                <span className="text-base text-gray-400 font-normal">/mo</span>
               </p>
             </div>
           </div>
@@ -659,7 +659,7 @@ function Slide5Team() {
   return (
     <div className="flex flex-col h-full gap-6">
       <div>
-        <h1 className="text-5xl font-bold text-gray-800 font-heading leading-tight">
+        <h1 className="text-4xl font-bold text-gray-800 font-heading leading-tight">
           Meet the Team
         </h1>
       </div>
@@ -682,7 +682,7 @@ function Slide5Team() {
             </div>
             {/* Info */}
             <div className="flex-1 flex flex-col justify-center px-6 py-5">
-              <p className="text-2xl font-bold text-gray-800 font-heading leading-tight">
+              <p className="text-xl font-bold text-gray-800 font-heading leading-tight">
                 {member.name}
               </p>
               <span className="inline-block mt-3 px-4 py-2 bg-primary/10 text-primary text-base font-semibold rounded-full font-body self-start">
@@ -705,10 +705,10 @@ function Slide6Apply() {
           <span className="inline-block px-5 py-2 bg-badge-bg text-black text-base font-semibold rounded-full mb-5 font-body">
             Enrollment Open
           </span>
-          <h1 className="text-6xl font-bold text-gray-800 font-heading leading-tight mb-4">
+          <h1 className="text-5xl font-bold text-gray-800 font-heading leading-tight mb-4">
             How to Enroll
           </h1>
-          <p className="text-2xl text-gray-500 font-body">
+          <p className="text-xl text-gray-500 font-body">
             Four simple steps to join Sage Field
           </p>
         </div>
@@ -776,26 +776,26 @@ function SlideFAQ({ item }: { item: (typeof faqItems)[number] }) {
 
         {/* Question */}
         <div
-          className="rounded-3xl px-10 py-8 border"
+          className="rounded-3xl px-8 py-6 border"
           style={{ backgroundColor: item.bg, borderColor: `${item.accent}40` }}
         >
           <p
-            className="text-sm font-bold uppercase tracking-widest mb-4 font-body"
+            className="text-sm font-bold uppercase tracking-widest mb-3 font-body"
             style={{ color: item.accent }}
           >
             Question
           </p>
-          <p className="text-4xl font-bold text-gray-800 font-heading leading-tight">
+          <p className="text-3xl font-bold text-gray-800 font-heading leading-tight">
             {item.question}
           </p>
         </div>
 
         {/* Answer */}
-        <div className="bg-white rounded-3xl px-10 py-8 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-3xl px-8 py-6 shadow-sm border border-gray-100">
           <p className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-4 font-body">
             Answer
           </p>
-          <p className="text-2xl text-gray-600 font-body leading-relaxed">
+          <p className="text-xl text-gray-600 font-body leading-relaxed">
             {item.answer}
           </p>
         </div>
@@ -935,37 +935,8 @@ export default function TVPage() {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      {/* Progress bar */}
-      <div className="relative h-1.5 bg-gray-200 shrink-0">
-        <motion.div
-          key={`progress-${current}`}
-          className="absolute top-0 left-0 h-full bg-primary"
-          initial={{ width: "0%" }}
-          animate={{ width: "100%" }}
-          transition={{ duration: INTERVAL_MS / 1000, ease: "linear" as const }}
-        />
-      </div>
-
-      {/* Top chrome */}
-      <div className="flex items-center justify-between px-10 py-4 shrink-0">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/assets/Logo.png"
-          alt="Sage Field"
-          className="h-12 object-contain"
-        />
-        <div className="flex items-center gap-3">
-          <span className="px-5 py-2 bg-badge-bg text-black text-base font-semibold rounded-full font-body">
-            {slides[current].label}
-          </span>
-          <span className="text-sm text-gray-400 font-body">
-            {current + 1} / {TOTAL_SLIDES}
-          </span>
-        </div>
-      </div>
-
       {/* Slide content */}
-      <div className="flex-1 relative overflow-hidden px-10 pb-4">
+      <div className="flex-1 relative overflow-hidden px-10 py-8">
         <AnimatePresence custom={direction} mode="wait">
           <motion.div
             key={current}
@@ -975,46 +946,13 @@ export default function TVPage() {
             animate="center"
             exit="exit"
             transition={{ duration: 0.45, ease: "easeInOut" }}
-            className="absolute inset-0 px-10 pb-4 overflow-hidden"
+            className="absolute inset-0 px-10 py-8 overflow-hidden"
           >
             {slides[current].component}
           </motion.div>
         </AnimatePresence>
       </div>
 
-      {/* Bottom: dot indicators + nav hint */}
-      <div className="flex items-center justify-center gap-3 py-4 shrink-0">
-        {/* Left arrow */}
-        <button
-          onClick={retreat}
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-sm border border-gray-200 hover:border-primary hover:text-primary transition-colors text-gray-400 cursor-pointer"
-          aria-label="Previous slide"
-        >
-          ‹
-        </button>
-
-        {slides.map((s, i) => (
-          <button
-            key={s.id}
-            onClick={() => goTo(i, i > current ? 1 : -1)}
-            className={`rounded-full transition-all duration-300 cursor-pointer ${
-              i === current
-                ? "bg-primary w-6 h-4"
-                : "bg-gray-300 hover:bg-gray-400 w-3 h-3"
-            }`}
-            aria-label={`Go to ${s.label}`}
-          />
-        ))}
-
-        {/* Right arrow */}
-        <button
-          onClick={advance}
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-sm border border-gray-200 hover:border-primary hover:text-primary transition-colors text-gray-400 cursor-pointer"
-          aria-label="Next slide"
-        >
-          ›
-        </button>
-      </div>
     </div>
   );
 }
