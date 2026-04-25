@@ -931,6 +931,27 @@ export function createVolunteerInterestEmbed(data: {
 }
 
 /**
+ * Creates a Discord embed for app runtime errors
+ */
+export function createAppErrorEmbed(data: {
+  error: string;
+  area: string;
+  userId?: string | null;
+  userEmail?: string | null;
+}): DiscordEmbed {
+  return {
+    title: `🚨 App Error — ${data.area}`,
+    color: 0xe74c3c,
+    fields: [
+      { name: "User ID", value: data.userId ?? "unknown", inline: true },
+      { name: "Email", value: data.userEmail ?? "unknown", inline: true },
+      { name: "Error", value: data.error.substring(0, 1024), inline: false },
+    ],
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
  * Creates a Discord embed for campus tour booking submissions
  */
 export function createTourBookingEmbed(data: {

@@ -8,6 +8,7 @@ import {
   createStudentCheckOutEmbed,
   createHelpRequestEmbed,
   createVolunteerInterestEmbed,
+  createAppErrorEmbed,
 } from "@/app/lib/discord";
 
 export async function POST(request: NextRequest) {
@@ -172,6 +173,19 @@ export async function POST(request: NextRequest) {
         notes: notes ?? null,
       });
       await sendDiscordNotification(embed, process.env.DISCORD_WEBHOOK_URL);
+      return NextResponse.json({ success: true });
+    }
+
+    if (type === "app_error") {
+      const { error, area, userId, userEmail } = data;
+      if (!error || !area) {
+        return NextResponse.json(
+          { error: "app_error requires error and area" },
+          { status: 400 },
+        );
+      }
+      const embed = createAppErrorEmbed({ error, area, userId, userEmail });
+      await sendDiscordNotification(embed, process.env.DISCORD_MOBILE_WEBHOOK_URL);
       return NextResponse.json({ success: true });
     }
 
