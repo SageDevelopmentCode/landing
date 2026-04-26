@@ -20,8 +20,11 @@ import { EmailThread } from './EmailThread'
 import { sendEnrollmentReminderEmail } from '../../actions/sendEnrollmentReminderEmail'
 import { sendEnrollmentConfirmationEmail } from '../../actions/sendEnrollmentConfirmationEmail'
 import { sendInfoSessionInviteEmail } from '../../actions/sendInfoSessionInviteEmail'
+import { sendOpenHouseEnrollmentEmail } from '../../actions/sendOpenHouseEnrollmentEmail'
 import { enrollApplication } from '../../actions/enrollApplication'
 import { updateApplicationProgram } from '../../actions/updateApplicationProgram'
+import { updateApplicationTags } from '../../actions/updateApplicationTags'
+import { PRESET_TAGS } from '../constants/applicationTags'
 
 export type CachedEnrollmentData = AdminEnrollmentData & {
   registrationFeePaidByStudent: Record<string, boolean>
@@ -106,6 +109,7 @@ type Application = {
   g2_preferred_contact: boolean | null
   student_id: string | null
   admin_notes: string | null
+  admin_tags: string[] | null
   status: string
   approved: boolean
   approved_at: string | null
@@ -126,6 +130,7 @@ interface ApplicationDetailSidebarProps {
   onItemClick: (itemId: number, studentId: string, data: CachedEnrollmentData | null) => void
   onEnrolled: (id: string) => void
   onProgramChanged?: (id: string, program: string) => void
+  onTagsChanged?: (id: string, tags: string[]) => void
 }
 
 
@@ -139,6 +144,7 @@ export function ApplicationDetailSidebar({
   onItemClick,
   onEnrolled,
   onProgramChanged,
+  onTagsChanged,
 }: ApplicationDetailSidebarProps) {
   const [notes, setNotes] = useState<{ id: string; content: string; created_at: string }[]>([])
   const [newNote, setNewNote] = useState('')
@@ -160,6 +166,12 @@ export function ApplicationDetailSidebar({
   const [infoSessionSending, setInfoSessionSending] = useState(false)
   const [infoSessionSent, setInfoSessionSent] = useState(false)
   const [infoSessionError, setInfoSessionError] = useState<string | null>(null)
+  const [openHouseSending, setOpenHouseSending] = useState(false)
+  const [openHouseSent, setOpenHouseSent] = useState(false)
+  const [openHouseError, setOpenHouseError] = useState<string | null>(null)
+  const [tagInput, setTagInput] = useState('')
+  const [tagSaving, setTagSaving] = useState(false)
+  const [tagError, setTagError] = useState<string | null>(null)
   const [enrollmentData, setEnrollmentData] = useState<AdminEnrollmentData & { registrationFeePaidByStudent: Record<string, boolean> } | null>(null)
   const [enrollmentLoading, setEnrollmentLoading] = useState(false)
   const [siblingApps, setSiblingApps] = useState<ApprovedApplication[]>([])
@@ -489,6 +501,56 @@ export function ApplicationDetailSidebar({
     }
   }
 
+  const handleSendOpenHouseEnrollment = async () => {
+    if (openHouseSending || !application.g1_email) return
+    setOpenHouseSending(true)
+    setOpenHouseError(null)
+    const result = await sendOpenHouseEnrollmentEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      program: application.program,
+      email: application.g1_email,
+    })
+    setOpenHouseSending(false)
+    if (result.success) {
+      setOpenHouseSent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setOpenHouseSent(false), 3000)
+    } else {
+      setOpenHouseError(result.error ?? 'Failed to send')
+    }
+  }
+
+  const currentTags = application?.admin_tags ?? []
+
+  const handleAddTag = async (tag: string) => {
+    if (!tag || currentTags.includes(tag)) { setTagInput(''); return }
+    const next = [...currentTags, tag]
+    setTagSaving(true)
+    setTagError(null)
+    const result = await updateApplicationTags(application!.id, next)
+    setTagSaving(false)
+    if (result.success) {
+      onTagsChanged?.(application!.id, next)
+      setTagInput('')
+    } else {
+      setTagError(result.error ?? 'Failed to save')
+    }
+  }
+
+  const handleRemoveTag = async (tag: string) => {
+    const next = currentTags.filter(t => t !== tag)
+    setTagSaving(true)
+    setTagError(null)
+    const result = await updateApplicationTags(application!.id, next)
+    setTagSaving(false)
+    if (result.success) {
+      onTagsChanged?.(application!.id, next)
+    } else {
+      setTagError(result.error ?? 'Failed to save')
+    }
+  }
+
   const footer = isDenyingMode ? (
     <div className="flex flex-col gap-3 w-full">
       <textarea
@@ -809,6 +871,66 @@ export function ApplicationDetailSidebar({
           </SidebarSection>
         )}
 
+        <SidebarSection title="Tags">
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {PRESET_TAGS.map(tag => {
+              const active = currentTags.includes(tag)
+              return (
+                <button
+                  key={tag}
+                  onClick={() => active ? handleRemoveTag(tag) : handleAddTag(tag)}
+                  disabled={tagSaving}
+                  className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full border transition-colors disabled:opacity-50 ${
+                    active
+                      ? 'bg-violet-600 text-white border-violet-600'
+                      : 'bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100'
+                  }`}
+                >
+                  {active ? '✓ ' : ''}{tag}
+                </button>
+              )
+            })}
+          </div>
+          {currentTags.filter(t => !PRESET_TAGS.includes(t)).length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {currentTags.filter(t => !PRESET_TAGS.includes(t)).map(tag => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-violet-50 text-violet-700 border border-violet-200"
+                >
+                  {tag}
+                  <button
+                    onClick={() => handleRemoveTag(tag)}
+                    disabled={tagSaving}
+                    className="ml-0.5 text-violet-400 hover:text-violet-700 transition-colors disabled:opacity-50"
+                    aria-label={`Remove tag ${tag}`}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={tagInput}
+              onChange={e => setTagInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag(tagInput.trim()) } }}
+              placeholder="Custom tag…"
+              className="flex-1 text-xs border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-violet-400 bg-white text-gray-900 placeholder:text-gray-400"
+            />
+            <button
+              onClick={() => handleAddTag(tagInput.trim())}
+              disabled={tagSaving || !tagInput.trim()}
+              className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-violet-600 text-white hover:bg-violet-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {tagSaving ? '…' : 'Add'}
+            </button>
+          </div>
+          {tagError && <p className="text-xs text-red-600 mt-1">{tagError}</p>}
+        </SidebarSection>
+
         {application.approved && application.g1_email && (
           <SidebarSection title="Outreach">
             <div className="flex flex-col gap-3">
@@ -844,6 +966,17 @@ export function ApplicationDetailSidebar({
                   {infoSessionSending ? 'Sending…' : infoSessionSent ? '✓ Sent!' : 'Send Info Session Invite'}
                 </button>
                 {infoSessionError && <span className="text-xs text-red-600">{infoSessionError}</span>}
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleSendOpenHouseEnrollment}
+                  disabled={openHouseSending || openHouseSent}
+                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                >
+                  {openHouseSending ? 'Sending…' : openHouseSent ? '✓ Sent!' : 'Send Open House Follow-Up'}
+                </button>
+                {openHouseError && <span className="text-xs text-red-600">{openHouseError}</span>}
               </div>
             </div>
           </SidebarSection>

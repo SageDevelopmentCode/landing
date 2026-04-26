@@ -12,6 +12,8 @@ import { cssColors as colors } from '../design-system'
 import { Poppins } from 'next/font/google'
 import { approveApplication } from '../../actions/approveApplication'
 import { denyApplication } from '../../actions/denyApplication'
+import { updateApplicationTags } from '../../actions/updateApplicationTags'
+import { PRESET_TAGS } from '../constants/applicationTags'
 
 const merriweather = Poppins({
   weight: ['300', '400', '700', '900'],
@@ -19,13 +21,13 @@ const merriweather = Poppins({
 })
 
 const KANBAN_COLUMNS = [
-  { key: 'in_progress',       label: 'In Progress',           accent: '#f59e0b', filter: (apps: Application[]) => apps.filter(a => a.status === 'in_progress') },
-  { key: 'in_review',         label: 'In Review',             accent: '#a855f7', filter: (apps: Application[]) => apps.filter(a => a.status === 'in_review') },
-  { key: 'enrolling',         label: 'Enrolling',             accent: '#3b82f6', filter: (apps: Application[]) => apps.filter(a => a.status === 'enrolling') },
-  { key: 'enrolled',          label: 'Enrolled',              accent: '#22c55e', filter: (apps: Application[]) => apps.filter(a => a.status === 'enrolled') },
-  { key: 'summer_26',         label: 'Summer 2026',           accent: '#f59e0b', filter: (apps: Application[]) => apps.filter(a => a.status === 'enrolled' && (a.program === 'summer_26' || a.program === 'both')) },
-  { key: 'school_year_26_27', label: 'School Year 2026–2027', accent: '#6366f1', filter: (apps: Application[]) => apps.filter(a => a.status === 'enrolled' && (a.program === 'school_year_26_27' || a.program === 'both')) },
-  { key: 'homeschool_drop_in', label: 'Homeschool Drop-In', accent: '#10b981', filter: (apps: Application[]) => apps.filter(a => a.status === 'enrolled' && a.program === 'homeschool_drop_in') },
+  { key: 'in_progress',        collapsible: true,  label: 'In Progress',              accent: '#f59e0b', filter: (apps: Application[]) => apps.filter(a => a.status === 'in_progress') },
+  { key: 'in_review',          collapsible: true,  label: 'In Review',                accent: '#a855f7', filter: (apps: Application[]) => apps.filter(a => a.status === 'in_review') },
+  { key: 'enrolling',          collapsible: true,  label: 'Enrolling',                accent: '#3b82f6', filter: (apps: Application[]) => apps.filter(a => a.status === 'enrolling') },
+  { key: 'enrolled',           collapsible: false, label: 'Enrolled',                 accent: '#22c55e', filter: (apps: Application[]) => apps.filter(a => a.status === 'enrolled') },
+  { key: 'summer_26',          collapsible: false, label: 'Summer 2026',              accent: '#f59e0b', filter: (apps: Application[]) => apps.filter(a => a.status === 'enrolled' && (a.program === 'summer_26' || a.program === 'both')) },
+  { key: 'school_year_26_27',  collapsible: false, label: 'School Year 2026–2027',    accent: '#6366f1', filter: (apps: Application[]) => apps.filter(a => a.status === 'enrolled' && (a.program === 'school_year_26_27' || a.program === 'both')) },
+  { key: 'homeschool_drop_in', collapsible: false, label: 'Homeschool Drop-In Program', accent: '#10b981', filter: (apps: Application[]) => apps.filter(a => a.status === 'enrolled' && a.program === 'homeschool_drop_in') },
 ]
 
 const PROGRAM_LABELS: Record<string, string> = {
@@ -119,8 +121,236 @@ type Application = {
   created_at: string | null
   student_id: string | null
   admin_notes: string | null
+  admin_tags: string[] | null
   is_active: boolean | null
   [key: string]: unknown
+}
+
+function KanbanTagEditor({
+  app,
+  onTagsChanged,
+}: {
+  app: Application
+  onTagsChanged: (id: string, tags: string[]) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 })
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const tags = app.admin_tags ?? []
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      if (
+        dropdownRef.current && !dropdownRef.current.contains(e.target as Node) &&
+        buttonRef.current && !buttonRef.current.contains(e.target as Node)
+      ) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
+  const handleOpen = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect()
+      setDropdownPos({ top: rect.bottom + window.scrollY + 4, left: rect.left + window.scrollX })
+    }
+    setOpen(o => !o)
+  }
+
+  const toggle = async (e: React.MouseEvent, tag: string) => {
+    e.stopPropagation()
+    const next = tags.includes(tag) ? tags.filter(t => t !== tag) : [...tags, tag]
+    setSaving(true)
+    const result = await updateApplicationTags(app.id, next)
+    setSaving(false)
+    if (result.success) onTagsChanged(app.id, next)
+  }
+
+  return (
+    <div className="mt-1.5" onClick={e => e.stopPropagation()}>
+      <div className="flex flex-wrap gap-1 items-center">
+        {tags.map(tag => (
+          <span
+            key={tag}
+            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-violet-50 text-violet-700 border border-violet-200"
+          >
+            {tag}
+            <button
+              onClick={e => toggle(e, tag)}
+              disabled={saving}
+              className="text-violet-300 hover:text-violet-600 transition-colors disabled:opacity-50 leading-none"
+              aria-label={`Remove ${tag}`}
+            >
+              ×
+            </button>
+          </span>
+        ))}
+        <button
+          ref={buttonRef}
+          onClick={handleOpen}
+          disabled={saving}
+          className="inline-flex items-center justify-center w-4 h-4 rounded-full border border-dashed border-violet-300 text-violet-400 hover:border-violet-500 hover:text-violet-600 transition-colors disabled:opacity-50 text-[10px] leading-none"
+          aria-label="Add tag"
+        >
+          +
+        </button>
+      </div>
+
+      {open && typeof window !== 'undefined' && (
+        <div
+          ref={dropdownRef}
+          className="fixed z-[9999] bg-white border border-gray-200 rounded-xl shadow-lg p-3 flex flex-col gap-2"
+          style={{ top: dropdownPos.top, left: dropdownPos.left, width: '232px' }}
+          onClick={e => e.stopPropagation()}
+        >
+          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Tags</p>
+          <div className="flex flex-wrap gap-1.5">
+            {PRESET_TAGS.map(tag => {
+              const active = tags.includes(tag)
+              return (
+                <button
+                  key={tag}
+                  onClick={e => toggle(e, tag)}
+                  disabled={saving}
+                  className={`inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded-full border transition-colors disabled:opacity-50 ${
+                    active
+                      ? 'bg-violet-600 text-white border-violet-600'
+                      : 'bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100'
+                  }`}
+                >
+                  {active ? '✓ ' : ''}{tag}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function TagCell({
+  app,
+  onTagsChanged,
+}: {
+  app: Application
+  onTagsChanged: (id: string, tags: string[]) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [customInput, setCustomInput] = useState('')
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 })
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const tags = app.admin_tags ?? []
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      if (
+        dropdownRef.current && !dropdownRef.current.contains(e.target as Node) &&
+        buttonRef.current && !buttonRef.current.contains(e.target as Node)
+      ) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
+  const handleOpen = () => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect()
+      setDropdownPos({ top: rect.bottom + window.scrollY + 4, left: rect.left + window.scrollX })
+    }
+    setOpen(o => !o)
+  }
+
+  const toggle = async (tag: string) => {
+    const next = tags.includes(tag) ? tags.filter(t => t !== tag) : [...tags, tag]
+    setSaving(true)
+    const result = await updateApplicationTags(app.id, next)
+    setSaving(false)
+    if (result.success) onTagsChanged(app.id, next)
+  }
+
+  const addCustom = async () => {
+    const tag = customInput.trim()
+    if (!tag || tags.includes(tag)) { setCustomInput(''); return }
+    setSaving(true)
+    const next = [...tags, tag]
+    const result = await updateApplicationTags(app.id, next)
+    setSaving(false)
+    if (result.success) { onTagsChanged(app.id, next); setCustomInput('') }
+  }
+
+  return (
+    <div onClick={e => e.stopPropagation()}>
+      <button
+        ref={buttonRef}
+        onClick={handleOpen}
+        className="flex flex-wrap gap-1 items-center min-w-[60px] group"
+      >
+        {tags.length === 0 ? (
+          <span className="text-[10px] text-gray-300 group-hover:text-gray-400 transition-colors">+ Add tag</span>
+        ) : (
+          tags.map(tag => (
+            <span key={tag} className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-violet-50 text-violet-700 border border-violet-200">
+              {tag}
+            </span>
+          ))
+        )}
+      </button>
+
+      {open && typeof window !== 'undefined' && (
+        <div
+          ref={dropdownRef}
+          className="fixed z-[9999] bg-white border border-gray-200 rounded-xl shadow-lg p-3 flex flex-col gap-2"
+          style={{ top: dropdownPos.top, left: dropdownPos.left, width: '240px' }}
+        >
+          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Preset Tags</p>
+          <div className="flex flex-wrap gap-1.5">
+            {PRESET_TAGS.map(tag => {
+              const active = tags.includes(tag)
+              return (
+                <button
+                  key={tag}
+                  onClick={() => toggle(tag)}
+                  disabled={saving}
+                  className={`inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded-full border transition-colors disabled:opacity-50 ${
+                    active
+                      ? 'bg-violet-600 text-white border-violet-600'
+                      : 'bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100'
+                  }`}
+                >
+                  {active ? '✓ ' : ''}{tag}
+                </button>
+              )
+            })}
+          </div>
+          <div className="border-t border-gray-100 pt-2 flex gap-1.5">
+            <input
+              type="text"
+              value={customInput}
+              onChange={e => setCustomInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustom() } }}
+              placeholder="Custom tag…"
+              className="flex-1 text-[10px] border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-violet-300 focus:border-violet-400 bg-white"
+            />
+            <button
+              onClick={addCustom}
+              disabled={saving || !customInput.trim()}
+              className="px-2 py-1 text-[10px] font-semibold rounded-lg bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-50 transition-colors"
+            >
+              Add
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function ApplicationsPage() {
@@ -135,6 +365,8 @@ export default function ApplicationsPage() {
   const [selectedItemStudentId, setSelectedItemStudentId] = useState<string | null>(null)
   const [drawerApp, setDrawerApp] = useState<Application | null>(null)
   const [drawerEnrollmentData, setDrawerEnrollmentData] = useState<CachedEnrollmentData | null>(null)
+  const [collapsedCols, setCollapsedCols] = useState<Set<string>>(new Set(['in_progress', 'in_review', 'enrolling']))
+  const [boardExcludedTags, setBoardExcludedTags] = useState<Set<string>>(new Set(["Don't Include"]))
   const pendingApp = useRef<Application | null>(null)
 
   useEffect(() => {
@@ -208,6 +440,15 @@ export default function ApplicationsPage() {
     )
   }
 
+  const handleTagsChanged = (id: string, tags: string[]) => {
+    setApplications((prev) =>
+      prev.map((app) => (app.id === id ? { ...app, admin_tags: tags } : app))
+    )
+    setSelectedApp((prev) =>
+      prev?.id === id ? { ...prev, admin_tags: tags } : prev
+    )
+  }
+
   function handleItemClick(itemId: number, studentId: string, data: CachedEnrollmentData | null) {
     pendingApp.current = selectedApp
     setSelectedApp(null)
@@ -254,6 +495,20 @@ export default function ApplicationsPage() {
         )
       })
     : applications
+
+  const kanbanApplications = boardExcludedTags.size === 0
+    ? filteredApplications
+    : filteredApplications.filter(app =>
+        !(app.admin_tags ?? []).some(t => boardExcludedTags.has(t))
+      )
+
+  const toggleBoardExcludeTag = (tag: string) => {
+    setBoardExcludedTags(prev => {
+      const next = new Set(prev)
+      next.has(tag) ? next.delete(tag) : next.add(tag)
+      return next
+    })
+  }
 
   if (isLoading) {
     return (
@@ -326,6 +581,37 @@ export default function ApplicationsPage() {
         </div>
       </div>
 
+      {view === 'kanban' && (
+        <div className="flex items-center gap-2 flex-wrap -mt-2">
+          <span className="text-xs font-semibold" style={{ color: colors.textTertiary }}>Exclude:</span>
+          {PRESET_TAGS.map(tag => {
+            const excluded = boardExcludedTags.has(tag)
+            return (
+              <button
+                key={tag}
+                onClick={() => toggleBoardExcludeTag(tag)}
+                className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full border transition-colors ${
+                  excluded
+                    ? 'bg-red-50 text-red-600 border-red-200 line-through opacity-70'
+                    : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                {excluded && <span className="not-italic no-underline">✕</span>}
+                {tag}
+              </button>
+            )
+          })}
+          {boardExcludedTags.size > 0 && (
+            <button
+              onClick={() => setBoardExcludedTags(new Set())}
+              className="text-xs text-gray-400 hover:text-gray-600 underline transition-colors"
+            >
+              Clear all
+            </button>
+          )}
+        </div>
+      )}
+
       <AnimatePresence mode="wait">
         {view === 'table' ? (
           <motion.div
@@ -344,6 +630,7 @@ export default function ApplicationsPage() {
                   'Program',
                   'Status',
                   'Approved',
+                  'Tags',
                   'Submitted',
                   'Actions',
                 ]}
@@ -399,6 +686,9 @@ export default function ApplicationsPage() {
                         ) : (
                           <span className="text-gray-400 text-sm">—</span>
                         )}
+                      </TableCell>
+                      <TableCell style={{ overflow: 'visible', position: 'relative' }}>
+                        <TagCell app={app} onTagsChanged={handleTagsChanged} />
                       </TableCell>
                       <TableCell>
                         <div className="text-gray-600">
@@ -458,10 +748,43 @@ export default function ApplicationsPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="flex gap-4 overflow-x-auto pb-4"
+            className="overflow-x-auto pb-2"
+            style={{ overflowX: 'auto', overflowY: 'visible' }}
           >
+            <div className="flex gap-4 pb-4" style={{ minWidth: 'max-content' }}>
             {KANBAN_COLUMNS.map(col => {
-              const cards = col.filter(filteredApplications)
+              const cards = col.filter(kanbanApplications)
+              const isCollapsed = col.collapsible && collapsedCols.has(col.key)
+              const toggleCollapse = () => {
+                setCollapsedCols(prev => {
+                  const next = new Set(prev)
+                  next.has(col.key) ? next.delete(col.key) : next.add(col.key)
+                  return next
+                })
+              }
+
+              if (isCollapsed) {
+                return (
+                  <div
+                    key={col.key}
+                    onClick={toggleCollapse}
+                    className="flex-shrink-0 w-10 flex flex-col items-center gap-2 bg-gray-50 rounded-2xl py-3 border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors"
+                    title={`${col.label} (${cards.length}) — click to expand`}
+                  >
+                    <div className="w-0.5 h-5 rounded-full" style={{ backgroundColor: col.accent }} />
+                    <span
+                      className="text-[10px] font-semibold text-gray-400 select-none"
+                      style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', letterSpacing: '0.05em' }}
+                    >
+                      {col.label}
+                    </span>
+                    <span className="text-[10px] font-bold mt-auto mb-1" style={{ color: col.accent }}>
+                      {cards.length}
+                    </span>
+                  </div>
+                )
+              }
+
               return (
                 <div key={col.key} className="flex-shrink-0 w-72 flex flex-col gap-3 bg-gray-50 rounded-2xl p-3 border border-gray-200">
                   <div
@@ -469,7 +792,18 @@ export default function ApplicationsPage() {
                     style={{ borderLeft: `3px solid ${col.accent}` }}
                   >
                     <span className="text-sm font-semibold text-gray-700">{col.label}</span>
-                    <span className="text-xs text-gray-400 font-medium">{cards.length}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400 font-medium">{cards.length}</span>
+                      {col.collapsible && (
+                        <button
+                          onClick={toggleCollapse}
+                          className="text-gray-300 hover:text-gray-500 transition-colors leading-none text-base"
+                          title="Collapse column"
+                        >
+                          ‹
+                        </button>
+                      )}
+                    </div>
                   </div>
                   {cards.length === 0 ? (
                     <div className="text-xs text-gray-400 italic px-1">No applications</div>
@@ -485,10 +819,8 @@ export default function ApplicationsPage() {
                           {app.child_legal_name ?? '—'}
                         </div>
 
-                        {/* Preferred name */}
-                        {app.preferred_name && (
-                          <div className="text-xs text-gray-400 italic mt-0.5">"{app.preferred_name}"</div>
-                        )}
+                        {/* Tags (replaces preferred name) */}
+                        <KanbanTagEditor app={app} onTagsChanged={handleTagsChanged} />
 
                         {/* Program + Grade badges */}
                         <div className="flex flex-wrap gap-1.5 mt-2.5">
@@ -532,6 +864,7 @@ export default function ApplicationsPage() {
                 </div>
               )
             })}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -546,6 +879,7 @@ export default function ApplicationsPage() {
           onEnrolled={handleEnrolled}
           onItemClick={handleItemClick}
           onProgramChanged={handleProgramChanged}
+          onTagsChanged={handleTagsChanged}
         />
       )}
 

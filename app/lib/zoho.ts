@@ -1221,6 +1221,79 @@ export async function buildFacebookLeadEmail(opts: {
 }
 
 /**
+ * Build HTML follow-up email for families who enrolled during the Open House
+ */
+export async function buildOpenHouseEnrollmentEmail(opts: {
+  g1FullName: string;
+  childLegalName: string;
+  program: string | null;
+}): Promise<{ subject: string; content: string }> {
+  const PROGRAM_LABELS: Record<string, { label: string; details: string }> = {
+    summer_26: {
+      label: "Summer 2026",
+      details: "May 26 – Aug 13 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Mon–Thu, ~6 hrs/day",
+    },
+    school_year_26_27: {
+      label: "School Year 2026–2027",
+      details: "Starts Aug 17, 2026 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Up to 4 days/week",
+    },
+    both: {
+      label: "Summer 2026 &amp; School Year 2026–2027",
+      details: "Both programs — Summer and the full school year",
+    },
+    homeschool_drop_in: {
+      label: "Homeschool Drop-In",
+      details: "1–5 Days/Week &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Fridays Are Field Days",
+    },
+  };
+
+  const programInfo = opts.program ? PROGRAM_LABELS[opts.program] : null;
+  const subject = "You're Enrolled at Sage Field — Here's What's Next";
+
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${opts.g1FullName},</p>
+
+  <p>What a wonderful day at the Open House! We are so thrilled that you enrolled <strong>${opts.childLegalName}</strong> at Sage Field — it means the world to us to have your family join our community.</p>
+
+  <p>Your registration fee has been received, and your spot is officially secured. Here is a quick summary of where things stand:</p>
+
+  ${programInfo ? `
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; margin: 28px 0;">
+    <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;">Your Enrolled Program</p>
+    <p style="margin: 4px 0; font-size: 16px; font-weight: bold; color: #5a7a5a;">${programInfo.label}</p>
+    <p style="margin: 4px 0; color: #555; font-size: 14px;">${programInfo.details}</p>
+  </div>
+  ` : ""}
+
+  <h2 style="font-size: 18px; margin-top: 36px; margin-bottom: 8px; color: #2c2c2c;">Continue Your Enrollment Checklist</h2>
+  <p>Your next step is to complete the enrollment checklist in your parent dashboard. This includes forms, signatures, and any remaining information we need before the first day.</p>
+
+  <div style="text-align: center; margin: 28px 0;">
+    <a href="https://www.sagefield.co/parent/dashboard"
+       style="display: inline-block; background: #2C5F2E; color: #ffffff; text-decoration: none; font-family: Georgia, serif; font-size: 15px; font-weight: bold; padding: 14px 32px; border-radius: 8px;">
+      Go to Your Dashboard →
+    </a>
+  </div>
+
+  <h2 style="font-size: 18px; margin-top: 36px; margin-bottom: 8px; color: #2c2c2c;">Your Open House Bonus 🎉</h2>
+  <p>As a thank-you for enrolling on Open House day, <strong>${opts.childLegalName}</strong> has earned <strong>2 free Field Day Fridays</strong>. We will send you a code to redeem them once the tuition portal opens next week — so keep an eye on your inbox!</p>
+
+  <p>If you have any questions in the meantime, please don't hesitate to reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a>.</p>
+
+  <p style="margin-top: 32px;">With so much excitement,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
+/**
  * Send an email via Zoho Mail API
  */
 export async function sendZohoEmail(opts: {

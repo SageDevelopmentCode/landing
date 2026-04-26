@@ -108,7 +108,7 @@ export default async function ApplicationDashboard() {
               .
             </p>
             <div className="mt-3">
-              <EnrollmentCodeEntry autoOpen={hasSubmitted} />
+              <EnrollmentCodeEntry />
             </div>
           </div>
         )}
