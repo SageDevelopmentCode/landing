@@ -152,7 +152,7 @@ export default async function BillingRoute() {
     .map((e) => ({ id: e.id, student_id: e.student_id!, name: e.child_legal_name, program: e.program ?? null }));
 
   const homeschoolDropInApps: HomeschoolDropInApp[] = allSummerApps
-    .filter((e) => (e.program === "homeschool_drop_in" || e.program === "both" || e.program === "summer_26" || e.program === "school_year_26_27") && e.status === "enrolled")
+    .filter((e) => e.program === "homeschool_drop_in" && e.status === "enrolled")
     .map((e) => ({
       id: e.id,
       student_id: e.student_id!,
