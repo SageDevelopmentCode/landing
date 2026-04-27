@@ -122,6 +122,9 @@ const TOUR_EXPECTATIONS = [
 const TODAY = new Date(2026, 3, 27); // April 27, 2026 — earliest available tour date
 TODAY.setHours(0, 0, 0, 0);
 
+const MAX_MONTH = 5; // June (0-indexed)
+const MAX_YEAR = 2026;
+
 // ─── New Constants ────────────────────────────────────────────────────────────
 
 const TOUR_STEPS_WALKTHROUGH = [
@@ -390,6 +393,8 @@ function CalendarGrid({
   const startOffset = getFirstDayOfMonth(calendarYear, calendarMonth);
   const isPrevDisabled =
     calendarYear === TODAY.getFullYear() && calendarMonth <= TODAY.getMonth();
+  const isNextDisabled =
+    calendarYear === MAX_YEAR && calendarMonth >= MAX_MONTH;
 
   const totalCells = startOffset + daysInMonth;
   const paddedCells = Math.ceil(totalCells / 7) * 7;
@@ -409,7 +414,8 @@ function CalendarGrid({
         </h3>
         <button
           onClick={onNextMonth}
-          className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
+          disabled={isNextDisabled}
+          className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed"
         >
           <ChevronRight className="w-4 h-4" />
         </button>
@@ -996,6 +1002,7 @@ export default function TourPage() {
   }
 
   function handleNextMonth() {
+    if (calendarYear === MAX_YEAR && calendarMonth >= MAX_MONTH) return;
     if (calendarMonth === 11) {
       setCalendarMonth(0);
       setCalendarYear((y) => y + 1);
