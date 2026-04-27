@@ -10,6 +10,7 @@ import {
   ChevronRight,
   Clock,
   PartyPopper,
+  Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -19,6 +20,15 @@ function formatProgramLabel(program: string | undefined | null): string | null {
     case "school_year_26_27": return "School Year 26–27";
     case "both": return "Summer & School Year";
     case "homeschool_drop_in": return "Homeschool Drop-In";
+    default: return null;
+  }
+}
+
+function formatDropInProgramLabel(prog: string | null | undefined): string | null {
+  switch (prog) {
+    case "summer_26": return "Summer 2026";
+    case "school_year_26_27": return "School Year 26–27";
+    case "both": return "Summer & School Year";
     default: return null;
   }
 }
@@ -3105,6 +3115,78 @@ function PendingDetailSidebar({
   );
 }
 
+function UpgradeToFullTimeCard({ childNames }: { childNames: string[] }) {
+  const nameLabel =
+    childNames.length === 1
+      ? childNames[0]
+      : childNames.slice(0, -1).join(", ") + " & " + childNames.at(-1);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" as const }}
+      className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200 rounded-2xl px-6 py-6 shadow-sm"
+    >
+      <div className="flex items-center gap-2 mb-3">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-full">
+          <Sparkles className="w-3 h-3" />
+          For {nameLabel}
+        </span>
+      </div>
+      <h3 className="text-lg font-bold font-heading text-gray-900 mb-1">
+        Go full-time at Sage Field.
+      </h3>
+      <p className="text-sm font-body text-gray-500 mb-5">
+        Mon–Thu, every week. Same kids, same teachers, deeper learning.
+      </p>
+
+      {/* Plan comparison cards */}
+      <div className="grid grid-cols-2 gap-3 mb-5">
+        {/* Drop-In */}
+        <div className="bg-white/70 border border-gray-200 rounded-xl px-4 py-4">
+          <p className="text-xs font-semibold font-body text-gray-400 uppercase tracking-wide mb-3">
+            Drop-In (current)
+          </p>
+          <div className="space-y-2.5">
+            <div>
+              <p className="text-xs font-body text-gray-400 mb-0.5">3-Day / School Year</p>
+              <p className="text-xl font-bold font-heading text-gray-700">$720<span className="text-sm font-normal text-gray-400">/mo</span></p>
+              <p className="text-xs font-body text-gray-400">Primary · $780/mo</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Full-Time */}
+        <div className="bg-indigo-600 border border-indigo-600 rounded-xl px-4 py-4 relative">
+          <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 bg-amber-400 text-amber-900 text-xs font-bold rounded-full whitespace-nowrap">
+            Best Value
+          </span>
+          <p className="text-xs font-semibold font-body text-indigo-200 uppercase tracking-wide mb-3">
+            Full-Time
+          </p>
+          <div className="space-y-2.5">
+            <div>
+              <p className="text-xs font-body text-indigo-300 mb-0.5">Mon–Thu / School Year</p>
+              <p className="text-xl font-bold font-heading text-white">$1,095<span className="text-sm font-normal text-indigo-300">/mo</span></p>
+              <p className="text-xs font-body text-indigo-300">Primary · $1,195/mo</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-2">
+        <button className="flex-1 px-5 py-2.5 bg-indigo-600 text-white text-sm font-semibold font-body rounded-xl hover:bg-indigo-700 transition-colors cursor-pointer shadow-sm">
+          Apply for Full-Time
+        </button>
+        <button className="flex-1 px-5 py-2.5 border border-indigo-200 text-indigo-700 text-sm font-semibold font-body rounded-xl hover:bg-indigo-50 transition-colors cursor-pointer">
+          See full pricing
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function BillingPage({
   transactions,
   studentMap,
@@ -3255,6 +3337,35 @@ export default function BillingPage({
             <h1 className="text-3xl font-bold font-heading text-gray-800 mb-2">
               Tuition &amp; Billing
             </h1>
+            {(() => {
+              const activeProgram = activeStudentId ? studentProgramMap.get(activeStudentId) : undefined;
+              const programBadgeLabel = formatProgramLabel(activeProgram);
+              const activeHomeschoolApp = homeschoolDropInApps.find((a) => a.student_id === activeStudentId);
+              const dropInBadgeLabel =
+                activeProgram === "homeschool_drop_in" && activeHomeschoolApp
+                  ? formatDropInProgramLabel(activeHomeschoolApp.drop_in_program)
+                  : null;
+              if (!programBadgeLabel) return null;
+              const fullName = activeStudentId ? studentMap[activeStudentId]?.name : null;
+              const firstName = fullName ? fullName.trim().split(/\s+/)[0] : null;
+              return (
+                <div className="flex items-center gap-2 mt-2">
+                  {firstName && (
+                    <span className="text-xs font-body text-gray-400">
+                      {firstName}&apos;s programs:
+                    </span>
+                  )}
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-body bg-[#d4e6d0] text-[#4a7c59]">
+                    {programBadgeLabel}
+                  </span>
+                  {dropInBadgeLabel && (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-body bg-amber-100 text-amber-700">
+                      {dropInBadgeLabel}
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
           </div>
 
           {hasPendingContent && (
@@ -3367,6 +3478,12 @@ export default function BillingPage({
               </div>
             )}
           </div>
+
+          {homeschoolDropInApps.length > 0 && (
+            <UpgradeToFullTimeCard
+              childNames={homeschoolDropInApps.map((a) => a.name ?? "your child")}
+            />
+          )}
         </div>
       </div>
 
