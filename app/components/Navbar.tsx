@@ -233,10 +233,10 @@ const NAV_TABS: NavTab[] = [
 
 const ANNOUNCEMENTS = [
   {
-    short: "🎉 Open House on April 25!",
-    full: "🎉 We are hosting an Open House on April 25!",
-    buttonLabel: "Join Us!",
-    href: "/rsvp",
+    short: "🗺️ Book a Private Tour!",
+    full: "🗺️ Schedule a tour of our campus!",
+    buttonLabel: "Book a Tour",
+    href: "/tour",
   },
   {
     short: "☀️ Join our Summer Program!",

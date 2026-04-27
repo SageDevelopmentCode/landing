@@ -41,11 +41,11 @@ const slides = [
   },
   {
     image: "/assets/After2.png",
-    title: "Open House — April 25",
+    title: "Book a Private Tour",
     description:
-      "Tour our space, meet our educators, and see Sage Field in person. Bring the whole family.",
-    buttonLabel: "RSVP for April 25",
-    buttonHref: "/rsvp",
+      "Walk the campus, meet Ms. Sabrina, and see Sage Field in person — free, private, 45 minutes.",
+    buttonLabel: "Schedule a Tour",
+    buttonHref: "/tour",
   },
   {
     image: "/assets/ImageTen.jpg",
