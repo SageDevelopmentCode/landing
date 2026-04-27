@@ -25,6 +25,7 @@ import {
   CalendarDays,
   MapPin,
   User,
+  Mail,
 } from "lucide-react";
 import ContactDialog from "./ContactDialog";
 import WaitlistDialog from "./WaitlistDialog";
@@ -189,6 +190,12 @@ const NAV_TABS: NavTab[] = [
         iconClass: "text-slate-400",
       },
       {
+        label: "Contact",
+        action: { kind: "link", href: "/contact" },
+        icon: Mail,
+        iconClass: "text-emerald-500",
+      },
+      {
         label: "Donate",
         action: { kind: "link", href: "/donate" },
         icon: Heart,
@@ -315,7 +322,8 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
       pathname === "/what-we-offer" ||
       pathname === "/educational-philosophy" ||
       pathname === "/tour" ||
-      pathname === "/programs");
+      pathname === "/programs" ||
+      pathname === "/contact");
 
   // Close everything on route change
   useEffect(() => {
