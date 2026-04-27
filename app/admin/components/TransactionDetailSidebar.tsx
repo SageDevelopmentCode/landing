@@ -128,6 +128,7 @@ type FullApplication = {
   denied_reason: string | null
   is_active: boolean | null
   created_at: string | null
+  admin_tags: string[] | null
   [key: string]: unknown
 }
 
