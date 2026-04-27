@@ -4,11 +4,12 @@ import Step1Form from "./Step1Form";
 export default async function ApplicationStep1({
   searchParams,
 }: {
-  searchParams: Promise<{ new?: string; appId?: string }>;
+  searchParams: Promise<{ new?: string; appId?: string; ref?: string }>;
 }) {
   const params = await searchParams;
   const isNew = params.new === "1";
   const appId = params.appId;
+  const refCode = params.ref ?? null;
 
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -42,5 +43,5 @@ export default async function ApplicationStep1({
     }
   }
 
-  return <Step1Form initialData={initialData} applicationId={applicationId} />;
+  return <Step1Form initialData={initialData} applicationId={applicationId} refCode={refCode} />;
 }

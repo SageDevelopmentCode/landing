@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Smartphone, ClipboardList } from "lucide-react";
+import { ArrowRight, Smartphone, ClipboardList, Gift, Copy, Check } from "lucide-react";
 import { getParentStudentAttendance, type ParentCheckInRecord } from "@/app/actions/getParentStudentAttendance";
 import { DetailSidebar } from "@/app/admin/components/DetailSidebar";
 import { SidebarField, SidebarSection } from "@/app/components/SidebarPrimitives";
@@ -11,6 +11,7 @@ import type {
   HomeStudent,
   HomeEvent,
   HomePendingPayment,
+  HomeReferral,
   StudentMap,
 } from "./page";
 
@@ -223,18 +224,36 @@ interface Props {
   upcomingEvents: HomeEvent[];
   pendingPayments: HomePendingPayment[];
   studentMap: StudentMap;
+  referrals: HomeReferral[];
 }
 
 export default function HomePageClient({
   fullName,
+  userId,
   students,
   upcomingEvents,
   pendingPayments,
   studentMap,
+  referrals,
 }: Props) {
   const [bannerIdx, setBannerIdx] = useState<number | null>(null);
   const [greeting, setGreeting] = useState("");
   const [attendanceStudent, setAttendanceStudent] = useState<HomeStudent | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const refCode = userId.replace(/-/g, "").slice(0, 8).toUpperCase();
+  const referralLink = `https://sagefield.co/apply?ref=${refCode}`;
+
+  function copyReferralLink() {
+    navigator.clipboard.writeText(referralLink).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  const referralCount = referrals.length;
+  const enrolledCount = referrals.filter((r) => r.status === "enrolled" || r.status === "rewarded").length;
+  const earnedDollars = referrals.filter((r) => r.status === "rewarded").length * 150;
 
   useEffect(() => {
     setBannerIdx(Math.floor(Math.random() * BANNER_IMAGES.length));
@@ -437,6 +456,84 @@ export default function HomePageClient({
           </section>
         </div>
       </div>
+
+      {/* Referral Section */}
+      <section
+        className="rounded-2xl p-6 shadow-sm border border-[#c2ddc8]"
+        style={{ background: "linear-gradient(135deg, #eef5ef 0%, #ddeede 100%)" }}
+      >
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          {/* Left: heading + description */}
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-7 h-7 rounded-full bg-[#4a7c59]/15 flex items-center justify-center">
+                <Gift className="w-3.5 h-3.5 text-[#4a7c59]" strokeWidth={1.5} />
+              </div>
+              <h2 className="text-base font-heading font-semibold text-gray-800">Refer a Family</h2>
+              <span className="bg-[#4a7c59] text-white text-xs font-body px-2 py-0.5 rounded-full font-medium">
+                $150 gift card
+              </span>
+            </div>
+            <p className="text-sm font-body text-gray-600 leading-relaxed max-w-lg">
+              Know a family who&apos;d be a great fit for Sage Field? Share your link — when they enroll and pay their registration fee, you&apos;ll receive a $150 gift card.
+            </p>
+
+            {/* How it works */}
+            <div className="flex flex-col sm:flex-row gap-3 mt-4">
+              {[
+                "Share your link with a family",
+                "They apply, get approved & enroll",
+                "You get a $150 gift card",
+              ].map((step, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-[#4a7c59]/20 flex items-center justify-center">
+                    <span className="text-[10px] font-bold font-heading text-[#4a7c59]">{i + 1}</span>
+                  </div>
+                  <p className="text-xs font-body text-gray-600">{step}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right: stats + copy link */}
+          <div className="flex flex-col gap-3 sm:min-w-[260px]">
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { value: String(referralCount), label: "Referred" },
+                { value: String(enrolledCount), label: "Enrolled" },
+                { value: `$${earnedDollars}`, label: "Earned" },
+              ].map(({ value, label }) => (
+                <div key={label} className="text-center bg-white/70 rounded-xl py-2.5 px-2 border border-[#c2ddc8]">
+                  <p className="text-base font-semibold font-heading text-gray-800">{value}</p>
+                  <p className="text-xs font-body text-gray-500">{label}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Copy link */}
+            <div className="flex items-center gap-2">
+              <div className="flex-1 min-w-0 bg-white/70 border border-[#c2ddc8] rounded-xl px-3 py-2">
+                <p className="text-xs font-body text-gray-600 truncate">{referralLink}</p>
+              </div>
+              <button
+                onClick={copyReferralLink}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold font-body transition-colors whitespace-nowrap ${
+                  copied
+                    ? "bg-green-600 text-white"
+                    : "bg-[#4a7c59] text-white hover:bg-[#3d6b4a]"
+                }`}
+              >
+                {copied ? (
+                  <><Check className="w-3.5 h-3.5" />Copied!</>
+                ) : (
+                  <><Copy className="w-3.5 h-3.5" />Copy link</>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Attendance sidebar */}
       <AttendanceSidebar

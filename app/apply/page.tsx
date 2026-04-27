@@ -332,6 +332,8 @@ export default function ApplyPage() {
   ).includes(tabParam as Tab)
     ? (tabParam as Tab)
     : "summer";
+  const refParam = searchParams.get("ref");
+  const applyStartUrl = refParam ? `/apply/start?ref=${encodeURIComponent(refParam)}` : "/apply/start";
   const [activeTab, setActiveTab] = useState<Tab>(initialTab);
   const [contactOpen, setContactOpen] = useState(false);
   const [waitlistOpen, setWaitlistOpen] = useState(false);
@@ -422,7 +424,7 @@ export default function ApplyPage() {
 
                 <div className="lg:hidden mb-10">
                   <button
-                    onClick={() => router.push("/apply/start")}
+                    onClick={() => router.push(applyStartUrl)}
                     className="w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
                   >
                     Apply Now
@@ -1073,7 +1075,7 @@ export default function ApplyPage() {
                 {/* Mobile CTA — hidden (covered by early button and right-column card) */}
                 <div className="hidden">
                   <button
-                    onClick={() => router.push("/apply/start")}
+                    onClick={() => router.push(applyStartUrl)}
                     className="w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
                   >
                     Start Application
@@ -1093,7 +1095,7 @@ export default function ApplyPage() {
                     place.
                   </p>
                   <button
-                    onClick={() => router.push("/apply/start")}
+                    onClick={() => router.push(applyStartUrl)}
                     className="hidden lg:block w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
                   >
                     Start Application
@@ -1105,7 +1107,7 @@ export default function ApplyPage() {
                     Have any questions?
                   </button>
                   <button
-                    onClick={() => router.push("/apply/start")}
+                    onClick={() => router.push(applyStartUrl)}
                     className="lg:hidden w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
                   >
                     Apply Now

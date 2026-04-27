@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -26,6 +26,8 @@ const slides = [
 ];
 
 export default function StartPageClient() {
+  const searchParams = useSearchParams();
+  const refCode = searchParams.get("ref") ?? undefined;
   const [mode, setMode] = useState<Mode>("choose");
   const [sharedEmail, setSharedEmail] = useState("");
 
@@ -186,6 +188,7 @@ export default function StartPageClient() {
                 key="create"
                 setMode={setMode}
                 onSwitchToLogin={handleSwitchToLogin}
+                refCode={refCode}
               />
             )}
             {mode === "login" && (
@@ -265,9 +268,11 @@ type CreateView = "otp-email" | "otp-code";
 function CreateMode({
   setMode,
   onSwitchToLogin,
+  refCode,
 }: {
   setMode: (m: Mode) => void;
   onSwitchToLogin: (email: string) => void;
+  refCode?: string;
 }) {
   const router = useRouter();
   const [view, setView] = useState<CreateView>("otp-email");
@@ -339,6 +344,7 @@ function CreateMode({
     fd.set("email", otpEmail);
     fd.set("token", otpDigits.join(""));
     fd.set("fullName", fullName);
+    if (refCode) fd.set("refCode", refCode);
     const result = await verifyEmailOtp(fd);
     if (result?.error) {
       setError(result.error);

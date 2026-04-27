@@ -22,18 +22,27 @@ import HelpWidget from "../components/HelpWidget";
 
 const primaryNavItems: { label: string; icon: LucideIcon; href: string }[] = [
   { label: "Home", icon: Home, href: "/parent/home" },
-  { label: "Enrollment", icon: ClipboardCheck, href: "/parent/dashboard" },
   { label: "My Children", icon: Users, href: "/parent/children" },
-  { label: "Tuition & Billing", icon: CreditCard, href: "/parent/billing" },
+  { label: "Tuition", icon: CreditCard, href: "/parent/billing" },
   { label: "Messages", icon: MessageCircle, href: "/parent/messages" },
   { label: "Calendar", icon: Calendar, href: "/parent/calendar" },
   { label: "Feed", icon: Rss, href: "/parent/feed" },
 ];
 
-const moreItems: { label: string; icon: LucideIcon; href?: string; action?: string }[] = [
+const moreItems: {
+  label: string;
+  icon: LucideIcon;
+  href?: string;
+  action?: string;
+}[] = [
+  { label: "Enrollment", icon: ClipboardCheck, href: "/parent/dashboard" },
   { label: "Forms & Documents", icon: FileText, href: "/parent/forms" },
   { label: "Volunteer Opportunities", icon: Heart, href: "/parent/volunteer" },
-  { label: "Emergency Contacts", icon: Phone, href: "/parent/emergency-contacts" },
+  {
+    label: "Emergency Contacts",
+    icon: Phone,
+    href: "/parent/emergency-contacts",
+  },
   { label: "Need Help", icon: HelpCircle, action: "help" },
 ];
 
@@ -101,7 +110,10 @@ export default function DashboardNav() {
                 return (
                   <button
                     key={label}
-                    onClick={() => { setMoreOpen(false); setHelpOpen(true); }}
+                    onClick={() => {
+                      setMoreOpen(false);
+                      setHelpOpen(true);
+                    }}
                     className={baseClass}
                   >
                     <Icon className="w-4 h-4" />
@@ -133,7 +145,11 @@ export default function DashboardNav() {
           </div>
         )}
       </div>
-      <HelpWidget hideFloatingButton open={helpOpen} onOpenChange={setHelpOpen} />
+      <HelpWidget
+        hideFloatingButton
+        open={helpOpen}
+        onOpenChange={setHelpOpen}
+      />
     </nav>
   );
 }

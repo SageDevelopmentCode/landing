@@ -23,6 +23,7 @@ export async function saveApplicationStep1(formData: {
   specialInterests: string
   dropInProgram: string
   applicationId?: string | null
+  refCode?: string | null
 }) {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -70,11 +71,26 @@ export async function saveApplicationStep1(formData: {
     }
     appId = formData.applicationId
   } else {
-    // Insert new row
+    // Resolve referrer from ref code (first 8 chars of UUID stripped of hyphens, uppercased)
+    let referrerId: string | null = null
+    if (formData.refCode) {
+      const code = formData.refCode.toUpperCase()
+      const { data: allUsers } = await adminClient
+        .schema('admin')
+        .from('users')
+        .select('id')
+        .eq('role', 'parent')
+      const match = (allUsers ?? []).find(
+        (u: { id: string }) => u.id.replace(/-/g, '').slice(0, 8).toUpperCase() === code
+      )
+      if (match && match.id !== user.id) referrerId = match.id
+    }
+
+    // Insert new application row
     const { data, error } = await adminClient
       .schema('parent_app')
       .from('applications')
-      .insert({ user_id: user.id, ...fields })
+      .insert({ user_id: user.id, referred_by: referrerId, ...fields })
       .select('id')
       .single()
 
@@ -83,6 +99,21 @@ export async function saveApplicationStep1(formData: {
       return { error: error.message }
     }
     appId = data.id
+
+    // Create referral tracking row
+    if (referrerId) {
+      const { data: authUser } = await adminClient.auth.admin.getUserById(user.id)
+      await adminClient
+        .schema('parent_app')
+        .from('referrals')
+        .insert({
+          referrer_id: referrerId,
+          referred_email: authUser?.user?.email ?? null,
+          referred_user_id: user.id,
+          application_id: appId,
+          status: 'applied',
+        })
+    }
   }
 
   redirect(`/apply/step/2?appId=${appId}`)

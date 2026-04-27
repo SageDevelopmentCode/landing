@@ -1054,6 +1054,7 @@ export type Database = {
           previous_schools: string | null
           previous_schools_list: string | null
           program: string | null
+          referred_by: string | null
           registration_fee_paid: boolean | null
           regulation_strategies: string | null
           special_interests: string | null
@@ -1131,6 +1132,7 @@ export type Database = {
           previous_schools?: string | null
           previous_schools_list?: string | null
           program?: string | null
+          referred_by?: string | null
           registration_fee_paid?: boolean | null
           regulation_strategies?: string | null
           special_interests?: string | null
@@ -1208,6 +1210,7 @@ export type Database = {
           previous_schools?: string | null
           previous_schools_list?: string | null
           program?: string | null
+          referred_by?: string | null
           registration_fee_paid?: boolean | null
           regulation_strategies?: string | null
           special_interests?: string | null
@@ -1216,6 +1219,39 @@ export type Database = {
           student_id?: string | null
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          id: string
+          referrer_id: string
+          referred_email: string | null
+          referred_user_id: string | null
+          application_id: string | null
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          referrer_id: string
+          referred_email?: string | null
+          referred_user_id?: string | null
+          application_id?: string | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          referrer_id?: string
+          referred_email?: string | null
+          referred_user_id?: string | null
+          application_id?: string | null
+          status?: string
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }

@@ -43,6 +43,13 @@ export type HomePendingPayment = {
   created_at: string;
 };
 
+export type HomeReferral = {
+  id: string;
+  referred_email: string | null;
+  status: string;
+  created_at: string;
+};
+
 export type StudentMap = Record<string, { name: string; profileImageUrl: string | null }>;
 
 export default async function ParentHomePage() {
@@ -76,7 +83,7 @@ export default async function ParentHomePage() {
   const students: HomeStudent[] = (studentsData ?? []) as HomeStudent[];
   const studentIds = students.map((s) => s.id);
 
-  const [{ data: checkInsData }, { data: eventsData }, { data: paymentsData }] =
+  const [{ data: checkInsData }, { data: eventsData }, { data: paymentsData }, { data: referralsData }] =
     await Promise.all([
       studentIds.length > 0
         ? adminClient
@@ -105,6 +112,12 @@ export default async function ParentHomePage() {
         .eq("status", "pending")
         .order("created_at", { ascending: false })
         .limit(3),
+      adminClient
+        .schema("parent_app")
+        .from("referrals")
+        .select("id, referred_email, status, created_at")
+        .eq("referrer_id", user.id)
+        .order("created_at", { ascending: false }),
     ]);
 
   const studentMap: StudentMap = {};
@@ -120,6 +133,7 @@ export default async function ParentHomePage() {
   const activeCheckIns: HomeCheckIn[] = (checkInsData ?? []) as HomeCheckIn[];
   const upcomingEvents: HomeEvent[] = (eventsData ?? []) as HomeEvent[];
   const pendingPayments: HomePendingPayment[] = (paymentsData ?? []) as HomePendingPayment[];
+  const referrals: HomeReferral[] = (referralsData ?? []) as HomeReferral[];
 
   return (
     <div className="bg-welcome-bg min-h-screen flex flex-col">
@@ -160,6 +174,7 @@ export default async function ParentHomePage() {
           upcomingEvents={upcomingEvents}
           pendingPayments={pendingPayments}
           studentMap={studentMap}
+          referrals={referrals}
         />
       </main>
 

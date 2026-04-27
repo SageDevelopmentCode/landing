@@ -116,6 +116,7 @@ export async function verifyEmailOtp(formData: FormData) {
   const email = formData.get('email') as string
   const token = formData.get('token') as string
   const fullName = formData.get('fullName') as string | null
+  const refCode = formData.get('refCode') as string | null
 
   const supabase = await createServerSupabaseClient()
 
@@ -147,7 +148,8 @@ export async function verifyEmailOtp(formData: FormData) {
       return { error: `Account setup failed: ${insertError.message}` }
     }
     void sendDiscordNotification(createParentSignupEmbed({ fullName: fullName ?? '', email })).catch(() => {})
-    return { redirectTo: '/apply/step/1' }
+    const redirectTo = refCode ? `/apply/step/1?ref=${encodeURIComponent(refCode)}` : '/apply/step/1'
+    return { redirectTo }
   }
 
   if (adminUser.role === 'teacher') return { redirectTo: '/teacher/dashboard' }

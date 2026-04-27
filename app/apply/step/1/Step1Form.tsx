@@ -48,9 +48,11 @@ type InitialData = {
 export default function Step1Form({
   initialData,
   applicationId,
+  refCode,
 }: {
   initialData: InitialData;
   applicationId: string | null;
+  refCode?: string | null;
 }) {
   const d = initialData;
   const [program, setProgram] = useState<
@@ -132,6 +134,7 @@ export default function Step1Form({
         specialInterests,
         dropInProgram,
         applicationId,
+        refCode: refCode ?? null,
       });
       if (result?.error) setError(result.error);
     });

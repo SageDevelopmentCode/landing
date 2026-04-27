@@ -2,7 +2,7 @@
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
 import { sendDiscordNotification, createErrorEmbed, createParentSignupEmbed } from '@/app/lib/discord'
 
-export async function signUpParent(fullName: string, email: string, password: string) {
+export async function signUpParent(fullName: string, email: string, password: string, refCode?: string) {
   const supabase = await createServerSupabaseClient()
 
   // 1. Sign up the user
@@ -41,5 +41,6 @@ export async function signUpParent(fullName: string, email: string, password: st
 
   // 4. Notify Discord and return redirect URL
   void sendDiscordNotification(createParentSignupEmbed({ fullName, email })).catch(() => {})
-  return { redirectTo: '/apply/step/1' }
+  const redirectTo = refCode ? `/apply/step/1?ref=${encodeURIComponent(refCode)}` : '/apply/step/1'
+  return { redirectTo }
 }
