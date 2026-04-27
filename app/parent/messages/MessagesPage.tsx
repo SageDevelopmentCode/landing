@@ -12,6 +12,8 @@ import {
   markMessagesRead,
   uploadMessageImage,
   uploadMessageFile,
+  getTeachersAndAdmins,
+  type TeacherOrAdmin,
   type ConversationWithMeta,
   type MessageRow,
 } from "./actions";
@@ -71,6 +73,10 @@ function roleLabel(role: string | null): string {
   if (role === "teacher" || role === "super_admin") return "Teacher";
   if (role === "parent") return "Parent";
   return "";
+}
+
+function staffCardRoleLabel(role: string): string {
+  return "Teacher";
 }
 
 function initialsFor(name: string): string {
@@ -139,6 +145,7 @@ export default function MessagesPage({
   const [recipientResults, setRecipientResults] = useState<{ id: string; full_name: string; profile_image_url: string | null }[]>([]);
   const [searchingUsers, setSearchingUsers] = useState(false);
   const [creatingConvo, setCreatingConvo] = useState(false);
+  const [suggestedStaff, setSuggestedStaff] = useState<TeacherOrAdmin[]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -152,6 +159,11 @@ export default function MessagesPage({
       setLoadingConvos(false);
     });
   }, [userId]);
+
+  // Fetch teachers/admins once for the empty state suggestions
+  useEffect(() => {
+    getTeachersAndAdmins().then(setSuggestedStaff);
+  }, []);
 
   // Handle deep-link to a specific recipient (e.g. from teacher card)
   useEffect(() => {
@@ -721,9 +733,68 @@ export default function MessagesPage({
             </div>
           </>
         ) : !active ? (
-          <div className="flex-1 flex items-center justify-center">
-            <p className="text-sm text-gray-400 font-body">Select a conversation or start a new one</p>
-          </div>
+          conversations.length === 0 && !loadingConvos && !search ? (
+            <div className="flex-1 overflow-y-auto px-6 py-10 flex flex-col items-center">
+              <div className="mb-8 text-center max-w-sm">
+                <h2 className="text-xl font-semibold font-body text-gray-800 mb-2">
+                  Who would you like to reach?
+                </h2>
+                <p className="text-sm text-gray-400 font-body leading-relaxed">
+                  Message your child&apos;s teachers and school staff directly from here.
+                </p>
+              </div>
+
+              {suggestedStaff.length > 0 && (
+                <div className="w-full max-w-2xl">
+                  <p className="text-xs font-semibold font-body text-gray-400 uppercase tracking-wider mb-4">
+                    Start a conversation
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {suggestedStaff.map((person) => (
+                      <div
+                        key={person.id}
+                        className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col items-center text-center gap-3 shadow-sm"
+                      >
+                        <UserAvatar
+                          id={person.id}
+                          name={person.full_name}
+                          imageUrl={person.profile_image_url}
+                        />
+                        <div className="min-w-0 w-full">
+                          <p className="text-sm font-semibold font-body text-gray-800 truncate">
+                            {person.full_name}
+                          </p>
+                          <p className="text-xs text-gray-400 font-body mt-0.5">
+                            {staffCardRoleLabel(person.role)}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setIsComposingNew(true);
+                            setActiveId(null);
+                            setMessages([]);
+                            handleSelectRecipient({
+                              id: person.id,
+                              full_name: person.full_name,
+                              profile_image_url: person.profile_image_url,
+                            });
+                            setMobileShowChat(true);
+                          }}
+                          className="w-full py-1.5 rounded-xl text-xs font-semibold font-body text-white bg-[#4a7c59] hover:bg-[#3d6849] transition-colors cursor-pointer"
+                        >
+                          Message
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex-1 flex items-center justify-center">
+              <p className="text-sm text-gray-400 font-body">Select a conversation or start a new one</p>
+            </div>
+          )
         ) : (
           <>
             {/* Chat header */}

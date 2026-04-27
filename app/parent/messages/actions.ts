@@ -353,3 +353,34 @@ export async function markMessagesRead(conversationId: string, userId: string): 
     .neq("sender_id", userId)
     .is("read_at", null);
 }
+
+export type TeacherOrAdmin = {
+  id: string;
+  full_name: string;
+  profile_image_url: string | null;
+  role: string;
+};
+
+export async function getTeachersAndAdmins(): Promise<TeacherOrAdmin[]> {
+  const adminClient = createAdminClient();
+  const { data, error } = await adminClient
+    .schema("admin")
+    .from("users")
+    .select("id, full_name, profile_image_url, role")
+    .in("role", ["teacher", "super_admin"])
+    .eq("is_deleted", false);
+
+  if (error) return [];
+  return (data ?? [])
+    .map((u) => ({
+      id: u.id,
+      full_name: u.full_name,
+      profile_image_url: u.profile_image_url ?? null,
+      role: u.role,
+    }))
+    .sort((a, b) => {
+      if (a.role === "super_admin" && b.role !== "super_admin") return -1;
+      if (a.role !== "super_admin" && b.role === "super_admin") return 1;
+      return 0;
+    });
+}
