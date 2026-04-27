@@ -43,13 +43,13 @@ const TEAM_MEMBERS = [
     description:
       "My name is Taylor, and I recently completed my education studies with a focus on child development and outdoor learning. I am passionate about creating meaningful experiences for children that connect them to nature and inspire a love of learning. I am thrilled to join the Sage Field team this summer.",
   },
-  // {
-  //   name: "Julius Cecilia",
-  //   role: "Director of Operations & Technology",
-  //   image: "/assets/team/JuliusC.jpg",
-  //   description:
-  //     "Julius Cecilia, a University of Washington graduate, is a software engineer and startup builder with experience across early-stage startups and established tech companies like Adobe. He previously co-founded a sports social platform and continues to build software at the intersection of technology and schools.",
-  // },
+  {
+    name: "Julius Cecilia",
+    role: "Director of Operations & Technology",
+    image: "/assets/team/JuliusC.jpg",
+    description:
+      "Julius Cecilia, a University of Washington graduate, is a software engineer and startup builder with experience across early-stage startups and established tech companies like Adobe. He previously co-founded a sports social platform and continues to build software at the intersection of technology and schools.",
+  },
 ];
 
 export default function MeetTheTeamSection({
