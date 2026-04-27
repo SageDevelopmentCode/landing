@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ChevronDown,
+  Home,
   Users,
   CreditCard,
   MessageCircle,
@@ -20,6 +21,7 @@ import { LucideIcon } from "lucide-react";
 import HelpWidget from "../components/HelpWidget";
 
 const primaryNavItems: { label: string; icon: LucideIcon; href: string }[] = [
+  { label: "Home", icon: Home, href: "/parent/home" },
   { label: "Enrollment", icon: ClipboardCheck, href: "/parent/dashboard" },
   { label: "My Children", icon: Users, href: "/parent/children" },
   { label: "Tuition & Billing", icon: CreditCard, href: "/parent/billing" },
