@@ -839,6 +839,11 @@ export default function ApplicationsPage() {
                               Both Programs
                             </span>
                           )}
+                          {app.program === 'homeschool_drop_in' && app.drop_in_program && (
+                            <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-teal-50 text-teal-700 border border-teal-200">
+                              {formatProgram(app.drop_in_program)}
+                            </span>
+                          )}
                           {app.child_grade && (
                             <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-600 border border-gray-200">
                               Grade {app.child_grade}
