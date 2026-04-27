@@ -14,6 +14,8 @@ import { getAllStudentAssignments } from "@/app/actions/teacherAssignments";
 import type { TeacherAssignment } from "@/app/actions/teacherAssignments";
 
 type Student = Database["admin"]["Tables"]["students"]["Row"];
+type AuthorizedPickupPlan = Database["parent_app"]["Tables"]["student_authorized_pickup_plan"]["Row"];
+type AuthorizedPickupPerson = Database["parent_app"]["Tables"]["student_authorized_pickup_persons"]["Row"];
 
 export default async function ChildrenRoute() {
   const supabase = await createServerSupabaseClient();
@@ -57,14 +59,29 @@ export default async function ChildrenRoute() {
 
   const nonEnrolledAppByStudent: Record<string, string> = {};
   const studentProgramMap: Record<string, string> = {};
+  const pickupByStudent: Record<string, { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] }> = {};
   if (studentIds.length > 0) {
-    const { data: appsData } = await adminClient
-      .schema("parent_app")
-      .from("applications")
-      .select("id, student_id, status, program, drop_in_program")
-      .eq("user_id", user.id)
-      .eq("approved", true)
-      .in("student_id", studentIds);
+    const [{ data: appsData }, { data: pickupPlansData }, { data: pickupPersonsData }] = await Promise.all([
+      adminClient
+        .schema("parent_app")
+        .from("applications")
+        .select("id, student_id, status, program, drop_in_program")
+        .eq("user_id", user.id)
+        .eq("approved", true)
+        .in("student_id", studentIds),
+      adminClient
+        .schema("parent_app")
+        .from("student_authorized_pickup_plan")
+        .select("*")
+        .eq("parent_id", user.id)
+        .in("student_id", studentIds),
+      adminClient
+        .schema("parent_app")
+        .from("student_authorized_pickup_persons")
+        .select("*")
+        .in("student_id", studentIds)
+        .order("sort_order", { ascending: true }),
+    ]);
 
     for (const app of appsData ?? []) {
       if (!app.student_id) continue;
@@ -76,6 +93,13 @@ export default async function ChildrenRoute() {
       if (prog && !studentProgramMap[app.student_id]) {
         studentProgramMap[app.student_id] = prog;
       }
+    }
+
+    for (const sid of studentIds) {
+      pickupByStudent[sid] = {
+        plan: pickupPlansData?.find((p) => p.student_id === sid) ?? null,
+        persons: pickupPersonsData?.filter((p) => p.student_id === sid) ?? [],
+      };
     }
   }
 
@@ -105,7 +129,7 @@ export default async function ChildrenRoute() {
         </header>
 
         <main className="flex-1 flex overflow-hidden">
-          <ChildrenPage children={children} teachersByStudent={teachersByStudent} nonEnrolledAppByStudent={nonEnrolledAppByStudent} studentProgramMap={studentProgramMap} />
+          <ChildrenPage children={children} teachersByStudent={teachersByStudent} nonEnrolledAppByStudent={nonEnrolledAppByStudent} studentProgramMap={studentProgramMap} pickupByStudent={pickupByStudent} />
         </main>
       </div>
       <Footer />

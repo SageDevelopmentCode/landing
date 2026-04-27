@@ -13,8 +13,16 @@ import {
   Camera,
   Loader2,
   User,
+  UserPlus,
+  Pencil,
+  Trash2,
+  Plus,
+  X,
+  Check,
 } from "lucide-react";
 import { uploadStudentProfileImage } from "@/app/actions/uploadStudentProfileImage";
+import { saveAuthorizedPickup, type PickupPersonEntry } from "@/app/actions/saveAuthorizedPickup";
+import { formatPhone } from "@/app/utils/formatPhone";
 import { getParentStudentAttendance, type ParentCheckInRecord } from "@/app/actions/getParentStudentAttendance";
 import { DetailSidebar } from "@/app/admin/components/DetailSidebar";
 import { SidebarField, SidebarSection } from "@/app/components/SidebarPrimitives";
@@ -23,14 +31,17 @@ import type { Database } from "@/app/types/database.types";
 import type { TeacherAssignment } from "@/app/actions/teacherAssignments";
 
 type Student = Database["admin"]["Tables"]["students"]["Row"];
+type AuthorizedPickupPlan = Database["parent_app"]["Tables"]["student_authorized_pickup_plan"]["Row"];
+type AuthorizedPickupPerson = Database["parent_app"]["Tables"]["student_authorized_pickup_persons"]["Row"];
 
-type ContentTab = "teacher" | "attendance" | "learning" | "photos" | "profile";
+type ContentTab = "teacher" | "attendance" | "learning" | "photos" | "pickup" | "profile";
 
 interface Props {
   children: Student[];
   teachersByStudent: Record<string, TeacherAssignment[]>;
   nonEnrolledAppByStudent: Record<string, string>;
   studentProgramMap: Record<string, string>;
+  pickupByStudent: Record<string, { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] }>;
 }
 
 function formatProgramLabel(program: string | undefined | null): string | null {
@@ -544,16 +555,295 @@ function LearningTab() {
   );
 }
 
+type EditablePerson = PickupPersonEntry & { _key: string };
+
+function blankPerson(): EditablePerson {
+  return {
+    _key: Math.random().toString(36).slice(2),
+    fullName: "",
+    relationship: "",
+    phone: "",
+    email: "",
+    dlStateIdNumber: "",
+    vehicleInfo: "",
+    licensePlateState: "",
+  };
+}
+
+function personToEditable(p: AuthorizedPickupPerson): EditablePerson {
+  return {
+    _key: p.id,
+    fullName: p.full_name ?? "",
+    relationship: p.relationship ?? "",
+    phone: p.phone ?? "",
+    email: p.email ?? "",
+    dlStateIdNumber: p.dl_state_id_number ?? "",
+    vehicleInfo: p.vehicle_info ?? "",
+    licensePlateState: p.license_plate_state ?? "",
+  };
+}
+
+function PickupPersonForm({
+  person,
+  onChange,
+  onCancel,
+  onSave,
+  saving,
+  error,
+}: {
+  person: EditablePerson;
+  onChange: (field: keyof PickupPersonEntry, value: string) => void;
+  onCancel: () => void;
+  onSave: () => void;
+  saving: boolean;
+  error: string | null;
+}) {
+  const inputCls = "w-full text-sm font-body text-gray-800 border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#4a7c59] focus:ring-1 focus:ring-[#4a7c59]";
+  const labelCls = "block text-xs font-body text-gray-400 uppercase tracking-wide mb-1";
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className={labelCls}>Full Name <span className="text-red-400">*</span></label>
+          <input className={inputCls} value={person.fullName} onChange={e => onChange("fullName", e.target.value)} placeholder="Jane Smith" />
+        </div>
+        <div>
+          <label className={labelCls}>Relationship <span className="text-red-400">*</span></label>
+          <input className={inputCls} value={person.relationship} onChange={e => onChange("relationship", e.target.value)} placeholder="Aunt" />
+        </div>
+        <div>
+          <label className={labelCls}>Phone <span className="text-red-400">*</span></label>
+          <input className={inputCls} value={person.phone} onChange={e => onChange("phone", formatPhone(e.target.value))} placeholder="(555) 000-0000" />
+        </div>
+        <div>
+          <label className={labelCls}>Email</label>
+          <input className={inputCls} value={person.email} onChange={e => onChange("email", e.target.value)} placeholder="optional" />
+        </div>
+        <div>
+          <label className={labelCls}>DL / State ID</label>
+          <input className={inputCls} value={person.dlStateIdNumber} onChange={e => onChange("dlStateIdNumber", e.target.value)} placeholder="optional" />
+        </div>
+        <div>
+          <label className={labelCls}>Vehicle Info</label>
+          <input className={inputCls} value={person.vehicleInfo} onChange={e => onChange("vehicleInfo", e.target.value)} placeholder="optional" />
+        </div>
+        <div>
+          <label className={labelCls}>License Plate State</label>
+          <input className={inputCls} value={person.licensePlateState} onChange={e => onChange("licensePlateState", e.target.value)} placeholder="optional" />
+        </div>
+      </div>
+      {error && <p className="text-xs text-red-500">{error}</p>}
+      <div className="flex gap-2 pt-1">
+        <button
+          onClick={onSave}
+          disabled={saving}
+          className="flex items-center gap-1.5 px-4 py-1.5 bg-[#4a7c59] text-white text-sm rounded-full font-semibold disabled:opacity-50 cursor-pointer hover:bg-[#3d6b4a] transition-colors"
+        >
+          {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+          Save
+        </button>
+        <button
+          onClick={onCancel}
+          disabled={saving}
+          className="flex items-center gap-1.5 px-4 py-1.5 text-gray-500 text-sm rounded-full hover:text-gray-700 transition-colors cursor-pointer"
+        >
+          <X className="w-3.5 h-3.5" />
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function PickupTab({
+  pickup,
+  studentId,
+}: {
+  pickup: { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] };
+  studentId: string;
+}) {
+  const [persons, setPersons] = useState<EditablePerson[]>(() =>
+    pickup.persons.map(personToEditable)
+  );
+  const [plan, setPlan] = useState(pickup.plan);
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState<EditablePerson | null>(null);
+  const [addingNew, setAddingNew] = useState(false);
+  const [newDraft, setNewDraft] = useState<EditablePerson>(blankPerson);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  // Dates from the plan (or empty strings if no plan yet)
+  const [dateOfRequest, setDateOfRequest] = useState(plan?.date_of_request ?? "");
+  const [effectiveUntil, setEffectiveUntil] = useState(plan?.effective_until ?? "");
+
+  function validatePerson(p: EditablePerson): string | null {
+    if (!p.fullName.trim()) return "Full name is required.";
+    if (!p.relationship.trim()) return "Relationship is required.";
+    if (!p.phone.trim()) return "Phone is required.";
+    return null;
+  }
+
+  async function commitSave(updatedPersons: EditablePerson[]) {
+    setSaving(true);
+    setFormError(null);
+    const result = await saveAuthorizedPickup({
+      studentId,
+      dateOfRequest: dateOfRequest || new Date().toISOString().slice(0, 10),
+      effectiveUntil: effectiveUntil || "",
+      persons: updatedPersons.map(({ _key: _k, ...p }) => p),
+    });
+    setSaving(false);
+    if (result.error) {
+      setFormError(result.error);
+      return false;
+    }
+    if (result.data) setPlan(result.data);
+    return true;
+  }
+
+  async function handleSaveEdit() {
+    if (!editDraft) return;
+    const err = validatePerson(editDraft);
+    if (err) { setFormError(err); return; }
+    const updated = persons.map(p => p._key === editDraft._key ? editDraft : p);
+    const ok = await commitSave(updated);
+    if (ok) { setPersons(updated); setEditingKey(null); setEditDraft(null); }
+  }
+
+  async function handleSaveNew() {
+    const err = validatePerson(newDraft);
+    if (err) { setFormError(err); return; }
+    const updated = [...persons, newDraft];
+    const ok = await commitSave(updated);
+    if (ok) { setPersons(updated); setAddingNew(false); setNewDraft(blankPerson()); }
+  }
+
+  async function handleDelete(key: string) {
+    const updated = persons.filter(p => p._key !== key);
+    const ok = await commitSave(updated);
+    if (ok) setPersons(updated);
+  }
+
+  function startEdit(person: EditablePerson) {
+    setAddingNew(false);
+    setFormError(null);
+    setEditingKey(person._key);
+    setEditDraft({ ...person });
+  }
+
+  function startAdd() {
+    setEditingKey(null);
+    setEditDraft(null);
+    setFormError(null);
+    setNewDraft(blankPerson());
+    setAddingNew(true);
+  }
+
+  const hasAnyData = plan || persons.length > 0;
+
+  return (
+    <div className="space-y-4">
+      {/* Plan dates */}
+      {hasAnyData && plan && (
+        <SectionCard title="Pickup Plan">
+          <Field label="Date of Request" value={plan.date_of_request ?? null} />
+          <Field label="Effective Until" value={plan.effective_until ?? null} />
+        </SectionCard>
+      )}
+
+      {/* Persons list */}
+      <SectionCard title={`Authorized Persons${persons.length > 0 ? ` (${persons.length})` : ""}`}>
+        {persons.length === 0 && !addingNew && (
+          <p className="text-sm font-body text-gray-400 italic py-1">No authorized pickup persons on file.</p>
+        )}
+
+        {persons.map((person, i) => (
+          <div key={person._key} className={i > 0 ? "pt-3 mt-3 border-t border-gray-100" : ""}>
+            {editingKey === person._key && editDraft ? (
+              <PickupPersonForm
+                person={editDraft}
+                onChange={(field, value) => setEditDraft(prev => prev ? { ...prev, [field]: value } : prev)}
+                onCancel={() => { setEditingKey(null); setEditDraft(null); setFormError(null); }}
+                onSave={handleSaveEdit}
+                saving={saving}
+                error={formError}
+              />
+            ) : (
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-700 mb-1">{person.fullName}</p>
+                  <Field label="Relationship" value={person.relationship || null} />
+                  <Field label="Phone" value={person.phone || null} />
+                  {person.email && <Field label="Email" value={person.email} />}
+                  {person.dlStateIdNumber && <Field label="DL / State ID" value={person.dlStateIdNumber} />}
+                  {person.vehicleInfo && <Field label="Vehicle" value={person.vehicleInfo} />}
+                  {person.licensePlateState && <Field label="License Plate State" value={person.licensePlateState} />}
+                </div>
+                <div className="flex items-center gap-1 flex-shrink-0 pt-0.5">
+                  <button
+                    onClick={() => startEdit(person)}
+                    disabled={saving}
+                    className="p-1.5 text-gray-400 hover:text-[#4a7c59] rounded-lg hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-40"
+                    title="Edit"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(person._key)}
+                    disabled={saving}
+                    className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-40"
+                    title="Delete"
+                  >
+                    {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+
+        {addingNew && (
+          <div className={persons.length > 0 ? "pt-3 mt-3 border-t border-gray-100" : ""}>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">New Person</p>
+            <PickupPersonForm
+              person={newDraft}
+              onChange={(field, value) => setNewDraft(prev => ({ ...prev, [field]: value }))}
+              onCancel={() => { setAddingNew(false); setFormError(null); }}
+              onSave={handleSaveNew}
+              saving={saving}
+              error={formError}
+            />
+          </div>
+        )}
+
+        {!addingNew && editingKey === null && (
+          <button
+            onClick={startAdd}
+            className="mt-3 flex items-center gap-1.5 text-sm text-[#4a7c59] font-semibold hover:underline cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            Add person
+          </button>
+        )}
+      </SectionCard>
+    </div>
+  );
+}
+
 function ChildProfile({
   child,
   teachers,
   enrollmentAppId,
   initialProfileImageUrl,
+  pickup,
 }: {
   child: Student;
   teachers: TeacherAssignment[];
   enrollmentAppId?: string;
   initialProfileImageUrl: string | null;
+  pickup: { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] };
 }) {
   const [activeTab, setActiveTab] = useState<ContentTab>("teacher");
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(initialProfileImageUrl);
@@ -594,6 +884,7 @@ function ChildProfile({
     { id: "attendance", label: "Attendance" },
     { id: "learning", label: "Learning" },
     { id: "photos", label: "Photos" },
+    { id: "pickup", label: "Pickup" },
     { id: "profile", label: "Profile" },
   ];
 
@@ -717,6 +1008,8 @@ function ChildProfile({
             />
           )}
 
+          {activeTab === "pickup" && <PickupTab pickup={pickup} studentId={child.id} />}
+
           {activeTab === "profile" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <SectionCard title="Medical Info">
@@ -797,7 +1090,7 @@ function ChildProfile({
   );
 }
 
-export default function ChildrenPage({ children, teachersByStudent, nonEnrolledAppByStudent, studentProgramMap }: Props) {
+export default function ChildrenPage({ children, teachersByStudent, nonEnrolledAppByStudent, studentProgramMap, pickupByStudent }: Props) {
   // Sort: enrolled children first, non-enrolled last
   const sortedChildren = [...children].sort((a, b) => {
     const aEnrolled = !nonEnrolledAppByStudent[a.id];
@@ -891,6 +1184,7 @@ export default function ChildrenPage({ children, teachersByStudent, nonEnrolledA
             teachers={teachersByStudent[activeChild.id] ?? []}
             enrollmentAppId={nonEnrolledAppByStudent[activeChild.id]}
             initialProfileImageUrl={(activeChild as Record<string, unknown>).profile_image_url as string | null ?? null}
+            pickup={pickupByStudent[activeChild.id] ?? { plan: null, persons: [] }}
           />
         </div>
       </div>
