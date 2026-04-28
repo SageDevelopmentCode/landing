@@ -3,10 +3,23 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Smartphone, ClipboardList, Gift, Copy, Check } from "lucide-react";
-import { getParentStudentAttendance, type ParentCheckInRecord } from "@/app/actions/getParentStudentAttendance";
+import {
+  ArrowRight,
+  Smartphone,
+  ClipboardList,
+  Gift,
+  Copy,
+  Check,
+} from "lucide-react";
+import {
+  getParentStudentAttendance,
+  type ParentCheckInRecord,
+} from "@/app/actions/getParentStudentAttendance";
 import { DetailSidebar } from "@/app/admin/components/DetailSidebar";
-import { SidebarField, SidebarSection } from "@/app/components/SidebarPrimitives";
+import {
+  SidebarField,
+  SidebarSection,
+} from "@/app/components/SidebarPrimitives";
 import type {
   HomeStudent,
   HomeEvent,
@@ -45,24 +58,33 @@ function fmt12(time: string): string {
 
 function formatEventTime(evt: HomeEvent): string {
   if (evt.is_all_day) return "All day";
-  if (evt.start_time && evt.end_time) return `${fmt12(evt.start_time)} – ${fmt12(evt.end_time)}`;
+  if (evt.start_time && evt.end_time)
+    return `${fmt12(evt.start_time)} – ${fmt12(evt.end_time)}`;
   if (evt.start_time) return fmt12(evt.start_time);
   return "";
 }
 
 function formatProgram(program: string | null): string {
   switch (program) {
-    case "summer_26": return "Summer 2026";
-    case "school_year_26_27": return "School Year 2026–2027";
-    case "both": return "Summer 2026 & School Year 2026–2027";
-    case "homeschool_drop_in": return "Homeschool Drop-In";
-    default: return program ?? "—";
+    case "summer_26":
+      return "Summer 2026";
+    case "school_year_26_27":
+      return "School Year 2026–2027";
+    case "both":
+      return "Summer 2026 & School Year 2026–2027";
+    case "homeschool_drop_in":
+      return "Homeschool Drop-In";
+    default:
+      return program ?? "—";
   }
 }
 
 function formatCents(cents: number | null): string {
   if (cents == null) return "—";
-  return (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
+  return (cents / 100).toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+  });
 }
 
 const AVATAR_COLORS = [
@@ -90,11 +112,19 @@ function getEventDayMonth(dateStr: string): { day: string; month: string } {
 }
 
 function formatAttendanceDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 function formatAttendanceTime(iso: string) {
-  return new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+  return new Date(iso).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
 }
 
 function isPastDay(iso: string) {
@@ -111,7 +141,8 @@ interface AttendanceSidebarProps {
 function AttendanceSidebar({ student, onClose }: AttendanceSidebarProps) {
   const [records, setRecords] = useState<ParentCheckInRecord[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState<ParentCheckInRecord | null>(null);
+  const [selectedRecord, setSelectedRecord] =
+    useState<ParentCheckInRecord | null>(null);
 
   useEffect(() => {
     if (!student) return;
@@ -138,7 +169,10 @@ function AttendanceSidebar({ student, onClose }: AttendanceSidebarProps) {
             {loading ? (
               <div className="space-y-0">
                 {[...Array(4)].map((_, i) => (
-                  <div key={i} className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                  <div
+                    key={i}
+                    className="flex items-center justify-between px-4 py-3 border-b border-gray-100"
+                  >
                     <div className="h-4 w-28 bg-gray-100 rounded animate-pulse" />
                     <div className="h-4 w-20 bg-gray-100 rounded animate-pulse" />
                     <div className="h-4 w-20 bg-gray-100 rounded animate-pulse" />
@@ -147,17 +181,28 @@ function AttendanceSidebar({ student, onClose }: AttendanceSidebarProps) {
                 ))}
               </div>
             ) : records.length === 0 ? (
-              <p className="text-sm text-gray-400 px-4 py-6">No attendance records found.</p>
+              <p className="text-sm text-gray-400 px-4 py-6">
+                No attendance records found.
+              </p>
             ) : (
               <div>
                 <div className="grid grid-cols-4 px-4 py-2 border-b border-gray-100 bg-gray-50">
-                  <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">Date</span>
-                  <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">In</span>
-                  <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">Out</span>
-                  <span className="text-xs font-semibold uppercase tracking-widest text-gray-400 text-right">Status</span>
+                  <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                    Date
+                  </span>
+                  <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                    In
+                  </span>
+                  <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                    Out
+                  </span>
+                  <span className="text-xs font-semibold uppercase tracking-widest text-gray-400 text-right">
+                    Status
+                  </span>
                 </div>
                 {records.map((r, i) => {
-                  const notCheckedOut = !r.checked_out_at && isPastDay(r.checked_in_at);
+                  const notCheckedOut =
+                    !r.checked_out_at && isPastDay(r.checked_in_at);
                   return (
                     <div
                       key={r.id}
@@ -166,16 +211,30 @@ function AttendanceSidebar({ student, onClose }: AttendanceSidebarProps) {
                         i < records.length - 1 ? "border-b border-gray-100" : ""
                       }`}
                     >
-                      <span className="text-xs text-gray-700">{formatAttendanceDate(r.checked_in_at)}</span>
-                      <span className="text-xs text-gray-600">{formatAttendanceTime(r.checked_in_at)}</span>
-                      <span className="text-xs text-gray-600">{r.checked_out_at ? formatAttendanceTime(r.checked_out_at) : "—"}</span>
+                      <span className="text-xs text-gray-700">
+                        {formatAttendanceDate(r.checked_in_at)}
+                      </span>
+                      <span className="text-xs text-gray-600">
+                        {formatAttendanceTime(r.checked_in_at)}
+                      </span>
+                      <span className="text-xs text-gray-600">
+                        {r.checked_out_at
+                          ? formatAttendanceTime(r.checked_out_at)
+                          : "—"}
+                      </span>
                       <div className="flex justify-end">
                         {r.checked_out_at ? (
-                          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-700">Out</span>
+                          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+                            Out
+                          </span>
                         ) : notCheckedOut ? (
-                          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Missed</span>
+                          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                            Missed
+                          </span>
                         ) : (
-                          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Active</span>
+                          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                            Active
+                          </span>
                         )}
                       </div>
                     </div>
@@ -184,7 +243,10 @@ function AttendanceSidebar({ student, onClose }: AttendanceSidebarProps) {
               </div>
             )}
             <div className="flex items-center gap-2 px-4 py-3 border-t border-gray-100 bg-gray-50">
-              <Smartphone className="w-4 h-4 text-gray-400 flex-shrink-0" strokeWidth={1.5} />
+              <Smartphone
+                className="w-4 h-4 text-gray-400 flex-shrink-0"
+                strokeWidth={1.5}
+              />
               <p className="text-xs text-gray-400">
                 To check in or out, use the Sage Field mobile app.
               </p>
@@ -201,13 +263,25 @@ function AttendanceSidebar({ student, onClose }: AttendanceSidebarProps) {
       >
         {selectedRecord && (
           <SidebarSection title="Check-In Record">
-            <SidebarField label="Date" value={formatAttendanceDate(selectedRecord.checked_in_at)} />
-            <SidebarField label="Checked In" value={formatAttendanceTime(selectedRecord.checked_in_at)} />
+            <SidebarField
+              label="Date"
+              value={formatAttendanceDate(selectedRecord.checked_in_at)}
+            />
+            <SidebarField
+              label="Checked In"
+              value={formatAttendanceTime(selectedRecord.checked_in_at)}
+            />
             <SidebarField
               label="Checked Out"
-              value={selectedRecord.checked_out_at ? formatAttendanceTime(selectedRecord.checked_out_at) : "Not checked out"}
+              value={
+                selectedRecord.checked_out_at
+                  ? formatAttendanceTime(selectedRecord.checked_out_at)
+                  : "Not checked out"
+              }
             />
-            {selectedRecord.notes && <SidebarField label="Notes" value={selectedRecord.notes} />}
+            {selectedRecord.notes && (
+              <SidebarField label="Notes" value={selectedRecord.notes} />
+            )}
           </SidebarSection>
         )}
       </DetailSidebar>
@@ -238,7 +312,8 @@ export default function HomePageClient({
 }: Props) {
   const [bannerIdx, setBannerIdx] = useState<number | null>(null);
   const [greeting, setGreeting] = useState("");
-  const [attendanceStudent, setAttendanceStudent] = useState<HomeStudent | null>(null);
+  const [attendanceStudent, setAttendanceStudent] =
+    useState<HomeStudent | null>(null);
   const [copied, setCopied] = useState(false);
 
   const refCode = userId.replace(/-/g, "").slice(0, 8).toUpperCase();
@@ -252,8 +327,11 @@ export default function HomePageClient({
   }
 
   const referralCount = referrals.length;
-  const enrolledCount = referrals.filter((r) => r.status === "enrolled" || r.status === "rewarded").length;
-  const earnedDollars = referrals.filter((r) => r.status === "rewarded").length * 150;
+  const enrolledCount = referrals.filter(
+    (r) => r.status === "enrolled" || r.status === "rewarded",
+  ).length;
+  const earnedDollars =
+    referrals.filter((r) => r.status === "rewarded").length * 150;
 
   useEffect(() => {
     setBannerIdx(Math.floor(Math.random() * BANNER_IMAGES.length));
@@ -264,7 +342,6 @@ export default function HomePageClient({
 
   return (
     <div className="px-6 py-8 flex flex-col gap-8 max-w-6xl mx-auto w-full">
-
       {/* Banner */}
       {bannerIdx !== null && (
         <div className="relative h-48 rounded-2xl overflow-hidden shadow-sm">
@@ -276,17 +353,17 @@ export default function HomePageClient({
           <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent" />
           <div className="absolute bottom-5 left-6">
             <p className="text-white/75 text-sm font-body">{greeting},</p>
-            <p className="text-white text-3xl font-heading font-bold leading-tight">{firstName}.</p>
+            <p className="text-white text-3xl font-heading font-bold leading-tight">
+              {firstName}.
+            </p>
           </div>
         </div>
       )}
 
       {/* Two-column grid on desktop, single column on mobile */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8 items-start">
-
         {/* Left column: Students + Events */}
         <div className="flex flex-col gap-8">
-
           {/* Student Cards */}
           <section>
             <h2 className="text-base font-heading font-semibold text-gray-800 mb-4">
@@ -294,7 +371,9 @@ export default function HomePageClient({
             </h2>
             {students.length === 0 ? (
               <div className="rounded-2xl bg-gray-50 border border-gray-100 px-5 py-6 text-center">
-                <p className="text-sm text-gray-400">No children found. Contact us if you believe this is an error.</p>
+                <p className="text-sm text-gray-400">
+                  No children found. Contact us if you believe this is an error.
+                </p>
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
@@ -322,9 +401,13 @@ export default function HomePageClient({
 
                       {/* Name + grade */}
                       <div className="text-center min-w-0 w-full">
-                        <p className="text-sm font-semibold font-heading text-gray-800 truncate">{childFirstName}</p>
+                        <p className="text-sm font-semibold font-heading text-gray-800 truncate">
+                          {childFirstName}
+                        </p>
                         {student.child_grade && (
-                          <p className="text-xs font-body text-gray-400 mt-0.5">{student.child_grade}</p>
+                          <p className="text-xs font-body text-gray-400 mt-0.5">
+                            {student.child_grade}
+                          </p>
                         )}
                       </div>
 
@@ -344,15 +427,22 @@ export default function HomePageClient({
 
             {/* Mobile app note */}
             <div className="flex items-center gap-2 mt-3">
-              <Smartphone className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" strokeWidth={1.5} />
-              <p className="text-xs text-gray-400">Check-in and pickup available on the Sage Field mobile app.</p>
+              <Smartphone
+                className="w-3.5 h-3.5 text-gray-300 flex-shrink-0"
+                strokeWidth={1.5}
+              />
+              <p className="text-xs text-gray-400">
+                Check-in and pickup available on the Sage Field mobile app.
+              </p>
             </div>
           </section>
 
           {/* Upcoming Events */}
           <section>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-heading font-semibold text-gray-800">Upcoming events</h2>
+              <h2 className="text-base font-heading font-semibold text-gray-800">
+                Upcoming events
+              </h2>
               <Link
                 href="/parent/calendar"
                 className="flex items-center gap-1 text-xs font-body text-[#4a7c59] hover:underline"
@@ -361,7 +451,9 @@ export default function HomePageClient({
               </Link>
             </div>
             {upcomingEvents.length === 0 ? (
-              <p className="text-sm font-body text-gray-400">No upcoming events.</p>
+              <p className="text-sm font-body text-gray-400">
+                No upcoming events.
+              </p>
             ) : (
               <div className="flex flex-col gap-2">
                 {upcomingEvents.map((evt) => {
@@ -377,19 +469,29 @@ export default function HomePageClient({
                         className="flex-shrink-0 w-11 h-11 rounded-xl flex flex-col items-center justify-center"
                         style={{ backgroundColor: evt.color + "22" }}
                       >
-                        <span className="text-xs font-semibold uppercase leading-none" style={{ color: evt.color }}>
+                        <span
+                          className="text-xs font-semibold uppercase leading-none"
+                          style={{ color: evt.color }}
+                        >
                           {month}
                         </span>
-                        <span className="text-base font-bold font-heading leading-tight" style={{ color: evt.color }}>
+                        <span
+                          className="text-base font-bold font-heading leading-tight"
+                          style={{ color: evt.color }}
+                        >
                           {day}
                         </span>
                       </div>
 
                       {/* Event info */}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold font-heading text-gray-800 truncate">{evt.title}</p>
+                        <p className="text-sm font-semibold font-heading text-gray-800 truncate">
+                          {evt.title}
+                        </p>
                         {timeStr && (
-                          <p className="text-xs font-body text-gray-500 mt-0.5">{timeStr}</p>
+                          <p className="text-xs font-body text-gray-500 mt-0.5">
+                            {timeStr}
+                          </p>
                         )}
                       </div>
 
@@ -397,7 +499,10 @@ export default function HomePageClient({
                       {evt.category && (
                         <span
                           className="text-xs font-body font-medium px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0"
-                          style={{ backgroundColor: evt.color + "22", color: evt.color }}
+                          style={{
+                            backgroundColor: evt.color + "22",
+                            color: evt.color,
+                          }}
                         >
                           {evt.category}
                         </span>
@@ -414,7 +519,9 @@ export default function HomePageClient({
         <div>
           <section>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-heading font-semibold text-gray-800">Tuition & billing</h2>
+              <h2 className="text-base font-heading font-semibold text-gray-800">
+                Tuition & billing
+              </h2>
               <Link
                 href="/parent/billing"
                 className="flex items-center gap-1 text-xs font-body text-[#4a7c59] hover:underline"
@@ -423,9 +530,19 @@ export default function HomePageClient({
               </Link>
             </div>
             {pendingPayments.length === 0 ? (
-              <div className="rounded-2xl px-5 py-5" style={{ backgroundColor: "#D6EAD8" }}>
-                <p className="text-sm font-semibold font-heading text-[#4a7c59]">All caught up!</p>
-                <p className="text-xs font-body mt-1" style={{ color: "#4a7c59bb" }}>No pending payments</p>
+              <div
+                className="rounded-2xl px-5 py-5"
+                style={{ backgroundColor: "#D6EAD8" }}
+              >
+                <p className="text-sm font-semibold font-heading text-[#4a7c59]">
+                  All caught up!
+                </p>
+                <p
+                  className="text-xs font-body mt-1"
+                  style={{ color: "#4a7c59bb" }}
+                >
+                  No pending payments
+                </p>
               </div>
             ) : (
               <div className="flex flex-col gap-2">
@@ -440,9 +557,15 @@ export default function HomePageClient({
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold font-heading text-gray-800 truncate">{studentName}</p>
-                          <p className="text-xs font-body text-gray-500 mt-0.5">{formatProgram(payment.program)}</p>
-                          <p className="text-xs font-body text-gray-400 mt-1 truncate">{payment.label}</p>
+                          <p className="text-sm font-semibold font-heading text-gray-800 truncate">
+                            {studentName}
+                          </p>
+                          <p className="text-xs font-body text-gray-500 mt-0.5">
+                            {formatProgram(payment.program)}
+                          </p>
+                          <p className="text-xs font-body text-gray-400 mt-1 truncate">
+                            {payment.label}
+                          </p>
                         </div>
                         <p className="text-sm font-semibold font-heading text-gray-800 whitespace-nowrap">
                           {formatCents(payment.amount_cents)}
@@ -460,22 +583,31 @@ export default function HomePageClient({
       {/* Referral Section */}
       <section
         className="rounded-2xl p-6 shadow-sm border border-[#c2ddc8]"
-        style={{ background: "linear-gradient(135deg, #eef5ef 0%, #ddeede 100%)" }}
+        style={{
+          background: "linear-gradient(135deg, #eef5ef 0%, #ddeede 100%)",
+        }}
       >
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           {/* Left: heading + description */}
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-7 h-7 rounded-full bg-[#4a7c59]/15 flex items-center justify-center">
-                <Gift className="w-3.5 h-3.5 text-[#4a7c59]" strokeWidth={1.5} />
+                <Gift
+                  className="w-3.5 h-3.5 text-[#4a7c59]"
+                  strokeWidth={1.5}
+                />
               </div>
-              <h2 className="text-base font-heading font-semibold text-gray-800">Refer a Family</h2>
+              <h2 className="text-base font-heading font-semibold text-gray-800">
+                Refer a Family
+              </h2>
               <span className="bg-[#4a7c59] text-white text-xs font-body px-2 py-0.5 rounded-full font-medium">
                 $150 gift card
               </span>
             </div>
             <p className="text-sm font-body text-gray-600 leading-relaxed max-w-lg">
-              Know a family who&apos;d be a great fit for Sage Field? Share your link — when they enroll and pay their registration fee, you&apos;ll receive a $150 gift card.
+              Know a family who&apos;d be a great fit for Sage Field? Share your
+              link — when they enroll and pay their registration fee,
+              you&apos;ll receive a $150 gift card.
             </p>
 
             {/* How it works */}
@@ -487,7 +619,9 @@ export default function HomePageClient({
               ].map((step, i) => (
                 <div key={i} className="flex items-center gap-2">
                   <div className="flex-shrink-0 w-5 h-5 rounded-full bg-[#4a7c59]/20 flex items-center justify-center">
-                    <span className="text-[10px] font-bold font-heading text-[#4a7c59]">{i + 1}</span>
+                    <span className="text-[10px] font-bold font-heading text-[#4a7c59]">
+                      {i + 1}
+                    </span>
                   </div>
                   <p className="text-xs font-body text-gray-600">{step}</p>
                 </div>
@@ -504,8 +638,13 @@ export default function HomePageClient({
                 { value: String(enrolledCount), label: "Enrolled" },
                 { value: `$${earnedDollars}`, label: "Earned" },
               ].map(({ value, label }) => (
-                <div key={label} className="text-center bg-white/70 rounded-xl py-2.5 px-2 border border-[#c2ddc8]">
-                  <p className="text-base font-semibold font-heading text-gray-800">{value}</p>
+                <div
+                  key={label}
+                  className="text-center bg-white/70 rounded-xl py-2.5 px-2 border border-[#c2ddc8]"
+                >
+                  <p className="text-base font-semibold font-heading text-gray-800">
+                    {value}
+                  </p>
                   <p className="text-xs font-body text-gray-500">{label}</p>
                 </div>
               ))}
@@ -514,7 +653,9 @@ export default function HomePageClient({
             {/* Copy link */}
             <div className="flex items-center gap-2">
               <div className="flex-1 min-w-0 bg-white/70 border border-[#c2ddc8] rounded-xl px-3 py-2">
-                <p className="text-xs font-body text-gray-600 truncate">{referralLink}</p>
+                <p className="text-xs font-body text-gray-600 truncate">
+                  {referralLink}
+                </p>
               </div>
               <button
                 onClick={copyReferralLink}
@@ -525,9 +666,15 @@ export default function HomePageClient({
                 }`}
               >
                 {copied ? (
-                  <><Check className="w-3.5 h-3.5" />Copied!</>
+                  <>
+                    <Check className="w-3.5 h-3.5" />
+                    Copied!
+                  </>
                 ) : (
-                  <><Copy className="w-3.5 h-3.5" />Copy link</>
+                  <>
+                    <Copy className="w-3.5 h-3.5" />
+                    Copy link
+                  </>
                 )}
               </button>
             </div>

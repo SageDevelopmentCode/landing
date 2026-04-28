@@ -952,6 +952,147 @@ export function createAppErrorEmbed(data: {
 }
 
 /**
+ * Creates a Discord embed for Mercury transaction webhook events
+ */
+export function createMercuryTransactionEmbed(data: {
+  title: string;
+  resourceId: string;
+  occurredAt: string;
+  changedPaths: string[];
+  mergePatch: Record<string, unknown>;
+  previousValues: Record<string, unknown>;
+}): DiscordEmbed {
+  const fmt = (n: unknown) =>
+    typeof n === "number"
+      ? n.toLocaleString("en-US", { style: "currency", currency: "USD" })
+      : null;
+
+  const date = new Date(data.occurredAt).toLocaleString("en-US", {
+    timeZone: "America/Chicago",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  const fields: DiscordEmbedField[] = [
+    { name: "Transaction ID", value: data.resourceId, inline: false },
+    { name: "Occurred At", value: date, inline: true },
+  ];
+
+  const status = data.mergePatch.status as string | undefined;
+  const prevStatus = data.previousValues.status as string | undefined;
+  if (status) {
+    fields.push({
+      name: "Status",
+      value: prevStatus ? `${prevStatus} → ${status}` : status,
+      inline: true,
+    });
+  }
+
+  const amount = fmt(data.mergePatch.amount);
+  if (amount) fields.push({ name: "Amount", value: amount, inline: true });
+
+  const merchant =
+    (data.mergePatch.merchantName as string | null) ??
+    (data.mergePatch.counterpartyName as string | null) ??
+    (data.mergePatch.bankDescription as string | null);
+  if (merchant) fields.push({ name: "Merchant / Counterparty", value: merchant, inline: true });
+
+  const kind = data.mergePatch.kind as string | undefined;
+  if (kind) fields.push({ name: "Kind", value: kind, inline: true });
+
+  if (data.changedPaths.length > 0) {
+    fields.push({ name: "Changed Fields", value: data.changedPaths.join(", "), inline: false });
+  }
+
+  const isDebit =
+    typeof data.mergePatch.amount === "number" && (data.mergePatch.amount as number) < 0;
+
+  return {
+    title: data.title,
+    color: isDebit ? 0xe74c3c : 0x27ae60,
+    fields,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * Creates a Discord embed for Mercury account balance updated webhook events
+ */
+export function createMercuryAccountBalanceEmbed(data: {
+  resourceType: string;
+  resourceId: string;
+  occurredAt: string;
+  mergePatch: Record<string, unknown>;
+  previousValues: Record<string, unknown>;
+}): DiscordEmbed {
+  const fmt = (n: unknown) =>
+    typeof n === "number"
+      ? n.toLocaleString("en-US", { style: "currency", currency: "USD" })
+      : "N/A";
+
+  const date = new Date(data.occurredAt).toLocaleString("en-US", {
+    timeZone: "America/Chicago",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  const accountTypeLabel =
+    data.resourceType === "checkingAccount"
+      ? "Checking"
+      : data.resourceType === "savingsAccount"
+        ? "Savings"
+        : data.resourceType === "treasuryAccount"
+          ? "Treasury"
+          : data.resourceType === "creditAccount"
+            ? "Credit"
+            : data.resourceType;
+
+  const fields: DiscordEmbedField[] = [
+    { name: "Account", value: `${accountTypeLabel} (${data.resourceId.slice(0, 8)}...)`, inline: true },
+    { name: "Updated At", value: date, inline: true },
+  ];
+
+  const available = data.mergePatch.availableBalance;
+  const current = data.mergePatch.currentBalance;
+  const inFlight = data.mergePatch.inFlightBalance;
+
+  if (available !== undefined) {
+    const prev = data.previousValues.availableBalance;
+    fields.push({
+      name: "Available Balance",
+      value: prev !== undefined ? `${fmt(prev)} → ${fmt(available)}` : fmt(available),
+      inline: true,
+    });
+  }
+  if (current !== undefined) {
+    const prev = data.previousValues.currentBalance;
+    fields.push({
+      name: "Current Balance",
+      value: prev !== undefined ? `${fmt(prev)} → ${fmt(current)}` : fmt(current),
+      inline: true,
+    });
+  }
+  if (inFlight !== undefined) {
+    fields.push({ name: "In-Flight Balance", value: fmt(inFlight), inline: true });
+  }
+
+  return {
+    title: `🏦 ${accountTypeLabel} Account Balance Updated`,
+    color: 0x5865f2,
+    fields,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
  * Creates a Discord embed for campus tour booking submissions
  */
 export function createTourBookingEmbed(data: {
