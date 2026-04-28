@@ -118,7 +118,7 @@ export default function ShadowDashboardClient({
   return (
     <div className="min-h-screen bg-welcome-bg flex flex-col">
       {/* Header */}
-      <header className="bg-white border-b border-gray-100 px-5 py-3 flex items-center justify-between">
+      <header className="bg-white border-b border-gray-100 px-4 sm:px-5 py-3 flex items-center justify-between">
         <Link href="/">
           <Image
             src="/assets/Logo.png"
@@ -136,13 +136,13 @@ export default function ShadowDashboardClient({
         />
       </header>
 
-      <main className="flex-1 px-4 sm:px-6 lg:px-10 py-10 max-w-6xl mx-auto w-full">
+      <main className="flex-1 px-4 sm:px-6 lg:px-10 py-6 sm:py-8 lg:py-10 max-w-6xl mx-auto w-full">
         {/* Greeting */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="mb-8"
+          className="mb-5 sm:mb-8"
         >
           <p className="text-sm text-gray-400 font-body mb-1">
             Shadow Day Dashboard
@@ -158,7 +158,7 @@ export default function ShadowDashboardClient({
         <div className="flex flex-col lg:flex-row gap-6 items-start">
 
           {/* LEFT SIDEBAR */}
-          <div className="w-full lg:w-72 xl:w-80 flex-shrink-0 space-y-4">
+          <div className="order-2 lg:order-1 w-full lg:w-72 xl:w-80 flex-shrink-0 space-y-4">
 
             {/* Calendar-style booking card */}
             {booking && dateparts && (
@@ -239,7 +239,7 @@ export default function ShadowDashboardClient({
           </div>
 
           {/* RIGHT MAIN AREA */}
-          <div className="flex-1 min-w-0 space-y-4">
+          <div className="order-1 lg:order-2 flex-1 min-w-0 space-y-4">
 
             {/* Pending payment banner */}
             {!isPaid && (
@@ -266,7 +266,7 @@ export default function ShadowDashboardClient({
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.16 }}
-              className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6"
+              className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6"
             >
               <div className="flex items-center justify-between mb-5">
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wide font-body">
@@ -296,7 +296,7 @@ export default function ShadowDashboardClient({
                     initial={{ opacity: 0, x: -12 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.35, delay: 0.25 + i * 0.1 }}
-                    className={`flex items-start gap-4 p-4 rounded-xl border transition-colors ${
+                    className={`flex items-start gap-4 p-3 sm:p-4 rounded-xl border transition-colors ${
                       item.done
                         ? "bg-sage-50 border-sage-200"
                         : "bg-white border-gray-100"
