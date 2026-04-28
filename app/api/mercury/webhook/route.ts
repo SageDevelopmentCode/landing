@@ -41,11 +41,12 @@ export async function POST(request: NextRequest) {
   const signatureHeader = request.headers.get("Mercury-Signature");
   const secret = process.env.MERCURY_WEBHOOK_SECRET;
 
-  if (!signatureHeader || !secret) {
-    return NextResponse.json({ error: "Missing signature" }, { status: 400 });
+  // No secret configured yet (e.g. Mercury's "Verify endpoint" ping during initial setup)
+  if (!secret) {
+    return NextResponse.json({ received: true });
   }
 
-  if (!verifyMercurySignature(body, signatureHeader, secret)) {
+  if (!signatureHeader || !verifyMercurySignature(body, signatureHeader, secret)) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
