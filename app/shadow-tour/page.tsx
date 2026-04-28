@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Calendar,
@@ -9,17 +10,13 @@ import {
   ChevronRight,
   ChevronDown,
   Check,
-  CheckCircle,
   Users,
   BookOpen,
-  MessageCircle,
   Star,
   Leaf,
   Heart,
   Shield,
   ArrowDown,
-  Lock,
-  Info,
   Tag,
   MapPin,
   Sun,
@@ -46,7 +43,7 @@ interface ShadowFormData {
   notes: string;
 }
 
-type ShadowStep = 1 | 2 | 3;
+type ShadowStep = 1 | 2;
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -78,17 +75,19 @@ const MONTHS = [
 
 const DAY_HEADERS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-const TODAY = new Date(2026, 3, 28);
+const TODAY = new Date(2026, 4, 26);
 TODAY.setHours(0, 0, 0, 0);
 
-const MAX_MONTH = 5;
+const MAX_DATE = new Date(2026, 7, 13);
+MAX_DATE.setHours(0, 0, 0, 0);
+
+const MAX_MONTH = 7;
 const MAX_YEAR = 2026;
 
-const STEP_LABELS = ["Pick a Date", "Your Family", "Review & Pay"];
+const STEP_LABELS = ["Pick a Date", "Your Family"];
 const STEP_MICROCOPY = [
   "Mon–Thu school days only",
   "Parent + child info",
-  "Summary + payment coming",
 ];
 
 const STEP_HEADINGS: Record<ShadowStep, { title: string; sub: string }> = {
@@ -99,10 +98,6 @@ const STEP_HEADINGS: Record<ShadowStep, { title: string; sub: string }> = {
   2: {
     title: "Your Family's Information",
     sub: "Tell us about your child so Ms. Sabrina can personalize their day.",
-  },
-  3: {
-    title: "Review Your Booking",
-    sub: "Everything look right? Payment processing is coming soon — your spot will be held until then.",
   },
 };
 
@@ -224,7 +219,7 @@ function isAvailableDay(date: Date): boolean {
 }
 
 function isPastDate(date: Date): boolean {
-  return date < TODAY;
+  return date < TODAY || date > MAX_DATE;
 }
 
 function formatDisplayDate(date: Date): string {
@@ -431,130 +426,6 @@ function SelectedDayChip({ date }: { date: Date | null }) {
         </motion.div>
       )}
     </AnimatePresence>
-  );
-}
-
-// ─── Shadow Confirmation (Step 3) ─────────────────────────────────────────────
-
-function ShadowConfirmation({
-  selectedDate,
-  formData,
-}: {
-  selectedDate: Date | null;
-  formData: ShadowFormData;
-}) {
-  return (
-    <div>
-      <motion.div
-        className="flex flex-col items-center text-center mb-8"
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ type: "spring", stiffness: 200, damping: 18 }}
-      >
-        <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mb-5">
-          <CheckCircle className="w-10 h-10 text-primary" />
-        </div>
-        <h3 className="text-2xl font-bold font-heading text-gray-800 mb-2">
-          Almost There — Review Your Day
-        </h3>
-        <p className="text-sm text-gray-500 font-body max-w-sm">
-          Payment processing is coming soon. Your details are saved and we&apos;ll
-          reach out to confirm your shadow day.
-        </p>
-      </motion.div>
-
-      {/* Booking Summary */}
-      <motion.div
-        className="bg-sage-50 rounded-2xl p-6 border border-sage-200 space-y-4 mb-6"
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15 }}
-      >
-        <p className="text-sm font-bold text-sage-700 font-body mb-4">
-          Your Shadow Day at Sage Field
-        </p>
-        <ConfirmRow icon={<Calendar className="w-4 h-4 text-sage-700" />} label="Date">
-          {selectedDate ? formatDisplayDate(selectedDate) : "—"}
-        </ConfirmRow>
-        <ConfirmRow icon={<Clock className="w-4 h-4 text-sage-700" />} label="Duration">
-          Full Day · 9:00 AM – 3:00 PM
-        </ConfirmRow>
-        <div className="border-t border-sage-200" />
-        <ConfirmRow icon={<Users className="w-4 h-4 text-sage-700" />} label="Parent / Guardian">
-          {formData.firstName} {formData.lastName}
-        </ConfirmRow>
-        <ConfirmRow icon={<BookOpen className="w-4 h-4 text-sage-700" />} label="Child">
-          {formData.childName}
-          {formData.childGrade ? ` — ${formData.childGrade}` : ""}
-        </ConfirmRow>
-      </motion.div>
-
-      {/* Price Breakdown */}
-      <motion.div
-        className="bg-white rounded-2xl border border-gray-200 p-5 mb-6"
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.25 }}
-      >
-        <p className="text-xs text-gray-400 uppercase tracking-wide font-body mb-4">
-          Payment Summary
-        </p>
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-gray-700 font-body">Shadow Day Experience</span>
-          <span className="text-sm font-bold text-gray-800 font-body">$95.00</span>
-        </div>
-        <div className="flex items-center justify-between pl-4 mb-3">
-          <span className="text-sm text-sage-700 font-body italic">Enroll within 14 days</span>
-          <span className="text-sm font-semibold text-sage-600 font-body">− $95.00</span>
-        </div>
-        <div className="border-t border-gray-100 pt-3 flex items-center justify-between">
-          <span className="text-sm font-bold text-gray-800 font-body">Total</span>
-          <span className="text-sm text-gray-400 italic font-body">TBD on enrollment</span>
-        </div>
-      </motion.div>
-
-      {/* Payment Placeholder Button */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.35 }}
-      >
-        <div className="w-full bg-gray-100 border-2 border-dashed border-gray-300 text-gray-400 py-5 rounded-xl font-semibold font-body flex items-center justify-center gap-3 cursor-not-allowed select-none">
-          <Lock className="w-4 h-4" />
-          Secure Payment Coming Soon
-        </div>
-        <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mt-3">
-          <Info className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
-          <p className="text-xs text-amber-700 font-body leading-relaxed">
-            Payment will be powered by Stripe. Once available, you&apos;ll create an account
-            and pay the $95 Shadow Day fee to secure your booking. The fee is fully waived
-            if you enroll within 14 days of your child&apos;s visit.
-          </p>
-        </div>
-      </motion.div>
-    </div>
-  );
-}
-
-function ConfirmRow({
-  icon,
-  label,
-  children,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-start gap-3">
-      <div className="mt-0.5 flex-shrink-0">{icon}</div>
-      <div>
-        <p className="text-xs text-gray-400 uppercase tracking-wide font-body mb-0.5">
-          {label}
-        </p>
-        <p className="text-sm font-semibold text-gray-800 font-body">{children}</p>
-      </div>
-    </div>
   );
 }
 
@@ -926,13 +797,13 @@ const inputClass =
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function ShadowTourPage() {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState<ShadowStep>(1);
   const stepDirection = useRef<1 | -1>(1);
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const now = new Date();
-  const [calendarMonth, setCalendarMonth] = useState(now.getMonth());
-  const [calendarYear, setCalendarYear] = useState(now.getFullYear());
+  const [calendarMonth, setCalendarMonth] = useState(4); // May
+  const [calendarYear, setCalendarYear] = useState(2026);
 
   const [isContactOpen, setIsContactOpen] = useState(false);
 
@@ -1344,56 +1215,54 @@ export default function ShadowTourPage() {
                   </div>
                 )}
 
-                {/* ── Step 3: Review & Pay ── */}
-                {currentStep === 3 && (
-                  <ShadowConfirmation
-                    selectedDate={selectedDate}
-                    formData={formData}
-                  />
-                )}
               </motion.div>
             </AnimatePresence>
 
             {/* Navigation */}
-            {currentStep < 3 && (
-              <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-100">
-                {currentStep > 1 ? (
-                  <button
-                    onClick={() => goToStep((currentStep - 1) as ShadowStep)}
-                    className="flex items-center gap-2 text-gray-500 hover:text-gray-700 font-body text-sm font-semibold transition-colors"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                    Back
-                  </button>
-                ) : (
-                  <span />
-                )}
-                <motion.button
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => goToStep((currentStep + 1) as ShadowStep)}
-                  disabled={
-                    (currentStep === 1 && !canAdvanceStep1) ||
-                    (currentStep === 2 && !canAdvanceStep2)
-                  }
-                  className="ml-auto bg-primary hover:bg-primary-hover text-white px-8 py-3 rounded-lg font-semibold font-body transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  {currentStep === 2 ? "Review My Booking" : "Next"}
-                  <ChevronRight className="w-4 h-4" />
-                </motion.button>
-              </div>
-            )}
-
-            {currentStep === 3 && (
-              <div className="flex items-center mt-8 pt-6 border-t border-gray-100">
+            <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-100">
+              {currentStep > 1 ? (
                 <button
-                  onClick={() => goToStep(2)}
+                  onClick={() => goToStep((currentStep - 1) as ShadowStep)}
                   className="flex items-center gap-2 text-gray-500 hover:text-gray-700 font-body text-sm font-semibold transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
-                  Edit Information
+                  Back
                 </button>
-              </div>
-            )}
+              ) : (
+                <span />
+              )}
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => {
+                  if (currentStep === 2) {
+                    const params = new URLSearchParams({
+                      firstName: formData.firstName,
+                      lastName: formData.lastName,
+                      email: formData.email,
+                      phone: formData.phone,
+                      childName: formData.childName,
+                      childGrade: formData.childGrade,
+                      referralSource: formData.referralSource,
+                      notes: formData.notes,
+                      shadowDate: selectedDate
+                        ? selectedDate.toISOString().split("T")[0]
+                        : "",
+                    });
+                    router.push(`/shadow-day/start?${params.toString()}`);
+                  } else {
+                    goToStep((currentStep + 1) as ShadowStep);
+                  }
+                }}
+                disabled={
+                  (currentStep === 1 && !canAdvanceStep1) ||
+                  (currentStep === 2 && !canAdvanceStep2)
+                }
+                className="ml-auto bg-primary hover:bg-primary-hover text-white px-8 py-3 rounded-lg font-semibold font-body transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {currentStep === 2 ? "Create Account & Book" : "Next"}
+                <ChevronRight className="w-4 h-4" />
+              </motion.button>
+            </div>
           </motion.div>
         </div>
       </section>

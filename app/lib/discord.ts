@@ -1093,6 +1093,34 @@ export function createMercuryAccountBalanceEmbed(data: {
 }
 
 /**
+ * Creates a Discord embed for shadow day bookings
+ */
+export function createShadowDayBookingEmbed(data: {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string | null;
+  childName: string;
+  childGrade?: string | null;
+  shadowDate: string;
+  isNewAccount: boolean;
+}): DiscordEmbed {
+  return {
+    title: "🌿 New Shadow Day Booked",
+    color: 0x4a7c59,
+    fields: [
+      { name: "Parent", value: `${data.firstName} ${data.lastName}`, inline: true },
+      { name: "Email", value: data.email, inline: true },
+      { name: "Phone", value: data.phone || "Not provided", inline: true },
+      { name: "Child", value: data.childName + (data.childGrade ? ` — ${data.childGrade}` : ""), inline: true },
+      { name: "Shadow Date", value: data.shadowDate, inline: true },
+      { name: "Account", value: data.isNewAccount ? "New account created" : "Existing account", inline: true },
+    ],
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
  * Creates a Discord embed for campus tour booking submissions
  */
 export function createTourBookingEmbed(data: {
