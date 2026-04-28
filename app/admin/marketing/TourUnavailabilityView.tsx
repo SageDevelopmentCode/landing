@@ -14,6 +14,7 @@ import {
   type TourUnavailability,
 } from '@/app/actions/tourUnavailability'
 import type { TourBooking } from './page'
+import { sendTourReminderEmail } from '@/app/actions/sendTourReminderEmail'
 
 const merriweather = Poppins({ weight: ['300', '400', '700', '900'], subsets: ['latin'] })
 
@@ -820,7 +821,27 @@ function formatCreatedAt(iso: string): string {
 
 function TourBookingsTable({ bookings }: { bookings: TourBooking[] }) {
   const [selected, setSelected] = useState<TourBooking | null>(null)
+  const [sending, setSending] = useState(false)
+  const [reminderSent, setReminderSent] = useState(false)
   const today = new Date().toISOString().split('T')[0]
+
+  async function handleSendReminder() {
+    if (!selected) return
+    setSending(true)
+    const res = await sendTourReminderEmail({
+      firstName: selected.first_name,
+      email: selected.email,
+      tourDate: formatBookingDate(selected.tour_date),
+      tourTime: selected.tour_time,
+    })
+    setSending(false)
+    if (res.success) setReminderSent(true)
+  }
+
+  function closePanel() {
+    setSelected(null)
+    setReminderSent(false)
+  }
 
   const upcoming = bookings.filter(b => b.tour_date >= today && b.status !== 'cancelled')
   const pendingCount = bookings.filter(b => b.status === 'pending').length
@@ -934,7 +955,7 @@ function TourBookingsTable({ bookings }: { bookings: TourBooking[] }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setSelected(null)}
+              onClick={closePanel}
               style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.15)', zIndex: 40 }}
             />
             <motion.div
@@ -962,7 +983,7 @@ function TourBookingsTable({ bookings }: { bookings: TourBooking[] }) {
                   </h2>
                 </div>
                 <button
-                  onClick={() => setSelected(null)}
+                  onClick={closePanel}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.textTertiary, fontSize: '20px', lineHeight: 1 }}
                 >
                   ×
@@ -989,6 +1010,27 @@ function TourBookingsTable({ bookings }: { bookings: TourBooking[] }) {
                   <p style={{ fontSize: '14px', color: colors.textPrimary }}>{value}</p>
                 </div>
               ))}
+
+              <div style={{ marginTop: '24px' }}>
+                <button
+                  onClick={handleSendReminder}
+                  disabled={sending || reminderSent}
+                  style={{
+                    width: '100%',
+                    padding: '10px 0',
+                    backgroundColor: reminderSent ? '#e8f0e8' : colors.mistyForest,
+                    color: reminderSent ? colors.mistyForest : 'white',
+                    border: reminderSent ? `1px solid ${colors.mistyForest}` : 'none',
+                    borderRadius: radius.md,
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    cursor: sending || reminderSent ? 'default' : 'pointer',
+                    opacity: sending ? 0.7 : 1,
+                  }}
+                >
+                  {sending ? 'Sending…' : reminderSent ? 'Reminder Sent ✓' : 'Send Tour Reminder'}
+                </button>
+              </div>
             </motion.div>
           </>
         )}

@@ -1761,3 +1761,48 @@ export async function buildInfoSessionReminderEmail(opts: {
 
   return { subject, content };
 }
+
+export async function buildTourReminderEmail(opts: {
+  firstName: string;
+  tourDate: string;
+  tourTime: string;
+}): Promise<{ subject: string; content: string }> {
+  const subject = "Reminder: Your campus tour at Sage Field School";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${opts.firstName},</p>
+
+  <p>Just a friendly reminder that your campus tour at Sage Field School is coming up! We're looking forward to meeting you and your family.</p>
+
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; margin: 28px 0;">
+    <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 15px;">Your Tour Details</p>
+    <p style="margin: 4px 0;"><strong>Date:</strong> ${opts.tourDate}</p>
+    <p style="margin: 4px 0;"><strong>Time:</strong> ${opts.tourTime}</p>
+    <p style="margin: 4px 0;"><strong>Location:</strong> <a href="https://maps.google.com/?q=2760+Gattis+School+Rd,+Round+Rock,+TX+78664" style="color: #5a7a5a;">2760 Gattis School Rd, Round Rock, TX 78664</a></p>
+    <p style="margin: 4px 0;"><strong>Duration:</strong> Approximately 45 minutes</p>
+  </div>
+
+  <h2 style="font-size: 18px; margin-top: 32px; margin-bottom: 8px; color: #2c2c2c;">What to Expect</h2>
+  <ul style="padding-left: 20px;">
+    <li style="margin-bottom: 8px;">A private, one-on-one family tour of our campus</li>
+    <li style="margin-bottom: 8px;">Walk through our outdoor learning spaces and classrooms</li>
+    <li style="margin-bottom: 8px;">Meet Sabrina and our educators</li>
+    <li style="margin-bottom: 8px;">See our curriculum and day-to-day rhythm in action</li>
+    <li style="margin-bottom: 8px;">Learn about enrollment for Summer 2026 &amp; School Year 2026–2027</li>
+  </ul>
+
+  <p>Please <strong>reply to this email</strong> to confirm your attendance, or let us know if you need to reschedule. We want to make sure we're ready for you!</p>
+
+  <p>If you have any questions before your visit, feel free to reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> or call/text <a href="tel:5126775872" style="color: #5a7a5a;">(512) 677-5872</a>.</p>
+
+  <p style="margin-top: 32px;">With warmth,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
