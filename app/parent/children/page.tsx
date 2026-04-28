@@ -5,10 +5,12 @@ import {
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { Suspense } from "react";
 import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import Footer from "@/app/components/Footer";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import ChildrenPage from "./ChildrenPage";
+import OnboardingChecklistButton from "@/app/parent/components/OnboardingChecklistButton";
 import type { Database } from "@/app/types/database.types";
 import { getAllStudentAssignments } from "@/app/actions/teacherAssignments";
 import type { TeacherAssignment } from "@/app/actions/teacherAssignments";
@@ -121,7 +123,8 @@ export default async function ChildrenRoute() {
           <div className="flex items-center justify-center">
             <DashboardNav />
           </div>
-          <div className="flex items-center justify-end">
+          <div className="flex items-center justify-end gap-1">
+            <OnboardingChecklistButton />
             {user?.email && (
               <ProfileDropdown email={user.email} fullName={fullName} userId={user.id} profileImageUrl={profileImageUrl} />
             )}
@@ -129,7 +132,9 @@ export default async function ChildrenRoute() {
         </header>
 
         <main className="flex-1 flex overflow-hidden">
-          <ChildrenPage children={children} teachersByStudent={teachersByStudent} nonEnrolledAppByStudent={nonEnrolledAppByStudent} studentProgramMap={studentProgramMap} pickupByStudent={pickupByStudent} />
+          <Suspense>
+            <ChildrenPage children={children} teachersByStudent={teachersByStudent} nonEnrolledAppByStudent={nonEnrolledAppByStudent} studentProgramMap={studentProgramMap} pickupByStudent={pickupByStudent} />
+          </Suspense>
         </main>
       </div>
       <Footer />

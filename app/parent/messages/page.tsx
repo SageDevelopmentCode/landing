@@ -5,6 +5,7 @@ import Image from "next/image";
 import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import MessagesPage from "./MessagesPage";
+import OnboardingChecklistButton from "@/app/parent/components/OnboardingChecklistButton";
 import { createAdminClient } from "@/app/lib/supabase-server";
 
 export default async function MessagesRoute({
@@ -54,7 +55,8 @@ export default async function MessagesRoute({
           <div className="flex items-center justify-center">
             <DashboardNav />
           </div>
-          <div className="flex items-center justify-end">
+          <div className="flex items-center justify-end gap-1">
+            <OnboardingChecklistButton />
             {user?.email && (
               <ProfileDropdown email={user.email} fullName={fullName} userId={user.id} profileImageUrl={profileImageUrl} />
             )}

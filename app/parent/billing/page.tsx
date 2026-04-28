@@ -9,6 +9,7 @@ import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import Footer from "@/app/components/Footer";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import BillingPage from "./BillingPage";
+import OnboardingChecklistButton from "@/app/parent/components/OnboardingChecklistButton";
 
 export type PendingPaymentRequest = {
   id: string;
@@ -250,7 +251,8 @@ export default async function BillingRoute() {
           <div className="flex items-center justify-center">
             <DashboardNav />
           </div>
-          <div className="flex items-center justify-end">
+          <div className="flex items-center justify-end gap-1">
+            <OnboardingChecklistButton />
             {user?.email && (
               <ProfileDropdown email={user.email} fullName={fullName} userId={user.id} profileImageUrl={profileImageUrl} />
             )}

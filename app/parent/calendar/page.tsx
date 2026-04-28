@@ -9,6 +9,7 @@ import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import Footer from "@/app/components/Footer";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import ParentCalendarClient from "./ParentCalendarClient";
+import OnboardingChecklistButton from "@/app/parent/components/OnboardingChecklistButton";
 
 export default async function ParentCalendarPage() {
   const supabase = await createServerSupabaseClient();
@@ -60,7 +61,8 @@ export default async function ParentCalendarPage() {
         <div className="flex items-center justify-center">
           <DashboardNav />
         </div>
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-end gap-1">
+          <OnboardingChecklistButton />
           {user?.email && (
             <ProfileDropdown email={user.email} fullName={fullName} userId={user.id} profileImageUrl={profileImageUrl} />
           )}

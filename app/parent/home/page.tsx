@@ -9,6 +9,7 @@ import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import Footer from "@/app/components/Footer";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import HomePageClient from "./HomePageClient";
+import OnboardingChecklistButton from "@/app/parent/components/OnboardingChecklistButton";
 
 export type HomeStudent = {
   id: string;
@@ -152,7 +153,8 @@ export default async function ParentHomePage() {
         <div className="flex items-center justify-center">
           <DashboardNav />
         </div>
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-end gap-1">
+          <OnboardingChecklistButton />
           {user?.email && (
             <ProfileDropdown
               email={user.email}

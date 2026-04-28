@@ -9,6 +9,7 @@ import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import Footer from "@/app/components/Footer";
 import ChildTabs from "./ChildTabs";
 import DashboardNav from "./DashboardNav";
+import OnboardingChecklistButton from "@/app/parent/components/OnboardingChecklistButton";
 import type { StudentSignatureMap } from "@/app/types/enrollment-signatures";
 import type { Database } from "@/app/types/database.types";
 import { getAllStudentAssignments } from "@/app/actions/teacherAssignments";
@@ -278,7 +279,8 @@ export default async function ParentDashboard() {
               user.id === "99a51958-efbd-44f6-8b48-1ccff6e98bea"
             ) && <DashboardNav />}
           </div>
-          <div className="flex items-center justify-end">
+          <div className="flex items-center justify-end gap-1">
+            <OnboardingChecklistButton />
             {user?.email && (
               <ProfileDropdown
                 email={user.email}

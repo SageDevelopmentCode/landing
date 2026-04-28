@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   Image as ImageIcon,
@@ -745,14 +745,6 @@ function PickupTab({
 
   return (
     <div className="space-y-4">
-      {/* Plan dates */}
-      {hasAnyData && plan && (
-        <SectionCard title="Pickup Plan">
-          <Field label="Date of Request" value={plan.date_of_request ?? null} />
-          <Field label="Effective Until" value={plan.effective_until ?? null} />
-        </SectionCard>
-      )}
-
       {/* Persons list */}
       <SectionCard title={`Authorized Persons${persons.length > 0 ? ` (${persons.length})` : ""}`}>
         {persons.length === 0 && !addingNew && (
@@ -828,6 +820,14 @@ function PickupTab({
           </button>
         )}
       </SectionCard>
+
+      {/* Plan dates */}
+      {hasAnyData && plan && (
+        <SectionCard title="Pickup Plan">
+          <Field label="Date of Request" value={plan.date_of_request ?? null} />
+          <Field label="Effective Until" value={plan.effective_until ?? null} />
+        </SectionCard>
+      )}
     </div>
   );
 }
@@ -845,7 +845,9 @@ function ChildProfile({
   initialProfileImageUrl: string | null;
   pickup: { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] };
 }) {
-  const [activeTab, setActiveTab] = useState<ContentTab>("teacher");
+  const searchParams = useSearchParams();
+  const initialTab = (searchParams.get("tab") as ContentTab | null) ?? "teacher";
+  const [activeTab, setActiveTab] = useState<ContentTab>(initialTab);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(initialProfileImageUrl);
   const [avatarHovered, setAvatarHovered] = useState(false);
   const [uploading, setUploading] = useState(false);

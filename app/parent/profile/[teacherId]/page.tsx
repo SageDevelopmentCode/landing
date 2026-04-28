@@ -8,6 +8,7 @@ import Image from "next/image";
 import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import DashboardNav from "../../dashboard/DashboardNav";
 import TeacherProfileClient from "@/app/teacher/profile/[teacherId]/TeacherProfileClient";
+import OnboardingChecklistButton from "@/app/parent/components/OnboardingChecklistButton";
 
 export default async function ParentTeacherProfilePage({
   params,
@@ -132,7 +133,8 @@ export default async function ParentTeacherProfilePage({
         <div className="flex items-center justify-center">
           <DashboardNav />
         </div>
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-end gap-1">
+          <OnboardingChecklistButton />
           {user?.email && (
             <ProfileDropdown
               email={user.email}

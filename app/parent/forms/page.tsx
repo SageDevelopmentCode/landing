@@ -9,6 +9,7 @@ import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import Footer from "@/app/components/Footer";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import FormsPage from "./FormsPage";
+import OnboardingChecklistButton from "@/app/parent/components/OnboardingChecklistButton";
 import type { StudentSignatureMap } from "@/app/types/enrollment-signatures";
 import type { Database } from "@/app/types/database.types";
 
@@ -229,7 +230,8 @@ export default async function FormsRoute() {
           <div className="flex items-center justify-center">
             <DashboardNav />
           </div>
-          <div className="flex items-center justify-end">
+          <div className="flex items-center justify-end gap-1">
+            <OnboardingChecklistButton />
             {user?.email && (
               <ProfileDropdown email={user.email} fullName={fullName} userId={user.id} profileImageUrl={profileImageUrl} />
             )}

@@ -8,6 +8,7 @@ import Image from "next/image";
 import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import DashboardNav from "../dashboard/DashboardNav";
 import ParentFeedClient from "./ParentFeedClient";
+import OnboardingChecklistButton from "@/app/parent/components/OnboardingChecklistButton";
 import { getFeedPosts } from "@/app/teacher/feed/actions";
 
 export default async function ParentFeedPage() {
@@ -66,7 +67,8 @@ export default async function ParentFeedPage() {
         <div className="flex items-center justify-center">
           <DashboardNav />
         </div>
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-end gap-1">
+          <OnboardingChecklistButton />
           {user?.email && (
             <ProfileDropdown
               email={user.email}
