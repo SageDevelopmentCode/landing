@@ -9,6 +9,7 @@ import {
   createFunFridayTuitionEmbed,
   createHomeschoolDropInEmbed,
   createDonationEmbed,
+  createShadowDayPaymentEmbed,
   createErrorEmbed,
   sendDiscordNotification,
 } from "@/app/lib/discord";
@@ -17,6 +18,7 @@ import {
   buildSummerTuitionConfirmationEmail,
   buildHomeschoolDropInConfirmationEmail,
   buildDonationConfirmationEmail,
+  buildShadowDayPaymentConfirmationEmail,
   sendZohoEmail,
 } from "@/app/lib/zoho";
 
@@ -561,6 +563,94 @@ export async function POST(request: NextRequest) {
           selectedFridays: selectedFridays.length > 0 ? selectedFridays : undefined,
         }),
       ).catch((err) => console.error("Fun Friday Discord notification failed:", err));
+    } else if (session.metadata?.payment_type === "shadow_day_fee") {
+      const bookingId = session.metadata?.booking_id;
+      const amountCents = session.amount_total ?? 0;
+      const amountDollars = (amountCents / 100).toFixed(2);
+
+      // Mark booking as paid
+      if (bookingId) {
+        const { error: bookingUpdateError } = await supabase
+          .schema("marketing")
+          .from("shadow_day_bookings")
+          .update({ payment_status: "paid" })
+          .eq("id", bookingId);
+
+        if (bookingUpdateError) {
+          console.error("Failed to update shadow day booking payment status:", bookingUpdateError);
+        }
+      }
+
+      // Fetch booking for notification data
+      let parentName = "N/A";
+      let parentEmailAddr = session.metadata?.parent_email ?? session.customer_email ?? "N/A";
+      let childName = "N/A";
+      let shadowDate = "N/A";
+
+      if (bookingId) {
+        const { data: bookingRow } = await supabase
+          .schema("marketing")
+          .from("shadow_day_bookings")
+          .select("first_name, last_name, email, child_name, shadow_date")
+          .eq("id", bookingId)
+          .single();
+
+        if (bookingRow) {
+          parentName = `${bookingRow.first_name ?? ""} ${bookingRow.last_name ?? ""}`.trim() || "N/A";
+          parentEmailAddr = bookingRow.email ?? parentEmailAddr;
+          childName = bookingRow.child_name ?? "N/A";
+          shadowDate = bookingRow.shadow_date ?? "N/A";
+        }
+      }
+
+      // Discord notification (non-blocking)
+      sendDiscordNotification(
+        createShadowDayPaymentEmbed({
+          parentName,
+          parentEmail: parentEmailAddr,
+          childName,
+          shadowDate,
+          amountCents,
+        }),
+      ).catch((err) => console.error("Shadow day payment Discord notification failed:", err));
+
+      // Email confirmation (non-blocking, with error embed fallback)
+      (async () => {
+        try {
+          const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
+          if (!toAddress) return;
+
+          const { subject, content } = await buildShadowDayPaymentConfirmationEmail({
+            parentName: parentName !== "N/A" ? parentName : "Parent",
+            childName: childName !== "N/A" ? childName : "your child",
+            shadowDate,
+            amountDollars,
+          });
+
+          const emailResult = await sendZohoEmail({ toAddress, subject, content });
+
+          if (emailResult.success) {
+            await supabase.schema("email_logs").from("sends").insert({
+              to_address: toAddress,
+              subject,
+              template: "shadow_day_fee_confirmation",
+              application_id: null,
+              status: "success",
+            });
+          } else {
+            throw new Error(emailResult.error ?? "Unknown email error");
+          }
+        } catch (err) {
+          console.error("Shadow day fee confirmation email failed:", err);
+          sendDiscordNotification(
+            createErrorEmbed({
+              context: "Shadow day fee confirmation email",
+              error: String(err),
+              details: { bookingId: bookingId ?? "N/A" },
+            }),
+          ).catch(() => {});
+        }
+      })();
     } else {
       const donorEmail =
         session.metadata?.donor_email || session.customer_email || "";

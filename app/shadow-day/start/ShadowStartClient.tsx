@@ -11,6 +11,7 @@ import {
   sendPasswordResetEmail,
   sendEmailOtp,
   sendSignupOtp,
+  verifyEmailOtp,
 } from "@/app/actions/auth";
 import { verifyShadowDayOtp } from "@/app/actions/verifyShadowDayOtp";
 
@@ -191,7 +192,6 @@ export default function ShadowStartClient({ initialData }: { initialData: Bookin
               <LoginMode
                 key={`login-${sharedEmail}`}
                 defaultEmail={sharedEmail}
-                bookingData={initialData}
                 onSwitchToCreate={() => setMode("create")}
               />
             )}
@@ -431,11 +431,9 @@ type LoginView = "otp-email" | "otp-code" | "password" | "forgot";
 
 function LoginMode({
   defaultEmail = "",
-  bookingData,
   onSwitchToCreate,
 }: {
   defaultEmail?: string;
-  bookingData: BookingData;
   onSwitchToCreate: () => void;
 }) {
   const router = useRouter();
@@ -506,20 +504,12 @@ function LoginMode({
     const fd = new FormData();
     fd.set("email", otpEmail);
     fd.set("token", otpDigits.join(""));
-    fd.set("firstName", bookingData.firstName);
-    fd.set("lastName", bookingData.lastName);
-    fd.set("phone", bookingData.phone);
-    fd.set("childName", bookingData.childName);
-    fd.set("childGrade", bookingData.childGrade);
-    fd.set("referralSource", bookingData.referralSource);
-    fd.set("notes", bookingData.notes);
-    fd.set("shadowDate", bookingData.shadowDate);
-    const result = await verifyShadowDayOtp(fd);
+    const result = await verifyEmailOtp(fd);
     if (result?.error) {
       setError(result.error);
       setLoading(false);
-    } else if (result?.redirectTo) {
-      router.push(result.redirectTo);
+    } else {
+      router.push("/shadow-day/dashboard");
     }
   };
 
@@ -531,19 +521,7 @@ function LoginMode({
     if (result?.error) {
       setError(result.error);
       setLoading(false);
-    } else if (result?.redirectTo) {
-      // After password login, save the booking then go to dashboard
-      const fd = new FormData();
-      fd.set("email", email);
-      fd.set("token", "");
-      fd.set("firstName", bookingData.firstName);
-      fd.set("lastName", bookingData.lastName);
-      fd.set("phone", bookingData.phone);
-      fd.set("childName", bookingData.childName);
-      fd.set("childGrade", bookingData.childGrade);
-      fd.set("referralSource", bookingData.referralSource);
-      fd.set("notes", bookingData.notes);
-      fd.set("shadowDate", bookingData.shadowDate);
+    } else {
       router.push("/shadow-day/dashboard");
     }
   };

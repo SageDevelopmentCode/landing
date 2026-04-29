@@ -22,9 +22,10 @@ export default async function ApplicationDashboard() {
 
   let apps: Record<string, string | null | boolean>[] = [];
   let fullName: string | null = null;
+  let shadowBooking: { shadow_date: string } | null = null;
   if (user) {
     const adminClient = createAdminClient();
-    const [{ data }, { data: adminUser, error: adminUserError }] =
+    const [{ data }, { data: adminUser }, { data: booking }] =
       await Promise.all([
         adminClient
           .schema("parent_app")
@@ -37,12 +38,26 @@ export default async function ApplicationDashboard() {
           .select("full_name")
           .eq("id", user.id)
           .single(),
+        adminClient
+          .schema("marketing")
+          .from("shadow_day_bookings")
+          .select("shadow_date")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single(),
       ]);
     apps = data ?? [];
     if (apps.some((app) => app.approved === true)) {
       redirect("/parent/dashboard");
     }
     fullName = adminUser?.full_name ?? null;
+    if (booking) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const bookingDate = new Date(booking.shadow_date + "T00:00:00");
+      if (bookingDate >= today) shadowBooking = booking;
+    }
   }
 
   const accountFirstName = fullName?.split(" ")[0] ?? "there";
@@ -110,6 +125,36 @@ export default async function ApplicationDashboard() {
             <div className="mt-3">
               <EnrollmentCodeEntry />
             </div>
+          </div>
+        )}
+
+        {/* Shadow day banner */}
+        {shadowBooking && (
+          <div className="bg-sage-50 border border-sage-200 rounded-xl px-5 py-4 mb-6 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-sage-100 flex items-center justify-center flex-shrink-0">
+                <span className="text-base">🌿</span>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-sage-800 font-body">
+                  You have an upcoming Shadow Day
+                </p>
+                <p className="text-xs text-sage-700 font-body">
+                  {new Date(shadowBooking.shadow_date + "T00:00:00").toLocaleDateString("en-US", {
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/shadow-day/dashboard"
+              className="text-xs font-semibold text-white bg-sage-600 hover:bg-sage-700 rounded-lg px-3 py-2 font-body transition-colors whitespace-nowrap flex-shrink-0"
+            >
+              View Details
+            </Link>
           </div>
         )}
 

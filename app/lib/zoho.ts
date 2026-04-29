@@ -1806,3 +1806,36 @@ export async function buildTourReminderEmail(opts: {
 
   return { subject, content };
 }
+
+/**
+ * Build HTML confirmation email for a paid shadow day fee
+ */
+export async function buildShadowDayPaymentConfirmationEmail(opts: {
+  parentName: string;
+  childName: string;
+  shadowDate: string;
+  amountDollars: string;
+}): Promise<{ subject: string; content: string }> {
+  const subject = "Shadow Day Fee Received — You're All Set!";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${opts.parentName},</p>
+
+  <p>We are excited to confirm that your shadow day fee of <strong>$${opts.amountDollars}</strong> has been received for <strong>${opts.childName}</strong>! Your child&apos;s visit on <strong>${opts.shadowDate}</strong> is now officially confirmed.</p>
+
+  <p>We can&apos;t wait to welcome ${opts.childName} to Sage Field for a full day of outdoor learning, creative projects, and community.</p>
+
+  <p><strong>A quick reminder:</strong> If you decide to enroll within 14 days of your child&apos;s shadow day visit, the $95 fee will be fully applied toward your registration — so it&apos;s essentially free if you join the family!</p>
+
+  <p>If you have any questions before the visit, feel free to reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> or text <a href="sms:+15126775872" style="color: #5a7a5a;">(512) 677-5872</a>.</p>
+
+  <p style="margin-top: 32px;">See you soon!</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+  return { subject, content };
+}

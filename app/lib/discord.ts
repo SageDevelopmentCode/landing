@@ -1121,6 +1121,30 @@ export function createShadowDayBookingEmbed(data: {
 }
 
 /**
+ * Creates a Discord embed for shadow day payment received
+ */
+export function createShadowDayPaymentEmbed(data: {
+  parentName: string;
+  parentEmail: string;
+  childName: string;
+  shadowDate: string;
+  amountCents: number;
+}): DiscordEmbed {
+  return {
+    title: "💳 Shadow Day Payment Received",
+    color: 0x4a7c59,
+    fields: [
+      { name: "Parent", value: data.parentName, inline: true },
+      { name: "Email", value: data.parentEmail, inline: true },
+      { name: "Child", value: data.childName, inline: true },
+      { name: "Shadow Date", value: data.shadowDate, inline: true },
+      { name: "Amount Paid", value: `$${(data.amountCents / 100).toFixed(2)}`, inline: true },
+    ],
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
  * Creates a Discord embed for campus tour booking submissions
  */
 export function createTourBookingEmbed(data: {

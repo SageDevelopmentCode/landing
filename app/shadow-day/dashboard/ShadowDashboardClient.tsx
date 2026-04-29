@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -15,6 +16,7 @@ import {
 } from "lucide-react";
 import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import HelpWidget from "@/app/parent/components/HelpWidget";
+import ShadowDayPaymentModal from "./ShadowDayPaymentModal";
 
 const SHADOW_SCHEDULE = [
   { time: "9:00 – 9:15 AM", activity: "Morning Arrival & Welcome" },
@@ -86,6 +88,7 @@ export default function ShadowDashboardClient({
   fullName: string;
   profileImageUrl: string | null;
 }) {
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const isPaid = booking?.payment_status === "paid";
   const dateparts = booking ? formatShadowDateShort(booking.shadow_date) : null;
 
@@ -109,7 +112,6 @@ export default function ShadowDashboardClient({
       icon: CreditCard,
       iconColor: "text-primary",
       iconBg: "bg-primary/10",
-      badge: isPaid ? undefined : "Coming Soon",
     },
   ];
 
@@ -254,9 +256,9 @@ export default function ShadowDashboardClient({
                   <span className="font-semibold">
                     Your shadow day is not officially confirmed yet.
                   </span>{" "}
-                  Your spot is held, but please complete payment once it becomes
-                  available to lock in your date. The $95 fee is fully waived if
-                  you enroll within 14 days of your child&apos;s visit.
+                  Your spot is held, but please complete payment to lock in your
+                  date. The $95 fee is fully waived if you enroll within 14 days
+                  of your child&apos;s visit.
                 </p>
               </motion.div>
             )}
@@ -309,23 +311,24 @@ export default function ShadowDashboardClient({
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <p
-                          className={`text-sm font-semibold font-body ${item.done ? "text-sage-800" : "text-gray-800"}`}
-                        >
-                          {item.label}
-                        </p>
-                        {item.badge && (
-                          <span className="text-[10px] font-bold font-body bg-amber-50 border border-amber-200 text-amber-700 px-2 py-0.5 rounded-full">
-                            {item.badge}
-                          </span>
-                        )}
-                      </div>
+                      <p
+                        className={`text-sm font-semibold font-body mb-0.5 ${item.done ? "text-sage-800" : "text-gray-800"}`}
+                      >
+                        {item.label}
+                      </p>
                       <p
                         className={`text-xs font-body leading-relaxed ${item.done ? "text-sage-700" : "text-gray-500"}`}
                       >
                         {item.description}
                       </p>
+                      {item.id === "payment" && !isPaid && booking && (
+                        <button
+                          onClick={() => setShowPaymentModal(true)}
+                          className="mt-2 px-3 py-1.5 rounded-lg text-xs font-semibold font-body bg-primary text-white hover:bg-primary/90 transition-colors cursor-pointer"
+                        >
+                          Pay Now
+                        </button>
+                      )}
                     </div>
 
                     <div className="flex-shrink-0 mt-0.5">
@@ -362,6 +365,17 @@ export default function ShadowDashboardClient({
           </div>
         </div>
       </main>
+
+      <AnimatePresence>
+        {showPaymentModal && !isPaid && booking && (
+          <ShadowDayPaymentModal
+            booking={booking}
+            userEmail={userEmail}
+            userId={userId}
+            onClose={() => setShowPaymentModal(false)}
+          />
+        )}
+      </AnimatePresence>
 
       <HelpWidget />
     </div>
