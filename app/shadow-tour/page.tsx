@@ -86,7 +86,7 @@ const MONTHS = [
 
 const DAY_HEADERS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-const TODAY = new Date(2026, 4, 26);
+const TODAY = new Date(2026, 4, 28);
 TODAY.setHours(0, 0, 0, 0);
 
 const MAX_DATE = new Date(2026, 7, 13);
@@ -917,21 +917,6 @@ export default function ShadowTourPage() {
   return (
     <div className="min-h-screen bg-welcome-bg">
       <Navbar darkStyle />
-
-      {/* ── Returning family banner ── */}
-      {isLoggedIn && (
-        <div className="bg-sage-50 border-b border-sage-200 px-6 py-3 flex items-center justify-between gap-4">
-          <p className="text-sm text-sage-700 font-body font-semibold">
-            You have a shadow day booked.
-          </p>
-          <a
-            href="/shadow-day/dashboard"
-            className="flex-shrink-0 text-sm font-semibold font-body text-white bg-sage-600 hover:bg-sage-700 px-4 py-2 rounded-lg transition-colors"
-          >
-            View My Shadow Day →
-          </a>
-        </div>
-      )}
 
       {/* ── Hero ── */}
       <section className="relative pt-28 pb-16 px-6 sm:px-12 lg:px-16 bg-welcome-bg overflow-hidden">
