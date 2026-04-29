@@ -119,7 +119,7 @@ const TOUR_EXPECTATIONS = [
   { icon: Star, text: "Private, one-on-one family tour experience" },
 ];
 
-const TODAY = new Date(2026, 3, 27); // April 27, 2026 — earliest available tour date
+const TODAY = new Date();
 TODAY.setHours(0, 0, 0, 0);
 
 const MAX_MONTH = 5; // June (0-indexed)
