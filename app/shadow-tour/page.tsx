@@ -838,7 +838,7 @@ export default function ShadowTourPage() {
   const stepDirection = useRef<1 | -1>(1);
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [calendarMonth, setCalendarMonth] = useState(4); // May
+  const [calendarMonth, setCalendarMonth] = useState(5); // June
   const [calendarYear, setCalendarYear] = useState(2026);
 
   const [isContactOpen, setIsContactOpen] = useState(false);
