@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/app/lib/supabase-browser";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Calendar,
@@ -69,8 +70,18 @@ const REFERRAL_OPTIONS = [
 ];
 
 const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 const DAY_HEADERS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -85,10 +96,7 @@ const MAX_MONTH = 7;
 const MAX_YEAR = 2026;
 
 const STEP_LABELS = ["Pick a Date", "Your Family"];
-const STEP_MICROCOPY = [
-  "Mon–Thu school days only",
-  "Parent + child info",
-];
+const STEP_MICROCOPY = ["Mon–Thu school days only", "Parent + child info"];
 
 const STEP_HEADINGS: Record<ShadowStep, { title: string; sub: string }> = {
   1: {
@@ -106,7 +114,8 @@ const SHADOW_DAY_SCHEDULE = [
     time: "9:00 AM",
     icon: Sun,
     label: "Morning Arrival",
-    description: "Your child arrives, meets their guide, and settles into the morning rhythm alongside classmates.",
+    description:
+      "Your child arrives, meets their guide, and settles into the morning rhythm alongside classmates.",
     colorClass: "bg-amber-50 border-amber-200",
     iconColor: "text-amber-500",
   },
@@ -114,7 +123,8 @@ const SHADOW_DAY_SCHEDULE = [
     time: "9:30 AM",
     icon: BookOpen,
     label: "Morning Lessons",
-    description: "Circle time, collaborative learning, and Montessori/Waldorf-inspired work cycles in small groups.",
+    description:
+      "Circle time, collaborative learning, and Montessori/Waldorf-inspired work cycles in small groups.",
     colorClass: "bg-sage-50 border-sage-200",
     iconColor: "text-sage-600",
   },
@@ -122,7 +132,8 @@ const SHADOW_DAY_SCHEDULE = [
     time: "10:30 AM",
     icon: TreePine,
     label: "Outdoor Learning",
-    description: "Nature trails, garden work, and hands-on science. This is where Sage Field comes alive.",
+    description:
+      "Nature trails, garden work, and hands-on science. This is where Sage Field comes alive.",
     colorClass: "bg-green-50 border-green-200",
     iconColor: "text-green-600",
   },
@@ -130,7 +141,8 @@ const SHADOW_DAY_SCHEDULE = [
     time: "12:00 PM",
     icon: Utensils,
     label: "Lunch with Friends",
-    description: "A real school lunch with real friends — your child eats alongside their class, not apart from it.",
+    description:
+      "A real school lunch with real friends — your child eats alongside their class, not apart from it.",
     colorClass: "bg-orange-50 border-orange-200",
     iconColor: "text-orange-500",
   },
@@ -138,7 +150,8 @@ const SHADOW_DAY_SCHEDULE = [
     time: "1:00 PM",
     icon: Star,
     label: "Afternoon Projects",
-    description: "Art, building, creative inquiry, or community projects. Afternoons at Sage Field are never passive.",
+    description:
+      "Art, building, creative inquiry, or community projects. Afternoons at Sage Field are never passive.",
     colorClass: "bg-primary/5 border-primary/20",
     iconColor: "text-primary",
   },
@@ -146,7 +159,8 @@ const SHADOW_DAY_SCHEDULE = [
     time: "3:00 PM",
     icon: Heart,
     label: "Pickup & Debrief",
-    description: "You pick up your child and spend 10 minutes with Ms. Sabrina hearing about their day.",
+    description:
+      "You pick up your child and spend 10 minutes with Ms. Sabrina hearing about their day.",
     colorClass: "bg-sage-50 border-sage-200",
     iconColor: "text-sage-600",
   },
@@ -178,27 +192,32 @@ const WHO_ITS_FOR = [
 const SHADOW_FAQS = [
   {
     question: "Why does a shadow day cost $95?",
-    answer: "Unlike a 45-minute campus tour, a shadow day is a full school day of real teacher time, materials, outdoor activities, and lunch. The $95 covers that experience and ensures families who book are genuinely considering enrollment.",
+    answer:
+      "Unlike a 45-minute campus tour, a shadow day is a full school day of real teacher time, materials, outdoor activities, and lunch. The $95 covers that experience and ensures families who book are genuinely considering enrollment.",
     highlight: true,
   },
   {
     question: "What happens to the $95 if we enroll?",
-    answer: "If your family submits an enrollment application within 14 days of your child's shadow day, the $95 fee is fully waived from your first month's tuition. It's not a discount — it disappears entirely.",
+    answer:
+      "If your family submits an enrollment application within 14 days of your child's shadow day, the $95 fee is fully waived from your first month's tuition. It's not a discount — it disappears entirely.",
     highlight: false,
   },
   {
     question: "What should my child bring?",
-    answer: "Comfortable clothes they can get dirty in, closed-toe shoes (they'll be outdoors), a water bottle, and a packed lunch unless otherwise coordinated. Ms. Sabrina will confirm specifics when your booking is confirmed.",
+    answer:
+      "Comfortable clothes they can get dirty in, closed-toe shoes (they'll be outdoors), a water bottle, and a packed lunch unless otherwise coordinated. Ms. Sabrina will confirm specifics when your booking is confirmed.",
     highlight: false,
   },
   {
     question: "Can siblings come?",
-    answer: "Each shadow day is structured around one child's experience in their appropriate age group. If you have multiple children, please book separate days so each child gets the full, personalized experience.",
+    answer:
+      "Each shadow day is structured around one child's experience in their appropriate age group. If you have multiple children, please book separate days so each child gets the full, personalized experience.",
     highlight: false,
   },
   {
     question: "What if the day doesn't feel like a fit?",
-    answer: "That's completely okay and it happens. We'd rather you know now than after enrollment. Ms. Sabrina will still spend 10 minutes with you at pickup giving honest feedback about what she observed and where your child might thrive.",
+    answer:
+      "That's completely okay and it happens. We'd rather you know now than after enrollment. Ms. Sabrina will still spend 10 minutes with you at pickup giving honest feedback about what she observed and where your child might thrive.",
     highlight: false,
   },
 ];
@@ -449,15 +468,18 @@ function ShadowDayTimeline() {
             What Your Child Will Actually Do
           </h2>
           <p className="text-base text-gray-500 font-body max-w-2xl mx-auto">
-            From the moment they arrive to the moment you pick them up — no gaps,
-            no waiting rooms, no observation glass.
+            From the moment they arrive to the moment you pick them up — no
+            gaps, no waiting rooms, no observation glass.
           </p>
         </motion.div>
 
         {/* Desktop: horizontal timeline */}
         <div className="hidden md:flex items-stretch">
           {SHADOW_DAY_SCHEDULE.map(
-            ({ time, icon: Icon, label, description, colorClass, iconColor }, i) => (
+            (
+              { time, icon: Icon, label, description, colorClass, iconColor },
+              i,
+            ) => (
               <div key={label} className="flex items-center flex-1">
                 <motion.div
                   className="flex flex-col items-center text-center flex-1 px-2"
@@ -469,7 +491,9 @@ function ShadowDayTimeline() {
                   <p className="text-xs font-bold text-sage-600 font-body uppercase tracking-wide mb-3">
                     {time}
                   </p>
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border-2 ${colorClass} mb-3`}>
+                  <div
+                    className={`w-14 h-14 rounded-2xl flex items-center justify-center border-2 ${colorClass} mb-3`}
+                  >
                     <Icon className={`w-6 h-6 ${iconColor}`} />
                   </div>
                   <h4 className="text-xs font-bold font-heading text-gray-800 mb-1">
@@ -501,7 +525,10 @@ function ShadowDayTimeline() {
         {/* Mobile: vertical timeline */}
         <div className="md:hidden relative pl-6 border-l-2 border-sage-200 space-y-6">
           {SHADOW_DAY_SCHEDULE.map(
-            ({ time, icon: Icon, label, description, colorClass, iconColor }, i) => (
+            (
+              { time, icon: Icon, label, description, colorClass, iconColor },
+              i,
+            ) => (
               <motion.div
                 key={label}
                 className="flex gap-4"
@@ -510,7 +537,9 @@ function ShadowDayTimeline() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: i * 0.08 }}
               >
-                <div className={`absolute -left-[13px] w-6 h-6 rounded-full border-2 flex items-center justify-center ${colorClass} bg-white`}>
+                <div
+                  className={`absolute -left-[13px] w-6 h-6 rounded-full border-2 flex items-center justify-center ${colorClass} bg-white`}
+                >
                   <Icon className={`w-3 h-3 ${iconColor}`} />
                 </div>
                 <div className="flex-1 bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
@@ -560,16 +589,17 @@ function WaivedFeeBlock() {
                 Enroll Within 14 Days, and Your $95 Is Waived.
               </h3>
               <p className="text-base text-gray-600 font-body leading-relaxed mb-6">
-                The Shadow Day fee exists because this is a real school day — teacher time,
-                materials, and outdoor space included. But if you see the fit and enroll
-                within two weeks of your child&apos;s visit, that $95 comes off your first
-                tuition payment. No forms. No codes. We just honor it.
+                The Shadow Day fee exists because this is a real school day —
+                teacher time, materials, and outdoor space included. But if you
+                see the fit and enroll within two weeks of your child&apos;s
+                visit, that $95 comes off your first tuition payment. No forms.
+                No codes. We just honor it.
               </p>
               <div className="flex items-start gap-3 bg-sage-50 border border-sage-200 rounded-xl p-4">
                 <Shield className="w-4 h-4 text-sage-600 mt-0.5 flex-shrink-0" />
                 <p className="text-xs text-gray-600 font-body leading-relaxed">
-                  No enrollment pressure. No coupon codes. If you love what you see and
-                  apply within two weeks, we simply honor the waiver.
+                  No enrollment pressure. No coupon codes. If you love what you
+                  see and apply within two weeks, we simply honor the waiver.
                 </p>
               </div>
             </div>
@@ -593,24 +623,19 @@ function WaivedFeeBlock() {
                 if you enroll within 14 days
               </p>
 
-              {/* 14-circle visual */}
-              <div className="bg-white rounded-xl border border-sage-200 p-4">
-                <p className="text-[10px] uppercase tracking-wide text-gray-400 font-body mb-3">
-                  14-day enrollment window
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {Array.from({ length: 14 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className={`w-3 h-3 rounded-full ${
-                        i < 5 ? "bg-primary" : "bg-gray-200"
-                      }`}
-                    />
-                  ))}
-                </div>
-                <p className="text-[10px] text-gray-400 font-body mt-2">
-                  Enroll any day within the window
-                </p>
+              <div className="bg-white rounded-xl border border-sage-200 p-4 space-y-2">
+                {[
+                  "Shadow Day: $95",
+                  "Enroll within 14 days",
+                  "$95 fee waived",
+                ].map((item) => (
+                  <div key={item} className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-sage-600 flex-shrink-0" />
+                    <span className="text-xs text-gray-700 font-body font-semibold">
+                      {item}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -660,7 +685,9 @@ function WhoItsForSection() {
               <h4 className="text-base font-bold font-heading text-gray-800 mb-2">
                 {headline}
               </h4>
-              <p className="text-sm text-gray-600 font-body leading-relaxed">{body}</p>
+              <p className="text-sm text-gray-600 font-body leading-relaxed">
+                {body}
+              </p>
             </motion.div>
           ))}
         </div>
@@ -777,6 +804,15 @@ function BottomCTAStrip() {
           <p className="text-sm text-sage-400 font-body mt-5">
             $95 · Waived if you enroll within 14 days
           </p>
+          <p className="text-sm text-sage-500 font-body mt-3">
+            Already booked?{" "}
+            <a
+              href="/shadow-day/dashboard"
+              className="text-sage-300 hover:text-white transition-colors"
+            >
+              View your upcoming day →
+            </a>
+          </p>
         </motion.div>
       </div>
     </section>
@@ -806,6 +842,15 @@ export default function ShadowTourPage() {
   const [calendarYear, setCalendarYear] = useState(2026);
 
   const [isContactOpen, setIsContactOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    createClient()
+      .auth.getSession()
+      .then(({ data }) => {
+        setIsLoggedIn(!!data.session);
+      });
+  }, []);
 
   const [formData, setFormData] = useState<ShadowFormData>({
     firstName: "",
@@ -847,7 +892,9 @@ export default function ShadowTourPage() {
   }
 
   function handleFormChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
   ) {
     const { name, value } = e.target;
     if (name === "phone") {
@@ -871,6 +918,21 @@ export default function ShadowTourPage() {
     <div className="min-h-screen bg-welcome-bg">
       <Navbar darkStyle />
 
+      {/* ── Returning family banner ── */}
+      {isLoggedIn && (
+        <div className="bg-sage-50 border-b border-sage-200 px-6 py-3 flex items-center justify-between gap-4">
+          <p className="text-sm text-sage-700 font-body font-semibold">
+            You have a shadow day booked.
+          </p>
+          <a
+            href="/shadow-day/dashboard"
+            className="flex-shrink-0 text-sm font-semibold font-body text-white bg-sage-600 hover:bg-sage-700 px-4 py-2 rounded-lg transition-colors"
+          >
+            View My Shadow Day →
+          </a>
+        </div>
+      )}
+
       {/* ── Hero ── */}
       <section className="relative pt-28 pb-16 px-6 sm:px-12 lg:px-16 bg-welcome-bg overflow-hidden">
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
@@ -879,15 +941,6 @@ export default function ShadowTourPage() {
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center relative">
           {/* Left column */}
           <div>
-            <motion.span
-              className="inline-block px-5 py-2 bg-badge-bg border border-primary/20 text-gray-700 text-sm font-semibold rounded-full mb-6 font-body"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-            >
-              Shadow Day Experience · Round Rock, TX
-            </motion.span>
-
             <motion.h1
               className="text-4xl md:text-5xl lg:text-6xl font-bold font-heading text-gray-800 leading-tight mb-5"
               initial={{ opacity: 0, x: -24 }}
@@ -903,9 +956,9 @@ export default function ShadowTourPage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.45, delay: 0.2 }}
             >
-              A Shadow Day is a full school day at Sage Field — real lessons, real outdoor
-              time, real lunch with classmates. Not a tour. An experience. Mon–Thu, 9 AM to
-              3 PM. $95, and waived if you enroll.
+              A Shadow Day is a full school day at Sage Field — real lessons,
+              real outdoor time, real lunch with classmates. Not a tour. An
+              experience. Mon–Thu, 9 AM to 3 PM. $95, and waived if you enroll.
             </motion.p>
 
             <motion.div
@@ -919,8 +972,16 @@ export default function ShadowTourPage() {
                 className="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white font-semibold font-body px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 text-base"
               >
                 Book Your Shadow Day
-                <ArrowDown className="w-4 h-4" />
               </a>
+              <p className="mt-3 text-sm text-gray-400 font-body">
+                Already booked?{" "}
+                <a
+                  href="/shadow-day/dashboard"
+                  className="text-sage-600 hover:text-sage-700 transition-colors"
+                >
+                  View your upcoming day →
+                </a>
+              </p>
             </motion.div>
 
             {/* Trust badges */}
@@ -974,8 +1035,12 @@ export default function ShadowTourPage() {
                 />
               </div>
               <div>
-                <p className="text-xs font-bold text-gray-800 font-body">Ms. Sabrina</p>
-                <p className="text-[10px] text-gray-500 font-body">Lead Teacher & Director</p>
+                <p className="text-xs font-bold text-gray-800 font-body">
+                  Ms. Sabrina
+                </p>
+                <p className="text-[10px] text-gray-500 font-body">
+                  Lead Teacher & Director
+                </p>
               </div>
               <span className="ml-1 bg-sage-100 text-sage-700 text-[10px] font-bold px-2 py-0.5 rounded-full font-body">
                 Your Guide
@@ -987,8 +1052,12 @@ export default function ShadowTourPage() {
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-sage-600 flex-shrink-0" />
                 <div>
-                  <p className="text-xs font-bold text-gray-800 font-body">9 AM – 3 PM</p>
-                  <p className="text-[10px] text-gray-500 font-body">Full school day</p>
+                  <p className="text-xs font-bold text-gray-800 font-body">
+                    9 AM – 3 PM
+                  </p>
+                  <p className="text-[10px] text-gray-500 font-body">
+                    Full school day
+                  </p>
                 </div>
               </div>
             </div>
@@ -1022,8 +1091,17 @@ export default function ShadowTourPage() {
               Reserve Your Child&apos;s Day
             </h2>
             <p className="text-base text-gray-500 font-body max-w-lg mx-auto">
-              Pick a school day, share your child&apos;s info, and we&apos;ll confirm
-              your booking directly.
+              Pick a school day, share your child&apos;s info, and we&apos;ll
+              confirm your booking directly.
+            </p>
+            <p className="text-xs text-gray-400 font-body mt-3">
+              Already booked?{" "}
+              <a
+                href="/shadow-day/dashboard"
+                className="text-sage-600 hover:text-sage-700 transition-colors"
+              >
+                View your upcoming day →
+              </a>
             </p>
           </motion.div>
 
@@ -1067,7 +1145,10 @@ export default function ShadowTourPage() {
                     <SelectedDayChip date={selectedDate} />
                     <div className="mt-4 flex items-center gap-2 text-xs text-gray-400 font-body">
                       <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-                      <span>2760 Gattis School Rd, Round Rock, TX 78664 · School days Mon–Thu only</span>
+                      <span>
+                        2760 Gattis School Rd, Round Rock, TX 78664 · School
+                        days Mon–Thu only
+                      </span>
                     </div>
                   </div>
                 )}
@@ -1143,7 +1224,8 @@ export default function ShadowTourPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-semibold text-text-gray mb-2 font-body">
-                          Child&apos;s Name <span className="text-red-500">*</span>
+                          Child&apos;s Name{" "}
+                          <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -1167,7 +1249,9 @@ export default function ShadowTourPage() {
                           >
                             <option value="">Select grade…</option>
                             {GRADE_OPTIONS.map((g) => (
-                              <option key={g} value={g}>{g}</option>
+                              <option key={g} value={g}>
+                                {g}
+                              </option>
                             ))}
                           </select>
                           <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -1188,7 +1272,9 @@ export default function ShadowTourPage() {
                         >
                           <option value="">Select one…</option>
                           {REFERRAL_OPTIONS.map((r) => (
-                            <option key={r} value={r}>{r}</option>
+                            <option key={r} value={r}>
+                              {r}
+                            </option>
                           ))}
                         </select>
                         <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -1214,7 +1300,6 @@ export default function ShadowTourPage() {
                     </div>
                   </div>
                 )}
-
               </motion.div>
             </AnimatePresence>
 

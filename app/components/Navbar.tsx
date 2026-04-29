@@ -701,10 +701,10 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
           Enroll Today!
         </Link>
         <Link
-          href="/rsvp"
+          href="/tour"
           className="flex-1 flex items-center justify-center px-3 py-2.5 bg-indigo-500 text-white text-sm font-semibold rounded-2xl"
         >
-          Open House on 4/25
+          Schedule a Tour
         </Link>
       </div>
 
@@ -872,11 +872,11 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
                 className="mb-2"
               >
                 <Link
-                  href="/rsvp"
+                  href="/tour"
                   onClick={() => setMobileMenuOpen(false)}
                   className="block w-full border-2 border-white bg-indigo-500 hover:bg-indigo-600 text-white font-semibold px-6 py-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-250 text-center"
                 >
-                  Join us on April 25th!
+                  Schedule a Tour
                 </Link>
               </motion.div>
 
