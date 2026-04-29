@@ -7,7 +7,8 @@ import { OpenHouseTable } from './OpenHouseTable'
 import { TourUnavailabilityView } from './TourUnavailabilityView'
 import { InfoSessionTable } from './InfoSessionTable'
 import { InfoSessionFAQView } from './InfoSessionFAQView'
-import type { OpenHouseRsvp, TourBooking, InfoSessionRsvp } from './page'
+import { ShadowDayBookingsView } from './ShadowDayBookingsView'
+import type { OpenHouseRsvp, TourBooking, InfoSessionRsvp, ShadowDayBooking } from './page'
 import type { TourUnavailability } from '@/app/actions/tourUnavailability'
 
 const merriweather = Poppins({
@@ -15,11 +16,12 @@ const merriweather = Poppins({
   subsets: ['latin'],
 })
 
-type SubMenuItem = 'open-house' | 'tour-unavailability' | 'info-session' | 'info-session-faq'
+type SubMenuItem = 'open-house' | 'tour-unavailability' | 'info-session' | 'info-session-faq' | 'shadow-day'
 
 const subMenuItems: { id: SubMenuItem; label: string; sublabel: string }[] = [
   { id: 'open-house', label: 'Open House', sublabel: 'April 25' },
   { id: 'tour-unavailability', label: 'Campus Tours', sublabel: 'Manage availability' },
+  { id: 'shadow-day', label: 'Shadow Day', sublabel: 'Bookings & payments' },
   { id: 'info-session', label: 'Info Session', sublabel: 'April 18 RSVPs' },
   { id: 'info-session-faq', label: 'Session FAQ', sublabel: 'April 18 prep' },
 ]
@@ -30,12 +32,14 @@ export function MarketingClient({
   tourBookings,
   enrolledEmailsArr,
   infoSessionRsvps,
+  shadowDayBookings,
 }: {
   rsvps: OpenHouseRsvp[]
   tourUnavailability: TourUnavailability[]
   tourBookings: TourBooking[]
   enrolledEmailsArr: { email: string; status: string }[]
   infoSessionRsvps: InfoSessionRsvp[]
+  shadowDayBookings: ShadowDayBooking[]
 }) {
   const [active, setActive] = useState<SubMenuItem>('open-house')
 
@@ -144,6 +148,10 @@ export function MarketingClient({
 
         {active === 'tour-unavailability' && (
           <TourUnavailabilityView initial={tourUnavailability} tourBookings={tourBookings} />
+        )}
+
+        {active === 'shadow-day' && (
+          <ShadowDayBookingsView bookings={shadowDayBookings} />
         )}
 
         {active === 'info-session' && (
