@@ -377,8 +377,8 @@ export default function HomePageClient({
       )}
 
       {/* Two-column grid on desktop, single column on mobile */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8 items-start">
-        {/* Left column: Students + Events */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8 items-start lg:items-stretch">
+        {/* Left column: Students + Drop-Off + Referral */}
         <div className="flex flex-col gap-8">
           {/* Student Cards */}
           <section>
@@ -453,6 +453,177 @@ export default function HomePageClient({
             </div>
           </section>
 
+          {/* First Week Drop-Off Schedule */}
+          {showDropOff && (
+            <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="flex items-center gap-2.5 px-5 py-4 bg-[#EEF5EF] border-b border-[#d3e9d5]">
+                <div className="w-7 h-7 rounded-full bg-[#4a7c59]/15 flex items-center justify-center flex-shrink-0">
+                  <Car
+                    className="w-3.5 h-3.5 text-[#4a7c59]"
+                    strokeWidth={1.5}
+                  />
+                </div>
+                <h2 className="text-base font-heading font-semibold text-gray-800">
+                  First Week Drop-Off
+                </h2>
+              </div>
+
+              <div className="px-5 py-4 flex flex-col gap-5">
+                <p className="text-sm font-body text-gray-500 leading-relaxed">
+                  To ease morning traffic during the first week, choose a
+                  15-minute drop-off window for your family. Drop-off runs{" "}
+                  <span className="font-medium text-gray-700">
+                    8:15 – 9:00 AM
+                  </span>
+                  .
+                </p>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  {DROP_OFF_SLOTS.map((slot) => {
+                    const isSelected = dropOffSlot === slot.value;
+                    return (
+                      <button
+                        key={slot.value}
+                        onClick={() => setDropOffSlot(slot.value)}
+                        className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold font-body transition-colors ${
+                          isSelected
+                            ? "bg-[#4a7c59] text-white"
+                            : "bg-[#EEF5EF] text-[#4a7c59] hover:bg-[#ddeede]"
+                        }`}
+                      >
+                        {isSelected && <Check className="w-3 h-3" />}
+                        {slot.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <div className="flex items-center gap-1.5 text-xs font-body text-gray-400">
+                    <CalendarClock
+                      className="w-3.5 h-3.5 flex-shrink-0"
+                      strokeWidth={1.5}
+                    />
+                    One time slot for the whole family
+                  </div>
+                  <button
+                    disabled={!dropOffSlot}
+                    onClick={() => {}}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold font-body bg-[#4a7c59] text-white hover:bg-[#3d6b4a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    Save drop-off time
+                  </button>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Referral Section */}
+          <section
+            className="rounded-2xl p-6 shadow-sm border border-[#c2ddc8]"
+            style={{
+              background: "linear-gradient(135deg, #eef5ef 0%, #ddeede 100%)",
+            }}
+          >
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              {/* Left: heading + description */}
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-7 h-7 rounded-full bg-[#4a7c59]/15 flex items-center justify-center">
+                    <Gift
+                      className="w-3.5 h-3.5 text-[#4a7c59]"
+                      strokeWidth={1.5}
+                    />
+                  </div>
+                  <h2 className="text-base font-heading font-semibold text-gray-800">
+                    Refer a Family
+                  </h2>
+                  <span className="bg-[#4a7c59] text-white text-xs font-body px-2 py-0.5 rounded-full font-medium">
+                    $150 gift card
+                  </span>
+                </div>
+                <p className="text-sm font-body text-gray-600 leading-relaxed max-w-lg">
+                  Know a family who&apos;d be a great fit for Sage Field? Share
+                  your link — when they enroll and pay their registration fee,
+                  you&apos;ll receive a $150 gift card.
+                </p>
+
+                {/* How it works */}
+                {/* <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                  {[
+                    "Share your link with a family",
+                    "They apply, get approved & enroll",
+                    "You get a $150 gift card",
+                  ].map((step, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <div className="flex-shrink-0 w-5 h-5 rounded-full bg-[#4a7c59]/20 flex items-center justify-center">
+                        <span className="text-[10px] font-bold font-heading text-[#4a7c59]">
+                          {i + 1}
+                        </span>
+                      </div>
+                      <p className="text-xs font-body text-gray-600">{step}</p>
+                    </div>
+                  ))}
+                </div> */}
+              </div>
+
+              {/* Right: stats + copy link */}
+              <div className="flex flex-col gap-3 sm:min-w-[260px]">
+                {/* Stats */}
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { value: String(referralCount), label: "Referred" },
+                    { value: String(enrolledCount), label: "Enrolled" },
+                    { value: `$${earnedDollars}`, label: "Earned" },
+                  ].map(({ value, label }) => (
+                    <div
+                      key={label}
+                      className="text-center bg-white/70 rounded-xl py-2.5 px-2 border border-[#c2ddc8]"
+                    >
+                      <p className="text-base font-semibold font-heading text-gray-800">
+                        {value}
+                      </p>
+                      <p className="text-xs font-body text-gray-500">{label}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Copy link */}
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 min-w-0 bg-white/70 border border-[#c2ddc8] rounded-xl px-3 py-2">
+                    <p className="text-xs font-body text-gray-600 truncate">
+                      {referralLink}
+                    </p>
+                  </div>
+                  <button
+                    onClick={copyReferralLink}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold font-body transition-colors whitespace-nowrap ${
+                      copied
+                        ? "bg-green-600 text-white"
+                        : "bg-[#4a7c59] text-white hover:bg-[#3d6b4a]"
+                    }`}
+                  >
+                    {copied ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        Copy link
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        {/* Right column: Events + Billing */}
+        <div className="flex flex-col gap-8 lg:sticky lg:top-[65px] lg:self-start">
           {/* Upcoming Events */}
           <section>
             <div className="flex items-center justify-between mb-4">
@@ -478,7 +649,7 @@ export default function HomePageClient({
                   return (
                     <div
                       key={evt.id}
-                      className="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 px-4 py-3 shadow-sm"
+                      className="flex items-center gap-3 bg-white rounded-2xl border border-gray-100 px-4 py-3 shadow-sm"
                     >
                       {/* Calendar day block */}
                       <div
@@ -509,30 +680,25 @@ export default function HomePageClient({
                             {timeStr}
                           </p>
                         )}
+                        {evt.category && (
+                          <span
+                            className="inline-block mt-1 text-xs font-body font-medium px-2 py-0.5 rounded-full"
+                            style={{
+                              backgroundColor: evt.color + "22",
+                              color: evt.color,
+                            }}
+                          >
+                            {evt.category}
+                          </span>
+                        )}
                       </div>
-
-                      {/* Category badge */}
-                      {evt.category && (
-                        <span
-                          className="text-xs font-body font-medium px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0"
-                          style={{
-                            backgroundColor: evt.color + "22",
-                            color: evt.color,
-                          }}
-                        >
-                          {evt.category}
-                        </span>
-                      )}
                     </div>
                   );
                 })}
               </div>
             )}
           </section>
-        </div>
 
-        {/* Right column: Billing */}
-        <div>
           <section>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-heading font-semibold text-gray-800">
@@ -595,168 +761,6 @@ export default function HomePageClient({
           </section>
         </div>
       </div>
-
-      {/* First Week Drop-Off Schedule */}
-      {showDropOff && (
-        <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="flex items-center gap-2.5 px-5 py-4 bg-[#EEF5EF] border-b border-[#d3e9d5]">
-            <div className="w-7 h-7 rounded-full bg-[#4a7c59]/15 flex items-center justify-center flex-shrink-0">
-              <Car className="w-3.5 h-3.5 text-[#4a7c59]" strokeWidth={1.5} />
-            </div>
-            <h2 className="text-base font-heading font-semibold text-gray-800">
-              First Week Drop-Off
-            </h2>
-          </div>
-
-          <div className="px-5 py-4 flex flex-col gap-5">
-            <p className="text-sm font-body text-gray-500 leading-relaxed">
-              To ease morning traffic during the first week, choose a 15-minute
-              drop-off window for your family. Drop-off runs{" "}
-              <span className="font-medium text-gray-700">8:15 – 9:00 AM</span>.
-            </p>
-
-            <div className="flex items-center gap-2 flex-wrap">
-              {DROP_OFF_SLOTS.map((slot) => {
-                const isSelected = dropOffSlot === slot.value;
-                return (
-                  <button
-                    key={slot.value}
-                    onClick={() => setDropOffSlot(slot.value)}
-                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold font-body transition-colors ${
-                      isSelected
-                        ? "bg-[#4a7c59] text-white"
-                        : "bg-[#EEF5EF] text-[#4a7c59] hover:bg-[#ddeede]"
-                    }`}
-                  >
-                    {isSelected && <Check className="w-3 h-3" />}
-                    {slot.label}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="flex items-center justify-between pt-1">
-              <div className="flex items-center gap-1.5 text-xs font-body text-gray-400">
-                <CalendarClock
-                  className="w-3.5 h-3.5 flex-shrink-0"
-                  strokeWidth={1.5}
-                />
-                One time slot for the whole family
-              </div>
-              <button
-                disabled={!dropOffSlot}
-                onClick={() => {}}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold font-body bg-[#4a7c59] text-white hover:bg-[#3d6b4a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Check className="w-3.5 h-3.5" />
-                Save drop-off time
-              </button>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Referral Section */}
-      <section
-        className="rounded-2xl p-6 shadow-sm border border-[#c2ddc8]"
-        style={{
-          background: "linear-gradient(135deg, #eef5ef 0%, #ddeede 100%)",
-        }}
-      >
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-          {/* Left: heading + description */}
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-7 h-7 rounded-full bg-[#4a7c59]/15 flex items-center justify-center">
-                <Gift
-                  className="w-3.5 h-3.5 text-[#4a7c59]"
-                  strokeWidth={1.5}
-                />
-              </div>
-              <h2 className="text-base font-heading font-semibold text-gray-800">
-                Refer a Family
-              </h2>
-              <span className="bg-[#4a7c59] text-white text-xs font-body px-2 py-0.5 rounded-full font-medium">
-                $150 gift card
-              </span>
-            </div>
-            <p className="text-sm font-body text-gray-600 leading-relaxed max-w-lg">
-              Know a family who&apos;d be a great fit for Sage Field? Share your
-              link — when they enroll and pay their registration fee,
-              you&apos;ll receive a $150 gift card.
-            </p>
-
-            {/* How it works */}
-            <div className="flex flex-col sm:flex-row gap-3 mt-4">
-              {[
-                "Share your link with a family",
-                "They apply, get approved & enroll",
-                "You get a $150 gift card",
-              ].map((step, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-[#4a7c59]/20 flex items-center justify-center">
-                    <span className="text-[10px] font-bold font-heading text-[#4a7c59]">
-                      {i + 1}
-                    </span>
-                  </div>
-                  <p className="text-xs font-body text-gray-600">{step}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Right: stats + copy link */}
-          <div className="flex flex-col gap-3 sm:min-w-[260px]">
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { value: String(referralCount), label: "Referred" },
-                { value: String(enrolledCount), label: "Enrolled" },
-                { value: `$${earnedDollars}`, label: "Earned" },
-              ].map(({ value, label }) => (
-                <div
-                  key={label}
-                  className="text-center bg-white/70 rounded-xl py-2.5 px-2 border border-[#c2ddc8]"
-                >
-                  <p className="text-base font-semibold font-heading text-gray-800">
-                    {value}
-                  </p>
-                  <p className="text-xs font-body text-gray-500">{label}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Copy link */}
-            <div className="flex items-center gap-2">
-              <div className="flex-1 min-w-0 bg-white/70 border border-[#c2ddc8] rounded-xl px-3 py-2">
-                <p className="text-xs font-body text-gray-600 truncate">
-                  {referralLink}
-                </p>
-              </div>
-              <button
-                onClick={copyReferralLink}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold font-body transition-colors whitespace-nowrap ${
-                  copied
-                    ? "bg-green-600 text-white"
-                    : "bg-[#4a7c59] text-white hover:bg-[#3d6b4a]"
-                }`}
-              >
-                {copied ? (
-                  <>
-                    <Check className="w-3.5 h-3.5" />
-                    Copied!
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5" />
-                    Copy link
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Attendance sidebar */}
       <AttendanceSidebar
