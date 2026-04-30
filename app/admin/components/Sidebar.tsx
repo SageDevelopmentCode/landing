@@ -28,6 +28,7 @@ import {
   PanelLeftOpen,
   PanelLeftClose,
   Gift,
+  Car,
 } from "lucide-react";
 import { cssColors as colors, radius, cssShadows as shadows } from "../design-system";
 import { useTheme } from "./ThemeProvider";
@@ -52,6 +53,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { name: "Applications", href: "/admin/applications",  icon: <ClipboardList className="w-4 h-4" /> },
       { name: "Transactions", href: "/admin/transactions",  icon: <CreditCard className="w-4 h-4" /> },
       { name: "Referrals",    href: "/admin/referrals",     icon: <Gift className="w-4 h-4" /> },
+      { name: "Dropoffs",    href: "/admin/dropoffs",      icon: <Car className="w-4 h-4" /> },
     ],
   },
   {
