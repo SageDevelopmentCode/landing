@@ -10,6 +10,8 @@ import {
   Gift,
   Copy,
   Check,
+  Car,
+  CalendarClock,
 } from "lucide-react";
 import {
   getParentStudentAttendance,
@@ -27,6 +29,16 @@ import type {
   HomeReferral,
   StudentMap,
 } from "./page";
+
+// Update each year to match the first school week
+const DROPOFF_WEEK_START = new Date("2026-04-28T00:00:00");
+const DROPOFF_WEEK_END = new Date("2026-04-30T23:59:59");
+
+const DROP_OFF_SLOTS = [
+  { label: "8:15 – 8:30", value: "8:15" },
+  { label: "8:30 – 8:45", value: "8:30" },
+  { label: "8:45 – 9:00", value: "8:45" },
+] as const;
 
 const BANNER_IMAGES = [
   "/assets/ImageSix.jpg",
@@ -315,6 +327,7 @@ export default function HomePageClient({
   const [attendanceStudent, setAttendanceStudent] =
     useState<HomeStudent | null>(null);
   const [copied, setCopied] = useState(false);
+  const [dropOffSlot, setDropOffSlot] = useState<string | null>(null);
 
   const refCode = userId.replace(/-/g, "").slice(0, 8).toUpperCase();
   const referralLink = `https://sagefield.co/apply?ref=${refCode}`;
@@ -339,6 +352,9 @@ export default function HomePageClient({
   }, []);
 
   const firstName = fullName?.split(" ")[0] ?? "there";
+
+  const now = new Date();
+  const showDropOff = now >= DROPOFF_WEEK_START && now <= DROPOFF_WEEK_END;
 
   return (
     <div className="px-6 py-8 flex flex-col gap-8 max-w-6xl mx-auto w-full">
@@ -579,6 +595,66 @@ export default function HomePageClient({
           </section>
         </div>
       </div>
+
+      {/* First Week Drop-Off Schedule */}
+      {showDropOff && (
+        <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="flex items-center gap-2.5 px-5 py-4 bg-[#EEF5EF] border-b border-[#d3e9d5]">
+            <div className="w-7 h-7 rounded-full bg-[#4a7c59]/15 flex items-center justify-center flex-shrink-0">
+              <Car className="w-3.5 h-3.5 text-[#4a7c59]" strokeWidth={1.5} />
+            </div>
+            <h2 className="text-base font-heading font-semibold text-gray-800">
+              First Week Drop-Off
+            </h2>
+          </div>
+
+          <div className="px-5 py-4 flex flex-col gap-5">
+            <p className="text-sm font-body text-gray-500 leading-relaxed">
+              To ease morning traffic during the first week, choose a 15-minute
+              drop-off window for your family. Drop-off runs{" "}
+              <span className="font-medium text-gray-700">8:15 – 9:00 AM</span>.
+            </p>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              {DROP_OFF_SLOTS.map((slot) => {
+                const isSelected = dropOffSlot === slot.value;
+                return (
+                  <button
+                    key={slot.value}
+                    onClick={() => setDropOffSlot(slot.value)}
+                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold font-body transition-colors ${
+                      isSelected
+                        ? "bg-[#4a7c59] text-white"
+                        : "bg-[#EEF5EF] text-[#4a7c59] hover:bg-[#ddeede]"
+                    }`}
+                  >
+                    {isSelected && <Check className="w-3 h-3" />}
+                    {slot.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center gap-1.5 text-xs font-body text-gray-400">
+                <CalendarClock
+                  className="w-3.5 h-3.5 flex-shrink-0"
+                  strokeWidth={1.5}
+                />
+                One time slot for the whole family
+              </div>
+              <button
+                disabled={!dropOffSlot}
+                onClick={() => {}}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold font-body bg-[#4a7c59] text-white hover:bg-[#3d6b4a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Check className="w-3.5 h-3.5" />
+                Save drop-off time
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Referral Section */}
       <section
