@@ -1,6 +1,7 @@
 'use server'
 
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
+import { sendDiscordNotification, createPaystubSubmittedEmbed } from '@/app/lib/discord'
 
 export type PaystubStatus = 'pending' | 'approved' | 'paid'
 
@@ -131,6 +132,27 @@ export async function submitPaystub(
     .single()
 
   if (insertError || !paystub) return { error: insertError?.message ?? 'Insert failed' }
+
+  const { data: teacherProfile } = await adminClient
+    .schema('admin')
+    .from('users')
+    .select('full_name, email')
+    .eq('id', user.id)
+    .single()
+
+  sendDiscordNotification(
+    createPaystubSubmittedEmbed({
+      teacherName: teacherProfile?.full_name ?? user.email ?? 'Unknown',
+      teacherEmail: teacherProfile?.email ?? user.email ?? 'Unknown',
+      periodStart,
+      periodEnd,
+      totalHours,
+      hourlyRate,
+      grossPay,
+    }),
+    process.env.DISCORD_EMPLOYEE_WEBHOOK_URL,
+  ).catch(() => {})
+
   return { paystub: paystub as Paystub }
 }
 

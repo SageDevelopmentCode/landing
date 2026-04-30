@@ -1210,6 +1210,35 @@ export function createTourBookingEmbed(data: {
 }
 
 /**
+ * Creates a Discord embed for paystub submissions
+ */
+export function createPaystubSubmittedEmbed(data: {
+  teacherName: string
+  teacherEmail: string
+  periodStart: string
+  periodEnd: string
+  totalHours: number
+  hourlyRate: number
+  grossPay: number
+}): DiscordEmbed {
+  const fmt = (n: number) =>
+    n.toLocaleString("en-US", { style: "currency", currency: "USD" })
+  return {
+    title: "📝 Paystub Submitted",
+    color: 0x5865f2,
+    fields: [
+      { name: "Teacher", value: data.teacherName || "N/A", inline: true },
+      { name: "Email", value: data.teacherEmail || "N/A", inline: true },
+      { name: "Pay Period", value: `${data.periodStart} – ${data.periodEnd}`, inline: false },
+      { name: "Total Hours", value: String(data.totalHours), inline: true },
+      { name: "Hourly Rate", value: fmt(data.hourlyRate), inline: true },
+      { name: "Gross Pay", value: fmt(data.grossPay), inline: true },
+    ],
+    timestamp: new Date().toISOString(),
+  }
+}
+
+/**
  * Creates a Discord embed for first week drop-off time selections
  */
 export function createDropOffTimeEmbed(data: {
