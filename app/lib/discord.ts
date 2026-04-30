@@ -956,9 +956,10 @@ export function createAppErrorEmbed(data: {
  */
 export function createMercuryTransactionEmbed(data: {
   title: string;
+  operationType: string;
   resourceId: string;
   occurredAt: string;
-  changedPaths: string[];
+  transaction: Record<string, unknown> | null;
   mergePatch: Record<string, unknown>;
   previousValues: Record<string, unknown>;
 }): DiscordEmbed {
@@ -966,6 +967,10 @@ export function createMercuryTransactionEmbed(data: {
     typeof n === "number"
       ? n.toLocaleString("en-US", { style: "currency", currency: "USD" })
       : null;
+
+  const tx = data.transaction;
+  const patch = data.mergePatch;
+  const prev = data.previousValues;
 
   const date = new Date(data.occurredAt).toLocaleString("en-US", {
     timeZone: "America/Chicago",
@@ -977,39 +982,48 @@ export function createMercuryTransactionEmbed(data: {
     hour12: true,
   });
 
+  const counterparty =
+    (tx?.counterpartyName as string | null) ??
+    (tx?.counterpartyNickname as string | null) ??
+    (patch.merchantName as string | null) ??
+    (patch.counterpartyName as string | null) ??
+    (patch.bankDescription as string | null) ??
+    "Unknown";
+
+  const amount = fmt(tx?.amount ?? patch.amount);
+  const status = (tx?.status ?? patch.status) as string | undefined;
+  const prevStatus = prev.status as string | undefined;
+  const kind = (tx?.kind ?? patch.kind) as string | undefined;
+  const note = (tx?.note ?? tx?.externalMemo) as string | null | undefined;
+  const dashboardLink = tx?.dashboardLink as string | undefined;
+
+  const statusValue = data.operationType === "update" && prevStatus && prevStatus !== status
+    ? `${prevStatus} → ${status}`
+    : status ?? "—";
+
   const fields: DiscordEmbedField[] = [
-    { name: "Transaction ID", value: data.resourceId, inline: false },
-    { name: "Occurred At", value: date, inline: true },
+    { name: "Counterparty", value: counterparty, inline: true },
+    { name: "Amount", value: amount ?? "—", inline: true },
+    { name: "Status", value: statusValue, inline: true },
   ];
 
-  const status = data.mergePatch.status as string | undefined;
-  const prevStatus = data.previousValues.status as string | undefined;
-  if (status) {
-    fields.push({
-      name: "Status",
-      value: prevStatus ? `${prevStatus} → ${status}` : status,
-      inline: true,
-    });
+  if (kind && kind !== "other") {
+    fields.push({ name: "Kind", value: kind, inline: true });
   }
 
-  const amount = fmt(data.mergePatch.amount);
-  if (amount) fields.push({ name: "Amount", value: amount, inline: true });
-
-  const merchant =
-    (data.mergePatch.merchantName as string | null) ??
-    (data.mergePatch.counterpartyName as string | null) ??
-    (data.mergePatch.bankDescription as string | null);
-  if (merchant) fields.push({ name: "Merchant / Counterparty", value: merchant, inline: true });
-
-  const kind = data.mergePatch.kind as string | undefined;
-  if (kind) fields.push({ name: "Kind", value: kind, inline: true });
-
-  if (data.changedPaths.length > 0) {
-    fields.push({ name: "Changed Fields", value: data.changedPaths.join(", "), inline: false });
+  if (note) {
+    fields.push({ name: "Note", value: note, inline: false });
   }
+
+  if (dashboardLink) {
+    fields.push({ name: "Link", value: dashboardLink, inline: false });
+  }
+
+  fields.push({ name: "Occurred At", value: date, inline: true });
 
   const isDebit =
-    typeof data.mergePatch.amount === "number" && (data.mergePatch.amount as number) < 0;
+    typeof (tx?.amount ?? patch.amount) === "number" &&
+    ((tx?.amount ?? patch.amount) as number) < 0;
 
   return {
     title: data.title,

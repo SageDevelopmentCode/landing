@@ -69,11 +69,27 @@ export async function POST(request: NextRequest) {
         event.operationType === "create"
           ? "💸 New Transaction"
           : "🔄 Transaction Updated";
+
+      let transaction: Record<string, unknown> | null = null;
+      const mercuryToken = process.env.MERCURY_API_TOKEN;
+      if (mercuryToken) {
+        try {
+          const res = await fetch(
+            `https://api.mercury.com/api/v1/transaction/${event.resourceId}`,
+            { headers: { Authorization: `Bearer ${mercuryToken}` } },
+          );
+          if (res.ok) transaction = await res.json();
+        } catch {
+          // fall through — embed will use mergePatch data
+        }
+      }
+
       const embed = createMercuryTransactionEmbed({
         title,
+        operationType: event.operationType,
         resourceId: event.resourceId,
         occurredAt: event.occurredAt,
-        changedPaths: event.changedPaths,
+        transaction,
         mergePatch: event.mergePatch ?? {},
         previousValues: event.previousValues ?? {},
       });
