@@ -1194,3 +1194,29 @@ export function createTourBookingEmbed(data: {
     timestamp: new Date().toISOString(),
   };
 }
+
+/**
+ * Creates a Discord embed for first week drop-off time selections
+ */
+export function createDropOffTimeEmbed(data: {
+  parentName: string;
+  parentEmail: string;
+  slot: string;
+  isUpdate: boolean;
+}): DiscordEmbed {
+  const SLOT_LABELS: Record<string, string> = {
+    "8:15": "8:15 – 8:30 AM",
+    "8:30": "8:30 – 8:45 AM",
+    "8:45": "8:45 – 9:00 AM",
+  };
+  return {
+    title: data.isUpdate ? "✏️ Drop-Off Time Updated" : "🚗 Drop-Off Time Selected",
+    color: 0x4a7c59,
+    fields: [
+      { name: "Parent", value: data.parentName || "N/A", inline: true },
+      { name: "Email", value: data.parentEmail || "N/A", inline: true },
+      { name: "Time Slot", value: SLOT_LABELS[data.slot] ?? data.slot, inline: true },
+    ],
+    timestamp: new Date().toISOString(),
+  };
+}

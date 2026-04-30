@@ -17,6 +17,7 @@ import {
   getParentStudentAttendance,
   type ParentCheckInRecord,
 } from "@/app/actions/getParentStudentAttendance";
+import { saveDropOffTime } from "@/app/actions/saveDropOffTime";
 import { DetailSidebar } from "@/app/admin/components/DetailSidebar";
 import {
   SidebarField,
@@ -311,6 +312,7 @@ interface Props {
   pendingPayments: HomePendingPayment[];
   studentMap: StudentMap;
   referrals: HomeReferral[];
+  savedDropOffSlot: string | null;
 }
 
 export default function HomePageClient({
@@ -321,13 +323,24 @@ export default function HomePageClient({
   pendingPayments,
   studentMap,
   referrals,
+  savedDropOffSlot,
 }: Props) {
   const [bannerIdx, setBannerIdx] = useState<number | null>(null);
   const [greeting, setGreeting] = useState("");
   const [attendanceStudent, setAttendanceStudent] =
     useState<HomeStudent | null>(null);
   const [copied, setCopied] = useState(false);
-  const [dropOffSlot, setDropOffSlot] = useState<string | null>(null);
+  const [dropOffSlot, setDropOffSlot] = useState<string | null>(savedDropOffSlot);
+  const [dropOffSaved, setDropOffSaved] = useState<boolean>(savedDropOffSlot !== null);
+  const [dropOffSaving, setDropOffSaving] = useState(false);
+
+  async function handleSaveDropOff() {
+    if (!dropOffSlot) return;
+    setDropOffSaving(true);
+    const res = await saveDropOffTime(dropOffSlot);
+    if ("ok" in res && res.ok) setDropOffSaved(true);
+    setDropOffSaving(false);
+  }
 
   const refCode = userId.replace(/-/g, "").slice(0, 8).toUpperCase();
   const referralLink = `https://sagefield.co/apply?ref=${refCode}`;
@@ -478,43 +491,65 @@ export default function HomePageClient({
                   .
                 </p>
 
-                <div className="flex items-center gap-2 flex-wrap">
-                  {DROP_OFF_SLOTS.map((slot) => {
-                    const isSelected = dropOffSlot === slot.value;
-                    return (
-                      <button
-                        key={slot.value}
-                        onClick={() => setDropOffSlot(slot.value)}
-                        className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold font-body transition-colors ${
-                          isSelected
-                            ? "bg-[#4a7c59] text-white"
-                            : "bg-[#EEF5EF] text-[#4a7c59] hover:bg-[#ddeede]"
-                        }`}
-                      >
-                        {isSelected && <Check className="w-3 h-3" />}
-                        {slot.label}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="flex items-center justify-between pt-1">
-                  <div className="flex items-center gap-1.5 text-xs font-body text-gray-400">
-                    <CalendarClock
-                      className="w-3.5 h-3.5 flex-shrink-0"
-                      strokeWidth={1.5}
-                    />
-                    One time slot for the whole family
+                {dropOffSaved ? (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-[#4a7c59] flex items-center justify-center flex-shrink-0">
+                        <Check className="w-3.5 h-3.5 text-white" />
+                      </div>
+                      <span className="text-sm font-semibold font-heading text-gray-800">
+                        {DROP_OFF_SLOTS.find((s) => s.value === dropOffSlot)?.label ?? dropOffSlot}
+                      </span>
+                      <span className="text-xs font-body text-gray-400">confirmed</span>
+                    </div>
+                    <button
+                      onClick={() => setDropOffSaved(false)}
+                      className="text-xs font-semibold font-body text-[#4a7c59] hover:underline"
+                    >
+                      Edit
+                    </button>
                   </div>
-                  <button
-                    disabled={!dropOffSlot}
-                    onClick={() => {}}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold font-body bg-[#4a7c59] text-white hover:bg-[#3d6b4a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Check className="w-3.5 h-3.5" />
-                    Save drop-off time
-                  </button>
-                </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {DROP_OFF_SLOTS.map((slot) => {
+                        const isSelected = dropOffSlot === slot.value;
+                        return (
+                          <button
+                            key={slot.value}
+                            onClick={() => setDropOffSlot(slot.value)}
+                            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold font-body transition-colors ${
+                              isSelected
+                                ? "bg-[#4a7c59] text-white"
+                                : "bg-[#EEF5EF] text-[#4a7c59] hover:bg-[#ddeede]"
+                            }`}
+                          >
+                            {isSelected && <Check className="w-3 h-3" />}
+                            {slot.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1">
+                      <div className="flex items-center gap-1.5 text-xs font-body text-gray-400">
+                        <CalendarClock
+                          className="w-3.5 h-3.5 flex-shrink-0"
+                          strokeWidth={1.5}
+                        />
+                        One time slot for the whole family
+                      </div>
+                      <button
+                        disabled={!dropOffSlot || dropOffSaving}
+                        onClick={handleSaveDropOff}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold font-body bg-[#4a7c59] text-white hover:bg-[#3d6b4a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        {dropOffSaving ? "Saving…" : "Save drop-off time"}
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </section>
           )}

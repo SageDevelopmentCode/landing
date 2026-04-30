@@ -84,7 +84,7 @@ export default async function ParentHomePage() {
   const students: HomeStudent[] = (studentsData ?? []) as HomeStudent[];
   const studentIds = students.map((s) => s.id);
 
-  const [{ data: checkInsData }, { data: eventsData }, { data: paymentsData }, { data: referralsData }] =
+  const [{ data: checkInsData }, { data: eventsData }, { data: paymentsData }, { data: referralsData }, { data: dropOffData }] =
     await Promise.all([
       studentIds.length > 0
         ? adminClient
@@ -119,6 +119,12 @@ export default async function ParentHomePage() {
         .select("id, referred_email, status, created_at")
         .eq("referrer_id", user.id)
         .order("created_at", { ascending: false }),
+      adminClient
+        .schema("parent_app")
+        .from("dropoff_times")
+        .select("slot")
+        .eq("parent_id", user.id)
+        .maybeSingle(),
     ]);
 
   const studentMap: StudentMap = {};
@@ -135,6 +141,7 @@ export default async function ParentHomePage() {
   const upcomingEvents: HomeEvent[] = (eventsData ?? []) as HomeEvent[];
   const pendingPayments: HomePendingPayment[] = (paymentsData ?? []) as HomePendingPayment[];
   const referrals: HomeReferral[] = (referralsData ?? []) as HomeReferral[];
+  const savedDropOffSlot: string | null = (dropOffData as { slot: string } | null)?.slot ?? null;
 
   return (
     <div className="bg-welcome-bg min-h-screen flex flex-col">
@@ -177,6 +184,7 @@ export default async function ParentHomePage() {
           pendingPayments={pendingPayments}
           studentMap={studentMap}
           referrals={referrals}
+          savedDropOffSlot={savedDropOffSlot}
         />
       </main>
 
