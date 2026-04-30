@@ -58,6 +58,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     label: "Tools",
     items: [
       { name: "Budget",    href: "/admin/budget",    icon: <DollarSign className="w-4 h-4" /> },
+      { name: "Payroll",   href: "/admin/payroll",   icon: <CreditCard className="w-4 h-4" /> },
       { name: "Messages",  href: "/admin/messages",  icon: <MessageSquare className="w-4 h-4" /> },
       { name: "Calendar",  href: "/admin/calendar",  icon: <CalendarDays className="w-4 h-4" /> },
       { name: "Emails",    href: "/admin/emails",    icon: <Mail className="w-4 h-4" /> },

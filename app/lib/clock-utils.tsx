@@ -75,6 +75,32 @@ export function formatElapsed(seconds: number): string {
   return `${s}s`;
 }
 
+// ─── Biweekly Pay Periods ────────────────────────────────────────────────────
+
+// Adjust this to the school's actual first payroll Monday
+const PAYROLL_ANCHOR = new Date('2025-01-06T00:00:00')
+
+export type PayPeriod = {
+  label: string  // e.g. "Apr 14 – Apr 27, 2025"
+  start: string  // 'YYYY-MM-DD'
+  end: string    // 'YYYY-MM-DD'
+}
+
+export function getPastPayPeriods(count = 12): PayPeriod[] {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const msPerPeriod = 14 * 24 * 60 * 60 * 1000
+  const completedCycles = Math.floor((today.getTime() - PAYROLL_ANCHOR.getTime()) / msPerPeriod)
+  const periods: PayPeriod[] = []
+  for (let i = completedCycles - 1; i >= Math.max(0, completedCycles - count); i--) {
+    const start = new Date(PAYROLL_ANCHOR.getTime() + i * msPerPeriod)
+    const end   = new Date(start.getTime() + 13 * 24 * 60 * 60 * 1000)
+    const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    periods.push({ label: `${fmt(start)} – ${fmt(end)}`, start: toISOKey(start), end: toISOKey(end) })
+  }
+  return periods
+}
+
 export function ElapsedTimer({ clockInAt }: { clockInAt: string }) {
   const [elapsed, setElapsed] = useState(() =>
     Math.floor((Date.now() - new Date(clockInAt).getTime()) / 1000),

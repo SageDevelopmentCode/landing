@@ -25,9 +25,9 @@ const primaryNavItems: { label: string; icon: LucideIcon; href: string }[] = [
   { label: "Feed", icon: Rss, href: "/teacher/feed" },
 ];
 
-const moreItems: { label: string; icon: LucideIcon; id: string }[] = [
-  { label: "Payroll", icon: CreditCard, id: "payroll" },
-  { label: "Forms and Documents", icon: FileText, id: "forms" },
+const moreItems: { label: string; icon: LucideIcon; href: string }[] = [
+  { label: "Payroll",             icon: CreditCard, href: "/teacher/dashboard/payroll" },
+  { label: "Forms and Documents", icon: FileText,   href: "#" },
 ];
 
 export default function TeacherNav() {
@@ -82,16 +82,24 @@ export default function TeacherNav() {
 
           {moreOpen && (
             <div className="absolute left-1/2 -translate-x-1/2 mt-1.5 w-52 bg-white border border-gray-100 rounded-xl shadow-sm z-50 py-1.5">
-              {moreItems.map(({ label, icon: Icon, id }) => (
-                <button
-                  key={label}
-                  onClick={() => setMoreOpen(false)}
-                  className="flex items-center gap-1.5 w-full text-left px-4 py-2 text-sm font-body text-gray-700 hover:bg-gray-50 hover:text-[#4a7c59] transition-colors cursor-pointer"
-                >
-                  <Icon className="w-4 h-4" />
-                  {label}
-                </button>
-              ))}
+              {moreItems.map(({ label, icon: Icon, href }) => {
+                const isActive = href !== "#" && pathname === href;
+                return (
+                  <Link
+                    key={label}
+                    href={href}
+                    onClick={() => setMoreOpen(false)}
+                    className={`flex items-center gap-1.5 w-full text-left px-4 py-2 text-sm font-body transition-colors ${
+                      isActive
+                        ? "text-[#4a7c59] bg-[#4a7c59]/8 font-semibold"
+                        : "text-gray-700 hover:bg-gray-50 hover:text-[#4a7c59]"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {label}
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>

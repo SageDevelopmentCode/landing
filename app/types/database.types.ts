@@ -130,6 +130,7 @@ export type Database = {
           g2_relationship_other: string | null
           g2_work_phone: string | null
           has_custody_orders: string | null
+          hourly_rate: number | null
           id: string
           is_deleted: boolean
           role: string | null
@@ -156,6 +157,7 @@ export type Database = {
           g2_relationship_other?: string | null
           g2_work_phone?: string | null
           has_custody_orders?: string | null
+          hourly_rate?: number | null
           id: string
           is_deleted?: boolean
           role?: string | null
@@ -182,6 +184,7 @@ export type Database = {
           g2_relationship_other?: string | null
           g2_work_phone?: string | null
           has_custody_orders?: string | null
+          hourly_rate?: number | null
           id?: string
           is_deleted?: boolean
           role?: string | null
@@ -1665,6 +1668,59 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      paystubs: {
+        Row: {
+          id: string
+          teacher_id: string
+          period_start: string
+          period_end: string
+          total_hours: number
+          hourly_rate_snapshot: number
+          gross_pay: number
+          status: 'pending' | 'approved' | 'paid'
+          submitted_at: string
+          approved_at: string | null
+          paid_at: string | null
+          admin_note: string | null
+        }
+        Insert: {
+          id?: string
+          teacher_id: string
+          period_start: string
+          period_end: string
+          total_hours: number
+          hourly_rate_snapshot: number
+          gross_pay: number
+          status?: 'pending' | 'approved' | 'paid'
+          submitted_at?: string
+          approved_at?: string | null
+          paid_at?: string | null
+          admin_note?: string | null
+        }
+        Update: {
+          id?: string
+          teacher_id?: string
+          period_start?: string
+          period_end?: string
+          total_hours?: number
+          hourly_rate_snapshot?: number
+          gross_pay?: number
+          status?: 'pending' | 'approved' | 'paid'
+          submitted_at?: string
+          approved_at?: string | null
+          paid_at?: string | null
+          admin_note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "paystubs_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       teacher_students: {
         Row: {
