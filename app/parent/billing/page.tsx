@@ -51,6 +51,7 @@ export type PaidHomeschoolEntry = {
   weeks: number[];
   tier: string;
   days: string[];
+  weekDays: Record<number, string[]>; // week number → days paid in that transaction
   amountCents: number;
   createdAt: string;
 };
@@ -181,7 +182,7 @@ export default async function BillingRoute() {
   }
 
   // Build paid homeschool drop-in map per student
-  const paidHomeschoolByStudent: Record<string, { summer: { weeks: number[]; tier: string; days: string[]; amountCents: number; createdAt: string }[]; schoolYear: { weeks: number[]; tier: string; days: string[]; amountCents: number; createdAt: string }[] }> = {};
+  const paidHomeschoolByStudent: PaidHomeschoolByStudent = {};
   for (const tx of transactions) {
     if (tx.payment_type === "homeschool_dropin" && tx.status === "completed" && tx.student_id) {
       const meta = (tx.metadata ?? {}) as Record<string, string>;
@@ -189,10 +190,23 @@ export default async function BillingRoute() {
       const tier = meta.tier ?? "dropin";
       const days = meta.selected_days?.split(",").filter(Boolean) ?? [];
       const weeks = meta.selected_weeks?.split(",").map(Number).filter(Boolean) ?? [];
+
+      // Build per-week day map: prefer new week_selections JSON, fall back to same days for every week
+      let weekDays: Record<number, string[]> = {};
+      if (meta.week_selections) {
+        try {
+          const parsed: { week: number; days: string[] }[] = JSON.parse(meta.week_selections);
+          parsed.forEach(({ week, days: d }) => { weekDays[week] = d; });
+        } catch { /* fall through to fallback */ }
+      }
+      if (Object.keys(weekDays).length === 0) {
+        weeks.forEach((w) => { weekDays[w] = days; });
+      }
+
       if (!paidHomeschoolByStudent[tx.student_id]) {
         paidHomeschoolByStudent[tx.student_id] = { summer: [], schoolYear: [] };
       }
-      const entry = { weeks, tier, days, amountCents: tx.amount_cents, createdAt: tx.created_at };
+      const entry = { weeks, tier, days, weekDays, amountCents: tx.amount_cents, createdAt: tx.created_at };
       if (program === "summer_26") {
         paidHomeschoolByStudent[tx.student_id].summer.push(entry);
       } else {

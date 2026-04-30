@@ -16,20 +16,31 @@ import { motion, AnimatePresence } from "framer-motion";
 
 function formatProgramLabel(program: string | undefined | null): string | null {
   switch (program) {
-    case "summer_26": return "Summer 2026";
-    case "school_year_26_27": return "School Year 26–27";
-    case "both": return "Summer & School Year";
-    case "homeschool_drop_in": return "Homeschool Drop-In";
-    default: return null;
+    case "summer_26":
+      return "Summer 2026";
+    case "school_year_26_27":
+      return "School Year 26–27";
+    case "both":
+      return "Summer & School Year";
+    case "homeschool_drop_in":
+      return "Homeschool Drop-In";
+    default:
+      return null;
   }
 }
 
-function formatDropInProgramLabel(prog: string | null | undefined): string | null {
+function formatDropInProgramLabel(
+  prog: string | null | undefined,
+): string | null {
   switch (prog) {
-    case "summer_26": return "Summer 2026";
-    case "school_year_26_27": return "School Year 26–27";
-    case "both": return "Summer & School Year";
-    default: return null;
+    case "summer_26":
+      return "Summer 2026";
+    case "school_year_26_27":
+      return "School Year 26–27";
+    case "both":
+      return "Summer & School Year";
+    default:
+      return null;
   }
 }
 
@@ -81,26 +92,18 @@ const SUMMER_FULL_ORIGINAL_CENTS = { primary: 450000, upper: 420000 };
 const TOTAL_WEEKS = 12;
 
 const SUMMER_WEEKS = [
-  { week: 1, dates: "May 26\u201329", theme: "Welcome to Camp" },
-  { week: 2, dates: "Jun 1\u20134", theme: "Mystery Camp Escape Challenge" },
-  { week: 3, dates: "Jun 8\u201311", theme: "Beach Day Bash" },
-  {
-    week: 4,
-    dates: "Jun 15\u201318",
-    theme: "Scientist and Space Engineering Lab",
-  },
-  { week: 5, dates: "Jun 22\u201325", theme: "Safari Escape" },
-  { week: 6, dates: "Jun 29\u2013Jul 2", theme: "Splash Into Summer" },
-  { week: 7, dates: "Jul 6\u20139", theme: "Dino Hunt" },
-  { week: 8, dates: "Jul 13\u201316", theme: "Pirate Adventure" },
-  { week: 9, dates: "Jul 20\u201323", theme: "You are a Superhero!" },
-  {
-    week: 10,
-    dates: "Jul 27\u201330",
-    theme: "Space Explorers: Mission to the Stars",
-  },
-  { week: 11, dates: "Aug 3\u20136", theme: "Down on the Farm" },
-  { week: 12, dates: "Aug 10\u201313", theme: "Finale of Camp" },
+  { week: 1,  dates: "May 26\u201328",  theme: "Welcome to Camp",                       emoji: "\ud83c\udfd5\ufe0f", highlights: ["Kick-Off Games", "Friendship Bracelets", "Water Balloon Race"], days: ["tue", "wed", "thu"] },
+  { week: 2,  dates: "Jun 1\u20134",    theme: "Mystery Camp Escape Challenge",         emoji: "\ud83d\udd0d", highlights: ["Giant Slip & Slide", "Painted Stones", "DIY Camp Flags"] },
+  { week: 3,  dates: "Jun 8\u201311",   theme: "Beach Day Bash",                        emoji: "\ud83c\udfd6\ufe0f", highlights: ["Ice Cream Bar", "Ocean Slime", "Seashell Painting"] },
+  { week: 4,  dates: "Jun 15\u201318",  theme: "Scientist & Space Engineering Lab",     emoji: "\ud83d\udd2c", highlights: ["Slime Lab", "Volcano Model", "Rocket Ship Craft"] },
+  { week: 5,  dates: "Jun 22\u201325",  theme: "Safari Escape",                         emoji: "\ud83e\udd81", highlights: ["Safari Journals", "Animal Masks", "Clay Sculptures"] },
+  { week: 6,  dates: "Jun 29\u2013Jul 2", theme: "Splash Into Summer",                  emoji: "\ud83d\udca6", highlights: ["Water Relay Races", "Sponge Dodgeball", "Tie Dye Bandanas"] },
+  { week: 7,  dates: "Jul 6\u20139",    theme: "Dino Hunt",                             emoji: "\ud83e\udd95", highlights: ["Dinosaur Dig", "Dino Egg Hunt", "Moon Sand"] },
+  { week: 8,  dates: "Jul 13\u201316",  theme: "Pirate Adventure",                      emoji: "\ud83c\udff4\u200d\u2620\ufe0f", highlights: ["X Marks the Spot", "Pirate Hats", "Treasure Maps"] },
+  { week: 9,  dates: "Jul 20\u201323",  theme: "You are a Superhero!",                  emoji: "\ud83e\uddb8", highlights: ["Hero Obstacle Course", "Superhero Masks", "Cape Decorating"] },
+  { week: 10, dates: "Jul 27\u201330",  theme: "Space Explorers: Mission to the Stars", emoji: "\ud83d\ude80", highlights: ["Rocket Launch Game", "Galaxy Paintings", "Planet Craft"] },
+  { week: 11, dates: "Aug 3\u20136",    theme: "Down on the Farm",                      emoji: "\ud83c\udf3e", highlights: ["Garden Scavenger Hunt", "Flower Pot Painting", "Sack Races"] },
+  { week: 12, dates: "Aug 10\u201313",  theme: "Finale of Camp",                        emoji: "\ud83c\udf89", highlights: ["Photo Booth", "Camp T-Shirts", "Memory Scrapbook"] },
 ];
 
 // --- Aftercare pricing ---
@@ -236,21 +239,26 @@ const FUN_FRIDAY_MONTHS = [
 // --- Homeschool Drop-In pricing ---
 // Summer: per-week rates
 const HOMESCHOOL_SUMMER_PRICING = {
-  dropin: { primary: 10000, upper: 9500 },   // $100/day, $95/day
-  "2day": { primary: 18000, upper: 17000 },  // $180/wk, $170/wk
-  "3day": { primary: 25500, upper: 24000 },  // $255/wk, $240/wk
+  dropin: { primary: 10000, upper: 9500 }, // $100/day, $95/day
+  "2day": { primary: 18000, upper: 17000 }, // $180/wk, $170/wk
+  "3day": { primary: 25500, upper: 24000 }, // $255/wk, $240/wk
 } as const;
 
 // School Year: per-month rates
 const HOMESCHOOL_SCHOOL_YEAR_PRICING = {
-  dropin: { primary: 12000, upper: 11000 },    // $120/day, $110/day
-  "2day": { primary: 56000, upper: 52000 },    // $560/mo, $520/mo
-  "3day": { primary: 78000, upper: 72000 },    // $780/mo, $720/mo
+  dropin: { primary: 12000, upper: 11000 }, // $120/day, $110/day
+  "2day": { primary: 56000, upper: 52000 }, // $560/mo, $520/mo
+  "3day": { primary: 78000, upper: 72000 }, // $780/mo, $720/mo
 } as const;
 
 type HomeschoolTier = "dropin" | "2day" | "3day";
 
-const HOMESCHOOL_TIERS: { key: HomeschoolTier; label: string; sub: string; days: number }[] = [
+const HOMESCHOOL_TIERS: {
+  key: HomeschoolTier;
+  label: string;
+  sub: string;
+  days: number;
+}[] = [
   { key: "dropin", label: "Explorer Day Pass", sub: "Drop-In", days: 1 },
   { key: "2day", label: "2 Days / Week", sub: "Part-Time", days: 2 },
   { key: "3day", label: "3 Days / Week", sub: "Part-Time", days: 3 },
@@ -262,6 +270,12 @@ const WEEKDAYS = [
   { key: "wed", label: "Wed" },
   { key: "thu", label: "Thu" },
 ] as const;
+
+function deriveTier(dayCount: number): HomeschoolTier {
+  if (dayCount === 1) return "dropin";
+  if (dayCount === 2) return "2day";
+  return "3day";
+}
 
 function getGradeTier(grade: string | null): "primary" | "upper" {
   if (!grade) return "upper";
@@ -356,14 +370,23 @@ function PendingPaymentCard({
       {/* Card body */}
       <div className="p-3.5 flex flex-col gap-2.5">
         <div>
-          <div className="text-xs font-medium text-gray-400 mb-0.5">{formatProgram(request.program)}</div>
-          <div className="text-sm font-semibold text-gray-800 leading-snug">{request.label}</div>
+          <div className="text-xs font-medium text-gray-400 mb-0.5">
+            {formatProgram(request.program)}
+          </div>
+          <div className="text-sm font-semibold text-gray-800 leading-snug">
+            {request.label}
+          </div>
         </div>
         <div className="flex items-center justify-between mt-auto">
           <span className="text-sm font-bold" style={{ color: "#4a7c59" }}>
-            {request.amount_cents != null ? formatCents(request.amount_cents) : "—"}
+            {request.amount_cents != null
+              ? formatCents(request.amount_cents)
+              : "—"}
           </span>
-          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: "#4a7c59" }}>
+          <span
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white"
+            style={{ backgroundColor: "#4a7c59" }}
+          >
             Pay Now
             <ChevronRight className="w-3 h-3" strokeWidth={2.5} />
           </span>
@@ -403,11 +426,18 @@ function SummerTuitionCard({
       </div>
       <div className="p-3.5 flex flex-col gap-2.5">
         <div>
-          <div className="text-xs font-medium text-gray-400 mb-0.5">Summer 2026</div>
-          <div className="text-sm font-semibold text-gray-800 leading-snug">Summer Program Tuition</div>
+          <div className="text-xs font-medium text-gray-400 mb-0.5">
+            Summer 2026
+          </div>
+          <div className="text-sm font-semibold text-gray-800 leading-snug">
+            Summer Program Tuition
+          </div>
         </div>
         <div className="flex items-center justify-between mt-auto">
-          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: "#e07a3a" }}>
+          <span
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white"
+            style={{ backgroundColor: "#e07a3a" }}
+          >
             {hasPaidWeeks ? "Add weeks" : "Select plan"}
             <ChevronRight className="w-3 h-3" strokeWidth={2.5} />
           </span>
@@ -470,7 +500,11 @@ function HomeschoolPlanHistoryModal({
 
   const formatEntryDate = (iso: string) => {
     try {
-      return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+      return new Date(iso).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
     } catch {
       return iso;
     }
@@ -494,33 +528,58 @@ function HomeschoolPlanHistoryModal({
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div>
-            <h2 className="text-base font-bold font-heading text-gray-800">Current Plan</h2>
-            {studentName && <p className="text-xs text-gray-400 mt-0.5">{studentName}</p>}
+            <h2 className="text-base font-bold font-heading text-gray-800">
+              Current Plan
+            </h2>
+            {studentName && (
+              <p className="text-xs text-gray-400 mt-0.5">{studentName}</p>
+            )}
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-full hover:bg-gray-100 transition-colors cursor-pointer">
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
+          >
             <X className="w-4 h-4 text-gray-500" />
           </button>
         </div>
         <div className="overflow-y-auto flex-1 px-6 py-5 space-y-6">
           {paidData.summer.length > 0 && (
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Summer 2026</p>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+                Summer 2026
+              </p>
               <div className="space-y-3">
                 {paidData.summer.map((entry, i) => (
-                  <div key={i} className="rounded-xl border border-gray-100 px-4 py-3 space-y-1.5">
+                  <div
+                    key={i}
+                    className="rounded-xl border border-gray-100 px-4 py-3 space-y-1.5"
+                  >
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold text-gray-800">{tierLabel(entry.tier)}</span>
-                      <span className="text-sm font-bold" style={{ color: "#4a7c59" }}>{formatCents(entry.amountCents)}</span>
+                      <span className="text-sm font-semibold text-gray-800">
+                        {tierLabel(entry.tier)}
+                      </span>
+                      <span
+                        className="text-sm font-bold"
+                        style={{ color: "#4a7c59" }}
+                      >
+                        {formatCents(entry.amountCents)}
+                      </span>
                     </div>
                     {entry.days.length > 0 && (
-                      <p className="text-xs text-gray-500">Days: {entry.days.map(dayLabel).join(", ")}</p>
+                      <p className="text-xs text-gray-500">
+                        Days: {entry.days.map(dayLabel).join(", ")}
+                      </p>
                     )}
                     {entry.weeks.length > 0 && (
                       <p className="text-xs text-gray-500">
-                        Weeks: {entry.weeks.sort((a, b) => a - b).join(", ")} ({entry.weeks.length} week{entry.weeks.length !== 1 ? "s" : ""})
+                        Weeks: {entry.weeks.sort((a, b) => a - b).join(", ")} (
+                        {entry.weeks.length} week
+                        {entry.weeks.length !== 1 ? "s" : ""})
                       </p>
                     )}
-                    <p className="text-xs text-gray-400">Paid {formatEntryDate(entry.createdAt)}</p>
+                    <p className="text-xs text-gray-400">
+                      Paid {formatEntryDate(entry.createdAt)}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -528,18 +587,34 @@ function HomeschoolPlanHistoryModal({
           )}
           {paidData.schoolYear.length > 0 && (
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">School Year 2026–2027</p>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+                School Year 2026–2027
+              </p>
               <div className="space-y-3">
                 {paidData.schoolYear.map((entry, i) => (
-                  <div key={i} className="rounded-xl border border-gray-100 px-4 py-3 space-y-1.5">
+                  <div
+                    key={i}
+                    className="rounded-xl border border-gray-100 px-4 py-3 space-y-1.5"
+                  >
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold text-gray-800">{tierLabel(entry.tier)}</span>
-                      <span className="text-sm font-bold" style={{ color: "#4a7c59" }}>{formatCents(entry.amountCents)}</span>
+                      <span className="text-sm font-semibold text-gray-800">
+                        {tierLabel(entry.tier)}
+                      </span>
+                      <span
+                        className="text-sm font-bold"
+                        style={{ color: "#4a7c59" }}
+                      >
+                        {formatCents(entry.amountCents)}
+                      </span>
                     </div>
                     {entry.days.length > 0 && (
-                      <p className="text-xs text-gray-500">Days: {entry.days.map(dayLabel).join(", ")}</p>
+                      <p className="text-xs text-gray-500">
+                        Days: {entry.days.map(dayLabel).join(", ")}
+                      </p>
                     )}
-                    <p className="text-xs text-gray-400">Paid {formatEntryDate(entry.createdAt)}</p>
+                    <p className="text-xs text-gray-400">
+                      Paid {formatEntryDate(entry.createdAt)}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -576,7 +651,8 @@ function HomeschoolDropInCard({
   const dropInProgram = app.drop_in_program;
   let programLabel = "Homeschool Drop-In";
   if (dropInProgram === "summer_26") programLabel = "Summer 2026";
-  else if (dropInProgram === "school_year_26_27") programLabel = "School Year 2026–2027";
+  else if (dropInProgram === "school_year_26_27")
+    programLabel = "School Year 2026–2027";
   else if (dropInProgram === "both") programLabel = "Summer & School Year";
 
   const hasSummer = (paidData?.summer.length ?? 0) > 0;
@@ -613,23 +689,35 @@ function HomeschoolDropInCard({
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-black/10" />
-        <span className={`absolute top-2.5 right-2.5 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold shadow-sm ${hasPriorPayment ? "bg-emerald-500 text-white" : "bg-white/80 backdrop-blur-sm text-gray-600"}`}>
+        <span
+          className={`absolute top-2.5 right-2.5 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold shadow-sm ${hasPriorPayment ? "bg-emerald-500 text-white" : "bg-white/80 backdrop-blur-sm text-gray-600"}`}
+        >
           {badgeLabel}
         </span>
       </div>
       <div className="p-3.5 flex flex-col gap-2.5">
         <div>
-          <div className="text-xs font-medium text-gray-400 mb-0.5">{programLabel}</div>
-          <div className="text-sm font-semibold text-gray-800 leading-snug">Homeschool Drop-In</div>
+          <div className="text-xs font-medium text-gray-400 mb-0.5">
+            {programLabel}
+          </div>
+          <div className="text-sm font-semibold text-gray-800 leading-snug">
+            Homeschool Drop-In
+          </div>
         </div>
         <div className="flex items-center justify-between mt-auto">
-          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: "#4a7c59" }}>
+          <span
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white"
+            style={{ backgroundColor: "#4a7c59" }}
+          >
             {ctaLabel}
             <ChevronRight className="w-3 h-3" strokeWidth={2.5} />
           </span>
           {hasPriorPayment && onViewHistory && (
             <button
-              onClick={(e) => { e.stopPropagation(); onViewHistory(); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewHistory();
+              }}
               className="text-xs font-semibold text-gray-400 hover:text-gray-600 transition-colors cursor-pointer underline underline-offset-2"
             >
               View current plan
@@ -657,70 +745,48 @@ function HomeschoolPaymentModal({
   onClose: () => void;
 }) {
   const gradeTier = getGradeTier(app.child_grade);
-  const dropInProgram = app.drop_in_program ?? "summer_26";
-  const showBothTabs = dropInProgram === "both";
-  const defaultTab: "summer" | "school-year" =
-    dropInProgram === "school_year_26_27" ? "school-year" : "summer";
 
-  const [activeTab, setActiveTab] = useState<"summer" | "school-year">(defaultTab);
-  const [selectedTier, setSelectedTier] = useState<HomeschoolTier | null>(null);
-  const [selectedDays, setSelectedDays] = useState<Set<string>>(new Set());
-  const [selectedWeeks, setSelectedWeeks] = useState<Set<number>>(new Set());
+  // weekSelections: week number → set of selected day keys
+  const [weekSelections, setWeekSelections] = useState<
+    Record<number, Set<string>>
+  >({});
   const [step, setStep] = useState<"plan" | "payment">("plan");
   const [paymentMethod, setPaymentMethod] = useState<"card" | "ach">("card");
   const [coverFees, setCoverFees] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isSummer = activeTab === "summer";
-  const pricing = isSummer ? HOMESCHOOL_SUMMER_PRICING : HOMESCHOOL_SCHOOL_YEAR_PRICING;
-  const tierDays = selectedTier ? HOMESCHOOL_TIERS.find((t) => t.key === selectedTier)?.days ?? 0 : 0;
+  // Build paid days per week across all prior transactions
+  const paidDaysByWeek: Record<number, Set<string>> = {};
+  for (const entry of paidData?.summer ?? []) {
+    for (const [wk, entryDays] of Object.entries(entry.weekDays)) {
+      const w = Number(wk);
+      if (!paidDaysByWeek[w]) paidDaysByWeek[w] = new Set();
+      entryDays.forEach((d) => paidDaysByWeek[w].add(d));
+    }
+  }
 
-  // Weeks already paid for this student (summer only)
-  const alreadyPaidWeeks = new Set(
-    (paidData?.summer ?? []).flatMap((s) => s.weeks)
+  const toggleWeekDay = (weekNum: number, dayKey: string) => {
+    if (paidDaysByWeek[weekNum]?.has(dayKey)) return;
+    setWeekSelections((prev) => {
+      const current = new Set(prev[weekNum] ?? []);
+      if (current.has(dayKey)) {
+        current.delete(dayKey);
+      } else if (current.size < 3) {
+        current.add(dayKey);
+      }
+      return { ...prev, [weekNum]: current };
+    });
+  };
+
+  // Compute total across all weeks
+  const baseAmountCents = Object.entries(weekSelections).reduce(
+    (sum, [, days]) => {
+      if (days.size === 0) return sum;
+      return sum + HOMESCHOOL_SUMMER_PRICING[deriveTier(days.size)][gradeTier];
+    },
+    0,
   );
-
-  // Reset selections when tab changes
-  const handleTabChange = (tab: "summer" | "school-year") => {
-    setActiveTab(tab);
-    setSelectedTier(null);
-    setSelectedDays(new Set());
-    setSelectedWeeks(new Set());
-  };
-
-  const toggleDay = (dayKey: string) => {
-    if (!selectedTier || selectedTier === "dropin") return;
-    const next = new Set(selectedDays);
-    if (next.has(dayKey)) {
-      next.delete(dayKey);
-    } else if (next.size < tierDays) {
-      next.add(dayKey);
-    }
-    setSelectedDays(next);
-  };
-
-  const toggleWeek = (weekNum: number) => {
-    const next = new Set(selectedWeeks);
-    if (next.has(weekNum)) next.delete(weekNum);
-    else next.add(weekNum);
-    setSelectedWeeks(next);
-  };
-
-  const unpaidSummerWeeks = SUMMER_WEEKS.filter((w) => !alreadyPaidWeeks.has(w.week));
-
-  const toggleAllWeeks = () => {
-    if (selectedWeeks.size === unpaidSummerWeeks.length) {
-      setSelectedWeeks(new Set());
-    } else {
-      setSelectedWeeks(new Set(unpaidSummerWeeks.map((w) => w.week)));
-    }
-  };
-
-  // For summer: total = weekly-rate × weeks (or day-rate × weeks for dropin)
-  const weeklyRate = selectedTier ? pricing[selectedTier][gradeTier] : 0;
-  const summerTotal = isSummer ? weeklyRate * selectedWeeks.size : 0;
-  const baseAmountCents = isSummer ? summerTotal : weeklyRate;
 
   // Fee estimates
   const cardFeeRate = 0.029;
@@ -730,20 +796,44 @@ function HomeschoolPaymentModal({
   const cardFee = Math.round(baseAmountCents * cardFeeRate) + cardFeeFixed;
   const achFee = Math.min(Math.round(baseAmountCents * achFeeRate), achFeeCap);
   const feeAmount = paymentMethod === "card" ? cardFee : achFee;
-  const totalWithFees = coverFees ? baseAmountCents + feeAmount : baseAmountCents;
+  const totalWithFees = coverFees
+    ? baseAmountCents + feeAmount
+    : baseAmountCents;
 
-  const daysComplete = selectedTier === "dropin" || selectedDays.size === tierDays;
-  const canContinuePlan =
-    selectedTier !== null &&
-    daysComplete &&
-    (!isSummer || selectedWeeks.size > 0);
+  const canContinuePlan = Object.values(weekSelections).some((d) => d.size > 0);
 
   const handlePayNow = async () => {
-    if (!selectedTier) return;
     setLoading(true);
     setError(null);
     try {
-      const program = activeTab === "summer" ? "summer_26" : "school_year_26_27";
+      // Derive a representative tier from the most common day count
+      const dayCounts = Object.values(weekSelections)
+        .filter((d) => d.size > 0)
+        .map((d) => d.size);
+      const freq: Record<number, number> = {};
+      dayCounts.forEach((c) => {
+        freq[c] = (freq[c] ?? 0) + 1;
+      });
+      const dominantCount =
+        dayCounts.sort((a, b) => (freq[b] ?? 0) - (freq[a] ?? 0))[0] ?? 1;
+      const dominantTier = deriveTier(dominantCount);
+
+      const selectedWeeksList = Object.entries(weekSelections)
+        .filter(([, d]) => d.size > 0)
+        .map(([wk]) => Number(wk))
+        .sort((a, b) => a - b);
+
+      const allSelectedDays = Array.from(
+        new Set(Object.values(weekSelections).flatMap((d) => Array.from(d))),
+      );
+
+      const weekSelectionsJson = JSON.stringify(
+        selectedWeeksList.map((wk) => ({
+          week: wk,
+          days: Array.from(weekSelections[wk] ?? []),
+        })),
+      );
+
       const res = await fetch("/api/stripe/create-homeschool-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -752,11 +842,12 @@ function HomeschoolPaymentModal({
           parentEmail,
           studentId: app.student_id,
           applicationId: app.id,
-          program,
-          tier: selectedTier,
+          program: "summer_26",
+          tier: dominantTier,
           gradeTier,
-          selectedDays: Array.from(selectedDays),
-          selectedWeeks: isSummer ? Array.from(selectedWeeks).sort((a, b) => a - b) : [],
+          selectedDays: allSelectedDays,
+          selectedWeeks: selectedWeeksList,
+          weekSelectionsJson,
           intendedAmountCents: baseAmountCents,
           coverFees,
           paymentMethod,
@@ -810,193 +901,106 @@ function HomeschoolPaymentModal({
         <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
           {step === "plan" ? (
             <>
-              {/* Grade tier badge */}
-              <div className="flex items-center gap-2">
+              {/* Grade tier + program label */}
+              <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-gray-500 font-body">
                   {gradeTierLabel(gradeTier)}
                 </span>
+                <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                  Summer 2026 · May 26 – Aug 13
+                </span>
               </div>
 
-              {/* Program tabs (only if "both") */}
-              {showBothTabs && (
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleTabChange("summer")}
-                    className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
-                      activeTab === "summer"
-                        ? "text-white"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
-                    style={activeTab === "summer" ? { backgroundColor: "#4a7c59" } : {}}
-                  >
-                    Summer 2026
-                  </button>
-                  <button
-                    onClick={() => handleTabChange("school-year")}
-                    className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
-                      activeTab === "school-year"
-                        ? "text-white"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
-                    style={activeTab === "school-year" ? { backgroundColor: "#4a7c59" } : {}}
-                  >
-                    School Year
-                  </button>
-                </div>
-              )}
-
-              {/* Program label if not tabs */}
-              {!showBothTabs && (
-                <div>
-                  <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                    {isSummer ? "Summer 2026 · May 26 – Aug 13" : "School Year 2026–2027 · Aug 17, 2026"}
-                  </span>
-                </div>
-              )}
-
-              {/* Tier selector */}
+              {/* Flat week list */}
               <div>
                 <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">
-                  Choose your schedule
+                  Choose up to 3 days per week
                 </p>
                 <div className="space-y-2">
-                  {HOMESCHOOL_TIERS.map((tier) => {
-                    const rate = pricing[tier.key][gradeTier];
-                    const isSelected = selectedTier === tier.key;
+                  {SUMMER_WEEKS.map((w) => {
+                    const availableDays = WEEKDAYS.filter((day) => !w.days || w.days.includes(day.key));
+                    const paidDays = paidDaysByWeek[w.week] ?? new Set<string>();
+                    const isFullyPaid = availableDays.every((day) => paidDays.has(day.key));
+                    const days = weekSelections[w.week] ?? new Set<string>();
+                    const weekRate =
+                      days.size > 0
+                        ? HOMESCHOOL_SUMMER_PRICING[deriveTier(days.size)][gradeTier]
+                        : 0;
                     return (
-                      <button
-                        key={tier.key}
-                        onClick={() => {
-                          setSelectedTier(tier.key);
-                          setSelectedDays(new Set());
-                        }}
-                        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border text-left transition-all cursor-pointer ${
-                          isSelected
-                            ? "border-primary bg-primary/5"
-                            : "border-gray-100 bg-white hover:border-gray-300"
+                      <div
+                        key={w.week}
+                        className={`rounded-xl border px-3 py-2.5 ${
+                          isFullyPaid
+                            ? "border-gray-100 bg-gray-50 opacity-60"
+                            : days.size > 0
+                              ? "border-primary bg-primary/5"
+                              : "border-gray-100 bg-white"
                         }`}
                       >
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                              isSelected ? "border-primary" : "border-gray-300"
-                            }`}
-                          >
-                            {isSelected && (
-                              <div className="w-2 h-2 rounded-full bg-primary" />
+                        <div className="flex items-start justify-between mb-1.5 gap-2">
+                          <div className="flex items-start gap-2 min-w-0">
+                            <span className="text-base leading-none mt-0.5 shrink-0">{w.emoji}</span>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <span className={`text-xs font-bold ${days.size > 0 && !isFullyPaid ? "text-primary" : "text-gray-400"}`}>
+                                  Wk {w.week}
+                                </span>
+                                <span className="text-[10px] text-gray-400">{w.dates}</span>
+                              </div>
+                              <p className="text-[11px] font-semibold text-gray-600 leading-tight">{w.theme}</p>
+                              <p className="text-[10px] text-gray-400 leading-tight mt-0.5">{w.highlights.join(" · ")}</p>
+                            </div>
+                          </div>
+                          <div className="shrink-0">
+                            {isFullyPaid ? (
+                              <span className="text-[10px] font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Paid</span>
+                            ) : paidDays.size > 0 ? (
+                              <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                                {Array.from(paidDays).map((d) => d.charAt(0).toUpperCase() + d.slice(1)).join(", ")} paid
+                              </span>
+                            ) : days.size > 0 ? (
+                              <span className="text-xs font-bold" style={{ color: "#4a7c59" }}>{formatCents(weekRate)}</span>
+                            ) : (
+                              <span className="text-[10px] text-gray-300">—</span>
                             )}
                           </div>
-                          <div>
-                            <span className="text-sm font-semibold text-gray-800">
-                              {tier.label}
-                            </span>
-                            <span className="text-xs text-gray-400 ml-2">{tier.sub}</span>
-                          </div>
                         </div>
-                        <span className="text-sm font-bold text-gray-800">
-                          {formatCents(rate)}
-                          <span className="text-xs font-normal text-gray-400 ml-1">
-                            {tier.key === "dropin" ? "/ day" : isSummer ? "/ week" : "/ month"}
-                          </span>
-                        </span>
-                      </button>
+                        <div className="flex gap-1.5">
+                          {availableDays.map((day) => {
+                            const isDayPaid = paidDays.has(day.key);
+                            const isSel = days.has(day.key);
+                            return (
+                              <button
+                                key={day.key}
+                                onClick={() => toggleWeekDay(w.week, day.key)}
+                                disabled={isDayPaid}
+                                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                                  isDayPaid
+                                    ? "bg-gray-100 text-gray-300 cursor-not-allowed"
+                                    : isSel
+                                      ? "text-white cursor-pointer"
+                                      : "bg-gray-100 text-gray-500 hover:bg-gray-200 cursor-pointer"
+                                }`}
+                                style={
+                                  isSel && !isDayPaid
+                                    ? { backgroundColor: "#4a7c59" }
+                                    : {}
+                                }
+                              >
+                                {day.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Day-of-week picker (not for drop-in) */}
-              <AnimatePresence>
-                {selectedTier && selectedTier !== "dropin" && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">
-                      Which days? ({selectedDays.size}/{tierDays} selected)
-                    </p>
-                    <div className="flex gap-2 flex-wrap">
-                      {WEEKDAYS.map((day) => {
-                        const isSelected = selectedDays.has(day.key);
-                        const isDisabled = !isSelected && selectedDays.size >= tierDays;
-                        return (
-                          <button
-                            key={day.key}
-                            onClick={() => toggleDay(day.key)}
-                            disabled={isDisabled}
-                            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
-                              isSelected
-                                ? "text-white"
-                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                            }`}
-                            style={isSelected ? { backgroundColor: "#4a7c59" } : {}}
-                          >
-                            {day.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Week picker — summer only, appears after tier (and days) are selected */}
-              <AnimatePresence>
-                {selectedTier && isSummer && daysComplete && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                        Which weeks? ({selectedWeeks.size} selected)
-                      </p>
-                      <button
-                        onClick={toggleAllWeeks}
-                        className="text-xs font-semibold cursor-pointer transition-colors"
-                        style={{ color: "#4a7c59" }}
-                      >
-                        {selectedWeeks.size === unpaidSummerWeeks.length && unpaidSummerWeeks.length > 0 ? "Deselect all" : "Select all"}
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      {SUMMER_WEEKS.map((w) => {
-                        const isSel = selectedWeeks.has(w.week);
-                        const isPaid = alreadyPaidWeeks.has(w.week);
-                        return (
-                          <button
-                            key={w.week}
-                            onClick={() => !isPaid && toggleWeek(w.week)}
-                            disabled={isPaid}
-                            className={`flex flex-col items-start px-3 py-2.5 rounded-xl border text-left transition-all ${
-                              isPaid
-                                ? "border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed"
-                                : isSel
-                                  ? "border-primary bg-primary/5 cursor-pointer"
-                                  : "border-gray-100 bg-white hover:border-gray-300 cursor-pointer"
-                            }`}
-                          >
-                            <span className={`text-xs font-bold ${isPaid ? "text-gray-400 line-through" : isSel ? "text-primary" : "text-gray-400"}`}>
-                              Wk {w.week}
-                            </span>
-                            <span className="text-[10px] text-gray-500 leading-tight mt-0.5">
-                              {isPaid ? "Paid" : w.dates}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
               {/* Rate summary */}
               <AnimatePresence>
-                {selectedTier && (!isSummer || selectedWeeks.size > 0) && (
+                {canContinuePlan && (
                   <motion.div
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -1004,24 +1008,43 @@ function HomeschoolPaymentModal({
                     className="rounded-xl px-4 py-3 space-y-1"
                     style={{ backgroundColor: "#f6faf7" }}
                   >
-                    {isSummer && selectedWeeks.size > 0 && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-400 font-body">
-                          {formatCents(weeklyRate)} × {selectedWeeks.size} week{selectedWeeks.size !== 1 ? "s" : ""}
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex items-center justify-between">
+                    {Object.entries(weekSelections)
+                      .filter(([, d]) => d.size > 0)
+                      .sort(([a], [b]) => Number(a) - Number(b))
+                      .map(([wk, d]) => {
+                        const wkNum = Number(wk);
+                        const rate =
+                          HOMESCHOOL_SUMMER_PRICING[deriveTier(d.size)][
+                            gradeTier
+                          ];
+                        const dayLabels = WEEKDAYS.filter((day) =>
+                          d.has(day.key),
+                        )
+                          .map((day) => day.label)
+                          .join(", ");
+                        return (
+                          <div
+                            key={wk}
+                            className="flex items-center justify-between"
+                          >
+                            <span className="text-xs text-gray-400 font-body">
+                              Wk {wkNum} · {dayLabels}
+                            </span>
+                            <span className="text-xs font-semibold text-gray-600">
+                              {formatCents(rate)}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    <div className="flex items-center justify-between pt-1 border-t border-gray-100 mt-1">
                       <span className="text-sm text-gray-500 font-body">
-                        {isSummer ? "Total" : selectedTier === "dropin" ? "Rate" : "Monthly rate"}
+                        Total
                       </span>
-                      <span className="text-base font-bold font-heading" style={{ color: "#4a7c59" }}>
+                      <span
+                        className="text-base font-bold font-heading"
+                        style={{ color: "#4a7c59" }}
+                      >
                         {formatCents(baseAmountCents)}
-                        {!isSummer && (
-                          <span className="text-xs font-normal text-gray-400 ml-1">
-                            {selectedTier === "dropin" ? "/ day" : "/ month"}
-                          </span>
-                        )}
                       </span>
                     </div>
                   </motion.div>
@@ -1095,7 +1118,10 @@ function HomeschoolPaymentModal({
                 style={{ backgroundColor: "#f6faf7" }}
               >
                 <span className="text-sm text-gray-500 font-body">Total</span>
-                <span className="text-base font-bold font-heading" style={{ color: "#4a7c59" }}>
+                <span
+                  className="text-base font-bold font-heading"
+                  style={{ color: "#4a7c59" }}
+                >
                   {formatCents(totalWithFees)}
                 </span>
               </div>
@@ -1121,7 +1147,9 @@ function HomeschoolPaymentModal({
             </button>
           )}
           <button
-            disabled={step === "plan" ? !canContinuePlan : loading || !coverFees}
+            disabled={
+              step === "plan" ? !canContinuePlan : loading || !coverFees
+            }
             className="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             style={{ backgroundColor: "#4a7c59" }}
             onClick={() => {
@@ -1732,11 +1760,18 @@ function AftercareCard({
       </div>
       <div className="p-3.5 flex flex-col gap-2.5">
         <div>
-          <div className="text-xs font-medium text-gray-400 mb-0.5">Summer 2026</div>
-          <div className="text-sm font-semibold text-gray-800 leading-snug">After School Care</div>
+          <div className="text-xs font-medium text-gray-400 mb-0.5">
+            Summer 2026
+          </div>
+          <div className="text-sm font-semibold text-gray-800 leading-snug">
+            After School Care
+          </div>
         </div>
         <div className="flex items-center justify-between mt-auto">
-          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: "#e07a3a" }}>
+          <span
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white"
+            style={{ backgroundColor: "#e07a3a" }}
+          >
             Select plan
             <ChevronRight className="w-3 h-3" strokeWidth={2.5} />
           </span>
@@ -1771,11 +1806,18 @@ function FunFridayCard({
       </div>
       <div className="p-3.5 flex flex-col gap-2.5">
         <div>
-          <div className="text-xs font-medium text-gray-400 mb-0.5">Summer 2026</div>
-          <div className="text-sm font-semibold text-gray-800 leading-snug">Friday Enrichment Day</div>
+          <div className="text-xs font-medium text-gray-400 mb-0.5">
+            Summer 2026
+          </div>
+          <div className="text-sm font-semibold text-gray-800 leading-snug">
+            Friday Enrichment Day
+          </div>
         </div>
         <div className="flex items-center justify-between mt-auto">
-          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: "#7c3aed" }}>
+          <span
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white"
+            style={{ backgroundColor: "#7c3aed" }}
+          >
             Select plan
             <ChevronRight className="w-3 h-3" strokeWidth={2.5} />
           </span>
@@ -2208,7 +2250,10 @@ function AftercarePaymentModal({
                               initial={{ height: 0, opacity: 0 }}
                               animate={{ height: "auto", opacity: 1 }}
                               exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.2, ease: "easeInOut" as const }}
+                              transition={{
+                                duration: 0.2,
+                                ease: "easeInOut" as const,
+                              }}
                               className="overflow-hidden"
                             >
                               <div className="px-4 py-3 flex flex-wrap gap-2">
@@ -2733,7 +2778,10 @@ function FunFridayPaymentModal({
                               initial={{ height: 0, opacity: 0 }}
                               animate={{ height: "auto", opacity: 1 }}
                               exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.2, ease: "easeInOut" as const }}
+                              transition={{
+                                duration: 0.2,
+                                ease: "easeInOut" as const,
+                              }}
                               className="overflow-hidden"
                             >
                               <div className="px-4 py-3 flex flex-wrap gap-2">
@@ -3150,9 +3198,16 @@ function UpgradeToFullTimeCard({ childNames }: { childNames: string[] }) {
           </p>
           <div className="space-y-2.5">
             <div>
-              <p className="text-xs font-body text-gray-400 mb-0.5">3-Day / School Year</p>
-              <p className="text-xl font-bold font-heading text-gray-700">$720<span className="text-sm font-normal text-gray-400">/mo</span></p>
-              <p className="text-xs font-body text-gray-400">Primary · $780/mo</p>
+              <p className="text-xs font-body text-gray-400 mb-0.5">
+                3-Day / School Year
+              </p>
+              <p className="text-xl font-bold font-heading text-gray-700">
+                $720
+                <span className="text-sm font-normal text-gray-400">/mo</span>
+              </p>
+              <p className="text-xs font-body text-gray-400">
+                Primary · $780/mo
+              </p>
             </div>
           </div>
         </div>
@@ -3167,9 +3222,16 @@ function UpgradeToFullTimeCard({ childNames }: { childNames: string[] }) {
           </p>
           <div className="space-y-2.5">
             <div>
-              <p className="text-xs font-body text-indigo-300 mb-0.5">Mon–Thu / School Year</p>
-              <p className="text-xl font-bold font-heading text-white">$1,095<span className="text-sm font-normal text-indigo-300">/mo</span></p>
-              <p className="text-xs font-body text-indigo-300">Primary · $1,195/mo</p>
+              <p className="text-xs font-body text-indigo-300 mb-0.5">
+                Mon–Thu / School Year
+              </p>
+              <p className="text-xl font-bold font-heading text-white">
+                $1,095
+                <span className="text-sm font-normal text-indigo-300">/mo</span>
+              </p>
+              <p className="text-xs font-body text-indigo-300">
+                Primary · $1,195/mo
+              </p>
             </div>
           </div>
         </div>
@@ -3224,7 +3286,10 @@ export default function BillingPage({
     // Only set from homeschoolDropInApps if the student's primary program is actually
     // a homeschool/drop-in variant — don't overwrite a summer_26-only enrollment
     const prog = e.drop_in_program ?? "homeschool_drop_in";
-    if (!studentProgramMap.has(e.student_id) || e.drop_in_program === "homeschool_drop_in") {
+    if (
+      !studentProgramMap.has(e.student_id) ||
+      e.drop_in_program === "homeschool_drop_in"
+    ) {
       studentProgramMap.set(e.student_id, prog);
     }
   }
@@ -3338,16 +3403,26 @@ export default function BillingPage({
               Tuition &amp; Billing
             </h1>
             {(() => {
-              const activeProgram = activeStudentId ? studentProgramMap.get(activeStudentId) : undefined;
+              const activeProgram = activeStudentId
+                ? studentProgramMap.get(activeStudentId)
+                : undefined;
               const programBadgeLabel = formatProgramLabel(activeProgram);
-              const activeHomeschoolApp = homeschoolDropInApps.find((a) => a.student_id === activeStudentId);
+              const activeHomeschoolApp = homeschoolDropInApps.find(
+                (a) => a.student_id === activeStudentId,
+              );
               const dropInBadgeLabel =
                 activeProgram === "homeschool_drop_in" && activeHomeschoolApp
-                  ? formatDropInProgramLabel(activeHomeschoolApp.drop_in_program)
+                  ? formatDropInProgramLabel(
+                      activeHomeschoolApp.drop_in_program,
+                    )
                   : null;
               if (!programBadgeLabel) return null;
-              const fullName = activeStudentId ? studentMap[activeStudentId]?.name : null;
-              const firstName = fullName ? fullName.trim().split(/\s+/)[0] : null;
+              const fullName = activeStudentId
+                ? studentMap[activeStudentId]?.name
+                : null;
+              const firstName = fullName
+                ? fullName.trim().split(/\s+/)[0]
+                : null;
               return (
                 <div className="flex items-center gap-2 mt-2">
                   {firstName && (
@@ -3481,7 +3556,9 @@ export default function BillingPage({
 
           {homeschoolDropInApps.length > 0 && (
             <UpgradeToFullTimeCard
-              childNames={homeschoolDropInApps.map((a) => a.name ?? "your child")}
+              childNames={homeschoolDropInApps.map(
+                (a) => a.name ?? "your child",
+              )}
             />
           )}
         </div>
@@ -3599,18 +3676,24 @@ export default function BillingPage({
             onClose={() => setSelectedHomeschoolApp(null)}
           />
         )}
-        {selectedHomeschoolHistoryApp && paidHomeschoolByStudent[selectedHomeschoolHistoryApp.student_id] && (
-          <HomeschoolPlanHistoryModal
-            app={selectedHomeschoolHistoryApp}
-            studentName={studentMap[selectedHomeschoolHistoryApp.student_id]?.name ?? null}
-            paidData={paidHomeschoolByStudent[selectedHomeschoolHistoryApp.student_id]}
-            onClose={() => setSelectedHomeschoolHistoryApp(null)}
-            onAddMore={() => {
-              setSelectedHomeschoolApp(selectedHomeschoolHistoryApp);
-              setSelectedHomeschoolHistoryApp(null);
-            }}
-          />
-        )}
+        {selectedHomeschoolHistoryApp &&
+          paidHomeschoolByStudent[selectedHomeschoolHistoryApp.student_id] && (
+            <HomeschoolPlanHistoryModal
+              app={selectedHomeschoolHistoryApp}
+              studentName={
+                studentMap[selectedHomeschoolHistoryApp.student_id]?.name ??
+                null
+              }
+              paidData={
+                paidHomeschoolByStudent[selectedHomeschoolHistoryApp.student_id]
+              }
+              onClose={() => setSelectedHomeschoolHistoryApp(null)}
+              onAddMore={() => {
+                setSelectedHomeschoolApp(selectedHomeschoolHistoryApp);
+                setSelectedHomeschoolHistoryApp(null);
+              }}
+            />
+          )}
       </AnimatePresence>
     </div>
   );

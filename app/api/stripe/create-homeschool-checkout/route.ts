@@ -36,8 +36,9 @@ const schema = z.object({
   program: z.enum(["summer_26", "school_year_26_27"]),
   tier: z.enum(["dropin", "2day", "3day"]),
   gradeTier: z.enum(["primary", "upper"]),
-  selectedDays: z.array(z.string()).default([]), // e.g. ["mon", "wed"]
-  selectedWeeks: z.array(z.number()).default([]), // e.g. [1, 3, 5] — summer only
+  selectedDays: z.array(z.string()).default([]),
+  selectedWeeks: z.array(z.number()).default([]),
+  weekSelectionsJson: z.string().optional(), // JSON: [{week, days[]}]
   intendedAmountCents: z.number().int().positive(),
   coverFees: z.boolean().optional().default(false),
   paymentMethod: z.enum(["card", "ach"]).optional().default("card"),
@@ -58,42 +59,18 @@ export async function POST(request: NextRequest) {
       gradeTier,
       selectedDays,
       selectedWeeks,
+      weekSelectionsJson,
       intendedAmountCents,
       coverFees,
       paymentMethod,
     } = validated;
 
-    const pricing = program === "summer_26" ? SUMMER_PRICING : SCHOOL_YEAR_PRICING;
-    const isSummer = program === "summer_26";
-    const tierLabel = TIER_LABELS[tier];
     const programLabel = PROGRAM_LABELS[program];
-    const daysLabel = selectedDays.length > 0 ? selectedDays.map((d) => d.charAt(0).toUpperCase() + d.slice(1)).join(", ") : "Day Pass";
-    const weeksLabel = selectedWeeks.length > 0 ? `Weeks ${selectedWeeks.join(", ")}` : "";
-
-    const weeklyRate = pricing[tier]?.[gradeTier] ?? intendedAmountCents;
-    // For summer: charge is weeklyRate × number of weeks
-    const unitAmount = isSummer ? weeklyRate : weeklyRate;
-
-    const description = isSummer
-      ? tier === "dropin"
-        ? `Homeschool Drop-In — ${tierLabel} · ${programLabel}${weeksLabel ? ` · ${weeksLabel}` : ""}`
-        : `Homeschool Drop-In — ${tierLabel} (${daysLabel}) · ${programLabel}${weeksLabel ? ` · ${weeksLabel}` : ""}`
-      : tier === "dropin"
-        ? `Homeschool Drop-In — ${tierLabel} · ${programLabel}`
-        : `Homeschool Drop-In — ${tierLabel} (${daysLabel}) · ${programLabel} · $${(weeklyRate / 100).toFixed(0)}/mo`;
+    const weeksCount = selectedWeeks.length;
+    const description = `Homeschool Drop-In · ${programLabel} · ${weeksCount} week${weeksCount !== 1 ? "s" : ""}`;
+    const productDesc = `${programLabel} · ${weeksCount} week${weeksCount !== 1 ? "s" : ""}, varied schedule`;
 
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
-
-    // For summer: quantity = number of weeks selected; unit = weekly rate
-    // For school year: quantity = 1; unit = monthly rate
-    const quantity = isSummer && selectedWeeks.length > 0 ? selectedWeeks.length : 1;
-    const productDesc = isSummer
-      ? tier === "dropin"
-        ? `${programLabel} · Day Pass${weeksLabel ? ` · ${weeksLabel}` : ""}`
-        : `${programLabel} · ${daysLabel}${weeksLabel ? ` · ${weeksLabel}` : ""}`
-      : tier === "dropin"
-        ? `${programLabel} · Day Pass`
-        : `${programLabel} · ${daysLabel} · $${(weeklyRate / 100).toFixed(0)}/mo`;
 
     const lineItems: {
       quantity: number;
@@ -104,12 +81,12 @@ export async function POST(request: NextRequest) {
       };
     }[] = [
       {
-        quantity,
+        quantity: 1,
         price_data: {
           currency: "usd",
-          unit_amount: unitAmount,
+          unit_amount: intendedAmountCents,
           product_data: {
-            name: `Homeschool Drop-In — ${tierLabel}${isSummer && quantity > 1 ? ` (${quantity} wks)` : ""}`,
+            name: `Homeschool Drop-In — ${programLabel} (${weeksCount} wk${weeksCount !== 1 ? "s" : ""})`,
             description: productDesc,
           },
         },
@@ -160,6 +137,7 @@ export async function POST(request: NextRequest) {
         grade_tier: gradeTier,
         selected_days: selectedDays.join(","),
         selected_weeks: selectedWeeks.join(","),
+        week_selections: weekSelectionsJson ?? "",
         cover_fees: String(coverFees),
         payment_method: paymentMethod,
         intended_amount_cents: String(intendedAmountCents),
