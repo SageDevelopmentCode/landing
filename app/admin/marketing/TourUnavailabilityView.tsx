@@ -15,6 +15,7 @@ import {
 } from '@/app/actions/tourUnavailability'
 import type { TourBooking } from './page'
 import { sendTourReminderEmail } from '@/app/actions/sendTourReminderEmail'
+import { sendTourThankYouEmail } from '@/app/actions/sendTourThankYouEmail'
 
 const merriweather = Poppins({ weight: ['300', '400', '700', '900'], subsets: ['latin'] })
 
@@ -823,6 +824,8 @@ function TourBookingsTable({ bookings }: { bookings: TourBooking[] }) {
   const [selected, setSelected] = useState<TourBooking | null>(null)
   const [sending, setSending] = useState(false)
   const [reminderSent, setReminderSent] = useState(false)
+  const [thankYouSending, setThankYouSending] = useState(false)
+  const [thankYouSent, setThankYouSent] = useState(false)
   const today = new Date().toISOString().split('T')[0]
 
   async function handleSendReminder() {
@@ -838,9 +841,21 @@ function TourBookingsTable({ bookings }: { bookings: TourBooking[] }) {
     if (res.success) setReminderSent(true)
   }
 
+  async function handleSendThankYou() {
+    if (!selected) return
+    setThankYouSending(true)
+    const res = await sendTourThankYouEmail({
+      firstName: selected.first_name,
+      email: selected.email,
+    })
+    setThankYouSending(false)
+    if (res.success) setThankYouSent(true)
+  }
+
   function closePanel() {
     setSelected(null)
     setReminderSent(false)
+    setThankYouSent(false)
   }
 
   const upcoming = bookings.filter(b => b.tour_date >= today && b.status !== 'cancelled')
@@ -1029,6 +1044,27 @@ function TourBookingsTable({ bookings }: { bookings: TourBooking[] }) {
                   }}
                 >
                   {sending ? 'Sending…' : reminderSent ? 'Reminder Sent ✓' : 'Send Tour Reminder'}
+                </button>
+              </div>
+
+              <div style={{ marginTop: '12px' }}>
+                <button
+                  onClick={handleSendThankYou}
+                  disabled={thankYouSending || thankYouSent}
+                  style={{
+                    width: '100%',
+                    padding: '10px 0',
+                    backgroundColor: thankYouSent ? '#e8f0e8' : colors.mistyForest,
+                    color: thankYouSent ? colors.mistyForest : 'white',
+                    border: thankYouSent ? `1px solid ${colors.mistyForest}` : 'none',
+                    borderRadius: radius.md,
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    cursor: thankYouSending || thankYouSent ? 'default' : 'pointer',
+                    opacity: thankYouSending ? 0.7 : 1,
+                  }}
+                >
+                  {thankYouSending ? 'Sending…' : thankYouSent ? 'Thank You Sent ✓' : 'Send Thank You Email'}
                 </button>
               </div>
             </motion.div>
