@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Receipt,
   CheckCircle2,
@@ -3163,6 +3164,145 @@ function PendingDetailSidebar({
   );
 }
 
+type FullTimeProgram = "summer_26" | "school_year_26_27" | "both";
+
+const FULL_TIME_OPTIONS: { value: FullTimeProgram; label: string; sub: string }[] = [
+  { value: "summer_26", label: "Summer 2026", sub: "May–Aug · 12 weeks · Mon–Thu" },
+  { value: "school_year_26_27", label: "School Year 26–27", sub: "Sep–May · Mon–Thu" },
+  { value: "both", label: "Both Programs", sub: "Summer 2026 + School Year 26–27" },
+];
+
+function WantToGoFullTimeSection({
+  applicationId,
+  dropInProgram,
+}: {
+  applicationId: string;
+  dropInProgram: string | null;
+}) {
+  const router = useRouter();
+  const [step, setStep] = useState<"idle" | "confirm">("idle");
+  const [selected, setSelected] = useState<FullTimeProgram | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Only show options relevant to what the parent signed up for as drop-in
+  const visibleOptions = FULL_TIME_OPTIONS.filter((opt) => {
+    if (dropInProgram === "summer_26") return opt.value === "summer_26" || opt.value === "both";
+    if (dropInProgram === "school_year_26_27") return opt.value === "school_year_26_27" || opt.value === "both";
+    return true; // "both" drop-in → show all
+  });
+
+  async function handleConfirm() {
+    if (!selected) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/parent/switch-program", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ applicationId, targetProgram: selected }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Something went wrong");
+      router.refresh();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div>
+      <h2 className="text-lg font-semibold font-heading text-gray-700 mb-4">
+        Want to go full-time?
+      </h2>
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: "easeOut" as const }}
+        className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200 rounded-2xl px-5 py-5 shadow-sm"
+      >
+        {step === "idle" && (
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold font-heading text-gray-900 mb-0.5">
+                Switch to a full-time program
+              </p>
+              <p className="text-xs font-body text-gray-500">
+                Mon–Thu, every week. Same kids, same teachers, deeper learning.
+              </p>
+            </div>
+            <button
+              onClick={() => setStep("confirm")}
+              className="flex-shrink-0 px-4 py-2 bg-indigo-600 text-white text-xs font-semibold font-body rounded-xl hover:bg-indigo-700 transition-colors whitespace-nowrap"
+            >
+              Switch to Full-Time
+            </button>
+          </div>
+        )}
+
+        {step === "confirm" && (
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm font-semibold font-heading text-gray-900 mb-0.5">
+                Which program would you like?
+              </p>
+              <p className="text-xs font-body text-gray-500">
+                Select a full-time program below. Your drop-in enrollment will be converted.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              {visibleOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setSelected(opt.value)}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border text-left transition-colors ${
+                    selected === opt.value
+                      ? "border-indigo-500 bg-indigo-50"
+                      : "border-gray-200 bg-white/70 hover:border-indigo-300"
+                  }`}
+                >
+                  <div>
+                    <p className={`text-xs font-semibold font-body ${selected === opt.value ? "text-indigo-700" : "text-gray-800"}`}>
+                      {opt.label}
+                    </p>
+                    <p className="text-xs font-body text-gray-400">{opt.sub}</p>
+                  </div>
+                  <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 ${
+                    selected === opt.value ? "border-indigo-500 bg-indigo-500" : "border-gray-300"
+                  }`} />
+                </button>
+              ))}
+            </div>
+
+            {error && (
+              <p className="text-xs font-body text-red-500">{error}</p>
+            )}
+
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => { setStep("idle"); setSelected(null); setError(null); }}
+                disabled={loading}
+                className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 text-xs font-semibold font-body rounded-xl hover:bg-white/60 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirm}
+                disabled={!selected || loading}
+                className="flex-1 px-4 py-2 bg-indigo-600 text-white text-xs font-semibold font-body rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? "Switching…" : "Confirm Switch"}
+              </button>
+            </div>
+          </div>
+        )}
+      </motion.div>
+    </div>
+  );
+}
+
 function UpgradeToFullTimeCard({ childNames }: { childNames: string[] }) {
   const nameLabel =
     childNames.length === 1
@@ -3468,6 +3608,23 @@ export default function BillingPage({
             </div>
           )}
 
+          {(() => {
+            const activeHomeschoolDropIn = homeschoolDropInApps.find(
+              (a) => a.student_id === activeStudentId,
+            );
+            const eligible =
+              !!activeHomeschoolDropIn &&
+              (activeHomeschoolDropIn.drop_in_program === "summer_26" ||
+                activeHomeschoolDropIn.drop_in_program === "both");
+            if (!eligible) return null;
+            return (
+              <WantToGoFullTimeSection
+                applicationId={activeHomeschoolDropIn.id}
+                dropInProgram={activeHomeschoolDropIn.drop_in_program}
+              />
+            );
+          })()}
+
           <div>
             <h2 className="text-lg font-semibold font-heading text-gray-700 mb-4">
               Payment History
@@ -3554,13 +3711,6 @@ export default function BillingPage({
             )}
           </div>
 
-          {homeschoolDropInApps.length > 0 && (
-            <UpgradeToFullTimeCard
-              childNames={homeschoolDropInApps.map(
-                (a) => a.name ?? "your child",
-              )}
-            />
-          )}
         </div>
       </div>
 
