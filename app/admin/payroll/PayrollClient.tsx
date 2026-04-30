@@ -12,8 +12,10 @@ import {
   setTeacherHourlyRate,
 } from '@/app/actions/paystubs'
 import type { PaystubWithTeacher } from '@/app/actions/paystubs'
+import { TeacherOverviewTab } from './TeacherOverviewTab'
+import { PayPeriodHoursTab } from './PayPeriodHoursTab'
 
-type TeacherRate = {
+export type TeacherRate = {
   id: string
   full_name: string | null
   email: string
@@ -25,25 +27,25 @@ interface Props {
   teachers: TeacherRate[]
 }
 
-const STATUS_CFG = {
+export const STATUS_CFG = {
   pending:  { label: 'Pending',  color: colors.warning,  bg: colors.warningBg,  border: colors.warningBorder },
   approved: { label: 'Approved', color: colors.info,     bg: colors.infoBg,     border: colors.infoBorder },
   paid:     { label: 'Paid',     color: colors.success,  bg: colors.successBg,  border: colors.successBorder },
 } as const
 
-function fmtDate(iso: string) {
+export function fmtDate(iso: string) {
   return new Date(iso + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-function fmtMoney(n: number) {
+export function fmtMoney(n: number) {
   return n.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
 }
 
-function fmtTs(iso: string) {
+export function fmtTs(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-function formatHours(h: number) {
+export function formatHours(h: number) {
   const hrs = Math.floor(h)
   const mins = Math.round((h - hrs) * 60)
   if (hrs === 0) return `${mins}m`
@@ -51,7 +53,7 @@ function formatHours(h: number) {
   return `${hrs}h ${mins}m`
 }
 
-function StatusBadge({ status }: { status: 'pending' | 'approved' | 'paid' }) {
+export function StatusBadge({ status }: { status: 'pending' | 'approved' | 'paid' }) {
   const cfg = STATUS_CFG[status]
   return (
     <span
@@ -314,7 +316,7 @@ function TeacherRatesTab({ teachers: initial }: { teachers: TeacherRate[] }) {
 
 export function PayrollClient({ paystubs: initial, teachers }: Props) {
   const [paystubs, setPaystubs] = useState<PaystubWithTeacher[]>(initial)
-  const [tab, setTab] = useState<'paystubs' | 'rates'>('paystubs')
+  const [tab, setTab] = useState<'paystubs' | 'overview' | 'periods' | 'rates'>('paystubs')
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [selectedStub, setSelectedStub] = useState<PaystubWithTeacher | null>(null)
@@ -370,8 +372,10 @@ export function PayrollClient({ paystubs: initial, teachers }: Props) {
     <div className="space-y-4">
       {/* Tabs */}
       <div className="flex gap-1">
-        <button style={tabStyle(tab === 'paystubs')} onClick={() => setTab('paystubs')}>Paystubs</button>
-        <button style={tabStyle(tab === 'rates')}    onClick={() => setTab('rates')}>Teacher Rates</button>
+        <button style={tabStyle(tab === 'paystubs')}  onClick={() => setTab('paystubs')}>Paystubs</button>
+        <button style={tabStyle(tab === 'overview')}  onClick={() => setTab('overview')}>Teacher Overview</button>
+        <button style={tabStyle(tab === 'periods')}   onClick={() => setTab('periods')}>Pay Period Hours</button>
+        <button style={tabStyle(tab === 'rates')}     onClick={() => setTab('rates')}>Teacher Rates</button>
       </div>
 
       {tab === 'paystubs' && (
@@ -472,7 +476,9 @@ export function PayrollClient({ paystubs: initial, teachers }: Props) {
         </>
       )}
 
-      {tab === 'rates' && <TeacherRatesTab teachers={teachers} />}
+      {tab === 'overview' && <TeacherOverviewTab paystubs={paystubs} teachers={teachers} />}
+      {tab === 'periods'  && <PayPeriodHoursTab paystubs={paystubs} />}
+      {tab === 'rates'    && <TeacherRatesTab teachers={teachers} />}
     </div>
   )
 }
