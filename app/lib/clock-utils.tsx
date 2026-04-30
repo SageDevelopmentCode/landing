@@ -92,7 +92,7 @@ export function getPastPayPeriods(count = 12): PayPeriod[] {
   const msPerPeriod = 14 * 24 * 60 * 60 * 1000
   const completedCycles = Math.floor((today.getTime() - PAYROLL_ANCHOR.getTime()) / msPerPeriod)
   const periods: PayPeriod[] = []
-  for (let i = completedCycles - 1; i >= Math.max(0, completedCycles - count); i--) {
+  for (let i = completedCycles; i >= Math.max(0, completedCycles - count + 1); i--) {
     const start = new Date(PAYROLL_ANCHOR.getTime() + i * msPerPeriod)
     const end   = new Date(start.getTime() + 13 * 24 * 60 * 60 * 1000)
     const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
