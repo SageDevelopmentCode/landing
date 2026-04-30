@@ -58,8 +58,8 @@ export async function POST(request: NextRequest) {
       operationType: string;
       occurredAt: string;
       changedPaths: string[];
-      mergePatch: Record<string, unknown>;
-      previousValues: Record<string, unknown>;
+      mergePatch: Record<string, unknown> | null;
+      previousValues: Record<string, unknown> | null;
     };
 
     const webhookUrl = process.env.DISCORD_MERCURY_WEBHOOK_URL;
@@ -74,8 +74,8 @@ export async function POST(request: NextRequest) {
         resourceId: event.resourceId,
         occurredAt: event.occurredAt,
         changedPaths: event.changedPaths,
-        mergePatch: event.mergePatch,
-        previousValues: event.previousValues,
+        mergePatch: event.mergePatch ?? {},
+        previousValues: event.previousValues ?? {},
       });
       await sendDiscordNotification(embed, webhookUrl);
     } else if (event.resourceType.endsWith("Account")) {
@@ -83,8 +83,8 @@ export async function POST(request: NextRequest) {
         resourceType: event.resourceType,
         resourceId: event.resourceId,
         occurredAt: event.occurredAt,
-        mergePatch: event.mergePatch,
-        previousValues: event.previousValues,
+        mergePatch: event.mergePatch ?? {},
+        previousValues: event.previousValues ?? {},
       });
       await sendDiscordNotification(embed, webhookUrl);
     }
