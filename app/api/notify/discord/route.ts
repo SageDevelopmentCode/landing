@@ -9,6 +9,7 @@ import {
   createHelpRequestEmbed,
   createVolunteerInterestEmbed,
   createAppErrorEmbed,
+  createPaystubSubmittedEmbed,
 } from "@/app/lib/discord";
 
 export async function POST(request: NextRequest) {
@@ -219,6 +220,57 @@ export async function POST(request: NextRequest) {
           timestamp: new Date().toISOString(),
         },
         process.env.DISCORD_WEBHOOK_URL,
+      );
+      return NextResponse.json({ success: true });
+    }
+
+    if (type === "paystub_submitted") {
+      const { teacherName, teacherEmail, periodStart, periodEnd, totalHours, hourlyRate, grossPay } = data;
+      if (!teacherName || !periodStart || !periodEnd || !totalHours || !hourlyRate || !grossPay) {
+        return NextResponse.json(
+          {
+            error:
+              "paystub_submitted requires teacherName, teacherEmail, periodStart, periodEnd, totalHours, hourlyRate, grossPay",
+          },
+          { status: 400 },
+        );
+      }
+      const embed = createPaystubSubmittedEmbed({
+        teacherName,
+        teacherEmail: teacherEmail ?? "",
+        periodStart,
+        periodEnd,
+        totalHours,
+        hourlyRate,
+        grossPay,
+      });
+      await sendDiscordNotification(embed, process.env.DISCORD_EMPLOYEE_WEBHOOK_URL);
+      return NextResponse.json({ success: true });
+    }
+
+    if (type === "paystub_status_changed") {
+      const { teacherName, newStatus, periodStart, periodEnd, grossPay } = data;
+      if (!teacherName || !newStatus || !periodStart || !periodEnd || !grossPay) {
+        return NextResponse.json(
+          {
+            error:
+              "paystub_status_changed requires teacherName, newStatus, periodStart, periodEnd, grossPay",
+          },
+          { status: 400 },
+        );
+      }
+      await sendDiscordNotification(
+        {
+          title: newStatus === "paid" ? "💸 Paystub Marked Paid" : "✅ Paystub Approved",
+          color: newStatus === "paid" ? 0x4a7c59 : 0x3b82f6,
+          fields: [
+            { name: "Teacher", value: teacherName, inline: true },
+            { name: "Period", value: `${periodStart} → ${periodEnd}`, inline: true },
+            { name: "Gross Pay", value: `$${grossPay}`, inline: true },
+          ],
+          timestamp: new Date().toISOString(),
+        },
+        process.env.DISCORD_EMPLOYEE_WEBHOOK_URL,
       );
       return NextResponse.json({ success: true });
     }
