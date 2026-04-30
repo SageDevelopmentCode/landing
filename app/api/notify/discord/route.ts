@@ -189,6 +189,40 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
+    if (type === "dropoff_time_selected" || type === "dropoff_time_updated") {
+      const { slot, slotLabel } = data;
+      if (!slot || !slotLabel) {
+        return NextResponse.json(
+          { error: "dropoff_time_selected/updated requires slot and slotLabel" },
+          { status: 400 },
+        );
+      }
+      const { data: profile } = await supabase
+        .schema("admin")
+        .from("users")
+        .select("full_name")
+        .eq("id", user.id)
+        .single();
+      const isUpdate = type === "dropoff_time_updated";
+      await sendDiscordNotification(
+        {
+          title: isUpdate ? "✏️  Drop-Off Time Updated" : "🚗 Drop-Off Time Selected",
+          color: isUpdate ? 0xf59e0b : 0x5e7c68,
+          fields: [
+            {
+              name: "Parent",
+              value: profile?.full_name ?? user.email ?? "Unknown",
+              inline: true,
+            },
+            { name: "Slot", value: `${slotLabel} AM`, inline: true },
+          ],
+          timestamp: new Date().toISOString(),
+        },
+        process.env.DISCORD_WEBHOOK_URL,
+      );
+      return NextResponse.json({ success: true });
+    }
+
     return NextResponse.json(
       { error: `Unknown type: ${type}` },
       { status: 400 },
