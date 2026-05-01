@@ -14,6 +14,7 @@ import OnboardingChecklistButton from "@/app/parent/components/OnboardingCheckli
 import type { Database } from "@/app/types/database.types";
 import { getAllStudentAssignments } from "@/app/actions/teacherAssignments";
 import type { TeacherAssignment } from "@/app/actions/teacherAssignments";
+import type { LearningNote } from "@/app/actions/saveParentLearningNote";
 
 type Student = Database["admin"]["Tables"]["students"]["Row"];
 type AuthorizedPickupPlan = Database["parent_app"]["Tables"]["student_authorized_pickup_plan"]["Row"];
@@ -62,8 +63,9 @@ export default async function ChildrenRoute() {
   const nonEnrolledAppByStudent: Record<string, string> = {};
   const studentProgramMap: Record<string, string> = {};
   const pickupByStudent: Record<string, { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] }> = {};
+  const notesByStudent: Record<string, LearningNote[]> = {};
   if (studentIds.length > 0) {
-    const [{ data: appsData }, { data: pickupPlansData }, { data: pickupPersonsData }] = await Promise.all([
+    const [{ data: appsData }, { data: pickupPlansData }, { data: pickupPersonsData }, { data: learningNotesData }] = await Promise.all([
       adminClient
         .schema("parent_app")
         .from("applications")
@@ -83,6 +85,14 @@ export default async function ChildrenRoute() {
         .select("*")
         .in("student_id", studentIds)
         .order("sort_order", { ascending: true }),
+      adminClient
+        .schema("parent_app")
+        .from("student_learning_notes")
+        .select("*")
+        .eq("parent_id", user.id)
+        .eq("is_deleted", false)
+        .in("student_id", studentIds)
+        .order("created_at", { ascending: false }),
     ]);
 
     for (const app of appsData ?? []) {
@@ -102,6 +112,7 @@ export default async function ChildrenRoute() {
         plan: pickupPlansData?.find((p) => p.student_id === sid) ?? null,
         persons: pickupPersonsData?.filter((p) => p.student_id === sid) ?? [],
       };
+      notesByStudent[sid] = (learningNotesData?.filter((n) => n.student_id === sid) ?? []) as LearningNote[];
     }
   }
 
@@ -133,7 +144,7 @@ export default async function ChildrenRoute() {
 
         <main className="flex-1 flex overflow-hidden">
           <Suspense>
-            <ChildrenPage children={children} teachersByStudent={teachersByStudent} nonEnrolledAppByStudent={nonEnrolledAppByStudent} studentProgramMap={studentProgramMap} pickupByStudent={pickupByStudent} />
+            <ChildrenPage children={children} teachersByStudent={teachersByStudent} nonEnrolledAppByStudent={nonEnrolledAppByStudent} studentProgramMap={studentProgramMap} pickupByStudent={pickupByStudent} notesByStudent={notesByStudent} />
           </Suspense>
         </main>
       </div>

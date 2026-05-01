@@ -1231,11 +1231,13 @@ export async function buildOpenHouseEnrollmentEmail(opts: {
   const PROGRAM_LABELS: Record<string, { label: string; details: string }> = {
     summer_26: {
       label: "Summer 2026",
-      details: "May 26 – Aug 13 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Mon–Thu, ~6 hrs/day",
+      details:
+        "May 26 – Aug 13 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Mon–Thu, ~6 hrs/day",
     },
     school_year_26_27: {
       label: "School Year 2026–2027",
-      details: "Starts Aug 17, 2026 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Up to 4 days/week",
+      details:
+        "Starts Aug 17, 2026 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Up to 4 days/week",
     },
     both: {
       label: "Summer 2026 &amp; School Year 2026–2027",
@@ -1243,7 +1245,8 @@ export async function buildOpenHouseEnrollmentEmail(opts: {
     },
     homeschool_drop_in: {
       label: "Homeschool Drop-In",
-      details: "1–5 Days/Week &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Fridays Are Field Days",
+      details:
+        "1–5 Days/Week &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Fridays Are Field Days",
     },
   };
 
@@ -1261,13 +1264,17 @@ export async function buildOpenHouseEnrollmentEmail(opts: {
 
   <p>Your registration fee has been received, and your spot is officially secured. Here is a quick summary of where things stand:</p>
 
-  ${programInfo ? `
+  ${
+    programInfo
+      ? `
   <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; margin: 28px 0;">
     <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;">Your Enrolled Program</p>
     <p style="margin: 4px 0; font-size: 16px; font-weight: bold; color: #5a7a5a;">${programInfo.label}</p>
     <p style="margin: 4px 0; color: #555; font-size: 14px;">${programInfo.details}</p>
   </div>
-  ` : ""}
+  `
+      : ""
+  }
 
   <h2 style="font-size: 18px; margin-top: 36px; margin-bottom: 8px; color: #2c2c2c;">Continue Your Enrollment Checklist</h2>
   <p>Your next step is to complete the enrollment checklist in your parent dashboard. This includes forms, signatures, and any remaining information we need before the first day.</p>
@@ -1286,6 +1293,68 @@ export async function buildOpenHouseEnrollmentEmail(opts: {
 
   <p style="margin-top: 32px;">With so much excitement,</p>
   <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
+/**
+ * Build urgency email for leads — limited spots + enrollment deadline
+ */
+export async function buildSummerUrgencyEmail(opts: {
+  parentName: string;
+  spotsRemaining: number;
+  deadlineDate: string;
+}): Promise<{ subject: string; content: string }> {
+  const firstName = opts.parentName.split(" ")[0] || opts.parentName;
+
+  const subject = `Only ${opts.spotsRemaining} spot${opts.spotsRemaining === 1 ? "" : "s"} left — Summer enrollment closes ${opts.deadlineDate}`;
+
+  const spotsWord =
+    opts.spotsRemaining === 1
+      ? "one spot"
+      : opts.spotsRemaining === 2
+        ? "two spots"
+        : opts.spotsRemaining === 3
+          ? "three spots"
+          : opts.spotsRemaining === 4
+            ? "four spots"
+            : `${opts.spotsRemaining} spots`;
+
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${firstName},</p>
+
+  <p>I wanted to personally reach out as we head into the final stretch of Summer 2026 enrollment at Sage Field. We only have ${spotsWord} left, and I didn't want your family to miss the chance to join us if this has been on your mind.</p>
+
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; margin: 28px 0;">
+    <p style="margin: 0 0 6px 0; font-weight: bold; font-size: 15px;">Summer 2026 — Enrollment Update</p>
+    <p style="margin: 4px 0; color: #2c2c2c; font-size: 15px;">Only <strong>${spotsWord} remaining</strong></p>
+    <p style="margin: 4px 0; color: #555; font-size: 14px;">Enrollment closes <strong>${opts.deadlineDate}</strong> — about 2 weeks away</p>
+  </div>
+
+  <p>This summer is shaping up to be something really special. We'll spend twelve weeks exploring themes through hands-on projects, outdoor play, art, music, and gentle academic enrichment. Our days are intentionally unhurried and rooted in connection, with each group of about ten to twelve children so each child is truly known and supported.</p>
+
+  <p>Our summer session runs May 26 through August 13, Monday through Thursday. Enrollment will close on ${opts.deadlineDate}, or sooner if those last spots fill.</p>
+
+  <p>If Sage Field feels like it could be a good fit for your child, I would love to welcome you.</p>
+
+  <div style="text-align: center; margin: 32px 0;">
+    <a href="https://www.sagefield.co/apply"
+       style="display: inline-block; background: #2C5F2E; color: #ffffff; text-decoration: none; font-family: Georgia, serif; font-size: 15px; font-weight: bold; padding: 14px 32px; border-radius: 8px;">
+      Secure Your Spot →
+    </a>
+  </div>
+
+  <p>And if you have any questions at all, feel free to reply directly to this email or text/call me at <a href="tel:5126775872" style="color: #5a7a5a;">(512) 677-5872</a>. I'm always happy to talk things through.</p>
+
+  <p style="margin-top: 32px;">With warmth,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a><br /><a href="tel:5126775872" style="color: #5a7a5a;">(512) 677-5872</a> — call or text</p>
 </body>
 </html>
   `.trim();

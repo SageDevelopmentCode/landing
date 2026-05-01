@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { uploadStudentProfileImage } from "@/app/actions/uploadStudentProfileImage";
 import { saveAuthorizedPickup, type PickupPersonEntry } from "@/app/actions/saveAuthorizedPickup";
+import { saveParentLearningNote, updateParentLearningNote, deleteParentLearningNote, type LearningNote, type LearningNoteCategory } from "@/app/actions/saveParentLearningNote";
 import { formatPhone } from "@/app/utils/formatPhone";
 import { getParentStudentAttendance, type ParentCheckInRecord } from "@/app/actions/getParentStudentAttendance";
 import { DetailSidebar } from "@/app/admin/components/DetailSidebar";
@@ -42,6 +43,7 @@ interface Props {
   nonEnrolledAppByStudent: Record<string, string>;
   studentProgramMap: Record<string, string>;
   pickupByStudent: Record<string, { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] }>;
+  notesByStudent: Record<string, LearningNote[]>;
 }
 
 function formatProgramLabel(program: string | undefined | null): string | null {
@@ -525,33 +527,236 @@ function AttendanceTab({
   );
 }
 
-function LearningTab() {
-  const goals = [
-    "Strengthen fine motor skills",
-    "Build group collaboration",
-    "Expand vocabulary through read-alouds",
-  ];
+const CATEGORY_META: Record<LearningNoteCategory, { label: string; cls: string }> = {
+  academic:   { label: "Academic",   cls: "bg-blue-50 text-blue-600" },
+  social:     { label: "Social",     cls: "bg-purple-50 text-purple-600" },
+  behavioral: { label: "Behavioral", cls: "bg-orange-50 text-orange-600" },
+  health:     { label: "Health",     cls: "bg-red-50 text-red-600" },
+  other:      { label: "Other",      cls: "bg-gray-100 text-gray-500" },
+};
+
+function LearningTab({ studentId, initialNotes, learningStyle, strengthsInterests, currentChallenges }: {
+  studentId: string;
+  initialNotes: LearningNote[];
+  learningStyle: string | null;
+  strengthsInterests: string | null;
+  currentChallenges: string | null;
+}) {
+  const [notes, setNotes] = useState<LearningNote[]>(initialNotes);
+  const [showForm, setShowForm] = useState(false);
+  const [noteText, setNoteText] = useState("");
+  const [category, setCategory] = useState<LearningNoteCategory>("academic");
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editText, setEditText] = useState("");
+  const [editCategory, setEditCategory] = useState<LearningNoteCategory>("academic");
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+
+  async function handleSave() {
+    if (!noteText.trim()) return;
+    setSaving(true);
+    setSaveError(null);
+    const result = await saveParentLearningNote({ studentId, category, noteText });
+    setSaving(false);
+    if (result.error) { setSaveError(result.error); return; }
+    if (result.note) setNotes((prev) => [result.note!, ...prev]);
+    setNoteText("");
+    setCategory("academic");
+    setShowForm(false);
+  }
+
+  async function handleDelete(noteId: string) {
+    setDeletingId(noteId);
+    const result = await deleteParentLearningNote(noteId);
+    setDeletingId(null);
+    if (!result.error) setNotes((prev) => prev.filter((n) => n.id !== noteId));
+  }
+
+  function startEdit(note: LearningNote) {
+    setEditingId(note.id);
+    setEditText(note.note_text);
+    setEditCategory(note.category);
+    setEditError(null);
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditText("");
+    setEditError(null);
+  }
+
+  async function handleEditSave(noteId: string) {
+    if (!editText.trim()) return;
+    setEditSaving(true);
+    setEditError(null);
+    const result = await updateParentLearningNote({ noteId, category: editCategory, noteText: editText });
+    setEditSaving(false);
+    if (result.error) { setEditError(result.error); return; }
+    if (result.note) {
+      setNotes((prev) => prev.map((n) => n.id === noteId ? result.note! : n));
+    }
+    setEditingId(null);
+    setEditText("");
+  }
+
+  const inputCls = "w-full text-sm font-body text-gray-800 border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#4a7c59] focus:ring-1 focus:ring-[#4a7c59]";
+  const hasProfile = learningStyle || strengthsInterests || currentChallenges;
+
   return (
-    <SectionCard title="Learning">
-      <Field label="Current Unit" value="Seasons & Nature" />
-      <Field
-        label="Recent Note"
-        value="Showed great curiosity during the leaf-sorting activity"
-      />
-      <div className="py-2.5">
-        <p className="text-xs font-body text-gray-400 uppercase tracking-wide mb-1.5">
-          Learning Goals
+    <div className="space-y-4">
+    {hasProfile && (
+      <SectionCard title="Learning Profile">
+        <Field label="Learning Style" value={learningStyle} />
+        <Field label="Strengths & Interests" value={strengthsInterests} />
+        <Field label="Current Challenges" value={currentChallenges} />
+      </SectionCard>
+    )}
+    <SectionCard title="Special Requests">
+      {notes.length === 0 && !showForm && (
+        <p className="text-sm font-body text-gray-400 italic py-1 mb-3">
+          No special requests yet. Let teachers know if your child needs any extra support.
         </p>
-        <ul className="space-y-1">
-          {goals.map((g) => (
-            <li key={g} className="text-sm font-body text-gray-700 flex gap-2">
-              <span className="text-[#4a7c59] mt-0.5">•</span>
-              {g}
-            </li>
-          ))}
+      )}
+
+      {notes.length > 0 && (
+        <ul className="divide-y divide-gray-50 mb-4">
+          {notes.map((note) => {
+            const meta = CATEGORY_META[note.category] ?? CATEGORY_META.other;
+            const date = new Date(note.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+            const isEditing = editingId === note.id;
+            return (
+              <li key={note.id} className="py-3">
+                {isEditing ? (
+                  <div className="space-y-2">
+                    <select
+                      className={inputCls}
+                      value={editCategory}
+                      onChange={(e) => setEditCategory(e.target.value as LearningNoteCategory)}
+                    >
+                      {(Object.keys(CATEGORY_META) as LearningNoteCategory[]).map((k) => (
+                        <option key={k} value={k}>{CATEGORY_META[k].label}</option>
+                      ))}
+                    </select>
+                    <textarea
+                      className={`${inputCls} resize-none`}
+                      rows={3}
+                      value={editText}
+                      onChange={(e) => setEditText(e.target.value)}
+                    />
+                    {editError && <p className="text-xs text-red-500">{editError}</p>}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEditSave(note.id)}
+                        disabled={editSaving || !editText.trim()}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#4a7c59] text-white hover:bg-[#3d6b4a] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {editSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                        Save
+                      </button>
+                      <button
+                        onClick={cancelEdit}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer"
+                      >
+                        <X className="w-3 h-3" />
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex gap-3 items-start">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className="text-xs font-body text-gray-400">{date}</span>
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${meta.cls}`}>{meta.label}</span>
+                      </div>
+                      <p className="text-sm font-body text-gray-700 leading-relaxed">{note.note_text}</p>
+                    </div>
+                    <div className="flex gap-1.5 flex-shrink-0 mt-0.5">
+                      <button
+                        onClick={() => startEdit(note)}
+                        className="text-gray-300 hover:text-[#4a7c59] transition-colors cursor-pointer"
+                        aria-label="Edit note"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(note.id)}
+                        disabled={deletingId === note.id}
+                        className="text-gray-300 hover:text-red-400 transition-colors cursor-pointer disabled:opacity-50"
+                        aria-label="Delete note"
+                      >
+                        {deletingId === note.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </li>
+            );
+          })}
         </ul>
-      </div>
+      )}
+
+      {showForm ? (
+        <div className="space-y-3 pt-1">
+          <div>
+            <label className="block text-xs font-body text-gray-400 uppercase tracking-wide mb-1">Category</label>
+            <select
+              className={inputCls}
+              value={category}
+              onChange={(e) => setCategory(e.target.value as LearningNoteCategory)}
+            >
+              {(Object.keys(CATEGORY_META) as LearningNoteCategory[]).map((k) => (
+                <option key={k} value={k}>{CATEGORY_META[k].label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-body text-gray-400 uppercase tracking-wide mb-1">Note <span className="text-red-400">*</span></label>
+            <textarea
+              className={`${inputCls} resize-none`}
+              rows={3}
+              placeholder="e.g. My child is needing extra help with reading comprehension this month."
+              value={noteText}
+              onChange={(e) => setNoteText(e.target.value)}
+            />
+          </div>
+          {saveError && <p className="text-xs text-red-500">{saveError}</p>}
+          <div className="flex gap-2">
+            <button
+              onClick={handleSave}
+              disabled={saving || !noteText.trim()}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-[#4a7c59] text-white hover:bg-[#3d6b4a] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+              Save
+            </button>
+            <button
+              onClick={() => { setShowForm(false); setNoteText(""); setSaveError(null); }}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={() => setShowForm(true)}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-[#4a7c59]/10 text-[#4a7c59] hover:bg-[#4a7c59]/20 transition-colors cursor-pointer mt-1"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          Add Note
+        </button>
+      )}
     </SectionCard>
+    </div>
   );
 }
 
@@ -838,12 +1043,14 @@ function ChildProfile({
   enrollmentAppId,
   initialProfileImageUrl,
   pickup,
+  initialNotes,
 }: {
   child: Student;
   teachers: TeacherAssignment[];
   enrollmentAppId?: string;
   initialProfileImageUrl: string | null;
   pickup: { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] };
+  initialNotes: LearningNote[];
 }) {
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get("tab") as ContentTab | null) ?? "teacher";
@@ -1000,7 +1207,15 @@ function ChildProfile({
             />
           )}
           {activeTab === "attendance" && <AttendanceTab records={attendanceRecords} loading={attendanceLoading} />}
-          {activeTab === "learning" && <LearningTab />}
+          {activeTab === "learning" && (
+            <LearningTab
+              studentId={child.id}
+              initialNotes={initialNotes}
+              learningStyle={child.learning_style}
+              strengthsInterests={child.strengths_interests}
+              currentChallenges={child.current_challenges}
+            />
+          )}
 
           {activeTab === "photos" && (
             <EmptyStateCard
@@ -1092,7 +1307,7 @@ function ChildProfile({
   );
 }
 
-export default function ChildrenPage({ children, teachersByStudent, nonEnrolledAppByStudent, studentProgramMap, pickupByStudent }: Props) {
+export default function ChildrenPage({ children, teachersByStudent, nonEnrolledAppByStudent, studentProgramMap, pickupByStudent, notesByStudent }: Props) {
   // Sort: enrolled children first, non-enrolled last
   const sortedChildren = [...children].sort((a, b) => {
     const aEnrolled = !nonEnrolledAppByStudent[a.id];
@@ -1187,6 +1402,7 @@ export default function ChildrenPage({ children, teachersByStudent, nonEnrolledA
             enrollmentAppId={nonEnrolledAppByStudent[activeChild.id]}
             initialProfileImageUrl={(activeChild as Record<string, unknown>).profile_image_url as string | null ?? null}
             pickup={pickupByStudent[activeChild.id] ?? { plan: null, persons: [] }}
+            initialNotes={notesByStudent[activeChild.id] ?? []}
           />
         </div>
       </div>

@@ -11,6 +11,7 @@ import { deleteWaitlistLead, deleteContactLead } from '../../actions/deleteLead'
 import { sendFacebookLeadEmail } from '../../actions/sendFacebookLeadEmail'
 import { sendInfoSessionInviteEmail } from '../../actions/sendInfoSessionInviteEmail'
 import { sendInfoSessionReminderEmail } from '../../actions/sendInfoSessionReminderEmail'
+import { sendSummerUrgencyEmail } from '../../actions/sendSummerUrgencyEmail'
 import { TagEditor } from './TagEditor'
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
@@ -133,6 +134,9 @@ export function LeadsDetailSidebar({
   const [reminderSending, setReminderSending] = useState(false)
   const [reminderSent, setReminderSent] = useState(false)
   const [reminderError, setReminderError] = useState<string | null>(null)
+  const [urgencySending, setUrgencySending] = useState(false)
+  const [urgencySent, setUrgencySent] = useState(false)
+  const [urgencyError, setUrgencyError] = useState<string | null>(null)
 
   const callNotesEditor = useEditor({
     extensions: [StarterKit, Highlight, TextStyle],
@@ -166,6 +170,8 @@ export function LeadsDetailSidebar({
       setInfoEmailError(null)
       setReminderSent(false)
       setReminderError(null)
+      setUrgencySent(false)
+      setUrgencyError(null)
     }
   }, [submission?.id])
 
@@ -344,6 +350,26 @@ export function LeadsDetailSidebar({
       setTimeout(() => setReminderSent(false), 3000)
     } else {
       setReminderError(result.error ?? 'Failed to send email')
+    }
+  }
+
+  const handleSendUrgencyEmail = async () => {
+    if (urgencySending || urgencySent) return
+    setUrgencySending(true)
+    setUrgencyError(null)
+    const name = isWaitlist ? (currentSubmission as WaitlistLead).parent_name : (currentSubmission as ContactLead).name
+    const result = await sendSummerUrgencyEmail({
+      parentName: name,
+      email: currentSubmission.email,
+      spotsRemaining: 4,
+      deadlineDate: 'May 15, 2026',
+    })
+    setUrgencySending(false)
+    if (result.success) {
+      setUrgencySent(true)
+      setTimeout(() => setUrgencySent(false), 3000)
+    } else {
+      setUrgencyError(result.error ?? 'Failed to send email')
     }
   }
 
@@ -795,6 +821,15 @@ export function LeadsDetailSidebar({
               {reminderSending ? 'Sending…' : reminderSent ? '✓ Sent!' : 'Send Info Session Reminder'}
             </button>
             {reminderError && <span className="text-xs text-red-600">{reminderError}</span>}
+            <button
+              onClick={handleSendUrgencyEmail}
+              disabled={urgencySending || urgencySent}
+              className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+            >
+              {urgencySending ? 'Sending…' : urgencySent ? '✓ Sent!' : 'Send Summer Urgency Email'}
+            </button>
+            {urgencyError && <span className="text-xs text-red-600">{urgencyError}</span>}
           </div>
         </div>
 
