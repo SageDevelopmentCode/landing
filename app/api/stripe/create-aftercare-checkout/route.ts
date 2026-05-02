@@ -6,6 +6,21 @@ import { getOrCreateStripeCustomer } from "@/app/lib/stripe-customer";
 const AFTERCARE_DAILY_CENTS = 3500; // $35/day
 const AFTERCARE_MONTHLY_CENTS = 37500; // $375/month
 
+const AFTERCARE_MONTHS = [
+  { key: "may", label: "May 2026", dayCount: 5 },
+  { key: "jun", label: "June 2026", dayCount: 21 },
+  { key: "jul", label: "July 2026", dayCount: 22 },
+  { key: "aug", label: "August 2026", dayCount: 9 },
+];
+
+const NORMAL_MONTH_DAY_THRESHOLD = 15;
+
+function aftercareMonthCents(dayCount: number): number {
+  return dayCount < NORMAL_MONTH_DAY_THRESHOLD
+    ? dayCount * AFTERCARE_DAILY_CENTS
+    : AFTERCARE_MONTHLY_CENTS;
+}
+
 const schema = z.object({
   parentId: z.string(),
   parentEmail: z.string().email("Valid email required"),
@@ -62,17 +77,24 @@ export async function POST(request: NextRequest) {
     if (planType === "monthly") {
       const monthLabels = selectedMonths.map((k) => MONTH_LABELS[k] ?? k).join(", ");
       description = `After Care — ${selectedMonths.length} month${selectedMonths.length !== 1 ? "s" : ""} (${monthLabels})`;
-      lineItems.push({
-        quantity: selectedMonths.length,
-        price_data: {
-          currency: "usd",
-          unit_amount: AFTERCARE_MONTHLY_CENTS,
-          product_data: {
-            name: `After Care — Monthly (${selectedMonths.length} month${selectedMonths.length !== 1 ? "s" : ""})`,
-            description: `Months: ${monthLabels} · 3:00 PM – 6:00 PM`,
+      for (const monthKey of selectedMonths) {
+        const month = AFTERCARE_MONTHS.find((m) => m.key === monthKey);
+        const unitAmount = month ? aftercareMonthCents(month.dayCount) : AFTERCARE_MONTHLY_CENTS;
+        const isReduced = unitAmount < AFTERCARE_MONTHLY_CENTS;
+        lineItems.push({
+          quantity: 1,
+          price_data: {
+            currency: "usd",
+            unit_amount: unitAmount,
+            product_data: {
+              name: `After Care — ${MONTH_LABELS[monthKey] ?? monthKey}`,
+              description: isReduced
+                ? `3:00 PM – 6:00 PM · ${month?.dayCount} days`
+                : "3:00 PM – 6:00 PM",
+            },
           },
-        },
-      });
+        });
+      }
     } else {
       description = `After Care — ${selectedDays.length} day${selectedDays.length !== 1 ? "s" : ""}`;
       lineItems.push({

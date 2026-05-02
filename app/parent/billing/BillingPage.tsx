@@ -199,6 +199,13 @@ const AFTERCARE_MONTHS = [
   },
 ];
 
+function aftercareMonthCents(month: (typeof AFTERCARE_MONTHS)[number]): number {
+  const normalMonthDayThreshold = 15;
+  return month.days.length < normalMonthDayThreshold
+    ? month.days.length * AFTERCARE_DAILY_CENTS
+    : AFTERCARE_MONTHLY_CENTS;
+}
+
 // --- Fun Friday pricing ---
 const FUN_FRIDAY_MONTHLY_CENTS = 20000; // $200/month (4 sessions)
 const FUN_FRIDAY_DROPIN_CENTS = 6000; // $60/session
@@ -236,6 +243,10 @@ const FUN_FRIDAY_MONTHS = [
     fridays: [{ label: "Fri Aug 7", date: "2026-08-07" }],
   },
 ];
+
+function funFridayMonthCents(month: (typeof FUN_FRIDAY_MONTHS)[number]): number {
+  return month.fridays.length === 1 ? FUN_FRIDAY_DROPIN_CENTS : FUN_FRIDAY_MONTHLY_CENTS;
+}
 
 // --- Homeschool Drop-In pricing ---
 // Summer: per-week rates
@@ -1853,7 +1864,10 @@ function AftercarePaymentModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const monthlyTotal = selectedMonths.size * AFTERCARE_MONTHLY_CENTS;
+  const monthlyTotal = AFTERCARE_MONTHS.filter((m) => selectedMonths.has(m.key)).reduce(
+    (sum, m) => sum + aftercareMonthCents(m),
+    0,
+  );
   const dailyTotal = selectedDays.size * AFTERCARE_DAILY_CENTS;
   const intendedAmountCents = tab === "monthly" ? monthlyTotal : dailyTotal;
   const canContinue =
@@ -2165,7 +2179,9 @@ function AftercarePaymentModal({
                         </div>
                         <p className="text-xs text-gray-400 font-body mt-1 ml-7">
                           {m.days.length} days ·{" "}
-                          {formatCents(AFTERCARE_MONTHLY_CENTS)}/mo
+                          {aftercareMonthCents(m) === AFTERCARE_MONTHLY_CENTS
+                            ? `${formatCents(AFTERCARE_MONTHLY_CENTS)}/mo`
+                            : formatCents(aftercareMonthCents(m))}
                         </p>
                       </motion.button>
                     );
@@ -2185,7 +2201,17 @@ function AftercarePaymentModal({
                   <span className="text-sm text-gray-500 font-body">
                     {selectedMonths.size === 0
                       ? "No months selected"
-                      : `${selectedMonths.size} month${selectedMonths.size !== 1 ? "s" : ""} × ${formatCents(AFTERCARE_MONTHLY_CENTS)}/mo`}
+                      : (() => {
+                          const sel = AFTERCARE_MONTHS.filter((m) =>
+                            selectedMonths.has(m.key),
+                          );
+                          const allNormal = sel.every(
+                            (m) => aftercareMonthCents(m) === AFTERCARE_MONTHLY_CENTS,
+                          );
+                          return allNormal
+                            ? `${sel.length} month${sel.length !== 1 ? "s" : ""} × ${formatCents(AFTERCARE_MONTHLY_CENTS)}/mo`
+                            : `${sel.length} month${sel.length !== 1 ? "s" : ""} selected`;
+                        })()}
                   </span>
                   <span
                     className="text-base font-bold font-heading"
@@ -2373,7 +2399,10 @@ function FunFridayPaymentModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const monthlyTotal = selectedMonths.size * FUN_FRIDAY_MONTHLY_CENTS;
+  const monthlyTotal = FUN_FRIDAY_MONTHS.filter((m) => selectedMonths.has(m.key)).reduce(
+    (sum, m) => sum + funFridayMonthCents(m),
+    0,
+  );
   const dropinTotal = selectedFridays.size * FUN_FRIDAY_DROPIN_CENTS;
   const intendedAmountCents = tab === "monthly" ? monthlyTotal : dropinTotal;
   const canContinue =
@@ -2689,7 +2718,9 @@ function FunFridayPaymentModal({
                         <p className="text-xs text-gray-400 font-body mt-1 ml-7">
                           {m.fridays.length} Friday
                           {m.fridays.length !== 1 ? "s" : ""} ·{" "}
-                          {formatCents(FUN_FRIDAY_MONTHLY_CENTS)}/mo
+                          {m.fridays.length === 1
+                            ? formatCents(FUN_FRIDAY_DROPIN_CENTS)
+                            : `${formatCents(FUN_FRIDAY_MONTHLY_CENTS)}/mo`}
                         </p>
                       </motion.button>
                     );
@@ -2709,7 +2740,15 @@ function FunFridayPaymentModal({
                   <span className="text-sm text-gray-500 font-body">
                     {selectedMonths.size === 0
                       ? "No months selected"
-                      : `${selectedMonths.size} month${selectedMonths.size !== 1 ? "s" : ""} × ${formatCents(FUN_FRIDAY_MONTHLY_CENTS)}/mo`}
+                      : (() => {
+                          const sel = FUN_FRIDAY_MONTHS.filter((m) =>
+                            selectedMonths.has(m.key),
+                          );
+                          const allNormal = sel.every((m) => m.fridays.length !== 1);
+                          return allNormal
+                            ? `${sel.length} month${sel.length !== 1 ? "s" : ""} × ${formatCents(FUN_FRIDAY_MONTHLY_CENTS)}/mo`
+                            : `${sel.length} month${sel.length !== 1 ? "s" : ""} selected`;
+                        })()}
                   </span>
                   <span
                     className="text-base font-bold font-heading"

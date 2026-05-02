@@ -6,6 +6,20 @@ import { getOrCreateStripeCustomer } from "@/app/lib/stripe-customer";
 const FUN_FRIDAY_MONTHLY_CENTS = 20000; // $200/month (4 sessions)
 const FUN_FRIDAY_DROPIN_CENTS = 6000; // $60/session
 
+const FUN_FRIDAY_MONTHS = [
+  { key: "may", label: "May 2026", fridayCount: 1 },
+  { key: "jun", label: "June 2026", fridayCount: 4 },
+  { key: "jul", label: "July 2026", fridayCount: 5 },
+  { key: "aug", label: "August 2026", fridayCount: 1 },
+];
+
+const MONTH_LABELS: Record<string, string> = {
+  may: "May 2026",
+  jun: "June 2026",
+  jul: "July 2026",
+  aug: "August 2026",
+};
+
 const schema = z.object({
   parentId: z.string(),
   parentEmail: z.string().email("Valid email required"),
@@ -20,13 +34,6 @@ const schema = z.object({
   coverFees: z.boolean().optional().default(false),
   paymentMethod: z.enum(["card", "ach"]).optional().default("card"),
 });
-
-const MONTH_LABELS: Record<string, string> = {
-  may: "May 2026",
-  jun: "June 2026",
-  jul: "July 2026",
-  aug: "August 2026",
-};
 
 export async function POST(request: NextRequest) {
   try {
@@ -62,17 +69,23 @@ export async function POST(request: NextRequest) {
     if (planType === "monthly") {
       const monthLabels = selectedMonths.map((k) => MONTH_LABELS[k] ?? k).join(", ");
       description = `Fun Friday — ${selectedMonths.length} month${selectedMonths.length !== 1 ? "s" : ""} (${monthLabels})`;
-      lineItems.push({
-        quantity: selectedMonths.length,
-        price_data: {
-          currency: "usd",
-          unit_amount: FUN_FRIDAY_MONTHLY_CENTS,
-          product_data: {
-            name: `Fun Friday — Monthly (${selectedMonths.length} month${selectedMonths.length !== 1 ? "s" : ""})`,
-            description: `Months: ${monthLabels} · 9:00 AM – 1:00 PM · Package of 4 Fridays`,
+      for (const monthKey of selectedMonths) {
+        const month = FUN_FRIDAY_MONTHS.find((m) => m.key === monthKey);
+        const isSingleFriday = month?.fridayCount === 1;
+        lineItems.push({
+          quantity: 1,
+          price_data: {
+            currency: "usd",
+            unit_amount: isSingleFriday ? FUN_FRIDAY_DROPIN_CENTS : FUN_FRIDAY_MONTHLY_CENTS,
+            product_data: {
+              name: `Fun Friday — ${MONTH_LABELS[monthKey] ?? monthKey}`,
+              description: isSingleFriday
+                ? "9:00 AM – 1:00 PM · Drop-in session"
+                : "9:00 AM – 1:00 PM · Package of 4 Fridays",
+            },
           },
-        },
-      });
+        });
+      }
     } else {
       description = `Fun Friday — ${selectedFridays.length} session${selectedFridays.length !== 1 ? "s" : ""}`;
       lineItems.push({
