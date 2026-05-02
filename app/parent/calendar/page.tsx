@@ -8,6 +8,7 @@ import Image from "next/image";
 import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import Footer from "@/app/components/Footer";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
+import DashboardHeader from "@/app/parent/dashboard/DashboardHeader";
 import ParentCalendarClient from "./ParentCalendarClient";
 import OnboardingChecklistButton from "@/app/parent/components/OnboardingChecklistButton";
 
@@ -46,7 +47,7 @@ export default async function ParentCalendarPage() {
 
   return (
     <div className="bg-welcome-bg min-h-screen flex flex-col">
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-[auto_1fr_auto] items-center">
+      <DashboardHeader sticky>
         <div className="flex items-center">
           <Link href="/">
             <Image
@@ -67,7 +68,7 @@ export default async function ParentCalendarPage() {
             <ProfileDropdown email={user.email} fullName={fullName} userId={user.id} profileImageUrl={profileImageUrl} />
           )}
         </div>
-      </header>
+      </DashboardHeader>
 
       <main className="flex-1 flex flex-col">
         <ParentCalendarClient initialEvents={events} />

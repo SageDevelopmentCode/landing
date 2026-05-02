@@ -8,6 +8,7 @@ import Image from "next/image";
 import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import Footer from "@/app/components/Footer";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
+import DashboardHeader from "@/app/parent/dashboard/DashboardHeader";
 import HomePageClient from "./HomePageClient";
 import OnboardingChecklistButton from "@/app/parent/components/OnboardingChecklistButton";
 
@@ -145,7 +146,7 @@ export default async function ParentHomePage() {
 
   return (
     <div className="bg-welcome-bg min-h-screen flex flex-col">
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-[auto_1fr_auto] items-center">
+      <DashboardHeader sticky>
         <div className="flex items-center">
           <Link href="/">
             <Image
@@ -171,7 +172,7 @@ export default async function ParentHomePage() {
             />
           )}
         </div>
-      </header>
+      </DashboardHeader>
 
       <main className="flex-1 overflow-y-auto">
         <HomePageClient

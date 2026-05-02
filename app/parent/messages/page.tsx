@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
+import DashboardHeader from "@/app/parent/dashboard/DashboardHeader";
 import MessagesPage from "./MessagesPage";
 import OnboardingChecklistButton from "@/app/parent/components/OnboardingChecklistButton";
 import { createAdminClient } from "@/app/lib/supabase-server";
@@ -40,7 +41,7 @@ export default async function MessagesRoute({
   return (
     <div className="bg-welcome-bg h-screen overflow-hidden">
       <div className="h-full flex flex-col">
-        <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-[auto_1fr_auto] items-center">
+        <DashboardHeader>
           <div className="flex items-center">
             <Link href="/">
               <Image
@@ -61,7 +62,7 @@ export default async function MessagesRoute({
               <ProfileDropdown email={user.email} fullName={fullName} userId={user.id} profileImageUrl={profileImageUrl} />
             )}
           </div>
-        </header>
+        </DashboardHeader>
 
         <main className="flex-1 min-h-0 flex flex-col">
           <MessagesPage

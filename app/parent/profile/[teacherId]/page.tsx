@@ -7,6 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import DashboardNav from "../../dashboard/DashboardNav";
+import DashboardHeader from "../../dashboard/DashboardHeader";
 import TeacherProfileClient from "@/app/teacher/profile/[teacherId]/TeacherProfileClient";
 import OnboardingChecklistButton from "@/app/parent/components/OnboardingChecklistButton";
 
@@ -118,7 +119,7 @@ export default async function ParentTeacherProfilePage({
 
   return (
     <div className="bg-welcome-bg min-h-screen flex flex-col">
-      <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-[auto_1fr_auto] items-center">
+      <DashboardHeader>
         <div className="flex items-center">
           <Link href="/">
             <Image
@@ -144,7 +145,7 @@ export default async function ParentTeacherProfilePage({
             />
           )}
         </div>
-      </header>
+      </DashboardHeader>
 
       <main className="flex-1 flex flex-col overflow-hidden">
         <TeacherProfileClient

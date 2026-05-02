@@ -9,6 +9,7 @@ import { Heart } from "lucide-react";
 import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import Footer from "@/app/components/Footer";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
+import DashboardHeader from "@/app/parent/dashboard/DashboardHeader";
 import OnboardingChecklistButton from "@/app/parent/components/OnboardingChecklistButton";
 import VolunteerButton from "./VolunteerButton";
 
@@ -36,7 +37,7 @@ export default async function VolunteerPage() {
   return (
     <div className="bg-welcome-bg">
       <div className="min-h-screen flex flex-col">
-        <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-[auto_1fr_auto] items-center">
+        <DashboardHeader>
           <div className="flex items-center">
             <Link href="/">
               <Image
@@ -57,7 +58,7 @@ export default async function VolunteerPage() {
               <ProfileDropdown email={user.email} fullName={fullName} userId={user.id} profileImageUrl={profileImageUrl} />
             )}
           </div>
-        </header>
+        </DashboardHeader>
 
         <main className="flex-1 max-w-4xl mx-auto px-6 py-12 w-full">
           <div className="mb-10">

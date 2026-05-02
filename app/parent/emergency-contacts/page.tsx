@@ -5,6 +5,7 @@ import Image from "next/image";
 import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import Footer from "@/app/components/Footer";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
+import DashboardHeader from "@/app/parent/dashboard/DashboardHeader";
 import EmergencyContactsPage from "./EmergencyContactsPage";
 import OnboardingChecklistButton from "@/app/parent/components/OnboardingChecklistButton";
 import { getParentEmergencyContacts } from "@/app/actions/getParentEmergencyContacts";
@@ -37,7 +38,7 @@ export default async function EmergencyContactsRoute() {
   return (
     <div className="bg-welcome-bg">
       <div className="min-h-screen flex flex-col">
-        <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-[auto_1fr_auto] items-center">
+        <DashboardHeader>
           <div className="flex items-center">
             <Link href="/">
               <Image
@@ -63,7 +64,7 @@ export default async function EmergencyContactsRoute() {
               />
             )}
           </div>
-        </header>
+        </DashboardHeader>
 
         <main className="flex-1 max-w-2xl mx-auto px-6 py-12 w-full">
           <div className="mb-10">

@@ -8,6 +8,7 @@ import Image from "next/image";
 import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import Footer from "@/app/components/Footer";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
+import DashboardHeader from "@/app/parent/dashboard/DashboardHeader";
 import BillingPage from "./BillingPage";
 import OnboardingChecklistButton from "@/app/parent/components/OnboardingChecklistButton";
 
@@ -250,7 +251,7 @@ export default async function BillingRoute() {
   return (
     <div className="bg-welcome-bg">
       <div className="min-h-screen flex flex-col">
-        <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-[auto_1fr_auto] items-center">
+        <DashboardHeader>
           <div className="flex items-center">
             <Link href="/">
               <Image
@@ -271,7 +272,7 @@ export default async function BillingRoute() {
               <ProfileDropdown email={user.email} fullName={fullName} userId={user.id} profileImageUrl={profileImageUrl} />
             )}
           </div>
-        </header>
+        </DashboardHeader>
 
         <main className="flex-1 flex overflow-hidden">
           <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} unpaidSummerEnrollments={unpaidSummerEnrollments} paidWeeksByStudent={paidWeeksByStudent} parentId={user.id} parentEmail={user.email ?? ""} nonEnrolledApps={nonEnrolledApps} homeschoolDropInApps={homeschoolDropInApps} paidHomeschoolByStudent={paidHomeschoolByStudent} />
