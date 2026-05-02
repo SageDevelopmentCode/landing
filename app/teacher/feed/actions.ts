@@ -45,6 +45,7 @@ export type FeedPost = {
   body: string;
   school_year: string;
   classroom: string | null;
+  post_type: string | null;
   created_at: string;
   media: FeedMediaRow[];
   attachments: FeedAttachmentRow[];
@@ -73,6 +74,7 @@ export async function getFeedPosts(): Promise<FeedPost[]> {
       body,
       school_year,
       classroom,
+      post_type,
       created_at,
       post_media ( id, kind, storage_url, display_order, duration_secs ),
       post_attachments ( id, file_name, file_size_bytes, kind, storage_url ),
@@ -153,6 +155,7 @@ export async function getFeedPosts(): Promise<FeedPost[]> {
       body: p.body,
       school_year: p.school_year,
       classroom: p.classroom,
+      post_type: p.post_type ?? null,
       created_at: p.created_at,
       media: ((p.post_media ?? []) as FeedMediaRow[])
         .sort((a, b) => a.display_order - b.display_order)
@@ -200,6 +203,7 @@ export async function createPost(formData: FormData) {
   const body = formData.get("body") as string;
   const school_year = (formData.get("school_year") as string) || "2025-2026";
   const classroom = (formData.get("classroom") as string) || null;
+  const post_type = (formData.get("post_type") as string) || "announcement";
 
   if (!body?.trim()) throw new Error("Post body is required");
 
@@ -208,7 +212,7 @@ export async function createPost(formData: FormData) {
   const { data: post, error } = await adminClient
     .schema("feed")
     .from("posts")
-    .insert({ teacher_id: user.id, body: body.trim(), school_year, classroom })
+    .insert({ teacher_id: user.id, body: body.trim(), school_year, classroom, post_type })
     .select("id")
     .single();
 

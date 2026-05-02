@@ -22,6 +22,7 @@ import {
   type FeedReactionSummary,
 } from "@/app/teacher/feed/actions";
 import { DEFAULT_REACTIONS } from "@/app/teacher/feed/constants";
+import { getPostType } from "@/app/teacher/feed/postTypes";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -164,6 +165,26 @@ function AuthorAvatar({
     >
       {initials}
     </div>
+  );
+}
+
+function PostTypeBadge({ value }: { value: string | null }) {
+  const config = getPostType(value);
+  if (!config) return null;
+  return (
+    <span
+      style={{
+        backgroundColor: config.color,
+        color: config.textColor,
+        borderRadius: 6,
+        padding: "3px 8px",
+        fontSize: 11,
+        fontWeight: 600,
+        display: "inline-block",
+      }}
+    >
+      {config.label}
+    </span>
   );
 }
 
@@ -396,6 +417,13 @@ function PostCard({
         )}
       </div>
 
+      {/* Post type badge */}
+      {post.post_type && (
+        <div className="px-5 mb-2">
+          <PostTypeBadge value={post.post_type} />
+        </div>
+      )}
+
       {/* Body */}
       <p className="text-sm font-body text-gray-700 leading-relaxed px-5">{post.body}</p>
 
@@ -574,6 +602,9 @@ function PostSidebarContent({
           <X className="w-4 h-4" />
         </button>
       </div>
+
+      {/* Post type badge */}
+      {post.post_type && <PostTypeBadge value={post.post_type} />}
 
       {/* Full body */}
       <p className="text-sm font-body text-gray-700 leading-relaxed">{post.body}</p>

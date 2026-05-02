@@ -30,6 +30,7 @@ import {
   type FeedReactionSummary,
 } from "./actions";
 import { DEFAULT_REACTIONS } from "./constants";
+import { POST_TYPES, getPostType } from "./postTypes";
 import { compressImage } from "@/app/utils/compressImage";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -173,6 +174,26 @@ function AuthorAvatar({
     >
       {initials}
     </div>
+  );
+}
+
+function PostTypeBadge({ value }: { value: string | null }) {
+  const config = getPostType(value);
+  if (!config) return null;
+  return (
+    <span
+      style={{
+        backgroundColor: config.color,
+        color: config.textColor,
+        borderRadius: 6,
+        padding: "3px 8px",
+        fontSize: 11,
+        fontWeight: 600,
+        display: "inline-block",
+      }}
+    >
+      {config.label}
+    </span>
   );
 }
 
@@ -408,6 +429,13 @@ function PostCard({
         )}
       </div>
 
+      {/* Post type badge */}
+      {post.post_type && (
+        <div className="px-5 mb-2">
+          <PostTypeBadge value={post.post_type} />
+        </div>
+      )}
+
       {/* Body */}
       <p className="text-sm font-body text-gray-700 leading-relaxed px-5">{post.body}</p>
 
@@ -586,6 +614,9 @@ function PostSidebarContent({
           <X className="w-4 h-4" />
         </button>
       </div>
+
+      {/* Post type badge */}
+      {post.post_type && <PostTypeBadge value={post.post_type} />}
 
       {/* Full body */}
       <p className="text-sm font-body text-gray-700 leading-relaxed">{post.body}</p>
@@ -780,6 +811,7 @@ function ComposeBar({
 }) {
   const [expanded, setExpanded] = useState(false);
   const [body, setBody] = useState("");
+  const [postType, setPostType] = useState("announcement");
   const [isPending, startTransition] = useTransition();
 
   const [mediaQueue, setMediaQueue] = useState<QueuedFile[]>([]);
@@ -871,6 +903,7 @@ function ComposeBar({
     setMediaQueue([]);
     setAttachmentQueue([]);
     setBody("");
+    setPostType("announcement");
     setExpanded(false);
     setUploadError(null);
   }
@@ -883,6 +916,7 @@ function ComposeBar({
       // 1. Create the post
       const fd = new FormData();
       fd.append("body", text);
+      fd.append("post_type", postType);
       let postId: string;
       try {
         postId = await createPost(fd);
@@ -977,6 +1011,32 @@ function ComposeBar({
             transition={{ duration: 0.25, ease: "easeOut" as const }}
             style={{ overflow: "hidden" }}
           >
+            {/* Post type pill selector */}
+            <div className="mt-3 flex flex-wrap gap-2">
+              {POST_TYPES.map((pt) => {
+                const selected = postType === pt.value;
+                return (
+                  <button
+                    key={pt.value}
+                    type="button"
+                    onClick={() => setPostType(pt.value)}
+                    style={{
+                      backgroundColor: selected ? pt.color : "#f9fafb",
+                      border: `1px solid ${selected ? pt.color : "#e5e7eb"}`,
+                      borderRadius: 9999,
+                      padding: "5px 11px",
+                      color: selected ? "#ffffff" : "#6b7280",
+                      fontWeight: 600,
+                      fontSize: 12,
+                      cursor: "pointer",
+                    }}
+                  >
+                    {pt.emoji}{"  "}{pt.label}
+                  </button>
+                );
+              })}
+            </div>
+
             {/* Media queue preview */}
             <AnimatePresence>
               {mediaQueue.length > 0 && (
