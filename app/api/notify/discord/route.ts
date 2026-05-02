@@ -10,6 +10,7 @@ import {
   createVolunteerInterestEmbed,
   createAppErrorEmbed,
   createPaystubSubmittedEmbed,
+  createSpecialRequestEmbed,
 } from "@/app/lib/discord";
 
 export async function POST(request: NextRequest) {
@@ -272,6 +273,19 @@ export async function POST(request: NextRequest) {
         },
         process.env.DISCORD_EMPLOYEE_WEBHOOK_URL,
       );
+      return NextResponse.json({ success: true });
+    }
+
+    if (type === "special_request_created") {
+      const { studentName, category, noteText } = data;
+      if (!studentName || !category || !noteText) {
+        return NextResponse.json(
+          { error: "special_request_created requires studentName, category, and noteText" },
+          { status: 400 },
+        );
+      }
+      const embed = createSpecialRequestEmbed({ studentName, category, noteText });
+      await sendDiscordNotification(embed, process.env.DISCORD_WEBHOOK_URL);
       return NextResponse.json({ success: true });
     }
 

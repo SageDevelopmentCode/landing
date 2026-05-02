@@ -1238,6 +1238,23 @@ export function createPaystubSubmittedEmbed(data: {
   }
 }
 
+export function createSpecialRequestEmbed(data: {
+  studentName: string;
+  category: string;
+  noteText: string;
+}): DiscordEmbed {
+  return {
+    title: "📋 Special Request Created",
+    color: 0xf59e0b,
+    fields: [
+      { name: "Student", value: data.studentName, inline: true },
+      { name: "Category", value: data.category, inline: true },
+      { name: "Note", value: data.noteText, inline: false },
+    ],
+    timestamp: new Date().toISOString(),
+  };
+}
+
 /**
  * Creates a Discord embed for first week drop-off time selections
  */
