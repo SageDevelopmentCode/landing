@@ -30,6 +30,7 @@ import {
   type FeedReactionSummary,
 } from "./actions";
 import { DEFAULT_REACTIONS } from "./constants";
+import { compressImage } from "@/app/utils/compressImage";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -790,12 +791,14 @@ function ComposeBar({
   const mediaInputRef = useRef<HTMLInputElement>(null);
   const attachmentInputRef = useRef<HTMLInputElement>(null);
 
-  function addMediaFiles(files: FileList | File[]) {
+  async function addMediaFiles(files: FileList | File[]) {
     setUploadError(null);
     const arr = Array.from(files);
     const valid: QueuedFile[] = [];
     for (const f of arr) {
-      if (!MEDIA_ACCEPTED.includes(f.type)) {
+      const isHeicByExtension =
+        f.name.toLowerCase().endsWith(".heic") || f.name.toLowerCase().endsWith(".heif");
+      if (!MEDIA_ACCEPTED.includes(f.type) && !isHeicByExtension) {
         setUploadError(`"${f.name}" is not a supported media type.`);
         continue;
       }
@@ -807,8 +810,19 @@ function ComposeBar({
         setUploadError(`Maximum ${MAX_MEDIA} media files allowed.`);
         break;
       }
-      const previewUrl = f.type.startsWith("image/") ? URL.createObjectURL(f) : null;
-      valid.push({ file: f, previewUrl });
+
+      let processedFile: File;
+      try {
+        processedFile = await compressImage(f);
+      } catch (err) {
+        console.error("[addMediaFiles] compression failed for", f.name, err);
+        processedFile = f;
+      }
+
+      const previewUrl = processedFile.type.startsWith("image/")
+        ? URL.createObjectURL(processedFile)
+        : null;
+      valid.push({ file: processedFile, previewUrl });
     }
     setMediaQueue((q) => [...q, ...valid]);
   }
