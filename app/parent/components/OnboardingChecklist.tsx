@@ -3,7 +3,18 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Check, Camera, GraduationCap, MessageCircle, CreditCard, Smile, CalendarDays, UserCheck } from "lucide-react";
+import {
+  X,
+  Check,
+  Camera,
+  GraduationCap,
+  MessageCircle,
+  CreditCard,
+  Smile,
+  CalendarDays,
+  UserCheck,
+  ClipboardCheck,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { getOnboardingProgress } from "@/app/actions/getOnboardingProgress";
 import { saveOnboardingProgress } from "@/app/actions/saveOnboardingProgress";
@@ -17,6 +28,15 @@ const TASKS: {
   iconBg: string;
   iconColor: string;
 }[] = [
+  {
+    id: "complete_enrollment",
+    label: "Complete your enrollment checklist",
+    description: "Sign contracts and upload records",
+    href: "/parent/dashboard",
+    icon: ClipboardCheck,
+    iconBg: "bg-teal-100",
+    iconColor: "text-teal-600",
+  },
   {
     id: "upload_photo",
     label: "Add your child's photo",
@@ -163,55 +183,69 @@ export default function OnboardingChecklist({ open, onClose }: Props) {
 
             {/* Task list */}
             <div className="flex-1 overflow-y-auto py-2">
-              {loading ? (
-                Array.from({ length: 7 }).map((_, i) => (
-                  <div key={i} className="flex items-center gap-3 px-5 py-3">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gray-100 animate-pulse" />
-                    <div className="flex-1 space-y-1.5">
-                      <div className="h-3 bg-gray-100 rounded animate-pulse w-3/4" />
-                      <div className="h-2.5 bg-gray-100 rounded animate-pulse w-1/2" />
+              {loading
+                ? Array.from({ length: 8 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-3 px-5 py-3">
+                      <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gray-100 animate-pulse" />
+                      <div className="flex-1 space-y-1.5">
+                        <div className="h-3 bg-gray-100 rounded animate-pulse w-3/4" />
+                        <div className="h-2.5 bg-gray-100 rounded animate-pulse w-1/2" />
+                      </div>
+                      <div className="flex-shrink-0 w-5 h-5 rounded-full bg-gray-100 animate-pulse" />
                     </div>
-                    <div className="flex-shrink-0 w-5 h-5 rounded-full bg-gray-100 animate-pulse" />
-                  </div>
-                ))
-              ) : TASKS.map((task) => {
-                const done = completed.has(task.id);
-                const Icon = task.icon;
-                return (
-                  <div key={task.id} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors">
-                    {/* Colored icon bubble */}
-                    <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${done ? "bg-gray-100" : task.iconBg}`}>
-                      <Icon className={`w-4 h-4 ${done ? "text-gray-400" : task.iconColor}`} />
-                    </div>
+                  ))
+                : TASKS.map((task) => {
+                    const done = completed.has(task.id);
+                    const Icon = task.icon;
+                    return (
+                      <div
+                        key={task.id}
+                        className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors"
+                      >
+                        {/* Colored icon bubble */}
+                        <div
+                          className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${done ? "bg-gray-100" : task.iconBg}`}
+                        >
+                          <Icon
+                            className={`w-4 h-4 ${done ? "text-gray-400" : task.iconColor}`}
+                          />
+                        </div>
 
-                    {/* Label + description — also navigates */}
-                    <Link
-                      href={task.href}
-                      onClick={onClose}
-                      className="flex-1 min-w-0 cursor-pointer"
-                    >
-                      <p className={`text-sm font-body font-medium leading-snug ${done ? "text-gray-400 line-through" : "text-gray-800"}`}>
-                        {task.label}
-                      </p>
-                      <p className="text-xs text-gray-400 font-body mt-0.5 leading-snug">
-                        {task.description}
-                      </p>
-                    </Link>
+                        {/* Label + description — also navigates */}
+                        <Link
+                          href={task.href}
+                          onClick={onClose}
+                          className="flex-1 min-w-0 cursor-pointer"
+                        >
+                          <p
+                            className={`text-sm font-body font-medium leading-snug ${done ? "text-gray-400 line-through" : "text-gray-800"}`}
+                          >
+                            {task.label}
+                          </p>
+                          <p className="text-xs text-gray-400 font-body mt-0.5 leading-snug">
+                            {task.description}
+                          </p>
+                        </Link>
 
-                    {/* Check toggle */}
-                    <button
-                      onClick={() => toggle(task.id)}
-                      className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors cursor-pointer ${
-                        done
-                          ? "bg-[#4a7c59] border-[#4a7c59]"
-                          : "border-gray-300 hover:border-[#4a7c59]"
-                      }`}
-                    >
-                      {done && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
-                    </button>
-                  </div>
-                );
-              })}
+                        {/* Check toggle */}
+                        <button
+                          onClick={() => toggle(task.id)}
+                          className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors cursor-pointer ${
+                            done
+                              ? "bg-[#4a7c59] border-[#4a7c59]"
+                              : "border-gray-300 hover:border-[#4a7c59]"
+                          }`}
+                        >
+                          {done && (
+                            <Check
+                              className="w-3 h-3 text-white"
+                              strokeWidth={3}
+                            />
+                          )}
+                        </button>
+                      </div>
+                    );
+                  })}
             </div>
 
             {/* Footer */}

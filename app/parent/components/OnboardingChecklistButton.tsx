@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ClipboardList } from "lucide-react";
 import OnboardingChecklist from "./OnboardingChecklist";
 
-const TOTAL_TASKS = 7;
+const TOTAL_TASKS = 8;
 
 export default function OnboardingChecklistButton() {
   const [open, setOpen] = useState(false);

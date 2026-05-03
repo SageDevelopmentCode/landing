@@ -609,8 +609,8 @@ export default function HomePageClient({
                 </div>
                 <p className="text-sm font-body text-gray-600 leading-relaxed max-w-lg">
                   Know a family who&apos;d be a great fit for Sage Field? Share
-                  your link — when they enroll and pay their registration fee,
-                  you&apos;ll receive a $150 gift card.
+                  your link and when they enroll and pay their registration fee,
+                  you&apos;ll receive a $150 gift card of your choice.
                 </p>
 
                 {/* How it works */}
