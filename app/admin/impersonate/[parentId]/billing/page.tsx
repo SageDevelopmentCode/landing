@@ -15,6 +15,7 @@ import type {
   PaidFunFridayByStudent,
   SummerNotesByStudent,
   StudentInfo,
+  SchoolYearOnlyApp,
 } from "@/app/parent/billing/page";
 
 export default async function ImpersonateBillingPage({
@@ -62,7 +63,7 @@ export default async function ImpersonateBillingPage({
       )
       .eq("user_id", parentId)
       .eq("approved", true)
-      .in("program", ["summer_26", "both", "homeschool_drop_in"]),
+      .in("program", ["summer_26", "both", "homeschool_drop_in", "school_year_26_27"]),
     adminClient
       .schema("billing")
       .from("summer_week_commitments")
@@ -241,6 +242,10 @@ export default async function ImpersonateBillingPage({
     }
   }
 
+  const schoolYearOnlyApps: SchoolYearOnlyApp[] = allSummerApps
+    .filter((e) => e.program === "school_year_26_27" && e.status === "enrolled")
+    .map((e) => ({ id: e.id, student_id: e.student_id!, child_grade: e.child_grade, name: e.child_legal_name }));
+
   const unpaidSummerEnrollments = summerEnrollments.filter(
     (e) =>
       e.program !== "homeschool_drop_in" &&
@@ -254,6 +259,7 @@ export default async function ImpersonateBillingPage({
         ...pendingRequests.map((p) => p.student_id),
         ...summerEnrollments.map((e) => e.student_id),
         ...homeschoolDropInApps.map((e) => e.student_id),
+        ...schoolYearOnlyApps.map((e) => e.student_id),
       ].filter(Boolean)
     ),
   ] as string[];
@@ -297,6 +303,7 @@ export default async function ImpersonateBillingPage({
           paidAftercareByStudent={paidAftercareByStudent}
           paidFunFridayByStudent={paidFunFridayByStudent}
           summerNotesByStudent={summerNotesByStudent}
+          schoolYearOnlyApps={schoolYearOnlyApps}
         />
       </main>
     </div>

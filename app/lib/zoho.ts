@@ -995,6 +995,67 @@ export async function buildEnrollmentConfirmationEmail(opts: {
   return { subject, content };
 }
 
+export async function buildEnrollmentReminder2Email(opts: {
+  g1FullName: string;
+  childLegalName: string;
+  program: string | null;
+}): Promise<{ subject: string; content: string }> {
+  const subject = `Limited Spots Remaining! Complete ${opts.childLegalName}'s Enrollment`;
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Happy Sunday, ${opts.g1FullName}!</p>
+
+  <p>Summer is right around the corner — there are only <strong>3 weeks</strong> before our summer program begins!</p>
+
+  <p>Thank you again for submitting <strong>${opts.childLegalName}</strong>'s application. We are so excited about the opportunity to have your family join our school community.</p>
+
+  <p style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 12px 16px; margin: 20px 0; font-size: 14px;">
+    At this time, <strong>${opts.childLegalName}</strong>'s spot is not yet secured. We are actively enrolling new students, and several families are in the process of completing their registration. Availability is now limited — only <strong>4 spots remaining for 2nd–4th grade</strong> and <strong>6 spots for Preschool–1st grade</strong>.
+  </p>
+
+  <p><strong>To finalize enrollment for summer, please complete the remaining steps through your parent dashboard:</strong></p>
+
+  <ul style="padding-left: 20px; margin-bottom: 20px;">
+    <li style="margin-bottom: 8px;">Submit the registration fee</li>
+    <li style="margin-bottom: 8px;">Select your child's summer camp weeks</li>
+  </ul>
+
+  <p style="text-align: center; margin: 28px 0;">
+    <a href="https://www.sagefield.co/parent/dashboard"
+       style="display: inline-block; background-color: #2C5F2E; color: #ffffff; text-decoration: none; font-weight: bold; padding: 12px 28px; border-radius: 8px; font-size: 15px;">
+      Complete Enrollment →
+    </a>
+  </p>
+
+  <p>While you are already on our website, you can also:</p>
+
+  <ul style="padding-left: 20px; margin-bottom: 20px;">
+    <li style="margin-bottom: 8px;">Confirm enrollment for the upcoming school year</li>
+  </ul>
+
+  <p style="font-size: 14px; color: #666;">Spots are filled on a first-come, first-served basis — please complete your enrollment as soon as possible to ensure ${opts.childLegalName}'s placement.</p>
+
+  <p>If you have any questions or need assistance, please don't hesitate to reach out.</p>
+
+  <p>We look forward to seeing you this summer!</p>
+
+  <p style="margin-top: 32px;">Wishing you a peaceful day,</p>
+  <p style="margin-top: 4px;">
+    <strong>Sabrina Grace Obnamia</strong><br />
+    Sage Field School<br />
+    <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a><br />
+    (512) 677-5872
+  </p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
 /**
  * Build HTML confirmation email for an Open House RSVP
  */
@@ -2061,6 +2122,59 @@ export async function buildFunFridayConfirmationEmail(opts: {
 
   <p style="margin-top: 32px;">See you Friday!</p>
   <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
+export async function buildPaySummerTuitionEmail(opts: {
+  g1FullName: string;
+  childLegalName: string;
+}): Promise<{ subject: string; content: string }> {
+  const subject = "Select Your Child's Summer Weeks";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Happy Sunday, ${opts.g1FullName}!</p>
+
+  <p>We have <strong>3 weeks left</strong> until our summer program starts!</p>
+
+  <p>There's just one quick step left: <strong>selecting and confirming the weeks ${opts.childLegalName} will be attending.</strong> This helps us get an accurate headcount so we can create the best experience for each group.</p>
+
+  <p>Please log into your parent portal using the same email you originally registered with — this will take you to your parent homepage where you can select your child's summer weeks.</p>
+
+  <p style="text-align: center; margin: 28px 0;">
+    <a href="https://www.sagefield.co/parent/dashboard"
+       style="display: inline-block; background-color: #2C5F2E; color: #ffffff; text-decoration: none; font-weight: bold; padding: 12px 28px; border-radius: 8px; font-size: 15px;">
+      Go to Parent Portal →
+    </a>
+  </p>
+
+  <p><strong>Once you're logged in:</strong></p>
+  <ol style="padding-left: 20px; margin-bottom: 20px;">
+    <li style="margin-bottom: 8px;">Click on the <strong>Tuition</strong> tab</li>
+    <li style="margin-bottom: 8px;">Select <strong>Summer 2026 Tuition</strong></li>
+    <li style="margin-bottom: 8px;">Choose the weeks your child will be attending</li>
+    <li style="margin-bottom: 8px;">Submit to confirm your schedule</li>
+  </ol>
+
+  <p style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 12px 16px; margin: 20px 0; font-size: 14px;">
+    We're currently building out our summer rosters, so we'd really appreciate you completing this step soon — it makes a big difference in helping us prepare well for your children.
+  </p>
+
+  <p>If you have any questions or need help accessing your account, I'm happy to guide you through it. Don't hesitate to reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> or text <a href="sms:+15126775872" style="color: #5a7a5a;">(512) 677-5872</a>.</p>
+
+  <p style="margin-top: 32px;">Wishing you a restful Sunday,</p>
+  <p style="margin-top: 4px;">
+    <strong>Sabrina Grace Obnamia</strong><br />
+    Sage Field School<br />
+    <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a><br />
+    (512) 677-5872
+  </p>
 </body>
 </html>
   `.trim();

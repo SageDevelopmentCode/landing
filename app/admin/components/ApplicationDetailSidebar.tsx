@@ -18,9 +18,11 @@ import { getAdminEnrollmentData, type AdminEnrollmentData } from '../../actions/
 import { EnrollmentProgressCard, type ApprovedApplication } from './EnrollmentProgressCard'
 import { EmailThread } from './EmailThread'
 import { sendEnrollmentReminderEmail } from '../../actions/sendEnrollmentReminderEmail'
+import { sendEnrollmentReminder2Email } from '../../actions/sendEnrollmentReminder2Email'
 import { sendEnrollmentConfirmationEmail } from '../../actions/sendEnrollmentConfirmationEmail'
 import { sendInfoSessionInviteEmail } from '../../actions/sendInfoSessionInviteEmail'
 import { sendOpenHouseEnrollmentEmail } from '../../actions/sendOpenHouseEnrollmentEmail'
+import { sendPaySummerTuitionEmail } from '../../actions/sendPaySummerTuitionEmail'
 import { enrollApplication } from '../../actions/enrollApplication'
 import { updateApplicationProgram } from '../../actions/updateApplicationProgram'
 import { updateApplicationTags } from '../../actions/updateApplicationTags'
@@ -160,6 +162,9 @@ export function ApplicationDetailSidebar({
   const [reminderSending, setReminderSending] = useState(false)
   const [reminderSent, setReminderSent] = useState(false)
   const [reminderError, setReminderError] = useState<string | null>(null)
+  const [reminder2Sending, setReminder2Sending] = useState(false)
+  const [reminder2Sent, setReminder2Sent] = useState(false)
+  const [reminder2Error, setReminder2Error] = useState<string | null>(null)
   const [confirmationSending, setConfirmationSending] = useState(false)
   const [confirmationSent, setConfirmationSent] = useState(false)
   const [confirmationError, setConfirmationError] = useState<string | null>(null)
@@ -169,6 +174,9 @@ export function ApplicationDetailSidebar({
   const [openHouseSending, setOpenHouseSending] = useState(false)
   const [openHouseSent, setOpenHouseSent] = useState(false)
   const [openHouseError, setOpenHouseError] = useState<string | null>(null)
+  const [summerTuitionSending, setSummerTuitionSending] = useState(false)
+  const [summerTuitionSent, setSummerTuitionSent] = useState(false)
+  const [summerTuitionError, setSummerTuitionError] = useState<string | null>(null)
   const [tagInput, setTagInput] = useState('')
   const [tagSaving, setTagSaving] = useState(false)
   const [tagError, setTagError] = useState<string | null>(null)
@@ -498,6 +506,45 @@ export function ApplicationDetailSidebar({
       setTimeout(() => setReminderSent(false), 3000)
     } else {
       setReminderError(result.error ?? 'Failed to send')
+    }
+  }
+
+  const handleSendEnrollmentReminder2 = async () => {
+    if (reminder2Sending || !application.g1_email) return
+    setReminder2Sending(true)
+    setReminder2Error(null)
+    const result = await sendEnrollmentReminder2Email({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      program: application.program,
+      email: application.g1_email,
+    })
+    setReminder2Sending(false)
+    if (result.success) {
+      setReminder2Sent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setReminder2Sent(false), 3000)
+    } else {
+      setReminder2Error(result.error ?? 'Failed to send')
+    }
+  }
+
+  const handleSendPaySummerTuition = async () => {
+    if (summerTuitionSending || !application.g1_email) return
+    setSummerTuitionSending(true)
+    setSummerTuitionError(null)
+    const result = await sendPaySummerTuitionEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+    })
+    setSummerTuitionSending(false)
+    if (result.success) {
+      setSummerTuitionSent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setSummerTuitionSent(false), 3000)
+    } else {
+      setSummerTuitionError(result.error ?? 'Failed to send')
     }
   }
 
@@ -947,6 +994,17 @@ export function ApplicationDetailSidebar({
               </div>
               <div className="flex items-center gap-3">
                 <button
+                  onClick={handleSendEnrollmentReminder2}
+                  disabled={reminder2Sending || reminder2Sent}
+                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                >
+                  {reminder2Sending ? 'Sending…' : reminder2Sent ? '✓ Sent!' : 'Send Enrollment Reminder 2'}
+                </button>
+                {reminder2Error && <span className="text-xs text-red-600">{reminder2Error}</span>}
+              </div>
+              <div className="flex items-center gap-3">
+                <button
                   onClick={handleSendEnrollmentConfirmation}
                   disabled={confirmationSending || confirmationSent}
                   className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
@@ -977,6 +1035,17 @@ export function ApplicationDetailSidebar({
                   {openHouseSending ? 'Sending…' : openHouseSent ? '✓ Sent!' : 'Send Open House Follow-Up'}
                 </button>
                 {openHouseError && <span className="text-xs text-red-600">{openHouseError}</span>}
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleSendPaySummerTuition}
+                  disabled={summerTuitionSending || summerTuitionSent}
+                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                >
+                  {summerTuitionSending ? 'Sending…' : summerTuitionSent ? '✓ Sent!' : 'Send Summer Week Selection'}
+                </button>
+                {summerTuitionError && <span className="text-xs text-red-600">{summerTuitionError}</span>}
               </div>
             </div>
           </SidebarSection>

@@ -48,6 +48,13 @@ export type HomeschoolDropInApp = {
   name: string | null;
 };
 
+export type SchoolYearOnlyApp = {
+  id: string;
+  student_id: string;
+  child_grade: string | null;
+  name: string | null;
+};
+
 export type PaidHomeschoolEntry = {
   weeks: number[];
   tier: string;
@@ -140,7 +147,7 @@ export default async function BillingRoute() {
       .select("id, student_id, child_grade, status, child_legal_name, program, drop_in_program")
       .eq("user_id", user.id)
       .eq("approved", true)
-      .in("program", ["summer_26", "both", "homeschool_drop_in"]),
+      .in("program", ["summer_26", "both", "homeschool_drop_in", "school_year_26_27"]),
     adminClient
       .schema("parent_app")
       .from("applications")
@@ -189,6 +196,10 @@ export default async function BillingRoute() {
       child_grade: e.child_grade,
       name: e.child_legal_name,
     }));
+
+  const schoolYearOnlyApps: SchoolYearOnlyApp[] = allSummerApps
+    .filter((e) => e.program === "school_year_26_27" && e.status === "enrolled")
+    .map((e) => ({ id: e.id, student_id: e.student_id!, child_grade: e.child_grade, name: e.child_legal_name }));
 
   // Build paid-weeks map per student from all completed summer_tuition transactions
   const paidWeeksByStudent: PaidWeeksByStudent = {};
@@ -292,6 +303,7 @@ export default async function BillingRoute() {
       ...pendingRequests.map((p) => p.student_id),
       ...summerEnrollments.map((e) => e.student_id),
       ...homeschoolDropInApps.map((e) => e.student_id),
+      ...schoolYearOnlyApps.map((e) => e.student_id),
     ].filter(Boolean)),
   ] as string[];
 
@@ -339,7 +351,7 @@ export default async function BillingRoute() {
         </DashboardHeader>
 
         <main className="flex-1 flex overflow-hidden">
-          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} unpaidSummerEnrollments={unpaidSummerEnrollments} paidWeeksByStudent={paidWeeksByStudent} parentId={user.id} parentEmail={user.email ?? ""} nonEnrolledApps={nonEnrolledApps} homeschoolDropInApps={homeschoolDropInApps} paidHomeschoolByStudent={paidHomeschoolByStudent} paidAftercareByStudent={paidAftercareByStudent} paidFunFridayByStudent={paidFunFridayByStudent} summerNotesByStudent={summerNotesByStudent} />
+          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} unpaidSummerEnrollments={unpaidSummerEnrollments} paidWeeksByStudent={paidWeeksByStudent} parentId={user.id} parentEmail={user.email ?? ""} nonEnrolledApps={nonEnrolledApps} homeschoolDropInApps={homeschoolDropInApps} paidHomeschoolByStudent={paidHomeschoolByStudent} paidAftercareByStudent={paidAftercareByStudent} paidFunFridayByStudent={paidFunFridayByStudent} summerNotesByStudent={summerNotesByStudent} schoolYearOnlyApps={schoolYearOnlyApps} />
         </main>
       </div>
       <Footer />

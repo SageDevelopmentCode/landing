@@ -73,6 +73,7 @@ import type {
   PaidAftercareByStudent,
   PaidFunFridayByStudent,
   SummerNotesByStudent,
+  SchoolYearOnlyApp,
 } from "./page";
 
 interface Props {
@@ -90,6 +91,7 @@ interface Props {
   paidAftercareByStudent: PaidAftercareByStudent;
   paidFunFridayByStudent: PaidFunFridayByStudent;
   summerNotesByStudent: SummerNotesByStudent;
+  schoolYearOnlyApps: SchoolYearOnlyApp[];
 }
 
 // --- Summer pricing ---
@@ -539,6 +541,37 @@ function SummerTuitionCard({
           >
             {hasPaidWeeks ? "Add weeks" : "Select plan"}
             <ChevronRight className="w-3 h-3" strokeWidth={2.5} />
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SchoolYearTuitionDisabledCard() {
+  return (
+    <div className="rounded-2xl overflow-hidden bg-white border border-gray-100 flex flex-col opacity-60">
+      <div className="relative h-28 overflow-hidden bg-gray-200">
+        <img
+          src="/assets/ImageFive.jpg"
+          alt=""
+          className="w-full h-full object-cover grayscale"
+        />
+        <div className="absolute inset-0 bg-black/20" />
+      </div>
+      <div className="p-3.5 flex flex-col gap-2.5">
+        <div>
+          <div className="text-xs font-medium text-gray-400 mb-0.5">
+            School Year 26–27
+          </div>
+          <div className="text-sm font-semibold text-gray-800 leading-snug">
+            School Year Tuition
+          </div>
+        </div>
+        <div className="flex items-center justify-between mt-auto">
+          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-gray-500 bg-gray-100 cursor-not-allowed">
+            <Clock className="w-3 h-3" />
+            Not available yet
           </span>
         </div>
       </div>
@@ -3293,6 +3326,7 @@ function PendingPaymentsSection({
   homeschoolDropInApps,
   paidHomeschoolByStudent,
   activeStudentId,
+  schoolYearOnlyApps,
 }: {
   summerEnrollments: SummerEnrollment[];
   unpaidSummerEnrollments: SummerEnrollment[];
@@ -3309,10 +3343,16 @@ function PendingPaymentsSection({
   homeschoolDropInApps: HomeschoolDropInApp[];
   paidHomeschoolByStudent: PaidHomeschoolByStudent;
   activeStudentId: string | null;
+  schoolYearOnlyApps: SchoolYearOnlyApp[];
 }) {
   const nonEnrolledMap = new Map(nonEnrolledApps.map((a) => [a.student_id, a]));
 
+  const isSchoolYearOnly = schoolYearOnlyApps.some(
+    (a) => a.student_id === activeStudentId,
+  );
+
   if (
+    !isSchoolYearOnly &&
     unpaidSummerEnrollments.length === 0 &&
     pendingRequests.length === 0 &&
     nonEnrolledApps.length === 0 &&
@@ -3367,6 +3407,8 @@ function PendingPaymentsSection({
       >
         {activeNonEnrolled ? (
           <NonEnrolledCard app={activeNonEnrolled} />
+        ) : isSchoolYearOnly ? (
+          <SchoolYearTuitionDisabledCard />
         ) : currentSummer.length === 0 &&
           currentItems.length === 0 &&
           currentAllSummer.length === 0 &&
@@ -3418,6 +3460,14 @@ function PendingPaymentsSection({
                 onViewHistory={() => onViewHomeschoolHistory(app)}
               />
             ))}
+            {/* Disabled School Year Tuition card for "both"-program students */}
+            {!isOtherTab && activeStudentId && (() => {
+              const hasBoth = summerEnrollments.some(
+                (e) => e.student_id === activeStudentId && e.program === "both",
+              );
+              if (!hasBoth) return null;
+              return <SchoolYearTuitionDisabledCard key="school-year-disabled" />;
+            })()}
 
             {/* Total bar */}
             {totalCents > 0 && (
@@ -3665,6 +3715,124 @@ function WantToGoFullTimeSection({
   );
 }
 
+function WantToAddSummerSection({ applicationId }: { applicationId: string }) {
+  const router = useRouter();
+  const [step, setStep] = useState<"idle" | "confirm">("idle");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleConfirm() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/parent/add-summer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ applicationId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Something went wrong");
+      router.refresh();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div>
+      <h2 className="text-lg font-semibold font-heading text-gray-700 mb-4">
+        Want to join Summer 2026?
+      </h2>
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: "easeOut" as const }}
+        className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-2xl px-5 py-5 shadow-sm"
+      >
+        {step === "idle" && (
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold font-heading text-gray-900 mb-0.5">
+                Add Summer 2026 to your enrollment
+              </p>
+              <p className="text-xs font-body text-gray-500">
+                May–Aug · 12 weeks · Mon–Thu. Keep the same community year-round.
+              </p>
+            </div>
+            <button
+              onClick={() => setStep("confirm")}
+              className="flex-shrink-0 px-4 py-2 bg-amber-500 text-white text-xs font-semibold font-body rounded-xl hover:bg-amber-600 transition-colors whitespace-nowrap"
+            >
+              Add Summer Program
+            </button>
+          </div>
+        )}
+
+        {step === "confirm" && (
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm font-semibold font-heading text-gray-900 mb-0.5">
+                Add Summer 2026?
+              </p>
+              <p className="text-xs font-body text-gray-500">
+                This will add the Summer 2026 program (May–Aug, 12 weeks, Mon–Thu) to your enrollment. You&apos;ll be able to select and pay for weeks right here.
+              </p>
+            </div>
+
+            {error && <p className="text-xs font-body text-red-500">{error}</p>}
+
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => {
+                  setStep("idle");
+                  setError(null);
+                }}
+                disabled={loading}
+                className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 text-xs font-semibold font-body rounded-xl hover:bg-white/60 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirm}
+                disabled={loading}
+                className="flex-1 px-4 py-2 bg-amber-500 text-white text-xs font-semibold font-body rounded-xl hover:bg-amber-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? "Adding…" : "Yes, Add Summer"}
+              </button>
+            </div>
+          </div>
+        )}
+      </motion.div>
+    </div>
+  );
+}
+
+function SchoolYearComingSoonCard() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: "easeOut" as const }}
+      className="bg-white border border-gray-100 rounded-2xl px-5 py-5 shadow-sm"
+    >
+      <div className="flex items-start gap-3">
+        <div className="flex-shrink-0 w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center mt-0.5">
+          <Clock className="w-4 h-4 text-blue-400" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold font-heading text-gray-800 mb-1">
+            School Year Tuition — Not Available Yet
+          </p>
+          <p className="text-xs font-body text-gray-500 leading-relaxed">
+            Tuition for the 2026–27 school year will open a few weeks before school starts. We&apos;ll notify you when it&apos;s ready to pay.
+          </p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 function UpgradeToFullTimeCard({ childNames }: { childNames: string[] }) {
   const nameLabel =
     childNames.length === 1
@@ -3766,6 +3934,7 @@ export default function BillingPage({
   paidAftercareByStudent,
   paidFunFridayByStudent,
   summerNotesByStudent,
+  schoolYearOnlyApps,
 }: Props) {
   const [selectedTx, setSelectedTx] = useState<StripeTransaction | null>(null);
   const [selectedPending, setSelectedPending] =
@@ -3801,6 +3970,11 @@ export default function BillingPage({
   for (const a of nonEnrolledApps) {
     if (a.program) studentProgramMap.set(a.student_id, a.program);
   }
+  for (const a of schoolYearOnlyApps) {
+    if (!studentProgramMap.has(a.student_id)) {
+      studentProgramMap.set(a.student_id, "school_year_26_27");
+    }
+  }
 
   // Collect all unique student IDs for the sidebar
   const allStudentIds = [
@@ -3809,6 +3983,7 @@ export default function BillingPage({
       ...(pendingRequests.map((r) => r.student_id).filter(Boolean) as string[]),
       ...nonEnrolledApps.map((a) => a.student_id),
       ...homeschoolDropInApps.map((a) => a.student_id),
+      ...schoolYearOnlyApps.map((a) => a.student_id),
     ]),
   ];
   const orphanRequests = pendingRequests.filter((r) => !r.student_id);
@@ -3830,7 +4005,8 @@ export default function BillingPage({
     pendingRequests.length > 0 ||
     nonEnrolledApps.length > 0 ||
     summerEnrollments.length > 0 ||
-    homeschoolDropInApps.length > 0;
+    homeschoolDropInApps.length > 0 ||
+    schoolYearOnlyApps.length > 0;
 
   const showSidebar = allStudentIds.length > 0 || hasOrphans;
 
@@ -3969,6 +4145,7 @@ export default function BillingPage({
                 homeschoolDropInApps={homeschoolDropInApps}
                 paidHomeschoolByStudent={paidHomeschoolByStudent}
                 activeStudentId={activeStudentId}
+                schoolYearOnlyApps={schoolYearOnlyApps}
               />
             </div>
           )}
@@ -3987,6 +4164,19 @@ export default function BillingPage({
                 applicationId={activeHomeschoolDropIn.id}
                 dropInProgram={activeHomeschoolDropIn.drop_in_program}
               />
+            );
+          })()}
+
+          {(() => {
+            const activeSchoolYear = schoolYearOnlyApps.find(
+              (a) => a.student_id === activeStudentId,
+            );
+            if (!activeSchoolYear) return null;
+            return (
+              <div className="space-y-4">
+                <WantToAddSummerSection applicationId={activeSchoolYear.id} />
+                <SchoolYearComingSoonCard />
+              </div>
             );
           })()}
 
