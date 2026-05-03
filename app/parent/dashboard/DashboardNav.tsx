@@ -46,11 +46,19 @@ const moreItems: {
   { label: "Need Help", icon: HelpCircle, action: "help" },
 ];
 
-export default function DashboardNav({ parentId }: { parentId?: string } = {}) {
+export default function DashboardNav({
+  parentId,
+  hasEnrolledStudent = true,
+}: {
+  parentId?: string;
+  hasEnrolledStudent?: boolean;
+} = {}) {
   const [moreOpen, setMoreOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+
+  if (!hasEnrolledStudent) return null;
 
   const impersonateBase = parentId ? `/admin/impersonate/${parentId}` : null;
 

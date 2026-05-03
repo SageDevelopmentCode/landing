@@ -48,7 +48,9 @@ export default async function ApplicationDashboard() {
           .single(),
       ]);
     apps = data ?? [];
-    if (apps.some((app) => app.approved === true)) {
+    if (apps.some((app) => app.status === "enrolled")) {
+      redirect("/parent/home");
+    } else if (apps.some((app) => app.approved === true)) {
       redirect("/parent/dashboard");
     }
     fullName = adminUser?.full_name ?? null;

@@ -24,7 +24,7 @@ export default async function ParentCalendarPage() {
 
   const adminClient = createAdminClient();
 
-  const [{ data: adminUser }, { data: eventsData }] = await Promise.all([
+  const [{ data: adminUser }, { data: eventsData }, { data: enrolledCheck }] = await Promise.all([
     adminClient
       .schema("admin")
       .from("users")
@@ -39,11 +39,20 @@ export default async function ParentCalendarPage() {
       )
       .contains("shared_with", ["Parents"])
       .order("event_date", { ascending: true }),
+    adminClient
+      .schema("parent_app")
+      .from("applications")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("status", "enrolled")
+      .limit(1),
   ]);
 
   const fullName = adminUser?.full_name ?? null;
   const profileImageUrl = adminUser?.profile_image_url ?? null;
   const events = eventsData ?? [];
+
+  if ((enrolledCheck ?? []).length === 0) redirect("/parent/dashboard");
 
   return (
     <div className="bg-welcome-bg min-h-screen flex flex-col">
@@ -60,7 +69,7 @@ export default async function ParentCalendarPage() {
           </Link>
         </div>
         <div className="flex items-center justify-center">
-          <DashboardNav />
+          <DashboardNav hasEnrolledStudent={(enrolledCheck ?? []).length > 0} />
         </div>
         <div className="flex items-center justify-end gap-1">
           <OnboardingChecklistButton />

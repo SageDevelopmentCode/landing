@@ -33,7 +33,7 @@ export default async function ChildrenRoute() {
 
   const adminClient = createAdminClient();
 
-  const [{ data: studentsData }, { data: adminUser }] = await Promise.all([
+  const [{ data: studentsData }, { data: adminUser }, { data: enrolledCheck }] = await Promise.all([
     adminClient
       .schema("admin")
       .from("students")
@@ -46,11 +46,20 @@ export default async function ChildrenRoute() {
       .select("full_name, profile_image_url")
       .eq("id", user.id)
       .single(),
+    adminClient
+      .schema("parent_app")
+      .from("applications")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("status", "enrolled")
+      .limit(1),
   ]);
 
   const children: Student[] = studentsData ?? [];
   const fullName = adminUser?.full_name ?? null;
   const profileImageUrl = adminUser?.profile_image_url ?? null;
+
+  if ((enrolledCheck ?? []).length === 0) redirect("/parent/dashboard");
 
   const studentIds = children.map((s) => s.id);
   const teachersByStudent: Record<string, TeacherAssignment[]> = {};
@@ -133,7 +142,7 @@ export default async function ChildrenRoute() {
             </Link>
           </div>
           <div className="flex items-center justify-center">
-            <DashboardNav />
+            <DashboardNav hasEnrolledStudent={(enrolledCheck ?? []).length > 0} />
           </div>
           <div className="flex items-center justify-end gap-1">
             <OnboardingChecklistButton />

@@ -273,7 +273,7 @@ export default async function ParentDashboard() {
             </Link>
           </div>
           <div className="flex items-center justify-center">
-            <DashboardNav />
+            <DashboardNav hasEnrolledStudent={approvedApps.some((a) => a.status === "enrolled")} />
           </div>
           <div className="flex items-center justify-end gap-1">
             <OnboardingChecklistButton />

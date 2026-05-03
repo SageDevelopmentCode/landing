@@ -56,6 +56,8 @@ export default async function FormsRoute() {
   const profileImageUrl = adminUser?.profile_image_url ?? null;
   const approvedApps = apps ?? [];
 
+  if (approvedApps.length === 0) redirect("/parent/dashboard");
+
   const studentIds = approvedApps
     .map((a) => a.student_id)
     .filter((id): id is string => id !== null);
@@ -229,7 +231,7 @@ export default async function FormsRoute() {
             </Link>
           </div>
           <div className="flex items-center justify-center">
-            <DashboardNav />
+            <DashboardNav hasEnrolledStudent={approvedApps.length > 0} />
           </div>
           <div className="flex items-center justify-end gap-1">
             <OnboardingChecklistButton />

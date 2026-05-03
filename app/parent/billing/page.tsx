@@ -111,7 +111,7 @@ export default async function BillingRoute() {
 
   const adminClient = createAdminClient();
 
-  const [{ data: txData }, { data: adminUser }, { data: pendingData }, { data: summerData }] = await Promise.all([
+  const [{ data: txData }, { data: adminUser }, { data: pendingData }, { data: summerData }, { data: enrolledCheck }] = await Promise.all([
     adminClient
       .schema("billing")
       .from("stripe_transactions")
@@ -139,12 +139,21 @@ export default async function BillingRoute() {
       .eq("user_id", user.id)
       .eq("approved", true)
       .in("program", ["summer_26", "both", "homeschool_drop_in"]),
+    adminClient
+      .schema("parent_app")
+      .from("applications")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("status", "enrolled")
+      .limit(1),
   ]);
 
   const transactions = (txData ?? []) as StripeTransaction[];
   const pendingRequests = (pendingData ?? []) as PendingPaymentRequest[];
   const fullName = adminUser?.full_name ?? null;
   const profileImageUrl = adminUser?.profile_image_url ?? null;
+
+  if ((enrolledCheck ?? []).length === 0) redirect("/parent/dashboard");
 
   const allSummerApps = ((summerData ?? []) as {
     id: string;
@@ -304,7 +313,7 @@ export default async function BillingRoute() {
             </Link>
           </div>
           <div className="flex items-center justify-center">
-            <DashboardNav />
+            <DashboardNav hasEnrolledStudent={(enrolledCheck ?? []).length > 0} />
           </div>
           <div className="flex items-center justify-end gap-1">
             <OnboardingChecklistButton />

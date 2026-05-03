@@ -36,6 +36,7 @@ export default async function ParentTeacherProfilePage({
     { data: quals },
     { data: expRows },
     { data: assignments },
+    { data: enrolledCheck },
   ] = await Promise.all([
     adminClient
       .schema("admin")
@@ -75,11 +76,20 @@ export default async function ParentTeacherProfilePage({
       .select("id, student_id, program, classroom")
       .eq("teacher_id", teacherId)
       .eq("is_deleted", false),
+    adminClient
+      .schema("parent_app")
+      .from("applications")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("status", "enrolled")
+      .limit(1),
   ]);
 
   if (!teacherUser) {
     redirect("/parent/dashboard");
   }
+
+  if ((enrolledCheck ?? []).length === 0) redirect("/parent/dashboard");
 
   // Bulk fetch students
   let students: {
@@ -132,7 +142,7 @@ export default async function ParentTeacherProfilePage({
           </Link>
         </div>
         <div className="flex items-center justify-center">
-          <DashboardNav />
+          <DashboardNav hasEnrolledStudent={(enrolledCheck ?? []).length > 0} />
         </div>
         <div className="flex items-center justify-end gap-1">
           <OnboardingChecklistButton />

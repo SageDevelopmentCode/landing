@@ -67,7 +67,7 @@ export default async function ParentHomePage() {
   const adminClient = createAdminClient();
   const todayISO = new Date().toISOString().slice(0, 10);
 
-  const [{ data: adminUser }, { data: studentsData }] = await Promise.all([
+  const [{ data: adminUser }, { data: studentsData }, { data: enrolledCheck }] = await Promise.all([
     adminClient
       .schema("admin")
       .from("users")
@@ -80,9 +80,18 @@ export default async function ParentHomePage() {
       .select("id, child_legal_name, child_grade, profile_image_url")
       .eq("parent_id", user.id)
       .eq("is_deleted", false),
+    adminClient
+      .schema("parent_app")
+      .from("applications")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("status", "enrolled")
+      .limit(1),
   ]);
 
   const students: HomeStudent[] = (studentsData ?? []) as HomeStudent[];
+
+  if ((enrolledCheck ?? []).length === 0) redirect("/parent/dashboard");
   const studentIds = students.map((s) => s.id);
 
   const [{ data: checkInsData }, { data: eventsData }, { data: paymentsData }, { data: referralsData }, { data: dropOffData }] =
@@ -159,7 +168,7 @@ export default async function ParentHomePage() {
           </Link>
         </div>
         <div className="flex items-center justify-center">
-          <DashboardNav />
+          <DashboardNav hasEnrolledStudent={(enrolledCheck ?? []).length > 0} />
         </div>
         <div className="flex items-center justify-end gap-1">
           <OnboardingChecklistButton />

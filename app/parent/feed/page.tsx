@@ -26,7 +26,7 @@ export default async function ParentFeedPage() {
 
   let currentUser: { full_name: string; role: string; id: string } | null = null;
 
-  const [{ data: adminUser }, initialPosts, { data: teachers }] = await Promise.all([
+  const [{ data: adminUser }, initialPosts, { data: teachers }, { data: enrolledCheck }] = await Promise.all([
     adminClient
       .schema("admin")
       .from("users")
@@ -41,6 +41,13 @@ export default async function ParentFeedPage() {
       .in("role", ["teacher", "super_admin"])
       .eq("is_deleted", false)
       .order("full_name", { ascending: true }),
+    adminClient
+      .schema("parent_app")
+      .from("applications")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("status", "enrolled")
+      .limit(1),
   ]);
 
   if (adminUser) {
@@ -50,6 +57,8 @@ export default async function ParentFeedPage() {
       id: user.id,
     };
   }
+
+  if ((enrolledCheck ?? []).length === 0) redirect("/parent/dashboard");
 
   return (
     <div className="bg-welcome-bg min-h-screen flex flex-col">
@@ -66,7 +75,7 @@ export default async function ParentFeedPage() {
           </Link>
         </div>
         <div className="flex items-center justify-center">
-          <DashboardNav />
+          <DashboardNav hasEnrolledStudent={(enrolledCheck ?? []).length > 0} />
         </div>
         <div className="flex items-center justify-end gap-1">
           <OnboardingChecklistButton />

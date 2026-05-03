@@ -13,17 +13,28 @@ export default async function LoginPage() {
 
   if (user) {
     const adminClient = createAdminClient();
-    const { data: adminUser } = await adminClient
-      .schema("admin")
-      .from("users")
-      .select("role")
-      .eq("id", user.id)
-      .single();
+    const [{ data: adminUser }, { data: enrolledApp }] = await Promise.all([
+      adminClient
+        .schema("admin")
+        .from("users")
+        .select("role")
+        .eq("id", user.id)
+        .single(),
+      adminClient
+        .schema("parent_app")
+        .from("applications")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("status", "enrolled")
+        .limit(1),
+    ]);
 
     if (adminUser?.role === "super_admin") {
       redirect("/admin");
     } else if (adminUser?.role === "teacher") {
       redirect("/teacher/dashboard");
+    } else if ((enrolledApp ?? []).length > 0) {
+      redirect("/parent/home");
     } else {
       redirect("/apply/dashboard");
     }
