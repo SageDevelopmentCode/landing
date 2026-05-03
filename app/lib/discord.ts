@@ -1292,6 +1292,24 @@ export function createAftercareEmbed(data: {
 }
 
 /**
+ * Creates a Discord embed for OTP verification code sends
+ */
+export function createOtpSentEmbed(data: {
+  email: string;
+  context: 'login' | 'signup';
+}): DiscordEmbed {
+  return {
+    title: "🔐 Verification Code Sent",
+    color: 0x5865f2,
+    fields: [
+      { name: "Email", value: data.email, inline: true },
+      { name: "Type", value: data.context === 'signup' ? "New signup" : "Login attempt", inline: true },
+    ],
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
  * Creates a Discord embed for first week drop-off time selections
  */
 export function createDropOffTimeEmbed(data: {

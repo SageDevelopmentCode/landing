@@ -1,7 +1,7 @@
 'use server'
 
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
-import { sendDiscordNotification, createParentSignupEmbed, createErrorEmbed } from '@/app/lib/discord'
+import { sendDiscordNotification, createParentSignupEmbed, createErrorEmbed, createOtpSentEmbed } from '@/app/lib/discord'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 
@@ -92,6 +92,7 @@ export async function sendEmailOtp(formData: FormData) {
     return { error: error.message }
   }
 
+  void sendDiscordNotification(createOtpSentEmbed({ email, context: 'login' }), process.env.DISCORD_SIGNINS_WEBHOOK_URL).catch(() => {})
   return { success: true }
 }
 
@@ -109,6 +110,7 @@ export async function sendSignupOtp(formData: FormData) {
     return { error: error.message }
   }
 
+  void sendDiscordNotification(createOtpSentEmbed({ email, context: 'signup' }), process.env.DISCORD_SIGNINS_WEBHOOK_URL).catch(() => {})
   return { success: true }
 }
 
