@@ -25,6 +25,7 @@ import {
 } from "@/app/components/SidebarPrimitives";
 import type {
   HomeStudent,
+  HomeCheckIn,
   HomeEvent,
   HomePendingPayment,
   HomeReferral,
@@ -307,7 +308,7 @@ interface Props {
   email: string;
   userId: string;
   students: HomeStudent[];
-  activeCheckIns: never[];
+  activeCheckIns: HomeCheckIn[];
   upcomingEvents: HomeEvent[];
   pendingPayments: HomePendingPayment[];
   studentMap: StudentMap;
