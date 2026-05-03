@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -13,8 +13,16 @@ import {
   Check,
   Car,
   CalendarClock,
+  CreditCard,
+  MessageCircle,
+  CalendarDays,
+  Rss,
+  Users,
+  Heart,
+  HelpCircle,
 } from "lucide-react";
 import OnboardingChecklist from "@/app/parent/components/OnboardingChecklist";
+import HelpWidget from "@/app/parent/components/HelpWidget";
 import {
   getParentStudentAttendance,
   type ParentCheckInRecord,
@@ -363,6 +371,7 @@ export default function HomePageClient({
     savedDropOffSlot !== null,
   );
   const [dropOffSaving, setDropOffSaving] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   async function handleSaveDropOff() {
     if (!dropOffSlot) return;
@@ -689,6 +698,51 @@ export default function HomePageClient({
                 </div>
               </div>
             </div>
+          </section>
+
+          {/* Quick Actions */}
+          <section>
+            <h2 className="text-base font-heading font-semibold text-gray-800 mb-3">
+              Quick Actions
+            </h2>
+            <div className="grid grid-cols-4 gap-2">
+              {(
+                [
+                  { label: "Pay Tuition", icon: CreditCard, href: "/parent/billing", iconBg: "bg-emerald-100", iconColor: "text-emerald-600" },
+                  { label: "Messages", icon: MessageCircle, href: "/parent/messages", iconBg: "bg-blue-100", iconColor: "text-blue-600" },
+                  { label: "Events", icon: CalendarDays, href: "/parent/calendar", iconBg: "bg-violet-100", iconColor: "text-violet-600" },
+                  { label: "Attendance", icon: ClipboardList, href: "/parent/children?tab=attendance", iconBg: "bg-amber-100", iconColor: "text-amber-600" },
+                  { label: "School Feed", icon: Rss, href: "/parent/feed", iconBg: "bg-sky-100", iconColor: "text-sky-600" },
+                  { label: "My Children", icon: Users, href: "/parent/children", iconBg: "bg-rose-100", iconColor: "text-rose-600" },
+                  { label: "Volunteer", icon: Heart, href: "/parent/volunteer", iconBg: "bg-pink-100", iconColor: "text-pink-600" },
+                ] as { label: string; icon: React.ElementType; href: string; iconBg: string; iconColor: string }[]
+              ).map(({ label, icon: Icon, href, iconBg, iconColor }) => (
+                <Link
+                  key={label}
+                  href={href}
+                  className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 transition-colors text-center"
+                >
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconBg}`}>
+                    <Icon className={`w-5 h-5 ${iconColor}`} strokeWidth={1.5} />
+                  </div>
+                  <span className="text-xs font-semibold font-body text-gray-700 leading-tight">
+                    {label}
+                  </span>
+                </Link>
+              ))}
+              <button
+                onClick={() => setHelpOpen(true)}
+                className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 transition-colors text-center cursor-pointer"
+              >
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-teal-100">
+                  <HelpCircle className="w-5 h-5 text-teal-600" strokeWidth={1.5} />
+                </div>
+                <span className="text-xs font-semibold font-body text-gray-700 leading-tight">
+                  Help
+                </span>
+              </button>
+            </div>
+            <HelpWidget hideFloatingButton open={helpOpen} onOpenChange={setHelpOpen} />
           </section>
         </div>
 
