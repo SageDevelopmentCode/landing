@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { ChevronLeft, ChevronRight, Loader2, Calendar as CalendarIcon } from "lucide-react";
 import {
   getAftercareStudentsForDate,
   upsertAfterCareRecord,
@@ -48,6 +48,23 @@ function shiftWeekday(dateStr: string, delta: 1 | -1): string {
   return `${ny}-${nm}-${nd}`;
 }
 
+function getMonthDays(year: number, month: number): (Date | null)[] {
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const offset = firstDay === 0 ? 6 : firstDay - 1;
+  const cells: (Date | null)[] = Array(offset).fill(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(year, month, d));
+  while (cells.length % 7 !== 0) cells.push(null);
+  return cells;
+}
+
+function toDateStr(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 function getInitials(name: string | null): string {
   if (!name) return "?";
   const parts = name.trim().split(/\s+/);
@@ -75,8 +92,23 @@ export default function AftercarePageClient({ initialStudents, initialDate }: Pr
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
   const debounceRefs = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
+  const [calOpen, setCalOpen] = useState(false);
+  const [calYear, setCalYear] = useState(() => Number(initialDate.split("-")[0]));
+  const [calMonth, setCalMonth] = useState(() => Number(initialDate.split("-")[1]) - 1);
+  const calRef = useRef<HTMLDivElement>(null);
+
   const todayStr = getTodayWeekday();
   const isToday = selectedDate === todayStr;
+
+  useEffect(() => {
+    if (!calOpen) return;
+    function handleOutside(e: MouseEvent) {
+      if (calRef.current && !calRef.current.contains(e.target as Node))
+        setCalOpen(false);
+    }
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [calOpen]);
 
   async function handleDateChange(newDate: string) {
     setLoadingDate(true);
@@ -164,14 +196,99 @@ export default function AftercarePageClient({ initialStudents, initialDate }: Pr
           <ChevronLeft className="w-4 h-4 text-gray-600" />
         </button>
 
-        <span className="text-sm font-semibold text-gray-800 min-w-[140px] text-center">
-          {formatDateLabel(selectedDate)}
-          {isToday && (
-            <span className="ml-2 text-xs font-medium text-[#4a7c59] bg-[#4a7c59]/10 px-2 py-0.5 rounded-full">
-              Today
-            </span>
+        <div className="relative" ref={calRef}>
+          <button
+            onClick={() => {
+              const [y, m] = selectedDate.split("-").map(Number);
+              setCalYear(y);
+              setCalMonth(m - 1);
+              setCalOpen((prev) => !prev);
+            }}
+            className="flex items-center gap-1.5 text-sm font-semibold text-gray-800 min-w-[140px] justify-center px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            {formatDateLabel(selectedDate)}
+            {isToday && (
+              <span className="ml-1 text-xs font-medium text-[#4a7c59] bg-[#4a7c59]/10 px-2 py-0.5 rounded-full">
+                Today
+              </span>
+            )}
+            <CalendarIcon className="w-3.5 h-3.5 text-gray-400 ml-0.5 flex-shrink-0" />
+          </button>
+
+          {calOpen && (
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50 bg-white rounded-xl border border-gray-200 shadow-lg p-3 w-64">
+              {/* Month navigation */}
+              <div className="flex items-center justify-between mb-3">
+                <button
+                  onClick={() => {
+                    if (calMonth === 0) { setCalMonth(11); setCalYear((y) => y - 1); }
+                    else setCalMonth((m) => m - 1);
+                  }}
+                  className="p-1 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="text-sm font-semibold text-gray-700">
+                  {MONTH_NAMES[calMonth]} {calYear}
+                </span>
+                <button
+                  onClick={() => {
+                    if (calMonth === 11) { setCalMonth(0); setCalYear((y) => y + 1); }
+                    else setCalMonth((m) => m + 1);
+                  }}
+                  className="p-1 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Day-of-week headers */}
+              <div className="grid grid-cols-7 mb-1">
+                {["M", "T", "W", "T", "F", "S", "S"].map((label, i) => (
+                  <div
+                    key={i}
+                    className={`text-center text-xs font-semibold py-1 ${i >= 5 ? "text-gray-300" : "text-gray-400"}`}
+                  >
+                    {label}
+                  </div>
+                ))}
+              </div>
+
+              {/* Day cells */}
+              <div className="grid grid-cols-7 gap-0.5">
+                {getMonthDays(calYear, calMonth).map((d, i) => {
+                  if (!d) return <div key={`e-${i}`} />;
+                  const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+                  const dateStr = toDateStr(d);
+                  const isSel = dateStr === selectedDate;
+                  const isTod = dateStr === todayStr;
+                  return (
+                    <button
+                      key={dateStr}
+                      disabled={isWeekend}
+                      onClick={() => { handleDateChange(dateStr); setCalOpen(false); }}
+                      className={`relative flex items-center justify-center w-full aspect-square rounded-lg text-xs font-medium transition-colors ${
+                        isWeekend
+                          ? "text-gray-300 cursor-not-allowed"
+                          : isSel
+                          ? "bg-[#4a7c59] text-white"
+                          : "text-gray-700 hover:bg-[#4a7c59]/10 cursor-pointer"
+                      }`}
+                    >
+                      {d.getDate()}
+                      {isTod && !isSel && (
+                        <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#4a7c59]" />
+                      )}
+                      {isTod && isSel && (
+                        <span className="absolute inset-0 rounded-lg ring-2 ring-[#4a7c59] ring-offset-1" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           )}
-        </span>
+        </div>
 
         <button
           onClick={() => handleDateChange(shiftWeekday(selectedDate, 1))}

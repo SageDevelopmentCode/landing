@@ -1256,6 +1256,37 @@ export function createSpecialRequestEmbed(data: {
 }
 
 /**
+ * Creates a Discord embed for aftercare check-in / pickup time updates
+ */
+export function createAftercareEmbed(data: {
+  studentName: string;
+  date: string;
+  event: "checked_in" | "checked_out" | "pickup_time_set";
+  pickupTime?: string | null;
+}): DiscordEmbed {
+  const EVENT_META = {
+    checked_in:      { title: "🟢 Student Added to Aftercare", color: 0x4a7c59 },
+    checked_out:     { title: "🔴 Student Removed from Aftercare", color: 0xe74c3c },
+    pickup_time_set: { title: "🕒 Pickup Time Updated", color: 0xe07a3a },
+  };
+  const { title, color } = EVENT_META[data.event];
+
+  const fields: DiscordEmbedField[] = [
+    { name: "Student", value: data.studentName, inline: true },
+    { name: "Date", value: data.date, inline: true },
+  ];
+
+  if (data.event === "pickup_time_set" && data.pickupTime) {
+    const [h, m] = data.pickupTime.split(":").map(Number);
+    const ampm = h >= 12 ? "PM" : "AM";
+    const h12 = h % 12 || 12;
+    fields.push({ name: "Pickup Time", value: `${h12}:${String(m).padStart(2, "0")} ${ampm}`, inline: true });
+  }
+
+  return { title, color, fields, timestamp: new Date().toISOString() };
+}
+
+/**
  * Creates a Discord embed for first week drop-off time selections
  */
 export function createDropOffTimeEmbed(data: {

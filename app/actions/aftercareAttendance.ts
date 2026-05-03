@@ -1,6 +1,9 @@
 'use server'
 
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
+import { sendDiscordNotification, createAftercareEmbed } from '@/app/lib/discord'
+
+const STUDENT_WEBHOOK = process.env.DISCORD_STUDENT_WEBHOOK_URL
 
 export type AftercareRecord = {
   id: string
@@ -103,7 +106,7 @@ export async function upsertAfterCareRecord(
 
   if (error || !data) return null
 
-  return {
+  const record: AftercareRecord = {
     id: data.id,
     date: data.date,
     student_id: data.student_id,
@@ -111,6 +114,24 @@ export async function upsertAfterCareRecord(
     recorded_by: data.recorded_by,
     notes: data.notes ?? null,
   }
+
+  // Fire-and-forget Discord notification
+  adminClient
+    .schema('admin')
+    .from('students')
+    .select('child_legal_name')
+    .eq('id', studentId)
+    .single()
+    .then(({ data: student }) => {
+      const studentName = student?.child_legal_name ?? 'Unknown Student'
+      const event = pickupTime ? 'pickup_time_set' : 'checked_in'
+      void sendDiscordNotification(
+        createAftercareEmbed({ studentName, date, event, pickupTime }),
+        STUDENT_WEBHOOK,
+      )
+    })
+
+  return record
 }
 
 export async function removeAfterCareRecord(recordId: string): Promise<{ ok: boolean }> {
@@ -119,11 +140,39 @@ export async function removeAfterCareRecord(recordId: string): Promise<{ ok: boo
   if (!user) return { ok: false }
 
   const adminClient = createAdminClient()
+
+  // Fetch record details before deleting so we can notify
+  const { data: existing } = await adminClient
+    .schema('attendance')
+    .from('aftercare_records')
+    .select('student_id, date')
+    .eq('id', recordId)
+    .single()
+
   const { error } = await adminClient
     .schema('attendance')
     .from('aftercare_records')
     .delete()
     .eq('id', recordId)
+
+  if (!error && existing) {
+    adminClient
+      .schema('admin')
+      .from('students')
+      .select('child_legal_name')
+      .eq('id', existing.student_id)
+      .single()
+      .then(({ data: student }) => {
+        void sendDiscordNotification(
+          createAftercareEmbed({
+            studentName: student?.child_legal_name ?? 'Unknown Student',
+            date: existing.date,
+            event: 'checked_out',
+          }),
+          STUDENT_WEBHOOK,
+        )
+      })
+  }
 
   return { ok: !error }
 }
