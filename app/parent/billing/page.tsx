@@ -62,6 +62,16 @@ export type PaidHomeschoolByStudent = Record<string, {
   schoolYear: PaidHomeschoolEntry[];
 }>;
 
+export type PaidAftercareByStudent = Record<string, {
+  months: string[]; // month keys, e.g. ["jun", "jul"]
+  days: string[];   // ISO dates, e.g. ["2026-05-26"]
+}>;
+
+export type PaidFunFridayByStudent = Record<string, {
+  months: string[];   // month keys, e.g. ["jun", "jul"]
+  fridays: string[];  // ISO dates, e.g. ["2026-06-05"]
+}>;
+
 export type StudentInfo = {
   name: string;
   profileImageUrl: string | null;
@@ -216,6 +226,36 @@ export default async function BillingRoute() {
     }
   }
 
+  // Build paid aftercare map per student
+  const paidAftercareByStudent: PaidAftercareByStudent = {};
+  for (const tx of transactions) {
+    if (tx.payment_type === "aftercare_tuition" && tx.status === "completed" && tx.student_id) {
+      const meta = (tx.metadata ?? {}) as Record<string, string>;
+      const months = meta.selected_months?.split(",").filter(Boolean) ?? [];
+      const days = meta.selected_days?.split(",").filter(Boolean) ?? [];
+      if (!paidAftercareByStudent[tx.student_id]) {
+        paidAftercareByStudent[tx.student_id] = { months: [], days: [] };
+      }
+      paidAftercareByStudent[tx.student_id].months.push(...months);
+      paidAftercareByStudent[tx.student_id].days.push(...days);
+    }
+  }
+
+  // Build paid fun friday map per student
+  const paidFunFridayByStudent: PaidFunFridayByStudent = {};
+  for (const tx of transactions) {
+    if (tx.payment_type === "fun_friday_tuition" && tx.status === "completed" && tx.student_id) {
+      const meta = (tx.metadata ?? {}) as Record<string, string>;
+      const months = meta.selected_months?.split(",").filter(Boolean) ?? [];
+      const fridays = meta.selected_fridays?.split(",").filter(Boolean) ?? [];
+      if (!paidFunFridayByStudent[tx.student_id]) {
+        paidFunFridayByStudent[tx.student_id] = { months: [], fridays: [] };
+      }
+      paidFunFridayByStudent[tx.student_id].months.push(...months);
+      paidFunFridayByStudent[tx.student_id].fridays.push(...fridays);
+    }
+  }
+
   // Show enrollment if parent has paid fewer than 12 weeks (weekly plan with room to add more)
   // Exclude homeschool_drop_in — they don't have summer tuition
   const unpaidSummerEnrollments = summerEnrollments.filter(
@@ -275,7 +315,7 @@ export default async function BillingRoute() {
         </DashboardHeader>
 
         <main className="flex-1 flex overflow-hidden">
-          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} unpaidSummerEnrollments={unpaidSummerEnrollments} paidWeeksByStudent={paidWeeksByStudent} parentId={user.id} parentEmail={user.email ?? ""} nonEnrolledApps={nonEnrolledApps} homeschoolDropInApps={homeschoolDropInApps} paidHomeschoolByStudent={paidHomeschoolByStudent} />
+          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} unpaidSummerEnrollments={unpaidSummerEnrollments} paidWeeksByStudent={paidWeeksByStudent} parentId={user.id} parentEmail={user.email ?? ""} nonEnrolledApps={nonEnrolledApps} homeschoolDropInApps={homeschoolDropInApps} paidHomeschoolByStudent={paidHomeschoolByStudent} paidAftercareByStudent={paidAftercareByStudent} paidFunFridayByStudent={paidFunFridayByStudent} />
         </main>
       </div>
       <Footer />

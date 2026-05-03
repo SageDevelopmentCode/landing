@@ -70,6 +70,8 @@ import type {
   HomeschoolDropInApp,
   PaidHomeschoolByStudent,
   PaidHomeschoolEntry,
+  PaidAftercareByStudent,
+  PaidFunFridayByStudent,
 } from "./page";
 
 interface Props {
@@ -84,6 +86,8 @@ interface Props {
   nonEnrolledApps: NonEnrolledApp[];
   homeschoolDropInApps: HomeschoolDropInApp[];
   paidHomeschoolByStudent: PaidHomeschoolByStudent;
+  paidAftercareByStudent: PaidAftercareByStudent;
+  paidFunFridayByStudent: PaidFunFridayByStudent;
 }
 
 // --- Summer pricing ---
@@ -1957,12 +1961,16 @@ function AftercarePaymentModal({
   studentName,
   parentId,
   parentEmail,
+  paidMonths,
+  paidDays,
   onClose,
 }: {
   enrollment: SummerEnrollment;
   studentName: string | null;
   parentId: string;
   parentEmail: string;
+  paidMonths: Set<string>;
+  paidDays: Set<string>;
   onClose: () => void;
 }) {
   const [step, setStep] = useState<"plan" | "payment">("plan");
@@ -2001,6 +2009,7 @@ function AftercarePaymentModal({
   );
 
   function toggleMonth(key: string) {
+    if (paidMonths.has(key)) return;
     setSelectedMonths((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
@@ -2010,6 +2019,7 @@ function AftercarePaymentModal({
   }
 
   function toggleDay(date: string) {
+    if (paidDays.has(date)) return;
     setSelectedDays((prev) => {
       const next = new Set(prev);
       if (next.has(date)) next.delete(date);
@@ -2253,33 +2263,44 @@ function AftercarePaymentModal({
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   {AFTERCARE_MONTHS.map((m) => {
                     const selected = selectedMonths.has(m.key);
+                    const isPaid = paidMonths.has(m.key);
+                    const paidDaysInMonth = m.days.filter((d) => paidDays.has(d.date)).length;
+                    // Only count individually-paid days (not from a monthly payment) for the subtitle
+                    const individualPaidDaysInMonth = isPaid ? 0 : paidDaysInMonth;
                     return (
                       <motion.button
                         key={m.key}
                         onClick={() => toggleMonth(m.key)}
-                        className="flex flex-col gap-1 rounded-xl px-4 py-4 text-left cursor-pointer transition-colors"
+                        disabled={isPaid}
+                        className={`flex flex-col gap-1 rounded-xl px-4 py-4 text-left transition-colors ${isPaid ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
                         animate={{
-                          backgroundColor: selected ? "#fff7f3" : "#f9fafb",
+                          backgroundColor: isPaid ? "#f0fdf4" : selected ? "#fff7f3" : "#f9fafb",
                         }}
-                        whileTap={{ scale: 0.99 }}
+                        whileTap={isPaid ? {} : { scale: 0.99 }}
                         transition={{ duration: 0.15 }}
                         style={
-                          selected ? { boxShadow: "inset 3px 0 0 #e07a3a" } : {}
+                          isPaid
+                            ? { boxShadow: "inset 3px 0 0 #16a34a" }
+                            : selected
+                              ? { boxShadow: "inset 3px 0 0 #e07a3a" }
+                              : {}
                         }
                       >
                         <div className="flex items-center gap-2">
                           <div
                             className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-colors"
                             style={
-                              selected
-                                ? { backgroundColor: "#e07a3a" }
-                                : {
-                                    backgroundColor: "transparent",
-                                    border: "2px solid #d1d5db",
-                                  }
+                              isPaid
+                                ? { backgroundColor: "#16a34a" }
+                                : selected
+                                  ? { backgroundColor: "#e07a3a" }
+                                  : {
+                                      backgroundColor: "transparent",
+                                      border: "2px solid #d1d5db",
+                                    }
                             }
                           >
-                            {selected && (
+                            {(isPaid || selected) && (
                               <Check
                                 className="w-3 h-3 text-white"
                                 strokeWidth={3}
@@ -2289,12 +2310,22 @@ function AftercarePaymentModal({
                           <span className="text-sm font-semibold font-heading text-gray-800">
                             {m.label}
                           </span>
+                          {isPaid && (
+                            <span className="ml-auto text-xs font-semibold text-green-600 bg-green-100 px-1.5 py-0.5 rounded-full">
+                              Paid
+                            </span>
+                          )}
                         </div>
                         <p className="text-xs text-gray-400 font-body mt-1 ml-7">
                           {m.days.length} days ·{" "}
                           {aftercareMonthCents(m) === AFTERCARE_MONTHLY_CENTS
                             ? `${formatCents(AFTERCARE_MONTHLY_CENTS)}/mo`
                             : formatCents(aftercareMonthCents(m))}
+                          {individualPaidDaysInMonth > 0 && (
+                            <span className="ml-1.5 text-green-600 font-semibold">
+                              · {individualPaidDaysInMonth} day{individualPaidDaysInMonth !== 1 ? "s" : ""} paid
+                            </span>
+                          )}
                         </p>
                       </motion.button>
                     );
@@ -2354,6 +2385,9 @@ function AftercarePaymentModal({
                     const selectedInMonth = m.days.filter((d) =>
                       selectedDays.has(d.date),
                     ).length;
+                    const paidInMonth = m.days.filter((d) =>
+                      paidDays.has(d.date),
+                    ).length;
                     return (
                       <div
                         key={m.key}
@@ -2368,6 +2402,11 @@ function AftercarePaymentModal({
                             <span className="text-sm font-semibold font-heading text-gray-700">
                               {m.label}
                             </span>
+                            {paidInMonth > 0 && (
+                              <span className="px-2 py-0.5 rounded-full text-xs font-semibold text-green-700 bg-green-100">
+                                {paidInMonth} paid
+                              </span>
+                            )}
                             {selectedInMonth > 0 && (
                               <span
                                 className="px-2 py-0.5 rounded-full text-xs font-semibold text-white"
@@ -2402,17 +2441,21 @@ function AftercarePaymentModal({
                               <div className="px-4 py-3 flex flex-wrap gap-2">
                                 {m.days.map((d) => {
                                   const sel = selectedDays.has(d.date);
+                                  const isPaidDay = paidDays.has(d.date);
                                   return (
                                     <button
                                       key={d.date}
                                       onClick={() => toggleDay(d.date)}
-                                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold font-body transition-colors cursor-pointer border ${
-                                        sel
-                                          ? "text-white border-transparent"
-                                          : "bg-white text-gray-600 border-gray-200 hover:border-orange-300 hover:text-orange-600"
+                                      disabled={isPaidDay}
+                                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold font-body transition-colors border ${
+                                        isPaidDay
+                                          ? "bg-green-100 text-green-700 border-green-200 cursor-not-allowed"
+                                          : sel
+                                            ? "text-white border-transparent cursor-pointer"
+                                            : "bg-white text-gray-600 border-gray-200 hover:border-orange-300 hover:text-orange-600 cursor-pointer"
                                       }`}
                                       style={
-                                        sel
+                                        !isPaidDay && sel
                                           ? {
                                               backgroundColor: "#e07a3a",
                                               borderColor: "#e07a3a",
@@ -2493,12 +2536,16 @@ function FunFridayPaymentModal({
   studentName,
   parentId,
   parentEmail,
+  paidMonths,
+  paidFridays,
   onClose,
 }: {
   enrollment: SummerEnrollment;
   studentName: string | null;
   parentId: string;
   parentEmail: string;
+  paidMonths: Set<string>;
+  paidFridays: Set<string>;
   onClose: () => void;
 }) {
   const [step, setStep] = useState<"plan" | "payment">("plan");
@@ -2539,6 +2586,7 @@ function FunFridayPaymentModal({
   );
 
   function toggleMonth(key: string) {
+    if (paidMonths.has(key)) return;
     setSelectedMonths((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
@@ -2548,6 +2596,7 @@ function FunFridayPaymentModal({
   }
 
   function toggleFriday(date: string) {
+    if (paidFridays.has(date)) return;
     setSelectedFridays((prev) => {
       const next = new Set(prev);
       if (next.has(date)) next.delete(date);
@@ -2793,33 +2842,43 @@ function FunFridayPaymentModal({
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   {FUN_FRIDAY_MONTHS.map((m) => {
                     const selected = selectedMonths.has(m.key);
+                    const isPaid = paidMonths.has(m.key);
+                    const paidFridaysInMonth = m.fridays.filter((d) => paidFridays.has(d.date)).length;
+                    const individualPaidFridaysInMonth = isPaid ? 0 : paidFridaysInMonth;
                     return (
                       <motion.button
                         key={m.key}
                         onClick={() => toggleMonth(m.key)}
-                        className="flex flex-col gap-1 rounded-xl px-4 py-4 text-left cursor-pointer transition-colors"
+                        disabled={isPaid}
+                        className={`flex flex-col gap-1 rounded-xl px-4 py-4 text-left transition-colors ${isPaid ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
                         animate={{
-                          backgroundColor: selected ? "#f5f3ff" : "#f9fafb",
+                          backgroundColor: isPaid ? "#f0fdf4" : selected ? "#f5f3ff" : "#f9fafb",
                         }}
-                        whileTap={{ scale: 0.99 }}
+                        whileTap={isPaid ? {} : { scale: 0.99 }}
                         transition={{ duration: 0.15 }}
                         style={
-                          selected ? { boxShadow: "inset 3px 0 0 #7c3aed" } : {}
+                          isPaid
+                            ? { boxShadow: "inset 3px 0 0 #16a34a" }
+                            : selected
+                              ? { boxShadow: "inset 3px 0 0 #7c3aed" }
+                              : {}
                         }
                       >
                         <div className="flex items-center gap-2">
                           <div
                             className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-colors"
                             style={
-                              selected
-                                ? { backgroundColor: "#7c3aed" }
-                                : {
-                                    backgroundColor: "transparent",
-                                    border: "2px solid #d1d5db",
-                                  }
+                              isPaid
+                                ? { backgroundColor: "#16a34a" }
+                                : selected
+                                  ? { backgroundColor: "#7c3aed" }
+                                  : {
+                                      backgroundColor: "transparent",
+                                      border: "2px solid #d1d5db",
+                                    }
                             }
                           >
-                            {selected && (
+                            {(isPaid || selected) && (
                               <Check
                                 className="w-3 h-3 text-white"
                                 strokeWidth={3}
@@ -2829,6 +2888,11 @@ function FunFridayPaymentModal({
                           <span className="text-sm font-semibold font-heading text-gray-800">
                             {m.label}
                           </span>
+                          {isPaid && (
+                            <span className="ml-auto text-xs font-semibold text-green-600 bg-green-100 px-1.5 py-0.5 rounded-full">
+                              Paid
+                            </span>
+                          )}
                         </div>
                         <p className="text-xs text-gray-400 font-body mt-1 ml-7">
                           {m.fridays.length} Friday
@@ -2836,6 +2900,11 @@ function FunFridayPaymentModal({
                           {m.fridays.length === 1
                             ? formatCents(FUN_FRIDAY_DROPIN_CENTS)
                             : `${formatCents(FUN_FRIDAY_MONTHLY_CENTS)}/mo`}
+                          {individualPaidFridaysInMonth > 0 && (
+                            <span className="ml-1.5 text-green-600 font-semibold">
+                              · {individualPaidFridaysInMonth} Friday{individualPaidFridaysInMonth !== 1 ? "s" : ""} paid
+                            </span>
+                          )}
                         </p>
                       </motion.button>
                     );
@@ -2896,6 +2965,9 @@ function FunFridayPaymentModal({
                     const selectedInMonth = m.fridays.filter((d) =>
                       selectedFridays.has(d.date),
                     ).length;
+                    const paidInMonth = m.fridays.filter((d) =>
+                      paidFridays.has(d.date),
+                    ).length;
                     return (
                       <div
                         key={m.key}
@@ -2910,6 +2982,11 @@ function FunFridayPaymentModal({
                             <span className="text-sm font-semibold font-heading text-gray-700">
                               {m.label}
                             </span>
+                            {paidInMonth > 0 && (
+                              <span className="px-2 py-0.5 rounded-full text-xs font-semibold text-green-700 bg-green-100">
+                                {paidInMonth} paid
+                              </span>
+                            )}
                             {selectedInMonth > 0 && (
                               <span
                                 className="px-2 py-0.5 rounded-full text-xs font-semibold text-white"
@@ -2944,17 +3021,21 @@ function FunFridayPaymentModal({
                               <div className="px-4 py-3 flex flex-wrap gap-2">
                                 {m.fridays.map((d) => {
                                   const sel = selectedFridays.has(d.date);
+                                  const isPaidFriday = paidFridays.has(d.date);
                                   return (
                                     <button
                                       key={d.date}
                                       onClick={() => toggleFriday(d.date)}
-                                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold font-body transition-colors cursor-pointer border ${
-                                        sel
-                                          ? "text-white border-transparent"
-                                          : "bg-white text-gray-600 border-gray-200 hover:border-violet-300 hover:text-violet-600"
+                                      disabled={isPaidFriday}
+                                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold font-body transition-colors border ${
+                                        isPaidFriday
+                                          ? "bg-green-100 text-green-700 border-green-200 cursor-not-allowed"
+                                          : sel
+                                            ? "text-white border-transparent cursor-pointer"
+                                            : "bg-white text-gray-600 border-gray-200 hover:border-violet-300 hover:text-violet-600 cursor-pointer"
                                       }`}
                                       style={
-                                        sel
+                                        !isPaidFriday && sel
                                           ? {
                                               backgroundColor: "#7c3aed",
                                               borderColor: "#7c3aed",
@@ -3584,6 +3665,8 @@ export default function BillingPage({
   nonEnrolledApps,
   homeschoolDropInApps,
   paidHomeschoolByStudent,
+  paidAftercareByStudent,
+  paidFunFridayByStudent,
 }: Props) {
   const [selectedTx, setSelectedTx] = useState<StripeTransaction | null>(null);
   const [selectedPending, setSelectedPending] =
@@ -3982,6 +4065,12 @@ export default function BillingPage({
             }
             parentId={parentId}
             parentEmail={parentEmail}
+            paidMonths={new Set(paidAftercareByStudent[selectedAftercareEnrollment.student_id]?.months ?? [])}
+            paidDays={new Set([
+              ...(paidAftercareByStudent[selectedAftercareEnrollment.student_id]?.days ?? []),
+              ...(paidAftercareByStudent[selectedAftercareEnrollment.student_id]?.months ?? [])
+                .flatMap((mk) => AFTERCARE_MONTHS.find((m) => m.key === mk)?.days.map((d) => d.date) ?? []),
+            ])}
             onClose={() => setSelectedAftercareEnrollment(null)}
           />
         )}
@@ -3993,6 +4082,12 @@ export default function BillingPage({
             }
             parentId={parentId}
             parentEmail={parentEmail}
+            paidMonths={new Set(paidFunFridayByStudent[selectedFunFridayEnrollment.student_id]?.months ?? [])}
+            paidFridays={new Set([
+              ...(paidFunFridayByStudent[selectedFunFridayEnrollment.student_id]?.fridays ?? []),
+              ...(paidFunFridayByStudent[selectedFunFridayEnrollment.student_id]?.months ?? [])
+                .flatMap((mk) => FUN_FRIDAY_MONTHS.find((m) => m.key === mk)?.fridays.map((d) => d.date) ?? []),
+            ])}
             onClose={() => setSelectedFunFridayEnrollment(null)}
           />
         )}
