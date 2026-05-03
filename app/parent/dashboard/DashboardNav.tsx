@@ -46,11 +46,19 @@ const moreItems: {
   { label: "Need Help", icon: HelpCircle, action: "help" },
 ];
 
-export default function DashboardNav() {
+export default function DashboardNav({ parentId }: { parentId?: string } = {}) {
   const [moreOpen, setMoreOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+
+  const impersonateBase = parentId ? `/admin/impersonate/${parentId}` : null;
+
+  function navHref(parentPath: string) {
+    if (!impersonateBase) return parentPath;
+    const slug = parentPath.replace("/parent/", "");
+    return `${impersonateBase}/${slug}`;
+  }
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -67,11 +75,12 @@ export default function DashboardNav() {
   return (
     <nav className="flex items-center gap-2">
       {primaryNavItems.map(({ label, icon: Icon, href }) => {
-        const isActive = href !== "#" && pathname === href;
+        const resolvedHref = navHref(href);
+        const isActive = href !== "#" && pathname === resolvedHref;
         return (
           <Link
             key={label}
-            href={href}
+            href={resolvedHref}
             className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-body rounded-md transition-colors whitespace-nowrap ${
               isActive
                 ? "text-[#4a7c59] bg-[#4a7c59]/8 font-semibold"
@@ -100,7 +109,8 @@ export default function DashboardNav() {
         {moreOpen && (
           <div className="absolute left-1/2 -translate-x-1/2 mt-1.5 w-52 bg-white border border-gray-100 rounded-xl shadow-sm z-50 py-1.5">
             {moreItems.map(({ label, icon: Icon, href, action }) => {
-              const isActive = !!href && pathname === href;
+              const resolvedHref = href ? navHref(href) : undefined;
+              const isActive = !!resolvedHref && pathname === resolvedHref;
               const baseClass = `flex items-center gap-1.5 w-full text-left px-4 py-2 text-sm font-body transition-colors cursor-pointer ${
                 isActive
                   ? "text-[#4a7c59] bg-[#4a7c59]/8 font-semibold"
@@ -121,10 +131,10 @@ export default function DashboardNav() {
                   </button>
                 );
               }
-              return href ? (
+              return resolvedHref ? (
                 <Link
                   key={label}
-                  href={href}
+                  href={resolvedHref}
                   onClick={() => setMoreOpen(false)}
                   className={baseClass}
                 >

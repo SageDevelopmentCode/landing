@@ -273,11 +273,7 @@ export default async function ParentDashboard() {
             </Link>
           </div>
           <div className="flex items-center justify-center">
-            {(
-              user.id === "f5a4edbc-5683-40dc-9d9b-7cd0522736fd" ||
-              user.id === "893f483e-2724-428f-a2f9-4333831501c7" ||
-              user.id === "99a51958-efbd-44f6-8b48-1ccff6e98bea"
-            ) && <DashboardNav />}
+            <DashboardNav />
           </div>
           <div className="flex items-center justify-end gap-1">
             <OnboardingChecklistButton />

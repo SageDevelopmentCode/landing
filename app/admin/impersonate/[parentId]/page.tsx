@@ -224,14 +224,9 @@ export default async function ImpersonateParentPage({
     return (
       <div>
         <AdminPreviewBanner parentName={fullName} parentEmail={email} />
-        {/* Parent dashboard header with DashboardNav — mirrors the gate in parent/dashboard/page.tsx */}
-        {(parentId === "f5a4edbc-5683-40dc-9d9b-7cd0522736fd" ||
-          parentId === "893f483e-2724-428f-a2f9-4333831501c7" ||
-          parentId === "99a51958-efbd-44f6-8b48-1ccff6e98bea") && (
-          <header className="bg-white border-b border-gray-100 px-5 py-3 flex items-center justify-center">
-            <DashboardNav />
-          </header>
-        )}
+        <header className="bg-white border-b border-gray-100 px-5 py-3 flex items-center justify-center">
+          <DashboardNav parentId={parentId} />
+        </header>
         <div className="max-w-4xl mx-auto px-6 py-12">
           <div className="mb-10">
             <h1 className="text-3xl font-bold font-heading text-gray-800 mb-2">
