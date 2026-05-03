@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Loader2, Calendar as CalendarIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Calendar as CalendarIcon, ChevronDown, Clock, Search } from "lucide-react";
 import {
   getAftercareStudentsForDate,
   upsertAfterCareRecord,
@@ -46,6 +46,25 @@ function shiftWeekday(dateStr: string, delta: 1 | -1): string {
   const nm = String(date.getMonth() + 1).padStart(2, "0");
   const nd = String(date.getDate()).padStart(2, "0");
   return `${ny}-${nm}-${nd}`;
+}
+
+function getTimeSlots(): string[] {
+  const now = new Date();
+  const slots: string[] = [];
+  const end = now.getHours() * 60 + now.getMinutes();
+  for (let t = 6 * 60; t <= end; t += 5) {
+    const h = Math.floor(t / 60);
+    const m = t % 60;
+    slots.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+  }
+  return slots.reverse();
+}
+
+function fmt12h(time: string): string {
+  const [h, m] = time.split(":").map(Number);
+  const ampm = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
 }
 
 function getMonthDays(year: number, month: number): (Date | null)[] {
@@ -97,6 +116,10 @@ export default function AftercarePageClient({ initialStudents, initialDate }: Pr
   const [calMonth, setCalMonth] = useState(() => Number(initialDate.split("-")[1]) - 1);
   const calRef = useRef<HTMLDivElement>(null);
 
+  const [openTimePickers, setOpenTimePickers] = useState<Set<string>>(new Set());
+  const timePickerRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const [search, setSearch] = useState("");
+
   const todayStr = getTodayWeekday();
   const isToday = selectedDate === todayStr;
 
@@ -109,6 +132,23 @@ export default function AftercarePageClient({ initialStudents, initialDate }: Pr
     document.addEventListener("mousedown", handleOutside);
     return () => document.removeEventListener("mousedown", handleOutside);
   }, [calOpen]);
+
+  useEffect(() => {
+    if (openTimePickers.size === 0) return;
+    function handleOutside(e: MouseEvent) {
+      for (const [id, el] of timePickerRefs.current.entries()) {
+        if (!el.contains(e.target as Node)) {
+          setOpenTimePickers((prev) => {
+            const next = new Set(prev);
+            next.delete(id);
+            return next;
+          });
+        }
+      }
+    }
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [openTimePickers]);
 
   async function handleDateChange(newDate: string) {
     setLoadingDate(true);
@@ -175,6 +215,9 @@ export default function AftercarePageClient({ initialStudents, initialDate }: Pr
   }
 
   const aftercareCount = students.filter((s) => s.record !== null).length;
+  const filteredStudents = search.trim()
+    ? students.filter((s) => s.name?.toLowerCase().includes(search.toLowerCase()))
+    : students;
 
   return (
     <div className="flex-1 px-6 py-6 overflow-y-auto w-full">
@@ -187,7 +230,7 @@ export default function AftercarePageClient({ initialStudents, initialDate }: Pr
       </div>
 
       {/* Date navigation */}
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-6 justify-between">
         <button
           onClick={() => handleDateChange(shiftWeekday(selectedDate, -1))}
           disabled={loadingDate}
@@ -307,6 +350,17 @@ export default function AftercarePageClient({ initialStudents, initialDate }: Pr
             Today
           </button>
         )}
+
+        <div className="relative ml-auto">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search students…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-8 pr-3 py-2 text-sm rounded-lg border border-gray-200 bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#4a7c59] focus:ring-1 focus:ring-[#4a7c59]/20 transition-colors w-56"
+          />
+        </div>
       </div>
 
       {/* Table */}
@@ -337,15 +391,15 @@ export default function AftercarePageClient({ initialStudents, initialDate }: Pr
         )}
 
         {/* Student rows */}
-        {!loadingDate && students.length === 0 && (
+        {!loadingDate && filteredStudents.length === 0 && (
           <div className="px-5 py-12 text-center text-sm text-gray-400">
-            No enrolled students found.
+            {search.trim() ? `No students match "${search}".` : "No enrolled students found."}
           </div>
         )}
 
-        {!loadingDate && students.length > 0 && (
+        {!loadingDate && filteredStudents.length > 0 && (
           <div className="divide-y divide-gray-50">
-            {students.map((row) => {
+            {filteredStudents.map((row) => {
               const isSaving = savingIds.has(row.student_id);
               const isChecked = row.record !== null;
 
@@ -403,17 +457,87 @@ export default function AftercarePageClient({ initialStudents, initialDate }: Pr
 
                   {/* Pickup time */}
                   <div className="flex items-center justify-center">
-                    <input
-                      type="time"
-                      value={row.record?.pickup_time ?? ""}
-                      disabled={!isChecked || isSaving}
-                      onChange={(e) => handleTimeChange(row, e.target.value)}
-                      className={`text-sm rounded-lg border px-2 py-1.5 w-28 text-center transition-colors ${
-                        isChecked && !isSaving
-                          ? "border-gray-200 bg-white text-gray-800 focus:outline-none focus:border-[#4a7c59] focus:ring-1 focus:ring-[#4a7c59]/20"
-                          : "border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed"
-                      }`}
-                    />
+                    {!isChecked ? (
+                      <span className="text-xs text-gray-300">—</span>
+                    ) : (
+                      <div
+                        className="relative flex items-center gap-1.5"
+                        ref={(el) => {
+                          if (el) timePickerRefs.current.set(row.student_id, el);
+                          else timePickerRefs.current.delete(row.student_id);
+                        }}
+                      >
+                        {/* Pickup stamp button — only when no time set */}
+                        {!row.record?.pickup_time && (
+                          <button
+                            disabled={isSaving}
+                            onClick={() => {
+                              const now = new Date();
+                              const h = String(now.getHours()).padStart(2, "0");
+                              const m = String(now.getMinutes()).padStart(2, "0");
+                              handleTimeChange(row, `${h}:${m}`);
+                            }}
+                            className="text-xs font-medium text-white bg-[#4a7c59] hover:bg-[#3d6b4a] px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-40"
+                          >
+                            Pickup
+                          </button>
+                        )}
+
+                        {/* Time display / custom picker toggle */}
+                        <button
+                          disabled={isSaving}
+                          onClick={() =>
+                            setOpenTimePickers((prev) => {
+                              const next = new Set(prev);
+                              next.has(row.student_id) ? next.delete(row.student_id) : next.add(row.student_id);
+                              return next;
+                            })
+                          }
+                          className={`flex items-center gap-1 text-xs font-medium rounded-lg px-2 py-1.5 border transition-colors disabled:opacity-40 ${
+                            row.record?.pickup_time
+                              ? "border-[#4a7c59]/30 bg-[#4a7c59]/5 text-[#4a7c59] hover:bg-[#4a7c59]/10"
+                              : "border-gray-200 bg-white text-gray-400 hover:bg-gray-50"
+                          }`}
+                        >
+                          {row.record?.pickup_time ? (
+                            <>
+                              {fmt12h(row.record.pickup_time)}
+                              <ChevronDown className="w-3 h-3" />
+                            </>
+                          ) : (
+                            <Clock className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+
+                        {/* Custom time dropdown */}
+                        {openTimePickers.has(row.student_id) && (
+                          <div className="absolute top-full right-0 mt-1 z-50 bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden w-28">
+                            <div className="max-h-44 overflow-y-auto">
+                              {getTimeSlots().map((slot) => (
+                                <button
+                                  key={slot}
+                                  onClick={() => {
+                                    handleTimeChange(row, slot);
+                                    setOpenTimePickers((prev) => {
+                                      const next = new Set(prev);
+                                      next.delete(row.student_id);
+                                      return next;
+                                    });
+                                  }}
+                                  className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${
+                                    row.record?.pickup_time === slot
+                                      ? "bg-[#4a7c59] text-white"
+                                      : "text-gray-700 hover:bg-[#4a7c59]/10"
+                                  }`}
+                                >
+                                  {fmt12h(slot)}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Status */}

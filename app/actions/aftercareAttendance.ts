@@ -3,7 +3,7 @@
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
 import { sendDiscordNotification, createAftercareEmbed } from '@/app/lib/discord'
 
-const STUDENT_WEBHOOK = process.env.DISCORD_STUDENT_WEBHOOK_URL
+const STUDENT_WEBHOOK = process.env.DISCORD_AFTERCARE_WEBHOOK_URL
 
 export type AftercareRecord = {
   id: string
