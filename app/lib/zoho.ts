@@ -1967,3 +1967,103 @@ export async function buildTourThankYouEmail(opts: {
 
   return { subject, content };
 }
+
+export async function buildAftercareConfirmationEmail(opts: {
+  g1FullName: string;
+  childLegalName: string;
+  planType: "monthly" | "daily";
+  selectedMonths: string[];
+  selectedDays: string[];
+  amountDollars: string;
+}): Promise<{ subject: string; content: string }> {
+  const MONTH_LABELS: Record<string, string> = {
+    may: "May 2026",
+    jun: "June 2026",
+    jul: "July 2026",
+    aug: "August 2026",
+  };
+  const formatISODate = (iso: string) =>
+    new Date(iso + "T12:00:00").toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+
+  const planLabel =
+    opts.planType === "monthly"
+      ? `Monthly — ${opts.selectedMonths.map((k) => MONTH_LABELS[k] ?? k).join(", ")}`
+      : `Daily — ${opts.selectedDays.length} day${opts.selectedDays.length !== 1 ? "s" : ""}`;
+
+  const subject = "Extended Learning Tuition Received — Thank You!";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${opts.g1FullName},</p>
+
+  <p>We are so pleased to confirm that your Extended Learning tuition payment of <strong>$${opts.amountDollars}</strong> has been received for <strong>${opts.childLegalName}</strong>!</p>
+
+  <p><strong>Plan:</strong> ${planLabel}</p>
+  ${opts.planType === "daily" && opts.selectedDays.length > 0 ? `<p><strong>Scheduled Days:</strong> ${opts.selectedDays.map(formatISODate).join(", ")}</p>` : ""}
+
+  <p>Your child&apos;s spot is confirmed. We look forward to welcoming ${opts.childLegalName} for extended learning. If you have any questions, please reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> or text <a href="sms:+15126775872" style="color: #5a7a5a;">(512) 677-5872</a>.</p>
+
+  <p style="margin-top: 32px;">With warmth,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
+export async function buildFunFridayConfirmationEmail(opts: {
+  g1FullName: string;
+  childLegalName: string;
+  planType: "monthly" | "dropin";
+  selectedMonths: string[];
+  selectedFridays: string[];
+  amountDollars: string;
+}): Promise<{ subject: string; content: string }> {
+  const MONTH_LABELS: Record<string, string> = {
+    may: "May 2026",
+    jun: "June 2026",
+    jul: "July 2026",
+    aug: "August 2026",
+  };
+  const formatISODate = (iso: string) =>
+    new Date(iso + "T12:00:00").toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+
+  const planLabel =
+    opts.planType === "monthly"
+      ? `Monthly — ${opts.selectedMonths.map((k) => MONTH_LABELS[k] ?? k).join(", ")}`
+      : `Drop-in — ${opts.selectedFridays.length} session${opts.selectedFridays.length !== 1 ? "s" : ""}`;
+
+  const subject = "Fun Friday Payment Received — See You Friday!";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${opts.g1FullName},</p>
+
+  <p>We are delighted to confirm that your Fun Friday payment of <strong>$${opts.amountDollars}</strong> has been received for <strong>${opts.childLegalName}</strong>!</p>
+
+  <p><strong>Plan:</strong> ${planLabel}</p>
+  ${opts.planType === "dropin" && opts.selectedFridays.length > 0 ? `<p><strong>Scheduled Fridays:</strong> ${opts.selectedFridays.map(formatISODate).join(", ")}</p>` : ""}
+
+  <p>We can&apos;t wait to see ${opts.childLegalName} on Friday! If you have any questions, please don&apos;t hesitate to reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> or text <a href="sms:+15126775872" style="color: #5a7a5a;">(512) 677-5872</a>.</p>
+
+  <p style="margin-top: 32px;">See you Friday!</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}

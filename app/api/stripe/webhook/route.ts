@@ -19,6 +19,8 @@ import {
   buildHomeschoolDropInConfirmationEmail,
   buildDonationConfirmationEmail,
   buildShadowDayPaymentConfirmationEmail,
+  buildAftercareConfirmationEmail,
+  buildFunFridayConfirmationEmail,
   sendZohoEmail,
 } from "@/app/lib/zoho";
 
@@ -415,6 +417,45 @@ export async function POST(request: NextRequest) {
           selectedDays: selectedDays.length > 0 ? selectedDays : undefined,
         }),
       ).catch((err) => console.error("Aftercare Discord notification failed:", err));
+      const amountDollars = (amountCents / 100).toFixed(2);
+      (async () => {
+        try {
+          const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
+          if (!toAddress) return;
+          const { subject, content } = await buildAftercareConfirmationEmail({
+            g1FullName: parentName !== "N/A" ? parentName : "Parent",
+            childLegalName: childName !== "N/A" ? childName : "your child",
+            planType,
+            selectedMonths,
+            selectedDays,
+            amountDollars,
+          });
+          const emailResult = await sendZohoEmail({ toAddress, subject, content });
+          if (emailResult.success) {
+            await supabase.schema("email_logs").from("sends").insert({
+              to_address: toAddress,
+              subject,
+              template: "aftercare_tuition_confirmation",
+              application_id: applicationId ?? null,
+              status: "success",
+            });
+          } else {
+            throw new Error(emailResult.error ?? "Unknown email error");
+          }
+        } catch (err) {
+          console.error("Aftercare confirmation email failed:", err);
+          sendDiscordNotification(
+            createErrorEmbed({
+              context: "Aftercare confirmation email",
+              error: String(err),
+              details: {
+                applicationId: applicationId ?? "N/A",
+                studentId: studentId ?? "N/A",
+              },
+            }),
+          ).catch(() => {});
+        }
+      })();
     } else if (session.metadata?.payment_type === "homeschool_dropin") {
       const applicationId = session.metadata?.application_id;
       const studentId = session.metadata?.student_id;
@@ -563,6 +604,45 @@ export async function POST(request: NextRequest) {
           selectedFridays: selectedFridays.length > 0 ? selectedFridays : undefined,
         }),
       ).catch((err) => console.error("Fun Friday Discord notification failed:", err));
+      const amountDollars = (amountCents / 100).toFixed(2);
+      (async () => {
+        try {
+          const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
+          if (!toAddress) return;
+          const { subject, content } = await buildFunFridayConfirmationEmail({
+            g1FullName: parentName !== "N/A" ? parentName : "Parent",
+            childLegalName: childName !== "N/A" ? childName : "your child",
+            planType,
+            selectedMonths,
+            selectedFridays,
+            amountDollars,
+          });
+          const emailResult = await sendZohoEmail({ toAddress, subject, content });
+          if (emailResult.success) {
+            await supabase.schema("email_logs").from("sends").insert({
+              to_address: toAddress,
+              subject,
+              template: "fun_friday_tuition_confirmation",
+              application_id: applicationId ?? null,
+              status: "success",
+            });
+          } else {
+            throw new Error(emailResult.error ?? "Unknown email error");
+          }
+        } catch (err) {
+          console.error("Fun Friday confirmation email failed:", err);
+          sendDiscordNotification(
+            createErrorEmbed({
+              context: "Fun Friday confirmation email",
+              error: String(err),
+              details: {
+                applicationId: applicationId ?? "N/A",
+                studentId: studentId ?? "N/A",
+              },
+            }),
+          ).catch(() => {});
+        }
+      })();
     } else if (session.metadata?.payment_type === "shadow_day_fee") {
       const bookingId = session.metadata?.booking_id;
       const amountCents = session.amount_total ?? 0;
