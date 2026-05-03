@@ -42,7 +42,7 @@ import type {
 
 // Update each year to match the first school week
 const DROPOFF_WEEK_START = new Date("2026-04-28T00:00:00");
-const DROPOFF_WEEK_END = new Date("2026-04-30T23:59:59");
+const DROPOFF_WEEK_END = new Date("2026-05-29T23:59:59");
 
 const DROP_OFF_SLOTS = [
   { label: "8:15 – 8:30", value: "8:15" },
@@ -501,10 +501,10 @@ export default function HomePageClient({
           {/* First Week Drop-Off Schedule */}
           {showDropOff && (
             <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="flex items-center gap-2.5 px-5 py-4 bg-[#EEF5EF] border-b border-[#d3e9d5]">
-                <div className="w-7 h-7 rounded-full bg-[#4a7c59]/15 flex items-center justify-center flex-shrink-0">
+              <div className="flex items-center gap-2.5 px-5 py-4 bg-[#EEF4FF] border-b border-[#c7dffe]">
+                <div className="w-7 h-7 rounded-full bg-[#3b82f6]/15 flex items-center justify-center flex-shrink-0">
                   <Car
-                    className="w-3.5 h-3.5 text-[#4a7c59]"
+                    className="w-3.5 h-3.5 text-[#3b82f6]"
                     strokeWidth={1.5}
                   />
                 </div>
@@ -526,7 +526,7 @@ export default function HomePageClient({
                 {dropOffSaved ? (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-[#4a7c59] flex items-center justify-center flex-shrink-0">
+                      <div className="w-6 h-6 rounded-full bg-[#3b82f6] flex items-center justify-center flex-shrink-0">
                         <Check className="w-3.5 h-3.5 text-white" />
                       </div>
                       <span className="text-sm font-semibold font-heading text-gray-800">
@@ -539,7 +539,7 @@ export default function HomePageClient({
                     </div>
                     <button
                       onClick={() => setDropOffSaved(false)}
-                      className="text-xs font-semibold font-body text-[#4a7c59] hover:underline"
+                      className="text-xs font-semibold font-body text-[#3b82f6] hover:underline"
                     >
                       Edit
                     </button>
@@ -555,8 +555,8 @@ export default function HomePageClient({
                             onClick={() => setDropOffSlot(slot.value)}
                             className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold font-body transition-colors ${
                               isSelected
-                                ? "bg-[#4a7c59] text-white"
-                                : "bg-[#EEF5EF] text-[#4a7c59] hover:bg-[#ddeede]"
+                                ? "bg-[#3b82f6] text-white"
+                                : "bg-[#EEF4FF] text-[#3b82f6] hover:bg-[#dbeafe]"
                             }`}
                           >
                             {isSelected && <Check className="w-3 h-3" />}
@@ -577,7 +577,7 @@ export default function HomePageClient({
                       <button
                         disabled={!dropOffSlot || dropOffSaving}
                         onClick={handleSaveDropOff}
-                        className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold font-body bg-[#4a7c59] text-white hover:bg-[#3d6b4a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold font-body bg-[#3b82f6] text-white hover:bg-[#2563eb] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Check className="w-3.5 h-3.5" />
                         {dropOffSaving ? "Saving…" : "Save drop-off time"}
