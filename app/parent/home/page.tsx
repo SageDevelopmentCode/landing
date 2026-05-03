@@ -2,6 +2,7 @@ import {
   createServerSupabaseClient,
   createAdminClient,
 } from "@/app/lib/supabase-server";
+import { getOnboardingProgress } from "@/app/actions/getOnboardingProgress";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -112,7 +113,7 @@ export default async function ParentHomePage() {
   if ((enrolledCheck ?? []).length === 0) redirect("/parent/dashboard");
   const studentIds = students.map((s) => s.id);
 
-  const [{ data: checkInsData }, { data: eventsData }, { data: paymentsData }, { data: referralsData }, { data: dropOffData }, { data: txData }, { data: summerData }] =
+  const [{ data: checkInsData }, { data: eventsData }, { data: paymentsData }, { data: referralsData }, { data: dropOffData }, { data: txData }, { data: summerData }, onboardingCompletedIds] =
     await Promise.all([
       studentIds.length > 0
         ? adminClient
@@ -165,6 +166,7 @@ export default async function ParentHomePage() {
         .eq("user_id", user.id)
         .eq("approved", true)
         .in("program", ["summer_26", "both", "homeschool_drop_in"]),
+      getOnboardingProgress(),
     ]);
 
   const studentMap: StudentMap = {};
@@ -284,6 +286,8 @@ export default async function ParentHomePage() {
     }
   }
 
+  const checklistComplete = onboardingCompletedIds.length >= 8;
+
   const unpaidSummerEnrollments = summerEnrollments.filter(
     (e) => e.program !== "homeschool_drop_in" && (paidWeeksByStudent[e.student_id]?.length ?? 0) < 12
   );
@@ -337,6 +341,7 @@ export default async function ParentHomePage() {
           paidHomeschoolByStudent={paidHomeschoolByStudent}
           paidAftercareByStudent={paidAftercareByStudent}
           paidFunFridayByStudent={paidFunFridayByStudent}
+          checklistComplete={checklistComplete}
         />
       </main>
 

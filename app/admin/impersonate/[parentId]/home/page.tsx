@@ -260,6 +260,7 @@ export default async function ImpersonateHomePage({
           paidHomeschoolByStudent={paidHomeschoolByStudent}
           paidAftercareByStudent={paidAftercareByStudent}
           paidFunFridayByStudent={paidFunFridayByStudent}
+          checklistComplete={true}
         />
       </main>
     </div>
