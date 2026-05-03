@@ -93,18 +93,95 @@ const SUMMER_FULL_ORIGINAL_CENTS = { primary: 450000, upper: 420000 };
 const TOTAL_WEEKS = 12;
 
 const SUMMER_WEEKS = [
-  { week: 1,  dates: "May 26\u201328",  theme: "Welcome to Camp",                       emoji: "\ud83c\udfd5\ufe0f", highlights: ["Kick-Off Games", "Friendship Bracelets", "Water Balloon Race"], days: ["tue", "wed", "thu"] },
-  { week: 2,  dates: "Jun 1\u20134",    theme: "Mystery Camp Escape Challenge",         emoji: "\ud83d\udd0d", highlights: ["Giant Slip & Slide", "Painted Stones", "DIY Camp Flags"] },
-  { week: 3,  dates: "Jun 8\u201311",   theme: "Beach Day Bash",                        emoji: "\ud83c\udfd6\ufe0f", highlights: ["Ice Cream Bar", "Ocean Slime", "Seashell Painting"] },
-  { week: 4,  dates: "Jun 15\u201318",  theme: "Scientist & Space Engineering Lab",     emoji: "\ud83d\udd2c", highlights: ["Slime Lab", "Volcano Model", "Rocket Ship Craft"] },
-  { week: 5,  dates: "Jun 22\u201325",  theme: "Safari Escape",                         emoji: "\ud83e\udd81", highlights: ["Safari Journals", "Animal Masks", "Clay Sculptures"] },
-  { week: 6,  dates: "Jun 29\u2013Jul 2", theme: "Splash Into Summer",                  emoji: "\ud83d\udca6", highlights: ["Water Relay Races", "Sponge Dodgeball", "Tie Dye Bandanas"] },
-  { week: 7,  dates: "Jul 6\u20139",    theme: "Dino Hunt",                             emoji: "\ud83e\udd95", highlights: ["Dinosaur Dig", "Dino Egg Hunt", "Moon Sand"] },
-  { week: 8,  dates: "Jul 13\u201316",  theme: "Pirate Adventure",                      emoji: "\ud83c\udff4\u200d\u2620\ufe0f", highlights: ["X Marks the Spot", "Pirate Hats", "Treasure Maps"] },
-  { week: 9,  dates: "Jul 20\u201323",  theme: "You are a Superhero!",                  emoji: "\ud83e\uddb8", highlights: ["Hero Obstacle Course", "Superhero Masks", "Cape Decorating"] },
-  { week: 10, dates: "Jul 27\u201330",  theme: "Space Explorers: Mission to the Stars", emoji: "\ud83d\ude80", highlights: ["Rocket Launch Game", "Galaxy Paintings", "Planet Craft"] },
-  { week: 11, dates: "Aug 3\u20136",    theme: "Down on the Farm",                      emoji: "\ud83c\udf3e", highlights: ["Garden Scavenger Hunt", "Flower Pot Painting", "Sack Races"] },
-  { week: 12, dates: "Aug 10\u201313",  theme: "Finale of Camp",                        emoji: "\ud83c\udf89", highlights: ["Photo Booth", "Camp T-Shirts", "Memory Scrapbook"] },
+  {
+    week: 1,
+    dates: "May 26\u201328",
+    theme: "Welcome to Camp",
+    emoji: "\ud83c\udfd5\ufe0f",
+    highlights: [
+      "Kick-Off Games",
+      "Friendship Bracelets",
+      "Water Balloon Race",
+    ],
+    days: ["tue", "wed", "thu"],
+  },
+  {
+    week: 2,
+    dates: "Jun 1\u20134",
+    theme: "Mystery Camp Escape Challenge",
+    emoji: "\ud83d\udd0d",
+    highlights: ["Giant Slip & Slide", "Painted Stones", "DIY Camp Flags"],
+  },
+  {
+    week: 3,
+    dates: "Jun 8\u201311",
+    theme: "Beach Day Bash",
+    emoji: "\ud83c\udfd6\ufe0f",
+    highlights: ["Ice Cream Bar", "Ocean Slime", "Seashell Painting"],
+  },
+  {
+    week: 4,
+    dates: "Jun 15\u201318",
+    theme: "Scientist & Space Engineering Lab",
+    emoji: "\ud83d\udd2c",
+    highlights: ["Slime Lab", "Volcano Model", "Rocket Ship Craft"],
+  },
+  {
+    week: 5,
+    dates: "Jun 22\u201325",
+    theme: "Safari Escape",
+    emoji: "\ud83e\udd81",
+    highlights: ["Safari Journals", "Animal Masks", "Clay Sculptures"],
+  },
+  {
+    week: 6,
+    dates: "Jun 29\u2013Jul 2",
+    theme: "Splash Into Summer",
+    emoji: "\ud83d\udca6",
+    highlights: ["Water Relay Races", "Sponge Dodgeball", "Tie Dye Bandanas"],
+  },
+  {
+    week: 7,
+    dates: "Jul 6\u20139",
+    theme: "Dino Hunt",
+    emoji: "\ud83e\udd95",
+    highlights: ["Dinosaur Dig", "Dino Egg Hunt", "Moon Sand"],
+  },
+  {
+    week: 8,
+    dates: "Jul 13\u201316",
+    theme: "Pirate Adventure",
+    emoji: "\ud83c\udff4\u200d\u2620\ufe0f",
+    highlights: ["X Marks the Spot", "Pirate Hats", "Treasure Maps"],
+  },
+  {
+    week: 9,
+    dates: "Jul 20\u201323",
+    theme: "You are a Superhero!",
+    emoji: "\ud83e\uddb8",
+    highlights: ["Hero Obstacle Course", "Superhero Masks", "Cape Decorating"],
+  },
+  {
+    week: 10,
+    dates: "Jul 27\u201330",
+    theme: "Space Explorers: Mission to the Stars",
+    emoji: "\ud83d\ude80",
+    highlights: ["Rocket Launch Game", "Galaxy Paintings", "Planet Craft"],
+  },
+  {
+    week: 11,
+    dates: "Aug 3\u20136",
+    theme: "Down on the Farm",
+    emoji: "\ud83c\udf3e",
+    highlights: ["Garden Scavenger Hunt", "Flower Pot Painting", "Sack Races"],
+  },
+  {
+    week: 12,
+    dates: "Aug 10\u201313",
+    theme: "Finale of Camp",
+    emoji: "\ud83c\udf89",
+    highlights: ["Photo Booth", "Camp T-Shirts", "Memory Scrapbook"],
+  },
 ];
 
 // --- Aftercare pricing ---
@@ -244,8 +321,12 @@ const FUN_FRIDAY_MONTHS = [
   },
 ];
 
-function funFridayMonthCents(month: (typeof FUN_FRIDAY_MONTHS)[number]): number {
-  return month.fridays.length === 1 ? FUN_FRIDAY_DROPIN_CENTS : FUN_FRIDAY_MONTHLY_CENTS;
+function funFridayMonthCents(
+  month: (typeof FUN_FRIDAY_MONTHS)[number],
+): number {
+  return month.fridays.length === 1
+    ? FUN_FRIDAY_DROPIN_CENTS
+    : FUN_FRIDAY_MONTHLY_CENTS;
 }
 
 // --- Homeschool Drop-In pricing ---
@@ -930,13 +1011,20 @@ function HomeschoolPaymentModal({
                 </p>
                 <div className="space-y-2">
                   {SUMMER_WEEKS.map((w) => {
-                    const availableDays = WEEKDAYS.filter((day) => !w.days || w.days.includes(day.key));
-                    const paidDays = paidDaysByWeek[w.week] ?? new Set<string>();
-                    const isFullyPaid = availableDays.every((day) => paidDays.has(day.key));
+                    const availableDays = WEEKDAYS.filter(
+                      (day) => !w.days || w.days.includes(day.key),
+                    );
+                    const paidDays =
+                      paidDaysByWeek[w.week] ?? new Set<string>();
+                    const isFullyPaid = availableDays.every((day) =>
+                      paidDays.has(day.key),
+                    );
                     const days = weekSelections[w.week] ?? new Set<string>();
                     const weekRate =
                       days.size > 0
-                        ? HOMESCHOOL_SUMMER_PRICING[deriveTier(days.size)][gradeTier]
+                        ? HOMESCHOOL_SUMMER_PRICING[deriveTier(days.size)][
+                            gradeTier
+                          ]
                         : 0;
                     return (
                       <div
@@ -951,29 +1039,54 @@ function HomeschoolPaymentModal({
                       >
                         <div className="flex items-start justify-between mb-1.5 gap-2">
                           <div className="flex items-start gap-2 min-w-0">
-                            <span className="text-base leading-none mt-0.5 shrink-0">{w.emoji}</span>
+                            <span className="text-base leading-none mt-0.5 shrink-0">
+                              {w.emoji}
+                            </span>
                             <div className="min-w-0">
                               <div className="flex items-center gap-1.5">
-                                <span className={`text-xs font-bold ${days.size > 0 && !isFullyPaid ? "text-primary" : "text-gray-400"}`}>
+                                <span
+                                  className={`text-xs font-bold ${days.size > 0 && !isFullyPaid ? "text-primary" : "text-gray-400"}`}
+                                >
                                   Wk {w.week}
                                 </span>
-                                <span className="text-[10px] text-gray-400">{w.dates}</span>
+                                <span className="text-[10px] text-gray-400">
+                                  {w.dates}
+                                </span>
                               </div>
-                              <p className="text-[11px] font-semibold text-gray-600 leading-tight">{w.theme}</p>
-                              <p className="text-[10px] text-gray-400 leading-tight mt-0.5">{w.highlights.join(" · ")}</p>
+                              <p className="text-[11px] font-semibold text-gray-600 leading-tight">
+                                {w.theme}
+                              </p>
+                              <p className="text-[10px] text-gray-400 leading-tight mt-0.5">
+                                {w.highlights.join(" · ")}
+                              </p>
                             </div>
                           </div>
                           <div className="shrink-0">
                             {isFullyPaid ? (
-                              <span className="text-[10px] font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Paid</span>
+                              <span className="text-[10px] font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                                Paid
+                              </span>
                             ) : paidDays.size > 0 ? (
                               <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-                                {Array.from(paidDays).map((d) => d.charAt(0).toUpperCase() + d.slice(1)).join(", ")} paid
+                                {Array.from(paidDays)
+                                  .map(
+                                    (d) =>
+                                      d.charAt(0).toUpperCase() + d.slice(1),
+                                  )
+                                  .join(", ")}{" "}
+                                paid
                               </span>
                             ) : days.size > 0 ? (
-                              <span className="text-xs font-bold" style={{ color: "#4a7c59" }}>{formatCents(weekRate)}</span>
+                              <span
+                                className="text-xs font-bold"
+                                style={{ color: "#4a7c59" }}
+                              >
+                                {formatCents(weekRate)}
+                              </span>
                             ) : (
-                              <span className="text-[10px] text-gray-300">—</span>
+                              <span className="text-[10px] text-gray-300">
+                                —
+                              </span>
                             )}
                           </div>
                         </div>
@@ -1776,7 +1889,7 @@ function AftercareCard({
             Summer 2026
           </div>
           <div className="text-sm font-semibold text-gray-800 leading-snug">
-            After School Care
+            Extended Learning
           </div>
         </div>
         <div className="flex items-center justify-between mt-auto">
@@ -1864,10 +1977,9 @@ function AftercarePaymentModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const monthlyTotal = AFTERCARE_MONTHS.filter((m) => selectedMonths.has(m.key)).reduce(
-    (sum, m) => sum + aftercareMonthCents(m),
-    0,
-  );
+  const monthlyTotal = AFTERCARE_MONTHS.filter((m) =>
+    selectedMonths.has(m.key),
+  ).reduce((sum, m) => sum + aftercareMonthCents(m), 0);
   const dailyTotal = selectedDays.size * AFTERCARE_DAILY_CENTS;
   const intendedAmountCents = tab === "monthly" ? monthlyTotal : dailyTotal;
   const canContinue =
@@ -1993,7 +2105,7 @@ function AftercarePaymentModal({
                   />
                 </div>
                 <h2 className="text-lg font-bold font-heading text-gray-800">
-                  After Care — Summer 2026
+                  Extended Learning — Summer 2026
                 </h2>
               </div>
               {studentName && (
@@ -2123,7 +2235,7 @@ function AftercarePaymentModal({
                 )}
 
                 <p className="text-xs text-gray-400 font-body mb-4">
-                  After care payments are non-refundable.
+                  Extended Learning payments are non-refundable.
                 </p>
               </motion.div>
             ) : tab === "monthly" ? (
@@ -2135,7 +2247,8 @@ function AftercarePaymentModal({
                 transition={{ duration: 0.2, ease: "easeInOut" as const }}
               >
                 <p className="text-sm text-gray-500 font-body mb-4">
-                  Select the months you&apos;d like after care coverage for.
+                  Select the months you&apos;d like Extended Learning coverage
+                  for.
                 </p>
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   {AFTERCARE_MONTHS.map((m) => {
@@ -2206,7 +2319,9 @@ function AftercarePaymentModal({
                             selectedMonths.has(m.key),
                           );
                           const allNormal = sel.every(
-                            (m) => aftercareMonthCents(m) === AFTERCARE_MONTHLY_CENTS,
+                            (m) =>
+                              aftercareMonthCents(m) ===
+                              AFTERCARE_MONTHLY_CENTS,
                           );
                           return allNormal
                             ? `${sel.length} month${sel.length !== 1 ? "s" : ""} × ${formatCents(AFTERCARE_MONTHLY_CENTS)}/mo`
@@ -2230,7 +2345,8 @@ function AftercarePaymentModal({
                 transition={{ duration: 0.2, ease: "easeInOut" as const }}
               >
                 <p className="text-sm text-gray-500 font-body mb-4">
-                  Select individual days you&apos;d like after care. $35/day.
+                  Select individual days you&apos;d like Extended Learning.
+                  $35/day.
                 </p>
                 <div className="space-y-3 mb-4">
                   {AFTERCARE_MONTHS.map((m) => {
@@ -2399,10 +2515,9 @@ function FunFridayPaymentModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const monthlyTotal = FUN_FRIDAY_MONTHS.filter((m) => selectedMonths.has(m.key)).reduce(
-    (sum, m) => sum + funFridayMonthCents(m),
-    0,
-  );
+  const monthlyTotal = FUN_FRIDAY_MONTHS.filter((m) =>
+    selectedMonths.has(m.key),
+  ).reduce((sum, m) => sum + funFridayMonthCents(m), 0);
   const dropinTotal = selectedFridays.size * FUN_FRIDAY_DROPIN_CENTS;
   const intendedAmountCents = tab === "monthly" ? monthlyTotal : dropinTotal;
   const canContinue =
@@ -2744,7 +2859,9 @@ function FunFridayPaymentModal({
                           const sel = FUN_FRIDAY_MONTHS.filter((m) =>
                             selectedMonths.has(m.key),
                           );
-                          const allNormal = sel.every((m) => m.fridays.length !== 1);
+                          const allNormal = sel.every(
+                            (m) => m.fridays.length !== 1,
+                          );
                           return allNormal
                             ? `${sel.length} month${sel.length !== 1 ? "s" : ""} × ${formatCents(FUN_FRIDAY_MONTHLY_CENTS)}/mo`
                             : `${sel.length} month${sel.length !== 1 ? "s" : ""} selected`;
@@ -3205,10 +3322,26 @@ function PendingDetailSidebar({
 
 type FullTimeProgram = "summer_26" | "school_year_26_27" | "both";
 
-const FULL_TIME_OPTIONS: { value: FullTimeProgram; label: string; sub: string }[] = [
-  { value: "summer_26", label: "Summer 2026", sub: "May–Aug · 12 weeks · Mon–Thu" },
-  { value: "school_year_26_27", label: "School Year 26–27", sub: "Sep–May · Mon–Thu" },
-  { value: "both", label: "Both Programs", sub: "Summer 2026 + School Year 26–27" },
+const FULL_TIME_OPTIONS: {
+  value: FullTimeProgram;
+  label: string;
+  sub: string;
+}[] = [
+  {
+    value: "summer_26",
+    label: "Summer 2026",
+    sub: "May–Aug · 12 weeks · Mon–Thu",
+  },
+  {
+    value: "school_year_26_27",
+    label: "School Year 26–27",
+    sub: "Sep–May · Mon–Thu",
+  },
+  {
+    value: "both",
+    label: "Both Programs",
+    sub: "Summer 2026 + School Year 26–27",
+  },
 ];
 
 function WantToGoFullTimeSection({
@@ -3226,8 +3359,10 @@ function WantToGoFullTimeSection({
 
   // Only show options relevant to what the parent signed up for as drop-in
   const visibleOptions = FULL_TIME_OPTIONS.filter((opt) => {
-    if (dropInProgram === "summer_26") return opt.value === "summer_26" || opt.value === "both";
-    if (dropInProgram === "school_year_26_27") return opt.value === "school_year_26_27" || opt.value === "both";
+    if (dropInProgram === "summer_26")
+      return opt.value === "summer_26" || opt.value === "both";
+    if (dropInProgram === "school_year_26_27")
+      return opt.value === "school_year_26_27" || opt.value === "both";
     return true; // "both" drop-in → show all
   });
 
@@ -3287,7 +3422,8 @@ function WantToGoFullTimeSection({
                 Which program would you like?
               </p>
               <p className="text-xs font-body text-gray-500">
-                Select a full-time program below. Your drop-in enrollment will be converted.
+                Select a full-time program below. Your drop-in enrollment will
+                be converted.
               </p>
             </div>
 
@@ -3303,25 +3439,33 @@ function WantToGoFullTimeSection({
                   }`}
                 >
                   <div>
-                    <p className={`text-xs font-semibold font-body ${selected === opt.value ? "text-indigo-700" : "text-gray-800"}`}>
+                    <p
+                      className={`text-xs font-semibold font-body ${selected === opt.value ? "text-indigo-700" : "text-gray-800"}`}
+                    >
                       {opt.label}
                     </p>
                     <p className="text-xs font-body text-gray-400">{opt.sub}</p>
                   </div>
-                  <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 ${
-                    selected === opt.value ? "border-indigo-500 bg-indigo-500" : "border-gray-300"
-                  }`} />
+                  <div
+                    className={`w-4 h-4 rounded-full border-2 flex-shrink-0 ${
+                      selected === opt.value
+                        ? "border-indigo-500 bg-indigo-500"
+                        : "border-gray-300"
+                    }`}
+                  />
                 </button>
               ))}
             </div>
 
-            {error && (
-              <p className="text-xs font-body text-red-500">{error}</p>
-            )}
+            {error && <p className="text-xs font-body text-red-500">{error}</p>}
 
             <div className="flex gap-2 pt-1">
               <button
-                onClick={() => { setStep("idle"); setSelected(null); setError(null); }}
+                onClick={() => {
+                  setStep("idle");
+                  setSelected(null);
+                  setError(null);
+                }}
                 disabled={loading}
                 className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 text-xs font-semibold font-body rounded-xl hover:bg-white/60 transition-colors disabled:opacity-50"
               >
@@ -3749,7 +3893,6 @@ export default function BillingPage({
               </div>
             )}
           </div>
-
         </div>
       </div>
 

@@ -17,7 +17,7 @@ export default function AfterCareCard() {
       <div className="relative h-[30vh] md:h-[35vh]">
         <Image
           src="/assets/ImageSeven.jpg"
-          alt="After Care Program"
+          alt="Extended Learning Program"
           fill
           className="object-cover"
           sizes="(max-width: 768px) 100vw, 50vw"
@@ -28,10 +28,10 @@ export default function AfterCareCard() {
           <Clock className="w-8 h-8 text-primary" />
         </div>
         <h3 className="text-2xl font-bold text-black mb-2 font-heading">
-          After Care
+          Extended Learning
         </h3>
         <p className="text-base text-text-gray mb-6 font-body">
-          3:00pm - 6:00pm
+          3:00pm - 5:00pm
         </p>
         <div className="space-y-4">
           <div className="p-4 bg-welcome-bg rounded-lg border-l-4 border-primary">
@@ -61,7 +61,7 @@ export default function AfterCareCard() {
           </div>
           <div className="p-4 bg-welcome-bg rounded-lg border-l-4 border-primary">
             <p className="text-sm font-semibold text-black mb-1 font-heading">
-              Monthly (After Care Only)
+              Monthly (Extended Learning Only)
             </p>
             <p className="text-2xl font-bold text-primary font-heading">
               $475

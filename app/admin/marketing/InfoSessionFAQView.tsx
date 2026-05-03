@@ -52,9 +52,9 @@ const faqSections: FAQSection[] = [
           "Yes. Summer: $75 one-time registration fee. School Year: $500 first-time registration, $300 re-registration, $300 annual supply fee.",
       },
       {
-        question: "Is there an aftercare option? What does it cost?",
+        question: "Is there an extended learning option? What does it cost?",
         answer:
-          "Yes — After Care runs 3:00pm–6:00pm. Drop-in: $35/day. Monthly for enrolled students: $375/month (~$23/day). After Care Only (non-enrolled families): $475/month (~$10/hour).",
+          "Yes — Extended Learning runs 3:00pm–5:00pm. Drop-in: $35/day. Monthly for enrolled students: $375/month (~$23/day). Extended Learning Only (non-enrolled families): $475/month (~$10/hour).",
       },
       {
         question: "What is Field Day Friday and what does it cost?",
@@ -142,7 +142,7 @@ const faqSections: FAQSection[] = [
       {
         question: "What are the school hours?",
         answer:
-          "9:00am–3:00pm, Monday through Thursday (doors open at 8:30am). Optional After Care is available from 3:00pm–6:00pm.",
+          "9:00am–3:00pm, Monday through Thursday (doors open at 8:30am). Optional Extended Learning is available from 3:00pm–5:00pm.",
       },
       {
         question: "What happens on Fridays?",
@@ -152,7 +152,7 @@ const faqSections: FAQSection[] = [
       {
         question: "What does drop-off and pick-up look like?",
         answer:
-          "Doors open at 8:15am for check-in and free play. The structured day begins at 9:00am. Dismissal is at 3:30pm (end of outdoor exploration block). After Care extends to 6:00pm for families who need it.",
+          "Doors open at 8:15am for check-in and free play. The structured day begins at 9:00am. Dismissal is at 3:30pm (end of outdoor exploration block). Extended Learning extends to 5:00pm for families who need it.",
       },
     ],
   },

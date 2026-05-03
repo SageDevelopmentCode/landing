@@ -83,7 +83,7 @@ export default function TuitionPage() {
         </div>
       </section>
 
-      {/* 4. After Care + Field Day Friday */}
+      {/* 4. Extended Learning + Field Day Friday */}
       <section className="bg-white py-16 px-8 sm:px-12 lg:px-16">
         <div className="max-w-7xl mx-auto w-full">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

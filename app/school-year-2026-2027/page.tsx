@@ -340,7 +340,7 @@ export default function SchoolYear20262027Page() {
             <FullEnrollmentCard onQuestionsClick={() => setWaitlistOpen(true)} />
           </div>
 
-          {/* After Care + Field Day Friday */}
+          {/* Extended Learning + Field Day Friday */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <AfterCareCard />
             <FieldDayFridayCard />
