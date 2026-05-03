@@ -268,7 +268,7 @@ function AttendanceSidebar({ student, onClose }: AttendanceSidebarProps) {
                 strokeWidth={1.5}
               />
               <p className="text-xs text-gray-400">
-                To check in or out, use the Sage Field mobile app.
+                To check in or out, use the Sage Field mobile app (Coming Soon).
               </p>
             </div>
           </div>
@@ -351,8 +351,12 @@ export default function HomePageClient({
   const [attendanceStudent, setAttendanceStudent] =
     useState<HomeStudent | null>(null);
   const [copied, setCopied] = useState(false);
-  const [dropOffSlot, setDropOffSlot] = useState<string | null>(savedDropOffSlot);
-  const [dropOffSaved, setDropOffSaved] = useState<boolean>(savedDropOffSlot !== null);
+  const [dropOffSlot, setDropOffSlot] = useState<string | null>(
+    savedDropOffSlot,
+  );
+  const [dropOffSaved, setDropOffSaved] = useState<boolean>(
+    savedDropOffSlot !== null,
+  );
   const [dropOffSaving, setDropOffSaving] = useState(false);
 
   async function handleSaveDropOff() {
@@ -482,7 +486,8 @@ export default function HomePageClient({
                 strokeWidth={1.5}
               />
               <p className="text-xs text-gray-400">
-                Check-in and pickup available on the Sage Field mobile app.
+                Check-in and pickup available on the Sage Field mobile app
+                (Coming Soon).
               </p>
             </div>
           </section>
@@ -519,9 +524,12 @@ export default function HomePageClient({
                         <Check className="w-3.5 h-3.5 text-white" />
                       </div>
                       <span className="text-sm font-semibold font-heading text-gray-800">
-                        {DROP_OFF_SLOTS.find((s) => s.value === dropOffSlot)?.label ?? dropOffSlot}
+                        {DROP_OFF_SLOTS.find((s) => s.value === dropOffSlot)
+                          ?.label ?? dropOffSlot}
                       </span>
-                      <span className="text-xs font-body text-gray-400">confirmed</span>
+                      <span className="text-xs font-body text-gray-400">
+                        confirmed
+                      </span>
                     </div>
                     <button
                       onClick={() => setDropOffSaved(false)}
@@ -768,23 +776,55 @@ export default function HomePageClient({
               </Link>
             </div>
             {(() => {
-              const nonHomeschoolEnrollments = summerEnrollments.filter((e) => e.program !== "homeschool_drop_in");
+              const nonHomeschoolEnrollments = summerEnrollments.filter(
+                (e) => e.program !== "homeschool_drop_in",
+              );
 
               // Consolidate: one card per program type, listing all kids
-              const unpaidSummerNames = unpaidSummerEnrollments.map((e) => studentMap[e.student_id]?.name).filter(Boolean) as string[];
+              const unpaidSummerNames = unpaidSummerEnrollments
+                .map((e) => studentMap[e.student_id]?.name)
+                .filter(Boolean) as string[];
               // For aftercare/fun friday, build per-program summaries across all kids
-              const aftercareNames = nonHomeschoolEnrollments.map((e) => studentMap[e.student_id]?.name).filter(Boolean) as string[];
-              const totalAftercareMonths = nonHomeschoolEnrollments.reduce((acc, e) => acc + (paidAftercareByStudent[e.student_id]?.months?.length ?? 0), 0);
-              const funFridayNames = nonHomeschoolEnrollments.map((e) => studentMap[e.student_id]?.name).filter(Boolean) as string[];
-              const totalFunFridayDays = nonHomeschoolEnrollments.reduce((acc, e) => acc + (paidFunFridayByStudent[e.student_id]?.fridays?.length ?? 0), 0);
+              const aftercareNames = nonHomeschoolEnrollments
+                .map((e) => studentMap[e.student_id]?.name)
+                .filter(Boolean) as string[];
+              const totalAftercareMonths = nonHomeschoolEnrollments.reduce(
+                (acc, e) =>
+                  acc +
+                  (paidAftercareByStudent[e.student_id]?.months?.length ?? 0),
+                0,
+              );
+              const funFridayNames = nonHomeschoolEnrollments
+                .map((e) => studentMap[e.student_id]?.name)
+                .filter(Boolean) as string[];
+              const totalFunFridayDays = nonHomeschoolEnrollments.reduce(
+                (acc, e) =>
+                  acc +
+                  (paidFunFridayByStudent[e.student_id]?.fridays?.length ?? 0),
+                0,
+              );
 
-              const hasAnything = pendingPayments.length > 0 || unpaidSummerEnrollments.length > 0 || homeschoolDropInApps.length > 0 || nonHomeschoolEnrollments.length > 0;
+              const hasAnything =
+                pendingPayments.length > 0 ||
+                unpaidSummerEnrollments.length > 0 ||
+                homeschoolDropInApps.length > 0 ||
+                nonHomeschoolEnrollments.length > 0;
 
               if (!hasAnything) {
                 return (
-                  <div className="rounded-2xl px-5 py-5" style={{ backgroundColor: "#D6EAD8" }}>
-                    <p className="text-sm font-semibold font-heading text-[#4a7c59]">All caught up!</p>
-                    <p className="text-xs font-body mt-1" style={{ color: "#4a7c59bb" }}>No pending payments</p>
+                  <div
+                    className="rounded-2xl px-5 py-5"
+                    style={{ backgroundColor: "#D6EAD8" }}
+                  >
+                    <p className="text-sm font-semibold font-heading text-[#4a7c59]">
+                      All caught up!
+                    </p>
+                    <p
+                      className="text-xs font-body mt-1"
+                      style={{ color: "#4a7c59bb" }}
+                    >
+                      No pending payments
+                    </p>
                   </div>
                 );
               }
@@ -792,39 +832,68 @@ export default function HomePageClient({
               return (
                 <div className="flex flex-col gap-3">
                   {/* Summer Tuition — one card for all unpaid kids */}
-                  {unpaidSummerNames.length > 0 && (() => {
-                    const totalPaid = unpaidSummerEnrollments.reduce((acc, e) => acc + (paidWeeksByStudent[e.student_id]?.length ?? 0), 0);
-                    return (
-                      <Link href="/parent/billing" className="rounded-2xl overflow-hidden bg-white border border-gray-100 flex flex-col group">
-                        <div className="relative h-28 overflow-hidden">
-                          <img src="/assets/ImageFive.jpg" alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                          <div className="absolute inset-0 bg-black/10" />
-                          {totalPaid > 0 && (
-                            <span className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500 text-white shadow-sm">
-                              {totalPaid}w paid
-                            </span>
-                          )}
-                        </div>
-                        <div className="p-3.5 flex flex-col gap-2">
-                          <div>
-                            <p className="text-xs font-medium text-gray-400 mb-0.5 truncate">{unpaidSummerNames.join(", ")}</p>
-                            <p className="text-sm font-semibold text-gray-800 leading-snug">Summer Tuition</p>
+                  {unpaidSummerNames.length > 0 &&
+                    (() => {
+                      const totalPaid = unpaidSummerEnrollments.reduce(
+                        (acc, e) =>
+                          acc + (paidWeeksByStudent[e.student_id]?.length ?? 0),
+                        0,
+                      );
+                      return (
+                        <Link
+                          href="/parent/billing"
+                          className="rounded-2xl overflow-hidden bg-white border border-gray-100 flex flex-col group"
+                        >
+                          <div className="relative h-28 overflow-hidden">
+                            <img
+                              src="/assets/ImageFive.jpg"
+                              alt=""
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            />
+                            <div className="absolute inset-0 bg-black/10" />
+                            {totalPaid > 0 && (
+                              <span className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500 text-white shadow-sm">
+                                {totalPaid}w paid
+                              </span>
+                            )}
                           </div>
-                          <span className="inline-flex items-center gap-1 self-start px-3 py-1.5 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: "#e07a3a" }}>
-                            {totalPaid > 0 ? "Add weeks" : "Select plan"} <ArrowRight className="w-3 h-3" />
-                          </span>
-                        </div>
-                      </Link>
-                    );
-                  })()}
+                          <div className="p-3.5 flex flex-col gap-2">
+                            <div>
+                              <p className="text-xs font-medium text-gray-400 mb-0.5 truncate">
+                                {unpaidSummerNames.join(", ")}
+                              </p>
+                              <p className="text-sm font-semibold text-gray-800 leading-snug">
+                                Summer Tuition
+                              </p>
+                            </div>
+                            <span
+                              className="inline-flex items-center gap-1 self-start px-3 py-1.5 rounded-full text-xs font-semibold text-white"
+                              style={{ backgroundColor: "#e07a3a" }}
+                            >
+                              {totalPaid > 0 ? "Add weeks" : "Select plan"}{" "}
+                              <ArrowRight className="w-3 h-3" />
+                            </span>
+                          </div>
+                        </Link>
+                      );
+                    })()}
 
                   {/* Extended Learning — one card for all enrolled kids */}
                   {aftercareNames.length > 0 && (
-                    <Link href="/parent/billing" className="rounded-2xl overflow-hidden bg-white border border-gray-100 flex flex-col group">
+                    <Link
+                      href="/parent/billing"
+                      className="rounded-2xl overflow-hidden bg-white border border-gray-100 flex flex-col group"
+                    >
                       <div className="relative h-28 overflow-hidden">
-                        <img src="/assets/ImageNine.jpg" alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                        <img
+                          src="/assets/ImageNine.jpg"
+                          alt=""
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
                         <div className="absolute inset-0 bg-black/10" />
-                        <span className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/80 text-gray-600 shadow-sm backdrop-blur-sm">Optional</span>
+                        <span className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/80 text-gray-600 shadow-sm backdrop-blur-sm">
+                          Optional
+                        </span>
                         {totalAftercareMonths > 0 && (
                           <span className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500 text-white shadow-sm">
                             {totalAftercareMonths}mo paid
@@ -833,11 +902,21 @@ export default function HomePageClient({
                       </div>
                       <div className="p-3.5 flex flex-col gap-2">
                         <div>
-                          <p className="text-xs font-medium text-gray-400 mb-0.5 truncate">{aftercareNames.join(", ")}</p>
-                          <p className="text-sm font-semibold text-gray-800 leading-snug">Extended Learning (3:30 – 5pm)</p>
+                          <p className="text-xs font-medium text-gray-400 mb-0.5 truncate">
+                            {aftercareNames.join(", ")}
+                          </p>
+                          <p className="text-sm font-semibold text-gray-800 leading-snug">
+                            Extended Learning (3:30 – 5pm)
+                          </p>
                         </div>
-                        <span className="inline-flex items-center gap-1 self-start px-3 py-1.5 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: "#e07a3a" }}>
-                          {totalAftercareMonths > 0 ? "Add months" : "Select plan"} <ArrowRight className="w-3 h-3" />
+                        <span
+                          className="inline-flex items-center gap-1 self-start px-3 py-1.5 rounded-full text-xs font-semibold text-white"
+                          style={{ backgroundColor: "#e07a3a" }}
+                        >
+                          {totalAftercareMonths > 0
+                            ? "Add months"
+                            : "Select plan"}{" "}
+                          <ArrowRight className="w-3 h-3" />
                         </span>
                       </div>
                     </Link>
@@ -845,11 +924,20 @@ export default function HomePageClient({
 
                   {/* Friday Enrichment — one card for all enrolled kids */}
                   {funFridayNames.length > 0 && (
-                    <Link href="/parent/billing" className="rounded-2xl overflow-hidden bg-white border border-gray-100 flex flex-col group">
+                    <Link
+                      href="/parent/billing"
+                      className="rounded-2xl overflow-hidden bg-white border border-gray-100 flex flex-col group"
+                    >
                       <div className="relative h-28 overflow-hidden">
-                        <img src="/assets/ImageEleven.jpg" alt="" className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105" />
+                        <img
+                          src="/assets/ImageEleven.jpg"
+                          alt=""
+                          className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                        />
                         <div className="absolute inset-0 bg-black/10" />
-                        <span className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/80 text-gray-600 shadow-sm backdrop-blur-sm">Optional</span>
+                        <span className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/80 text-gray-600 shadow-sm backdrop-blur-sm">
+                          Optional
+                        </span>
                         {totalFunFridayDays > 0 && (
                           <span className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500 text-white shadow-sm">
                             {totalFunFridayDays} paid
@@ -858,11 +946,19 @@ export default function HomePageClient({
                       </div>
                       <div className="p-3.5 flex flex-col gap-2">
                         <div>
-                          <p className="text-xs font-medium text-gray-400 mb-0.5 truncate">{funFridayNames.join(", ")}</p>
-                          <p className="text-sm font-semibold text-gray-800 leading-snug">Friday Enrichment Day</p>
+                          <p className="text-xs font-medium text-gray-400 mb-0.5 truncate">
+                            {funFridayNames.join(", ")}
+                          </p>
+                          <p className="text-sm font-semibold text-gray-800 leading-snug">
+                            Friday Enrichment Day
+                          </p>
                         </div>
-                        <span className="inline-flex items-center gap-1 self-start px-3 py-1.5 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: "#7c3aed" }}>
-                          {totalFunFridayDays > 0 ? "Add days" : "Select plan"} <ArrowRight className="w-3 h-3" />
+                        <span
+                          className="inline-flex items-center gap-1 self-start px-3 py-1.5 rounded-full text-xs font-semibold text-white"
+                          style={{ backgroundColor: "#7c3aed" }}
+                        >
+                          {totalFunFridayDays > 0 ? "Add days" : "Select plan"}{" "}
+                          <ArrowRight className="w-3 h-3" />
                         </span>
                       </div>
                     </Link>
@@ -870,27 +966,56 @@ export default function HomePageClient({
 
                   {/* Homeschool Drop-In — one card per student (each has distinct schedule) */}
                   {homeschoolDropInApps.map((app) => {
-                    const studentName = studentMap[app.student_id]?.name ?? null;
+                    const studentName =
+                      studentMap[app.student_id]?.name ?? null;
                     const paidData = paidHomeschoolByStudent[app.student_id];
                     const hasSummer = (paidData?.summer?.length ?? 0) > 0;
-                    const hasSchoolYear = (paidData?.schoolYear?.length ?? 0) > 0;
-                    const badgeLabel = hasSummer && hasSchoolYear ? "Plans active" : hasSummer ? "Summer active" : hasSchoolYear ? "School year active" : null;
+                    const hasSchoolYear =
+                      (paidData?.schoolYear?.length ?? 0) > 0;
+                    const badgeLabel =
+                      hasSummer && hasSchoolYear
+                        ? "Plans active"
+                        : hasSummer
+                          ? "Summer active"
+                          : hasSchoolYear
+                            ? "School year active"
+                            : null;
                     return (
-                      <Link key={`homeschool-${app.id}`} href="/parent/billing" className="rounded-2xl overflow-hidden bg-white border border-gray-100 flex flex-col group">
+                      <Link
+                        key={`homeschool-${app.id}`}
+                        href="/parent/billing"
+                        className="rounded-2xl overflow-hidden bg-white border border-gray-100 flex flex-col group"
+                      >
                         <div className="relative h-28 overflow-hidden">
-                          <img src="/assets/Homeschool.jpg" alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                          <img
+                            src="/assets/Homeschool.jpg"
+                            alt=""
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
                           <div className="absolute inset-0 bg-black/10" />
                           {badgeLabel && (
-                            <span className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500 text-white shadow-sm">{badgeLabel}</span>
+                            <span className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500 text-white shadow-sm">
+                              {badgeLabel}
+                            </span>
                           )}
                         </div>
                         <div className="p-3.5 flex flex-col gap-2">
                           <div>
-                            {studentName && <p className="text-xs font-medium text-gray-400 mb-0.5 truncate">{studentName}</p>}
-                            <p className="text-sm font-semibold text-gray-800 leading-snug">Homeschool Drop-In</p>
+                            {studentName && (
+                              <p className="text-xs font-medium text-gray-400 mb-0.5 truncate">
+                                {studentName}
+                              </p>
+                            )}
+                            <p className="text-sm font-semibold text-gray-800 leading-snug">
+                              Homeschool Drop-In
+                            </p>
                           </div>
-                          <span className="inline-flex items-center gap-1 self-start px-3 py-1.5 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: "#4a7c59" }}>
-                            {badgeLabel ? "Manage plan" : "Set up plan"} <ArrowRight className="w-3 h-3" />
+                          <span
+                            className="inline-flex items-center gap-1 self-start px-3 py-1.5 rounded-full text-xs font-semibold text-white"
+                            style={{ backgroundColor: "#4a7c59" }}
+                          >
+                            {badgeLabel ? "Manage plan" : "Set up plan"}{" "}
+                            <ArrowRight className="w-3 h-3" />
                           </span>
                         </div>
                       </Link>
@@ -903,21 +1028,38 @@ export default function HomePageClient({
                       ? (studentMap[payment.student_id]?.name ?? "Student")
                       : "Student";
                     return (
-                      <Link key={payment.id} href="/parent/billing" className="rounded-2xl overflow-hidden bg-white border border-gray-100 flex flex-col group">
+                      <Link
+                        key={payment.id}
+                        href="/parent/billing"
+                        className="rounded-2xl overflow-hidden bg-white border border-gray-100 flex flex-col group"
+                      >
                         <div className="relative h-28 overflow-hidden">
-                          <img src="/assets/ImageTen.jpg" alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                          <img
+                            src="/assets/ImageTen.jpg"
+                            alt=""
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
                           <div className="absolute inset-0 bg-black/10" />
                         </div>
                         <div className="p-3.5 flex flex-col gap-2">
                           <div>
-                            <p className="text-xs font-medium text-gray-400 mb-0.5 truncate">{studentName}</p>
-                            <p className="text-sm font-semibold text-gray-800 leading-snug truncate">{payment.label}</p>
+                            <p className="text-xs font-medium text-gray-400 mb-0.5 truncate">
+                              {studentName}
+                            </p>
+                            <p className="text-sm font-semibold text-gray-800 leading-snug truncate">
+                              {payment.label}
+                            </p>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: "#4a7c59" }}>
+                            <span
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white"
+                              style={{ backgroundColor: "#4a7c59" }}
+                            >
                               Pay now <ArrowRight className="w-3 h-3" />
                             </span>
-                            <span className="text-sm font-semibold text-gray-800">{formatCents(payment.amount_cents)}</span>
+                            <span className="text-sm font-semibold text-gray-800">
+                              {formatCents(payment.amount_cents)}
+                            </span>
                           </div>
                         </div>
                       </Link>

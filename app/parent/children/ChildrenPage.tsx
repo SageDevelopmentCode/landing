@@ -21,38 +21,69 @@ import {
   Check,
 } from "lucide-react";
 import { uploadStudentProfileImage } from "@/app/actions/uploadStudentProfileImage";
-import { saveAuthorizedPickup, type PickupPersonEntry } from "@/app/actions/saveAuthorizedPickup";
-import { saveParentLearningNote, updateParentLearningNote, deleteParentLearningNote, type LearningNote, type LearningNoteCategory } from "@/app/actions/saveParentLearningNote";
+import {
+  saveAuthorizedPickup,
+  type PickupPersonEntry,
+} from "@/app/actions/saveAuthorizedPickup";
+import {
+  saveParentLearningNote,
+  updateParentLearningNote,
+  deleteParentLearningNote,
+  type LearningNote,
+  type LearningNoteCategory,
+} from "@/app/actions/saveParentLearningNote";
 import { formatPhone } from "@/app/utils/formatPhone";
-import { getParentStudentAttendance, type ParentCheckInRecord } from "@/app/actions/getParentStudentAttendance";
+import {
+  getParentStudentAttendance,
+  type ParentCheckInRecord,
+} from "@/app/actions/getParentStudentAttendance";
 import { DetailSidebar } from "@/app/admin/components/DetailSidebar";
-import { SidebarField, SidebarSection } from "@/app/components/SidebarPrimitives";
+import {
+  SidebarField,
+  SidebarSection,
+} from "@/app/components/SidebarPrimitives";
 import NextImage from "next/image";
 import type { Database } from "@/app/types/database.types";
 import type { TeacherAssignment } from "@/app/actions/teacherAssignments";
 
 type Student = Database["admin"]["Tables"]["students"]["Row"];
-type AuthorizedPickupPlan = Database["parent_app"]["Tables"]["student_authorized_pickup_plan"]["Row"];
-type AuthorizedPickupPerson = Database["parent_app"]["Tables"]["student_authorized_pickup_persons"]["Row"];
+type AuthorizedPickupPlan =
+  Database["parent_app"]["Tables"]["student_authorized_pickup_plan"]["Row"];
+type AuthorizedPickupPerson =
+  Database["parent_app"]["Tables"]["student_authorized_pickup_persons"]["Row"];
 
-type ContentTab = "teacher" | "attendance" | "learning" | "photos" | "pickup" | "profile";
+type ContentTab =
+  | "teacher"
+  | "attendance"
+  | "learning"
+  | "photos"
+  | "pickup"
+  | "profile";
 
 interface Props {
   children: Student[];
   teachersByStudent: Record<string, TeacherAssignment[]>;
   nonEnrolledAppByStudent: Record<string, string>;
   studentProgramMap: Record<string, string>;
-  pickupByStudent: Record<string, { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] }>;
+  pickupByStudent: Record<
+    string,
+    { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] }
+  >;
   notesByStudent: Record<string, LearningNote[]>;
 }
 
 function formatProgramLabel(program: string | undefined | null): string | null {
   switch (program) {
-    case "summer_26": return "Summer 2026";
-    case "school_year_26_27": return "School Year 26–27";
-    case "both": return "Summer & School Year";
-    case "homeschool_drop_in": return "Homeschool Drop-In";
-    default: return null;
+    case "summer_26":
+      return "Summer 2026";
+    case "school_year_26_27":
+      return "School Year 26–27";
+    case "both":
+      return "Summer & School Year";
+    case "homeschool_drop_in":
+      return "Homeschool Drop-In";
+    default:
+      return null;
   }
 }
 
@@ -388,7 +419,8 @@ function AttendanceTab({
   records: ParentCheckInRecord[];
   loading: boolean;
 }) {
-  const [selectedRecord, setSelectedRecord] = useState<ParentCheckInRecord | null>(null);
+  const [selectedRecord, setSelectedRecord] =
+    useState<ParentCheckInRecord | null>(null);
 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString("en-US", {
@@ -448,7 +480,8 @@ function AttendanceTab({
               </span>
             </div>
             {records.map((r, i) => {
-              const notCheckedOut = !r.checked_out_at && isPastDay(r.checked_in_at);
+              const notCheckedOut =
+                !r.checked_out_at && isPastDay(r.checked_in_at);
               return (
                 <div
                   key={r.id}
@@ -487,9 +520,13 @@ function AttendanceTab({
           </div>
         )}
         <div className="flex items-center gap-2 px-4 py-3 border-t border-gray-100 bg-gray-50">
-          <Smartphone className="w-4 h-4 text-gray-400 flex-shrink-0" strokeWidth={1.5} />
+          <Smartphone
+            className="w-4 h-4 text-gray-400 flex-shrink-0"
+            strokeWidth={1.5}
+          />
           <p className="text-xs text-gray-400">
-            To check your child in or out, use the Sage Field mobile app.
+            To check your child in or out, use the Sage Field mobile app (Coming
+            Soon).
           </p>
         </div>
       </div>
@@ -527,15 +564,24 @@ function AttendanceTab({
   );
 }
 
-const CATEGORY_META: Record<LearningNoteCategory, { label: string; cls: string }> = {
-  academic:   { label: "Academic",   cls: "bg-blue-50 text-blue-600" },
-  social:     { label: "Social",     cls: "bg-purple-50 text-purple-600" },
+const CATEGORY_META: Record<
+  LearningNoteCategory,
+  { label: string; cls: string }
+> = {
+  academic: { label: "Academic", cls: "bg-blue-50 text-blue-600" },
+  social: { label: "Social", cls: "bg-purple-50 text-purple-600" },
   behavioral: { label: "Behavioral", cls: "bg-orange-50 text-orange-600" },
-  health:     { label: "Health",     cls: "bg-red-50 text-red-600" },
-  other:      { label: "Other",      cls: "bg-gray-100 text-gray-500" },
+  health: { label: "Health", cls: "bg-red-50 text-red-600" },
+  other: { label: "Other", cls: "bg-gray-100 text-gray-500" },
 };
 
-function LearningTab({ studentId, initialNotes, learningStyle, strengthsInterests, currentChallenges }: {
+function LearningTab({
+  studentId,
+  initialNotes,
+  learningStyle,
+  strengthsInterests,
+  currentChallenges,
+}: {
   studentId: string;
   initialNotes: LearningNote[];
   learningStyle: string | null;
@@ -551,7 +597,8 @@ function LearningTab({ studentId, initialNotes, learningStyle, strengthsInterest
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
-  const [editCategory, setEditCategory] = useState<LearningNoteCategory>("academic");
+  const [editCategory, setEditCategory] =
+    useState<LearningNoteCategory>("academic");
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
@@ -559,9 +606,16 @@ function LearningTab({ studentId, initialNotes, learningStyle, strengthsInterest
     if (!noteText.trim()) return;
     setSaving(true);
     setSaveError(null);
-    const result = await saveParentLearningNote({ studentId, category, noteText });
+    const result = await saveParentLearningNote({
+      studentId,
+      category,
+      noteText,
+    });
     setSaving(false);
-    if (result.error) { setSaveError(result.error); return; }
+    if (result.error) {
+      setSaveError(result.error);
+      return;
+    }
     if (result.note) setNotes((prev) => [result.note!, ...prev]);
     setNoteText("");
     setCategory("academic");
@@ -592,170 +646,222 @@ function LearningTab({ studentId, initialNotes, learningStyle, strengthsInterest
     if (!editText.trim()) return;
     setEditSaving(true);
     setEditError(null);
-    const result = await updateParentLearningNote({ noteId, category: editCategory, noteText: editText });
+    const result = await updateParentLearningNote({
+      noteId,
+      category: editCategory,
+      noteText: editText,
+    });
     setEditSaving(false);
-    if (result.error) { setEditError(result.error); return; }
+    if (result.error) {
+      setEditError(result.error);
+      return;
+    }
     if (result.note) {
-      setNotes((prev) => prev.map((n) => n.id === noteId ? result.note! : n));
+      setNotes((prev) => prev.map((n) => (n.id === noteId ? result.note! : n)));
     }
     setEditingId(null);
     setEditText("");
   }
 
-  const inputCls = "w-full text-sm font-body text-gray-800 border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#4a7c59] focus:ring-1 focus:ring-[#4a7c59]";
+  const inputCls =
+    "w-full text-sm font-body text-gray-800 border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#4a7c59] focus:ring-1 focus:ring-[#4a7c59]";
   const hasProfile = learningStyle || strengthsInterests || currentChallenges;
 
   return (
     <div className="space-y-4">
-    {hasProfile && (
-      <SectionCard title="Learning Profile">
-        <Field label="Learning Style" value={learningStyle} />
-        <Field label="Strengths & Interests" value={strengthsInterests} />
-        <Field label="Current Challenges" value={currentChallenges} />
-      </SectionCard>
-    )}
-    <SectionCard title="Special Requests">
-      {notes.length === 0 && !showForm && (
-        <p className="text-sm font-body text-gray-400 italic py-1 mb-3">
-          No special requests yet. Let teachers know if your child needs any extra support.
-        </p>
+      {hasProfile && (
+        <SectionCard title="Learning Profile">
+          <Field label="Learning Style" value={learningStyle} />
+          <Field label="Strengths & Interests" value={strengthsInterests} />
+          <Field label="Current Challenges" value={currentChallenges} />
+        </SectionCard>
       )}
+      <SectionCard title="Special Requests">
+        {notes.length === 0 && !showForm && (
+          <p className="text-sm font-body text-gray-400 italic py-1 mb-3">
+            No special requests yet. Let teachers know if your child needs any
+            extra support.
+          </p>
+        )}
 
-      {notes.length > 0 && (
-        <ul className="divide-y divide-gray-50 mb-4">
-          {notes.map((note) => {
-            const meta = CATEGORY_META[note.category] ?? CATEGORY_META.other;
-            const date = new Date(note.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-            const isEditing = editingId === note.id;
-            return (
-              <li key={note.id} className="py-3">
-                {isEditing ? (
-                  <div className="space-y-2">
-                    <select
-                      className={inputCls}
-                      value={editCategory}
-                      onChange={(e) => setEditCategory(e.target.value as LearningNoteCategory)}
-                    >
-                      {(Object.keys(CATEGORY_META) as LearningNoteCategory[]).map((k) => (
-                        <option key={k} value={k}>{CATEGORY_META[k].label}</option>
-                      ))}
-                    </select>
-                    <textarea
-                      className={`${inputCls} resize-none`}
-                      rows={3}
-                      value={editText}
-                      onChange={(e) => setEditText(e.target.value)}
-                    />
-                    {editError && <p className="text-xs text-red-500">{editError}</p>}
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEditSave(note.id)}
-                        disabled={editSaving || !editText.trim()}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#4a7c59] text-white hover:bg-[#3d6b4a] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        {notes.length > 0 && (
+          <ul className="divide-y divide-gray-50 mb-4">
+            {notes.map((note) => {
+              const meta = CATEGORY_META[note.category] ?? CATEGORY_META.other;
+              const date = new Date(note.created_at).toLocaleDateString(
+                "en-US",
+                { month: "short", day: "numeric" },
+              );
+              const isEditing = editingId === note.id;
+              return (
+                <li key={note.id} className="py-3">
+                  {isEditing ? (
+                    <div className="space-y-2">
+                      <select
+                        className={inputCls}
+                        value={editCategory}
+                        onChange={(e) =>
+                          setEditCategory(
+                            e.target.value as LearningNoteCategory,
+                          )
+                        }
                       >
-                        {editSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
-                        Save
-                      </button>
-                      <button
-                        onClick={cancelEdit}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer"
-                      >
-                        <X className="w-3 h-3" />
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex gap-3 items-start">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span className="text-xs font-body text-gray-400">{date}</span>
-                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${meta.cls}`}>{meta.label}</span>
+                        {(
+                          Object.keys(CATEGORY_META) as LearningNoteCategory[]
+                        ).map((k) => (
+                          <option key={k} value={k}>
+                            {CATEGORY_META[k].label}
+                          </option>
+                        ))}
+                      </select>
+                      <textarea
+                        className={`${inputCls} resize-none`}
+                        rows={3}
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                      />
+                      {editError && (
+                        <p className="text-xs text-red-500">{editError}</p>
+                      )}
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEditSave(note.id)}
+                          disabled={editSaving || !editText.trim()}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#4a7c59] text-white hover:bg-[#3d6b4a] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {editSaving ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <Check className="w-3 h-3" />
+                          )}
+                          Save
+                        </button>
+                        <button
+                          onClick={cancelEdit}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer"
+                        >
+                          <X className="w-3 h-3" />
+                          Cancel
+                        </button>
                       </div>
-                      <p className="text-sm font-body text-gray-700 leading-relaxed">{note.note_text}</p>
                     </div>
-                    <div className="flex gap-1.5 flex-shrink-0 mt-0.5">
-                      <button
-                        onClick={() => startEdit(note)}
-                        className="text-gray-300 hover:text-[#4a7c59] transition-colors cursor-pointer"
-                        aria-label="Edit note"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(note.id)}
-                        disabled={deletingId === note.id}
-                        className="text-gray-300 hover:text-red-400 transition-colors cursor-pointer disabled:opacity-50"
-                        aria-label="Delete note"
-                      >
-                        {deletingId === note.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="w-4 h-4" />
-                        )}
-                      </button>
+                  ) : (
+                    <div className="flex gap-3 items-start">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <span className="text-xs font-body text-gray-400">
+                            {date}
+                          </span>
+                          <span
+                            className={`text-xs font-semibold px-2 py-0.5 rounded-full ${meta.cls}`}
+                          >
+                            {meta.label}
+                          </span>
+                        </div>
+                        <p className="text-sm font-body text-gray-700 leading-relaxed">
+                          {note.note_text}
+                        </p>
+                      </div>
+                      <div className="flex gap-1.5 flex-shrink-0 mt-0.5">
+                        <button
+                          onClick={() => startEdit(note)}
+                          className="text-gray-300 hover:text-[#4a7c59] transition-colors cursor-pointer"
+                          aria-label="Edit note"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(note.id)}
+                          disabled={deletingId === note.id}
+                          className="text-gray-300 hover:text-red-400 transition-colors cursor-pointer disabled:opacity-50"
+                          aria-label="Delete note"
+                        >
+                          {deletingId === note.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
 
-      {showForm ? (
-        <div className="space-y-3 pt-1">
-          <div>
-            <label className="block text-xs font-body text-gray-400 uppercase tracking-wide mb-1">Category</label>
-            <select
-              className={inputCls}
-              value={category}
-              onChange={(e) => setCategory(e.target.value as LearningNoteCategory)}
-            >
-              {(Object.keys(CATEGORY_META) as LearningNoteCategory[]).map((k) => (
-                <option key={k} value={k}>{CATEGORY_META[k].label}</option>
-              ))}
-            </select>
+        {showForm ? (
+          <div className="space-y-3 pt-1">
+            <div>
+              <label className="block text-xs font-body text-gray-400 uppercase tracking-wide mb-1">
+                Category
+              </label>
+              <select
+                className={inputCls}
+                value={category}
+                onChange={(e) =>
+                  setCategory(e.target.value as LearningNoteCategory)
+                }
+              >
+                {(Object.keys(CATEGORY_META) as LearningNoteCategory[]).map(
+                  (k) => (
+                    <option key={k} value={k}>
+                      {CATEGORY_META[k].label}
+                    </option>
+                  ),
+                )}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-body text-gray-400 uppercase tracking-wide mb-1">
+                Note <span className="text-red-400">*</span>
+              </label>
+              <textarea
+                className={`${inputCls} resize-none`}
+                rows={3}
+                placeholder="e.g. My child is needing extra help with reading comprehension this month."
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+              />
+            </div>
+            {saveError && <p className="text-xs text-red-500">{saveError}</p>}
+            <div className="flex gap-2">
+              <button
+                onClick={handleSave}
+                disabled={saving || !noteText.trim()}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-[#4a7c59] text-white hover:bg-[#3d6b4a] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Check className="w-3.5 h-3.5" />
+                )}
+                Save
+              </button>
+              <button
+                onClick={() => {
+                  setShowForm(false);
+                  setNoteText("");
+                  setSaveError(null);
+                }}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+                Cancel
+              </button>
+            </div>
           </div>
-          <div>
-            <label className="block text-xs font-body text-gray-400 uppercase tracking-wide mb-1">Note <span className="text-red-400">*</span></label>
-            <textarea
-              className={`${inputCls} resize-none`}
-              rows={3}
-              placeholder="e.g. My child is needing extra help with reading comprehension this month."
-              value={noteText}
-              onChange={(e) => setNoteText(e.target.value)}
-            />
-          </div>
-          {saveError && <p className="text-xs text-red-500">{saveError}</p>}
-          <div className="flex gap-2">
-            <button
-              onClick={handleSave}
-              disabled={saving || !noteText.trim()}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-[#4a7c59] text-white hover:bg-[#3d6b4a] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-              Save
-            </button>
-            <button
-              onClick={() => { setShowForm(false); setNoteText(""); setSaveError(null); }}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer"
-            >
-              <X className="w-3.5 h-3.5" />
-              Cancel
-            </button>
-          </div>
-        </div>
-      ) : (
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-[#4a7c59]/10 text-[#4a7c59] hover:bg-[#4a7c59]/20 transition-colors cursor-pointer mt-1"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          Add Note
-        </button>
-      )}
-    </SectionCard>
+        ) : (
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-[#4a7c59]/10 text-[#4a7c59] hover:bg-[#4a7c59]/20 transition-colors cursor-pointer mt-1"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Add Note
+          </button>
+        )}
+      </SectionCard>
     </div>
   );
 }
@@ -803,39 +909,82 @@ function PickupPersonForm({
   saving: boolean;
   error: string | null;
 }) {
-  const inputCls = "w-full text-sm font-body text-gray-800 border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#4a7c59] focus:ring-1 focus:ring-[#4a7c59]";
-  const labelCls = "block text-xs font-body text-gray-400 uppercase tracking-wide mb-1";
+  const inputCls =
+    "w-full text-sm font-body text-gray-800 border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#4a7c59] focus:ring-1 focus:ring-[#4a7c59]";
+  const labelCls =
+    "block text-xs font-body text-gray-400 uppercase tracking-wide mb-1";
 
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label className={labelCls}>Full Name <span className="text-red-400">*</span></label>
-          <input className={inputCls} value={person.fullName} onChange={e => onChange("fullName", e.target.value)} placeholder="Jane Smith" />
+          <label className={labelCls}>
+            Full Name <span className="text-red-400">*</span>
+          </label>
+          <input
+            className={inputCls}
+            value={person.fullName}
+            onChange={(e) => onChange("fullName", e.target.value)}
+            placeholder="Jane Smith"
+          />
         </div>
         <div>
-          <label className={labelCls}>Relationship <span className="text-red-400">*</span></label>
-          <input className={inputCls} value={person.relationship} onChange={e => onChange("relationship", e.target.value)} placeholder="Aunt" />
+          <label className={labelCls}>
+            Relationship <span className="text-red-400">*</span>
+          </label>
+          <input
+            className={inputCls}
+            value={person.relationship}
+            onChange={(e) => onChange("relationship", e.target.value)}
+            placeholder="Aunt"
+          />
         </div>
         <div>
-          <label className={labelCls}>Phone <span className="text-red-400">*</span></label>
-          <input className={inputCls} value={person.phone} onChange={e => onChange("phone", formatPhone(e.target.value))} placeholder="(555) 000-0000" />
+          <label className={labelCls}>
+            Phone <span className="text-red-400">*</span>
+          </label>
+          <input
+            className={inputCls}
+            value={person.phone}
+            onChange={(e) => onChange("phone", formatPhone(e.target.value))}
+            placeholder="(555) 000-0000"
+          />
         </div>
         <div>
           <label className={labelCls}>Email</label>
-          <input className={inputCls} value={person.email} onChange={e => onChange("email", e.target.value)} placeholder="optional" />
+          <input
+            className={inputCls}
+            value={person.email}
+            onChange={(e) => onChange("email", e.target.value)}
+            placeholder="optional"
+          />
         </div>
         <div>
           <label className={labelCls}>DL / State ID</label>
-          <input className={inputCls} value={person.dlStateIdNumber} onChange={e => onChange("dlStateIdNumber", e.target.value)} placeholder="optional" />
+          <input
+            className={inputCls}
+            value={person.dlStateIdNumber}
+            onChange={(e) => onChange("dlStateIdNumber", e.target.value)}
+            placeholder="optional"
+          />
         </div>
         <div>
           <label className={labelCls}>Vehicle Info</label>
-          <input className={inputCls} value={person.vehicleInfo} onChange={e => onChange("vehicleInfo", e.target.value)} placeholder="optional" />
+          <input
+            className={inputCls}
+            value={person.vehicleInfo}
+            onChange={(e) => onChange("vehicleInfo", e.target.value)}
+            placeholder="optional"
+          />
         </div>
         <div>
           <label className={labelCls}>License Plate State</label>
-          <input className={inputCls} value={person.licensePlateState} onChange={e => onChange("licensePlateState", e.target.value)} placeholder="optional" />
+          <input
+            className={inputCls}
+            value={person.licensePlateState}
+            onChange={(e) => onChange("licensePlateState", e.target.value)}
+            placeholder="optional"
+          />
         </div>
       </div>
       {error && <p className="text-xs text-red-500">{error}</p>}
@@ -845,7 +994,11 @@ function PickupPersonForm({
           disabled={saving}
           className="flex items-center gap-1.5 px-4 py-1.5 bg-[#4a7c59] text-white text-sm rounded-full font-semibold disabled:opacity-50 cursor-pointer hover:bg-[#3d6b4a] transition-colors"
         >
-          {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+          {saving ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <Check className="w-3.5 h-3.5" />
+          )}
           Save
         </button>
         <button
@@ -865,11 +1018,14 @@ function PickupTab({
   pickup,
   studentId,
 }: {
-  pickup: { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] };
+  pickup: {
+    plan: AuthorizedPickupPlan | null;
+    persons: AuthorizedPickupPerson[];
+  };
   studentId: string;
 }) {
   const [persons, setPersons] = useState<EditablePerson[]>(() =>
-    pickup.persons.map(personToEditable)
+    pickup.persons.map(personToEditable),
   );
   const [plan, setPlan] = useState(pickup.plan);
   const [editingKey, setEditingKey] = useState<string | null>(null);
@@ -880,8 +1036,12 @@ function PickupTab({
   const [formError, setFormError] = useState<string | null>(null);
 
   // Dates from the plan (or empty strings if no plan yet)
-  const [dateOfRequest, setDateOfRequest] = useState(plan?.date_of_request ?? "");
-  const [effectiveUntil, setEffectiveUntil] = useState(plan?.effective_until ?? "");
+  const [dateOfRequest, setDateOfRequest] = useState(
+    plan?.date_of_request ?? "",
+  );
+  const [effectiveUntil, setEffectiveUntil] = useState(
+    plan?.effective_until ?? "",
+  );
 
   function validatePerson(p: EditablePerson): string | null {
     if (!p.fullName.trim()) return "Full name is required.";
@@ -911,22 +1071,38 @@ function PickupTab({
   async function handleSaveEdit() {
     if (!editDraft) return;
     const err = validatePerson(editDraft);
-    if (err) { setFormError(err); return; }
-    const updated = persons.map(p => p._key === editDraft._key ? editDraft : p);
+    if (err) {
+      setFormError(err);
+      return;
+    }
+    const updated = persons.map((p) =>
+      p._key === editDraft._key ? editDraft : p,
+    );
     const ok = await commitSave(updated);
-    if (ok) { setPersons(updated); setEditingKey(null); setEditDraft(null); }
+    if (ok) {
+      setPersons(updated);
+      setEditingKey(null);
+      setEditDraft(null);
+    }
   }
 
   async function handleSaveNew() {
     const err = validatePerson(newDraft);
-    if (err) { setFormError(err); return; }
+    if (err) {
+      setFormError(err);
+      return;
+    }
     const updated = [...persons, newDraft];
     const ok = await commitSave(updated);
-    if (ok) { setPersons(updated); setAddingNew(false); setNewDraft(blankPerson()); }
+    if (ok) {
+      setPersons(updated);
+      setAddingNew(false);
+      setNewDraft(blankPerson());
+    }
   }
 
   async function handleDelete(key: string) {
-    const updated = persons.filter(p => p._key !== key);
+    const updated = persons.filter((p) => p._key !== key);
     const ok = await commitSave(updated);
     if (ok) setPersons(updated);
   }
@@ -951,18 +1127,33 @@ function PickupTab({
   return (
     <div className="space-y-4">
       {/* Persons list */}
-      <SectionCard title={`Authorized Persons${persons.length > 0 ? ` (${persons.length})` : ""}`}>
+      <SectionCard
+        title={`Authorized Persons${persons.length > 0 ? ` (${persons.length})` : ""}`}
+      >
         {persons.length === 0 && !addingNew && (
-          <p className="text-sm font-body text-gray-400 italic py-1">No authorized pickup persons on file.</p>
+          <p className="text-sm font-body text-gray-400 italic py-1">
+            No authorized pickup persons on file.
+          </p>
         )}
 
         {persons.map((person, i) => (
-          <div key={person._key} className={i > 0 ? "pt-3 mt-3 border-t border-gray-100" : ""}>
+          <div
+            key={person._key}
+            className={i > 0 ? "pt-3 mt-3 border-t border-gray-100" : ""}
+          >
             {editingKey === person._key && editDraft ? (
               <PickupPersonForm
                 person={editDraft}
-                onChange={(field, value) => setEditDraft(prev => prev ? { ...prev, [field]: value } : prev)}
-                onCancel={() => { setEditingKey(null); setEditDraft(null); setFormError(null); }}
+                onChange={(field, value) =>
+                  setEditDraft((prev) =>
+                    prev ? { ...prev, [field]: value } : prev,
+                  )
+                }
+                onCancel={() => {
+                  setEditingKey(null);
+                  setEditDraft(null);
+                  setFormError(null);
+                }}
                 onSave={handleSaveEdit}
                 saving={saving}
                 error={formError}
@@ -970,13 +1161,30 @@ function PickupTab({
             ) : (
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-700 mb-1">{person.fullName}</p>
-                  <Field label="Relationship" value={person.relationship || null} />
+                  <p className="text-sm font-semibold text-gray-700 mb-1">
+                    {person.fullName}
+                  </p>
+                  <Field
+                    label="Relationship"
+                    value={person.relationship || null}
+                  />
                   <Field label="Phone" value={person.phone || null} />
                   {person.email && <Field label="Email" value={person.email} />}
-                  {person.dlStateIdNumber && <Field label="DL / State ID" value={person.dlStateIdNumber} />}
-                  {person.vehicleInfo && <Field label="Vehicle" value={person.vehicleInfo} />}
-                  {person.licensePlateState && <Field label="License Plate State" value={person.licensePlateState} />}
+                  {person.dlStateIdNumber && (
+                    <Field
+                      label="DL / State ID"
+                      value={person.dlStateIdNumber}
+                    />
+                  )}
+                  {person.vehicleInfo && (
+                    <Field label="Vehicle" value={person.vehicleInfo} />
+                  )}
+                  {person.licensePlateState && (
+                    <Field
+                      label="License Plate State"
+                      value={person.licensePlateState}
+                    />
+                  )}
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0 pt-0.5">
                   <button
@@ -993,7 +1201,11 @@ function PickupTab({
                     className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-40"
                     title="Delete"
                   >
-                    {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                    {saving ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-3.5 h-3.5" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -1002,12 +1214,23 @@ function PickupTab({
         ))}
 
         {addingNew && (
-          <div className={persons.length > 0 ? "pt-3 mt-3 border-t border-gray-100" : ""}>
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">New Person</p>
+          <div
+            className={
+              persons.length > 0 ? "pt-3 mt-3 border-t border-gray-100" : ""
+            }
+          >
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+              New Person
+            </p>
             <PickupPersonForm
               person={newDraft}
-              onChange={(field, value) => setNewDraft(prev => ({ ...prev, [field]: value }))}
-              onCancel={() => { setAddingNew(false); setFormError(null); }}
+              onChange={(field, value) =>
+                setNewDraft((prev) => ({ ...prev, [field]: value }))
+              }
+              onCancel={() => {
+                setAddingNew(false);
+                setFormError(null);
+              }}
               onSave={handleSaveNew}
               saving={saving}
               error={formError}
@@ -1049,16 +1272,24 @@ function ChildProfile({
   teachers: TeacherAssignment[];
   enrollmentAppId?: string;
   initialProfileImageUrl: string | null;
-  pickup: { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] };
+  pickup: {
+    plan: AuthorizedPickupPlan | null;
+    persons: AuthorizedPickupPerson[];
+  };
   initialNotes: LearningNote[];
 }) {
   const searchParams = useSearchParams();
-  const initialTab = (searchParams.get("tab") as ContentTab | null) ?? "teacher";
+  const initialTab =
+    (searchParams.get("tab") as ContentTab | null) ?? "teacher";
   const [activeTab, setActiveTab] = useState<ContentTab>(initialTab);
-  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(initialProfileImageUrl);
+  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(
+    initialProfileImageUrl,
+  );
   const [avatarHovered, setAvatarHovered] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [attendanceRecords, setAttendanceRecords] = useState<ParentCheckInRecord[]>([]);
+  const [attendanceRecords, setAttendanceRecords] = useState<
+    ParentCheckInRecord[]
+  >([]);
   const [attendanceLoading, setAttendanceLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -1076,12 +1307,12 @@ function ChildProfile({
     if (!file) return;
     setUploading(true);
     const formData = new FormData();
-    formData.append('file', file);
-    formData.append('studentId', child.id);
+    formData.append("file", file);
+    formData.append("studentId", child.id);
     const result = await uploadStudentProfileImage(formData);
     setUploading(false);
-    if ('url' in result) setCurrentImageUrl(result.url);
-    e.target.value = '';
+    if ("url" in result) setCurrentImageUrl(result.url);
+    e.target.value = "";
   }
 
   const age = computeAge(child.dob_month, child.dob_day, child.dob_year);
@@ -1109,7 +1340,11 @@ function ChildProfile({
         >
           {currentImageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={currentImageUrl} alt={child.child_legal_name ?? ''} className="w-full h-full object-cover" />
+            <img
+              src={currentImageUrl}
+              alt={child.child_legal_name ?? ""}
+              className="w-full h-full object-cover"
+            />
           ) : (
             <div
               className="w-full h-full flex items-center justify-center text-2xl font-bold font-heading"
@@ -1168,11 +1403,18 @@ function ChildProfile({
           className="flex items-center gap-4 bg-amber-50 border border-amber-100 rounded-2xl px-5 py-4 hover:bg-amber-100 transition-colors no-underline"
         >
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-semibold text-gray-800">Enrollment not complete</div>
-            <div className="text-xs text-amber-600 mt-0.5">Finish setting up this child&apos;s enrollment to access teacher info, attendance, and more.</div>
+            <div className="text-sm font-semibold text-gray-800">
+              Enrollment not complete
+            </div>
+            <div className="text-xs text-amber-600 mt-0.5">
+              Finish setting up this child&apos;s enrollment to access teacher
+              info, attendance, and more.
+            </div>
           </div>
           <div className="flex-shrink-0 flex items-center gap-1.5">
-            <span className="text-sm font-semibold text-amber-700">Complete enrollment</span>
+            <span className="text-sm font-semibold text-amber-700">
+              Complete enrollment
+            </span>
             <ChevronRight className="w-4 h-4 text-amber-700" strokeWidth={2} />
           </div>
         </a>
@@ -1206,7 +1448,12 @@ function ChildProfile({
               }
             />
           )}
-          {activeTab === "attendance" && <AttendanceTab records={attendanceRecords} loading={attendanceLoading} />}
+          {activeTab === "attendance" && (
+            <AttendanceTab
+              records={attendanceRecords}
+              loading={attendanceLoading}
+            />
+          )}
           {activeTab === "learning" && (
             <LearningTab
               studentId={child.id}
@@ -1225,7 +1472,9 @@ function ChildProfile({
             />
           )}
 
-          {activeTab === "pickup" && <PickupTab pickup={pickup} studentId={child.id} />}
+          {activeTab === "pickup" && (
+            <PickupTab pickup={pickup} studentId={child.id} />
+          )}
 
           {activeTab === "profile" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -1242,7 +1491,10 @@ function ChildProfile({
                 )}
                 <Field label="Has Allergies" value={child.has_allergies} />
                 {child.has_allergies?.toLowerCase() === "yes" && (
-                  <Field label="Allergies" value={child.allergies_description} />
+                  <Field
+                    label="Allergies"
+                    value={child.allergies_description}
+                  />
                 )}
                 <Field
                   label="Has Emergency Medications"
@@ -1307,7 +1559,14 @@ function ChildProfile({
   );
 }
 
-export default function ChildrenPage({ children, teachersByStudent, nonEnrolledAppByStudent, studentProgramMap, pickupByStudent, notesByStudent }: Props) {
+export default function ChildrenPage({
+  children,
+  teachersByStudent,
+  nonEnrolledAppByStudent,
+  studentProgramMap,
+  pickupByStudent,
+  notesByStudent,
+}: Props) {
   // Sort: enrolled children first, non-enrolled last
   const sortedChildren = [...children].sort((a, b) => {
     const aEnrolled = !nonEnrolledAppByStudent[a.id];
@@ -1344,7 +1603,10 @@ export default function ChildrenPage({ children, teachersByStudent, nonEnrolledA
         </p>
         {sortedChildren.map((child, i) => {
           const isActive = i === activeIndex;
-          const profileImageUrl = (child as Record<string, unknown>).profile_image_url as string | null ?? null;
+          const profileImageUrl =
+            ((child as Record<string, unknown>).profile_image_url as
+              | string
+              | null) ?? null;
           const name = child.child_legal_name ?? `Child ${i + 1}`;
           const programLabel = formatProgramLabel(studentProgramMap[child.id]);
           return (
@@ -1400,8 +1662,14 @@ export default function ChildrenPage({ children, teachersByStudent, nonEnrolledA
             child={activeChild}
             teachers={teachersByStudent[activeChild.id] ?? []}
             enrollmentAppId={nonEnrolledAppByStudent[activeChild.id]}
-            initialProfileImageUrl={(activeChild as Record<string, unknown>).profile_image_url as string | null ?? null}
-            pickup={pickupByStudent[activeChild.id] ?? { plan: null, persons: [] }}
+            initialProfileImageUrl={
+              ((activeChild as Record<string, unknown>).profile_image_url as
+                | string
+                | null) ?? null
+            }
+            pickup={
+              pickupByStudent[activeChild.id] ?? { plan: null, persons: [] }
+            }
             initialNotes={notesByStudent[activeChild.id] ?? []}
           />
         </div>
