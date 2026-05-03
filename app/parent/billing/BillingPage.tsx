@@ -1889,7 +1889,7 @@ function AftercareCard({
             Summer 2026
           </div>
           <div className="text-sm font-semibold text-gray-800 leading-snug">
-            Extended Learning
+            Extended Learning (3 – 5pm)
           </div>
         </div>
         <div className="flex items-center justify-between mt-auto">
