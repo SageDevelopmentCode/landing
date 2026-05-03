@@ -1,0 +1,424 @@
+"use client";
+
+import { useState, useRef, useEffect } from "react";
+import { ChevronLeft, ChevronRight, Loader2, Calendar as CalendarIcon, Search } from "lucide-react";
+import {
+  getFieldFridayStudentsForDate,
+  upsertFieldFridayRecord,
+  removeFieldFridayRecord,
+} from "@/app/actions/fieldFridayAttendance";
+import type { FieldFridayStudentRow } from "@/app/actions/fieldFridayAttendance";
+
+interface Props {
+  initialStudents: FieldFridayStudentRow[];
+  initialDate: string;
+}
+
+const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTH_NAMES = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
+function formatDateLabel(dateStr: string): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const date = new Date(y, m - 1, d);
+  return `${DAY_NAMES[date.getDay()]}, ${MONTH_NAMES[date.getMonth()]} ${d}`;
+}
+
+function getTodayFriday(): string {
+  const d = new Date();
+  const day = d.getDay();
+  if (day !== 5) {
+    const daysUntilFriday = day === 6 ? 6 : 5 - day;
+    d.setDate(d.getDate() + daysUntilFriday);
+  }
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${dd}`;
+}
+
+function shiftFriday(dateStr: string, delta: 1 | -1): string {
+  const [y, mo, d] = dateStr.split("-").map(Number);
+  const date = new Date(y, mo - 1, d);
+  date.setDate(date.getDate() + delta * 7);
+  const ny = date.getFullYear();
+  const nm = String(date.getMonth() + 1).padStart(2, "0");
+  const nd = String(date.getDate()).padStart(2, "0");
+  return `${ny}-${nm}-${nd}`;
+}
+
+function getMonthDays(year: number, month: number): (Date | null)[] {
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const offset = firstDay === 0 ? 6 : firstDay - 1;
+  const cells: (Date | null)[] = Array(offset).fill(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(year, month, d));
+  while (cells.length % 7 !== 0) cells.push(null);
+  return cells;
+}
+
+function toDateStr(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function getInitials(name: string | null): string {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0][0].toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+const AVATAR_COLORS = [
+  "#4a7c59", "#6b9e7a", "#3d6b4e", "#527a62", "#7aab8a",
+  "#5c8f6e", "#436854", "#618f72", "#4e8060", "#3a5e49",
+];
+
+function avatarColor(studentId: string): string {
+  let hash = 0;
+  for (let i = 0; i < studentId.length; i++) {
+    hash = (hash * 31 + studentId.charCodeAt(i)) & 0xfffffff;
+  }
+  return AVATAR_COLORS[hash % AVATAR_COLORS.length];
+}
+
+export default function FieldFridayPageClient({ initialStudents, initialDate }: Props) {
+  const [selectedDate, setSelectedDate] = useState(initialDate);
+  const [students, setStudents] = useState<FieldFridayStudentRow[]>(initialStudents);
+  const [loadingDate, setLoadingDate] = useState(false);
+  const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
+
+  const [calOpen, setCalOpen] = useState(false);
+  const [calYear, setCalYear] = useState(() => Number(initialDate.split("-")[0]));
+  const [calMonth, setCalMonth] = useState(() => Number(initialDate.split("-")[1]) - 1);
+  const calRef = useRef<HTMLDivElement>(null);
+  const [search, setSearch] = useState("");
+
+  const todayFriday = getTodayFriday();
+  const isThisFriday = selectedDate === todayFriday;
+
+  useEffect(() => {
+    if (!calOpen) return;
+    function handleOutside(e: MouseEvent) {
+      if (calRef.current && !calRef.current.contains(e.target as Node))
+        setCalOpen(false);
+    }
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [calOpen]);
+
+  async function handleDateChange(newDate: string) {
+    setLoadingDate(true);
+    setSelectedDate(newDate);
+    const rows = await getFieldFridayStudentsForDate(newDate);
+    setStudents(rows);
+    setLoadingDate(false);
+  }
+
+  function addSaving(id: string) {
+    setSavingIds((prev) => new Set(prev).add(id));
+  }
+
+  function removeSaving(id: string) {
+    setSavingIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  }
+
+  async function handleCheckboxChange(row: FieldFridayStudentRow, checked: boolean) {
+    addSaving(row.student_id);
+    if (checked) {
+      const record = await upsertFieldFridayRecord(row.student_id, selectedDate, row.hasEnrollment);
+      setStudents((prev) =>
+        prev.map((s) => (s.student_id === row.student_id ? { ...s, record } : s))
+      );
+    } else if (row.record) {
+      await removeFieldFridayRecord(row.record.id);
+      setStudents((prev) =>
+        prev.map((s) => (s.student_id === row.student_id ? { ...s, record: null } : s))
+      );
+    }
+    removeSaving(row.student_id);
+  }
+
+  const attendingCount = students.filter((s) => s.record !== null).length;
+  const filteredStudents = search.trim()
+    ? students.filter((s) => s.name?.toLowerCase().includes(search.toLowerCase()))
+    : students;
+
+  return (
+    <div className="flex-1 px-6 py-6 overflow-y-auto w-full">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-[#4a7c59]">Field Fun Fridays Attendance</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          {attendingCount} of {students.length} student{students.length !== 1 ? "s" : ""} attending
+        </p>
+      </div>
+
+      {/* Date navigation */}
+      <div className="flex items-center gap-3 mb-6 justify-between">
+        <button
+          onClick={() => handleDateChange(shiftFriday(selectedDate, -1))}
+          disabled={loadingDate}
+          className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors disabled:opacity-40"
+        >
+          <ChevronLeft className="w-4 h-4 text-gray-600" />
+        </button>
+
+        <div className="relative" ref={calRef}>
+          <button
+            onClick={() => {
+              const [y, m] = selectedDate.split("-").map(Number);
+              setCalYear(y);
+              setCalMonth(m - 1);
+              setCalOpen((prev) => !prev);
+            }}
+            className="flex items-center gap-1.5 text-sm font-semibold text-gray-800 min-w-[140px] justify-center px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            {formatDateLabel(selectedDate)}
+            {isThisFriday && (
+              <span className="ml-1 text-xs font-medium text-[#4a7c59] bg-[#4a7c59]/10 px-2 py-0.5 rounded-full">
+                This Friday
+              </span>
+            )}
+            <CalendarIcon className="w-3.5 h-3.5 text-gray-400 ml-0.5 flex-shrink-0" />
+          </button>
+
+          {calOpen && (
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50 bg-white rounded-xl border border-gray-200 shadow-lg p-3 w-64">
+              {/* Month navigation */}
+              <div className="flex items-center justify-between mb-3">
+                <button
+                  onClick={() => {
+                    if (calMonth === 0) { setCalMonth(11); setCalYear((y) => y - 1); }
+                    else setCalMonth((m) => m - 1);
+                  }}
+                  className="p-1 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="text-sm font-semibold text-gray-700">
+                  {MONTH_NAMES[calMonth]} {calYear}
+                </span>
+                <button
+                  onClick={() => {
+                    if (calMonth === 11) { setCalMonth(0); setCalYear((y) => y + 1); }
+                    else setCalMonth((m) => m + 1);
+                  }}
+                  className="p-1 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Day-of-week headers */}
+              <div className="grid grid-cols-7 mb-1">
+                {["M", "T", "W", "T", "F", "S", "S"].map((label, i) => (
+                  <div
+                    key={i}
+                    className={`text-center text-xs font-semibold py-1 ${i === 4 ? "text-[#4a7c59]" : "text-gray-300"}`}
+                  >
+                    {label}
+                  </div>
+                ))}
+              </div>
+
+              {/* Day cells */}
+              <div className="grid grid-cols-7 gap-0.5">
+                {getMonthDays(calYear, calMonth).map((d, i) => {
+                  if (!d) return <div key={`e-${i}`} />;
+                  const isFriday = d.getDay() === 5;
+                  const dateStr = toDateStr(d);
+                  const isSel = dateStr === selectedDate;
+                  const isTod = dateStr === todayFriday;
+                  return (
+                    <button
+                      key={dateStr}
+                      disabled={!isFriday}
+                      onClick={() => { handleDateChange(dateStr); setCalOpen(false); }}
+                      className={`relative flex items-center justify-center w-full aspect-square rounded-lg text-xs font-medium transition-colors ${
+                        !isFriday
+                          ? "text-gray-300 cursor-not-allowed"
+                          : isSel
+                          ? "bg-[#4a7c59] text-white"
+                          : "text-gray-700 hover:bg-[#4a7c59]/10 cursor-pointer"
+                      }`}
+                    >
+                      {d.getDate()}
+                      {isTod && !isSel && (
+                        <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#4a7c59]" />
+                      )}
+                      {isTod && isSel && (
+                        <span className="absolute inset-0 rounded-lg ring-2 ring-[#4a7c59] ring-offset-1" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <button
+          onClick={() => handleDateChange(shiftFriday(selectedDate, 1))}
+          disabled={loadingDate}
+          className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors disabled:opacity-40"
+        >
+          <ChevronRight className="w-4 h-4 text-gray-600" />
+        </button>
+
+        {!isThisFriday && (
+          <button
+            onClick={() => handleDateChange(todayFriday)}
+            disabled={loadingDate}
+            className="text-xs font-medium text-[#4a7c59] border border-[#4a7c59]/30 bg-[#4a7c59]/5 hover:bg-[#4a7c59]/10 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-40"
+          >
+            This Friday
+          </button>
+        )}
+
+        <div className="relative ml-auto">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search students…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-8 pr-3 py-2 text-sm rounded-lg border border-gray-200 bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#4a7c59] focus:ring-1 focus:ring-[#4a7c59]/20 transition-colors w-56"
+          />
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+        {/* Table header */}
+        <div className="grid grid-cols-[1fr_120px_100px_110px] gap-4 px-5 py-3 border-b border-gray-100 bg-gray-50">
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Student</span>
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-center">Attending</span>
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-center">Status</span>
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-center">Paid</span>
+        </div>
+
+        {/* Loading skeleton */}
+        {loadingDate && (
+          <div className="divide-y divide-gray-50">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="grid grid-cols-[1fr_120px_100px_110px] gap-4 px-5 py-4 items-center">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
+                  <div className="h-4 bg-gray-200 rounded animate-pulse w-32" />
+                </div>
+                <div className="h-4 bg-gray-200 rounded animate-pulse mx-auto w-8" />
+                <div className="h-4 bg-gray-200 rounded animate-pulse mx-auto w-16" />
+                <div className="h-4 bg-gray-200 rounded animate-pulse mx-auto w-16" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Student rows */}
+        {!loadingDate && filteredStudents.length === 0 && (
+          <div className="px-5 py-12 text-center text-sm text-gray-400">
+            {search.trim() ? `No students match "${search}".` : "No enrolled students found."}
+          </div>
+        )}
+
+        {!loadingDate && filteredStudents.length > 0 && (
+          <div className="divide-y divide-gray-50">
+            {filteredStudents.map((row) => {
+              const isSaving = savingIds.has(row.student_id);
+              const isChecked = row.record !== null;
+
+              return (
+                <div
+                  key={row.student_id}
+                  className="grid grid-cols-[1fr_120px_100px_110px] gap-4 px-5 py-3.5 items-center hover:bg-gray-50/50 transition-colors"
+                >
+                  {/* Student name + avatar */}
+                  <div className="flex items-center gap-3 min-w-0">
+                    {row.profile_image_url ? (
+                      <img
+                        src={row.profile_image_url}
+                        alt={row.name ?? ""}
+                        className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                      />
+                    ) : (
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0"
+                        style={{ backgroundColor: avatarColor(row.student_id) }}
+                      >
+                        {getInitials(row.name)}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-800 truncate">{row.name ?? "—"}</p>
+                      {row.grade && (
+                        <p className="text-xs text-gray-400 truncate">{row.grade}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Checkbox */}
+                  <div className="flex items-center justify-center">
+                    {isSaving ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-[#4a7c59]" />
+                    ) : (
+                      <button
+                        onClick={() => handleCheckboxChange(row, !isChecked)}
+                        className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                          isChecked
+                            ? "bg-[#4a7c59] border-[#4a7c59]"
+                            : "bg-white border-gray-300 hover:border-[#4a7c59]"
+                        }`}
+                        aria-label={isChecked ? "Remove from Field Fun Fridays" : "Mark attending Field Fun Fridays"}
+                      >
+                        {isChecked && (
+                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2 6l3 3 5-5" />
+                          </svg>
+                        )}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Status */}
+                  <div className="flex items-center justify-center">
+                    {isSaving ? (
+                      <span className="text-xs text-gray-400">Saving…</span>
+                    ) : isChecked ? (
+                      <span className="text-xs font-medium text-[#4a7c59] bg-[#4a7c59]/10 px-2.5 py-1 rounded-full">
+                        Recorded
+                      </span>
+                    ) : (
+                      <span className="text-xs text-gray-300">—</span>
+                    )}
+                  </div>
+
+                  {/* Paid */}
+                  <div className="flex items-center justify-center">
+                    {row.hasEnrollment ? (
+                      <span className="text-xs font-medium text-[#4a7c59] bg-[#4a7c59]/10 px-2.5 py-1 rounded-full">
+                        Paid
+                      </span>
+                    ) : (
+                      <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">
+                        Not paid
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

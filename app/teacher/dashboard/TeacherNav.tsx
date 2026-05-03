@@ -29,6 +29,7 @@ const primaryNavItems: { label: string; icon: LucideIcon; href: string }[] = [
 const moreItems: { label: string; icon: LucideIcon; href: string }[] = [
   { label: "Payroll",             icon: CreditCard, href: "/teacher/dashboard/payroll" },
   { label: "Aftercare",           icon: Sun,        href: "/teacher/dashboard/aftercare" },
+  { label: "Field Fun Fridays",   icon: Sun,        href: "/teacher/dashboard/field-friday" },
   { label: "Forms and Documents", icon: FileText,   href: "#" },
 ];
 
