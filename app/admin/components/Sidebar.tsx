@@ -11,7 +11,6 @@ import {
   Users,
   ClipboardList,
   DollarSign,
-  GraduationCap,
   CreditCard,
   Mail,
   BookOpen,
@@ -47,8 +46,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     items: [
       { name: "Dashboard",    href: "/admin",               icon: <LayoutDashboard className="w-4 h-4" /> },
       { name: "Leads",        href: "/admin/leads",         icon: <TrendingUp className="w-4 h-4" /> },
-      { name: "Parents",      href: "/admin/parents",       icon: <Users className="w-4 h-4" /> },
-      { name: "Students",     href: "/admin/students",      icon: <GraduationCap className="w-4 h-4" /> },
+      { name: "People",       href: "/admin/people",        icon: <Users className="w-4 h-4" /> },
       { name: "Programs",     href: "/admin/programs",      icon: <BookOpen className="w-4 h-4" /> },
       { name: "Applications", href: "/admin/applications",  icon: <ClipboardList className="w-4 h-4" /> },
       { name: "Transactions", href: "/admin/transactions",  icon: <CreditCard className="w-4 h-4" /> },
