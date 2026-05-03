@@ -173,7 +173,7 @@ export default function AftercarePageClient({ initialStudents, initialDate }: Pr
   async function handleCheckboxChange(row: AftercareStudentRow, checked: boolean) {
     addSaving(row.student_id);
     if (checked) {
-      const record = await upsertAfterCareRecord(row.student_id, selectedDate, null);
+      const record = await upsertAfterCareRecord(row.student_id, selectedDate, null, row.hasEnrollment);
       setStudents((prev) =>
         prev.map((s) => (s.student_id === row.student_id ? { ...s, record } : s))
       );
@@ -366,24 +366,26 @@ export default function AftercarePageClient({ initialStudents, initialDate }: Pr
       {/* Table */}
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
         {/* Table header */}
-        <div className="grid grid-cols-[1fr_120px_160px_100px] gap-4 px-5 py-3 border-b border-gray-100 bg-gray-50">
+        <div className="grid grid-cols-[1fr_120px_160px_100px_110px] gap-4 px-5 py-3 border-b border-gray-100 bg-gray-50">
           <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Student</span>
           <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-center">In Aftercare</span>
           <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-center">Pickup Time</span>
           <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-center">Status</span>
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-center">Enrollment</span>
         </div>
 
         {/* Loading skeleton */}
         {loadingDate && (
           <div className="divide-y divide-gray-50">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="grid grid-cols-[1fr_120px_160px_100px] gap-4 px-5 py-4 items-center">
+              <div key={i} className="grid grid-cols-[1fr_120px_160px_100px_110px] gap-4 px-5 py-4 items-center">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
                   <div className="h-4 bg-gray-200 rounded animate-pulse w-32" />
                 </div>
                 <div className="h-4 bg-gray-200 rounded animate-pulse mx-auto w-8" />
                 <div className="h-8 bg-gray-200 rounded animate-pulse mx-auto w-28" />
+                <div className="h-4 bg-gray-200 rounded animate-pulse mx-auto w-16" />
                 <div className="h-4 bg-gray-200 rounded animate-pulse mx-auto w-16" />
               </div>
             ))}
@@ -406,7 +408,7 @@ export default function AftercarePageClient({ initialStudents, initialDate }: Pr
               return (
                 <div
                   key={row.student_id}
-                  className="grid grid-cols-[1fr_120px_160px_100px] gap-4 px-5 py-3.5 items-center hover:bg-gray-50/50 transition-colors"
+                  className="grid grid-cols-[1fr_120px_160px_100px_110px] gap-4 px-5 py-3.5 items-center hover:bg-gray-50/50 transition-colors"
                 >
                   {/* Student name + avatar */}
                   <div className="flex items-center gap-3 min-w-0">
@@ -550,6 +552,19 @@ export default function AftercarePageClient({ initialStudents, initialDate }: Pr
                       </span>
                     ) : (
                       <span className="text-xs text-gray-300">—</span>
+                    )}
+                  </div>
+
+                  {/* Enrollment */}
+                  <div className="flex items-center justify-center">
+                    {row.hasEnrollment ? (
+                      <span className="text-xs font-medium text-[#4a7c59] bg-[#4a7c59]/10 px-2.5 py-1 rounded-full">
+                        Paid
+                      </span>
+                    ) : (
+                      <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">
+                        Not paid
+                      </span>
                     )}
                   </div>
                 </div>

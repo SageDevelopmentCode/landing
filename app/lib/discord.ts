@@ -1263,6 +1263,7 @@ export function createAftercareEmbed(data: {
   date: string;
   event: "checked_in" | "checked_out" | "pickup_time_set";
   pickupTime?: string | null;
+  paidForDay?: boolean;
 }): DiscordEmbed {
   const EVENT_META = {
     checked_in:      { title: "🟢 Student Added to Aftercare", color: 0x4a7c59 },
@@ -1275,6 +1276,10 @@ export function createAftercareEmbed(data: {
     { name: "Student", value: data.studentName, inline: true },
     { name: "Date", value: data.date, inline: true },
   ];
+
+  if (data.event === "checked_in" || data.event === "checked_out") {
+    fields.push({ name: "Paid", value: data.paidForDay ? "✅ Yes" : "❌ No", inline: true });
+  }
 
   if (data.event === "pickup_time_set" && data.pickupTime) {
     const [h, m] = data.pickupTime.split(":").map(Number);
