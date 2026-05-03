@@ -133,13 +133,20 @@ export default async function PeoplePage() {
   ] = await Promise.all([
     client.schema('admin').from('users').select('*').eq('role', 'parent').eq('is_deleted', false).order('full_name'),
     client.schema('admin').from('students').select('*').eq('is_deleted', false).order('child_legal_name'),
-    client.schema('parent_app').from('applications').select('student_id').eq('status', 'enrolled'),
+    client.schema('parent_app').from('applications').select('student_id, admin_tags').eq('status', 'enrolled'),
     getAllStudentAssignments(),
   ])
 
   const enrolledStudentIds = new Set(
     (enrolledApps ?? []).map((a) => a.student_id).filter(Boolean)
   )
+
+  const tagsByStudentId: Record<string, string[]> = {}
+  for (const a of enrolledApps ?? []) {
+    if (a.student_id && a.admin_tags?.length) {
+      tagsByStudentId[a.student_id] = a.admin_tags
+    }
+  }
 
   const allStudents = (students ?? []) as Student[]
   const enrolledStudents = allStudents.filter((s) => enrolledStudentIds.has(s.id))
@@ -188,6 +195,7 @@ export default async function PeoplePage() {
         fetchParentDetail={fetchParentDetail}
         fetchStudentDetail={fetchStudentDetail}
         assignmentsByStudentId={assignmentsByStudentId}
+        tagsByStudentId={tagsByStudentId}
       />
     </div>
   )

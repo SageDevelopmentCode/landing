@@ -1310,6 +1310,30 @@ export function createOtpSentEmbed(data: {
 }
 
 /**
+ * Creates a Discord embed for summer week commitment notes
+ */
+export function createSummerCommitmentNoteEmbed(data: {
+  parentEmail: string;
+  childName: string;
+  note: string;
+}): DiscordEmbed {
+  return {
+    title: "📝 Summer Week Commitment Note",
+    color: 0xe07a3a,
+    fields: [
+      { name: "Parent", value: data.parentEmail, inline: true },
+      { name: "Child", value: data.childName, inline: true },
+      {
+        name: "Note",
+        value: data.note.length > 1024 ? data.note.substring(0, 1021) + "..." : data.note,
+        inline: false,
+      },
+    ],
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
  * Creates a Discord embed for first week drop-off time selections
  */
 export function createDropOffTimeEmbed(data: {

@@ -13,6 +13,7 @@ import type {
   PaidHomeschoolByStudent,
   PaidAftercareByStudent,
   PaidFunFridayByStudent,
+  SummerNotesByStudent,
   StudentInfo,
 } from "@/app/parent/billing/page";
 
@@ -29,6 +30,7 @@ export default async function ImpersonateBillingPage({
     { data: adminUser },
     { data: pendingData },
     { data: summerData },
+    { data: notesData },
   ] = await Promise.all([
     adminClient
       .schema("billing")
@@ -61,6 +63,11 @@ export default async function ImpersonateBillingPage({
       .eq("user_id", parentId)
       .eq("approved", true)
       .in("program", ["summer_26", "both", "homeschool_drop_in"]),
+    adminClient
+      .schema("billing")
+      .from("summer_week_commitments")
+      .select("student_id, note")
+      .eq("parent_id", parentId),
   ]);
 
   if (!adminUser) notFound();
@@ -227,6 +234,13 @@ export default async function ImpersonateBillingPage({
     }
   }
 
+  const summerNotesByStudent: SummerNotesByStudent = {};
+  for (const row of notesData ?? []) {
+    if (row.student_id && row.note) {
+      summerNotesByStudent[row.student_id] = row.note;
+    }
+  }
+
   const unpaidSummerEnrollments = summerEnrollments.filter(
     (e) =>
       e.program !== "homeschool_drop_in" &&
@@ -282,6 +296,7 @@ export default async function ImpersonateBillingPage({
           paidHomeschoolByStudent={paidHomeschoolByStudent}
           paidAftercareByStudent={paidAftercareByStudent}
           paidFunFridayByStudent={paidFunFridayByStudent}
+          summerNotesByStudent={summerNotesByStudent}
         />
       </main>
     </div>
