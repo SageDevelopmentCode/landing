@@ -13,6 +13,7 @@ import {
   Rss,
   FileText,
   Users,
+  Sun,
 } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 
@@ -27,6 +28,7 @@ const primaryNavItems: { label: string; icon: LucideIcon; href: string }[] = [
 
 const moreItems: { label: string; icon: LucideIcon; href: string }[] = [
   { label: "Payroll",             icon: CreditCard, href: "/teacher/dashboard/payroll" },
+  { label: "Aftercare",           icon: Sun,        href: "/teacher/dashboard/aftercare" },
   { label: "Forms and Documents", icon: FileText,   href: "#" },
 ];
 
