@@ -9,7 +9,9 @@ interface FullEnrollmentCardProps {
   onQuestionsClick: () => void;
 }
 
-export default function FullEnrollmentCard({ onQuestionsClick }: FullEnrollmentCardProps) {
+export default function FullEnrollmentCard({
+  onQuestionsClick,
+}: FullEnrollmentCardProps) {
   const router = useRouter();
   return (
     <motion.div
@@ -57,7 +59,7 @@ export default function FullEnrollmentCard({ onQuestionsClick }: FullEnrollmentC
               </div>
               <div className="px-6 py-4 bg-white rounded-lg shadow-md">
                 <p className="text-sm font-semibold text-text-gray font-body mb-1">
-                  Primary (Pre-K – 1st Grade)
+                  Pre-K – 1st Grade
                 </p>
                 <p className="text-3xl font-bold text-primary font-heading">
                   $1,195
@@ -71,9 +73,7 @@ export default function FullEnrollmentCard({ onQuestionsClick }: FullEnrollmentC
               </div>
             </div>
             <p className="text-xs text-text-gray font-body mb-4">
-              <span className="font-semibold text-black">
-                Enrollment fees:
-              </span>{" "}
+              <span className="font-semibold text-black">Enrollment fees:</span>{" "}
               First-time registration $500 · Re-registration $300 · Annual
               supply fee $300
             </p>

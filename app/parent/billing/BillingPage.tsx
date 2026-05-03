@@ -394,7 +394,7 @@ function getGradeTier(grade: string | null): "primary" | "upper" {
 }
 
 function gradeTierLabel(tier: "primary" | "upper"): string {
-  return tier === "primary" ? "Primary (Pre-K\u20131st)" : "2nd\u20134th Grade";
+  return tier === "primary" ? "Pre-K–1st Grade" : "2nd–4th Grade";
 }
 
 function formatCents(cents: number): string {
@@ -2264,9 +2264,13 @@ function AftercarePaymentModal({
                   {AFTERCARE_MONTHS.map((m) => {
                     const selected = selectedMonths.has(m.key);
                     const isPaid = paidMonths.has(m.key);
-                    const paidDaysInMonth = m.days.filter((d) => paidDays.has(d.date)).length;
+                    const paidDaysInMonth = m.days.filter((d) =>
+                      paidDays.has(d.date),
+                    ).length;
                     // Only count individually-paid days (not from a monthly payment) for the subtitle
-                    const individualPaidDaysInMonth = isPaid ? 0 : paidDaysInMonth;
+                    const individualPaidDaysInMonth = isPaid
+                      ? 0
+                      : paidDaysInMonth;
                     return (
                       <motion.button
                         key={m.key}
@@ -2274,7 +2278,11 @@ function AftercarePaymentModal({
                         disabled={isPaid}
                         className={`flex flex-col gap-1 rounded-xl px-4 py-4 text-left transition-colors ${isPaid ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
                         animate={{
-                          backgroundColor: isPaid ? "#f0fdf4" : selected ? "#fff7f3" : "#f9fafb",
+                          backgroundColor: isPaid
+                            ? "#f0fdf4"
+                            : selected
+                              ? "#fff7f3"
+                              : "#f9fafb",
                         }}
                         whileTap={isPaid ? {} : { scale: 0.99 }}
                         transition={{ duration: 0.15 }}
@@ -2323,7 +2331,8 @@ function AftercarePaymentModal({
                             : formatCents(aftercareMonthCents(m))}
                           {individualPaidDaysInMonth > 0 && (
                             <span className="ml-1.5 text-green-600 font-semibold">
-                              · {individualPaidDaysInMonth} day{individualPaidDaysInMonth !== 1 ? "s" : ""} paid
+                              · {individualPaidDaysInMonth} day
+                              {individualPaidDaysInMonth !== 1 ? "s" : ""} paid
                             </span>
                           )}
                         </p>
@@ -2843,8 +2852,12 @@ function FunFridayPaymentModal({
                   {FUN_FRIDAY_MONTHS.map((m) => {
                     const selected = selectedMonths.has(m.key);
                     const isPaid = paidMonths.has(m.key);
-                    const paidFridaysInMonth = m.fridays.filter((d) => paidFridays.has(d.date)).length;
-                    const individualPaidFridaysInMonth = isPaid ? 0 : paidFridaysInMonth;
+                    const paidFridaysInMonth = m.fridays.filter((d) =>
+                      paidFridays.has(d.date),
+                    ).length;
+                    const individualPaidFridaysInMonth = isPaid
+                      ? 0
+                      : paidFridaysInMonth;
                     return (
                       <motion.button
                         key={m.key}
@@ -2852,7 +2865,11 @@ function FunFridayPaymentModal({
                         disabled={isPaid}
                         className={`flex flex-col gap-1 rounded-xl px-4 py-4 text-left transition-colors ${isPaid ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
                         animate={{
-                          backgroundColor: isPaid ? "#f0fdf4" : selected ? "#f5f3ff" : "#f9fafb",
+                          backgroundColor: isPaid
+                            ? "#f0fdf4"
+                            : selected
+                              ? "#f5f3ff"
+                              : "#f9fafb",
                         }}
                         whileTap={isPaid ? {} : { scale: 0.99 }}
                         transition={{ duration: 0.15 }}
@@ -2902,7 +2919,11 @@ function FunFridayPaymentModal({
                             : `${formatCents(FUN_FRIDAY_MONTHLY_CENTS)}/mo`}
                           {individualPaidFridaysInMonth > 0 && (
                             <span className="ml-1.5 text-green-600 font-semibold">
-                              · {individualPaidFridaysInMonth} Friday{individualPaidFridaysInMonth !== 1 ? "s" : ""} paid
+                              · {individualPaidFridaysInMonth} Friday
+                              {individualPaidFridaysInMonth !== 1
+                                ? "s"
+                                : ""}{" "}
+                              paid
                             </span>
                           )}
                         </p>
@@ -4065,12 +4086,28 @@ export default function BillingPage({
             }
             parentId={parentId}
             parentEmail={parentEmail}
-            paidMonths={new Set(paidAftercareByStudent[selectedAftercareEnrollment.student_id]?.months ?? [])}
-            paidDays={new Set([
-              ...(paidAftercareByStudent[selectedAftercareEnrollment.student_id]?.days ?? []),
-              ...(paidAftercareByStudent[selectedAftercareEnrollment.student_id]?.months ?? [])
-                .flatMap((mk) => AFTERCARE_MONTHS.find((m) => m.key === mk)?.days.map((d) => d.date) ?? []),
-            ])}
+            paidMonths={
+              new Set(
+                paidAftercareByStudent[selectedAftercareEnrollment.student_id]
+                  ?.months ?? [],
+              )
+            }
+            paidDays={
+              new Set([
+                ...(paidAftercareByStudent[
+                  selectedAftercareEnrollment.student_id
+                ]?.days ?? []),
+                ...(
+                  paidAftercareByStudent[selectedAftercareEnrollment.student_id]
+                    ?.months ?? []
+                ).flatMap(
+                  (mk) =>
+                    AFTERCARE_MONTHS.find((m) => m.key === mk)?.days.map(
+                      (d) => d.date,
+                    ) ?? [],
+                ),
+              ])
+            }
             onClose={() => setSelectedAftercareEnrollment(null)}
           />
         )}
@@ -4082,12 +4119,28 @@ export default function BillingPage({
             }
             parentId={parentId}
             parentEmail={parentEmail}
-            paidMonths={new Set(paidFunFridayByStudent[selectedFunFridayEnrollment.student_id]?.months ?? [])}
-            paidFridays={new Set([
-              ...(paidFunFridayByStudent[selectedFunFridayEnrollment.student_id]?.fridays ?? []),
-              ...(paidFunFridayByStudent[selectedFunFridayEnrollment.student_id]?.months ?? [])
-                .flatMap((mk) => FUN_FRIDAY_MONTHS.find((m) => m.key === mk)?.fridays.map((d) => d.date) ?? []),
-            ])}
+            paidMonths={
+              new Set(
+                paidFunFridayByStudent[selectedFunFridayEnrollment.student_id]
+                  ?.months ?? [],
+              )
+            }
+            paidFridays={
+              new Set([
+                ...(paidFunFridayByStudent[
+                  selectedFunFridayEnrollment.student_id
+                ]?.fridays ?? []),
+                ...(
+                  paidFunFridayByStudent[selectedFunFridayEnrollment.student_id]
+                    ?.months ?? []
+                ).flatMap(
+                  (mk) =>
+                    FUN_FRIDAY_MONTHS.find((m) => m.key === mk)?.fridays.map(
+                      (d) => d.date,
+                    ) ?? [],
+                ),
+              ])
+            }
             onClose={() => setSelectedFunFridayEnrollment(null)}
           />
         )}

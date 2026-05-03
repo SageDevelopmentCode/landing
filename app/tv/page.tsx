@@ -604,7 +604,7 @@ function Slide4Tuition() {
             </div>
             <div className="bg-[#FFF9F5] rounded-xl p-4">
               <p className="text-base text-gray-500 font-body mb-1">
-                Primary (Pre-K–1st)
+                Pre-K–1st Grade
               </p>
               <p className="text-2xl font-bold text-primary font-heading">
                 $1,195
@@ -952,7 +952,6 @@ export default function TVPage() {
           </motion.div>
         </AnimatePresence>
       </div>
-
     </div>
   );
 }

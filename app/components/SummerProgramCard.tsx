@@ -9,7 +9,9 @@ interface SummerProgramCardProps {
   onQuestionsClick: () => void;
 }
 
-export default function SummerProgramCard({ onQuestionsClick }: SummerProgramCardProps) {
+export default function SummerProgramCard({
+  onQuestionsClick,
+}: SummerProgramCardProps) {
   const router = useRouter();
   return (
     <motion.div
@@ -59,7 +61,7 @@ export default function SummerProgramCard({ onQuestionsClick }: SummerProgramCar
                   </div>
                   <div>
                     <p className="text-xs text-text-gray font-body">
-                      Primary (Pre-K – 1st Grade)
+                      Pre-K – 1st Grade
                     </p>
                     <p className="text-2xl font-bold text-primary font-heading">
                       $375
@@ -87,23 +89,19 @@ export default function SummerProgramCard({ onQuestionsClick }: SummerProgramCar
                     </p>
                     <p className="text-xs text-white/60 font-body">
                       <span className="line-through">$4,200</span>
-                      <span className="ml-1 text-white/80">
-                        · $420 off
-                      </span>
+                      <span className="ml-1 text-white/80">· $420 off</span>
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-white/70 font-body">
-                      Primary (Pre-K – 1st Grade)
+                      Pre-K – 1st Grade
                     </p>
                     <p className="text-2xl font-bold text-white font-heading">
                       $4,050
                     </p>
                     <p className="text-xs text-white/60 font-body">
                       <span className="line-through">$4,500</span>
-                      <span className="ml-1 text-white/80">
-                        · $450 off
-                      </span>
+                      <span className="ml-1 text-white/80">· $450 off</span>
                     </p>
                   </div>
                 </div>
