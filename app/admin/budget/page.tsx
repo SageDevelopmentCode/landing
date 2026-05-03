@@ -714,6 +714,239 @@ function RevenueTrend({
   );
 }
 
+// ─── MonthPicker ─────────────────────────────────────────────────────────────
+
+const MONTH_ABBRS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+function MonthPicker({ value, onChange, placeholder = "Select month" }: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  const parsed = value ? { y: Number(value.slice(0, 4)), m: Number(value.slice(5, 7)) - 1 } : null;
+  const [viewYear, setViewYear] = React.useState(parsed?.y ?? new Date().getFullYear());
+
+  React.useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  const label = parsed
+    ? `${MONTH_ABBRS[parsed.m]} ${parsed.y}`
+    : placeholder;
+
+  return (
+    <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
+      <button
+        type="button"
+        onClick={() => { setOpen(o => !o); if (parsed) setViewYear(parsed.y); }}
+        style={{
+          ...inputStyle,
+          width: "140px",
+          cursor: "pointer",
+          textAlign: "left",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          color: parsed ? colors.textPrimary : colors.textSecondary,
+        }}
+      >
+        <span>{label}</span>
+        <span style={{ fontSize: "10px", color: colors.textSecondary }}>▾</span>
+      </button>
+      {open && (
+        <div style={{
+          position: "absolute",
+          top: "calc(100% + 4px)",
+          left: 0,
+          zIndex: 200,
+          backgroundColor: colors.elevated,
+          border: `1px solid ${colors.border}`,
+          borderRadius: radius.md,
+          boxShadow: shadows.soft,
+          padding: "12px",
+          minWidth: "200px",
+        }}>
+          {/* Year nav */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+            <button
+              type="button"
+              onClick={() => setViewYear(y => y - 1)}
+              style={{ background: "none", border: "none", cursor: "pointer", color: colors.textSecondary, fontSize: "14px", padding: "2px 6px" }}
+            >‹</button>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: colors.textPrimary }}>{viewYear}</span>
+            <button
+              type="button"
+              onClick={() => setViewYear(y => y + 1)}
+              style={{ background: "none", border: "none", cursor: "pointer", color: colors.textSecondary, fontSize: "14px", padding: "2px 6px" }}
+            >›</button>
+          </div>
+          {/* Month grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "4px" }}>
+            {MONTH_ABBRS.map((abbr, idx) => {
+              const isSelected = parsed?.y === viewYear && parsed?.m === idx;
+              return (
+                <button
+                  key={abbr}
+                  type="button"
+                  onClick={() => {
+                    onChange(`${viewYear}-${String(idx + 1).padStart(2, "0")}`);
+                    setOpen(false);
+                  }}
+                  style={{
+                    padding: "6px 4px",
+                    borderRadius: radius.sm,
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "12px",
+                    fontWeight: isSelected ? 600 : 400,
+                    backgroundColor: isSelected ? colors.accent : "transparent",
+                    color: isSelected ? "#fff" : colors.textPrimary,
+                    transition: "background 0.15s",
+                  }}
+                  onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLButtonElement).style.backgroundColor = colors.accentLight; }}
+                  onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
+                >
+                  {abbr}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── DatePicker ──────────────────────────────────────────────────────────────
+
+function DatePicker({ value, onChange }: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  const parsed = value ? { y: Number(value.slice(0,4)), m: Number(value.slice(5,7))-1, d: Number(value.slice(8,10)) } : null;
+  const today = new Date();
+  const [viewY, setViewY] = React.useState(parsed?.y ?? today.getFullYear());
+  const [viewM, setViewM] = React.useState(parsed?.m ?? today.getMonth());
+
+  React.useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  const label = parsed
+    ? `${MONTH_ABBRS[parsed.m]} ${parsed.d}, ${parsed.y}`
+    : "Select date";
+
+  const daysInMonth = new Date(viewY, viewM + 1, 0).getDate();
+  const firstDow = new Date(viewY, viewM, 1).getDay();
+
+  const prevMonth = () => {
+    if (viewM === 0) { setViewM(11); setViewY(y => y - 1); }
+    else setViewM(m => m - 1);
+  };
+  const nextMonth = () => {
+    if (viewM === 11) { setViewM(0); setViewY(y => y + 1); }
+    else setViewM(m => m + 1);
+  };
+
+  return (
+    <div ref={ref} style={{ position: "relative", display: "block", width: "100%" }}>
+      <button
+        type="button"
+        onClick={() => { setOpen(o => !o); if (parsed) { setViewY(parsed.y); setViewM(parsed.m); } }}
+        style={{
+          ...inputStyle,
+          cursor: "pointer",
+          textAlign: "left",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          color: parsed ? colors.textPrimary : colors.textSecondary,
+        }}
+      >
+        <span>{label}</span>
+        <span style={{ fontSize: "10px", color: colors.textSecondary }}>▾</span>
+      </button>
+      {open && (
+        <div style={{
+          position: "absolute",
+          top: "calc(100% + 4px)",
+          left: 0,
+          zIndex: 200,
+          backgroundColor: colors.elevated,
+          border: `1px solid ${colors.border}`,
+          borderRadius: radius.md,
+          boxShadow: shadows.soft,
+          padding: "12px",
+          minWidth: "220px",
+        }}>
+          {/* Month/year nav */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+            <button type="button" onClick={prevMonth} style={{ background: "none", border: "none", cursor: "pointer", color: colors.textSecondary, fontSize: "14px", padding: "2px 6px" }}>‹</button>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: colors.textPrimary }}>{MONTH_ABBRS[viewM]} {viewY}</span>
+            <button type="button" onClick={nextMonth} style={{ background: "none", border: "none", cursor: "pointer", color: colors.textSecondary, fontSize: "14px", padding: "2px 6px" }}>›</button>
+          </div>
+          {/* Weekday headers */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px", marginBottom: "4px" }}>
+            {["Su","Mo","Tu","We","Th","Fr","Sa"].map(d => (
+              <div key={d} style={{ textAlign: "center", fontSize: "10px", color: colors.textTertiary, padding: "2px 0" }}>{d}</div>
+            ))}
+          </div>
+          {/* Day grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px" }}>
+            {Array.from({ length: firstDow }).map((_, i) => <div key={`e${i}`} />)}
+            {Array.from({ length: daysInMonth }).map((_, i) => {
+              const day = i + 1;
+              const isSelected = parsed?.y === viewY && parsed?.m === viewM && parsed?.d === day;
+              return (
+                <button
+                  key={day}
+                  type="button"
+                  onClick={() => {
+                    onChange(`${viewY}-${String(viewM+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`);
+                    setOpen(false);
+                  }}
+                  style={{
+                    padding: "5px 0",
+                    borderRadius: radius.sm,
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "12px",
+                    textAlign: "center",
+                    fontWeight: isSelected ? 600 : 400,
+                    backgroundColor: isSelected ? colors.accent : "transparent",
+                    color: isSelected ? "#fff" : colors.textPrimary,
+                    transition: "background 0.15s",
+                  }}
+                  onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLButtonElement).style.backgroundColor = colors.accentLight; }}
+                  onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
+                >
+                  {day}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Overview Tab ────────────────────────────────────────────────────────────
 
 function OverviewTab({
@@ -778,12 +1011,7 @@ function OverviewTab({
     <div className="space-y-6">
       {/* Month picker */}
       <div className="flex items-center gap-3">
-        <input
-          style={{ ...inputStyle, width: "140px" }}
-          type="month"
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(e.target.value)}
-        />
+        <MonthPicker value={selectedMonth} onChange={setSelectedMonth} />
       </div>
 
       {/* Revenue vs Expenses line chart */}
@@ -1166,12 +1394,7 @@ function BudgetVsActual({
         >
           Budget vs. Actual
         </p>
-        <input
-          type="month"
-          value={filterMonth}
-          onChange={(e) => setFilterMonth(e.target.value)}
-          style={{ ...inputStyle, width: "140px" }}
-        />
+        <MonthPicker value={filterMonth} onChange={setFilterMonth} />
       </div>
 
       <div style={{ overflowX: "auto" }}>
@@ -2109,13 +2332,7 @@ function ExpensesTab({
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3 justify-between">
         <div className="flex gap-3">
-          <input
-            style={{ ...inputStyle, width: "140px" }}
-            type="month"
-            value={filterMonth}
-            onChange={(e) => setFilterMonth(e.target.value)}
-            placeholder="Filter month"
-          />
+          <MonthPicker value={filterMonth} onChange={setFilterMonth} placeholder="Filter month" />
           <select
             style={{ ...inputStyle, width: "160px" }}
             value={filterCat}
@@ -2242,17 +2459,24 @@ function ExpensesTab({
                       >
                         {label}
                       </label>
-                      <input
-                        style={inputStyle}
-                        type={type}
-                        placeholder={placeholder}
-                        value={
-                          (newExp as Record<string, unknown>)[key] as string
-                        }
-                        onChange={(e) =>
-                          setNewExp((p) => ({ ...p, [key]: e.target.value }))
-                        }
-                      />
+                      {key === "expense_date" ? (
+                        <DatePicker
+                          value={(newExp as Record<string, unknown>)[key] as string ?? ""}
+                          onChange={(v) => setNewExp((p) => ({ ...p, [key]: v }))}
+                        />
+                      ) : (
+                        <input
+                          style={inputStyle}
+                          type={type}
+                          placeholder={placeholder}
+                          value={
+                            (newExp as Record<string, unknown>)[key] as string
+                          }
+                          onChange={(e) =>
+                            setNewExp((p) => ({ ...p, [key]: e.target.value }))
+                          }
+                        />
+                      )}
                     </div>
                   ))}
                   <div className="flex items-center gap-2">
@@ -3923,13 +4147,9 @@ function ExpensesTab({
             >
               Date
             </label>
-            <input
-              style={inputStyle}
-              type="date"
+            <DatePicker
               value={editValues.expense_date ?? ""}
-              onChange={(e) =>
-                setEditValues((v) => ({ ...v, expense_date: e.target.value }))
-              }
+              onChange={(v) => setEditValues((prev) => ({ ...prev, expense_date: v }))}
             />
           </div>
           <div>
