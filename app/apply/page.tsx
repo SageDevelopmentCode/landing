@@ -261,8 +261,8 @@ const tabContent = {
     badge: "Summer 2026",
     title: "Summer 2026 Program",
     description: [
-      "Our Summer 2026 program is a twelve-week immersive experience designed for curious learners ages 4–11. Each day blends hands-on projects, nature exploration, literacy and math support, and plenty of time for creative play—all in a small, nurturing group setting.",
-      "This is an ideal way to experience Sage Field before committing to a full school year. Families who complete the summer program and wish to continue will have priority consideration for School Year 2026–2027 enrollment.",
+      "Our Summer 2026 program is a twelve-week academic enrichment session designed for curious learners ages 4–11. Each day features structured, teacher-led instruction in literacy and mathematics, complemented by specialized modules in nature study, fine arts, music, cooking, and social-emotional development.",
+      "We operate as a full-day school, maintaining a consistent academic schedule, attendance records, and small-group instructional cohorts from Monday through Thursday. This program is designed as a formal extension of our private-school curriculum to support student progress, and functions as an academic institution rather than a child care or camp program.",
     ],
     details: [
       { label: "Dates", value: "May 26 – August 13, 2026" },
@@ -333,7 +333,9 @@ export default function ApplyPage() {
     ? (tabParam as Tab)
     : "summer";
   const refParam = searchParams.get("ref");
-  const applyStartUrl = refParam ? `/apply/start?ref=${encodeURIComponent(refParam)}` : "/apply/start";
+  const applyStartUrl = refParam
+    ? `/apply/start?ref=${encodeURIComponent(refParam)}`
+    : "/apply/start";
   const [activeTab, setActiveTab] = useState<Tab>(initialTab);
   const [contactOpen, setContactOpen] = useState(false);
   const [waitlistOpen, setWaitlistOpen] = useState(false);
@@ -479,31 +481,6 @@ export default function ApplyPage() {
                   </div>
                 </div>
 
-                {/* Blurb — Summer only */}
-                {activeTab === "summer" && (
-                  <div className="mb-10 p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
-                    <p className="text-base text-gray-600 font-body leading-relaxed mb-4">
-                      Summer at Sage Field is a season of sunshine, discovery,
-                      and play! Each day is filled with outdoor adventures,
-                      daily water play, music, art (both guided and free
-                      exploration), and ever-changing hands-on activities that
-                      spark imagination and joy. We focus on creating a space
-                      where children can explore, make friends, and simply enjoy
-                      being kids.
-                    </p>
-                    <p className="text-base text-gray-600 font-body leading-relaxed">
-                      Amid all the fun, we also keep minds curious and confident
-                      with short, engaging academic blocks—15 minutes each of
-                      reading and English, math, and writing. Our teachers
-                      individualize learning for every child, meeting them right
-                      where they are and turning lessons into exciting,
-                      achievable challenges. This gentle rhythm keeps learning
-                      meaningful and fun while helping students transition
-                      smoothly into the new school year.
-                    </p>
-                  </div>
-                )}
-
                 {/* Daily Schedule — Summer only */}
                 {activeTab === "summer" && (
                   <div className="mb-10">
@@ -552,7 +529,8 @@ export default function ApplyPage() {
                           },
                           {
                             time: "1:45 – 2:30 PM",
-                            activity: "Cooking / Homesteading (Animal & Garden Care) 🌱",
+                            activity:
+                              "Cooking / Homesteading (Animal & Garden Care) 🌱",
                           },
                           {
                             time: "1:45 – 2:45 PM",
@@ -573,9 +551,6 @@ export default function ApplyPage() {
                               i % 2 === 0 ? "bg-white" : "bg-gray-50/60"
                             }`}
                           >
-                            <span className="text-xs text-gray-400 font-body whitespace-nowrap w-36 shrink-0">
-                              {row.time}
-                            </span>
                             <span className="text-sm font-semibold text-gray-800 font-body">
                               {row.activity}
                             </span>

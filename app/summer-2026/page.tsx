@@ -362,9 +362,6 @@ export default function Summer2026Page() {
                       i % 2 === 0 ? "bg-white" : "bg-gray-50/60"
                     }`}
                   >
-                    <span className="text-xs text-gray-400 font-body whitespace-nowrap w-36 shrink-0">
-                      {row.time}
-                    </span>
                     <span className="text-sm font-semibold text-gray-800 font-body">
                       {row.activity}
                     </span>
