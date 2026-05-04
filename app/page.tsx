@@ -38,7 +38,7 @@ export default function Home() {
     {
       question: "What is Sage Field?",
       answer:
-        "Sage Field Private School is an outdoor-focused private microschool in Round Rock, Texas. We are a small-group, outdoor-centered education that fosters curiosity, confidence, and wisdom — a structured drop-off program without the rigidity of traditional school.",
+        "Sage Field Private School is an outdoor-focused private microschool in Round Rock, Texas. Sage Field operates as a private microschool, not a child-care or daycare center. We are a small-group, outdoor-centered education that fosters curiosity, confidence, and wisdom — a structured drop-off program without the rigidity of traditional school.",
     },
     {
       question: "Are you a school? Will Sage Field keep grades or transcripts?",
@@ -247,7 +247,11 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
+              transition={{
+                duration: 0.6,
+                delay: 0.1,
+                ease: "easeOut" as const,
+              }}
             >
               <h3 className="text-2xl md:text-3xl font-bold mb-6 font-heading text-gray-800">
                 Program Details
@@ -263,7 +267,11 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
+              transition={{
+                duration: 0.6,
+                delay: 0.2,
+                ease: "easeOut" as const,
+              }}
             >
               <h3 className="text-2xl md:text-3xl font-bold mb-6 font-heading text-gray-800">
                 Supporting All Learners
@@ -279,7 +287,11 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
+              transition={{
+                duration: 0.6,
+                delay: 0.3,
+                ease: "easeOut" as const,
+              }}
             >
               <h3 className="text-2xl md:text-3xl font-bold mb-6 font-heading text-gray-800">
                 Enrollment & Parent Partnership

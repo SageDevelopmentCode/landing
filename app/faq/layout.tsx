@@ -44,7 +44,7 @@ export default function FAQLayout({ children }: { children: React.ReactNode }) {
         name: "What is Sage Field?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Sage Field Private School is an outdoor-focused private microschool in Round Rock, Texas. We are a small-group, outdoor-centered education that fosters curiosity, confidence, and wisdom — a structured drop-off program without the rigidity of traditional school.",
+          text: "Sage Field Private School is an outdoor-focused private microschool in Round Rock, Texas. Sage Field operates as a private microschool, not a child-care or daycare center. We are a small-group, outdoor-centered education that fosters curiosity, confidence, and wisdom — a structured drop-off program without the rigidity of traditional school.",
         },
       },
       {
@@ -52,7 +52,7 @@ export default function FAQLayout({ children }: { children: React.ReactNode }) {
         name: "What is a microschool?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "A microschool is a small, independent private school — typically serving no more than 10 - 12 students — that offers a more personalized, flexible alternative to traditional schooling. Microschools prioritize small class sizes, individualized pacing, and innovative approaches to learning. Sage Field fits this model: we are a licensed private school with intentional, outdoor-based education at our core.",
+          text: "A microschool is a small, independent private school — typically serving no more than 10 - 12 students per class — that offers a more personalized, flexible alternative to traditional schooling. Microschools prioritize small class sizes, individualized pacing, and innovative approaches to learning. Sage Field fits this model: we are a licensed private school with intentional, outdoor-based education at our core.",
         },
       },
       {
