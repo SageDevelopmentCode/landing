@@ -75,8 +75,7 @@ export default function WelcomeSection() {
             Sage Field Private School is an outdoor-focused private microschool
             in Round Rock, Texas for children ages 4-11. We offer small-group,
             outdoor-centered education that fosters curiosity, confidence, and
-            wisdom through personalised, hands-on learning — without the rigid
-            structure of traditional school.
+            wisdom through personalised, hands-on learning.
           </motion.p>
         </div>
 
