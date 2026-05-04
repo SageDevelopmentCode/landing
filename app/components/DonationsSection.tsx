@@ -380,22 +380,6 @@ const DonationsSection = () => {
                         $23 per day per student
                       </p>
                     </div>
-
-                    {/* Non-Member Monthly */}
-                    <div className="p-4 bg-welcome-bg rounded-lg border-l-4 border-primary">
-                      <p className="text-sm font-semibold text-black mb-1 font-heading">
-                        Monthly (After Care Only)
-                      </p>
-                      <p className="text-2xl font-bold text-primary font-heading">
-                        $475
-                        <span className="text-base text-text-gray font-normal">
-                          /month
-                        </span>
-                      </p>
-                      <p className="text-xs text-text-gray mt-1 font-body">
-                        $10/hour - Cheaper than a babysitter!
-                      </p>
-                    </div>
                   </div>
                 </div>
               </motion.div>

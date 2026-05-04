@@ -3,17 +3,28 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import { motion, AnimatePresence } from "framer-motion";
-import { Poppins } from 'next/font/google'
-import { cssColors as colors, radius, cssShadows as shadows } from "../design-system";
+import { Poppins } from "next/font/google";
+import {
+  cssColors as colors,
+  radius,
+  cssShadows as shadows,
+} from "../design-system";
 import type { Tables } from "../../types/database.types";
 type BudgetLineItem = Tables<{ schema: "budget" }, "line_items">;
 type BudgetExpense = Tables<{ schema: "budget" }, "expenses">;
 type BudgetIncome = Tables<{ schema: "budget" }, "income">;
 import { Table, TableRow, TableCell } from "../components/Table";
 import { DetailSidebar } from "../components/DetailSidebar";
-import { MercuryDetailSidebar, type MercuryTransaction } from "../components/MercuryDetailSidebar";
+import {
+  MercuryDetailSidebar,
+  type MercuryTransaction,
+} from "../components/MercuryDetailSidebar";
 import { IncomeDetailSidebar } from "../components/IncomeDetailSidebar";
-import { TransactionDetailSidebar, formatPaymentType, formatCents } from "../components/TransactionDetailSidebar";
+import {
+  TransactionDetailSidebar,
+  formatPaymentType,
+  formatCents,
+} from "../components/TransactionDetailSidebar";
 import { getStripeTransactions } from "@/app/actions/getStripeTransactions";
 import { Upload, Trash2, FileText, Download, X } from "lucide-react";
 import { uploadExpenseReceipt } from "@/app/actions/uploadExpenseReceipt";
@@ -25,27 +36,27 @@ import { fetchBudgetParents } from "@/app/actions/fetchBudgetParents";
 import type { FileObject } from "@supabase/storage-js";
 
 type StripeTransaction = {
-  id: string
-  stripe_session_id: string | null
-  stripe_payment_intent_id: string | null
-  payment_type: string
-  status: string
-  amount_cents: number
-  intended_amount_cents: number | null
-  currency: string
-  cover_fees: boolean | null
-  payer_name: string | null
-  payer_email: string | null
-  description: string | null
-  student_id: string | null
-  application_id: string | null
-  parent_id: string | null
-  metadata: Record<string, unknown> | null
-  created_at: string
-  updated_at: string | null
-  is_deleted: boolean
-  exclude_from_revenue: boolean
-}
+  id: string;
+  stripe_session_id: string | null;
+  stripe_payment_intent_id: string | null;
+  payment_type: string;
+  status: string;
+  amount_cents: number;
+  intended_amount_cents: number | null;
+  currency: string;
+  cover_fees: boolean | null;
+  payer_name: string | null;
+  payer_email: string | null;
+  description: string | null;
+  student_id: string | null;
+  application_id: string | null;
+  parent_id: string | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string | null;
+  is_deleted: boolean;
+  exclude_from_revenue: boolean;
+};
 
 const merriweather = Poppins({
   weight: ["300", "400", "700", "900"],
@@ -266,7 +277,9 @@ function CategoryBudgetRings({
           const emoji = CATEGORY_EMOJI[row.cat] ?? "💰";
           const clampedPct = Math.min(row.pct, 1);
           const dashLen = clampedPct * RING_CIRC;
-          const strokeColor = row.over ? colors.error : SLICE_COLORS[i % SLICE_COLORS.length];
+          const strokeColor = row.over
+            ? colors.error
+            : SLICE_COLORS[i % SLICE_COLORS.length];
           const textColor = "#ffffff";
           const bgColor = row.over ? colors.error : colors.success;
 
@@ -440,9 +453,13 @@ function RevenueExpensesLineChart({
 
   const data = allMonths.map((m) => {
     const revenue = stripeTransactions
-      .filter((tx) => !tx.exclude_from_revenue && tx.created_at.slice(0, 7) === m)
+      .filter(
+        (tx) => !tx.exclude_from_revenue && tx.created_at.slice(0, 7) === m,
+      )
       .reduce((s, tx) => {
-        const net = tx.cover_fees ? (tx.intended_amount_cents ?? tx.amount_cents) : tx.amount_cents;
+        const net = tx.cover_fees
+          ? (tx.intended_amount_cents ?? tx.amount_cents)
+          : tx.amount_cents;
         return s + net / 100;
       }, 0);
     const expenseTotal = expenses
@@ -451,7 +468,10 @@ function RevenueExpensesLineChart({
     return { month: m, revenue, expenses: expenseTotal };
   });
 
-  const maxVal = Math.max(...data.map((d) => Math.max(d.revenue, d.expenses)), 1);
+  const maxVal = Math.max(
+    ...data.map((d) => Math.max(d.revenue, d.expenses)),
+    1,
+  );
 
   const x = (i: number) =>
     allMonths.length > 1
@@ -460,22 +480,35 @@ function RevenueExpensesLineChart({
 
   const y = (val: number) => PAD.top + chartH - (val / maxVal) * chartH;
 
-  const revPath = data.map((d, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(d.revenue)}`).join(" ");
-  const expPath = data.map((d, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(d.expenses)}`).join(" ");
+  const revPath = data
+    .map((d, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(d.revenue)}`)
+    .join(" ");
+  const expPath = data
+    .map((d, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(d.expenses)}`)
+    .join(" ");
 
   // Area fill under revenue line back to baseline
   const revArea =
     `M ${x(0)} ${y(data[0].revenue)} ` +
-    data.slice(1).map((d, i) => `L ${x(i + 1)} ${y(d.revenue)}`).join(" ") +
+    data
+      .slice(1)
+      .map((d, i) => `L ${x(i + 1)} ${y(d.revenue)}`)
+      .join(" ") +
     ` L ${x(data.length - 1)} ${PAD.top + chartH} L ${x(0)} ${PAD.top + chartH} Z`;
 
   const fmtMo = (m: string) =>
-    new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)) - 1).toLocaleString("default", {
-      month: "short",
-    });
+    new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)) - 1).toLocaleString(
+      "default",
+      {
+        month: "short",
+      },
+    );
 
   const GRIDLINES = 4;
-  const gridVals = Array.from({ length: GRIDLINES + 1 }, (_, i) => (maxVal / GRIDLINES) * i);
+  const gridVals = Array.from(
+    { length: GRIDLINES + 1 },
+    (_, i) => (maxVal / GRIDLINES) * i,
+  );
 
   const fmtShort = (n: number) => {
     if (n >= 1000) return `$${(n / 1000).toFixed(0)}k`;
@@ -485,17 +518,38 @@ function RevenueExpensesLineChart({
   return (
     <div style={{ ...cardStyle, padding: "24px" }}>
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
+        <p
+          className="text-sm font-semibold"
+          style={{ color: colors.textPrimary }}
+        >
           Revenue vs. Expenses
         </p>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
-            <div style={{ width: 10, height: 10, borderRadius: "50%", backgroundColor: colors.success }} />
-            <span style={{ fontSize: "12px", color: colors.textSecondary }}>Revenue</span>
+            <div
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: "50%",
+                backgroundColor: colors.success,
+              }}
+            />
+            <span style={{ fontSize: "12px", color: colors.textSecondary }}>
+              Revenue
+            </span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div style={{ width: 10, height: 10, borderRadius: "50%", backgroundColor: colors.error }} />
-            <span style={{ fontSize: "12px", color: colors.textSecondary }}>Expenses</span>
+            <div
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: "50%",
+                backgroundColor: colors.error,
+              }}
+            />
+            <span style={{ fontSize: "12px", color: colors.textSecondary }}>
+              Expenses
+            </span>
           </div>
         </div>
       </div>
@@ -607,8 +661,7 @@ function RevenueTrend({
   const data = months.map((m) => {
     const total = stripeTransactions
       .filter(
-        (tx) =>
-          !tx.exclude_from_revenue && tx.created_at.slice(0, 7) === m,
+        (tx) => !tx.exclude_from_revenue && tx.created_at.slice(0, 7) === m,
       )
       .reduce((s, tx) => {
         const net = tx.cover_fees
@@ -666,15 +719,18 @@ function RevenueTrend({
         }}
       >
         {data.map((d, i) => {
-          const barH = d.total > 0
-            ? Math.max((d.total / maxVal) * BAR_MAX_PX, 4)
-            : 0;
+          const barH =
+            d.total > 0 ? Math.max((d.total / maxVal) * BAR_MAX_PX, 4) : 0;
           return (
             <motion.div
               key={d.month}
               initial={{ height: 0 }}
               animate={{ height: barH }}
-              transition={{ duration: 0.5, delay: i * 0.07, ease: "easeOut" as const }}
+              transition={{
+                duration: 0.5,
+                delay: i * 0.07,
+                ease: "easeOut" as const,
+              }}
               style={{
                 flex: 1,
                 borderRadius: "4px 4px 0 0",
@@ -716,9 +772,26 @@ function RevenueTrend({
 
 // ─── MonthPicker ─────────────────────────────────────────────────────────────
 
-const MONTH_ABBRS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const MONTH_ABBRS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 
-function MonthPicker({ value, onChange, placeholder = "Select month" }: {
+function MonthPicker({
+  value,
+  onChange,
+  placeholder = "Select month",
+}: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
@@ -726,27 +799,33 @@ function MonthPicker({ value, onChange, placeholder = "Select month" }: {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef<HTMLDivElement>(null);
 
-  const parsed = value ? { y: Number(value.slice(0, 4)), m: Number(value.slice(5, 7)) - 1 } : null;
-  const [viewYear, setViewYear] = React.useState(parsed?.y ?? new Date().getFullYear());
+  const parsed = value
+    ? { y: Number(value.slice(0, 4)), m: Number(value.slice(5, 7)) - 1 }
+    : null;
+  const [viewYear, setViewYear] = React.useState(
+    parsed?.y ?? new Date().getFullYear(),
+  );
 
   React.useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  const label = parsed
-    ? `${MONTH_ABBRS[parsed.m]} ${parsed.y}`
-    : placeholder;
+  const label = parsed ? `${MONTH_ABBRS[parsed.m]} ${parsed.y}` : placeholder;
 
   return (
     <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
       <button
         type="button"
-        onClick={() => { setOpen(o => !o); if (parsed) setViewYear(parsed.y); }}
+        onClick={() => {
+          setOpen((o) => !o);
+          if (parsed) setViewYear(parsed.y);
+        }}
         style={{
           ...inputStyle,
           width: "140px",
@@ -762,34 +841,75 @@ function MonthPicker({ value, onChange, placeholder = "Select month" }: {
         <span style={{ fontSize: "10px", color: colors.textSecondary }}>▾</span>
       </button>
       {open && (
-        <div style={{
-          position: "absolute",
-          top: "calc(100% + 4px)",
-          left: 0,
-          zIndex: 200,
-          backgroundColor: colors.elevated,
-          border: `1px solid ${colors.border}`,
-          borderRadius: radius.md,
-          boxShadow: shadows.soft,
-          padding: "12px",
-          minWidth: "200px",
-        }}>
+        <div
+          style={{
+            position: "absolute",
+            top: "calc(100% + 4px)",
+            left: 0,
+            zIndex: 200,
+            backgroundColor: colors.elevated,
+            border: `1px solid ${colors.border}`,
+            borderRadius: radius.md,
+            boxShadow: shadows.soft,
+            padding: "12px",
+            minWidth: "200px",
+          }}
+        >
           {/* Year nav */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: "10px",
+            }}
+          >
             <button
               type="button"
-              onClick={() => setViewYear(y => y - 1)}
-              style={{ background: "none", border: "none", cursor: "pointer", color: colors.textSecondary, fontSize: "14px", padding: "2px 6px" }}
-            >‹</button>
-            <span style={{ fontSize: "13px", fontWeight: 600, color: colors.textPrimary }}>{viewYear}</span>
+              onClick={() => setViewYear((y) => y - 1)}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: colors.textSecondary,
+                fontSize: "14px",
+                padding: "2px 6px",
+              }}
+            >
+              ‹
+            </button>
+            <span
+              style={{
+                fontSize: "13px",
+                fontWeight: 600,
+                color: colors.textPrimary,
+              }}
+            >
+              {viewYear}
+            </span>
             <button
               type="button"
-              onClick={() => setViewYear(y => y + 1)}
-              style={{ background: "none", border: "none", cursor: "pointer", color: colors.textSecondary, fontSize: "14px", padding: "2px 6px" }}
-            >›</button>
+              onClick={() => setViewYear((y) => y + 1)}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: colors.textSecondary,
+                fontSize: "14px",
+                padding: "2px 6px",
+              }}
+            >
+              ›
+            </button>
           </div>
           {/* Month grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "4px" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: "4px",
+            }}
+          >
             {MONTH_ABBRS.map((abbr, idx) => {
               const isSelected = parsed?.y === viewYear && parsed?.m === idx;
               return (
@@ -811,8 +931,18 @@ function MonthPicker({ value, onChange, placeholder = "Select month" }: {
                     color: isSelected ? "#fff" : colors.textPrimary,
                     transition: "background 0.15s",
                   }}
-                  onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLButtonElement).style.backgroundColor = colors.accentLight; }}
-                  onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
+                  onMouseEnter={(e) => {
+                    if (!isSelected)
+                      (
+                        e.currentTarget as HTMLButtonElement
+                      ).style.backgroundColor = colors.accentLight;
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSelected)
+                      (
+                        e.currentTarget as HTMLButtonElement
+                      ).style.backgroundColor = "transparent";
+                  }}
                 >
                   {abbr}
                 </button>
@@ -827,14 +957,23 @@ function MonthPicker({ value, onChange, placeholder = "Select month" }: {
 
 // ─── DatePicker ──────────────────────────────────────────────────────────────
 
-function DatePicker({ value, onChange }: {
+function DatePicker({
+  value,
+  onChange,
+}: {
   value: string;
   onChange: (v: string) => void;
 }) {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef<HTMLDivElement>(null);
 
-  const parsed = value ? { y: Number(value.slice(0,4)), m: Number(value.slice(5,7))-1, d: Number(value.slice(8,10)) } : null;
+  const parsed = value
+    ? {
+        y: Number(value.slice(0, 4)),
+        m: Number(value.slice(5, 7)) - 1,
+        d: Number(value.slice(8, 10)),
+      }
+    : null;
   const today = new Date();
   const [viewY, setViewY] = React.useState(parsed?.y ?? today.getFullYear());
   const [viewM, setViewM] = React.useState(parsed?.m ?? today.getMonth());
@@ -842,7 +981,8 @@ function DatePicker({ value, onChange }: {
   React.useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -856,19 +996,32 @@ function DatePicker({ value, onChange }: {
   const firstDow = new Date(viewY, viewM, 1).getDay();
 
   const prevMonth = () => {
-    if (viewM === 0) { setViewM(11); setViewY(y => y - 1); }
-    else setViewM(m => m - 1);
+    if (viewM === 0) {
+      setViewM(11);
+      setViewY((y) => y - 1);
+    } else setViewM((m) => m - 1);
   };
   const nextMonth = () => {
-    if (viewM === 11) { setViewM(0); setViewY(y => y + 1); }
-    else setViewM(m => m + 1);
+    if (viewM === 11) {
+      setViewM(0);
+      setViewY((y) => y + 1);
+    } else setViewM((m) => m + 1);
   };
 
   return (
-    <div ref={ref} style={{ position: "relative", display: "block", width: "100%" }}>
+    <div
+      ref={ref}
+      style={{ position: "relative", display: "block", width: "100%" }}
+    >
       <button
         type="button"
-        onClick={() => { setOpen(o => !o); if (parsed) { setViewY(parsed.y); setViewM(parsed.m); } }}
+        onClick={() => {
+          setOpen((o) => !o);
+          if (parsed) {
+            setViewY(parsed.y);
+            setViewM(parsed.m);
+          }
+        }}
         style={{
           ...inputStyle,
           cursor: "pointer",
@@ -883,42 +1036,113 @@ function DatePicker({ value, onChange }: {
         <span style={{ fontSize: "10px", color: colors.textSecondary }}>▾</span>
       </button>
       {open && (
-        <div style={{
-          position: "absolute",
-          top: "calc(100% + 4px)",
-          left: 0,
-          zIndex: 200,
-          backgroundColor: colors.elevated,
-          border: `1px solid ${colors.border}`,
-          borderRadius: radius.md,
-          boxShadow: shadows.soft,
-          padding: "12px",
-          minWidth: "220px",
-        }}>
+        <div
+          style={{
+            position: "absolute",
+            top: "calc(100% + 4px)",
+            left: 0,
+            zIndex: 200,
+            backgroundColor: colors.elevated,
+            border: `1px solid ${colors.border}`,
+            borderRadius: radius.md,
+            boxShadow: shadows.soft,
+            padding: "12px",
+            minWidth: "220px",
+          }}
+        >
           {/* Month/year nav */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
-            <button type="button" onClick={prevMonth} style={{ background: "none", border: "none", cursor: "pointer", color: colors.textSecondary, fontSize: "14px", padding: "2px 6px" }}>‹</button>
-            <span style={{ fontSize: "13px", fontWeight: 600, color: colors.textPrimary }}>{MONTH_ABBRS[viewM]} {viewY}</span>
-            <button type="button" onClick={nextMonth} style={{ background: "none", border: "none", cursor: "pointer", color: colors.textSecondary, fontSize: "14px", padding: "2px 6px" }}>›</button>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: "10px",
+            }}
+          >
+            <button
+              type="button"
+              onClick={prevMonth}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: colors.textSecondary,
+                fontSize: "14px",
+                padding: "2px 6px",
+              }}
+            >
+              ‹
+            </button>
+            <span
+              style={{
+                fontSize: "13px",
+                fontWeight: 600,
+                color: colors.textPrimary,
+              }}
+            >
+              {MONTH_ABBRS[viewM]} {viewY}
+            </span>
+            <button
+              type="button"
+              onClick={nextMonth}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: colors.textSecondary,
+                fontSize: "14px",
+                padding: "2px 6px",
+              }}
+            >
+              ›
+            </button>
           </div>
           {/* Weekday headers */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px", marginBottom: "4px" }}>
-            {["Su","Mo","Tu","We","Th","Fr","Sa"].map(d => (
-              <div key={d} style={{ textAlign: "center", fontSize: "10px", color: colors.textTertiary, padding: "2px 0" }}>{d}</div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(7, 1fr)",
+              gap: "2px",
+              marginBottom: "4px",
+            }}
+          >
+            {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
+              <div
+                key={d}
+                style={{
+                  textAlign: "center",
+                  fontSize: "10px",
+                  color: colors.textTertiary,
+                  padding: "2px 0",
+                }}
+              >
+                {d}
+              </div>
             ))}
           </div>
           {/* Day grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px" }}>
-            {Array.from({ length: firstDow }).map((_, i) => <div key={`e${i}`} />)}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(7, 1fr)",
+              gap: "2px",
+            }}
+          >
+            {Array.from({ length: firstDow }).map((_, i) => (
+              <div key={`e${i}`} />
+            ))}
             {Array.from({ length: daysInMonth }).map((_, i) => {
               const day = i + 1;
-              const isSelected = parsed?.y === viewY && parsed?.m === viewM && parsed?.d === day;
+              const isSelected =
+                parsed?.y === viewY && parsed?.m === viewM && parsed?.d === day;
               return (
                 <button
                   key={day}
                   type="button"
                   onClick={() => {
-                    onChange(`${viewY}-${String(viewM+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`);
+                    onChange(
+                      `${viewY}-${String(viewM + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
+                    );
                     setOpen(false);
                   }}
                   style={{
@@ -933,8 +1157,18 @@ function DatePicker({ value, onChange }: {
                     color: isSelected ? "#fff" : colors.textPrimary,
                     transition: "background 0.15s",
                   }}
-                  onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLButtonElement).style.backgroundColor = colors.accentLight; }}
-                  onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
+                  onMouseEnter={(e) => {
+                    if (!isSelected)
+                      (
+                        e.currentTarget as HTMLButtonElement
+                      ).style.backgroundColor = colors.accentLight;
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSelected)
+                      (
+                        e.currentTarget as HTMLButtonElement
+                      ).style.backgroundColor = "transparent";
+                  }}
                 >
                   {day}
                 </button>
@@ -967,18 +1201,20 @@ function OverviewTab({
     0,
   );
 
-  const monthExpenses = expenses.filter(e =>
+  const monthExpenses = expenses.filter((e) =>
     e.expense_date.startsWith(selectedMonth),
   );
   const totalExpenses = monthExpenses.reduce((s, e) => s + Number(e.amount), 0);
 
   const monthTransactions = stripeTransactions.filter(
-    tx => tx.created_at.slice(0, 7) === selectedMonth,
+    (tx) => tx.created_at.slice(0, 7) === selectedMonth,
   );
   const totalRevenue = monthTransactions
-    .filter(tx => !tx.exclude_from_revenue)
+    .filter((tx) => !tx.exclude_from_revenue)
     .reduce((s, tx) => {
-      const net = tx.cover_fees ? (tx.intended_amount_cents ?? tx.amount_cents) : tx.amount_cents;
+      const net = tx.cover_fees
+        ? (tx.intended_amount_cents ?? tx.amount_cents)
+        : tx.amount_cents;
       return s + net / 100;
     }, 0);
   const netProfit = totalRevenue - totalExpenses;
@@ -986,9 +1222,11 @@ function OverviewTab({
 
   // All-time totals (unfiltered)
   const allTimeRevenue = stripeTransactions
-    .filter(tx => !tx.exclude_from_revenue)
+    .filter((tx) => !tx.exclude_from_revenue)
     .reduce((s, tx) => {
-      const net = tx.cover_fees ? (tx.intended_amount_cents ?? tx.amount_cents) : tx.amount_cents;
+      const net = tx.cover_fees
+        ? (tx.intended_amount_cents ?? tx.amount_cents)
+        : tx.amount_cents;
       return s + net / 100;
     }, 0);
   const allTimeExpenses = expenses.reduce((s, e) => s + Number(e.amount), 0);
@@ -1080,25 +1318,40 @@ function OverviewTab({
               <div key={title} style={{ ...cardStyle, padding: "16px" }}>
                 <p
                   className="text-xs font-semibold mb-3"
-                  style={{ color: colors.textSecondary, textTransform: "uppercase", letterSpacing: "0.05em" }}
+                  style={{
+                    color: colors.textSecondary,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                  }}
                 >
                   {title}
                 </p>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span style={{ color: colors.textSecondary }}>Revenue</span>
-                    <span style={{ color: colors.success, fontWeight: 600 }}>{fmt(revenue)}</span>
+                    <span style={{ color: colors.success, fontWeight: 600 }}>
+                      {fmt(revenue)}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span style={{ color: colors.textSecondary }}>Expenses</span>
-                    <span style={{ color: colors.error, fontWeight: 600 }}>{fmt(exp)}</span>
+                    <span style={{ color: colors.textSecondary }}>
+                      Expenses
+                    </span>
+                    <span style={{ color: colors.error, fontWeight: 600 }}>
+                      {fmt(exp)}
+                    </span>
                   </div>
                   <div
                     className="flex justify-between pt-2 mt-1"
-                    style={{ borderTop: `1px solid ${colors.border}`, fontWeight: 700 }}
+                    style={{
+                      borderTop: `1px solid ${colors.border}`,
+                      fontWeight: 700,
+                    }}
                   >
                     <span style={{ color: colors.textPrimary }}>Net</span>
-                    <span style={{ color: netColor }}>{net < 0 ? `-${fmt(Math.abs(net))}` : fmt(net)}</span>
+                    <span style={{ color: netColor }}>
+                      {net < 0 ? `-${fmt(Math.abs(net))}` : fmt(net)}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1244,7 +1497,11 @@ function BudgetPieChart({
                 strokeDashoffset={slice.offset}
                 initial={{ strokeDasharray: `0 ${CIRC}` }}
                 animate={{ strokeDasharray: `${slice.dashLen} ${CIRC}` }}
-                transition={{ duration: 0.6, delay: i * 0.08, ease: "easeOut" as const }}
+                transition={{
+                  duration: 0.6,
+                  delay: i * 0.08,
+                  ease: "easeOut" as const,
+                }}
               />
             ))}
             <circle cx={cx} cy={cy} r={50} fill="white" />
@@ -1354,7 +1611,7 @@ function BudgetVsActual({
 
   const actualByCategory = monthExpenses.reduce<Record<string, number>>(
     (acc, e) => {
-      const cat = e.category ?? 'Uncategorized';
+      const cat = e.category ?? "Uncategorized";
       acc[cat] = (acc[cat] ?? 0) + Number(e.amount);
       return acc;
     },
@@ -1483,9 +1740,7 @@ function BudgetVsActual({
                     </div>
                     <span
                       style={{
-                        color: row.over
-                          ? colors.error
-                          : colors.textSecondary,
+                        color: row.over ? colors.error : colors.textSecondary,
                         fontSize: "12px",
                         minWidth: "38px",
                         textAlign: "right",
@@ -1521,8 +1776,7 @@ function BudgetVsActual({
               <td
                 className="py-3 px-3 font-bold"
                 style={{
-                  color:
-                    totalVariance < 0 ? colors.error : colors.success,
+                  color: totalVariance < 0 ? colors.error : colors.success,
                 }}
               >
                 {totalVariance < 0 ? "-" : "+"}
@@ -2011,7 +2265,9 @@ function ExpensesTab({
     new Date().toISOString().slice(0, 7),
   );
   const [filterCat, setFilterCat] = useState("");
-  const [view, setView] = useState<"monthly" | "daily" | "category" | "trend">("monthly");
+  const [view, setView] = useState<"monthly" | "daily" | "category" | "trend">(
+    "monthly",
+  );
   const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(
     new Set(),
   );
@@ -2036,9 +2292,13 @@ function ExpensesTab({
   const [isLoadingReceipts, setIsLoadingReceipts] = useState(false);
   const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
   const [isDraggingReceipt, setIsDraggingReceipt] = useState(false);
-  const [deletingReceiptPath, setDeletingReceiptPath] = useState<string | null>(null);
+  const [deletingReceiptPath, setDeletingReceiptPath] = useState<string | null>(
+    null,
+  );
   const [receiptError, setReceiptError] = useState<string | null>(null);
-  const [loadingPreviewPath, setLoadingPreviewPath] = useState<string | null>(null);
+  const [loadingPreviewPath, setLoadingPreviewPath] = useState<string | null>(
+    null,
+  );
   const receiptInputRef = useRef<HTMLInputElement>(null);
   const [newPendingReceipts, setNewPendingReceipts] = useState<File[]>([]);
   const [isDraggingNewReceipt, setIsDraggingNewReceipt] = useState(false);
@@ -2048,13 +2308,19 @@ function ExpensesTab({
 
   const MAX_RECEIPT_FILES = 10;
   const MAX_FILE_SIZE = 10 * 1024 * 1024;
-  const ACCEPTED_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/heic'];
+  const ACCEPTED_TYPES = [
+    "application/pdf",
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/heic",
+  ];
 
   async function loadReceipts(expenseId: string) {
     setIsLoadingReceipts(true);
     setReceiptError(null);
     const result = await listExpenseReceipts(expenseId);
-    if ('error' in result && result.error) {
+    if ("error" in result && result.error) {
       setReceiptError(result.error);
     } else {
       const files = result.files as FileObject[];
@@ -2079,11 +2345,13 @@ function ExpensesTab({
   async function handleReceiptUpload(file: File) {
     if (!editingId) return;
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      setReceiptError('File type not supported. Use PDF, JPEG, PNG, WEBP, or HEIC.');
+      setReceiptError(
+        "File type not supported. Use PDF, JPEG, PNG, WEBP, or HEIC.",
+      );
       return;
     }
     if (file.size > MAX_FILE_SIZE) {
-      setReceiptError('File exceeds 10 MB limit.');
+      setReceiptError("File exceeds 10 MB limit.");
       return;
     }
     if (receiptFiles.length >= MAX_RECEIPT_FILES) {
@@ -2093,10 +2361,10 @@ function ExpensesTab({
     setReceiptError(null);
     setIsUploadingReceipt(true);
     const fd = new FormData();
-    fd.append('expenseId', editingId);
-    fd.append('file', file);
+    fd.append("expenseId", editingId);
+    fd.append("file", file);
     const result = await uploadExpenseReceipt(fd);
-    if ('error' in result && result.error) {
+    if ("error" in result && result.error) {
       setReceiptError(result.error);
     } else {
       await loadReceipts(editingId);
@@ -2107,7 +2375,7 @@ function ExpensesTab({
   async function handleReceiptDelete(path: string) {
     setDeletingReceiptPath(path);
     const result = await deleteExpenseReceipt(path);
-    if ('error' in result && result.error) {
+    if ("error" in result && result.error) {
       setReceiptError(result.error);
     } else if (editingId) {
       await loadReceipts(editingId);
@@ -2118,12 +2386,12 @@ function ExpensesTab({
   async function handleReceiptDownload(path: string, fileName: string) {
     setLoadingPreviewPath(path);
     const result = await getExpenseReceiptUrl(path);
-    if ('error' in result) {
-      setReceiptError(result.error ?? 'Unknown error');
+    if ("error" in result) {
+      setReceiptError(result.error ?? "Unknown error");
     } else {
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = result.url;
-      a.download = fileName.replace(/^\d+-/, '');
+      a.download = fileName.replace(/^\d+-/, "");
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -2155,7 +2423,11 @@ function ExpensesTab({
   // All days in the selected month up to today (only days that have actually passed)
   const todayStr = new Date().toISOString().slice(0, 10);
   const daysInView: string[] = (() => {
-    if (!filterMonth) return Object.keys(byDay).filter((d) => d <= todayStr).sort().reverse();
+    if (!filterMonth)
+      return Object.keys(byDay)
+        .filter((d) => d <= todayStr)
+        .sort()
+        .reverse();
     const [y, m] = filterMonth.split("-").map(Number);
     const count = new Date(y, m, 0).getDate();
     return Array.from({ length: count }, (_, i) => {
@@ -2226,7 +2498,10 @@ function ExpensesTab({
       return { cat, actual, planned, variance, pct, over };
     })
     .sort((a, b) => b.actual - a.actual)
-    .map((row, i) => ({ ...row, color: SLICE_COLORS[i % SLICE_COLORS.length] }));
+    .map((row, i) => ({
+      ...row,
+      color: SLICE_COLORS[i % SLICE_COLORS.length],
+    }));
 
   const totalBudgetPlanned = budgetRows.reduce((s, r) => s + r.planned, 0);
   const totalBudgetActual = budgetRows.reduce((s, r) => s + r.actual, 0);
@@ -2299,14 +2574,14 @@ function ExpensesTab({
         notes: newExp.notes || null,
         tax_deductible: newExp.tax_deductible,
       })
-      .select('id')
+      .select("id")
       .single();
 
     if (data?.id && newPendingReceipts.length > 0) {
       for (const file of newPendingReceipts) {
         const fd = new FormData();
-        fd.append('expenseId', data.id);
-        fd.append('file', file);
+        fd.append("expenseId", data.id);
+        fd.append("file", file);
         await uploadExpenseReceipt(fd);
       }
     }
@@ -2332,7 +2607,11 @@ function ExpensesTab({
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3 justify-between">
         <div className="flex gap-3">
-          <MonthPicker value={filterMonth} onChange={setFilterMonth} placeholder="Filter month" />
+          <MonthPicker
+            value={filterMonth}
+            onChange={setFilterMonth}
+            placeholder="Filter month"
+          />
           <select
             style={{ ...inputStyle, width: "160px" }}
             value={filterCat}
@@ -2461,8 +2740,14 @@ function ExpensesTab({
                       </label>
                       {key === "expense_date" ? (
                         <DatePicker
-                          value={(newExp as Record<string, unknown>)[key] as string ?? ""}
-                          onChange={(v) => setNewExp((p) => ({ ...p, [key]: v }))}
+                          value={
+                            ((newExp as Record<string, unknown>)[
+                              key
+                            ] as string) ?? ""
+                          }
+                          onChange={(v) =>
+                            setNewExp((p) => ({ ...p, [key]: v }))
+                          }
                         />
                       ) : (
                         <input
@@ -2521,32 +2806,80 @@ function ExpensesTab({
                 </div>
 
                 {/* Receipts & Screenshots */}
-                <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: 16, marginTop: 4 }}>
-                  <p className="text-xs font-semibold mb-3" style={{ color: colors.textPrimary, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                <div
+                  style={{
+                    borderTop: `1px solid ${colors.border}`,
+                    paddingTop: 16,
+                    marginTop: 4,
+                  }}
+                >
+                  <p
+                    className="text-xs font-semibold mb-3"
+                    style={{
+                      color: colors.textPrimary,
+                      letterSpacing: "0.05em",
+                      textTransform: "uppercase",
+                    }}
+                  >
                     Receipts &amp; Screenshots
                   </p>
 
                   {/* Queued file list */}
                   {newPendingReceipts.length > 0 && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 6,
+                        marginBottom: 12,
+                      }}
+                    >
                       {newPendingReceipts.map((file, i) => (
                         <div
                           key={i}
                           style={{
-                            display: 'flex', alignItems: 'center', gap: 8,
-                            padding: '6px 10px',
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                            padding: "6px 10px",
                             background: colors.softCloud,
                             border: `1px solid ${colors.border}`,
                             borderRadius: radius.sm,
                           }}
                         >
-                          <FileText size={14} style={{ color: colors.textSecondary, flexShrink: 0 }} />
-                          <span className="text-xs" style={{ color: colors.textPrimary, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <FileText
+                            size={14}
+                            style={{
+                              color: colors.textSecondary,
+                              flexShrink: 0,
+                            }}
+                          />
+                          <span
+                            className="text-xs"
+                            style={{
+                              color: colors.textPrimary,
+                              flex: 1,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
                             {file.name}
                           </span>
                           <button
-                            onClick={() => setNewPendingReceipts(p => p.filter((_, idx) => idx !== i))}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: colors.textSecondary, flexShrink: 0 }}
+                            onClick={() =>
+                              setNewPendingReceipts((p) =>
+                                p.filter((_, idx) => idx !== i),
+                              )
+                            }
+                            style={{
+                              background: "none",
+                              border: "none",
+                              cursor: "pointer",
+                              padding: 2,
+                              color: colors.textSecondary,
+                              flexShrink: 0,
+                            }}
                           >
                             <X size={13} />
                           </button>
@@ -2558,32 +2891,63 @@ function ExpensesTab({
                   {/* Drop zone */}
                   {newPendingReceipts.length < MAX_RECEIPT_FILES && (
                     <div
-                      onDragOver={(e) => { e.preventDefault(); setIsDraggingNewReceipt(true); }}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setIsDraggingNewReceipt(true);
+                      }}
                       onDragLeave={() => setIsDraggingNewReceipt(false)}
                       onDrop={(e) => {
                         e.preventDefault();
                         setIsDraggingNewReceipt(false);
                         const file = e.dataTransfer.files[0];
                         if (!file) return;
-                        if (!ACCEPTED_TYPES.includes(file.type)) { setNewReceiptError('File type not supported.'); return; }
-                        if (file.size > MAX_FILE_SIZE) { setNewReceiptError('File exceeds 10 MB limit.'); return; }
+                        if (!ACCEPTED_TYPES.includes(file.type)) {
+                          setNewReceiptError("File type not supported.");
+                          return;
+                        }
+                        if (file.size > MAX_FILE_SIZE) {
+                          setNewReceiptError("File exceeds 10 MB limit.");
+                          return;
+                        }
                         setNewReceiptError(null);
-                        setNewPendingReceipts(p => [...p, file]);
+                        setNewPendingReceipts((p) => [...p, file]);
                       }}
                       onClick={() => newReceiptInputRef.current?.click()}
                       style={{
                         border: `2px dashed ${isDraggingNewReceipt ? colors.mistyForest : colors.border}`,
                         borderRadius: radius.sm,
-                        padding: '16px 12px',
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        background: isDraggingNewReceipt ? colors.pastelSage + '30' : colors.softCloud,
-                        transition: 'border-color 0.15s, background 0.15s',
+                        padding: "16px 12px",
+                        textAlign: "center",
+                        cursor: "pointer",
+                        background: isDraggingNewReceipt
+                          ? colors.pastelSage + "30"
+                          : colors.softCloud,
+                        transition: "border-color 0.15s, background 0.15s",
                       }}
                     >
-                      <Upload size={18} style={{ color: colors.textSecondary, margin: '0 auto 6px' }} />
-                      <p className="text-xs" style={{ color: colors.textSecondary }}>Drop a file or click to upload</p>
-                      <p className="text-xs" style={{ color: colors.textSecondary, opacity: 0.6, marginTop: 2 }}>PDF, JPEG, PNG, WEBP, HEIC · max 10 MB</p>
+                      <Upload
+                        size={18}
+                        style={{
+                          color: colors.textSecondary,
+                          margin: "0 auto 6px",
+                        }}
+                      />
+                      <p
+                        className="text-xs"
+                        style={{ color: colors.textSecondary }}
+                      >
+                        Drop a file or click to upload
+                      </p>
+                      <p
+                        className="text-xs"
+                        style={{
+                          color: colors.textSecondary,
+                          opacity: 0.6,
+                          marginTop: 2,
+                        }}
+                      >
+                        PDF, JPEG, PNG, WEBP, HEIC · max 10 MB
+                      </p>
                     </div>
                   )}
 
@@ -2591,20 +2955,28 @@ function ExpensesTab({
                     ref={newReceiptInputRef}
                     type="file"
                     accept=".pdf,.jpg,.jpeg,.png,.webp,.heic"
-                    style={{ display: 'none' }}
+                    style={{ display: "none" }}
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
-                      if (!ACCEPTED_TYPES.includes(file.type)) { setNewReceiptError('File type not supported.'); return; }
-                      if (file.size > MAX_FILE_SIZE) { setNewReceiptError('File exceeds 10 MB limit.'); return; }
+                      if (!ACCEPTED_TYPES.includes(file.type)) {
+                        setNewReceiptError("File type not supported.");
+                        return;
+                      }
+                      if (file.size > MAX_FILE_SIZE) {
+                        setNewReceiptError("File exceeds 10 MB limit.");
+                        return;
+                      }
                       setNewReceiptError(null);
-                      setNewPendingReceipts(p => [...p, file]);
-                      e.target.value = '';
+                      setNewPendingReceipts((p) => [...p, file]);
+                      e.target.value = "";
                     }}
                   />
 
                   {newReceiptError && (
-                    <p className="text-xs mt-2" style={{ color: '#ef4444' }}>{newReceiptError}</p>
+                    <p className="text-xs mt-2" style={{ color: "#ef4444" }}>
+                      {newReceiptError}
+                    </p>
                   )}
                 </div>
               </div>
@@ -2897,13 +3269,19 @@ function ExpensesTab({
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {!filterMonth ? (
             <div style={{ ...cardStyle, padding: "24px" }}>
-              <p className="text-sm text-center py-8" style={{ color: colors.textTertiary }}>
+              <p
+                className="text-sm text-center py-8"
+                style={{ color: colors.textTertiary }}
+              >
                 Select a month above to view daily expenses.
               </p>
             </div>
           ) : daysInView.length === 0 ? (
             <div style={{ ...cardStyle, padding: "24px" }}>
-              <p className="text-sm text-center py-8" style={{ color: colors.textTertiary }}>
+              <p
+                className="text-sm text-center py-8"
+                style={{ color: colors.textTertiary }}
+              >
                 No days to show yet for this month.
               </p>
             </div>
@@ -2915,7 +3293,15 @@ function ExpensesTab({
                 // day-of-week the 1st falls on (0=Sun)
                 const firstDow = new Date(y, m - 1, 1).getDay();
                 const daysInMonth = new Date(y, m, 0).getDate();
-                const DOW_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+                const DOW_LABELS = [
+                  "Sun",
+                  "Mon",
+                  "Tue",
+                  "Wed",
+                  "Thu",
+                  "Fri",
+                  "Sat",
+                ];
 
                 // build cells: leading nulls + day numbers
                 const cells: (number | null)[] = [
@@ -2928,37 +3314,84 @@ function ExpensesTab({
                 return (
                   <div style={{ ...cardStyle, padding: "16px 20px" }}>
                     {/* "All" link */}
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                      <p style={{ fontSize: 12, fontWeight: 600, color: colors.textSecondary, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                        {new Date(y, m - 1, 1).toLocaleString("default", { month: "long", year: "numeric" })}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        marginBottom: 12,
+                      }}
+                    >
+                      <p
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 600,
+                          color: colors.textSecondary,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.05em",
+                        }}
+                      >
+                        {new Date(y, m - 1, 1).toLocaleString("default", {
+                          month: "long",
+                          year: "numeric",
+                        })}
                       </p>
                       <button
                         onClick={() => setSelectedDay(null)}
                         style={{
                           fontSize: 12,
                           fontWeight: selectedDay === null ? 700 : 400,
-                          color: selectedDay === null ? colors.mistyForest : colors.textSecondary,
+                          color:
+                            selectedDay === null
+                              ? colors.mistyForest
+                              : colors.textSecondary,
                           background: "none",
                           border: "none",
                           cursor: "pointer",
                           padding: 0,
                         }}
                       >
-                        {selectedDay === null ? `All (${filtered.length})` : "Show all"}
+                        {selectedDay === null
+                          ? `All (${filtered.length})`
+                          : "Show all"}
                       </button>
                     </div>
 
                     {/* DOW header */}
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 4 }}>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(7, 1fr)",
+                        gap: 4,
+                        marginBottom: 4,
+                      }}
+                    >
                       {DOW_LABELS.map((d) => (
-                        <div key={d} style={{ textAlign: "center", fontSize: 10, fontWeight: 600, color: colors.textSecondary, textTransform: "uppercase", letterSpacing: "0.04em", padding: "2px 0" }}>
+                        <div
+                          key={d}
+                          style={{
+                            textAlign: "center",
+                            fontSize: 10,
+                            fontWeight: 600,
+                            color: colors.textSecondary,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.04em",
+                            padding: "2px 0",
+                          }}
+                        >
                           {d}
                         </div>
                       ))}
                     </div>
 
                     {/* Day cells */}
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(7, 1fr)",
+                        gap: 4,
+                      }}
+                    >
                       {cells.map((dayNum, idx) => {
                         if (dayNum === null) {
                           return <div key={`empty-${idx}`} />;
@@ -2974,7 +3407,9 @@ function ExpensesTab({
                           <button
                             key={dayKey}
                             disabled={isFuture}
-                            onClick={() => setSelectedDay(isSelected ? null : dayKey)}
+                            onClick={() =>
+                              setSelectedDay(isSelected ? null : dayKey)
+                            }
                             style={{
                               display: "flex",
                               flexDirection: "column",
@@ -2983,7 +3418,11 @@ function ExpensesTab({
                               padding: "6px 4px",
                               borderRadius: radius.md,
                               border: `1px solid ${isSelected ? colors.mistyForest : isToday ? colors.mistyForest + "50" : colors.border}`,
-                              backgroundColor: isSelected ? colors.mistyForest : isToday ? colors.mistyForest + "10" : "transparent",
+                              backgroundColor: isSelected
+                                ? colors.mistyForest
+                                : isToday
+                                  ? colors.mistyForest + "10"
+                                  : "transparent",
                               cursor: isFuture ? "default" : "pointer",
                               opacity: isFuture ? 0.3 : 1,
                               transition: "all 0.15s",
@@ -2991,24 +3430,50 @@ function ExpensesTab({
                               gap: 2,
                             }}
                           >
-                            <span style={{ fontSize: 14, fontWeight: 700, lineHeight: 1, color: isSelected ? "white" : isToday ? colors.mistyForest : colors.textPrimary }}>
+                            <span
+                              style={{
+                                fontSize: 14,
+                                fontWeight: 700,
+                                lineHeight: 1,
+                                color: isSelected
+                                  ? "white"
+                                  : isToday
+                                    ? colors.mistyForest
+                                    : colors.textPrimary,
+                              }}
+                            >
                               {dayNum}
                             </span>
                             {hasExpenses ? (
-                              <span style={{
-                                fontSize: 10,
-                                fontWeight: 600,
-                                backgroundColor: isSelected ? "rgba(255,255,255,0.25)" : colors.warmLinen,
-                                color: isSelected ? "white" : colors.textSecondary,
-                                borderRadius: 8,
-                                padding: "1px 5px",
-                                lineHeight: 1.5,
-                                marginTop: 2,
-                              }}>
+                              <span
+                                style={{
+                                  fontSize: 10,
+                                  fontWeight: 600,
+                                  backgroundColor: isSelected
+                                    ? "rgba(255,255,255,0.25)"
+                                    : colors.warmLinen,
+                                  color: isSelected
+                                    ? "white"
+                                    : colors.textSecondary,
+                                  borderRadius: 8,
+                                  padding: "1px 5px",
+                                  lineHeight: 1.5,
+                                  marginTop: 2,
+                                }}
+                              >
                                 {dayExps.length}
                               </span>
                             ) : (
-                              <span style={{ fontSize: 10, lineHeight: 1.5, color: "transparent", marginTop: 2 }}>·</span>
+                              <span
+                                style={{
+                                  fontSize: 10,
+                                  lineHeight: 1.5,
+                                  color: "transparent",
+                                  marginTop: 2,
+                                }}
+                              >
+                                ·
+                              </span>
                             )}
                           </button>
                         );
@@ -3024,55 +3489,114 @@ function ExpensesTab({
                 return visibleDays.map((dayKey) => {
                   const dayExps = byDay[dayKey] ?? [];
                   if (dayExps.length === 0) return null;
-                  const dayTotal = dayExps.reduce((s, e) => s + Number(e.amount), 0);
+                  const dayTotal = dayExps.reduce(
+                    (s, e) => s + Number(e.amount),
+                    0,
+                  );
                   const isToday = dayKey === todayStr;
                   const dateObj = new Date(dayKey + "T00:00:00");
-                  const weekday = dateObj.toLocaleDateString("default", { weekday: "long" });
-                  const dateLabel = dateObj.toLocaleDateString("default", { month: "long", day: "numeric" });
+                  const weekday = dateObj.toLocaleDateString("default", {
+                    weekday: "long",
+                  });
+                  const dateLabel = dateObj.toLocaleDateString("default", {
+                    month: "long",
+                    day: "numeric",
+                  });
                   return (
-                    <div key={dayKey} style={{ ...cardStyle, overflow: "hidden" }}>
+                    <div
+                      key={dayKey}
+                      style={{ ...cardStyle, overflow: "hidden" }}
+                    >
                       {/* Day header */}
                       <div
                         style={{
                           padding: "12px 20px",
-                          backgroundColor: isToday ? colors.mistyForest : "#F6F1E8",
+                          backgroundColor: isToday
+                            ? colors.mistyForest
+                            : "#F6F1E8",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "space-between",
                         }}
                       >
-                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 10,
+                          }}
+                        >
                           <div
                             style={{
                               width: 36,
                               height: 36,
                               borderRadius: radius.md,
-                              backgroundColor: isToday ? "rgba(255,255,255,0.2)" : colors.border,
+                              backgroundColor: isToday
+                                ? "rgba(255,255,255,0.2)"
+                                : colors.border,
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
                               flexShrink: 0,
                             }}
                           >
-                            <span style={{ fontSize: 14, fontWeight: 700, lineHeight: 1, color: isToday ? "white" : colors.textPrimary }}>
+                            <span
+                              style={{
+                                fontSize: 14,
+                                fontWeight: 700,
+                                lineHeight: 1,
+                                color: isToday ? "white" : colors.textPrimary,
+                              }}
+                            >
                               {dateObj.getDate()}
                             </span>
                           </div>
                           <div>
-                            <p style={{ fontSize: 13, fontWeight: 700, color: isToday ? "white" : colors.textPrimary, lineHeight: 1.2 }}>
+                            <p
+                              style={{
+                                fontSize: 13,
+                                fontWeight: 700,
+                                color: isToday ? "white" : colors.textPrimary,
+                                lineHeight: 1.2,
+                              }}
+                            >
                               {weekday}
                               {isToday && (
-                                <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 500, backgroundColor: "rgba(255,255,255,0.25)", borderRadius: 4, padding: "1px 5px" }}>
+                                <span
+                                  style={{
+                                    marginLeft: 6,
+                                    fontSize: 10,
+                                    fontWeight: 500,
+                                    backgroundColor: "rgba(255,255,255,0.25)",
+                                    borderRadius: 4,
+                                    padding: "1px 5px",
+                                  }}
+                                >
                                   Today
                                 </span>
                               )}
                             </p>
-                            <p style={{ fontSize: 11, color: isToday ? "rgba(255,255,255,0.75)" : colors.textSecondary, marginTop: 1 }}>
-                              {dateLabel} · {dayExps.length} expense{dayExps.length !== 1 ? "s" : ""}
+                            <p
+                              style={{
+                                fontSize: 11,
+                                color: isToday
+                                  ? "rgba(255,255,255,0.75)"
+                                  : colors.textSecondary,
+                                marginTop: 1,
+                              }}
+                            >
+                              {dateLabel} · {dayExps.length} expense
+                              {dayExps.length !== 1 ? "s" : ""}
                             </p>
                           </div>
                         </div>
-                        <span style={{ fontSize: 14, fontWeight: 700, color: isToday ? "white" : colors.error }}>
+                        <span
+                          style={{
+                            fontSize: 14,
+                            fontWeight: 700,
+                            color: isToday ? "white" : colors.error,
+                          }}
+                        >
                           {fmt(dayTotal)}
                         </span>
                       </div>
@@ -3086,12 +3610,23 @@ function ExpensesTab({
                               display: "flex",
                               alignItems: "center",
                               padding: "10px 20px",
-                              borderBottom: i < dayExps.length - 1 ? `1px solid ${colors.border}` : "none",
+                              borderBottom:
+                                i < dayExps.length - 1
+                                  ? `1px solid ${colors.border}`
+                                  : "none",
                               cursor: "pointer",
                               transition: "background 0.1s",
                             }}
-                            onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = colors.warmLinen; }}
-                            onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = "transparent"; }}
+                            onMouseEnter={(e) => {
+                              (
+                                e.currentTarget as HTMLDivElement
+                              ).style.backgroundColor = colors.warmLinen;
+                            }}
+                            onMouseLeave={(e) => {
+                              (
+                                e.currentTarget as HTMLDivElement
+                              ).style.backgroundColor = "transparent";
+                            }}
                             onClick={() => {
                               setEditingId(exp.id);
                               setEditValues({ ...exp });
@@ -3102,43 +3637,97 @@ function ExpensesTab({
                                 width: 8,
                                 height: 8,
                                 borderRadius: "50%",
-                                backgroundColor: SLICE_COLORS[CATEGORIES.indexOf(exp.category) % SLICE_COLORS.length] ?? colors.textSecondary,
+                                backgroundColor:
+                                  SLICE_COLORS[
+                                    CATEGORIES.indexOf(exp.category) %
+                                      SLICE_COLORS.length
+                                  ] ?? colors.textSecondary,
                                 flexShrink: 0,
                                 marginRight: 12,
                               }}
                             />
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <p style={{ fontSize: 13, fontWeight: 600, color: colors.textPrimary, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                              <p
+                                style={{
+                                  fontSize: 13,
+                                  fontWeight: 600,
+                                  color: colors.textPrimary,
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                }}
+                              >
                                 {exp.expense_name}
                               </p>
-                              <p style={{ fontSize: 11, color: colors.textSecondary, marginTop: 1 }}>
+                              <p
+                                style={{
+                                  fontSize: 11,
+                                  color: colors.textSecondary,
+                                  marginTop: 1,
+                                }}
+                              >
                                 {exp.category ?? "Uncategorized"}
-                                {exp.payment_method ? ` · ${exp.payment_method}` : ""}
+                                {exp.payment_method
+                                  ? ` · ${exp.payment_method}`
+                                  : ""}
                                 {exp.tax_deductible ? " · Tax ded." : ""}
                               </p>
                             </div>
                             {exp.notes && (
                               <p
-                                style={{ fontSize: 11, color: colors.textTertiary, marginLeft: 12, maxWidth: 140, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flexShrink: 0 }}
+                                style={{
+                                  fontSize: 11,
+                                  color: colors.textTertiary,
+                                  marginLeft: 12,
+                                  maxWidth: 140,
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  flexShrink: 0,
+                                }}
                                 title={exp.notes}
                               >
                                 {exp.notes}
                               </p>
                             )}
-                            <span style={{ fontSize: 13, fontWeight: 700, color: colors.error, marginLeft: 16, flexShrink: 0 }}>
+                            <span
+                              style={{
+                                fontSize: 13,
+                                fontWeight: 700,
+                                color: colors.error,
+                                marginLeft: 16,
+                                flexShrink: 0,
+                              }}
+                            >
                               {fmt(Number(exp.amount))}
                             </span>
-                            <div className="flex gap-1 items-center" style={{ marginLeft: 12, flexShrink: 0 }}>
+                            <div
+                              className="flex gap-1 items-center"
+                              style={{ marginLeft: 12, flexShrink: 0 }}
+                            >
                               <button
                                 title="Edit"
-                                style={{ ...btnGhost, padding: "4px 6px", lineHeight: 1 }}
+                                style={{
+                                  ...btnGhost,
+                                  padding: "4px 6px",
+                                  lineHeight: 1,
+                                }}
                                 onClick={(ev) => {
                                   ev.stopPropagation();
                                   setEditingId(exp.id);
                                   setEditValues({ ...exp });
                                 }}
                               >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <svg
+                                  width="14"
+                                  height="14"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
                                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                                 </svg>
@@ -3151,7 +3740,16 @@ function ExpensesTab({
                                   deleteExpense(exp.id);
                                 }}
                               >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <svg
+                                  width="14"
+                                  height="14"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
                                   <polyline points="3 6 5 6 21 6" />
                                   <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
                                   <path d="M10 11v6" />
@@ -3179,17 +3777,33 @@ function ExpensesTab({
                   backgroundColor: "#F6F1E8",
                 }}
               >
-                <span className="text-sm font-bold" style={{ color: colors.textPrimary }}>
+                <span
+                  className="text-sm font-bold"
+                  style={{ color: colors.textPrimary }}
+                >
                   {selectedDay
                     ? `${new Date(selectedDay + "T00:00:00").toLocaleDateString("default", { month: "long", day: "numeric" })} total`
                     : `Month total`}{" "}
-                  ({(selectedDay ? (byDay[selectedDay] ?? []) : filtered).length} expense
-                  {(selectedDay ? (byDay[selectedDay] ?? []) : filtered).length !== 1 ? "s" : ""})
+                  (
+                  {(selectedDay ? (byDay[selectedDay] ?? []) : filtered).length}{" "}
+                  expense
+                  {(selectedDay ? (byDay[selectedDay] ?? []) : filtered)
+                    .length !== 1
+                    ? "s"
+                    : ""}
+                  )
                 </span>
-                <span className="text-sm font-bold" style={{ color: colors.error }}>
-                  {fmt(selectedDay
-                    ? (byDay[selectedDay] ?? []).reduce((s, e) => s + Number(e.amount), 0)
-                    : total
+                <span
+                  className="text-sm font-bold"
+                  style={{ color: colors.error }}
+                >
+                  {fmt(
+                    selectedDay
+                      ? (byDay[selectedDay] ?? []).reduce(
+                          (s, e) => s + Number(e.amount),
+                          0,
+                        )
+                      : total,
                   )}
                 </span>
               </div>
@@ -3210,235 +3824,243 @@ function ExpensesTab({
                 Spend vs. Budget by Category
               </p>
               {filterMonth && (
-                <p className="text-xs mt-0.5" style={{ color: colors.textSecondary }}>
+                <p
+                  className="text-xs mt-0.5"
+                  style={{ color: colors.textSecondary }}
+                >
                   {new Date(
                     Number(filterMonth.slice(0, 4)),
                     Number(filterMonth.slice(5, 7)) - 1,
-                  ).toLocaleString("default", { month: "long", year: "numeric" })}
+                  ).toLocaleString("default", {
+                    month: "long",
+                    year: "numeric",
+                  })}
                 </p>
               )}
             </div>
           </div>
           {!filterMonth ? (
             <p className="text-sm" style={{ color: colors.textSecondary }}>
-              Select a month above to compare spending against your monthly budget.
+              Select a month above to compare spending against your monthly
+              budget.
             </p>
           ) : budgetRows.length === 0 ? (
             <p className="text-sm" style={{ color: colors.textSecondary }}>
               No expenses recorded for this month.
             </p>
-          ) :
-          <div style={{ overflowX: "auto" }}>
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                fontSize: "13px",
-              }}
-            >
-              <thead>
-                <tr style={{ borderBottom: `1px solid ${colors.border}` }}>
-                  {["Category", "Budgeted", "Spent", "Variance", "Usage"].map(
-                    (h) => (
-                      <th
-                        key={h}
-                        className="text-left py-2 px-3"
-                        style={{
-                          color: colors.textSecondary,
-                          fontWeight: 600,
-                          fontSize: "11px",
-                          textTransform: "uppercase",
-                          letterSpacing: "0.05em",
-                        }}
-                      >
-                        {h}
-                      </th>
-                    ),
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {budgetRows.map((row) => (
-                  <tr
-                    key={row.cat}
-                    style={{ borderBottom: `1px solid ${colors.border}` }}
-                  >
-                    <td
-                      className="py-3 px-3"
-                      style={{ color: colors.textPrimary }}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div
+          ) : (
+            <div style={{ overflowX: "auto" }}>
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  fontSize: "13px",
+                }}
+              >
+                <thead>
+                  <tr style={{ borderBottom: `1px solid ${colors.border}` }}>
+                    {["Category", "Budgeted", "Spent", "Variance", "Usage"].map(
+                      (h) => (
+                        <th
+                          key={h}
+                          className="text-left py-2 px-3"
                           style={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: "50%",
-                            backgroundColor: row.color,
-                            flexShrink: 0,
-                          }}
-                        />
-                        {row.cat}
-                      </div>
-                    </td>
-                    <td
-                      className="py-3 px-3"
-                      style={{ color: colors.textSecondary }}
-                    >
-                      {row.planned > 0 ? fmt(row.planned) : "—"}
-                    </td>
-                    <td
-                      className="py-3 px-3"
-                      style={{ color: colors.textSecondary }}
-                    >
-                      {fmt(row.actual)}
-                    </td>
-                    <td
-                      className="py-3 px-3"
-                      style={{
-                        color:
-                          row.planned === 0
-                            ? colors.textTertiary
-                            : row.over
-                              ? colors.error
-                              : colors.success,
-                        fontWeight: 600,
-                      }}
-                    >
-                      {row.planned === 0
-                        ? "—"
-                        : (row.over ? "-" : "+") + fmt(Math.abs(row.variance))}
-                    </td>
-                    <td className="py-3 px-3" style={{ minWidth: "140px" }}>
-                      {row.pct === null ? (
-                        <span
-                          style={{
-                            color: colors.textTertiary,
-                            fontSize: "12px",
+                            color: colors.textSecondary,
+                            fontWeight: 600,
+                            fontSize: "11px",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.05em",
                           }}
                         >
-                          —
-                        </span>
-                      ) : (
+                          {h}
+                        </th>
+                      ),
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
+                  {budgetRows.map((row) => (
+                    <tr
+                      key={row.cat}
+                      style={{ borderBottom: `1px solid ${colors.border}` }}
+                    >
+                      <td
+                        className="py-3 px-3"
+                        style={{ color: colors.textPrimary }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div
+                            style={{
+                              width: 8,
+                              height: 8,
+                              borderRadius: "50%",
+                              backgroundColor: row.color,
+                              flexShrink: 0,
+                            }}
+                          />
+                          {row.cat}
+                        </div>
+                      </td>
+                      <td
+                        className="py-3 px-3"
+                        style={{ color: colors.textSecondary }}
+                      >
+                        {row.planned > 0 ? fmt(row.planned) : "—"}
+                      </td>
+                      <td
+                        className="py-3 px-3"
+                        style={{ color: colors.textSecondary }}
+                      >
+                        {fmt(row.actual)}
+                      </td>
+                      <td
+                        className="py-3 px-3"
+                        style={{
+                          color:
+                            row.planned === 0
+                              ? colors.textTertiary
+                              : row.over
+                                ? colors.error
+                                : colors.success,
+                          fontWeight: 600,
+                        }}
+                      >
+                        {row.planned === 0
+                          ? "—"
+                          : (row.over ? "-" : "+") +
+                            fmt(Math.abs(row.variance))}
+                      </td>
+                      <td className="py-3 px-3" style={{ minWidth: "140px" }}>
+                        {row.pct === null ? (
+                          <span
+                            style={{
+                              color: colors.textTertiary,
+                              fontSize: "12px",
+                            }}
+                          >
+                            —
+                          </span>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <div
+                              style={{
+                                flex: 1,
+                                height: "6px",
+                                borderRadius: "99px",
+                                backgroundColor: colors.warmLinen,
+                                overflow: "hidden",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  width: `${Math.min(row.pct, 1) * 100}%`,
+                                  height: "100%",
+                                  borderRadius: "99px",
+                                  backgroundColor: row.over
+                                    ? colors.error
+                                    : colors.mistyForest,
+                                  transition: "width 0.4s ease",
+                                }}
+                              />
+                            </div>
+                            <span
+                              style={{
+                                color: row.over
+                                  ? colors.error
+                                  : colors.textSecondary,
+                                fontSize: "12px",
+                                minWidth: "38px",
+                                textAlign: "right",
+                              }}
+                            >
+                              {(row.pct * 100).toFixed(0)}%
+                            </span>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr style={{ backgroundColor: colors.warmLinen }}>
+                    <td
+                      className="py-3 px-3 font-bold"
+                      style={{ color: colors.textPrimary }}
+                    >
+                      Total
+                    </td>
+                    <td
+                      className="py-3 px-3 font-bold"
+                      style={{ color: colors.textPrimary }}
+                    >
+                      {totalBudgetPlanned > 0 ? fmt(totalBudgetPlanned) : "—"}
+                    </td>
+                    <td
+                      className="py-3 px-3 font-bold"
+                      style={{ color: colors.textPrimary }}
+                    >
+                      {fmt(totalBudgetActual)}
+                    </td>
+                    <td
+                      className="py-3 px-3 font-bold"
+                      style={{
+                        color:
+                          totalBudgetVariance < 0
+                            ? colors.error
+                            : colors.success,
+                      }}
+                    >
+                      {totalBudgetPlanned === 0
+                        ? "—"
+                        : (totalBudgetVariance < 0 ? "-" : "+") +
+                          fmt(Math.abs(totalBudgetVariance))}
+                    </td>
+                    <td className="py-3 px-3">
+                      {totalBudgetPlanned > 0 && (
                         <div className="flex items-center gap-2">
                           <div
                             style={{
                               flex: 1,
                               height: "6px",
                               borderRadius: "99px",
-                              backgroundColor: colors.warmLinen,
+                              backgroundColor: colors.border,
                               overflow: "hidden",
                             }}
                           >
                             <div
                               style={{
-                                width: `${Math.min(row.pct, 1) * 100}%`,
+                                width: `${Math.min(totalBudgetPlanned > 0 ? totalBudgetActual / totalBudgetPlanned : 0, 1) * 100}%`,
                                 height: "100%",
                                 borderRadius: "99px",
-                                backgroundColor: row.over
-                                  ? colors.error
-                                  : colors.mistyForest,
-                                transition: "width 0.4s ease",
+                                backgroundColor:
+                                  totalBudgetActual > totalBudgetPlanned
+                                    ? colors.error
+                                    : colors.mistyForest,
                               }}
                             />
                           </div>
                           <span
                             style={{
-                              color: row.over
-                                ? colors.error
-                                : colors.textSecondary,
+                              color: colors.textSecondary,
                               fontSize: "12px",
                               minWidth: "38px",
                               textAlign: "right",
                             }}
                           >
-                            {(row.pct * 100).toFixed(0)}%
+                            {(totalBudgetPlanned > 0
+                              ? (totalBudgetActual / totalBudgetPlanned) * 100
+                              : 0
+                            ).toFixed(0)}
+                            %
                           </span>
                         </div>
                       )}
                     </td>
                   </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr style={{ backgroundColor: colors.warmLinen }}>
-                  <td
-                    className="py-3 px-3 font-bold"
-                    style={{ color: colors.textPrimary }}
-                  >
-                    Total
-                  </td>
-                  <td
-                    className="py-3 px-3 font-bold"
-                    style={{ color: colors.textPrimary }}
-                  >
-                    {totalBudgetPlanned > 0 ? fmt(totalBudgetPlanned) : "—"}
-                  </td>
-                  <td
-                    className="py-3 px-3 font-bold"
-                    style={{ color: colors.textPrimary }}
-                  >
-                    {fmt(totalBudgetActual)}
-                  </td>
-                  <td
-                    className="py-3 px-3 font-bold"
-                    style={{
-                      color:
-                        totalBudgetVariance < 0
-                          ? colors.error
-                          : colors.success,
-                    }}
-                  >
-                    {totalBudgetPlanned === 0
-                      ? "—"
-                      : (totalBudgetVariance < 0 ? "-" : "+") +
-                        fmt(Math.abs(totalBudgetVariance))}
-                  </td>
-                  <td className="py-3 px-3">
-                    {totalBudgetPlanned > 0 && (
-                      <div className="flex items-center gap-2">
-                        <div
-                          style={{
-                            flex: 1,
-                            height: "6px",
-                            borderRadius: "99px",
-                            backgroundColor: colors.border,
-                            overflow: "hidden",
-                          }}
-                        >
-                          <div
-                            style={{
-                              width: `${Math.min(totalBudgetPlanned > 0 ? totalBudgetActual / totalBudgetPlanned : 0, 1) * 100}%`,
-                              height: "100%",
-                              borderRadius: "99px",
-                              backgroundColor:
-                                totalBudgetActual > totalBudgetPlanned
-                                  ? colors.error
-                                  : colors.mistyForest,
-                            }}
-                          />
-                        </div>
-                        <span
-                          style={{
-                            color: colors.textSecondary,
-                            fontSize: "12px",
-                            minWidth: "38px",
-                            textAlign: "right",
-                          }}
-                        >
-                          {(totalBudgetPlanned > 0
-                            ? (totalBudgetActual / totalBudgetPlanned) * 100
-                            : 0
-                          ).toFixed(0)}
-                          %
-                        </span>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-          }
+                </tfoot>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
@@ -3498,10 +4120,14 @@ function ExpensesTab({
                 (s, r) => s + r.actual,
                 0,
               );
-              const monthBudgetVariance = monthBudgetPlanned - monthBudgetActual;
+              const monthBudgetVariance =
+                monthBudgetPlanned - monthBudgetActual;
 
               return (
-                <div key={monthKey} style={{ ...cardStyle, overflow: "hidden" }}>
+                <div
+                  key={monthKey}
+                  style={{ ...cardStyle, overflow: "hidden" }}
+                >
                   {/* Month header */}
                   <div
                     style={{
@@ -3514,7 +4140,9 @@ function ExpensesTab({
                     }}
                     onClick={() => toggleCatMonth(monthKey)}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div
+                      style={{ display: "flex", alignItems: "center", gap: 8 }}
+                    >
                       <span
                         style={{
                           fontSize: "12px",
@@ -3568,8 +4196,7 @@ function ExpensesTab({
                                 const pct =
                                   monthTotal > 0 ? val / monthTotal : 0;
                                 const dashLen = pct * CIRC;
-                                const offset =
-                                  CIRC - cumulative - CIRC / 4;
+                                const offset = CIRC - cumulative - CIRC / 4;
                                 cumulative += dashLen;
                                 return {
                                   cat,
@@ -3648,8 +4275,7 @@ function ExpensesTab({
                           {Object.entries(byCatMonth)
                             .sort(([, a], [, b]) => b - a)
                             .map(([cat, val], i) => {
-                              const pct =
-                                monthTotal > 0 ? val / monthTotal : 0;
+                              const pct = monthTotal > 0 ? val / monthTotal : 0;
                               const color =
                                 SLICE_COLORS[i % SLICE_COLORS.length];
                               return (
@@ -3797,9 +4423,7 @@ function ExpensesTab({
                                       className="py-3 px-3"
                                       style={{ color: colors.textSecondary }}
                                     >
-                                      {row.planned > 0
-                                        ? fmt(row.planned)
-                                        : "—"}
+                                      {row.planned > 0 ? fmt(row.planned) : "—"}
                                     </td>
                                     <td
                                       className="py-3 px-3"
@@ -4149,7 +4773,9 @@ function ExpensesTab({
             </label>
             <DatePicker
               value={editValues.expense_date ?? ""}
-              onChange={(v) => setEditValues((prev) => ({ ...prev, expense_date: v }))}
+              onChange={(v) =>
+                setEditValues((prev) => ({ ...prev, expense_date: v }))
+              }
             />
           </div>
           <div>
@@ -4204,51 +4830,79 @@ function ExpensesTab({
           </div>
 
           {/* Receipts & Screenshots */}
-          <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: 16, marginTop: 8 }}>
-            <p className="text-xs font-semibold mb-3" style={{ color: colors.textPrimary, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+          <div
+            style={{
+              borderTop: `1px solid ${colors.border}`,
+              paddingTop: 16,
+              marginTop: 8,
+            }}
+          >
+            <p
+              className="text-xs font-semibold mb-3"
+              style={{
+                color: colors.textPrimary,
+                letterSpacing: "0.05em",
+                textTransform: "uppercase",
+              }}
+            >
               Receipts &amp; Screenshots
             </p>
 
             {/* File list */}
             {isLoadingReceipts ? (
-              <p className="text-xs" style={{ color: colors.textSecondary }}>Loading…</p>
+              <p className="text-xs" style={{ color: colors.textSecondary }}>
+                Loading…
+              </p>
             ) : receiptFiles.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 6,
+                  marginBottom: 12,
+                }}
+              >
                 {receiptFiles.map((f) => {
                   const filePath = `expenses/${editingId}/${f.name}`;
                   return (
                     <div
                       key={f.name}
                       style={{
-                        display: 'flex',
-                        alignItems: 'center',
+                        display: "flex",
+                        alignItems: "center",
                         gap: 8,
-                        padding: '6px 10px',
+                        padding: "6px 10px",
                         background: colors.softCloud,
                         border: `1px solid ${colors.border}`,
                         borderRadius: radius.sm,
                       }}
                     >
-                      <FileText size={14} style={{ color: colors.textSecondary, flexShrink: 0 }} />
+                      <FileText
+                        size={14}
+                        style={{ color: colors.textSecondary, flexShrink: 0 }}
+                      />
                       <span
                         className="text-xs"
                         style={{
                           color: colors.textPrimary,
                           flex: 1,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
                         }}
                       >
-                        {f.name.replace(/^\d+-/, '')}
+                        {f.name.replace(/^\d+-/, "")}
                       </span>
                       <button
                         onClick={() => handleReceiptDownload(filePath, f.name)}
                         disabled={loadingPreviewPath === filePath}
                         style={{
-                          background: 'none',
-                          border: 'none',
-                          cursor: loadingPreviewPath === filePath ? 'not-allowed' : 'pointer',
+                          background: "none",
+                          border: "none",
+                          cursor:
+                            loadingPreviewPath === filePath
+                              ? "not-allowed"
+                              : "pointer",
                           padding: 2,
                           color: colors.textSecondary,
                           opacity: loadingPreviewPath === filePath ? 0.4 : 1,
@@ -4261,9 +4915,12 @@ function ExpensesTab({
                         onClick={() => handleReceiptDelete(filePath)}
                         disabled={deletingReceiptPath === filePath}
                         style={{
-                          background: 'none',
-                          border: 'none',
-                          cursor: deletingReceiptPath === filePath ? 'not-allowed' : 'pointer',
+                          background: "none",
+                          border: "none",
+                          cursor:
+                            deletingReceiptPath === filePath
+                              ? "not-allowed"
+                              : "pointer",
                           padding: 2,
                           color: colors.textSecondary,
                           opacity: deletingReceiptPath === filePath ? 0.4 : 1,
@@ -4281,7 +4938,10 @@ function ExpensesTab({
             {/* Drop zone */}
             {receiptFiles.length < MAX_RECEIPT_FILES && (
               <div
-                onDragOver={(e) => { e.preventDefault(); setIsDraggingReceipt(true); }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDraggingReceipt(true);
+                }}
                 onDragLeave={() => setIsDraggingReceipt(false)}
                 onDrop={(e) => {
                   e.preventDefault();
@@ -4293,19 +4953,33 @@ function ExpensesTab({
                 style={{
                   border: `2px dashed ${isDraggingReceipt ? colors.mistyForest : colors.border}`,
                   borderRadius: radius.sm,
-                  padding: '16px 12px',
-                  textAlign: 'center',
-                  cursor: isUploadingReceipt ? 'not-allowed' : 'pointer',
-                  background: isDraggingReceipt ? colors.pastelSage + '30' : colors.softCloud,
-                  transition: 'border-color 0.15s, background 0.15s',
+                  padding: "16px 12px",
+                  textAlign: "center",
+                  cursor: isUploadingReceipt ? "not-allowed" : "pointer",
+                  background: isDraggingReceipt
+                    ? colors.pastelSage + "30"
+                    : colors.softCloud,
+                  transition: "border-color 0.15s, background 0.15s",
                   opacity: isUploadingReceipt ? 0.6 : 1,
                 }}
               >
-                <Upload size={18} style={{ color: colors.textSecondary, margin: '0 auto 6px' }} />
+                <Upload
+                  size={18}
+                  style={{ color: colors.textSecondary, margin: "0 auto 6px" }}
+                />
                 <p className="text-xs" style={{ color: colors.textSecondary }}>
-                  {isUploadingReceipt ? 'Uploading…' : 'Drop a file or click to upload'}
+                  {isUploadingReceipt
+                    ? "Uploading…"
+                    : "Drop a file or click to upload"}
                 </p>
-                <p className="text-xs" style={{ color: colors.textSecondary, opacity: 0.6, marginTop: 2 }}>
+                <p
+                  className="text-xs"
+                  style={{
+                    color: colors.textSecondary,
+                    opacity: 0.6,
+                    marginTop: 2,
+                  }}
+                >
                   PDF, JPEG, PNG, WEBP, HEIC · max 10 MB
                 </p>
               </div>
@@ -4315,21 +4989,22 @@ function ExpensesTab({
               ref={receiptInputRef}
               type="file"
               accept=".pdf,.jpg,.jpeg,.png,.webp,.heic"
-              style={{ display: 'none' }}
+              style={{ display: "none" }}
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) handleReceiptUpload(file);
-                e.target.value = '';
+                e.target.value = "";
               }}
             />
 
             {receiptError && (
-              <p className="text-xs mt-2" style={{ color: '#ef4444' }}>{receiptError}</p>
+              <p className="text-xs mt-2" style={{ color: "#ef4444" }}>
+                {receiptError}
+              </p>
             )}
           </div>
         </div>
       </DetailSidebar>
-
     </div>
   );
 }
@@ -4337,21 +5012,21 @@ function ExpensesTab({
 // ─── Revenue Tab ──────────────────────────────────────────────────────────────
 
 const SOURCE_LABELS: Record<string, string> = {
-  tuition:          "Tuition",
-  aftercare:        "After Care",
-  fun_friday:       "Field Day Friday",
-  summer:           "Summer Program",
+  tuition: "Tuition",
+  aftercare: "After Care",
+  fun_friday: "Field Day Friday",
+  summer: "Summer Program",
   registration_fee: "Registration Fee",
-  supply_fee:       "Supply Fee",
-  late_fee:         "Late Fee",
-  donation:         "Donation",
-  fundraiser:       "Fundraiser",
-  grant:            "Grant / Sponsorship",
-  field_trip_fee:   "Field Trip Fee",
-  uniform_fee:      "Uniform / Spirit Wear",
-  extended_care:    "Extended Care (Drop-in)",
-  event:            "Event / Workshop",
-  other:            "Other",
+  supply_fee: "Supply Fee",
+  late_fee: "Late Fee",
+  donation: "Donation",
+  fundraiser: "Fundraiser",
+  grant: "Grant / Sponsorship",
+  field_trip_fee: "Field Trip Fee",
+  uniform_fee: "Uniform / Spirit Wear",
+  extended_care: "Extended Care (Drop-in)",
+  event: "Event / Workshop",
+  other: "Other",
 };
 
 const TUITION_RATES = {
@@ -4371,10 +5046,20 @@ function RevenueTab({
   transactions: StripeTransaction[];
   onRefresh: () => void;
 }) {
-  const [selectedTransaction, setSelectedTransaction] = useState<StripeTransaction | null>(null);
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<StripeTransaction | null>(null);
   const [hideExcluded, setHideExcluded] = useState(true);
-  const [students, setStudents] = useState<{ id: string; child_legal_name: string | null }[]>([]);
-  const [parents, setParents] = useState<{ id: string; full_name: string | null; email: string; g1_cell_phone: string | null }[]>([]);
+  const [students, setStudents] = useState<
+    { id: string; child_legal_name: string | null }[]
+  >([]);
+  const [parents, setParents] = useState<
+    {
+      id: string;
+      full_name: string | null;
+      email: string;
+      g1_cell_phone: string | null;
+    }[]
+  >([]);
   const [enrollment, setEnrollment] = useState({
     full_14: 0,
     full_primary: 0,
@@ -4383,7 +5068,9 @@ function RevenueTab({
     summer: 0,
   });
   const [view, setView] = useState<"monthly" | "type">("monthly");
-  const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
+  const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(
+    new Set(),
+  );
 
   useEffect(() => {
     async function fetchLists() {
@@ -4398,9 +5085,11 @@ function RevenueTab({
   }, []);
 
   const totalActual = transactions
-    .filter(tx => !tx.exclude_from_revenue)
+    .filter((tx) => !tx.exclude_from_revenue)
     .reduce((s, tx) => {
-      const net = tx.cover_fees ? (tx.intended_amount_cents ?? tx.amount_cents) : tx.amount_cents;
+      const net = tx.cover_fees
+        ? (tx.intended_amount_cents ?? tx.amount_cents)
+        : tx.amount_cents;
       return s + net / 100;
     }, 0);
 
@@ -4412,20 +5101,27 @@ function RevenueTab({
     enrollment.summer * TUITION_RATES.summer_14_wk;
 
   function txNet(tx: StripeTransaction) {
-    return (tx.cover_fees ? (tx.intended_amount_cents ?? tx.amount_cents) : tx.amount_cents) / 100;
+    return (
+      (tx.cover_fees
+        ? (tx.intended_amount_cents ?? tx.amount_cents)
+        : tx.amount_cents) / 100
+    );
   }
 
-  const visibleTx = transactions.filter(tx => !tx.exclude_from_revenue);
+  const visibleTx = transactions.filter((tx) => !tx.exclude_from_revenue);
 
-  const byMonth = visibleTx.reduce<Record<string, StripeTransaction[]>>((acc, tx) => {
-    const key = tx.created_at.slice(0, 7);
-    (acc[key] ??= []).push(tx);
-    return acc;
-  }, {});
+  const byMonth = visibleTx.reduce<Record<string, StripeTransaction[]>>(
+    (acc, tx) => {
+      const key = tx.created_at.slice(0, 7);
+      (acc[key] ??= []).push(tx);
+      return acc;
+    },
+    {},
+  );
   const revenueMonths = Object.keys(byMonth).sort().reverse();
 
   function toggleMonth(key: string) {
-    setCollapsedMonths(prev => {
+    setCollapsedMonths((prev) => {
       const next = new Set(prev);
       next.has(key) ? next.delete(key) : next.add(key);
       return next;
@@ -4475,7 +5171,8 @@ function RevenueTab({
                   fontWeight: view === v ? 600 : 400,
                   border: "none",
                   cursor: "pointer",
-                  backgroundColor: view === v ? colors.mistyForest : "transparent",
+                  backgroundColor:
+                    view === v ? colors.mistyForest : "transparent",
                   color: view === v ? "white" : colors.textSecondary,
                   transition: "all 0.15s",
                 }}
@@ -4489,18 +5186,20 @@ function RevenueTab({
             <button
               onClick={() => setHideExcluded(!hideExcluded)}
               style={{
-                backgroundColor: hideExcluded ? colors.mistyForest : 'transparent',
-                color: hideExcluded ? '#fff' : colors.textSecondary,
+                backgroundColor: hideExcluded
+                  ? colors.mistyForest
+                  : "transparent",
+                color: hideExcluded ? "#fff" : colors.textSecondary,
                 border: `1px solid ${hideExcluded ? colors.mistyForest : colors.border}`,
-                borderRadius: '99px',
-                padding: '4px 12px',
-                fontSize: '12px',
+                borderRadius: "99px",
+                padding: "4px 12px",
+                fontSize: "12px",
                 fontWeight: 500,
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
+                cursor: "pointer",
+                transition: "all 0.2s ease",
               }}
             >
-              {hideExcluded ? 'Show Excluded' : 'Hide Excluded'}
+              {hideExcluded ? "Show Excluded" : "Hide Excluded"}
             </button>
           )}
         </div>
@@ -4509,13 +5208,22 @@ function RevenueTab({
       {/* Monthly view */}
       {view === "monthly" && (
         <Table
-          headers={["Date", "Type", "Student", "Application", "Payer", "Net Amount"]}
+          headers={[
+            "Date",
+            "Type",
+            "Student",
+            "Application",
+            "Payer",
+            "Net Amount",
+          ]}
         >
           {(() => {
             const displayTx = hideExcluded
-              ? transactions.filter(tx => !tx.exclude_from_revenue)
+              ? transactions.filter((tx) => !tx.exclude_from_revenue)
               : transactions;
-            const displayByMonth = displayTx.reduce<Record<string, StripeTransaction[]>>((acc, tx) => {
+            const displayByMonth = displayTx.reduce<
+              Record<string, StripeTransaction[]>
+            >((acc, tx) => {
               const key = tx.created_at.slice(0, 7);
               (acc[key] ??= []).push(tx);
               return acc;
@@ -4523,109 +5231,180 @@ function RevenueTab({
             const displayMonths = Object.keys(displayByMonth).sort().reverse();
             return displayMonths.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-400">
-                  {hideExcluded ? 'All transactions are excluded.' : 'No transactions yet.'}
+                <td
+                  colSpan={6}
+                  className="px-4 py-8 text-center text-sm text-gray-400"
+                >
+                  {hideExcluded
+                    ? "All transactions are excluded."
+                    : "No transactions yet."}
                 </td>
               </tr>
             ) : (
               <>
                 {displayMonths.map((monthKey) => {
                   const monthTxs = displayByMonth[monthKey];
-                  const monthTotal = monthTxs.reduce((s, tx) => s + txNet(tx), 0);
+                  const monthTotal = monthTxs.reduce(
+                    (s, tx) => s + txNet(tx),
+                    0,
+                  );
                   const isCollapsed = collapsedMonths.has(monthKey);
                   return (
                     <React.Fragment key={monthKey}>
                       {/* Month header row */}
                       <tr
-                        style={{ backgroundColor: "#F6F1E8", cursor: "pointer" }}
+                        style={{
+                          backgroundColor: "#F6F1E8",
+                          cursor: "pointer",
+                        }}
                         onClick={() => toggleMonth(monthKey)}
                       >
                         <td colSpan={6} style={{ padding: "10px 16px" }}>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 8,
+                              }}
+                            >
                               <span
                                 style={{
                                   fontSize: "12px",
                                   color: colors.textSecondary,
-                                  transform: isCollapsed ? "rotate(-90deg)" : "rotate(0deg)",
+                                  transform: isCollapsed
+                                    ? "rotate(-90deg)"
+                                    : "rotate(0deg)",
                                   display: "inline-block",
                                   transition: "transform 0.2s",
                                 }}
                               >
                                 ▾
                               </span>
-                              <span className="text-sm font-bold" style={{ color: colors.textPrimary }}>
+                              <span
+                                className="text-sm font-bold"
+                                style={{ color: colors.textPrimary }}
+                              >
                                 {formatMonthLabel(monthKey)}
                               </span>
-                              <span className="text-xs" style={{ color: colors.textSecondary }}>
-                                ({monthTxs.length} transaction{monthTxs.length !== 1 ? "s" : ""})
+                              <span
+                                className="text-xs"
+                                style={{ color: colors.textSecondary }}
+                              >
+                                ({monthTxs.length} transaction
+                                {monthTxs.length !== 1 ? "s" : ""})
                               </span>
                             </div>
-                            <span className="text-sm font-bold" style={{ color: colors.success }}>
+                            <span
+                              className="text-sm font-bold"
+                              style={{ color: colors.success }}
+                            >
                               {fmt(monthTotal)}
                             </span>
                           </div>
                         </td>
                       </tr>
                       {/* Transaction rows */}
-                      {!isCollapsed && monthTxs.map((tx, i) => (
-                        <TableRow
-                          key={tx.id}
-                          index={i}
-                          onClick={() => setSelectedTransaction(tx)}
-                          style={{ cursor: 'pointer', opacity: tx.exclude_from_revenue ? 0.5 : 1 }}
-                        >
-                          <TableCell>
-                            {new Date(tx.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                          </TableCell>
-                          <TableCell>
-                            <span
+                      {!isCollapsed &&
+                        monthTxs.map((tx, i) => (
+                          <TableRow
+                            key={tx.id}
+                            index={i}
+                            onClick={() => setSelectedTransaction(tx)}
+                            style={{
+                              cursor: "pointer",
+                              opacity: tx.exclude_from_revenue ? 0.5 : 1,
+                            }}
+                          >
+                            <TableCell>
+                              {new Date(tx.created_at).toLocaleDateString(
+                                "en-US",
+                                {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                },
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <span
+                                style={{
+                                  backgroundColor: colors.pastelSage,
+                                  color: colors.mistyForest,
+                                  borderRadius: "99px",
+                                  padding: "2px 8px",
+                                  fontSize: "11px",
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {formatPaymentType(tx.payment_type)}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              {tx.student_id
+                                ? (students.find((s) => s.id === tx.student_id)
+                                    ?.child_legal_name ?? tx.student_id)
+                                : "—"}
+                            </TableCell>
+                            <TableCell>
+                              {tx.application_id ? "✓" : "—"}
+                            </TableCell>
+                            <TableCell>
+                              {(() => {
+                                const effectiveParentId =
+                                  tx.parent_id ??
+                                  (tx.metadata?.parent_id as string | null) ??
+                                  null;
+                                return (
+                                  tx.payer_name ||
+                                  tx.payer_email ||
+                                  (effectiveParentId
+                                    ? (parents.find(
+                                        (p) => p.id === effectiveParentId,
+                                      )?.email ?? "—")
+                                    : "—")
+                                );
+                              })()}
+                            </TableCell>
+                            <TableCell
+                              className="font-semibold"
                               style={{
-                                backgroundColor: colors.pastelSage,
-                                color: colors.mistyForest,
-                                borderRadius: "99px",
-                                padding: "2px 8px",
-                                fontSize: "11px",
-                                fontWeight: 600,
+                                color: tx.exclude_from_revenue
+                                  ? "#9CA3AF"
+                                  : colors.success,
                               }}
                             >
-                              {formatPaymentType(tx.payment_type)}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            {tx.student_id
-                              ? (students.find(s => s.id === tx.student_id)?.child_legal_name ?? tx.student_id)
-                              : "—"}
-                          </TableCell>
-                          <TableCell>{tx.application_id ? "✓" : "—"}</TableCell>
-                          <TableCell>
-                            {(() => {
-                              const effectiveParentId = tx.parent_id ?? (tx.metadata?.parent_id as string | null) ?? null;
-                              return tx.payer_name || tx.payer_email || (effectiveParentId ? (parents.find(p => p.id === effectiveParentId)?.email ?? "—") : "—");
-                            })()}
-                          </TableCell>
-                          <TableCell
-                            className="font-semibold"
-                            style={{ color: tx.exclude_from_revenue ? '#9CA3AF' : colors.success }}
-                          >
-                            <span className="flex items-center gap-2">
-                              {formatCents(tx.cover_fees ? tx.intended_amount_cents : tx.amount_cents, tx.currency)}
-                              {tx.exclude_from_revenue && (
-                                <span style={{
-                                  backgroundColor: '#FEF3C7',
-                                  color: '#D97706',
-                                  borderRadius: '99px',
-                                  padding: '1px 6px',
-                                  fontSize: '10px',
-                                  fontWeight: 600,
-                                }}>
-                                  Excluded
-                                </span>
-                              )}
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                              <span className="flex items-center gap-2">
+                                {formatCents(
+                                  tx.cover_fees
+                                    ? tx.intended_amount_cents
+                                    : tx.amount_cents,
+                                  tx.currency,
+                                )}
+                                {tx.exclude_from_revenue && (
+                                  <span
+                                    style={{
+                                      backgroundColor: "#FEF3C7",
+                                      color: "#D97706",
+                                      borderRadius: "99px",
+                                      padding: "1px 6px",
+                                      fontSize: "10px",
+                                      fontWeight: 600,
+                                    }}
+                                  >
+                                    Excluded
+                                  </span>
+                                )}
+                              </span>
+                            </TableCell>
+                          </TableRow>
+                        ))}
                     </React.Fragment>
                   );
                 })}
@@ -4633,11 +5412,23 @@ function RevenueTab({
             );
           })()}
           {/* Total row */}
-          <tr style={{ backgroundColor: "#F6F1E8", borderTop: `1px solid #E8E4DF` }}>
-            <td colSpan={5} className="px-4 py-3 text-sm font-bold" style={{ color: colors.textPrimary }}>
+          <tr
+            style={{
+              backgroundColor: "#F6F1E8",
+              borderTop: `1px solid #E8E4DF`,
+            }}
+          >
+            <td
+              colSpan={5}
+              className="px-4 py-3 text-sm font-bold"
+              style={{ color: colors.textPrimary }}
+            >
               Total
             </td>
-            <td className="px-4 py-3 text-sm font-bold" style={{ color: colors.success }}>
+            <td
+              className="px-4 py-3 text-sm font-bold"
+              style={{ color: colors.success }}
+            >
               {fmt(totalActual)}
             </td>
           </tr>
@@ -4654,7 +5445,10 @@ function RevenueTab({
             Revenue by Type
           </p>
           {visibleTx.length === 0 ? (
-            <p className="text-sm text-center py-8" style={{ color: colors.textTertiary }}>
+            <p
+              className="text-sm text-center py-8"
+              style={{ color: colors.textTertiary }}
+            >
               No transactions yet.
             </p>
           ) : (
@@ -4663,19 +5457,36 @@ function RevenueTab({
               <div style={{ flexShrink: 0 }}>
                 <svg width={220} height={220}>
                   {(() => {
-                    const cx = 110, cy = 110;
-                    const typeEntries = Object.entries(byType).sort(([, a], [, b]) => b - a);
+                    const cx = 110,
+                      cy = 110;
+                    const typeEntries = Object.entries(byType).sort(
+                      ([, a], [, b]) => b - a,
+                    );
                     let cumulative = 0;
                     const slices = typeEntries.map(([t, val], i) => {
                       const pct = totalActual > 0 ? val / totalActual : 0;
                       const dashLen = pct * CIRC;
                       const offset = CIRC - cumulative - CIRC / 4;
                       cumulative += dashLen;
-                      return { t, val, pct, dashLen, offset, color: SLICE_COLORS[i % SLICE_COLORS.length] };
+                      return {
+                        t,
+                        val,
+                        pct,
+                        dashLen,
+                        offset,
+                        color: SLICE_COLORS[i % SLICE_COLORS.length],
+                      };
                     });
                     return (
                       <>
-                        <circle cx={cx} cy={cy} r={RADIUS} fill="none" stroke={colors.warmLinen} strokeWidth={30} />
+                        <circle
+                          cx={cx}
+                          cy={cy}
+                          r={RADIUS}
+                          fill="none"
+                          stroke={colors.warmLinen}
+                          strokeWidth={30}
+                        />
                         {slices.map((slice, i) => (
                           <motion.circle
                             key={slice.t}
@@ -4688,15 +5499,34 @@ function RevenueTab({
                             strokeDasharray={`${slice.dashLen} ${CIRC}`}
                             strokeDashoffset={slice.offset}
                             initial={{ strokeDasharray: `0 ${CIRC}` }}
-                            animate={{ strokeDasharray: `${slice.dashLen} ${CIRC}` }}
-                            transition={{ duration: 0.6, delay: i * 0.08, ease: "easeOut" as const }}
+                            animate={{
+                              strokeDasharray: `${slice.dashLen} ${CIRC}`,
+                            }}
+                            transition={{
+                              duration: 0.6,
+                              delay: i * 0.08,
+                              ease: "easeOut" as const,
+                            }}
                           />
                         ))}
                         <circle cx={cx} cy={cy} r={50} fill="white" />
-                        <text x={cx} y={cy - 6} textAnchor="middle" fontSize="13" fontWeight="700" fill={colors.textPrimary}>
+                        <text
+                          x={cx}
+                          y={cy - 6}
+                          textAnchor="middle"
+                          fontSize="13"
+                          fontWeight="700"
+                          fill={colors.textPrimary}
+                        >
                           {fmt(totalActual)}
                         </text>
-                        <text x={cx} y={cy + 12} textAnchor="middle" fontSize="10" fill={colors.textSecondary}>
+                        <text
+                          x={cx}
+                          y={cy + 12}
+                          textAnchor="middle"
+                          fontSize="10"
+                          fill={colors.textSecondary}
+                        >
                           total revenue
                         </text>
                       </>
@@ -4724,15 +5554,25 @@ function RevenueTab({
                               flexShrink: 0,
                             }}
                           />
-                          <span className="text-sm flex-1" style={{ color: colors.textSecondary }}>
+                          <span
+                            className="text-sm flex-1"
+                            style={{ color: colors.textSecondary }}
+                          >
                             {SOURCE_LABELS[t] ?? formatPaymentType(t)}
                           </span>
-                          <span className="text-sm font-medium" style={{ color: colors.textPrimary }}>
+                          <span
+                            className="text-sm font-medium"
+                            style={{ color: colors.textPrimary }}
+                          >
                             {fmt(val)}
                           </span>
                           <span
                             className="text-xs"
-                            style={{ color: colors.textTertiary, minWidth: 40, textAlign: "right" }}
+                            style={{
+                              color: colors.textTertiary,
+                              minWidth: 40,
+                              textAlign: "right",
+                            }}
                           >
                             {(pct * 100).toFixed(1)}%
                           </span>
@@ -4749,8 +5589,15 @@ function RevenueTab({
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${pct * 100}%` }}
-                            transition={{ duration: 0.5, ease: "easeOut" as const }}
-                            style={{ height: "100%", borderRadius: 99, backgroundColor: color }}
+                            transition={{
+                              duration: 0.5,
+                              ease: "easeOut" as const,
+                            }}
+                            style={{
+                              height: "100%",
+                              borderRadius: 99,
+                              backgroundColor: color,
+                            }}
                           />
                         </div>
                       </div>
@@ -4818,7 +5665,10 @@ function RevenueTab({
       <TransactionDetailSidebar
         transaction={selectedTransaction}
         onClose={() => setSelectedTransaction(null)}
-        onDeleted={() => { setSelectedTransaction(null); onRefresh(); }}
+        onDeleted={() => {
+          setSelectedTransaction(null);
+          onRefresh();
+        }}
         onExclusionToggled={() => onRefresh()}
       />
     </div>
@@ -5159,7 +6009,8 @@ function MixSummary({
             className="text-sm font-bold"
             style={{ color: colors.textPrimary }}
           >
-            {fmt(mixTotal)}{unit}
+            {fmt(mixTotal)}
+            {unit}
           </p>
         </div>
         <div>
@@ -5167,7 +6018,8 @@ function MixSummary({
             Projected profit
           </p>
           <p className="text-sm font-bold" style={{ color: profitColor }}>
-            {fmt(mixProfit)}{unit}
+            {fmt(mixProfit)}
+            {unit}
           </p>
         </div>
         <div>
@@ -5178,7 +6030,8 @@ function MixSummary({
             className="text-sm font-bold"
             style={{ color: colors.textPrimary }}
           >
-            {fmt(targetProfit)}{unit}
+            {fmt(targetProfit)}
+            {unit}
           </p>
         </div>
       </div>
@@ -5255,7 +6108,8 @@ function RevenueGoalHeader({
             className="text-xl font-bold"
             style={{ color: colors.mistyForest }}
           >
-            {fmt(netGoal)}{unit}
+            {fmt(netGoal)}
+            {unit}
           </p>
           <p className="text-xs mt-0.5" style={{ color: colors.textTertiary }}>
             {fullSeasonMonthlyCredit
@@ -5299,7 +6153,8 @@ function RevenueGoalHeader({
         <span className="text-xs" style={{ color: colors.textTertiary }}>
           Current mix:{" "}
           <strong style={{ color: colors.textPrimary }}>
-            {fmt(mixTotal)}{unit}
+            {fmt(mixTotal)}
+            {unit}
           </strong>
         </span>
         <span
@@ -5508,11 +6363,6 @@ const SCHOOL_YEAR_RATES = [
     rate: TUITION_RATES.aftercare_enrolled,
   },
   {
-    key: "aftercare_non",
-    label: "After Care – after care only",
-    rate: TUITION_RATES.aftercare_non,
-  },
-  {
     key: "fun_friday",
     label: "Field Day Friday (pkg of 4)",
     rate: TUITION_RATES.fun_friday,
@@ -5572,8 +6422,8 @@ function SummerAnalysisTab({
       ]),
     ),
   );
-  const [ssStudents, setSsStudents] = useState<Record<string, number>>(
-    () => Object.fromEntries(SUMMER_SEASON_RATES.map((r) => [r.key, 0]))
+  const [ssStudents, setSsStudents] = useState<Record<string, number>>(() =>
+    Object.fromEntries(SUMMER_SEASON_RATES.map((r) => [r.key, 0])),
   );
 
   const netProfitColor = netProfit >= 0 ? colors.success : colors.error;
@@ -5663,17 +6513,25 @@ function SummerAnalysisTab({
 
         {/* Weeks attended slider */}
         <div className="flex items-center gap-4 mb-4 mt-4">
-          <p className="text-xs font-semibold uppercase tracking-wide whitespace-nowrap"
-             style={{ color: colors.textSecondary }}>
+          <p
+            className="text-xs font-semibold uppercase tracking-wide whitespace-nowrap"
+            style={{ color: colors.textSecondary }}
+          >
             Weeks attended
           </p>
           <input
-            type="range" min={1} max={12} step={1} value={swWeeks}
+            type="range"
+            min={1}
+            max={12}
+            step={1}
+            value={swWeeks}
             onChange={(e) => setSwWeeks(Number(e.target.value))}
             style={{ flex: 1, accentColor: colors.mistyForest }}
           />
-          <p className="text-xs font-bold whitespace-nowrap"
-             style={{ color: colors.mistyForest }}>
+          <p
+            className="text-xs font-bold whitespace-nowrap"
+            style={{ color: colors.mistyForest }}
+          >
             {swWeeks} {swWeeks === 1 ? "week" : "weeks"}
           </p>
         </div>
@@ -5753,21 +6611,31 @@ function SummerAnalysisTab({
             );
           })}
         </div>
-        <div className="mt-4 pt-3" style={{ borderTop: `1px solid ${colors.border}` }}>
+        <div
+          className="mt-4 pt-3"
+          style={{ borderTop: `1px solid ${colors.border}` }}
+        >
           <div className="flex justify-between items-baseline">
             <span className="text-xs" style={{ color: colors.textTertiary }}>
               Full season total revenue
             </span>
-            <span className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
-              {fmt(SUMMER_SEASON_RATES.reduce((s, { key, totalPrice }) => s + (ssStudents[key] ?? 0) * totalPrice, 0))} total
+            <span
+              className="text-sm font-semibold"
+              style={{ color: colors.textPrimary }}
+            >
+              {fmt(
+                SUMMER_SEASON_RATES.reduce(
+                  (s, { key, totalPrice }) =>
+                    s + (ssStudents[key] ?? 0) * totalPrice,
+                  0,
+                ),
+              )}{" "}
+              total
             </span>
           </div>
         </div>
 
-        <p
-          className="text-xs mt-4"
-          style={{ color: colors.textTertiary }}
-        >
+        <p className="text-xs mt-4" style={{ color: colors.textTertiary }}>
           Registration fee: $75/student · one-time fee
         </p>
       </div>
@@ -6059,18 +6927,18 @@ function MercuryTab() {
   }
 
   const COUNTERPARTY_USER: Record<string, string> = {
-    'Capital One - Checking ••4567': 'Julius',
-    'Wells Fargo - Checking ••0769': 'Sage',
-    'GOLDMAN SACHS BA; TRANSFER; Julius Cecilia': 'Julius',
+    "Capital One - Checking ••4567": "Julius",
+    "Wells Fargo - Checking ••0769": "Sage",
+    "GOLDMAN SACHS BA; TRANSFER; Julius Cecilia": "Julius",
   };
 
   const resolveUser = (tx: MercuryTransaction, fallback: string) =>
-    COUNTERPARTY_USER[tx.counterpartyName ?? '']
-    ?? COUNTERPARTY_USER[tx.bankDescription ?? '']
-    ?? fallback;
+    COUNTERPARTY_USER[tx.counterpartyName ?? ""] ??
+    COUNTERPARTY_USER[tx.bankDescription ?? ""] ??
+    fallback;
 
   const userTotals = transactions.reduce<Record<string, number>>((acc, tx) => {
-    const user = resolveUser(tx, 'Other');
+    const user = resolveUser(tx, "Other");
     acc[user] = (acc[user] ?? 0) + tx.amount;
     return acc;
   }, {});
@@ -6078,15 +6946,23 @@ function MercuryTab() {
   const overallTotal = transactions.reduce((s, tx) => s + tx.amount, 0);
 
   const fmtCurrency = (v: number) =>
-    `${v >= 0 ? '+' : ''}${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v)}`;
+    `${v >= 0 ? "+" : ""}${new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(v)}`;
 
   return (
     <>
       {/* User Total Cards */}
-      <div className="grid gap-4 mb-6" style={{ gridTemplateColumns: `repeat(${Object.keys(userTotals).length + 1}, minmax(0, 1fr))` }}>
+      <div
+        className="grid gap-4 mb-6"
+        style={{
+          gridTemplateColumns: `repeat(${Object.keys(userTotals).length + 1}, minmax(0, 1fr))`,
+        }}
+      >
         {Object.entries(userTotals).map(([user, total]) => (
-          <div key={user} style={{ ...cardStyle, padding: '20px 24px' }}>
-            <p className="text-xs font-medium uppercase tracking-wider" style={{ color: colors.textTertiary }}>
+          <div key={user} style={{ ...cardStyle, padding: "20px 24px" }}>
+            <p
+              className="text-xs font-medium uppercase tracking-wider"
+              style={{ color: colors.textTertiary }}
+            >
               {user}
             </p>
             <p
@@ -6096,15 +6972,21 @@ function MercuryTab() {
               {fmtCurrency(total)}
             </p>
             <p className="text-xs mt-1" style={{ color: colors.textSecondary }}>
-              {transactions.filter(tx => {
-                const u = resolveUser(tx, 'Other');
-                return u === user;
-              }).length} transactions
+              {
+                transactions.filter((tx) => {
+                  const u = resolveUser(tx, "Other");
+                  return u === user;
+                }).length
+              }{" "}
+              transactions
             </p>
           </div>
         ))}
-        <div style={{ ...cardStyle, padding: '20px 24px' }}>
-          <p className="text-xs font-medium uppercase tracking-wider" style={{ color: colors.textTertiary }}>
+        <div style={{ ...cardStyle, padding: "20px 24px" }}>
+          <p
+            className="text-xs font-medium uppercase tracking-wider"
+            style={{ color: colors.textTertiary }}
+          >
             Total
           </p>
           <p
@@ -6135,20 +7017,29 @@ function MercuryTab() {
           </p>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
+          <table
+            className="w-full text-sm"
+            style={{ borderCollapse: "collapse" }}
+          >
             <thead>
               <tr style={{ borderBottom: `1px solid ${colors.border}` }}>
-                {["Date", "Counterparty", "Amount", "Type", "Status", "Account", "User"].map(
-                  (col) => (
-                    <th
-                      key={col}
-                      className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider"
-                      style={{ color: colors.textTertiary }}
-                    >
-                      {col}
-                    </th>
-                  )
-                )}
+                {[
+                  "Date",
+                  "Counterparty",
+                  "Amount",
+                  "Type",
+                  "Status",
+                  "Account",
+                  "User",
+                ].map((col) => (
+                  <th
+                    key={col}
+                    className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider"
+                    style={{ color: colors.textTertiary }}
+                  >
+                    {col}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -6156,14 +7047,14 @@ function MercuryTab() {
                 const isCredit = tx.amount > 0;
                 const amountDisplay = `${isCredit ? "+" : ""}${new Intl.NumberFormat(
                   "en-US",
-                  { style: "currency", currency: "USD" }
+                  { style: "currency", currency: "USD" },
                 ).format(tx.amount)}`;
                 const desc =
                   tx.counterpartyName ??
                   tx.merchantName ??
                   tx.bankDescription ??
                   "—";
-                const user = resolveUser(tx, '—')
+                const user = resolveUser(tx, "—");
                 return (
                   <tr
                     key={tx.id}
@@ -6171,12 +7062,14 @@ function MercuryTab() {
                     className="cursor-pointer transition-colors"
                     style={{ borderBottom: `1px solid ${colors.divider}` }}
                     onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLTableRowElement).style.backgroundColor =
-                        colors.softCloud;
+                      (
+                        e.currentTarget as HTMLTableRowElement
+                      ).style.backgroundColor = colors.softCloud;
                     }}
                     onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLTableRowElement).style.backgroundColor =
-                        "transparent";
+                      (
+                        e.currentTarget as HTMLTableRowElement
+                      ).style.backgroundColor = "transparent";
                     }}
                   >
                     <td
@@ -6193,7 +7086,9 @@ function MercuryTab() {
                     </td>
                     <td
                       className="px-4 py-3 font-medium tabular-nums"
-                      style={{ color: isCredit ? colors.success : colors.error }}
+                      style={{
+                        color: isCredit ? colors.success : colors.error,
+                      }}
                     >
                       {amountDisplay}
                     </td>
@@ -6211,14 +7106,14 @@ function MercuryTab() {
                             tx.status === "sent" || tx.status === "posted"
                               ? colors.success
                               : tx.status === "pending"
-                              ? colors.warning
-                              : colors.info,
+                                ? colors.warning
+                                : colors.info,
                           color:
                             tx.status === "sent" || tx.status === "posted"
                               ? colors.success
                               : tx.status === "pending"
-                              ? colors.warningText
-                              : colors.infoText,
+                                ? colors.warningText
+                                : colors.infoText,
                         }}
                       >
                         {tx.status}
@@ -6230,7 +7125,10 @@ function MercuryTab() {
                     >
                       {tx.accountName}
                     </td>
-                    <td className="px-4 py-3" style={{ color: colors.textSecondary }}>
+                    <td
+                      className="px-4 py-3"
+                      style={{ color: colors.textSecondary }}
+                    >
                       {user}
                     </td>
                   </tr>
@@ -6264,7 +7162,9 @@ export default function BudgetPage() {
   const [lineItems, setLineItems] = useState<BudgetLineItem[]>([]);
   const [expenses, setExpenses] = useState<BudgetExpense[]>([]);
   const [income, setIncome] = useState<BudgetIncome[]>([]);
-  const [stripeTransactions, setStripeTransactions] = useState<StripeTransaction[]>([]);
+  const [stripeTransactions, setStripeTransactions] = useState<
+    StripeTransaction[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -6412,7 +7312,10 @@ export default function BudgetPage() {
                 />
               )}
               {activeTab === "Revenue" && (
-                <RevenueTab transactions={stripeTransactions} onRefresh={fetchAll} />
+                <RevenueTab
+                  transactions={stripeTransactions}
+                  onRefresh={fetchAll}
+                />
               )}
               {activeTab === "Taxes" && (
                 <TaxesTab expenses={expenses} income={income} />
