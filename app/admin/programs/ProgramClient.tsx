@@ -144,7 +144,7 @@ function StudentCard({
       onClick={() => onClick(student)}
       className="flex flex-col items-center p-4 text-center"
       style={{
-        backgroundColor: 'white',
+        backgroundColor: colors.surface,
         border: `1px solid ${colors.border}`,
         borderRadius: radius.md,
         boxShadow: shadows.soft,
@@ -171,7 +171,8 @@ function StudentCard({
           {student.admin_tags.map((tag) => (
             <span
               key={tag}
-              className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-violet-50 text-violet-700 border border-violet-200"
+              className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded-full"
+              style={{ backgroundColor: colors.accentLight, color: colors.accent, border: `1px solid ${colors.accentLight}` }}
             >
               {tag}
             </span>
@@ -311,11 +312,10 @@ export function ProgramClient({
                 <button
                   key={tag}
                   onClick={() => toggleExcludeTag(tag)}
-                  className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full border transition-colors ${
-                    excluded
-                      ? 'bg-red-50 text-red-600 border-red-200 line-through opacity-70'
-                      : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-gray-300'
-                  }`}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full border transition-colors"
+                  style={excluded
+                    ? { backgroundColor: 'rgba(220,38,38,0.08)', color: '#DC2626', borderColor: 'rgba(220,38,38,0.25)', textDecoration: 'line-through', opacity: 0.7 }
+                    : { backgroundColor: colors.elevated, color: colors.textSecondary, borderColor: colors.border }}
                 >
                   {excluded && <span className="not-italic no-underline">✕</span>}
                   {tag}
@@ -325,7 +325,8 @@ export function ProgramClient({
             {excludedTags.size > 0 && (
               <button
                 onClick={() => setExcludedTags(new Set())}
-                className="text-xs text-gray-400 hover:text-gray-600 underline transition-colors"
+                className="text-xs underline transition-colors"
+                style={{ color: colors.textTertiary }}
               >
                 Clear all
               </button>

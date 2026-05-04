@@ -117,14 +117,14 @@ function StatCard({ icon, label, value, sub }: StatCardProps) {
     <div
       className="flex items-start gap-3 p-4 rounded-xl"
       style={{
-        backgroundColor: 'white',
+        backgroundColor: colors.surface,
         border: `1px solid ${colors.border}`,
         boxShadow: shadows.soft,
       }}
     >
       <div
         className="flex items-center justify-center shrink-0 rounded-lg"
-        style={{ width: 36, height: 36, backgroundColor: '#4a7c59' + '18' }}
+        style={{ width: 36, height: 36, backgroundColor: colors.accentLight, color: colors.accent }}
       >
         {icon}
       </div>
@@ -233,24 +233,24 @@ export function AttendanceProgramClient({ program, initialDate, initialRows, sta
       {/* Stats row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <StatCard
-          icon={<Users className="w-4 h-4" style={{ color: '#4a7c59' }} />}
+          icon={<Users className="w-4 h-4" style={{ color: colors.accent }} />}
           label="Total Enrolled"
           value={stats.totalEnrolled}
         />
         <StatCard
-          icon={<CalendarDays className="w-4 h-4" style={{ color: '#4a7c59' }} />}
+          icon={<CalendarDays className="w-4 h-4" style={{ color: colors.accent }} />}
           label="Sessions Held"
           value={stats.totalSessions}
           sub={`${stats.avgPerSession} avg per session`}
         />
         <StatCard
-          icon={<TrendingUp className="w-4 h-4" style={{ color: '#4a7c59' }} />}
+          icon={<TrendingUp className="w-4 h-4" style={{ color: colors.accent }} />}
           label="Total Attendances"
           value={stats.totalAttendances}
           sub={`across all sessions`}
         />
         <StatCard
-          icon={<CreditCard className="w-4 h-4" style={{ color: '#4a7c59' }} />}
+          icon={<CreditCard className="w-4 h-4" style={{ color: colors.accent }} />}
           label="Payment Rate"
           value={`${stats.paidRate}%`}
           sub={`${stats.paidAttendances} paid · ${stats.unpaidAttendances} unpaid`}
@@ -262,8 +262,8 @@ export function AttendanceProgramClient({ program, initialDate, initialRows, sta
         <button
           onClick={() => handleDateChange(isAftercare ? shiftWeekday(selectedDate, -1) : shiftFriday(selectedDate, -1))}
           disabled={loadingDate}
-          className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors disabled:opacity-40"
-          style={{ borderColor: colors.border }}
+          className="p-2 rounded-lg transition-colors disabled:opacity-40"
+          style={{ border: `1px solid ${colors.border}`, backgroundColor: colors.surface }}
         >
           <ChevronLeft className="w-4 h-4" style={{ color: colors.textSecondary }} />
         </button>
@@ -276,14 +276,14 @@ export function AttendanceProgramClient({ program, initialDate, initialRows, sta
               setCalMonth(m - 1)
               setCalOpen((prev) => !prev)
             }}
-            className="flex items-center gap-1.5 text-sm font-semibold min-w-[140px] justify-center px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-1.5 text-sm font-semibold min-w-[140px] justify-center px-3 py-2 rounded-lg transition-colors"
             style={{ color: colors.textPrimary }}
           >
             {formatDateLabel(selectedDate)}
             {isToday && (
               <span
                 className="ml-1 text-xs font-medium px-2 py-0.5 rounded-full"
-                style={{ color: '#4a7c59', backgroundColor: '#4a7c5918' }}
+                style={{ color: colors.accent, backgroundColor: colors.accentLight }}
               >
                 {isAftercare ? 'Today' : 'This Friday'}
               </span>
@@ -294,7 +294,7 @@ export function AttendanceProgramClient({ program, initialDate, initialRows, sta
           {calOpen && (
             <div
               className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50 rounded-xl border p-3 w-64"
-              style={{ backgroundColor: 'white', borderColor: colors.border, boxShadow: shadows.medium }}
+              style={{ backgroundColor: colors.surface, borderColor: colors.border, boxShadow: shadows.medium }}
             >
               <div className="flex items-center justify-between mb-3">
                 <button
@@ -302,7 +302,7 @@ export function AttendanceProgramClient({ program, initialDate, initialRows, sta
                     if (calMonth === 0) { setCalMonth(11); setCalYear((y) => y - 1) }
                     else setCalMonth((m) => m - 1)
                   }}
-                  className="p-1 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="p-1 rounded-lg transition-colors"
                   style={{ color: colors.textTertiary }}
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -315,7 +315,7 @@ export function AttendanceProgramClient({ program, initialDate, initialRows, sta
                     if (calMonth === 11) { setCalMonth(0); setCalYear((y) => y + 1) }
                     else setCalMonth((m) => m + 1)
                   }}
-                  className="p-1 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="p-1 rounded-lg transition-colors"
                   style={{ color: colors.textTertiary }}
                 >
                   <ChevronRight className="w-4 h-4" />
@@ -329,7 +329,7 @@ export function AttendanceProgramClient({ program, initialDate, initialRows, sta
                     <div
                       key={i}
                       className="text-center text-xs font-semibold py-1"
-                      style={{ color: highlight ? '#4a7c59' : colors.textTertiary }}
+                      style={{ color: highlight ? colors.accent : colors.textTertiary }}
                     >
                       {label}
                     </div>
@@ -353,14 +353,14 @@ export function AttendanceProgramClient({ program, initialDate, initialRows, sta
                       onClick={() => { handleDateChange(dateStr); setCalOpen(false) }}
                       className="relative flex items-center justify-center w-full aspect-square rounded-lg text-xs font-medium transition-colors"
                       style={{
-                        backgroundColor: isSel ? '#4a7c59' : undefined,
+                        backgroundColor: isSel ? colors.accent : undefined,
                         color: disabled ? colors.border : isSel ? 'white' : colors.textPrimary,
                         cursor: disabled ? 'not-allowed' : 'pointer',
                       }}
                     >
                       {d.getDate()}
                       {isTod && !isSel && (
-                        <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full" style={{ backgroundColor: '#4a7c59' }} />
+                        <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full" style={{ backgroundColor: colors.accent }} />
                       )}
                     </button>
                   )
@@ -373,8 +373,8 @@ export function AttendanceProgramClient({ program, initialDate, initialRows, sta
         <button
           onClick={() => handleDateChange(isAftercare ? shiftWeekday(selectedDate, 1) : shiftFriday(selectedDate, 1))}
           disabled={loadingDate}
-          className="p-2 rounded-lg border bg-white hover:bg-gray-50 transition-colors disabled:opacity-40"
-          style={{ borderColor: colors.border }}
+          className="p-2 rounded-lg transition-colors disabled:opacity-40"
+          style={{ border: `1px solid ${colors.border}`, backgroundColor: colors.surface }}
         >
           <ChevronRight className="w-4 h-4" style={{ color: colors.textSecondary }} />
         </button>
@@ -384,7 +384,7 @@ export function AttendanceProgramClient({ program, initialDate, initialRows, sta
             onClick={() => handleDateChange(todayRef)}
             disabled={loadingDate}
             className="text-xs font-medium px-3 py-1.5 rounded-lg transition-colors disabled:opacity-40"
-            style={{ color: '#4a7c59', border: '1px solid #4a7c5950', backgroundColor: '#4a7c5910' }}
+            style={{ color: colors.accent, border: `1px solid ${colors.accentLight}`, backgroundColor: colors.accentLight }}
           >
             {isAftercare ? 'Today' : 'This Friday'}
           </button>
@@ -400,7 +400,7 @@ export function AttendanceProgramClient({ program, initialDate, initialRows, sta
             className="pl-8 pr-3 py-2 text-sm rounded-lg border transition-colors w-56 focus:outline-none"
             style={{
               borderColor: colors.border,
-              backgroundColor: 'white',
+              backgroundColor: colors.surface,
               color: colors.textPrimary,
             }}
           />
@@ -416,7 +416,7 @@ export function AttendanceProgramClient({ program, initialDate, initialRows, sta
           <>
             <span
               className="text-xs font-medium px-2.5 py-1 rounded-full"
-              style={{ color: '#4a7c59', backgroundColor: '#4a7c5915' }}
+              style={{ color: colors.accent, backgroundColor: colors.accentLight }}
             >
               {paidTodayCount} paid
             </span>
@@ -435,7 +435,7 @@ export function AttendanceProgramClient({ program, initialDate, initialRows, sta
       {/* Table */}
       <div
         className="rounded-2xl overflow-hidden"
-        style={{ backgroundColor: 'white', border: `1px solid ${colors.border}`, boxShadow: shadows.soft }}
+        style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}`, boxShadow: shadows.soft }}
       >
         {/* Header */}
         <div
@@ -458,13 +458,13 @@ export function AttendanceProgramClient({ program, initialDate, initialRows, sta
                 className={`grid gap-4 px-5 py-4 items-center ${isAftercare ? 'grid-cols-[1fr_110px_140px_100px_110px]' : 'grid-cols-[1fr_110px_100px_110px]'}`}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gray-100 animate-pulse" />
-                  <div className="h-4 bg-gray-100 rounded animate-pulse w-32" />
+                  <div className="w-8 h-8 rounded-full animate-pulse" style={{ backgroundColor: colors.border }} />
+                  <div className="h-4 rounded animate-pulse w-32" style={{ backgroundColor: colors.border }} />
                 </div>
-                <div className="h-4 bg-gray-100 rounded animate-pulse mx-auto w-8" />
-                {isAftercare && <div className="h-4 bg-gray-100 rounded animate-pulse mx-auto w-20" />}
-                <div className="h-4 bg-gray-100 rounded animate-pulse mx-auto w-16" />
-                <div className="h-4 bg-gray-100 rounded animate-pulse mx-auto w-16" />
+                <div className="h-4 rounded animate-pulse mx-auto w-8" style={{ backgroundColor: colors.border }} />
+                {isAftercare && <div className="h-4 rounded animate-pulse mx-auto w-20" style={{ backgroundColor: colors.border }} />}
+                <div className="h-4 rounded animate-pulse mx-auto w-16" style={{ backgroundColor: colors.border }} />
+                <div className="h-4 rounded animate-pulse mx-auto w-16" style={{ backgroundColor: colors.border }} />
               </div>
             ))}
           </div>
@@ -519,8 +519,8 @@ export function AttendanceProgramClient({ program, initialDate, initialRows, sta
                     <div
                       className="w-5 h-5 rounded border-2 flex items-center justify-center"
                       style={{
-                        backgroundColor: isChecked ? '#4a7c59' : 'transparent',
-                        borderColor: isChecked ? '#4a7c59' : colors.border,
+                        backgroundColor: isChecked ? colors.accent : 'transparent',
+                        borderColor: isChecked ? colors.accent : colors.border,
                       }}
                     >
                       {isChecked && (
@@ -537,7 +537,7 @@ export function AttendanceProgramClient({ program, initialDate, initialRows, sta
                       {pickupTime ? (
                         <span
                           className="text-xs font-medium px-2.5 py-1 rounded-full"
-                          style={{ color: '#4a7c59', backgroundColor: '#4a7c5915' }}
+                          style={{ color: colors.accent, backgroundColor: colors.accentLight }}
                         >
                           {fmt12h(pickupTime)}
                         </span>
@@ -552,7 +552,7 @@ export function AttendanceProgramClient({ program, initialDate, initialRows, sta
                     {isChecked ? (
                       <span
                         className="text-xs font-medium px-2.5 py-1 rounded-full"
-                        style={{ color: '#4a7c59', backgroundColor: '#4a7c5915' }}
+                        style={{ color: colors.accent, backgroundColor: colors.accentLight }}
                       >
                         Recorded
                       </span>
@@ -566,7 +566,7 @@ export function AttendanceProgramClient({ program, initialDate, initialRows, sta
                     {row.hasEnrollment ? (
                       <span
                         className="text-xs font-medium px-2.5 py-1 rounded-full"
-                        style={{ color: '#4a7c59', backgroundColor: '#4a7c5915' }}
+                        style={{ color: colors.accent, backgroundColor: colors.accentLight }}
                       >
                         Paid
                       </span>

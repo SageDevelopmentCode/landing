@@ -125,6 +125,52 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
+    if (type === "summer_attendance_marked") {
+      const { studentName, date } = data;
+      if (!date) {
+        return NextResponse.json(
+          { error: "summer_attendance_marked requires date" },
+          { status: 400 },
+        );
+      }
+      await sendDiscordNotification(
+        {
+          title: "✅ Summer Attendance Marked",
+          color: 0xd97706,
+          fields: [
+            { name: "Student", value: studentName ?? "Student", inline: true },
+            { name: "Date", value: date, inline: true },
+          ],
+          timestamp: new Date().toISOString(),
+        },
+        process.env.DISCORD_STUDENT_WEBHOOK_URL,
+      );
+      return NextResponse.json({ success: true });
+    }
+
+    if (type === "summer_attendance_removed") {
+      const { studentName, date } = data;
+      if (!date) {
+        return NextResponse.json(
+          { error: "summer_attendance_removed requires date" },
+          { status: 400 },
+        );
+      }
+      await sendDiscordNotification(
+        {
+          title: "❌ Summer Attendance Removed",
+          color: 0x6b7280,
+          fields: [
+            { name: "Student", value: studentName ?? "Student", inline: true },
+            { name: "Date", value: date, inline: true },
+          ],
+          timestamp: new Date().toISOString(),
+        },
+        process.env.DISCORD_STUDENT_WEBHOOK_URL,
+      );
+      return NextResponse.json({ success: true });
+    }
+
     if (type === "help_request") {
       const {
         parentName,
