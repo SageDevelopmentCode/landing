@@ -109,6 +109,7 @@ export async function getSummerStudentsForDay(date: string): Promise<SummerStude
 
   const [
     { data: students },
+    { data: enrolledApps },
     { data: summerTxData },
     { data: homeschoolTxData },
   ] = await Promise.all([
@@ -118,6 +119,13 @@ export async function getSummerStudentsForDay(date: string): Promise<SummerStude
       .select('id, child_legal_name, child_grade, profile_image_url')
       .eq('is_deleted', false)
       .order('child_legal_name'),
+    // All students with an enrolled summer application (full enrollment or homeschool drop-in)
+    adminClient
+      .schema('parent_app')
+      .from('applications')
+      .select('student_id')
+      .eq('status', 'enrolled')
+      .in('program', ['summer_26', 'both', 'homeschool_drop_in']),
     adminClient
       .schema('billing')
       .from('stripe_transactions')
@@ -134,6 +142,17 @@ export async function getSummerStudentsForDay(date: string): Promise<SummerStude
       .eq('is_deleted', false),
   ])
 
+  // Only show students who have an enrolled summer application
+  const enrolledIds = new Set(
+    (enrolledApps ?? []).map((a: { student_id: string }) => a.student_id).filter(Boolean)
+  )
+  const enrolledStudents = (students ?? []).filter((s: { id: string }) => enrolledIds.has(s.id))
+
+  if (enrolledStudents.length === 0) return []
+
+  const studentIds = enrolledStudents.map((s: { id: string }) => s.id)
+
+  // Build the set of students who actually paid for this specific date
   const paidIds = new Set<string>()
   const allTx = [...(summerTxData ?? []), ...(homeschoolTxData ?? [])]
   for (const tx of allTx) {
@@ -143,14 +162,12 @@ export async function getSummerStudentsForDay(date: string): Promise<SummerStude
     }
   }
 
-  const allStudentIds = (students ?? []).map((s: { id: string }) => s.id)
-
   const { data: records } = await adminClient
     .schema('attendance')
     .from('summer_records')
     .select('id, date, student_id, recorded_by, notes, paid_for_day')
     .eq('date', date)
-    .in('student_id', allStudentIds.length > 0 ? allStudentIds : ['00000000-0000-0000-0000-000000000000'])
+    .in('student_id', studentIds)
 
   const recordMap = new Map<string, SummerRecord>()
   for (const r of records ?? []) {
@@ -164,16 +181,15 @@ export async function getSummerStudentsForDay(date: string): Promise<SummerStude
     })
   }
 
-  return (students ?? [])
-    .filter((s: { id: string }) => paidIds.has(s.id) || recordMap.has(s.id))
-    .map((s: { id: string; child_legal_name: string | null; child_grade: string | null; profile_image_url: string | null }) => ({
-      student_id: s.id,
-      name: s.child_legal_name,
-      grade: s.child_grade,
-      profile_image_url: s.profile_image_url ?? null,
-      record: recordMap.get(s.id) ?? null,
-      hasEnrollment: paidIds.has(s.id),
-    }))
+  // Return ALL enrolled students — hasEnrollment reflects whether they paid for this day
+  return enrolledStudents.map((s: { id: string; child_legal_name: string | null; child_grade: string | null; profile_image_url: string | null }) => ({
+    student_id: s.id,
+    name: s.child_legal_name,
+    grade: s.child_grade,
+    profile_image_url: s.profile_image_url ?? null,
+    record: recordMap.get(s.id) ?? null,
+    hasEnrollment: paidIds.has(s.id),
+  }))
 }
 
 export async function getSummerStudentsForWeek(weekStartDate: string): Promise<SummerDayData[]> {

@@ -140,11 +140,15 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
     : null;
 
   const filteredDayStudents = dayDetail
-    ? search.trim()
-      ? dayDetail.students.filter((s) =>
-          s.name?.toLowerCase().includes(search.toLowerCase())
-        )
-      : dayDetail.students
+    ? (search.trim()
+        ? dayDetail.students.filter((s) =>
+            s.name?.toLowerCase().includes(search.toLowerCase())
+          )
+        : dayDetail.students
+      ).slice().sort((a, b) => {
+        if (a.hasEnrollment !== b.hasEnrollment) return a.hasEnrollment ? -1 : 1;
+        return (a.name ?? "").localeCompare(b.name ?? "");
+      })
     : [];
 
   const totalExpectedThisWeek = new Set(
@@ -155,7 +159,7 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
   const dayDetailPresent = dayDetail?.students.filter((s) => s.record !== null).length ?? 0;
 
   return (
-    <div className="flex-1 px-6 py-6 overflow-y-auto w-full">
+    <div className="flex-1 flex flex-col px-6 pt-6 pb-6 w-full min-h-0 overflow-hidden">
       {/* Header */}
       <div className="mb-5">
         <h1 className="text-2xl font-bold text-[#d97706]">Summer 2026 Attendance</h1>
@@ -211,7 +215,7 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
 
       {/* Week view: 5-column grid */}
       {viewMode === "week" && (
-        <div className="grid grid-cols-5 gap-3">
+        <div className="grid grid-cols-5 gap-3 flex-1 min-h-0">
           {loadingWeek
             ? DAY_LABELS.map((label) => (
                 <div key={label} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -227,11 +231,15 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
                 </div>
               ))
             : weekData.map((day, colIdx) => {
-                const filtered = search.trim()
+                const filtered = (search.trim()
                   ? day.students.filter((s) =>
                       s.name?.toLowerCase().includes(search.toLowerCase())
                     )
-                  : day.students;
+                  : day.students
+                ).slice().sort((a, b) => {
+                  if (a.hasEnrollment !== b.hasEnrollment) return a.hasEnrollment ? -1 : 1;
+                  return (a.name ?? "").localeCompare(b.name ?? "");
+                });
                 const expectedCount = day.students.filter((s) => s.hasEnrollment).length;
                 const presentCount = day.students.filter((s) => s.record !== null).length;
                 const isToday =
@@ -247,7 +255,7 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
                 return (
                   <div
                     key={day.date}
-                    className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col"
+                    className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full"
                   >
                     {/* Day column header */}
                     <button
@@ -273,7 +281,7 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
                     </button>
 
                     {/* Student list */}
-                    <div className="flex-1 divide-y divide-gray-50 overflow-y-auto max-h-64">
+                    <div className="flex-1 min-h-0 divide-y divide-gray-50 overflow-y-auto">
                       {filtered.length === 0 && (
                         <p className="text-xs text-gray-300 text-center py-4 px-2">
                           {search.trim() ? "No match" : "No students"}
@@ -367,7 +375,7 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
 
       {/* Day detail view */}
       {viewMode === "day" && dayDetail && (
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+        <div className="flex-1 min-h-0 bg-white rounded-2xl border border-gray-100 overflow-y-auto shadow-sm">
           {/* Table header */}
           <div className="grid grid-cols-[1fr_120px_100px_110px] gap-4 px-5 py-3 border-b border-gray-100 bg-gray-50">
             <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Student</span>

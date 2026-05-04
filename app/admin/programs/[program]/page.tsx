@@ -1,7 +1,9 @@
 import { createAdminClient } from '@/app/lib/supabase-server'
 import { ProgramClient } from '../ProgramClient'
 import { AttendanceProgramClient } from '../AttendanceProgramClient'
-import { getAdminAftercareForDate, getAdminFieldFridayForDate, getAttendanceStats } from '@/app/actions/adminAttendance'
+import { SummerProgramClient } from '../SummerProgramClient'
+import { getAdminAftercareForDate, getAdminFieldFridayForDate, getAttendanceStats, getAdminSummerAttendanceStats } from '@/app/actions/adminAttendance'
+import { getSummerStudentsForWeek } from '@/app/actions/summerAttendance'
 
 type FullStudent = {
   id: string
@@ -141,6 +143,110 @@ export default async function ProgramPage({
         totalStudentCount={unassignedStudents.length}
         unassignedStudents={unassignedStudents}
         fetchStudentDetail={fetchStudentDetail}
+      />
+    )
+  }
+
+  if (program === 'summer_26') {
+    const SUMMER_WEEK1_MONDAY = new Date(2026, 4, 25)
+    const TOTAL_WEEKS = 12
+    const today = new Date()
+    const pad = (n: number) => String(n).padStart(2, '0')
+    const diffDays = Math.floor((today.getTime() - SUMMER_WEEK1_MONDAY.getTime()) / 86400000)
+    const weekNum = diffDays < 0 ? 1 : Math.min(Math.floor(diffDays / 7) + 1, TOTAL_WEEKS)
+    const mondayDate = new Date(SUMMER_WEEK1_MONDAY)
+    mondayDate.setDate(mondayDate.getDate() + (weekNum - 1) * 7)
+    const weekStartDate = `${mondayDate.getFullYear()}-${pad(mondayDate.getMonth() + 1)}-${pad(mondayDate.getDate())}`
+
+    const [{ data: assignments }, initialWeekData, stats] = await Promise.all([
+      client
+        .schema('teachers')
+        .from('teacher_students')
+        .select('teacher_id, student_id, classroom')
+        .eq('program', 'summer_26')
+        .eq('is_deleted', false),
+      getSummerStudentsForWeek(weekStartDate),
+      getAdminSummerAttendanceStats(),
+    ])
+
+    const rows = assignments ?? []
+
+    const teacherIds = [...new Set(rows.map((r) => r.teacher_id).filter(Boolean))]
+    let teacherMap: Record<string, { id: string; full_name: string | null; role: string | null }> = {}
+
+    if (teacherIds.length > 0) {
+      const { data: teachers } = await client
+        .schema('admin')
+        .from('users')
+        .select('id, full_name, role')
+        .in('id', teacherIds)
+      if (teachers) {
+        teacherMap = Object.fromEntries(teachers.map((t) => [t.id, t]))
+      }
+    }
+
+    const studentIds = [...new Set(rows.map((r) => r.student_id).filter(Boolean))]
+    let studentMap: Record<string, StudentInfo> = {}
+
+    if (studentIds.length > 0) {
+      const [{ data: students }, { data: appRows }] = await Promise.all([
+        client
+          .schema('admin')
+          .from('students')
+          .select('id, child_legal_name, child_grade, dob_month, dob_day, dob_year, profile_image_url')
+          .in('id', studentIds)
+          .eq('is_deleted', false),
+        client
+          .schema('parent_app')
+          .from('applications')
+          .select('student_id, admin_tags')
+          .in('student_id', studentIds)
+          .eq('is_active', true),
+      ])
+
+      const tagsByStudentId = Object.fromEntries(
+        (appRows ?? []).map((a) => [a.student_id, (a.admin_tags as string[] | null) ?? []])
+      )
+
+      studentMap = Object.fromEntries(
+        (students ?? []).map((s) => [
+          s.id,
+          {
+            ...(s as Omit<StudentInfo, 'admin_tags'>),
+            admin_tags: tagsByStudentId[s.id] ?? [],
+          },
+        ])
+      )
+    }
+
+    const groupMap = new Map<string, TeacherGroup>()
+    for (const row of rows) {
+      if (!row.teacher_id) continue
+      const teacher = teacherMap[row.teacher_id]
+      if (!teacher) continue
+      if (!groupMap.has(row.teacher_id)) {
+        groupMap.set(row.teacher_id, { teacher, classroom: row.classroom ?? null, students: [] })
+      }
+      const student = studentMap[row.student_id]
+      if (student) {
+        const group = groupMap.get(row.teacher_id)!
+        if (!group.students.find((s) => s.id === student.id)) {
+          group.students.push(student)
+        }
+      }
+    }
+
+    const teacherGroups: TeacherGroup[] = [...groupMap.values()]
+    const totalStudentCount = [...new Set(rows.map((r) => r.student_id).filter(Boolean))].length
+
+    return (
+      <SummerProgramClient
+        teacherGroups={teacherGroups}
+        totalStudentCount={totalStudentCount}
+        fetchStudentDetail={fetchStudentDetail}
+        initialWeekData={initialWeekData}
+        initialWeekNum={weekNum}
+        stats={stats}
       />
     )
   }

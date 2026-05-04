@@ -257,3 +257,60 @@ export async function getAttendanceStats(program: 'aftercare' | 'field_friday'):
     unpaidAttendances,
   }
 }
+
+export type SummerAttendanceStats = {
+  totalEnrolled: number
+  totalDaysHeld: number
+  totalAttendances: number
+  avgPerDay: number
+  paidAttendances: number
+  unpaidAttendances: number
+  paidRate: number
+  presentToday: number
+}
+
+export async function getAdminSummerAttendanceStats(): Promise<SummerAttendanceStats> {
+  const adminClient = createAdminClient()
+
+  const [{ data: enrolledApps }, { data: allRecords }] = await Promise.all([
+    adminClient
+      .schema('parent_app')
+      .from('applications')
+      .select('student_id')
+      .eq('status', 'enrolled')
+      .in('program', ['summer_26', 'both', 'homeschool_drop_in']),
+    adminClient
+      .schema('attendance')
+      .from('summer_records')
+      .select('date, student_id, paid_for_day'),
+  ])
+
+  const totalEnrolled = new Set(
+    (enrolledApps ?? []).map((a: { student_id: string }) => a.student_id).filter(Boolean)
+  ).size
+
+  const now = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const today = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+
+  const records = allRecords ?? []
+  const distinctDates = new Set(records.map((r: { date: string }) => r.date))
+  const totalDaysHeld = distinctDates.size
+  const totalAttendances = records.length
+  const paidAttendances = records.filter((r: { paid_for_day: boolean }) => r.paid_for_day).length
+  const unpaidAttendances = totalAttendances - paidAttendances
+  const avgPerDay = totalDaysHeld > 0 ? Math.round((totalAttendances / totalDaysHeld) * 10) / 10 : 0
+  const paidRate = totalAttendances > 0 ? Math.round((paidAttendances / totalAttendances) * 100) : 0
+  const presentToday = records.filter((r: { date: string }) => r.date === today).length
+
+  return {
+    totalEnrolled,
+    totalDaysHeld,
+    totalAttendances,
+    avgPerDay,
+    paidAttendances,
+    unpaidAttendances,
+    paidRate,
+    presentToday,
+  }
+}
