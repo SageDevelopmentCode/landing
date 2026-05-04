@@ -13,7 +13,7 @@ export default function WeeklySchedule() {
       textColor: "text-primary",
     },
     {
-      time: "After Care",
+      time: "Extended Learning",
       label: "Optional",
       bgColor: "bg-gray-50",
       textColor: "text-gray-600",
