@@ -14,7 +14,8 @@ export default function WeeklySchedule() {
     },
     {
       time: "Extended Learning",
-      label: "Optional",
+      label:
+        "Structured academic support block that provides additional instruction, guided practice, and individualized support",
       bgColor: "bg-gray-50",
       textColor: "text-gray-600",
     },
