@@ -153,7 +153,11 @@ export default function AcademicCalendarPage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" as const }}
+              transition={{
+                duration: 0.5,
+                delay: 0.1,
+                ease: "easeOut" as const,
+              }}
             >
               <p className="text-sm font-semibold uppercase tracking-widest text-gray-400 font-body mt-1">
                 Last Day of School
@@ -199,9 +203,18 @@ export default function AcademicCalendarPage() {
                 May 26 – August 13, 2026
               </h3>
               <p className="text-gray-600 font-body leading-relaxed">
-                Our summer program runs before the school year begins. An
-                immersive outdoor experience focused on exploration, nature
-                study, and hands-on learning. Enrollment is now open.
+                Our Summer 2026 program is a twelve-week academic enrichment
+                session designed for curious learners ages 4–11. Each day
+                features structured, teacher-led instruction in literacy and
+                mathematics, complemented by specialized modules in nature
+                study, fine arts, music, cooking, and social-emotional
+                development. We operate as a full-day school, maintaining a
+                consistent academic schedule, attendance records, and
+                small-group instructional cohorts from Monday through Thursday.
+                This program is designed as a formal extension of our
+                private-school curriculum to support student progress, and
+                functions as an academic institution rather than a child care or
+                camp program.
               </p>
             </div>
             <div className="shrink-0">
@@ -233,7 +246,11 @@ export default function AcademicCalendarPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.05, ease: "easeOut" as const }}
+            transition={{
+              duration: 0.6,
+              delay: 0.05,
+              ease: "easeOut" as const,
+            }}
           >
             School is closed on the following dates.
           </motion.p>
@@ -246,7 +263,11 @@ export default function AcademicCalendarPage() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.06, ease: "easeOut" as const }}
+                transition={{
+                  duration: 0.5,
+                  delay: i * 0.06,
+                  ease: "easeOut" as const,
+                }}
               >
                 <SeasonBadge season={h.season} />
                 <div>
