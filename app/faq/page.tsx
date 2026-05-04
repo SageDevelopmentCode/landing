@@ -57,7 +57,7 @@ export default function FAQPage() {
     {
       question: "What subjects does Sage Field teach?",
       answer:
-        "At Sage Field, we cover literacy, numeracy, science, nature study, art, music, movement, and social-emotional learning — drawing from Montessori, Waldorf, and Reggio-inspired approaches with broadly TEKS-aligned academics. We are a full drop-off program; families do not need to supplement our academic program at home unless they choose to.",
+        "Our school provides a comprehensive, bona fide education centered on a rigorous core curriculum that includes reading, spelling, grammar, mathematics, and good citizenship. We complement these foundations with nature study, art, music, movement, and social-emotional learning, drawing from Montessori, Waldorf, and Reggio-inspired approaches with broadly TEKS-aligned academics. We operate as an academic institution rather than a child care center, featuring structured, teacher-led instruction, formal attendance tracking, and consistent learning objectives for every student. Because we are a full drop-off school, families do not need to supplement our academic program at home unless they choose to. By prioritizing a set academic scope and sequence, we ensure that our students receive a formal education in a focused, classroom-based environment.",
     },
   ];
 
