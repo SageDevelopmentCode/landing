@@ -588,8 +588,18 @@ function TimeBottomSheet({
                 className="text-gray-400 hover:text-gray-600 transition-colors p-1"
                 aria-label="Close"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -597,19 +607,21 @@ function TimeBottomSheet({
             {/* Scrollable time slots */}
             <div className="overflow-y-auto flex-1 px-6 py-4">
               <div className="flex flex-col gap-2 pb-6">
-                {TIME_SLOTS.filter((slot) => !blockedTimes.has(slot)).map((slot) => (
-                  <button
-                    key={slot}
-                    onClick={() => handlePick(slot)}
-                    className={`w-full text-left px-4 py-3 rounded-xl border-2 text-sm font-body transition-all duration-150 ${
-                      selectedTime === slot
-                        ? "border-primary bg-primary/10 text-primary font-semibold"
-                        : "border-gray-200 text-gray-700 hover:border-primary/50 hover:bg-primary/5"
-                    }`}
-                  >
-                    {slot}
-                  </button>
-                ))}
+                {TIME_SLOTS.filter((slot) => !blockedTimes.has(slot)).map(
+                  (slot) => (
+                    <button
+                      key={slot}
+                      onClick={() => handlePick(slot)}
+                      className={`w-full text-left px-4 py-3 rounded-xl border-2 text-sm font-body transition-all duration-150 ${
+                        selectedTime === slot
+                          ? "border-primary bg-primary/10 text-primary font-semibold"
+                          : "border-gray-200 text-gray-700 hover:border-primary/50 hover:bg-primary/5"
+                      }`}
+                    >
+                      {slot}
+                    </button>
+                  ),
+                )}
               </div>
             </div>
           </motion.div>
@@ -905,7 +917,7 @@ const stepVariants = {
 const STEP_HEADINGS: Record<TourStep, { title: string; sub: string }> = {
   1: {
     title: "Select a Date & Time",
-    sub: "Pick a weekday or Saturday that works for your family — Mon through Sat, 9 AM to 5 PM.",
+    sub: "Pick a day or time that works for your family",
   },
   2: {
     title: "Your Information",

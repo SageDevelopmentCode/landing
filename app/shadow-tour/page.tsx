@@ -160,7 +160,7 @@ const SHADOW_DAY_SCHEDULE = [
     icon: Heart,
     label: "Pickup & Debrief",
     description:
-      "You pick up your child and spend 10 minutes with Ms. Sabrina hearing about their day.",
+      "You pick up your child and spend time with your student's teacher hearing about their day.",
     colorClass: "bg-sage-50 border-sage-200",
     iconColor: "text-sage-600",
   },
@@ -217,7 +217,7 @@ const SHADOW_FAQS = [
   {
     question: "What if the day doesn't feel like a fit?",
     answer:
-      "That's completely okay and it happens. We'd rather you know now than after enrollment. Ms. Sabrina will still spend 10 minutes with you at pickup giving honest feedback about what she observed and where your child might thrive.",
+      "That's completely okay and it happens. We'd rather you know now than after enrollment. Your student's teacher will still spend time with you at pickup giving honest feedback about what they observed and where your child might thrive.",
     highlight: false,
   },
 ];
@@ -980,7 +980,7 @@ export default function ShadowTourPage() {
                 { icon: Calendar, label: "Mon – Thu Only" },
                 { icon: Clock, label: "Full Day · 9 AM – 3 PM" },
                 { icon: Star, label: "$95 · Waived on Enrollment" },
-                { icon: Users, label: "Ages Pre-K – 8th Grade" },
+                { icon: Users, label: "Ages Pre-K – 4th Grade" },
               ].map(({ icon: Icon, label }) => (
                 <span
                   key={label}

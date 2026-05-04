@@ -1197,7 +1197,7 @@ export default function ParentCalendarClient({
   const [viewEvent, setViewEvent] = useState<CalendarEvent | null>(null);
   const [selectedProgram, setSelectedProgram] = useState<ProgramKey>("summer");
   const [view, setView] = useState<ViewMode>("weekly");
-  const [currentDate, setCurrentDate] = useState<Date>(new Date(programs.summer.start));
+  const [currentDate, setCurrentDate] = useState<Date>(new Date(2026, 4, 25));
   const [overlapEvents, setOverlapEvents] = useState<CalendarEvent[] | null>(null);
 
   useEffect(() => {
