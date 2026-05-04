@@ -108,7 +108,11 @@ export default function WhatWeOfferSection() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
+              transition={{
+                duration: 0.6,
+                delay: 0.1,
+                ease: "easeOut" as const,
+              }}
             >
               What We Offer
             </motion.h2>
@@ -119,9 +123,13 @@ export default function WhatWeOfferSection() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
+              transition={{
+                duration: 0.6,
+                delay: 0.2,
+                ease: "easeOut" as const,
+              }}
             >
-              Enrichment Through Connection and Exploration
+              Education Through Connection and Exploration
             </motion.p>
 
             {/* Description Paragraphs */}
@@ -130,10 +138,14 @@ export default function WhatWeOfferSection() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
+              transition={{
+                duration: 0.6,
+                delay: 0.3,
+                ease: "easeOut" as const,
+              }}
             >
-              Sage Field operates as a private microschool using intentional
-              enrichment. We focus on{" "}
+              Sage Field operates as a private microschool, not a child-care or
+              daycare center. We focus on{" "}
               <span className="text-primary font-semibold">
                 whole-child growth
               </span>
@@ -157,7 +169,11 @@ export default function WhatWeOfferSection() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" as const }}
+              transition={{
+                duration: 0.6,
+                delay: 0.4,
+                ease: "easeOut" as const,
+              }}
             >
               Our days are designed around{" "}
               <span className="text-primary font-semibold">movement</span>,{" "}
@@ -289,7 +305,6 @@ export default function WhatWeOfferSection() {
           </div>
         </div>
       </div>
-
     </section>
   );
 }
