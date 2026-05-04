@@ -54,7 +54,7 @@ const faqSections: FAQSection[] = [
       {
         question: "Is there an extended learning option? What does it cost?",
         answer:
-          "Yes — Extended Learning runs 3:00pm–5:00pm. Drop-in: $35/day. Monthly for enrolled students: $375/month (~$23/day). Extended Learning Only (non-enrolled families): $475/month (~$10/hour).",
+          "Yes — Extended Learning runs 3:00pm–5:00pm. Drop-in: $35/day. Monthly for enrolled students: $299/month (~$18/day).",
       },
       {
         question: "What is Field Day Friday and what does it cost?",

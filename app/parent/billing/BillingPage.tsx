@@ -194,7 +194,7 @@ const SUMMER_WEEKS = [
 
 // --- Aftercare pricing ---
 const AFTERCARE_DAILY_CENTS = 3500; // $35/day
-const AFTERCARE_MONTHLY_CENTS = 37500; // $375/month
+const AFTERCARE_MONTHLY_CENTS = 29900; // $299/month
 
 const AFTERCARE_MONTHS = [
   {
@@ -206,7 +206,6 @@ const AFTERCARE_MONTHS = [
       { label: "Tue May 27", date: "2026-05-27" },
       { label: "Wed May 28", date: "2026-05-28" },
       { label: "Thu May 29", date: "2026-05-29" },
-      { label: "Fri May 30", date: "2026-05-30" },
     ],
   },
   {
@@ -222,17 +221,14 @@ const AFTERCARE_MONTHS = [
       { label: "Tue Jun 9", date: "2026-06-09" },
       { label: "Wed Jun 10", date: "2026-06-10" },
       { label: "Thu Jun 11", date: "2026-06-11" },
-      { label: "Fri Jun 12", date: "2026-06-12" },
       { label: "Mon Jun 15", date: "2026-06-15" },
       { label: "Tue Jun 16", date: "2026-06-16" },
       { label: "Wed Jun 17", date: "2026-06-17" },
       { label: "Thu Jun 18", date: "2026-06-18" },
-      { label: "Fri Jun 19", date: "2026-06-19" },
       { label: "Mon Jun 22", date: "2026-06-22" },
       { label: "Tue Jun 23", date: "2026-06-23" },
       { label: "Wed Jun 24", date: "2026-06-24" },
       { label: "Thu Jun 25", date: "2026-06-25" },
-      { label: "Fri Jun 26", date: "2026-06-26" },
       { label: "Mon Jun 29", date: "2026-06-29" },
       { label: "Tue Jun 30", date: "2026-06-30" },
     ],
@@ -244,7 +240,6 @@ const AFTERCARE_MONTHS = [
     days: [
       { label: "Wed Jul 1", date: "2026-07-01" },
       { label: "Thu Jul 2", date: "2026-07-02" },
-      { label: "Fri Jul 3", date: "2026-07-03" },
       { label: "Mon Jul 6", date: "2026-07-06" },
       { label: "Tue Jul 7", date: "2026-07-07" },
       { label: "Wed Jul 8", date: "2026-07-08" },
@@ -253,17 +248,14 @@ const AFTERCARE_MONTHS = [
       { label: "Tue Jul 14", date: "2026-07-14" },
       { label: "Wed Jul 15", date: "2026-07-15" },
       { label: "Thu Jul 16", date: "2026-07-16" },
-      { label: "Fri Jul 17", date: "2026-07-17" },
       { label: "Mon Jul 20", date: "2026-07-20" },
       { label: "Tue Jul 21", date: "2026-07-21" },
       { label: "Wed Jul 22", date: "2026-07-22" },
       { label: "Thu Jul 23", date: "2026-07-23" },
-      { label: "Fri Jul 24", date: "2026-07-24" },
       { label: "Mon Jul 27", date: "2026-07-27" },
       { label: "Tue Jul 28", date: "2026-07-28" },
       { label: "Wed Jul 29", date: "2026-07-29" },
       { label: "Thu Jul 30", date: "2026-07-30" },
-      { label: "Fri Jul 31", date: "2026-07-31" },
     ],
   },
   {
@@ -275,7 +267,6 @@ const AFTERCARE_MONTHS = [
       { label: "Tue Aug 4", date: "2026-08-04" },
       { label: "Wed Aug 5", date: "2026-08-05" },
       { label: "Thu Aug 6", date: "2026-08-06" },
-      { label: "Fri Aug 7", date: "2026-08-07" },
       { label: "Mon Aug 10", date: "2026-08-10" },
       { label: "Tue Aug 11", date: "2026-08-11" },
       { label: "Wed Aug 12", date: "2026-08-12" },
@@ -287,7 +278,7 @@ const AFTERCARE_MONTHS = [
 function aftercareMonthCents(month: (typeof AFTERCARE_MONTHS)[number]): number {
   const normalMonthDayThreshold = 15;
   return month.days.length < normalMonthDayThreshold
-    ? month.days.length * AFTERCARE_DAILY_CENTS
+    ? Math.round(month.days.length * 1868.75)
     : AFTERCARE_MONTHLY_CENTS;
 }
 
