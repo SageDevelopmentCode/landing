@@ -13,23 +13,22 @@ import {
   Rss,
   FileText,
   Users,
-  Sun,
+  ClipboardList,
 } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 
 const primaryNavItems: { label: string; icon: LucideIcon; href: string }[] = [
-  { label: "Dashboard", icon: LayoutDashboard, href: "/teacher/dashboard" },
-  { label: "My Students", icon: Users, href: "/teacher/dashboard/students" },
-  { label: "My Hours", icon: Clock, href: "/teacher/dashboard/hours" },
-  { label: "Messages", icon: MessageCircle, href: "/teacher/messages" },
-  { label: "Calendar", icon: Calendar, href: "/teacher/calendar" },
-  { label: "Feed", icon: Rss, href: "/teacher/feed" },
+  { label: "Dashboard",  icon: LayoutDashboard, href: "/teacher/dashboard" },
+  { label: "My Students", icon: Users,          href: "/teacher/dashboard/students" },
+  { label: "My Hours",   icon: Clock,           href: "/teacher/dashboard/hours" },
+  { label: "Attendance", icon: ClipboardList,   href: "/teacher/dashboard/attendance" },
+  { label: "Messages",   icon: MessageCircle,   href: "/teacher/messages" },
+  { label: "Calendar",   icon: Calendar,        href: "/teacher/calendar" },
+  { label: "Feed",       icon: Rss,             href: "/teacher/feed" },
 ];
 
 const moreItems: { label: string; icon: LucideIcon; href: string }[] = [
   { label: "Payroll",             icon: CreditCard, href: "/teacher/dashboard/payroll" },
-  { label: "Aftercare",           icon: Sun,        href: "/teacher/dashboard/aftercare" },
-  { label: "Field Fun Fridays",   icon: Sun,        href: "/teacher/dashboard/field-friday" },
   { label: "Forms and Documents", icon: FileText,   href: "#" },
 ];
 
