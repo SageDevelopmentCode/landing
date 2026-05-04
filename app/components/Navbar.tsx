@@ -330,7 +330,9 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
       pathname === "/educational-philosophy" ||
       pathname === "/tour" ||
       pathname === "/programs" ||
-      pathname === "/contact");
+      pathname === "/contact" ||
+      pathname === "/privacy" ||
+      pathname === "/terms");
 
   // Close everything on route change
   useEffect(() => {
@@ -420,7 +422,9 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
     ) : null;
 
     const iconEl = leaf.icon ? (
-      <leaf.icon className={`w-4 h-4 shrink-0 ${leaf.iconClass ?? "opacity-60"}`} />
+      <leaf.icon
+        className={`w-4 h-4 shrink-0 ${leaf.iconClass ?? "opacity-60"}`}
+      />
     ) : null;
 
     if (leaf.action.kind === "disabled") {
