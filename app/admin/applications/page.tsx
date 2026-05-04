@@ -30,6 +30,13 @@ const KANBAN_COLUMNS = [
   { key: 'homeschool_drop_in', collapsible: false, label: 'Homeschool Drop-In Program', accent: '#10b981', filter: (apps: Application[]) => apps.filter(a => a.status === 'enrolled' && a.program === 'homeschool_drop_in') },
 ]
 
+const AGE_RANGES: { key: string; label: string; min: number; max: number }[] = [
+  { key: '3-5',  label: 'Ages 3–5',   min: 3,  max: 5  },
+  { key: '6-8',  label: 'Ages 6–8',   min: 6,  max: 8  },
+  { key: '9-11', label: 'Ages 9–11',  min: 9,  max: 11 },
+  { key: '12+',  label: 'Ages 12+',   min: 12, max: Infinity },
+]
+
 const PROGRAM_LABELS: Record<string, string> = {
   summer_26: 'Summer 2026',
   school_year_26_27: 'School Year 2026-2027',
@@ -367,7 +374,20 @@ export default function ApplicationsPage() {
   const [drawerEnrollmentData, setDrawerEnrollmentData] = useState<CachedEnrollmentData | null>(null)
   const [collapsedCols, setCollapsedCols] = useState<Set<string>>(new Set(['in_progress', 'in_review', 'enrolling']))
   const [boardExcludedTags, setBoardExcludedTags] = useState<Set<string>>(new Set(["Don't Include"]))
+  const [tableStatusFilter, setTableStatusFilter] = useState<Set<string>>(new Set())
+  const [tableIncludeTags, setTableIncludeTags] = useState<Set<string>>(new Set())
+  const [tableExcludeTags, setTableExcludeTags] = useState<Set<string>>(new Set())
+  const [tableAgeRanges, setTableAgeRanges] = useState<Set<string>>(new Set())
   const pendingApp = useRef<Application | null>(null)
+
+  useEffect(() => {
+    if (view !== 'table') {
+      setTableStatusFilter(new Set())
+      setTableIncludeTags(new Set())
+      setTableExcludeTags(new Set())
+      setTableAgeRanges(new Set())
+    }
+  }, [view])
 
   useEffect(() => {
     const supabase = createBrowserClient(
@@ -502,10 +522,54 @@ export default function ApplicationsPage() {
         !(app.admin_tags ?? []).some(t => boardExcludedTags.has(t))
       )
 
+  const tableFilteredApplications = filteredApplications.filter(app => {
+    if (tableStatusFilter.size > 0 && !tableStatusFilter.has(app.status)) return false
+    if (tableIncludeTags.size > 0 && !(app.admin_tags ?? []).some(t => tableIncludeTags.has(t))) return false
+    if (tableExcludeTags.size > 0 && (app.admin_tags ?? []).some(t => tableExcludeTags.has(t))) return false
+    if (tableAgeRanges.size > 0) {
+      const age = app.child_age
+      const inRange = AGE_RANGES.some(r => tableAgeRanges.has(r.key) && age != null && age >= r.min && age <= r.max)
+      if (!inRange) return false
+    }
+    return true
+  })
+
   const toggleBoardExcludeTag = (tag: string) => {
     setBoardExcludedTags(prev => {
       const next = new Set(prev)
       next.has(tag) ? next.delete(tag) : next.add(tag)
+      return next
+    })
+  }
+
+  const toggleTableStatus = (status: string) => {
+    setTableStatusFilter(prev => {
+      const next = new Set(prev)
+      next.has(status) ? next.delete(status) : next.add(status)
+      return next
+    })
+  }
+
+  const toggleTableIncludeTag = (tag: string) => {
+    setTableIncludeTags(prev => {
+      const next = new Set(prev)
+      next.has(tag) ? next.delete(tag) : next.add(tag)
+      return next
+    })
+  }
+
+  const toggleTableExcludeTag = (tag: string) => {
+    setTableExcludeTags(prev => {
+      const next = new Set(prev)
+      next.has(tag) ? next.delete(tag) : next.add(tag)
+      return next
+    })
+  }
+
+  const toggleTableAgeRange = (key: string) => {
+    setTableAgeRanges(prev => {
+      const next = new Set(prev)
+      next.has(key) ? next.delete(key) : next.add(key)
       return next
     })
   }
@@ -612,6 +676,126 @@ export default function ApplicationsPage() {
         </div>
       )}
 
+      {view === 'table' && (
+        <div className="flex flex-col gap-2 -mt-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-semibold" style={{ color: colors.textTertiary }}>Status:</span>
+            {Object.entries(STATUS_CONFIG).map(([key, { label, className }]) => {
+              const active = tableStatusFilter.has(key)
+              return (
+                <button
+                  key={key}
+                  onClick={() => toggleTableStatus(key)}
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full border transition-colors ${
+                    active
+                      ? `${className} font-semibold`
+                      : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  {active && <span>✓</span>}
+                  {label}
+                </button>
+              )
+            })}
+            {tableStatusFilter.size > 0 && (
+              <button
+                onClick={() => setTableStatusFilter(new Set())}
+                className="text-xs text-gray-400 hover:text-gray-600 underline transition-colors"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-semibold" style={{ color: colors.textTertiary }}>Show tag:</span>
+            {PRESET_TAGS.map(tag => {
+              const included = tableIncludeTags.has(tag)
+              return (
+                <button
+                  key={tag}
+                  onClick={() => toggleTableIncludeTag(tag)}
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full border transition-colors ${
+                    included
+                      ? 'bg-violet-600 text-white border-violet-600'
+                      : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  {included && <span>✓</span>}
+                  {tag}
+                </button>
+              )
+            })}
+            {tableIncludeTags.size > 0 && (
+              <button
+                onClick={() => setTableIncludeTags(new Set())}
+                className="text-xs text-gray-400 hover:text-gray-600 underline transition-colors"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-semibold" style={{ color: colors.textTertiary }}>Exclude tag:</span>
+            {PRESET_TAGS.map(tag => {
+              const excluded = tableExcludeTags.has(tag)
+              return (
+                <button
+                  key={tag}
+                  onClick={() => toggleTableExcludeTag(tag)}
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full border transition-colors ${
+                    excluded
+                      ? 'bg-red-50 text-red-600 border-red-200 line-through opacity-70'
+                      : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  {excluded && <span className="not-italic no-underline">✕</span>}
+                  {tag}
+                </button>
+              )
+            })}
+            {tableExcludeTags.size > 0 && (
+              <button
+                onClick={() => setTableExcludeTags(new Set())}
+                className="text-xs text-gray-400 hover:text-gray-600 underline transition-colors"
+              >
+                Clear all
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-semibold" style={{ color: colors.textTertiary }}>Age:</span>
+            {AGE_RANGES.map(range => {
+              const active = tableAgeRanges.has(range.key)
+              return (
+                <button
+                  key={range.key}
+                  onClick={() => toggleTableAgeRange(range.key)}
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full border transition-colors ${
+                    active
+                      ? 'bg-sky-50 text-sky-700 border-sky-200 font-semibold'
+                      : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  {active && <span>✓</span>}
+                  {range.label}
+                </button>
+              )
+            })}
+            {tableAgeRanges.size > 0 && (
+              <button
+                onClick={() => setTableAgeRanges(new Set())}
+                className="text-xs text-gray-400 hover:text-gray-600 underline transition-colors"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       <AnimatePresence mode="wait">
         {view === 'table' ? (
           <motion.div
@@ -621,7 +805,7 @@ export default function ApplicationsPage() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
           >
-            {filteredApplications.length > 0 ? (
+            {tableFilteredApplications.length > 0 ? (
               <Table
                 headers={[
                   'Parent',
@@ -635,7 +819,7 @@ export default function ApplicationsPage() {
                   'Actions',
                 ]}
               >
-                {filteredApplications.map((app, index) => {
+                {tableFilteredApplications.map((app, index) => {
                   const isApproving = approvingId === app.id
 
                   return (
