@@ -1013,7 +1013,7 @@ export async function buildEnrollmentReminder2Email(opts: {
   <p>Thank you again for submitting <strong>${opts.childLegalName}</strong>'s application. We are so excited about the opportunity to have your family join our school community.</p>
 
   <p style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 12px 16px; margin: 20px 0; font-size: 14px;">
-    At this time, <strong>${opts.childLegalName}</strong>'s spot is not yet secured. We are actively enrolling new students, and several families are in the process of completing their registration. Availability is now limited — only <strong>4 spots remaining for 2nd–4th grade</strong> and <strong>6 spots for Preschool–1st grade</strong>.
+    At this time, <strong>${opts.childLegalName}</strong>'s spot is not yet secured. We are actively enrolling new students, and several families are in the process of completing their registration. Availability is now limited — only <strong>4 spots remaining for 2nd–4th grade</strong> and <strong>6 spots for Pre-K – 1st grade</strong>.
   </p>
 
   <p><strong>To finalize enrollment for summer, please complete the remaining steps through your parent dashboard:</strong></p>
