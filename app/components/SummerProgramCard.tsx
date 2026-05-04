@@ -61,7 +61,7 @@ export default function SummerProgramCard({
                   </div>
                   <div>
                     <p className="text-xs text-text-gray font-body">
-                      Pre-K – 1st Grade
+                      Pre-K–1st Grade
                     </p>
                     <p className="text-2xl font-bold text-primary font-heading">
                       $375
@@ -94,7 +94,7 @@ export default function SummerProgramCard({
                   </div>
                   <div>
                     <p className="text-xs text-white/70 font-body">
-                      Pre-K – 1st Grade
+                      Pre-K–1st Grade
                     </p>
                     <p className="text-2xl font-bold text-white font-heading">
                       $4,050

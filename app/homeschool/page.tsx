@@ -82,8 +82,15 @@ const programs = [
   {
     title: "Summer 2026 Program",
     dates: "May 26 – Aug 13, 2026",
-    details: ["Ages 4–11", "Mon–Thu", "12 Weeks", "~10 children per class", "Field Fridays"],
-    description: "Twelve weeks of themed adventures, hands-on projects, nature play, art, and academic enrichment in a small, nurturing group.",
+    details: [
+      "Ages 4–11",
+      "Mon–Thu",
+      "12 Weeks",
+      "~10 children per class",
+      "Field Fridays",
+    ],
+    description:
+      "Twelve weeks of themed adventures, hands-on projects, nature play, art, and academic enrichment in a small, nurturing group.",
     href: "/summer-2026",
     image: "/assets/ImageFive.jpg",
     dateBg: "bg-primary/10",
@@ -92,8 +99,16 @@ const programs = [
   {
     title: "School Year 2026–2027",
     dates: "August 17, 2026 – March 2027",
-    details: ["Ages 4–11", "Mon-Thu", "6-month commitment", "~10 children per class", "Field Fridays", "Aftercare available"],
-    description: "A full school-year microschool experience blending Montessori, Waldorf, and Reggio-inspired methods with TEKS-aligned academics.",
+    details: [
+      "Ages 4–11",
+      "Mon-Thu",
+      "6-month commitment",
+      "~10 children per class",
+      "Field Fridays",
+      "Aftercare available",
+    ],
+    description:
+      "A full school-year microschool experience blending Montessori, Waldorf, and Reggio-inspired methods with TEKS-aligned academics.",
     href: "/school-year-2026-2027",
     image: "/assets/ImageTwo.jpg",
     dateBg: "bg-lavender/40",
@@ -104,7 +119,9 @@ const programs = [
 export default function HomeschoolDropInPage() {
   const [waitlistOpen, setWaitlistOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
-  const [activePricingTab, setActivePricingTab] = useState<"summer" | "school-year">("summer");
+  const [activePricingTab, setActivePricingTab] = useState<
+    "summer" | "school-year"
+  >("summer");
   const router = useRouter();
 
   return (
@@ -436,7 +453,8 @@ export default function HomeschoolDropInPage() {
               Drop-In Available for Both Programs
             </h2>
             <p className="text-base text-text-gray mb-8 leading-relaxed font-body">
-              The Homeschool Drop-In option is available across both of our current programs — choose the season that fits your family.
+              The Homeschool Drop-In option is available across both of our
+              current programs — choose the season that fits your family.
             </p>
           </motion.div>
 
@@ -446,11 +464,20 @@ export default function HomeschoolDropInPage() {
                 key={program.href}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 + index * 0.15, ease: "easeOut" as const }}
+                transition={{
+                  duration: 0.6,
+                  delay: 0.1 + index * 0.15,
+                  ease: "easeOut" as const,
+                }}
               >
                 <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 h-full flex flex-col">
                   <div className="relative h-48 w-full">
-                    <Image src={program.image} alt={program.title} fill className="object-cover" />
+                    <Image
+                      src={program.image}
+                      alt={program.title}
+                      fill
+                      className="object-cover"
+                    />
                   </div>
                   <div className="p-6 flex flex-col flex-1">
                     <Link
@@ -461,20 +488,32 @@ export default function HomeschoolDropInPage() {
                       Enrollment is now open
                       <span>→</span>
                     </Link>
-                    <h3 className="text-xl font-bold text-black font-heading mb-3">{program.title}</h3>
-                    <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ${program.dateBg} ${program.dateText} text-xs font-semibold mb-4 self-start`}>
+                    <h3 className="text-xl font-bold text-black font-heading mb-3">
+                      {program.title}
+                    </h3>
+                    <div
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ${program.dateBg} ${program.dateText} text-xs font-semibold mb-4 self-start`}
+                    >
                       📅 {program.dates}
                     </div>
                     <div className="flex flex-wrap gap-2 mb-4">
                       {program.details.map((detail) => (
-                        <span key={detail} className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">
+                        <span
+                          key={detail}
+                          className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full"
+                        >
                           {detail}
                         </span>
                       ))}
                     </div>
-                    <p className="text-sm text-text-gray font-body leading-relaxed mb-4 flex-1">{program.description}</p>
+                    <p className="text-sm text-text-gray font-body leading-relaxed mb-4 flex-1">
+                      {program.description}
+                    </p>
                     <div className="flex items-center gap-4">
-                      <Link href={program.href} className="text-primary font-semibold text-sm hover:underline">
+                      <Link
+                        href={program.href}
+                        className="text-primary font-semibold text-sm hover:underline"
+                      >
                         Learn More
                       </Link>
                       <button
@@ -540,10 +579,16 @@ export default function HomeschoolDropInPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" as const }}
+              transition={{
+                duration: 0.5,
+                delay: 0.1,
+                ease: "easeOut" as const,
+              }}
               className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col"
             >
-              <h3 className="text-base font-bold text-black font-heading mb-1">Explorer Day Pass</h3>
+              <h3 className="text-base font-bold text-black font-heading mb-1">
+                Explorer Day Pass
+              </h3>
               <p className="text-xs text-gray-400 font-body mb-4">Drop-In</p>
               {activePricingTab === "summer" ? (
                 <div className="space-y-2 mb-4">
@@ -552,7 +597,7 @@ export default function HomeschoolDropInPage() {
                     <span className="font-semibold text-black">$95/day</span>
                   </div>
                   <div className="flex justify-between text-sm font-body">
-                    <span className="text-gray-600">Primary</span>
+                    <span className="text-gray-600">Pre-K–1st</span>
                     <span className="font-semibold text-black">$100/day</span>
                   </div>
                 </div>
@@ -563,7 +608,7 @@ export default function HomeschoolDropInPage() {
                     <span className="font-semibold text-black">$110/day</span>
                   </div>
                   <div className="flex justify-between text-sm font-body">
-                    <span className="text-gray-600">Primary</span>
+                    <span className="text-gray-600">Pre-K–1st</span>
                     <span className="font-semibold text-black">$120/day</span>
                   </div>
                 </div>
@@ -579,35 +624,47 @@ export default function HomeschoolDropInPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" as const }}
+              transition={{
+                duration: 0.5,
+                delay: 0.2,
+                ease: "easeOut" as const,
+              }}
               className="bg-white rounded-xl p-6 shadow-sm border border-primary/30 flex flex-col relative"
             >
               <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary text-white text-xs font-semibold rounded-full">
                 Most Popular
               </span>
-              <h3 className="text-base font-bold text-black font-heading mb-1">Part-Time Memberships</h3>
-              <p className="text-xs text-gray-400 font-body mb-4">2-Day &amp; 3-Day</p>
+              <h3 className="text-base font-bold text-black font-heading mb-1">
+                Part-Time Memberships
+              </h3>
+              <p className="text-xs text-gray-400 font-body mb-4">
+                2-Day &amp; 3-Day
+              </p>
               {activePricingTab === "summer" ? (
                 <div className="space-y-4 mb-4">
                   <div>
-                    <p className="text-xs font-semibold text-gray-500 mb-1.5 font-body">2-Day/Week</p>
+                    <p className="text-xs font-semibold text-gray-500 mb-1.5 font-body">
+                      2-Day/Week
+                    </p>
                     <div className="flex justify-between text-sm font-body">
                       <span className="text-gray-600">2nd–4th</span>
                       <span className="font-semibold text-black">$170/wk</span>
                     </div>
                     <div className="flex justify-between text-sm font-body">
-                      <span className="text-gray-600">Primary</span>
+                      <span className="text-gray-600">Pre-K–1st</span>
                       <span className="font-semibold text-black">$180/wk</span>
                     </div>
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-gray-500 mb-1.5 font-body">3-Day/Week</p>
+                    <p className="text-xs font-semibold text-gray-500 mb-1.5 font-body">
+                      3-Day/Week
+                    </p>
                     <div className="flex justify-between text-sm font-body">
                       <span className="text-gray-600">2nd–4th</span>
                       <span className="font-semibold text-black">$240/wk</span>
                     </div>
                     <div className="flex justify-between text-sm font-body">
-                      <span className="text-gray-600">Primary</span>
+                      <span className="text-gray-600">Pre-K–1st</span>
                       <span className="font-semibold text-black">$255/wk</span>
                     </div>
                   </div>
@@ -615,31 +672,34 @@ export default function HomeschoolDropInPage() {
               ) : (
                 <div className="space-y-4 mb-4">
                   <div>
-                    <p className="text-xs font-semibold text-gray-500 mb-1.5 font-body">2-Day/Week</p>
+                    <p className="text-xs font-semibold text-gray-500 mb-1.5 font-body">
+                      2-Day/Week
+                    </p>
                     <div className="flex justify-between text-sm font-body">
                       <span className="text-gray-600">2nd–4th</span>
                       <span className="font-semibold text-black">$520/mo</span>
                     </div>
                     <div className="flex justify-between text-sm font-body">
-                      <span className="text-gray-600">Primary</span>
+                      <span className="text-gray-600">Pre-K–1st</span>
                       <span className="font-semibold text-black">$560/mo</span>
                     </div>
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-gray-500 mb-1.5 font-body">3-Day/Week</p>
+                    <p className="text-xs font-semibold text-gray-500 mb-1.5 font-body">
+                      3-Day/Week
+                    </p>
                     <div className="flex justify-between text-sm font-body">
                       <span className="text-gray-600">2nd–4th</span>
                       <span className="font-semibold text-black">$720/mo</span>
                     </div>
                     <div className="flex justify-between text-sm font-body">
-                      <span className="text-gray-600">Primary</span>
+                      <span className="text-gray-600">Pre-K–1st</span>
                       <span className="font-semibold text-black">$780/mo</span>
                     </div>
                   </div>
                 </div>
               )}
             </motion.div>
-
           </div>
         </div>
       </section>
@@ -679,8 +739,14 @@ export default function HomeschoolDropInPage() {
       </section>
 
       <Footer />
-      <WaitlistDialog isOpen={waitlistOpen} onClose={() => setWaitlistOpen(false)} />
-      <ContactDialog isOpen={contactOpen} onClose={() => setContactOpen(false)} />
+      <WaitlistDialog
+        isOpen={waitlistOpen}
+        onClose={() => setWaitlistOpen(false)}
+      />
+      <ContactDialog
+        isOpen={contactOpen}
+        onClose={() => setContactOpen(false)}
+      />
       <FloatingSMSButton />
     </div>
   );

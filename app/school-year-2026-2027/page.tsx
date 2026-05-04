@@ -96,10 +96,12 @@ export default function SchoolYear20262027Page() {
           >
             <p className="text-lg text-gray-600 font-body leading-relaxed">
               Sage Field is a small outdoor learning microschool located in
-              Round Rock, TX. We blend elements of Montessori, Waldorf, and
-              Reggio Emilia philosophies with TEKS-aligned academics to create a
-              nurturing, nature-connected learning environment where children
-              are always wondering, exploring, and growing.
+              Round Rock, TX. Sage Field operates as a private microschool, not
+              a child-care or daycare center. We blend elements of Montessori,
+              Waldorf, and Reggio Emilia philosophies with TEKS-aligned
+              academics to create a nurturing, nature-connected learning
+              environment where children are always wondering, exploring, and
+              growing.
             </p>
           </motion.div>
 
@@ -317,7 +319,10 @@ export default function SchoolYear20262027Page() {
       </section>
 
       {/* Meet the Team */}
-      <MeetTheTeamSection featured={false} exclude={["Nicole Elias", "Taylor Elias"]} />
+      <MeetTheTeamSection
+        featured={false}
+        exclude={["Nicole Elias", "Taylor Elias"]}
+      />
 
       {/* Full Enrollment Tuition */}
       <section className="pb-16 px-8 sm:px-12 lg:px-16">
@@ -337,7 +342,9 @@ export default function SchoolYear20262027Page() {
           </motion.div>
 
           <div className="mb-8">
-            <FullEnrollmentCard onQuestionsClick={() => setWaitlistOpen(true)} />
+            <FullEnrollmentCard
+              onQuestionsClick={() => setWaitlistOpen(true)}
+            />
           </div>
 
           {/* Extended Learning + Field Day Friday */}

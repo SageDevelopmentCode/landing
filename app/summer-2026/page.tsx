@@ -449,9 +449,13 @@ export default function Summer2026Page() {
               <span className="text-primary">Field Day</span> Fridays
             </h2>
             <p className="text-gray-500 font-body text-base mb-8 max-w-xl mx-auto">
-              Fridays are an optional add-on — join us for a full day of outdoor
-              adventure from 9 am to 1 pm. Every Field Day Friday is a unique,
-              one-of-a-kind experience!
+              For families seeking additional experiential learning, we offer
+              optional ‘Field Study Fridays’ from 9:00 a.m. to 1:00 p.m. These
+              sessions provide an immersive, instructor-led outdoor curriculum
+              designed to expand upon our nature-study modules. Each Friday
+              serves as a purposeful field-learning experience where students
+              engage in in-depth exploration, scientific inquiry, and
+              environmental education within a structured academic framework.
             </p>
           </motion.div>
 

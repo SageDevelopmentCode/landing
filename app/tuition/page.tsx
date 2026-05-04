@@ -14,7 +14,9 @@ import FieldDayFridayCard from "../components/FieldDayFridayCard";
 
 export default function TuitionPage() {
   const [isWaitlistOpen, setIsWaitlistOpen] = useState(false);
-  const [activePricingTab, setActivePricingTab] = useState<"summer" | "school-year">("summer");
+  const [activePricingTab, setActivePricingTab] = useState<
+    "summer" | "school-year"
+  >("summer");
   const router = useRouter();
 
   return (
@@ -79,7 +81,9 @@ export default function TuitionPage() {
       {/* 3. Full Enrollment Section */}
       <section className="bg-welcome-bg py-16 px-8 sm:px-12 lg:px-16">
         <div className="max-w-7xl mx-auto w-full">
-          <FullEnrollmentCard onQuestionsClick={() => setIsWaitlistOpen(true)} />
+          <FullEnrollmentCard
+            onQuestionsClick={() => setIsWaitlistOpen(true)}
+          />
         </div>
       </section>
 
@@ -143,10 +147,16 @@ export default function TuitionPage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" as const }}
+              transition={{
+                duration: 0.5,
+                delay: 0.1,
+                ease: "easeOut" as const,
+              }}
               className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col"
             >
-              <h3 className="text-base font-bold text-black font-heading mb-1">Explorer Day Pass</h3>
+              <h3 className="text-base font-bold text-black font-heading mb-1">
+                Explorer Day Pass
+              </h3>
               <p className="text-xs text-gray-400 font-body mb-4">Drop-In</p>
               {activePricingTab === "summer" ? (
                 <div className="space-y-2 mb-4">
@@ -155,7 +165,7 @@ export default function TuitionPage() {
                     <span className="font-semibold text-black">$95/day</span>
                   </div>
                   <div className="flex justify-between text-sm font-body">
-                    <span className="text-gray-600">Primary</span>
+                    <span className="text-gray-600">Pre-K–1st</span>
                     <span className="font-semibold text-black">$100/day</span>
                   </div>
                 </div>
@@ -166,7 +176,7 @@ export default function TuitionPage() {
                     <span className="font-semibold text-black">$110/day</span>
                   </div>
                   <div className="flex justify-between text-sm font-body">
-                    <span className="text-gray-600">Primary</span>
+                    <span className="text-gray-600">Pre-K–1st</span>
                     <span className="font-semibold text-black">$120/day</span>
                   </div>
                 </div>
@@ -183,35 +193,47 @@ export default function TuitionPage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" as const }}
+              transition={{
+                duration: 0.5,
+                delay: 0.2,
+                ease: "easeOut" as const,
+              }}
               className="bg-white rounded-xl p-6 shadow-sm border border-primary/30 flex flex-col relative"
             >
               <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary text-white text-xs font-semibold rounded-full">
                 Most Popular
               </span>
-              <h3 className="text-base font-bold text-black font-heading mb-1">Part-Time Memberships</h3>
-              <p className="text-xs text-gray-400 font-body mb-4">2-Day &amp; 3-Day</p>
+              <h3 className="text-base font-bold text-black font-heading mb-1">
+                Part-Time Memberships
+              </h3>
+              <p className="text-xs text-gray-400 font-body mb-4">
+                2-Day &amp; 3-Day
+              </p>
               {activePricingTab === "summer" ? (
                 <div className="space-y-4 mb-4">
                   <div>
-                    <p className="text-xs font-semibold text-gray-500 mb-1.5 font-body">2-Day/Week</p>
+                    <p className="text-xs font-semibold text-gray-500 mb-1.5 font-body">
+                      2-Day/Week
+                    </p>
                     <div className="flex justify-between text-sm font-body">
                       <span className="text-gray-600">2nd–4th</span>
                       <span className="font-semibold text-black">$170/wk</span>
                     </div>
                     <div className="flex justify-between text-sm font-body">
-                      <span className="text-gray-600">Primary</span>
+                      <span className="text-gray-600">Pre-K–1st</span>
                       <span className="font-semibold text-black">$180/wk</span>
                     </div>
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-gray-500 mb-1.5 font-body">3-Day/Week</p>
+                    <p className="text-xs font-semibold text-gray-500 mb-1.5 font-body">
+                      3-Day/Week
+                    </p>
                     <div className="flex justify-between text-sm font-body">
                       <span className="text-gray-600">2nd–4th</span>
                       <span className="font-semibold text-black">$240/wk</span>
                     </div>
                     <div className="flex justify-between text-sm font-body">
-                      <span className="text-gray-600">Primary</span>
+                      <span className="text-gray-600">Pre-K–1st</span>
                       <span className="font-semibold text-black">$255/wk</span>
                     </div>
                   </div>
@@ -219,24 +241,28 @@ export default function TuitionPage() {
               ) : (
                 <div className="space-y-4 mb-4">
                   <div>
-                    <p className="text-xs font-semibold text-gray-500 mb-1.5 font-body">2-Day/Week</p>
+                    <p className="text-xs font-semibold text-gray-500 mb-1.5 font-body">
+                      2-Day/Week
+                    </p>
                     <div className="flex justify-between text-sm font-body">
                       <span className="text-gray-600">2nd–4th</span>
                       <span className="font-semibold text-black">$520/mo</span>
                     </div>
                     <div className="flex justify-between text-sm font-body">
-                      <span className="text-gray-600">Primary</span>
+                      <span className="text-gray-600">Pre-K–1st</span>
                       <span className="font-semibold text-black">$560/mo</span>
                     </div>
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-gray-500 mb-1.5 font-body">3-Day/Week</p>
+                    <p className="text-xs font-semibold text-gray-500 mb-1.5 font-body">
+                      3-Day/Week
+                    </p>
                     <div className="flex justify-between text-sm font-body">
                       <span className="text-gray-600">2nd–4th</span>
                       <span className="font-semibold text-black">$720/mo</span>
                     </div>
                     <div className="flex justify-between text-sm font-body">
-                      <span className="text-gray-600">Primary</span>
+                      <span className="text-gray-600">Pre-K–1st</span>
                       <span className="font-semibold text-black">$780/mo</span>
                     </div>
                   </div>
@@ -249,14 +275,22 @@ export default function TuitionPage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" as const }}
+              transition={{
+                duration: 0.5,
+                delay: 0.3,
+                ease: "easeOut" as const,
+              }}
               className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col relative"
             >
               <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-full">
                 Best Value
               </span>
-              <h3 className="text-base font-bold text-black font-heading mb-1">Full-Time</h3>
-              <p className="text-xs text-gray-400 font-body mb-4">5 Days/Week</p>
+              <h3 className="text-base font-bold text-black font-heading mb-1">
+                Full-Time
+              </h3>
+              <p className="text-xs text-gray-400 font-body mb-4">
+                5 Days/Week
+              </p>
               {activePricingTab === "summer" ? (
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-sm font-body">
@@ -264,7 +298,7 @@ export default function TuitionPage() {
                     <span className="font-semibold text-black">$350/wk</span>
                   </div>
                   <div className="flex justify-between text-sm font-body">
-                    <span className="text-gray-600">Primary</span>
+                    <span className="text-gray-600">Pre-K–1st</span>
                     <span className="font-semibold text-black">$375/wk</span>
                   </div>
                 </div>
@@ -275,7 +309,7 @@ export default function TuitionPage() {
                     <span className="font-semibold text-black">$1,095/mo</span>
                   </div>
                   <div className="flex justify-between text-sm font-body">
-                    <span className="text-gray-600">Primary</span>
+                    <span className="text-gray-600">Pre-K–1st</span>
                     <span className="font-semibold text-black">$1,195/mo</span>
                   </div>
                 </div>

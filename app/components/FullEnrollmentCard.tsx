@@ -59,7 +59,7 @@ export default function FullEnrollmentCard({
               </div>
               <div className="px-6 py-4 bg-white rounded-lg shadow-md">
                 <p className="text-sm font-semibold text-text-gray font-body mb-1">
-                  Pre-K – 1st Grade
+                  Pre-K–1st Grade
                 </p>
                 <p className="text-3xl font-bold text-primary font-heading">
                   $1,195
