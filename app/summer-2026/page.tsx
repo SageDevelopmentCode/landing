@@ -254,13 +254,18 @@ export default function Summer2026Page() {
             transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
             className="space-y-4 mb-10"
           >
-            <p className="text-lg text-gray-600 font-body leading-relaxed">
-              Our Summer 2026 program is a twelve-week immersive experience
-              designed for curious learners ages 4–11. Each day blends hands-on
-              projects, nature exploration, literacy and math support, art,
-              music, and plenty of time for creative play—all in a small,
-              nurturing group setting of about 10 children, Monday through
-              Thursday, approximately six hours a day.
+            <p className="text-lg text-gray-600 font-body leading-relaxed text-center">
+              Our Summer 2026 program is a twelve-week academic enrichment
+              session designed for curious learners ages 4–11. Each day features
+              structured, teacher-led instruction in literacy and mathematics,
+              complemented by specialized modules in nature study, fine arts,
+              music, cooking, and social-emotional development. We operate as a
+              full-day school, maintaining a consistent academic schedule,
+              attendance records, and small-group instructional cohorts from
+              Monday through Thursday. This program is designed as a formal
+              extension of our private-school curriculum to support student
+              progress, and functions as an academic institution rather than a
+              child care or camp program.
             </p>
           </motion.div>
 
@@ -310,21 +315,46 @@ export default function Summer2026Page() {
               </div>
               <div className="divide-y divide-gray-50">
                 {[
-                  { time: "8:15 – 9:00 AM", activity: "Drop Off / Outdoor Play 🌞" },
-                  { time: "9:00 – 9:15 AM", activity: "Morning Meeting (Good Citizenship) 🌟" },
-                  { time: "9:15 – 9:30 AM", activity: "ELA Challenger Block 📚" },
-                  { time: "9:30 – 9:45 AM", activity: "Math Challenger Block 🔢" },
+                  {
+                    time: "8:15 – 9:00 AM",
+                    activity: "Drop Off / Outdoor Play 🌞",
+                  },
+                  {
+                    time: "9:00 – 9:15 AM",
+                    activity: "Morning Meeting (Good Citizenship) 🌟",
+                  },
+                  {
+                    time: "9:15 – 9:30 AM",
+                    activity: "ELA Challenger Block 📚",
+                  },
+                  {
+                    time: "9:30 – 9:45 AM",
+                    activity: "Math Challenger Block 🔢",
+                  },
                   { time: "9:45 – 10:15 AM", activity: "Snack 🍎" },
                   { time: "10:15 – 10:45 AM", activity: "Daily Activity 🌟" },
                   { time: "10:45 – 11:15 AM", activity: "Art 🎨" },
                   { time: "11:15 – 11:30 AM", activity: "Music 🎵" },
                   { time: "11:30 AM – 12:15 PM", activity: "Lunch 🍱" },
                   { time: "12:15 – 1:15 PM", activity: "Water Play 💦" },
-                  { time: "1:15 – 1:45 PM", activity: "Journaling & Reflection 📝" },
-                  { time: "1:45 – 2:30 PM", activity: "Cooking / Homesteading (Animal & Garden Care) 🌱" },
-                  { time: "1:45 – 2:45 PM", activity: "Outdoor Free Choice 🧸" },
+                  {
+                    time: "1:15 – 1:45 PM",
+                    activity: "Journaling & Reflection 📝",
+                  },
+                  {
+                    time: "1:45 – 2:30 PM",
+                    activity:
+                      "Cooking / Homesteading (Animal & Garden Care) 🌱",
+                  },
+                  {
+                    time: "1:45 – 2:45 PM",
+                    activity: "Outdoor Free Choice 🧸",
+                  },
                   { time: "2:45 – 3:00 PM", activity: "Afternoon Meeting 🌤️" },
-                  { time: "2:45 – 3:00 PM", activity: "Pick Up / Outdoor Play 🌳" },
+                  {
+                    time: "2:45 – 3:00 PM",
+                    activity: "Pick Up / Outdoor Play 🌳",
+                  },
                 ].map((row, i) => (
                   <div
                     key={i}
