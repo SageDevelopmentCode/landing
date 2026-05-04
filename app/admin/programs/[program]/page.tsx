@@ -1,5 +1,7 @@
 import { createAdminClient } from '@/app/lib/supabase-server'
 import { ProgramClient } from '../ProgramClient'
+import { AttendanceProgramClient } from '../AttendanceProgramClient'
+import { getAdminAftercareForDate, getAdminFieldFridayForDate, getAttendanceStats } from '@/app/actions/adminAttendance'
 
 type FullStudent = {
   id: string
@@ -62,6 +64,44 @@ export default async function ProgramPage({
 }) {
   const { program } = await params
   const client = createAdminClient()
+
+  if (program === 'aftercare' || program === 'field_friday') {
+    const today = new Date()
+    const pad = (n: number) => String(n).padStart(2, '0')
+    let initialDate = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`
+
+    if (program === 'aftercare') {
+      // Snap to nearest weekday
+      const dow = today.getDay()
+      if (dow === 6) today.setDate(today.getDate() - 1)
+      else if (dow === 0) today.setDate(today.getDate() + 1)
+      initialDate = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`
+    } else {
+      // Snap to nearest upcoming Friday
+      const dow = today.getDay()
+      if (dow !== 5) {
+        const daysUntilFriday = dow === 6 ? 6 : 5 - dow
+        today.setDate(today.getDate() + daysUntilFriday)
+      }
+      initialDate = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`
+    }
+
+    const [initialRows, stats] = await Promise.all([
+      program === 'aftercare'
+        ? getAdminAftercareForDate(initialDate)
+        : getAdminFieldFridayForDate(initialDate),
+      getAttendanceStats(program),
+    ])
+
+    return (
+      <AttendanceProgramClient
+        program={program}
+        initialDate={initialDate}
+        initialRows={initialRows}
+        stats={stats}
+      />
+    )
+  }
 
   if (program === 'homeschool_drop_in') {
     const { data: apps } = await client

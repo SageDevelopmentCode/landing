@@ -17,6 +17,8 @@ const PROGRAM_LABELS: Record<string, string> = {
   summer_26: 'Summer 2026',
   school_year_26_27: 'School Year 2026–2027',
   homeschool_drop_in: 'Homeschool Drop-In',
+  aftercare: 'Aftercare Extended Learning',
+  field_friday: 'Field Fun Fridays',
 }
 
 const CLASSROOM_LABELS: Record<string, string> = {
@@ -184,6 +186,8 @@ const SUB_NAV = [
   { label: 'Summer 2026', href: '/admin/programs/summer_26' },
   { label: 'School Year 2026–2027', href: '/admin/programs/school_year_26_27' },
   { label: 'Homeschool Drop-In', href: '/admin/programs/homeschool_drop_in' },
+  { label: 'Aftercare', href: '/admin/programs/aftercare' },
+  { label: 'Field Fun Fridays', href: '/admin/programs/field_friday' },
 ]
 
 export function ProgramClient({
