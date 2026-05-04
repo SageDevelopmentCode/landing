@@ -117,7 +117,7 @@ const faqItems = [
   {
     question: "What is a microschool?",
     answer:
-      "A microschool is a small, independent private school — typically no more than 10–12 students — that offers a personalized, flexible alternative to traditional schooling. Sage Field fits this model: we're a private school with intentional, outdoor-based education at our core.",
+      "A microschool is a small, independent private school — typically no more than 10–12 students per class — that offers a personalized, flexible alternative to traditional schooling. Sage Field fits this model: we're a private school with intentional, outdoor-based education at our core.",
     category: "About Sage Field",
     bg: "#FFF4EC",
     accent: "#f29a8f",

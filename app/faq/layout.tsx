@@ -52,7 +52,7 @@ export default function FAQLayout({ children }: { children: React.ReactNode }) {
         name: "What is a microschool?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "A microschool is a small, independent private school — typically serving no more than 10 - 12 students per class — that offers a more personalized, flexible alternative to traditional schooling. Microschools prioritize small class sizes, individualized pacing, and innovative approaches to learning. Sage Field fits this model: we are a licensed private school with intentional, outdoor-based education at our core.",
+          text: "A microschool is a small, independent private school — typically serving no more than 10 - 12 students per class — that offers a more personalized, flexible alternative to traditional schooling. Microschools prioritize small class sizes, individualized pacing, and innovative approaches to learning.",
         },
       },
       {
@@ -60,7 +60,7 @@ export default function FAQLayout({ children }: { children: React.ReactNode }) {
         name: "What ages do you serve and how big are the groups?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "We serve children ages 4-11, with flexibility based on developmental fit. Students learn together in mixed-age groups so children can move at their own pace. We intentionally keep our groups small — typically no more than 10–12 children per class — so that two adults can stay closely attuned to each child's needs.",
+          text: "We serve children ages 4-11, with flexibility based on developmental fit. Students learn together in mixed-age groups so children can move at their own pace. We intentionally keep our groups small — typically no more than 10–12 children per class — so that our adults can stay closely attuned to each child's needs.",
         },
       },
       {
