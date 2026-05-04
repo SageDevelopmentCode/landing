@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Sun, Leaf } from "lucide-react";
+import { Sun, Leaf, Umbrella } from "lucide-react";
 import AftercarePageClient from "../aftercare/AftercarePageClient";
 import FieldFridayPageClient from "../field-friday/FieldFridayPageClient";
+import SummerLazyLoader from "../summer/SummerLazyLoader";
 import { getFieldFridayStudentsForDate } from "@/app/actions/fieldFridayAttendance";
 import type { AftercareStudentRow } from "@/app/actions/aftercareAttendance";
 import type { FieldFridayStudentRow } from "@/app/actions/fieldFridayAttendance";
 
-type Program = "aftercare" | "field-friday";
+type Program = "aftercare" | "field-friday" | "summer";
 
 interface Props {
   initialAftercareStudents: AftercareStudentRow[];
@@ -59,6 +60,7 @@ function FieldFridayLazyLoader() {
 const programs: { id: Program; label: string; icon: React.ElementType }[] = [
   { id: "aftercare", label: "Aftercare", icon: Sun },
   { id: "field-friday", label: "Field Fun Fridays", icon: Leaf },
+  { id: "summer", label: "Summer 2026", icon: Umbrella },
 ];
 
 export default function AttendancePageClient({ initialAftercareStudents, initialAftercareDate }: Props) {
@@ -78,8 +80,10 @@ export default function AttendancePageClient({ initialAftercareStudents, initial
               onClick={() => setActiveProgram(id)}
               className={`flex items-center gap-2.5 w-full text-left px-3 py-2.5 text-sm font-body rounded-xl transition-colors ${
                 isActive
-                  ? "bg-[#4a7c59]/8 text-[#4a7c59] font-semibold border-l-2 border-[#4a7c59]"
-                  : "text-gray-600 hover:text-[#4a7c59] hover:bg-gray-50 border-l-2 border-transparent"
+                  ? id === "summer"
+                    ? "bg-[#d97706]/8 text-[#d97706] font-semibold border-l-2 border-[#d97706]"
+                    : "bg-[#4a7c59]/8 text-[#4a7c59] font-semibold border-l-2 border-[#4a7c59]"
+                  : "text-gray-600 hover:text-gray-800 hover:bg-gray-50 border-l-2 border-transparent"
               }`}
             >
               <Icon className="w-4 h-4 flex-shrink-0" />
@@ -97,6 +101,7 @@ export default function AttendancePageClient({ initialAftercareStudents, initial
           />
         )}
         {activeProgram === "field-friday" && <FieldFridayLazyLoader />}
+        {activeProgram === "summer" && <SummerLazyLoader />}
       </div>
     </div>
   );
