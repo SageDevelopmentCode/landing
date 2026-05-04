@@ -1360,7 +1360,9 @@ function SummerPaymentModal({
   const [error, setError] = useState<string | null>(null);
   const [noteText, setNoteText] = useState(initialNote);
   const [noteSaving, setNoteSaving] = useState(false);
-  const [noteSaveResult, setNoteSaveResult] = useState<"success" | "error" | null>(null);
+  const [noteSaveResult, setNoteSaveResult] = useState<
+    "success" | "error" | null
+  >(null);
 
   const tier = getGradeTier(enrollment.child_grade);
   const weeklyRate = SUMMER_WEEKLY_CENTS[tier];
@@ -2003,7 +2005,7 @@ function AftercareCard({
             Summer 2026
           </div>
           <div className="text-sm font-semibold text-gray-800 leading-snug">
-            Extended Learning (3:30 – 5pm)
+            Extended Learning (3:00 – 5:00pm)
           </div>
         </div>
         <div className="flex items-center justify-between mt-auto">
@@ -3461,13 +3463,18 @@ function PendingPaymentsSection({
               />
             ))}
             {/* Disabled School Year Tuition card for "both"-program students */}
-            {!isOtherTab && activeStudentId && (() => {
-              const hasBoth = summerEnrollments.some(
-                (e) => e.student_id === activeStudentId && e.program === "both",
-              );
-              if (!hasBoth) return null;
-              return <SchoolYearTuitionDisabledCard key="school-year-disabled" />;
-            })()}
+            {!isOtherTab &&
+              activeStudentId &&
+              (() => {
+                const hasBoth = summerEnrollments.some(
+                  (e) =>
+                    e.student_id === activeStudentId && e.program === "both",
+                );
+                if (!hasBoth) return null;
+                return (
+                  <SchoolYearTuitionDisabledCard key="school-year-disabled" />
+                );
+              })()}
 
             {/* Total bar */}
             {totalCents > 0 && (
@@ -3757,7 +3764,8 @@ function WantToAddSummerSection({ applicationId }: { applicationId: string }) {
                 Add Summer 2026 to your enrollment
               </p>
               <p className="text-xs font-body text-gray-500">
-                May–Aug · 12 weeks · Mon–Thu. Keep the same community year-round.
+                May–Aug · 12 weeks · Mon–Thu. Keep the same community
+                year-round.
               </p>
             </div>
             <button
@@ -3776,7 +3784,9 @@ function WantToAddSummerSection({ applicationId }: { applicationId: string }) {
                 Add Summer 2026?
               </p>
               <p className="text-xs font-body text-gray-500">
-                This will add the Summer 2026 program (May–Aug, 12 weeks, Mon–Thu) to your enrollment. You&apos;ll be able to select and pay for weeks right here.
+                This will add the Summer 2026 program (May–Aug, 12 weeks,
+                Mon–Thu) to your enrollment. You&apos;ll be able to select and
+                pay for weeks right here.
               </p>
             </div>
 
@@ -3825,7 +3835,8 @@ function SchoolYearComingSoonCard() {
             School Year Tuition — Not Available Yet
           </p>
           <p className="text-xs font-body text-gray-500 leading-relaxed">
-            Tuition for the 2026–27 school year will open a few weeks before school starts. We&apos;ll notify you when it&apos;s ready to pay.
+            Tuition for the 2026–27 school year will open a few weeks before
+            school starts. We&apos;ll notify you when it&apos;s ready to pay.
           </p>
         </div>
       </div>

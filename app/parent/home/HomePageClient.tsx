@@ -415,7 +415,10 @@ export default function HomePageClient({
 
   return (
     <div className="px-6 py-8 flex flex-col gap-8 max-w-6xl mx-auto w-full">
-      <OnboardingChecklist open={checklistOpen} onClose={() => setChecklistOpen(false)} />
+      <OnboardingChecklist
+        open={checklistOpen}
+        onClose={() => setChecklistOpen(false)}
+      />
       {/* Banner */}
       {bannerIdx !== null && (
         <div className="relative h-48 rounded-2xl overflow-hidden shadow-sm">
@@ -713,22 +716,75 @@ export default function HomePageClient({
             <div className="grid grid-cols-4 gap-2">
               {(
                 [
-                  { label: "Pay Tuition", icon: CreditCard, href: "/parent/billing", iconBg: "bg-emerald-100", iconColor: "text-emerald-600" },
-                  { label: "Messages", icon: MessageCircle, href: "/parent/messages", iconBg: "bg-blue-100", iconColor: "text-blue-600" },
-                  { label: "Events", icon: CalendarDays, href: "/parent/calendar", iconBg: "bg-violet-100", iconColor: "text-violet-600" },
-                  { label: "Attendance", icon: ClipboardList, href: "/parent/children?tab=attendance", iconBg: "bg-amber-100", iconColor: "text-amber-600" },
-                  { label: "School Feed", icon: Rss, href: "/parent/feed", iconBg: "bg-sky-100", iconColor: "text-sky-600" },
-                  { label: "My Children", icon: Users, href: "/parent/children", iconBg: "bg-rose-100", iconColor: "text-rose-600" },
-                  { label: "Volunteer", icon: Heart, href: "/parent/volunteer", iconBg: "bg-pink-100", iconColor: "text-pink-600" },
-                ] as { label: string; icon: React.ElementType; href: string; iconBg: string; iconColor: string }[]
+                  {
+                    label: "Pay Tuition",
+                    icon: CreditCard,
+                    href: "/parent/billing",
+                    iconBg: "bg-emerald-100",
+                    iconColor: "text-emerald-600",
+                  },
+                  {
+                    label: "Messages",
+                    icon: MessageCircle,
+                    href: "/parent/messages",
+                    iconBg: "bg-blue-100",
+                    iconColor: "text-blue-600",
+                  },
+                  {
+                    label: "Events",
+                    icon: CalendarDays,
+                    href: "/parent/calendar",
+                    iconBg: "bg-violet-100",
+                    iconColor: "text-violet-600",
+                  },
+                  {
+                    label: "Attendance",
+                    icon: ClipboardList,
+                    href: "/parent/children?tab=attendance",
+                    iconBg: "bg-amber-100",
+                    iconColor: "text-amber-600",
+                  },
+                  {
+                    label: "School Feed",
+                    icon: Rss,
+                    href: "/parent/feed",
+                    iconBg: "bg-sky-100",
+                    iconColor: "text-sky-600",
+                  },
+                  {
+                    label: "My Children",
+                    icon: Users,
+                    href: "/parent/children",
+                    iconBg: "bg-rose-100",
+                    iconColor: "text-rose-600",
+                  },
+                  {
+                    label: "Volunteer",
+                    icon: Heart,
+                    href: "/parent/volunteer",
+                    iconBg: "bg-pink-100",
+                    iconColor: "text-pink-600",
+                  },
+                ] as {
+                  label: string;
+                  icon: React.ElementType;
+                  href: string;
+                  iconBg: string;
+                  iconColor: string;
+                }[]
               ).map(({ label, icon: Icon, href, iconBg, iconColor }) => (
                 <Link
                   key={label}
                   href={href}
                   className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 transition-colors text-center"
                 >
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconBg}`}>
-                    <Icon className={`w-5 h-5 ${iconColor}`} strokeWidth={1.5} />
+                  <div
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconBg}`}
+                  >
+                    <Icon
+                      className={`w-5 h-5 ${iconColor}`}
+                      strokeWidth={1.5}
+                    />
                   </div>
                   <span className="text-xs font-semibold font-body text-gray-700 leading-tight">
                     {label}
@@ -740,14 +796,21 @@ export default function HomePageClient({
                 className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 transition-colors text-center cursor-pointer"
               >
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-teal-100">
-                  <HelpCircle className="w-5 h-5 text-teal-600" strokeWidth={1.5} />
+                  <HelpCircle
+                    className="w-5 h-5 text-teal-600"
+                    strokeWidth={1.5}
+                  />
                 </div>
                 <span className="text-xs font-semibold font-body text-gray-700 leading-tight">
                   Help
                 </span>
               </button>
             </div>
-            <HelpWidget hideFloatingButton open={helpOpen} onOpenChange={setHelpOpen} />
+            <HelpWidget
+              hideFloatingButton
+              open={helpOpen}
+              onOpenChange={setHelpOpen}
+            />
           </section>
         </div>
 
@@ -997,7 +1060,7 @@ export default function HomePageClient({
                             {aftercareNames.join(", ")}
                           </p>
                           <p className="text-sm font-semibold text-gray-800 leading-snug">
-                            Extended Learning (3:30 – 5pm)
+                            Extended Learning (3:00 – 5pm)
                           </p>
                         </div>
                         <span
@@ -1196,7 +1259,8 @@ export default function HomePageClient({
                   Best on Desktop
                 </h2>
                 <p className="text-sm text-gray-500 font-body leading-relaxed">
-                  This dashboard is designed for laptop or desktop screens. For the best experience, please visit on a larger device.
+                  This dashboard is designed for laptop or desktop screens. For
+                  the best experience, please visit on a larger device.
                 </p>
                 <p className="text-sm text-[#5a8a6a] font-body font-medium">
                   Our Sage Field mobile app is coming soon!

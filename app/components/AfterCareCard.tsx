@@ -31,7 +31,7 @@ export default function AfterCareCard() {
           Extended Learning
         </h3>
         <p className="text-base text-text-gray mb-6 font-body">
-          3:30pm - 5:00pm
+          3:00pm - 5:00pm
         </p>
         <div className="space-y-4">
           <div className="p-4 bg-welcome-bg rounded-lg border-l-4 border-primary">

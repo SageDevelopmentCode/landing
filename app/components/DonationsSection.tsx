@@ -344,10 +344,10 @@ const DonationsSection = () => {
 
                   {/* Title */}
                   <h3 className="text-2xl font-bold text-black mb-2 font-heading">
-                    After Care
+                    Extended Learning
                   </h3>
                   <p className="text-base text-text-gray mb-6 font-body">
-                    3:00pm - 6:00pm
+                    3:00pm - 5:00pm
                   </p>
 
                   {/* Pricing Options */}
