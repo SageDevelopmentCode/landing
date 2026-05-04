@@ -293,7 +293,7 @@ export default async function ParentHomePage() {
   );
 
   return (
-    <div className="bg-welcome-bg min-h-screen flex flex-col">
+    <div className="bg-welcome-bg min-h-screen flex flex-col overflow-x-hidden">
       <DashboardHeader sticky>
         <div className="flex items-center">
           <Link href="/">

@@ -372,6 +372,11 @@ export default function HomePageClient({
   );
   const [dropOffSaving, setDropOffSaving] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [showMobileWarning, setShowMobileWarning] = useState(false);
+
+  useEffect(() => {
+    if (window.innerWidth < 1024) setShowMobileWarning(true);
+  }, []);
 
   async function handleSaveDropOff() {
     if (!dropOffSlot) return;
@@ -1163,6 +1168,50 @@ export default function HomePageClient({
         student={attendanceStudent}
         onClose={() => setAttendanceStudent(null)}
       />
+
+      {/* Mobile warning bottom sheet */}
+      <AnimatePresence>
+        {showMobileWarning && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", stiffness: 280, damping: 30 }}
+              style={{ width: "100vw", left: 0 }}
+              className="fixed bottom-0 z-[61] bg-white rounded-t-3xl shadow-2xl px-6 pt-6 pb-10 flex flex-col items-center text-center gap-4"
+            >
+              <div className="w-10 h-1 rounded-full bg-gray-200 mb-1" />
+              <div className="w-12 h-12 rounded-2xl bg-[#eef4ec] flex items-center justify-center">
+                <Smartphone className="w-6 h-6 text-[#5a8a6a]" />
+              </div>
+              <div className="flex flex-col gap-2">
+                <h2 className="text-lg font-heading font-bold text-gray-900">
+                  Best on Desktop
+                </h2>
+                <p className="text-sm text-gray-500 font-body leading-relaxed">
+                  This dashboard is designed for laptop or desktop screens. For the best experience, please visit on a larger device.
+                </p>
+                <p className="text-sm text-[#5a8a6a] font-body font-medium">
+                  Our Sage Field mobile app is coming soon!
+                </p>
+              </div>
+              <button
+                onClick={() => setShowMobileWarning(false)}
+                className="mt-1 w-full bg-[#5a8a6a] hover:bg-[#4a7a5a] text-white text-sm font-semibold rounded-xl py-2.5 transition-colors"
+              >
+                Got it
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
