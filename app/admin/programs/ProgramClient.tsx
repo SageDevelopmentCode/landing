@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react'
 import { Poppins } from 'next/font/google'
 import { cssColors as colors, cssShadows as shadows, radius } from '../design-system'
 import { StudentDetailSidebar } from '../components/StudentDetailSidebar'
+import { PRESET_TAGS } from '../constants/applicationTags'
 
 const merriweather = Poppins({
   weight: ['300', '400', '700', '900'],
@@ -30,6 +31,8 @@ type StudentInfo = {
   dob_month: string | null
   dob_day: string | null
   dob_year: string | null
+  profile_image_url: string | null
+  admin_tags: string[]
 }
 
 type TeacherGroup = {
@@ -70,6 +73,7 @@ interface ProgramClientProps {
   teacherGroups: TeacherGroup[]
   program: string
   totalStudentCount: number
+  unassignedStudents?: StudentInfo[]
   fetchStudentDetail: (studentId: string) => Promise<FullStudent>
 }
 
@@ -92,6 +96,90 @@ function formatDob(
   return [month, day, year].filter(Boolean).join('/')
 }
 
+function StudentAvatar({ name, imageUrl }: { name: string | null; imageUrl: string | null }) {
+  if (imageUrl) {
+    return (
+      <img
+        src={imageUrl}
+        alt={name ?? 'Student'}
+        className="mb-2 object-cover"
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: '50%',
+          border: `1px solid ${colors.border}`,
+          flexShrink: 0,
+        }}
+      />
+    )
+  }
+  return (
+    <div
+      className="flex items-center justify-center mb-2 text-sm font-bold"
+      style={{
+        width: 40,
+        height: 40,
+        borderRadius: '50%',
+        backgroundColor: colors.warmLinen,
+        color: colors.mistyForest,
+        border: `1px solid ${colors.border}`,
+      }}
+    >
+      {getInitials(name)}
+    </div>
+  )
+}
+
+function StudentCard({
+  student,
+  onClick,
+}: {
+  student: StudentInfo
+  onClick: (student: StudentInfo) => void
+}) {
+  return (
+    <div
+      onClick={() => onClick(student)}
+      className="flex flex-col items-center p-4 text-center"
+      style={{
+        backgroundColor: 'white',
+        border: `1px solid ${colors.border}`,
+        borderRadius: radius.md,
+        boxShadow: shadows.soft,
+        cursor: 'pointer',
+      }}
+    >
+      <StudentAvatar name={student.child_legal_name} imageUrl={student.profile_image_url} />
+      <p
+        className="text-sm font-semibold leading-tight truncate w-full"
+        style={{ color: colors.textPrimary }}
+      >
+        {student.child_legal_name ?? '—'}
+      </p>
+      {student.child_grade && (
+        <p className="text-xs mt-0.5" style={{ color: colors.textSecondary }}>
+          Grade {student.child_grade}
+        </p>
+      )}
+      <p className="text-xs mt-0.5" style={{ color: colors.textTertiary }}>
+        {formatDob(student.dob_month, student.dob_day, student.dob_year)}
+      </p>
+      {student.admin_tags.length > 0 && (
+        <div className="flex flex-wrap gap-1 mt-2 justify-center">
+          {student.admin_tags.map((tag) => (
+            <span
+              key={tag}
+              className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-violet-50 text-violet-700 border border-violet-200"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 const SUB_NAV = [
   { label: 'Summer 2026', href: '/admin/programs/summer_26' },
   { label: 'School Year 2026–2027', href: '/admin/programs/school_year_26_27' },
@@ -102,6 +190,7 @@ export function ProgramClient({
   teacherGroups,
   program,
   totalStudentCount,
+  unassignedStudents,
   fetchStudentDetail,
 }: ProgramClientProps) {
   const pathname = usePathname()
@@ -113,6 +202,7 @@ export function ProgramClient({
   const [selectedStudent, setSelectedStudent] = useState<StudentInfo | null>(null)
   const [studentDetail, setStudentDetail] = useState<FullStudent | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
+  const [excludedTags, setExcludedTags] = useState<Set<string>>(new Set(["Don't Include"]))
 
   useEffect(() => {
     setActiveTeacherId(teacherGroups[0]?.teacher.id ?? null)
@@ -131,6 +221,27 @@ export function ProgramClient({
       setDetailLoading(false)
     }
   }
+
+  const toggleExcludeTag = (tag: string) => {
+    setExcludedTags((prev) => {
+      const next = new Set(prev)
+      next.has(tag) ? next.delete(tag) : next.add(tag)
+      return next
+    })
+  }
+
+  function filterStudents(students: StudentInfo[]) {
+    if (excludedTags.size === 0) return students
+    return students.filter((s) => !s.admin_tags.some((t) => excludedTags.has(t)))
+  }
+
+  const visibleUnassigned = unassignedStudents ? filterStudents(unassignedStudents) : undefined
+  const visibleActiveStudents = activeGroup ? filterStudents(activeGroup.students) : []
+
+  const allStudentsForProgram = unassignedStudents
+    ? unassignedStudents
+    : teacherGroups.flatMap((g) => g.students)
+  const hasAnyTags = allStudentsForProgram.some((s) => s.admin_tags.length > 0)
 
   return (
     <div className="flex min-h-full -mx-3 sm:-mx-4 lg:-mx-6">
@@ -172,7 +283,7 @@ export function ProgramClient({
       {/* Main content */}
       <div className="flex-1 px-8 py-6">
         {/* Page header */}
-        <div className="mb-6">
+        <div className="mb-4">
           <h1
             className={`text-2xl font-bold ${merriweather.className}`}
             style={{ color: colors.mistyForest }}
@@ -180,11 +291,55 @@ export function ProgramClient({
             {programLabel}
           </h1>
           <p className="mt-1 text-sm" style={{ color: colors.textSecondary }}>
-            {totalStudentCount} student{totalStudentCount !== 1 ? 's' : ''} assigned
+            {totalStudentCount} student{totalStudentCount !== 1 ? 's' : ''} enrolled
           </p>
         </div>
 
-        {teacherGroups.length === 0 ? (
+        {/* Tag exclusion filter — only shown when students have tags */}
+        {hasAnyTags && (
+          <div className="flex items-center gap-2 flex-wrap mb-6">
+            <span className="text-xs font-semibold" style={{ color: colors.textTertiary }}>
+              Exclude:
+            </span>
+            {PRESET_TAGS.map((tag) => {
+              const excluded = excludedTags.has(tag)
+              return (
+                <button
+                  key={tag}
+                  onClick={() => toggleExcludeTag(tag)}
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full border transition-colors ${
+                    excluded
+                      ? 'bg-red-50 text-red-600 border-red-200 line-through opacity-70'
+                      : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  {excluded && <span className="not-italic no-underline">✕</span>}
+                  {tag}
+                </button>
+              )
+            })}
+            {excludedTags.size > 0 && (
+              <button
+                onClick={() => setExcludedTags(new Set())}
+                className="text-xs text-gray-400 hover:text-gray-600 underline transition-colors"
+              >
+                Clear all
+              </button>
+            )}
+          </div>
+        )}
+
+        {visibleUnassigned && visibleUnassigned.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {visibleUnassigned.map((student) => (
+              <StudentCard key={student.id} student={student} onClick={handleStudentClick} />
+            ))}
+          </div>
+        ) : visibleUnassigned && visibleUnassigned.length === 0 && unassignedStudents && unassignedStudents.length > 0 ? (
+          <div className="flex flex-col items-center justify-center py-24" style={{ color: colors.textTertiary }}>
+            <p className="text-base">All students are hidden by the current tag filter.</p>
+          </div>
+        ) : teacherGroups.length === 0 ? (
           <div
             className="flex flex-col items-center justify-center py-24"
             style={{ color: colors.textTertiary }}
@@ -211,7 +366,6 @@ export function ProgramClient({
                       cursor: 'pointer',
                     }}
                   >
-                    {/* Mini avatar */}
                     <div
                       className="flex items-center justify-center shrink-0 text-xs font-bold"
                       style={{
@@ -244,50 +398,10 @@ export function ProgramClient({
             {/* Active teacher panel */}
             {activeGroup && (
               <div>
-                {/* Student grid */}
-                {activeGroup.students.length > 0 ? (
+                {visibleActiveStudents.length > 0 ? (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                    {activeGroup.students.map((student) => (
-                      <div
-                        key={student.id}
-                        onClick={() => handleStudentClick(student)}
-                        className="flex flex-col items-center p-4 text-center"
-                        style={{
-                          backgroundColor: 'white',
-                          border: `1px solid ${colors.border}`,
-                          borderRadius: radius.md,
-                          boxShadow: shadows.soft,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <div
-                          className="flex items-center justify-center mb-2 text-sm font-bold"
-                          style={{
-                            width: 40,
-                            height: 40,
-                            borderRadius: '50%',
-                            backgroundColor: colors.warmLinen,
-                            color: colors.mistyForest,
-                            border: `1px solid ${colors.border}`,
-                          }}
-                        >
-                          {getInitials(student.child_legal_name)}
-                        </div>
-                        <p
-                          className="text-sm font-semibold leading-tight truncate w-full"
-                          style={{ color: colors.textPrimary }}
-                        >
-                          {student.child_legal_name ?? '—'}
-                        </p>
-                        {student.child_grade && (
-                          <p className="text-xs mt-0.5" style={{ color: colors.textSecondary }}>
-                            Grade {student.child_grade}
-                          </p>
-                        )}
-                        <p className="text-xs mt-0.5" style={{ color: colors.textTertiary }}>
-                          {formatDob(student.dob_month, student.dob_day, student.dob_year)}
-                        </p>
-                      </div>
+                    {visibleActiveStudents.map((student) => (
+                      <StudentCard key={student.id} student={student} onClick={handleStudentClick} />
                     ))}
                   </div>
                 ) : (

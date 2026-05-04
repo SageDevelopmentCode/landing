@@ -45,6 +45,8 @@ type StudentInfo = {
   dob_month: string | null
   dob_day: string | null
   dob_year: string | null
+  profile_image_url: string | null
+  admin_tags: string[]
 }
 
 type TeacherGroup = {
@@ -60,6 +62,48 @@ export default async function ProgramPage({
 }) {
   const { program } = await params
   const client = createAdminClient()
+
+  if (program === 'homeschool_drop_in') {
+    const { data: apps } = await client
+      .schema('parent_app')
+      .from('applications')
+      .select('student_id, admin_tags')
+      .eq('status', 'enrolled')
+      .eq('program', 'homeschool_drop_in')
+      .eq('is_active', true)
+
+    const appRows = apps ?? []
+    const studentIds = [...new Set(appRows.map((a) => a.student_id).filter(Boolean))]
+    const tagsByStudentId = Object.fromEntries(
+      appRows.map((a) => [a.student_id, (a.admin_tags as string[] | null) ?? []])
+    )
+
+    let unassignedStudents: StudentInfo[] = []
+
+    if (studentIds.length > 0) {
+      const { data: students } = await client
+        .schema('admin')
+        .from('students')
+        .select('id, child_legal_name, child_grade, dob_month, dob_day, dob_year, profile_image_url')
+        .in('id', studentIds)
+        .eq('is_deleted', false)
+
+      unassignedStudents = (students ?? []).map((s) => ({
+        ...(s as Omit<StudentInfo, 'admin_tags'>),
+        admin_tags: tagsByStudentId[s.id] ?? [],
+      }))
+    }
+
+    return (
+      <ProgramClient
+        teacherGroups={[]}
+        program={program}
+        totalStudentCount={unassignedStudents.length}
+        unassignedStudents={unassignedStudents}
+        fetchStudentDetail={fetchStudentDetail}
+      />
+    )
+  }
 
   // 1. Fetch assignments for this program
   const { data: assignments } = await client
@@ -87,21 +131,39 @@ export default async function ProgramPage({
     }
   }
 
-  // 3. Fetch students
+  // 3. Fetch students + their application tags
   const studentIds = [...new Set(rows.map((r) => r.student_id).filter(Boolean))]
   let studentMap: Record<string, StudentInfo> = {}
 
   if (studentIds.length > 0) {
-    const { data: students } = await client
-      .schema('admin')
-      .from('students')
-      .select('id, child_legal_name, child_grade, dob_month, dob_day, dob_year')
-      .in('id', studentIds)
-      .eq('is_deleted', false)
+    const [{ data: students }, { data: appRows }] = await Promise.all([
+      client
+        .schema('admin')
+        .from('students')
+        .select('id, child_legal_name, child_grade, dob_month, dob_day, dob_year, profile_image_url')
+        .in('id', studentIds)
+        .eq('is_deleted', false),
+      client
+        .schema('parent_app')
+        .from('applications')
+        .select('student_id, admin_tags')
+        .in('student_id', studentIds)
+        .eq('is_active', true),
+    ])
 
-    if (students) {
-      studentMap = Object.fromEntries(students.map((s) => [s.id, s]))
-    }
+    const tagsByStudentId = Object.fromEntries(
+      (appRows ?? []).map((a) => [a.student_id, (a.admin_tags as string[] | null) ?? []])
+    )
+
+    studentMap = Object.fromEntries(
+      (students ?? []).map((s) => [
+        s.id,
+        {
+          ...(s as Omit<StudentInfo, 'admin_tags'>),
+          admin_tags: tagsByStudentId[s.id] ?? [],
+        },
+      ])
+    )
   }
 
   // 4. Build teacher groups
