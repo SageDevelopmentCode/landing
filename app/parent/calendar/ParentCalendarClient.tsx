@@ -78,7 +78,7 @@ const programs: Record<ProgramKey, { label: string; shortLabel: string; start: D
     school: {
       label: "School Year 2026–2027",
       shortLabel: "SCHOOL",
-      start: new Date(2026, 7, 1),
+      start: new Date(2026, 7, 17),
       end: new Date(2027, 4, 31),
       dateRange: "Aug 2026 – May 2027",
     },

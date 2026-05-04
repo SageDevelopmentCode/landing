@@ -126,7 +126,7 @@ export default async function ImpersonateChildrenPage({
       <header className="bg-white border-b border-gray-100 px-5 py-3 flex items-center justify-center">
         <DashboardNav parentId={parentId} />
       </header>
-      <main className="flex-1 flex overflow-hidden pointer-events-none select-none">
+      <main className="flex-1 flex overflow-hidden">
         <Suspense>
           <ChildrenPage
             children={children}
