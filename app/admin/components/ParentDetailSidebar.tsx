@@ -7,6 +7,7 @@ import { DetailSidebar } from './DetailSidebar'
 import { EmailThread } from './EmailThread'
 import { SidebarField, SidebarSection } from '../../components/SidebarPrimitives'
 import { deleteParent } from '../../actions/deleteParent'
+import { sendFullSummerThankYouEmail } from '../../actions/sendFullSummerThankYouEmail'
 
 const PROGRAM_LABELS: Record<string, string> = {
   summer_26: 'Summer 2026',
@@ -110,6 +111,28 @@ export function ParentDetailSidebar({ parent, detail, loading, onClose, onParent
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  const [summerThankYouSending, setSummerThankYouSending] = useState(false)
+  const [summerThankYouSent, setSummerThankYouSent] = useState(false)
+  const [summerThankYouError, setSummerThankYouError] = useState<string | null>(null)
+
+  const handleSendSummerThankYou = async () => {
+    if (summerThankYouSending || !parent?.email) return
+    setSummerThankYouSending(true)
+    setSummerThankYouError(null)
+    const result = await sendFullSummerThankYouEmail({
+      g1FullName: parent.full_name ?? '',
+      childLegalName: detail?.children[0]?.child_legal_name ?? '',
+      email: parent.email,
+    })
+    setSummerThankYouSending(false)
+    if (result.success) {
+      setSummerThankYouSent(true)
+      setTimeout(() => setSummerThankYouSent(false), 3000)
+    } else {
+      setSummerThankYouError(result.error ?? 'Failed to send')
+    }
+  }
 
   const handleDelete = async () => {
     if (!parent || isDeleting) return
@@ -313,6 +336,25 @@ export function ParentDetailSidebar({ parent, detail, loading, onClose, onParent
                 </>
               )}
             </SidebarSection>
+
+            {/* Outreach */}
+            {parent?.email && (
+              <SidebarSection title="Outreach">
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleSendSummerThankYou}
+                      disabled={summerThankYouSending || summerThankYouSent}
+                      className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                    >
+                      {summerThankYouSending ? 'Sending…' : summerThankYouSent ? '✓ Sent!' : 'Send Summer Enrollment Thank You'}
+                    </button>
+                    {summerThankYouError && <span className="text-xs text-red-600">{summerThankYouError}</span>}
+                  </div>
+                </div>
+              </SidebarSection>
+            )}
 
             {/* Email History */}
             {parent?.email && (

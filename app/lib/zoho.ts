@@ -738,6 +738,33 @@ export async function buildSummerTuitionConfirmationEmail(opts: {
   return { subject, content };
 }
 
+export async function buildFullSummerThankYouEmail(opts: {
+  g1FullName: string;
+  childLegalName: string;
+}): Promise<{ subject: string; content: string }> {
+  const subject = "Thank You for Enrolling in Full Summer 2026!";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${opts.g1FullName},</p>
+
+  <p>Thank you so much for enrolling ${opts.childLegalName} in the <strong>Full Summer 2026</strong> program at Sage Field! We are truly thrilled to have your family with us for all 12 weeks this summer (May 26 – August 13, 2026).</p>
+
+  <p>Choosing the full summer means ${opts.childLegalName} will have the chance to build deep friendships, settle into our rhythms, and really make this place their own. We can't wait to watch them grow and thrive.</p>
+
+  <p>We'll be in touch with more details as summer approaches. In the meantime, please don't hesitate to reach out with any questions at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> — we're always happy to hear from you.</p>
+
+  <p style="margin-top: 32px;">With gratitude,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field Private School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
 /**
  * Build HTML confirmation email for a Homeschool Drop-In payment
  */

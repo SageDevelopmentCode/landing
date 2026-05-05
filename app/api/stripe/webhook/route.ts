@@ -289,7 +289,7 @@ export async function POST(request: NextRequest) {
 
       // Fetch application for parent/child names
       let parentName = "N/A";
-      let parentEmailAddr = session.customer_email ?? "N/A";
+      let parentEmailAddr = session.metadata?.parent_email ?? session.customer_email ?? "N/A";
       let childName = "N/A";
 
       if (applicationId) {
@@ -302,10 +302,13 @@ export async function POST(request: NextRequest) {
 
         if (application) {
           parentName = application.g1_full_name ?? "N/A";
-          parentEmailAddr = application.g1_email ?? session.customer_email ?? "N/A";
+          parentEmailAddr = application.g1_email ?? session.metadata?.parent_email ?? session.customer_email ?? "N/A";
           childName = application.child_legal_name ?? "N/A";
         }
-      } else if (studentId) {
+      }
+
+      // If application lookup failed (e.g. malformed ID in metadata), try student
+      if (childName === "N/A" && studentId) {
         const { data: student } = await supabase
           .schema("admin")
           .from("students")
