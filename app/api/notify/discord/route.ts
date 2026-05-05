@@ -189,7 +189,7 @@ export async function POST(request: NextRequest) {
           ],
           timestamp: new Date().toISOString(),
         },
-        process.env.DISCORD_EMPLOYEE_WEBHOOK_URL,
+        process.env.DISCORD_STUDENT_WEBHOOK_URL,
       );
       return NextResponse.json({ success: true });
     }
@@ -212,7 +212,7 @@ export async function POST(request: NextRequest) {
           ],
           timestamp: new Date().toISOString(),
         },
-        process.env.DISCORD_EMPLOYEE_WEBHOOK_URL,
+        process.env.DISCORD_STUDENT_WEBHOOK_URL,
       );
       return NextResponse.json({ success: true });
     }
@@ -236,7 +236,7 @@ export async function POST(request: NextRequest) {
           ],
           timestamp: new Date().toISOString(),
         },
-        process.env.DISCORD_EMPLOYEE_WEBHOOK_URL,
+        process.env.DISCORD_STUDENT_WEBHOOK_URL,
       );
       return NextResponse.json({ success: true });
     }
