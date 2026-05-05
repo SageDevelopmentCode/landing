@@ -252,8 +252,11 @@ export async function POST(request: NextRequest) {
       await sendDiscordNotification(
         {
           title: "✅ Field Fun Friday — Checked In",
-          description: `**${studentName}** was marked present for **${date}**`,
           color: 0x16a34a,
+          fields: [
+            { name: "Student", value: studentName, inline: true },
+            { name: "Date", value: date, inline: true },
+          ],
           timestamp: new Date().toISOString(),
         },
         process.env.DISCORD_STUDENT_WEBHOOK_URL,
@@ -272,8 +275,11 @@ export async function POST(request: NextRequest) {
       await sendDiscordNotification(
         {
           title: "↩️ Field Fun Friday — Checked Out",
-          description: `**${studentName}** was unmarked for **${date}**`,
           color: 0x16a34a,
+          fields: [
+            { name: "Student", value: studentName, inline: true },
+            { name: "Date", value: date, inline: true },
+          ],
           timestamp: new Date().toISOString(),
         },
         process.env.DISCORD_STUDENT_WEBHOOK_URL,
