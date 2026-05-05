@@ -18,7 +18,7 @@ const FOUNDERS = [
   {
     name: "Julius Cecilia",
     role: "Director of Operations & Technology",
-    image: "/assets/team/JuliusC.jpg",
+    image: "/assets/team/Julius.PNG",
     description:
       "Julius Cecilia, a University of Washington graduate, is a software engineer and startup builder with experience across early-stage startups and established tech companies like Adobe. He previously co-founded a sports social platform and continues to build software at the intersection of technology and schools.",
   },
