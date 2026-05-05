@@ -20,6 +20,7 @@ import {
   Users,
   Heart,
   HelpCircle,
+  X,
 } from "lucide-react";
 import OnboardingChecklist from "@/app/parent/components/OnboardingChecklist";
 import HelpWidget from "@/app/parent/components/HelpWidget";
@@ -377,10 +378,23 @@ export default function HomePageClient({
   const [dropOffSaving, setDropOffSaving] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [showMobileWarning, setShowMobileWarning] = useState(false);
+  const [referralPopupOpen, setReferralPopupOpen] = useState(false);
 
   useEffect(() => {
     if (window.innerWidth < 1024) setShowMobileWarning(true);
   }, []);
+
+  useEffect(() => {
+    if (!sessionStorage.getItem("referralPopupSeen")) {
+      const t = setTimeout(() => setReferralPopupOpen(true), 1000);
+      return () => clearTimeout(t);
+    }
+  }, []);
+
+  function closeReferralPopup() {
+    sessionStorage.setItem("referralPopupSeen", "1");
+    setReferralPopupOpen(false);
+  }
 
   async function handleSaveDropOff() {
     if (!dropOffSlot) return;
@@ -426,6 +440,107 @@ export default function HomePageClient({
           initialCompleted={initialCompletedIds}
         />
       </div>
+
+      {/* Referral popup — shown once per session */}
+      <AnimatePresence>
+        {referralPopupOpen && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={closeReferralPopup}
+          >
+            <motion.div
+              className="relative w-full max-w-lg rounded-2xl shadow-2xl bg-white overflow-hidden"
+              initial={{ opacity: 0, scale: 0.92, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ type: "spring", damping: 26, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Banner image */}
+              <div className="relative h-40 w-full overflow-hidden">
+                <img
+                  src="/assets/Kid1.png"
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+              </div>
+
+              <div className="p-6">
+                <button
+                  onClick={closeReferralPopup}
+                  className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-[#4a7c59]/10 flex items-center justify-center flex-shrink-0">
+                    <Gift
+                      className="w-5 h-5 text-[#4a7c59]"
+                      strokeWidth={1.5}
+                    />
+                  </div>
+                  <h2 className="text-lg font-heading font-semibold text-gray-900">
+                    Refer a Family
+                  </h2>
+                  <span className="bg-[#4a7c59] text-white text-xs font-body px-2.5 py-1 rounded-full font-medium">
+                    $150 gift card
+                  </span>
+                </div>
+
+                <p className="text-sm font-body text-gray-600 leading-relaxed mb-6">
+                  Know a family who&apos;d be a great fit for Sage Field? Share
+                  your link — when they enroll and pay their registration fee,
+                  you&apos;ll receive a{" "}
+                  <strong className="text-gray-800">$150 gift card</strong> of
+                  your choice.
+                </p>
+
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 min-w-0 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5">
+                    <p className="text-sm font-body text-gray-500 truncate">
+                      {referralLink}
+                    </p>
+                  </div>
+                  <button
+                    onClick={copyReferralLink}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold font-body transition-colors whitespace-nowrap cursor-pointer ${
+                      copied
+                        ? "bg-green-600 text-white"
+                        : "bg-[#4a7c59] text-white hover:bg-[#3d6b4a]"
+                    }`}
+                  >
+                    {copied ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4" />
+                        Copy link
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <button
+                  onClick={closeReferralPopup}
+                  className="mt-5 w-full text-center text-xs font-body text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                >
+                  Maybe later
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Banner */}
       {bannerIdx !== null && (
         <div className="relative h-48 rounded-2xl overflow-hidden shadow-sm">
@@ -825,7 +940,11 @@ export default function HomePageClient({
         <div className="flex flex-col gap-8 lg:sticky lg:top-[65px] lg:self-start">
           {/* Onboarding checklist prompt */}
           {!checklistComplete && (
-            <section className={checklistInteractive ? "pointer-events-auto" : undefined}>
+            <section
+              className={
+                checklistInteractive ? "pointer-events-auto" : undefined
+              }
+            >
               <h2 className="text-base font-heading font-semibold text-gray-800 mb-4">
                 Get started
               </h2>
