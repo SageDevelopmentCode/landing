@@ -17,6 +17,8 @@ import type { SummerStudentRow, SummerDayData } from '@/app/actions/summerAttend
 import type { SummerAttendanceStats } from '@/app/actions/adminAttendance'
 import { cssColors as colors, cssShadows as shadows, radius } from '../design-system'
 import { StudentDetailSidebar } from '../components/StudentDetailSidebar'
+import { DetailSidebar } from '../components/DetailSidebar'
+import { Table, TableRow, TableCell } from '../components/Table'
 import { PRESET_TAGS } from '../constants/applicationTags'
 
 const poppins = Poppins({ weight: ['300', '400', '700', '900'], subsets: ['latin'] })
@@ -92,6 +94,22 @@ type FullStudent = {
   parent_name?: string | null
 }
 
+type DropoffKid = {
+  id: string
+  name: string | null
+  grade: string | null
+  dob_year: string | null
+}
+
+type DropoffRow = {
+  parent_id: string
+  slot: string
+  updated_at: string
+  parent_name: string | null
+  parent_email: string | null
+  kids: DropoffKid[]
+}
+
 interface SummerProgramClientProps {
   teacherGroups: TeacherGroup[]
   totalStudentCount: number
@@ -99,6 +117,7 @@ interface SummerProgramClientProps {
   initialWeekData: SummerDayData[]
   initialWeekNum: number
   stats: SummerAttendanceStats
+  dropoffRows: DropoffRow[]
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -146,6 +165,33 @@ function formatWeekRange(weekNum: number): string {
 function getTodayStr(): string {
   const now = new Date()
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+}
+
+const DROPOFF_SLOTS = [
+  { value: '8:15', label: '8:15 – 8:30 AM', color: '#38BDF8', bg: 'rgba(56,189,248,0.1)', border: 'rgba(56,189,248,0.25)' },
+  { value: '8:30', label: '8:30 – 8:45 AM', color: '#F59E0B', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.25)' },
+  { value: '8:45', label: '8:45 – 9:00 AM', color: '#22C55E', bg: 'rgba(34,197,94,0.1)',  border: 'rgba(34,197,94,0.25)' },
+] as const
+
+function dropoffSlotConfig(value: string) {
+  return DROPOFF_SLOTS.find((s) => s.value === value) ?? DROPOFF_SLOTS[0]
+}
+
+function kidAge(dob_year: string | null): number | null {
+  if (!dob_year) return null
+  const year = parseInt(dob_year, 10)
+  if (isNaN(year)) return null
+  return new Date().getFullYear() - year
+}
+
+function formatUpdated(iso: string) {
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+const TAB_LABELS: Record<'students' | 'attendance' | 'dropoffs', string> = {
+  students: 'Students',
+  attendance: 'Attendance',
+  dropoffs: 'Drop-offs',
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -197,6 +243,18 @@ function StatCard({
         )}
       </div>
     </div>
+  )
+}
+
+function SlotBadge({ slot }: { slot: string }) {
+  const cfg = dropoffSlotConfig(slot)
+  return (
+    <span
+      className="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full whitespace-nowrap"
+      style={{ color: cfg.color, backgroundColor: cfg.bg, border: `1px solid ${cfg.border}` }}
+    >
+      {cfg.label}
+    </span>
   )
 }
 
@@ -267,11 +325,12 @@ export function SummerProgramClient({
   initialWeekData,
   initialWeekNum,
   stats,
+  dropoffRows,
 }: SummerProgramClientProps) {
   const pathname = usePathname()
 
   // Tab state
-  const [activeTab, setActiveTab] = useState<'students' | 'attendance'>('students')
+  const [activeTab, setActiveTab] = useState<'students' | 'attendance' | 'dropoffs'>('students')
 
   // Students tab state
   const [activeTeacherId, setActiveTeacherId] = useState<string | null>(teacherGroups[0]?.teacher.id ?? null)
@@ -288,6 +347,10 @@ export function SummerProgramClient({
   const [loadingWeek, setLoadingWeek] = useState(false)
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set())
   const [attendanceSearch, setAttendanceSearch] = useState('')
+
+  // Drop-offs tab state
+  const [dropoffSearch, setDropoffSearch] = useState('')
+  const [selectedDropoff, setSelectedDropoff] = useState<DropoffRow | null>(null)
 
   // ── Students tab helpers ──────────────────────────────────────────────────
 
@@ -460,14 +523,14 @@ export function SummerProgramClient({
 
         {/* Tab switcher */}
         <div className="flex gap-0 mb-6" style={{ borderBottom: `1px solid ${colors.border}` }}>
-          {(['students', 'attendance'] as const).map((tab) => (
+          {(['students', 'attendance', 'dropoffs'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className="relative px-4 py-2 text-sm font-medium transition-colors capitalize"
+              className="relative px-4 py-2 text-sm font-medium transition-colors"
               style={{ color: activeTab === tab ? colors.mistyForest : colors.textSecondary }}
             >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {TAB_LABELS[tab]}
               {activeTab === tab && (
                 <span
                   className="absolute bottom-0 left-0 right-0 h-0.5"
@@ -998,6 +1061,194 @@ export function SummerProgramClient({
                 )}
               </div>
             )}
+          </div>
+        )}
+
+        {/* ── Drop-offs Tab ──────────────────────────────────────────────── */}
+        {activeTab === 'dropoffs' && (
+          <div className="space-y-6">
+            {/* Slot summary cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {DROPOFF_SLOTS.map(({ value, label, color }) => {
+                const slotRows = dropoffRows.filter((r) => r.slot === value)
+                return (
+                  <div
+                    key={value}
+                    className="px-4 py-4 rounded-xl"
+                    style={{
+                      backgroundColor: colors.surface,
+                      border: `1px solid ${colors.border}`,
+                      borderLeft: `3px solid ${color}`,
+                    }}
+                  >
+                    <p className="text-xs font-semibold mb-1" style={{ color }}>{label}</p>
+                    <p className="text-2xl font-bold mb-1" style={{ color: colors.textPrimary }}>
+                      {slotRows.length}
+                    </p>
+                    <p
+                      className="text-xs leading-relaxed line-clamp-2"
+                      style={{ color: colors.textTertiary }}
+                    >
+                      {slotRows.length === 0
+                        ? 'No families yet'
+                        : slotRows.map((r) => r.parent_name ?? 'Unknown').join(', ')}
+                    </p>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Search */}
+            <div className="relative max-w-xs">
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none"
+                style={{ color: colors.textTertiary }}
+              />
+              <input
+                type="text"
+                placeholder="Search families…"
+                value={dropoffSearch}
+                onChange={(e) => setDropoffSearch(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 text-sm rounded-lg outline-none"
+                style={{
+                  backgroundColor: colors.surface,
+                  border: `1px solid ${colors.border}`,
+                  color: colors.textPrimary,
+                  borderRadius: radius.md,
+                }}
+              />
+            </div>
+
+            {/* Table */}
+            {(() => {
+              const filtered = dropoffRows.filter((r) => {
+                const q = dropoffSearch.toLowerCase()
+                return !q || r.parent_name?.toLowerCase().includes(q) || r.parent_email?.toLowerCase().includes(q)
+              })
+              return filtered.length === 0 ? (
+                <div
+                  className="py-12 text-center rounded-xl text-sm"
+                  style={{ color: colors.textTertiary, backgroundColor: colors.surface, border: `1px solid ${colors.border}` }}
+                >
+                  No drop-off submissions found.
+                </div>
+              ) : (
+                <Table headers={['Parent', 'Slot', 'Kids', 'Updated']}>
+                  {filtered.map((row, i) => (
+                    <TableRow key={row.parent_id} index={i} onClick={() => setSelectedDropoff(row)}>
+                      <TableCell>
+                        <div className="font-medium" style={{ color: colors.textPrimary }}>
+                          {row.parent_name ?? '—'}
+                        </div>
+                        <div className="text-xs mt-0.5" style={{ color: colors.textTertiary }}>
+                          {row.parent_email ?? '—'}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <SlotBadge slot={row.slot} />
+                      </TableCell>
+                      <TableCell>
+                        {row.kids.length === 0 ? (
+                          <span style={{ color: colors.textTertiary }}>—</span>
+                        ) : (
+                          <div className="space-y-0.5">
+                            {row.kids.map((k) => {
+                              const age = kidAge(k.dob_year)
+                              return (
+                                <div key={k.id} style={{ color: colors.textSecondary }}>
+                                  {k.name ?? 'Unknown'}
+                                  {k.grade && (
+                                    <span className="ml-1.5 text-xs" style={{ color: colors.textTertiary }}>
+                                      Grade {k.grade}
+                                    </span>
+                                  )}
+                                  {age !== null && (
+                                    <span className="ml-1 text-xs" style={{ color: colors.textTertiary }}>
+                                      · {age}y
+                                    </span>
+                                  )}
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>{formatUpdated(row.updated_at)}</TableCell>
+                    </TableRow>
+                  ))}
+                </Table>
+              )
+            })()}
+
+            {/* Detail sidebar */}
+            <DetailSidebar
+              isOpen={!!selectedDropoff}
+              onClose={() => setSelectedDropoff(null)}
+              title={selectedDropoff?.parent_name ?? 'Parent'}
+            >
+              {selectedDropoff && (
+                <div className="flex flex-col gap-6">
+                  <div
+                    className="rounded-xl p-4 flex flex-col gap-3"
+                    style={{ backgroundColor: colors.elevated, border: `1px solid ${colors.border}` }}
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: colors.textTertiary }}>
+                      Parent
+                    </p>
+                    <div className="flex flex-col gap-1">
+                      <p className="text-sm font-medium" style={{ color: colors.textPrimary }}>
+                        {selectedDropoff.parent_name ?? '—'}
+                      </p>
+                      <p className="text-xs" style={{ color: colors.textTertiary }}>
+                        {selectedDropoff.parent_email ?? '—'}
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: colors.textTertiary }}>
+                        Drop-Off Slot
+                      </p>
+                      <SlotBadge slot={selectedDropoff.slot} />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: colors.textTertiary }}>
+                        Submitted
+                      </p>
+                      <p className="text-sm" style={{ color: colors.textSecondary }}>
+                        {formatUpdated(selectedDropoff.updated_at)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3">
+                    <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: colors.textTertiary }}>
+                      Children ({selectedDropoff.kids.length})
+                    </p>
+                    {selectedDropoff.kids.length === 0 ? (
+                      <p className="text-sm" style={{ color: colors.textTertiary }}>No children on record.</p>
+                    ) : (
+                      selectedDropoff.kids.map((k) => {
+                        const age = kidAge(k.dob_year)
+                        return (
+                          <div
+                            key={k.id}
+                            className="rounded-xl p-3 flex flex-col gap-1"
+                            style={{ backgroundColor: colors.elevated, border: `1px solid ${colors.border}` }}
+                          >
+                            <p className="text-sm font-medium" style={{ color: colors.textPrimary }}>
+                              {k.name ?? 'Unknown'}
+                            </p>
+                            <div className="flex items-center gap-3 text-xs" style={{ color: colors.textTertiary }}>
+                              {k.grade && <span>Grade {k.grade}</span>}
+                              {age !== null && <span>{age} years old</span>}
+                            </div>
+                          </div>
+                        )
+                      })
+                    )}
+                  </div>
+                </div>
+              )}
+            </DetailSidebar>
           </div>
         )}
       </div>

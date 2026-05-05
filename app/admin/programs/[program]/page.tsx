@@ -158,7 +158,7 @@ export default async function ProgramPage({
     mondayDate.setDate(mondayDate.getDate() + (weekNum - 1) * 7)
     const weekStartDate = `${mondayDate.getFullYear()}-${pad(mondayDate.getMonth() + 1)}-${pad(mondayDate.getDate())}`
 
-    const [{ data: assignments }, initialWeekData, stats] = await Promise.all([
+    const [{ data: assignments }, initialWeekData, stats, { data: dropoffTimes }] = await Promise.all([
       client
         .schema('teachers')
         .from('teacher_students')
@@ -167,6 +167,11 @@ export default async function ProgramPage({
         .eq('is_deleted', false),
       getSummerStudentsForWeek(weekStartDate),
       getAdminSummerAttendanceStats(),
+      client
+        .schema('parent_app')
+        .from('dropoff_times')
+        .select('parent_id, slot, updated_at')
+        .order('updated_at', { ascending: false }),
     ])
 
     const rows = assignments ?? []
@@ -239,6 +244,34 @@ export default async function ProgramPage({
     const teacherGroups: TeacherGroup[] = [...groupMap.values()]
     const totalStudentCount = [...new Set(rows.map((r) => r.student_id).filter(Boolean))].length
 
+    // Enrich dropoff data
+    const dropoffParentIds = [...new Set((dropoffTimes ?? []).map((d) => d.parent_id))]
+    type DropoffKid = { id: string; name: string | null; grade: string | null; dob_year: string | null }
+    type DropoffRow = { parent_id: string; slot: string; updated_at: string; parent_name: string | null; parent_email: string | null; kids: DropoffKid[] }
+
+    let dropoffRows: DropoffRow[] = []
+    if (dropoffParentIds.length > 0) {
+      const [{ data: dropoffUsers }, { data: dropoffStudents }] = await Promise.all([
+        client.schema('admin').from('users').select('id, full_name, email').in('id', dropoffParentIds),
+        client.schema('admin').from('students').select('id, parent_id, child_legal_name, child_grade, dob_year').in('parent_id', dropoffParentIds).eq('is_deleted', false),
+      ])
+      const userMap: Record<string, { full_name: string | null; email: string | null }> = {}
+      for (const u of dropoffUsers ?? []) userMap[u.id] = { full_name: u.full_name, email: u.email }
+      const kidsMap: Record<string, DropoffKid[]> = {}
+      for (const s of dropoffStudents ?? []) {
+        if (!kidsMap[s.parent_id]) kidsMap[s.parent_id] = []
+        kidsMap[s.parent_id].push({ id: s.id, name: s.child_legal_name, grade: s.child_grade, dob_year: s.dob_year ?? null })
+      }
+      dropoffRows = (dropoffTimes ?? []).map((d) => ({
+        parent_id: d.parent_id,
+        slot: d.slot,
+        updated_at: d.updated_at,
+        parent_name: userMap[d.parent_id]?.full_name ?? null,
+        parent_email: userMap[d.parent_id]?.email ?? null,
+        kids: kidsMap[d.parent_id] ?? [],
+      }))
+    }
+
     return (
       <SummerProgramClient
         teacherGroups={teacherGroups}
@@ -247,6 +280,7 @@ export default async function ProgramPage({
         initialWeekData={initialWeekData}
         initialWeekNum={weekNum}
         stats={stats}
+        dropoffRows={dropoffRows}
       />
     )
   }

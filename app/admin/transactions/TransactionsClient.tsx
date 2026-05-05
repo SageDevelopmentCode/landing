@@ -562,6 +562,14 @@ export function TransactionsClient({
               <TableCell>
                 <div className="flex items-center gap-2">
                   {formatPaymentType(tx.payment_type)}
+                  {tx.stripe_session_id?.startsWith('check_') && (
+                    <span
+                      className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-semibold"
+                      style={{ backgroundColor: '#FEF3C7', color: '#92400E' }}
+                    >
+                      Check
+                    </span>
+                  )}
                   {stripeUrl(tx) && (
                     <a
                       href={stripeUrl(tx)!}
