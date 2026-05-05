@@ -241,6 +241,46 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
+    if (type === "field_friday_checked_in") {
+      const { studentName, date } = data;
+      if (!studentName || !date) {
+        return NextResponse.json(
+          { error: "field_friday_checked_in requires studentName and date" },
+          { status: 400 },
+        );
+      }
+      await sendDiscordNotification(
+        {
+          title: "✅ Field Fun Friday — Checked In",
+          description: `**${studentName}** was marked present for **${date}**`,
+          color: 0x16a34a,
+          timestamp: new Date().toISOString(),
+        },
+        process.env.DISCORD_STUDENT_WEBHOOK_URL,
+      );
+      return NextResponse.json({ success: true });
+    }
+
+    if (type === "field_friday_checked_out") {
+      const { studentName, date } = data;
+      if (!studentName || !date) {
+        return NextResponse.json(
+          { error: "field_friday_checked_out requires studentName and date" },
+          { status: 400 },
+        );
+      }
+      await sendDiscordNotification(
+        {
+          title: "↩️ Field Fun Friday — Checked Out",
+          description: `**${studentName}** was unmarked for **${date}**`,
+          color: 0x16a34a,
+          timestamp: new Date().toISOString(),
+        },
+        process.env.DISCORD_STUDENT_WEBHOOK_URL,
+      );
+      return NextResponse.json({ success: true });
+    }
+
     if (type === "help_request") {
       const {
         parentName,
