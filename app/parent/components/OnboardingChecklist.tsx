@@ -105,13 +105,17 @@ const TASKS: {
 interface Props {
   open: boolean;
   onClose: () => void;
+  initialCompleted?: string[];
 }
 
-export default function OnboardingChecklist({ open, onClose }: Props) {
-  const [completed, setCompleted] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
+export default function OnboardingChecklist({ open, onClose, initialCompleted }: Props) {
+  const [completed, setCompleted] = useState<Set<string>>(
+    new Set(initialCompleted ?? [])
+  );
+  const [loading, setLoading] = useState(initialCompleted === undefined);
 
   useEffect(() => {
+    if (initialCompleted !== undefined) return;
     getOnboardingProgress().then((ids) => {
       setCompleted(new Set(ids));
       setLoading(false);

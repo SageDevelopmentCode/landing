@@ -338,6 +338,8 @@ interface Props {
   paidAftercareByStudent: PaidAftercareByStudent;
   paidFunFridayByStudent: PaidFunFridayByStudent;
   checklistComplete: boolean;
+  initialCompletedIds?: string[];
+  checklistInteractive?: boolean;
 }
 
 export default function HomePageClient({
@@ -357,6 +359,8 @@ export default function HomePageClient({
   paidAftercareByStudent,
   paidFunFridayByStudent,
   checklistComplete,
+  initialCompletedIds,
+  checklistInteractive,
 }: Props) {
   const [checklistOpen, setChecklistOpen] = useState(false);
   const [bannerIdx, setBannerIdx] = useState<number | null>(null);
@@ -415,10 +419,13 @@ export default function HomePageClient({
 
   return (
     <div className="px-6 py-8 flex flex-col gap-8 max-w-6xl mx-auto w-full">
-      <OnboardingChecklist
-        open={checklistOpen}
-        onClose={() => setChecklistOpen(false)}
-      />
+      <div className={checklistInteractive ? "pointer-events-auto" : undefined}>
+        <OnboardingChecklist
+          open={checklistOpen}
+          onClose={() => setChecklistOpen(false)}
+          initialCompleted={initialCompletedIds}
+        />
+      </div>
       {/* Banner */}
       {bannerIdx !== null && (
         <div className="relative h-48 rounded-2xl overflow-hidden shadow-sm">
@@ -818,7 +825,7 @@ export default function HomePageClient({
         <div className="flex flex-col gap-8 lg:sticky lg:top-[65px] lg:self-start">
           {/* Onboarding checklist prompt */}
           {!checklistComplete && (
-            <section>
+            <section className={checklistInteractive ? "pointer-events-auto" : undefined}>
               <h2 className="text-base font-heading font-semibold text-gray-800 mb-4">
                 Get started
               </h2>

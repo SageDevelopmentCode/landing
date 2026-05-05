@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import AdminPreviewBanner from "../../AdminPreviewBanner";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import HomePageClient from "@/app/parent/home/HomePageClient";
+import { getOnboardingProgressForParent } from "@/app/actions/getOnboardingProgress";
 import type {
   HomeStudent,
   HomeCheckIn,
@@ -28,7 +29,8 @@ export default async function ImpersonateHomePage({
   const adminClient = createAdminClient();
   const todayISO = new Date().toISOString().slice(0, 10);
 
-  const [{ data: adminUser }, { data: studentsData }] = await Promise.all([
+  const [{ data: adminUser }, { data: studentsData }, onboardingCompletedIds] =
+    await Promise.all([
     adminClient
       .schema("admin")
       .from("users")
@@ -41,6 +43,7 @@ export default async function ImpersonateHomePage({
       .select("id, child_legal_name, child_grade, profile_image_url")
       .eq("parent_id", parentId)
       .eq("is_deleted", false),
+    getOnboardingProgressForParent(parentId),
   ]);
 
   if (!adminUser) notFound();
@@ -231,6 +234,8 @@ export default async function ImpersonateHomePage({
     }
   }
 
+  const checklistComplete = onboardingCompletedIds.length >= 8;
+
   const unpaidSummerEnrollments = summerEnrollments.filter(
     (e) => e.program !== "homeschool_drop_in" && (paidWeeksByStudent[e.student_id]?.length ?? 0) < 12
   );
@@ -260,7 +265,9 @@ export default async function ImpersonateHomePage({
           paidHomeschoolByStudent={paidHomeschoolByStudent}
           paidAftercareByStudent={paidAftercareByStudent}
           paidFunFridayByStudent={paidFunFridayByStudent}
-          checklistComplete={true}
+          checklistComplete={checklistComplete}
+          initialCompletedIds={onboardingCompletedIds}
+          checklistInteractive
         />
       </main>
     </div>

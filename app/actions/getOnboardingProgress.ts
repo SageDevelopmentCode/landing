@@ -17,3 +17,15 @@ export async function getOnboardingProgress(): Promise<string[]> {
 
   return data?.completed ?? []
 }
+
+export async function getOnboardingProgressForParent(parentId: string): Promise<string[]> {
+  const adminClient = createAdminClient()
+  const { data } = await adminClient
+    .schema('parent_app')
+    .from('onboarding_checklist')
+    .select('completed')
+    .eq('parent_id', parentId)
+    .single()
+
+  return data?.completed ?? []
+}
