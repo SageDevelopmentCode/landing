@@ -385,7 +385,7 @@ export default function HomePageClient({
   }, []);
 
   useEffect(() => {
-    if (!sessionStorage.getItem("referralPopupSeen")) {
+    if (window.innerWidth >= 1024 && !sessionStorage.getItem("referralPopupSeen")) {
       const t = setTimeout(() => setReferralPopupOpen(true), 1000);
       return () => clearTimeout(t);
     }
