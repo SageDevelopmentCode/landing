@@ -171,6 +171,76 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
+    if (type === "aftercare_checked_in") {
+      const { studentName, date } = data;
+      if (!studentName || !date) {
+        return NextResponse.json(
+          { error: "aftercare_checked_in requires studentName and date" },
+          { status: 400 },
+        );
+      }
+      await sendDiscordNotification(
+        {
+          title: "🌙 Aftercare Check-In",
+          color: 0x5e7c68,
+          fields: [
+            { name: "Student", value: studentName, inline: true },
+            { name: "Date", value: date, inline: true },
+          ],
+          timestamp: new Date().toISOString(),
+        },
+        process.env.DISCORD_EMPLOYEE_WEBHOOK_URL,
+      );
+      return NextResponse.json({ success: true });
+    }
+
+    if (type === "aftercare_checked_out") {
+      const { studentName, date } = data;
+      if (!studentName || !date) {
+        return NextResponse.json(
+          { error: "aftercare_checked_out requires studentName and date" },
+          { status: 400 },
+        );
+      }
+      await sendDiscordNotification(
+        {
+          title: "⬜ Aftercare Removal",
+          color: 0x5e7c68,
+          fields: [
+            { name: "Student", value: studentName, inline: true },
+            { name: "Date", value: date, inline: true },
+          ],
+          timestamp: new Date().toISOString(),
+        },
+        process.env.DISCORD_EMPLOYEE_WEBHOOK_URL,
+      );
+      return NextResponse.json({ success: true });
+    }
+
+    if (type === "aftercare_pickup_set") {
+      const { studentName, date, pickupTime } = data;
+      if (!studentName || !date || !pickupTime) {
+        return NextResponse.json(
+          { error: "aftercare_pickup_set requires studentName, date, and pickupTime" },
+          { status: 400 },
+        );
+      }
+      await sendDiscordNotification(
+        {
+          title: "🚗 Aftercare Pickup Set",
+          color: 0x5e7c68,
+          fields: [
+            { name: "Student", value: studentName, inline: true },
+            { name: "Pickup Time", value: pickupTime, inline: true },
+            { name: "Date", value: date, inline: true },
+          ],
+          timestamp: new Date().toISOString(),
+        },
+        process.env.DISCORD_EMPLOYEE_WEBHOOK_URL,
+      );
+      return NextResponse.json({ success: true });
+    }
+
     if (type === "help_request") {
       const {
         parentName,
