@@ -780,6 +780,8 @@ function HomeschoolDropInCard({
     programLabel = "School Year 2026–2027";
   else if (dropInProgram === "both") programLabel = "Summer & School Year";
 
+  const isDisabled = dropInProgram === "school_year_26_27";
+
   const hasSummer = (paidData?.summer.length ?? 0) > 0;
   const hasSchoolYear = (paidData?.schoolYear.length ?? 0) > 0;
   const hasPriorPayment = hasSummer || hasSchoolYear;
@@ -804,21 +806,23 @@ function HomeschoolDropInCard({
 
   return (
     <div
-      className="rounded-2xl overflow-hidden cursor-pointer group bg-white border border-gray-100 flex flex-col"
-      onClick={onClick}
+      className={`rounded-2xl overflow-hidden bg-white border border-gray-100 flex flex-col ${isDisabled ? "opacity-60 cursor-not-allowed pointer-events-none" : "cursor-pointer group"}`}
+      onClick={isDisabled ? undefined : onClick}
     >
       <div className="relative h-28 overflow-hidden">
         <img
           src="/assets/Homeschool.jpg"
           alt=""
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className={`w-full h-full object-cover ${isDisabled ? "grayscale" : "transition-transform duration-500 group-hover:scale-105"}`}
         />
-        <div className="absolute inset-0 bg-black/10" />
-        <span
-          className={`absolute top-2.5 right-2.5 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold shadow-sm ${hasPriorPayment ? "bg-emerald-500 text-white" : "bg-white/80 backdrop-blur-sm text-gray-600"}`}
-        >
-          {badgeLabel}
-        </span>
+        <div className={`absolute inset-0 ${isDisabled ? "bg-black/20" : "bg-black/10"}`} />
+        {!isDisabled && (
+          <span
+            className={`absolute top-2.5 right-2.5 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold shadow-sm ${hasPriorPayment ? "bg-emerald-500 text-white" : "bg-white/80 backdrop-blur-sm text-gray-600"}`}
+          >
+            {badgeLabel}
+          </span>
+        )}
       </div>
       <div className="p-3.5 flex flex-col gap-2.5">
         <div>
@@ -830,23 +834,32 @@ function HomeschoolDropInCard({
           </div>
         </div>
         <div className="flex items-center justify-between mt-auto">
-          <span
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white"
-            style={{ backgroundColor: "#4a7c59" }}
-          >
-            {ctaLabel}
-            <ChevronRight className="w-3 h-3" strokeWidth={2.5} />
-          </span>
-          {hasPriorPayment && onViewHistory && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onViewHistory();
-              }}
-              className="text-xs font-semibold text-gray-400 hover:text-gray-600 transition-colors cursor-pointer underline underline-offset-2"
-            >
-              View current plan
-            </button>
+          {isDisabled ? (
+            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-gray-500 bg-gray-100 cursor-not-allowed">
+              <Clock className="w-3 h-3" />
+              Not available yet
+            </span>
+          ) : (
+            <>
+              <span
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white"
+                style={{ backgroundColor: "#4a7c59" }}
+              >
+                {ctaLabel}
+                <ChevronRight className="w-3 h-3" strokeWidth={2.5} />
+              </span>
+              {hasPriorPayment && onViewHistory && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onViewHistory();
+                  }}
+                  className="text-xs font-semibold text-gray-400 hover:text-gray-600 transition-colors cursor-pointer underline underline-offset-2"
+                >
+                  View current plan
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
