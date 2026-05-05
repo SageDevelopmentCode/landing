@@ -1333,6 +1333,27 @@ export function createSummerCommitmentNoteEmbed(data: {
   };
 }
 
+export function createHomeschoolDayCommitmentNoteEmbed(data: {
+  parentEmail: string;
+  childName: string;
+  note: string;
+}): DiscordEmbed {
+  return {
+    title: "📝 Homeschool Day Commitment Note",
+    color: 0x4a7c59,
+    fields: [
+      { name: "Parent", value: data.parentEmail, inline: true },
+      { name: "Child", value: data.childName, inline: true },
+      {
+        name: "Note",
+        value: data.note.length > 1024 ? data.note.substring(0, 1021) + "..." : data.note,
+        inline: false,
+      },
+    ],
+    timestamp: new Date().toISOString(),
+  };
+}
+
 /**
  * Creates a Discord embed for first week drop-off time selections
  */

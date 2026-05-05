@@ -80,6 +80,7 @@ export type PaidFunFridayByStudent = Record<string, {
 }>;
 
 export type SummerNotesByStudent = Record<string, string>; // studentId → note text
+export type HomeschoolNotesByStudent = Record<string, string>; // studentId → note text
 
 export type StudentInfo = {
   name: string;
@@ -120,7 +121,7 @@ export default async function BillingRoute() {
 
   const adminClient = createAdminClient();
 
-  const [{ data: txData }, { data: adminUser }, { data: pendingData }, { data: summerData }, { data: enrolledCheck }, { data: notesData }] = await Promise.all([
+  const [{ data: txData }, { data: adminUser }, { data: pendingData }, { data: summerData }, { data: enrolledCheck }, { data: notesData }, { data: homeschoolNotesData }] = await Promise.all([
     adminClient
       .schema("billing")
       .from("stripe_transactions")
@@ -158,6 +159,11 @@ export default async function BillingRoute() {
     adminClient
       .schema("billing")
       .from("summer_week_commitments")
+      .select("student_id, note")
+      .eq("parent_id", user.id),
+    adminClient
+      .schema("billing")
+      .from("homeschool_day_commitments")
       .select("student_id, note")
       .eq("parent_id", user.id),
   ]);
@@ -291,6 +297,14 @@ export default async function BillingRoute() {
     }
   }
 
+  // Build homeschool day commitment notes map per student
+  const homeschoolNotesByStudent: HomeschoolNotesByStudent = {};
+  for (const row of homeschoolNotesData ?? []) {
+    if (row.student_id && row.note) {
+      homeschoolNotesByStudent[row.student_id] = row.note;
+    }
+  }
+
   // Show enrollment if parent has paid fewer than 12 weeks (weekly plan with room to add more)
   // Exclude homeschool_drop_in — they don't have summer tuition
   const unpaidSummerEnrollments = summerEnrollments.filter(
@@ -351,7 +365,7 @@ export default async function BillingRoute() {
         </DashboardHeader>
 
         <main className="flex-1 flex overflow-hidden">
-          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} unpaidSummerEnrollments={unpaidSummerEnrollments} paidWeeksByStudent={paidWeeksByStudent} parentId={user.id} parentEmail={user.email ?? ""} nonEnrolledApps={nonEnrolledApps} homeschoolDropInApps={homeschoolDropInApps} paidHomeschoolByStudent={paidHomeschoolByStudent} paidAftercareByStudent={paidAftercareByStudent} paidFunFridayByStudent={paidFunFridayByStudent} summerNotesByStudent={summerNotesByStudent} schoolYearOnlyApps={schoolYearOnlyApps} />
+          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} unpaidSummerEnrollments={unpaidSummerEnrollments} paidWeeksByStudent={paidWeeksByStudent} parentId={user.id} parentEmail={user.email ?? ""} nonEnrolledApps={nonEnrolledApps} homeschoolDropInApps={homeschoolDropInApps} paidHomeschoolByStudent={paidHomeschoolByStudent} paidAftercareByStudent={paidAftercareByStudent} paidFunFridayByStudent={paidFunFridayByStudent} summerNotesByStudent={summerNotesByStudent} homeschoolNotesByStudent={homeschoolNotesByStudent} schoolYearOnlyApps={schoolYearOnlyApps} />
         </main>
       </div>
       <Footer />

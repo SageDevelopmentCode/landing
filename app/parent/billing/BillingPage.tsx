@@ -73,6 +73,7 @@ import type {
   PaidAftercareByStudent,
   PaidFunFridayByStudent,
   SummerNotesByStudent,
+  HomeschoolNotesByStudent,
   SchoolYearOnlyApp,
 } from "./page";
 
@@ -91,6 +92,7 @@ interface Props {
   paidAftercareByStudent: PaidAftercareByStudent;
   paidFunFridayByStudent: PaidFunFridayByStudent;
   summerNotesByStudent: SummerNotesByStudent;
+  homeschoolNotesByStudent: HomeschoolNotesByStudent;
   schoolYearOnlyApps: SchoolYearOnlyApp[];
 }
 
@@ -858,6 +860,7 @@ function HomeschoolPaymentModal({
   parentId,
   parentEmail,
   paidData,
+  initialNote,
   onClose,
 }: {
   app: HomeschoolDropInApp;
@@ -865,6 +868,7 @@ function HomeschoolPaymentModal({
   parentId: string;
   parentEmail: string;
   paidData?: PaidHomeschoolByStudent[string];
+  initialNote: string;
   onClose: () => void;
 }) {
   const gradeTier = getGradeTier(app.child_grade);
@@ -878,6 +882,9 @@ function HomeschoolPaymentModal({
   const [coverFees, setCoverFees] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [noteText, setNoteText] = useState(initialNote);
+  const [noteSaving, setNoteSaving] = useState(false);
+  const [noteSaveResult, setNoteSaveResult] = useState<"success" | "error" | null>(null);
 
   // Build paid days per week across all prior transactions
   const paidDaysByWeek: Record<number, Set<string>> = {};
@@ -924,6 +931,31 @@ function HomeschoolPaymentModal({
     : baseAmountCents;
 
   const canContinuePlan = Object.values(weekSelections).some((d) => d.size > 0);
+
+  async function handleSaveNote() {
+    if (!noteText.trim()) return;
+    setNoteSaving(true);
+    setNoteSaveResult(null);
+    try {
+      const res = await fetch("/api/billing/save-homeschool-note", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          parentId,
+          studentId: app.student_id,
+          applicationId: app.id,
+          note: noteText.trim(),
+        }),
+      });
+      const data = await res.json();
+      setNoteSaveResult(res.ok ? "success" : "error");
+      if (!res.ok) console.error("save homeschool note error:", data.error);
+    } catch {
+      setNoteSaveResult("error");
+    } finally {
+      setNoteSaving(false);
+    }
+  }
 
   const handlePayNow = async () => {
     setLoading(true);
@@ -1205,6 +1237,46 @@ function HomeschoolPaymentModal({
                   </motion.div>
                 )}
               </AnimatePresence>
+
+              {/* Notes / Commitment section */}
+              <div className="mt-5 pt-4 border-t border-gray-100">
+                <p className="text-sm font-semibold text-gray-700 font-heading mb-1">
+                  Planning to add more days later?
+                </p>
+                <p className="text-xs text-gray-400 font-body mb-3">
+                  Leave a note letting us know which days you&apos;re planning to commit to — we&apos;ll hold your spot.
+                </p>
+                <textarea
+                  value={noteText}
+                  onChange={(e) => {
+                    setNoteText(e.target.value);
+                    setNoteSaveResult(null);
+                  }}
+                  rows={3}
+                  maxLength={2000}
+                  placeholder="e.g. I plan to add Tuesdays in weeks 7–9…"
+                  className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-700 font-body placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 resize-none"
+                />
+                <div className="flex items-center justify-between mt-2">
+                  <div className="text-xs">
+                    {noteSaveResult === "success" && (
+                      <span className="text-emerald-600 font-body">Note saved.</span>
+                    )}
+                    {noteSaveResult === "error" && (
+                      <span className="text-red-500 font-body">Couldn&apos;t save — please try again.</span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    disabled={noteSaving || !noteText.trim()}
+                    onClick={handleSaveNote}
+                    className="px-4 py-1.5 rounded-lg text-xs font-semibold text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: "#4a7c59" }}
+                  >
+                    {noteSaving ? "Saving…" : "Save Note"}
+                  </button>
+                </div>
+              </div>
             </>
           ) : (
             <>
@@ -3936,6 +4008,7 @@ export default function BillingPage({
   paidAftercareByStudent,
   paidFunFridayByStudent,
   summerNotesByStudent,
+  homeschoolNotesByStudent,
   schoolYearOnlyApps,
 }: Props) {
   const [selectedTx, setSelectedTx] = useState<StripeTransaction | null>(null);
@@ -4426,6 +4499,7 @@ export default function BillingPage({
             parentId={parentId}
             parentEmail={parentEmail}
             paidData={paidHomeschoolByStudent[selectedHomeschoolApp.student_id]}
+            initialNote={homeschoolNotesByStudent[selectedHomeschoolApp.student_id] ?? ""}
             onClose={() => setSelectedHomeschoolApp(null)}
           />
         )}
