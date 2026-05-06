@@ -11,14 +11,14 @@ const FOUNDERS = [
   {
     name: "Sabrina Grace Obnamia",
     role: "Lead Teacher & Director",
-    image: "/assets/team/Sabrina.PNG",
+    image: "/assets/team/sabrina.png",
     description:
       "Ms. Sabrina brings a wealth of experience to SageField. She holds a Bachelor's degree in Elementary Education with a concentration in Early Childhood Development from Biola University and a Teaching Credential. Her background includes working with children in a wide range of roles both in the U.S. and internationally—spanning special education, preschool, homeschooling, tutoring, coaching, traditional schooling, nature school guide, and more. She values movement, outdoor learning, and most importantly, the joy of slowing down to be present, intentional, and thankful.",
   },
   {
     name: "Julius Cecilia",
     role: "Director of Operations & Technology",
-    image: "/assets/team/Julius.PNG",
+    image: "/assets/team/Julius.jpg",
     description:
       "Julius Cecilia, a University of Washington graduate, is a software engineer and startup builder with experience across early-stage startups and established tech companies like Adobe. He previously co-founded a sports social platform and continues to build software at the intersection of technology and schools.",
   },
