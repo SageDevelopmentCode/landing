@@ -996,10 +996,10 @@ export async function buildEnrollmentConfirmationEmail(opts: {
   <p style="margin-top: 24px;"><strong>What's coming next:</strong></p>
   <ol style="padding-left: 20px;">
     <li style="margin-bottom: 12px;">
-      <strong>Tuition</strong> — We will be reaching out soon with tuition details and payment information. Keep an eye on your inbox.
+      <strong>Tuition</strong> — Your tuition portal is live at <a href="https://www.sagefield.co/parent/billing" style="color: #5a7a5a; font-weight: bold;">sagefield.co/parent/billing</a>. Head there to reserve your summer weeks, or to manage tuition payments for the school year or homeschool drop-in program.
     </li>
     <li style="margin-bottom: 12px;">
-      <strong>Parent Dashboard</strong> — Your parent dashboard at <a href="https://www.sagefield.co/parent/dashboard" style="color: #5a7a5a; font-weight: bold;">sagefield.co/parent/dashboard</a> is your central hub. Bookmark it — we will use it to share updates, documents, and important information throughout the year.
+      <strong>Parent Home</strong> — Your parent home is live at <a href="https://www.sagefield.co/parent/home" style="color: #5a7a5a; font-weight: bold;">sagefield.co/parent/home</a>. Bookmark it — it's your central hub for updates, documents, and important information throughout the year.
     </li>
     <li style="margin-bottom: 12px;">
       <strong>Sage Field Mobile App</strong> — We have a mobile app in the works that will make staying connected even easier. We will let you know as soon as it is available.

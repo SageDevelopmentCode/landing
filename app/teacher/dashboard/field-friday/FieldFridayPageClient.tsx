@@ -296,34 +296,24 @@ export default function FieldFridayPageClient({ initialStudents, initialDate }: 
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
-        {/* Table header */}
-        <div className="grid grid-cols-[1fr_120px_100px_110px] gap-4 px-5 py-3 border-b border-gray-100 bg-gray-50">
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Student</span>
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-center">Attending</span>
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-center">Status</span>
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-center">Paid</span>
-        </div>
-
+      {/* Student rows */}
+      <div className="divide-y divide-gray-100 border-t border-gray-100">
         {/* Loading skeleton */}
         {loadingDate && (
-          <div className="divide-y divide-gray-50">
+          <>
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="grid grid-cols-[1fr_120px_100px_110px] gap-4 px-5 py-4 items-center">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
+              <div key={i} className="flex items-center gap-3 px-5 py-3.5">
+                <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse flex-shrink-0" />
+                <div className="flex-1 space-y-1.5">
                   <div className="h-4 bg-gray-200 rounded animate-pulse w-32" />
+                  <div className="h-3 bg-gray-200 rounded animate-pulse w-20" />
                 </div>
-                <div className="h-4 bg-gray-200 rounded animate-pulse mx-auto w-8" />
-                <div className="h-4 bg-gray-200 rounded animate-pulse mx-auto w-16" />
-                <div className="h-4 bg-gray-200 rounded animate-pulse mx-auto w-16" />
+                <div className="h-5 w-5 rounded-full bg-gray-200 animate-pulse flex-shrink-0" />
               </div>
             ))}
-          </div>
+          </>
         )}
 
-        {/* Student rows */}
         {!loadingDate && filteredStudents.length === 0 && (
           <div className="px-5 py-12 text-center text-sm text-gray-400">
             {search.trim() ? `No students match "${search}".` : "No enrolled students found."}
@@ -331,7 +321,7 @@ export default function FieldFridayPageClient({ initialStudents, initialDate }: 
         )}
 
         {!loadingDate && filteredStudents.length > 0 && (
-          <div className="divide-y divide-gray-50">
+          <>
             {filteredStudents.map((row) => {
               const isSaving = savingIds.has(row.student_id);
               const isChecked = row.record !== null;
@@ -339,43 +329,53 @@ export default function FieldFridayPageClient({ initialStudents, initialDate }: 
               return (
                 <div
                   key={row.student_id}
-                  className="grid grid-cols-[1fr_120px_100px_110px] gap-4 px-5 py-3.5 items-center hover:bg-gray-50/50 transition-colors"
+                  className="flex items-center gap-3 px-5 py-3 transition-colors"
                 >
-                  {/* Student name + avatar */}
-                  <div className="flex items-center gap-3 min-w-0">
-                    {row.profile_image_url ? (
-                      <img
-                        src={row.profile_image_url}
-                        alt={row.name ?? ""}
-                        className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                      />
-                    ) : (
-                      <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0"
-                        style={{ backgroundColor: avatarColor(row.student_id) }}
-                      >
-                        {getInitials(row.name)}
-                      </div>
-                    )}
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-800 truncate">{row.name ?? "—"}</p>
-                      {row.grade && (
-                        <p className="text-xs text-gray-400 truncate">{row.grade}</p>
-                      )}
+                  {/* Avatar */}
+                  {row.profile_image_url ? (
+                    <img
+                      src={row.profile_image_url}
+                      alt={row.name ?? ""}
+                      className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                    />
+                  ) : (
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0"
+                      style={{ backgroundColor: avatarColor(row.student_id) }}
+                    >
+                      {getInitials(row.name)}
                     </div>
+                  )}
+
+                  {/* Name + grade */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800 truncate">{row.name ?? "—"}</p>
+                    {row.grade && (
+                      <p className="text-xs text-gray-400 truncate">{row.grade}</p>
+                    )}
                   </div>
 
-                  {/* Checkbox */}
-                  <div className="flex items-center justify-center">
+                  {/* Controls: enrollment badge + checkbox */}
+                  <div className="flex items-center gap-2.5 flex-shrink-0">
+                    {row.hasEnrollment ? (
+                      <span className="text-xs font-medium text-[#4a7c59] bg-[#4a7c59]/10 px-2.5 py-1 rounded-full">
+                        Paid
+                      </span>
+                    ) : (
+                      <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">
+                        Not paid
+                      </span>
+                    )}
+
                     {isSaving ? (
                       <Loader2 className="w-4 h-4 animate-spin text-[#4a7c59]" />
                     ) : (
                       <button
                         onClick={() => handleCheckboxChange(row, !isChecked)}
-                        className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                        className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors border-2 ${
                           isChecked
                             ? "bg-[#4a7c59] border-[#4a7c59]"
-                            : "bg-white border-gray-300 hover:border-[#4a7c59]"
+                            : "bg-transparent border-gray-300 hover:border-[#4a7c59]"
                         }`}
                         aria-label={isChecked ? "Remove from Field Fun Fridays" : "Mark attending Field Fun Fridays"}
                       >
@@ -387,36 +387,10 @@ export default function FieldFridayPageClient({ initialStudents, initialDate }: 
                       </button>
                     )}
                   </div>
-
-                  {/* Status */}
-                  <div className="flex items-center justify-center">
-                    {isSaving ? (
-                      <span className="text-xs text-gray-400">Saving…</span>
-                    ) : isChecked ? (
-                      <span className="text-xs font-medium text-[#4a7c59] bg-[#4a7c59]/10 px-2.5 py-1 rounded-full">
-                        Recorded
-                      </span>
-                    ) : (
-                      <span className="text-xs text-gray-300">—</span>
-                    )}
-                  </div>
-
-                  {/* Paid */}
-                  <div className="flex items-center justify-center">
-                    {row.hasEnrollment ? (
-                      <span className="text-xs font-medium text-[#4a7c59] bg-[#4a7c59]/10 px-2.5 py-1 rounded-full">
-                        Paid
-                      </span>
-                    ) : (
-                      <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">
-                        Not paid
-                      </span>
-                    )}
-                  </div>
                 </div>
               );
             })}
-          </div>
+          </>
         )}
       </div>
     </div>

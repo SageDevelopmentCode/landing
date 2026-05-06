@@ -335,9 +335,51 @@ export function ProgramClient({
         )}
 
         {visibleUnassigned && visibleUnassigned.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div className="divide-y" style={{ borderColor: colors.border, borderTop: `1px solid ${colors.border}` }}>
             {visibleUnassigned.map((student) => (
-              <StudentCard key={student.id} student={student} onClick={handleStudentClick} />
+              <div
+                key={student.id}
+                className="flex items-center gap-3 px-4 py-2.5 cursor-pointer"
+                style={{ borderColor: colors.border }}
+                onClick={() => handleStudentClick(student)}
+              >
+                {student.profile_image_url ? (
+                  <img
+                    src={student.profile_image_url}
+                    alt={student.child_legal_name ?? 'Student'}
+                    className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                    style={{ border: `1px solid ${colors.border}` }}
+                  />
+                ) : (
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0"
+                    style={{ backgroundColor: colors.warmLinen, color: colors.mistyForest, border: `1px solid ${colors.border}` }}
+                  >
+                    {getInitials(student.child_legal_name)}
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate" style={{ color: colors.textPrimary }}>
+                    {student.child_legal_name ?? '—'}
+                  </p>
+                  {student.child_grade && (
+                    <p className="text-xs" style={{ color: colors.textSecondary }}>Grade {student.child_grade}</p>
+                  )}
+                </div>
+                {student.admin_tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 justify-end flex-shrink-0">
+                    {student.admin_tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded-full"
+                        style={{ backgroundColor: colors.accentLight, color: colors.accent, border: `1px solid ${colors.accentLight}` }}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         ) : visibleUnassigned && visibleUnassigned.length === 0 && unassignedStudents && unassignedStudents.length > 0 ? (
@@ -404,9 +446,51 @@ export function ProgramClient({
             {activeGroup && (
               <div>
                 {visibleActiveStudents.length > 0 ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  <div className="divide-y" style={{ borderColor: colors.border, borderTop: `1px solid ${colors.border}` }}>
                     {visibleActiveStudents.map((student) => (
-                      <StudentCard key={student.id} student={student} onClick={handleStudentClick} />
+                      <div
+                        key={student.id}
+                        className="flex items-center gap-3 px-4 py-2.5 cursor-pointer"
+                        style={{ borderColor: colors.border }}
+                        onClick={() => handleStudentClick(student)}
+                      >
+                        {student.profile_image_url ? (
+                          <img
+                            src={student.profile_image_url}
+                            alt={student.child_legal_name ?? 'Student'}
+                            className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                            style={{ border: `1px solid ${colors.border}` }}
+                          />
+                        ) : (
+                          <div
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0"
+                            style={{ backgroundColor: colors.warmLinen, color: colors.mistyForest, border: `1px solid ${colors.border}` }}
+                          >
+                            {getInitials(student.child_legal_name)}
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate" style={{ color: colors.textPrimary }}>
+                            {student.child_legal_name ?? '—'}
+                          </p>
+                          {student.child_grade && (
+                            <p className="text-xs" style={{ color: colors.textSecondary }}>Grade {student.child_grade}</p>
+                          )}
+                        </div>
+                        {student.admin_tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 justify-end flex-shrink-0">
+                            {student.admin_tags.map((tag) => (
+                              <span
+                                key={tag}
+                                className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded-full"
+                                style={{ backgroundColor: colors.accentLight, color: colors.accent, border: `1px solid ${colors.accentLight}` }}
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
                 ) : (

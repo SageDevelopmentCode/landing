@@ -432,42 +432,22 @@ export function AttendanceProgramClient({ program, initialDate, initialRows, sta
         )}
       </div>
 
-      {/* Table */}
-      <div
-        className="rounded-2xl overflow-hidden"
-        style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}`, boxShadow: shadows.soft }}
-      >
-        {/* Header */}
-        <div
-          className={`grid gap-4 px-5 py-3 border-b text-xs font-semibold uppercase tracking-wide ${isAftercare ? 'grid-cols-[1fr_110px_140px_100px_110px]' : 'grid-cols-[1fr_110px_100px_110px]'}`}
-          style={{ backgroundColor: colors.warmLinen, borderColor: colors.border, color: colors.textTertiary }}
-        >
-          <span>Student</span>
-          <span className="text-center">Attended</span>
-          {isAftercare && <span className="text-center">Pickup Time</span>}
-          <span className="text-center">Status</span>
-          <span className="text-center">Payment</span>
-        </div>
-
+      {/* Student rows */}
+      <div className="divide-y" style={{ borderColor: colors.border, borderTop: `1px solid ${colors.border}` }}>
         {/* Skeleton */}
         {loadingDate && (
-          <div className="divide-y" style={{ borderColor: colors.border }}>
+          <>
             {Array.from({ length: 5 }).map((_, i) => (
-              <div
-                key={i}
-                className={`grid gap-4 px-5 py-4 items-center ${isAftercare ? 'grid-cols-[1fr_110px_140px_100px_110px]' : 'grid-cols-[1fr_110px_100px_110px]'}`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full animate-pulse" style={{ backgroundColor: colors.border }} />
+              <div key={i} className="flex items-center gap-3 px-5 py-3.5">
+                <div className="w-8 h-8 rounded-full animate-pulse flex-shrink-0" style={{ backgroundColor: colors.border }} />
+                <div className="flex-1 space-y-1.5">
                   <div className="h-4 rounded animate-pulse w-32" style={{ backgroundColor: colors.border }} />
+                  <div className="h-3 rounded animate-pulse w-20" style={{ backgroundColor: colors.border }} />
                 </div>
-                <div className="h-4 rounded animate-pulse mx-auto w-8" style={{ backgroundColor: colors.border }} />
-                {isAftercare && <div className="h-4 rounded animate-pulse mx-auto w-20" style={{ backgroundColor: colors.border }} />}
-                <div className="h-4 rounded animate-pulse mx-auto w-16" style={{ backgroundColor: colors.border }} />
-                <div className="h-4 rounded animate-pulse mx-auto w-16" style={{ backgroundColor: colors.border }} />
+                <div className="h-6 rounded-full animate-pulse w-16" style={{ backgroundColor: colors.border }} />
               </div>
             ))}
-          </div>
+          </>
         )}
 
         {/* Empty */}
@@ -479,7 +459,7 @@ export function AttendanceProgramClient({ program, initialDate, initialRows, sta
 
         {/* Rows */}
         {!loadingDate && filteredRows.length > 0 && (
-          <div className="divide-y" style={{ borderColor: colors.border + '60' }}>
+          <>
             {filteredRows.map((row) => {
               const isChecked = row.record !== null
               const pickupTime = isAftercare ? (row as AdminAttendanceRow).record?.pickup_time : undefined
@@ -487,82 +467,44 @@ export function AttendanceProgramClient({ program, initialDate, initialRows, sta
               return (
                 <div
                   key={row.student_id}
-                  className={`grid gap-4 px-5 py-3.5 items-center ${isAftercare ? 'grid-cols-[1fr_110px_140px_100px_110px]' : 'grid-cols-[1fr_110px_100px_110px]'}`}
+                  className="flex items-center gap-3 px-5 py-3"
                   style={{ transition: 'background-color 0.1s' }}
                 >
-                  {/* Student */}
-                  <div className="flex items-center gap-3 min-w-0">
-                    {row.profile_image_url ? (
-                      <img
-                        src={row.profile_image_url}
-                        alt={row.name ?? ''}
-                        className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                      />
-                    ) : (
-                      <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0"
-                        style={{ backgroundColor: avatarColor(row.student_id) }}
-                      >
-                        {getInitials(row.name)}
-                      </div>
-                    )}
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate" style={{ color: colors.textPrimary }}>{row.name ?? '—'}</p>
-                      {row.grade && (
-                        <p className="text-xs truncate" style={{ color: colors.textTertiary }}>{row.grade}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Attended indicator (read-only) */}
-                  <div className="flex items-center justify-center">
+                  {/* Avatar */}
+                  {row.profile_image_url ? (
+                    <img
+                      src={row.profile_image_url}
+                      alt={row.name ?? ''}
+                      className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                    />
+                  ) : (
                     <div
-                      className="w-5 h-5 rounded border-2 flex items-center justify-center"
-                      style={{
-                        backgroundColor: isChecked ? colors.accent : 'transparent',
-                        borderColor: isChecked ? colors.accent : colors.border,
-                      }}
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0"
+                      style={{ backgroundColor: avatarColor(row.student_id) }}
                     >
-                      {isChecked && (
-                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth={2.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M2 6l3 3 5-5" />
-                        </svg>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Pickup time (aftercare only) */}
-                  {isAftercare && (
-                    <div className="flex items-center justify-center">
-                      {pickupTime ? (
-                        <span
-                          className="text-xs font-medium px-2.5 py-1 rounded-full"
-                          style={{ color: colors.accent, backgroundColor: colors.accentLight }}
-                        >
-                          {fmt12h(pickupTime)}
-                        </span>
-                      ) : (
-                        <span className="text-xs" style={{ color: colors.border }}>—</span>
-                      )}
+                      {getInitials(row.name)}
                     </div>
                   )}
 
-                  {/* Status */}
-                  <div className="flex items-center justify-center">
-                    {isChecked ? (
+                  {/* Name + grade */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate" style={{ color: colors.textPrimary }}>{row.name ?? '—'}</p>
+                    {row.grade && (
+                      <p className="text-xs truncate" style={{ color: colors.textTertiary }}>{row.grade}</p>
+                    )}
+                  </div>
+
+                  {/* Badges */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {isAftercare && pickupTime && (
                       <span
                         className="text-xs font-medium px-2.5 py-1 rounded-full"
                         style={{ color: colors.accent, backgroundColor: colors.accentLight }}
                       >
-                        Recorded
+                        {fmt12h(pickupTime)}
                       </span>
-                    ) : (
-                      <span className="text-xs" style={{ color: colors.border }}>—</span>
                     )}
-                  </div>
 
-                  {/* Payment */}
-                  <div className="flex items-center justify-center">
                     {row.hasEnrollment ? (
                       <span
                         className="text-xs font-medium px-2.5 py-1 rounded-full"
@@ -585,11 +527,26 @@ export function AttendanceProgramClient({ program, initialDate, initialRows, sta
                         Not paid
                       </span>
                     )}
+
+                    {/* Attended indicator (read-only) */}
+                    <div
+                      className="w-5 h-5 rounded-full border-2 flex items-center justify-center"
+                      style={{
+                        backgroundColor: isChecked ? colors.accent : 'transparent',
+                        borderColor: isChecked ? colors.accent : colors.border,
+                      }}
+                    >
+                      {isChecked && (
+                        <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2 6l3 3 5-5" />
+                        </svg>
+                      )}
+                    </div>
                   </div>
                 </div>
               )
             })}
-          </div>
+          </>
         )}
       </div>
       </div>

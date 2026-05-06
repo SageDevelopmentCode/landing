@@ -160,38 +160,20 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
 
   return (
     <div className="flex-1 flex flex-col px-6 pt-6 pb-6 w-full min-h-0 overflow-hidden">
-      {/* Header */}
-      <div className="mb-5">
-        <h1 className="text-2xl font-bold text-[#d97706]">Summer 2026 Attendance</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          {viewMode === "week"
-            ? `Week ${weekNum} of ${TOTAL_WEEKS}  •  ${totalExpectedThisWeek} unique student${totalExpectedThisWeek !== 1 ? "s" : ""} expected this week`
-            : `${dayDetailExpected} expected  •  ${dayDetailPresent} marked present`}
-        </p>
+      {/* Header + nav bar */}
+      <div className="flex items-start justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-[#d97706]">Summer 2026 Attendance</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            {viewMode === "week"
+              ? `Week ${weekNum} of ${TOTAL_WEEKS} · ${totalExpectedThisWeek} student${totalExpectedThisWeek !== 1 ? "s" : ""}`
+              : `${dayDetailExpected} expected · ${dayDetailPresent} present`}
+          </p>
+        </div>
       </div>
 
-      {/* Week navigation bar */}
-      <div className="flex items-center gap-3 mb-6">
-        <button
-          onClick={() => handleWeekChange(weekNum - 1)}
-          disabled={loadingWeek || weekNum <= 1}
-          className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors disabled:opacity-40"
-        >
-          <ChevronLeft className="w-4 h-4 text-gray-600" />
-        </button>
-
-        <span className="text-sm font-semibold text-gray-800 min-w-[200px] text-center">
-          Week {weekNum} — {formatWeekRange(weekNum)}
-        </span>
-
-        <button
-          onClick={() => handleWeekChange(weekNum + 1)}
-          disabled={loadingWeek || weekNum >= TOTAL_WEEKS}
-          className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors disabled:opacity-40"
-        >
-          <ChevronRight className="w-4 h-4 text-gray-600" />
-        </button>
-
+      {/* Nav bar */}
+      <div className="flex items-center gap-2 mb-6">
         {viewMode === "day" && selectedDate && (
           <button
             onClick={() => { setViewMode("week"); setSelectedDate(null); }}
@@ -208,24 +190,42 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
             placeholder="Search students…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-8 pr-3 py-2 text-sm rounded-lg border border-gray-200 bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#d97706] focus:ring-1 focus:ring-[#d97706]/20 transition-colors w-56"
+            className="pl-8 pr-3 py-2 text-sm rounded-lg border border-gray-200 bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#d97706] focus:ring-1 focus:ring-[#d97706]/20 transition-colors w-48"
           />
+        </div>
+
+        <div className="flex items-center gap-1 rounded-lg px-1 py-1 border border-gray-200 bg-white">
+          <button
+            onClick={() => handleWeekChange(weekNum - 1)}
+            disabled={loadingWeek || weekNum <= 1}
+            className="p-1 rounded transition-colors disabled:opacity-40 hover:bg-gray-50"
+          >
+            <ChevronLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span className="text-xs font-semibold text-gray-800 px-2 min-w-[140px] text-center">
+            Week {weekNum} — {formatWeekRange(weekNum)}
+          </span>
+          <button
+            onClick={() => handleWeekChange(weekNum + 1)}
+            disabled={loadingWeek || weekNum >= TOTAL_WEEKS}
+            className="p-1 rounded transition-colors disabled:opacity-40 hover:bg-gray-50"
+          >
+            <ChevronRight className="w-4 h-4 text-gray-600" />
+          </button>
         </div>
       </div>
 
-      {/* Week view: 5-column grid */}
+      {/* Week view: flat 5-column grid */}
       {viewMode === "week" && (
-        <div className="grid grid-cols-5 gap-3 flex-1 min-h-0">
+        <div className="grid grid-cols-5 divide-x divide-gray-100 border-t border-gray-100">
           {loadingWeek
             ? DAY_LABELS.map((label) => (
-                <div key={label} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                  <div className="px-3 py-3 border-b border-gray-100 bg-gray-50 animate-pulse">
-                    <div className="h-4 bg-gray-200 rounded w-20 mb-1" />
-                    <div className="h-3 bg-gray-100 rounded w-16" />
-                  </div>
-                  <div className="p-3 space-y-2">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="h-10 bg-gray-100 rounded-lg animate-pulse" />
+                <div key={label} className="px-4 py-4">
+                  <div className="h-5 bg-gray-200 rounded w-12 mb-1 animate-pulse" />
+                  <div className="h-3 bg-gray-100 rounded w-16 mb-3 animate-pulse" />
+                  <div className="space-y-3">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i} className="h-9 bg-gray-100 rounded-lg animate-pulse" />
                     ))}
                   </div>
                 </div>
@@ -253,37 +253,33 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
                   })();
 
                 return (
-                  <div
-                    key={day.date}
-                    className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full"
-                  >
+                  <div key={day.date} className="flex flex-col">
                     {/* Day column header */}
-                    <button
-                      onClick={() => handleDrillDown(day.date)}
-                      className="px-3 py-3 border-b border-gray-100 bg-gray-50 hover:bg-[#d97706]/5 transition-colors text-left w-full"
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-sm font-semibold text-gray-800">
+                    <div className="px-4 pt-4 pb-3 border-b border-gray-100">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className="text-sm font-bold text-gray-800">
                           {DAY_LABELS[colIdx]}
                         </span>
                         {isToday && (
-                          <span className="text-xs font-medium text-[#d97706] bg-[#d97706]/10 px-1.5 py-0.5 rounded-full leading-tight">
+                          <span className="text-[10px] font-medium text-[#d97706] bg-[#d97706]/10 px-1.5 py-0.5 rounded-full leading-tight">
                             Today
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {formatShortDate(day.date)}
+                      <p className="text-xs text-gray-500">{formatShortDate(day.date)}</p>
+                      <p className="text-xs mt-1.5">
+                        <span className="text-gray-500">{expectedCount} expected</span>
+                        {" · "}
+                        <span className={presentCount > 0 ? "text-[#d97706] font-semibold" : "text-gray-400"}>
+                          {presentCount} present
+                        </span>
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {expectedCount} expected · {presentCount} present
-                      </p>
-                    </button>
+                    </div>
 
                     {/* Student list */}
-                    <div className="flex-1 min-h-0 divide-y divide-gray-50 overflow-y-auto">
+                    <div className="divide-y divide-gray-50">
                       {filtered.length === 0 && (
-                        <p className="text-xs text-gray-300 text-center py-4 px-2">
+                        <p className="text-xs text-gray-300 text-center py-6 px-3">
                           {search.trim() ? "No match" : "No students"}
                         </p>
                       )}
@@ -293,69 +289,54 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
                         return (
                           <div
                             key={row.student_id}
-                            className="flex items-center gap-2 px-2.5 py-2 hover:bg-gray-50/60 transition-colors"
+                            className="flex items-center gap-2.5 px-4 py-2.5"
                           >
-                            {/* Avatar */}
                             {row.profile_image_url ? (
                               <img
                                 src={row.profile_image_url}
                                 alt={row.name ?? ""}
-                                className="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                                className="w-8 h-8 rounded-full object-cover flex-shrink-0"
                               />
                             ) : (
                               <div
-                                className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0"
+                                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0"
                                 style={{ backgroundColor: avatarColor(row.student_id) }}
                               >
                                 {getInitials(row.name)}
                               </div>
                             )}
-
-                            {/* Name */}
-                            <div className="flex items-center gap-1 flex-1 min-w-0">
-                              <p className="text-xs font-medium text-gray-700 truncate min-w-0">
-                                {row.name ?? "—"}
-                              </p>
-                              {row.isHomeschool && (
-                                <span title="Homeschool drop-in" className="flex-shrink-0">
-                                  <Home className="w-3 h-3 text-[#4a7c59]" />
-                                </span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1 min-w-0">
+                                <p className="text-xs font-medium text-gray-700 truncate min-w-0">
+                                  {row.name ?? "—"}
+                                </p>
+                                {row.isHomeschool && (
+                                  <span title="Homeschool drop-in" className="flex-shrink-0">
+                                    <Home className="w-3 h-3 text-[#4a7c59]" />
+                                  </span>
+                                )}
+                              </div>
+                              {row.hasEnrollment ? (
+                                <span className="text-[10px] text-[#d97706]">Paid</span>
+                              ) : (
+                                <span className="text-[10px] text-gray-400">Unpaid</span>
                               )}
                             </div>
-
-                            {/* Paid badge */}
-                            {row.hasEnrollment ? (
-                              <span className="text-[10px] font-medium text-[#d97706] bg-[#d97706]/10 px-1.5 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">
-                                Paid
-                              </span>
-                            ) : (
-                              <span className="text-[10px] font-medium text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">
-                                Unpaid
-                              </span>
-                            )}
-
-                            {/* Checkbox */}
                             <div className="flex-shrink-0">
                               {isSaving ? (
-                                <Loader2 className="w-3.5 h-3.5 animate-spin text-[#d97706]" />
+                                <Loader2 className="w-5 h-5 animate-spin text-[#d97706]" />
                               ) : (
                                 <button
                                   onClick={() => handleToggle(row.student_id, day.date, row)}
-                                  className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
+                                  className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors border-2 ${
                                     isChecked
                                       ? "bg-[#d97706] border-[#d97706]"
-                                      : "bg-white border-gray-300 hover:border-[#d97706]"
+                                      : "bg-transparent border-gray-300 hover:border-[#d97706]"
                                   }`}
                                   aria-label={isChecked ? "Remove attendance" : "Mark present"}
                                 >
                                   {isChecked && (
-                                    <svg
-                                      className="w-2.5 h-2.5 text-white"
-                                      fill="none"
-                                      viewBox="0 0 12 12"
-                                      stroke="currentColor"
-                                      strokeWidth={2.5}
-                                    >
+                                    <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth={2.5}>
                                       <path strokeLinecap="round" strokeLinejoin="round" d="M2 6l3 3 5-5" />
                                     </svg>
                                   )}
@@ -367,10 +348,9 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
                       })}
                     </div>
 
-                    {/* View all link */}
                     <button
                       onClick={() => handleDrillDown(day.date)}
-                      className="px-3 py-2 text-xs text-[#d97706] hover:text-[#b45309] border-t border-gray-100 text-center hover:bg-[#d97706]/5 transition-colors"
+                      className="px-4 py-2 text-xs text-gray-400 hover:text-[#d97706] border-t border-gray-100 text-left mt-auto transition-colors"
                     >
                       View full day →
                     </button>
@@ -382,13 +362,13 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
 
       {/* Day detail view */}
       {viewMode === "day" && dayDetail && (
-        <div className="flex-1 min-h-0 bg-white rounded-2xl border border-gray-100 overflow-y-auto shadow-sm">
+        <div className="flex-1 min-h-0 overflow-y-auto border-t border-gray-100">
           {/* Table header */}
-          <div className="grid grid-cols-[1fr_120px_100px_110px] gap-4 px-5 py-3 border-b border-gray-100 bg-gray-50">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Student</span>
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-center">Present</span>
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-center">Status</span>
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-center">Paid</span>
+          <div className="grid grid-cols-[1fr_120px_100px_110px] gap-4 px-5 py-3 border-b border-gray-100">
+            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Student</span>
+            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide text-center">Present</span>
+            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide text-center">Status</span>
+            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide text-center">Paid</span>
           </div>
 
           {filteredDayStudents.length === 0 && (
@@ -398,7 +378,7 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
           )}
 
           {filteredDayStudents.length > 0 && (
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-gray-100">
               {filteredDayStudents.map((row) => {
                 const isSaving = savingIds.has(row.student_id);
                 const isChecked = row.record !== null;
@@ -407,7 +387,6 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
                     key={row.student_id}
                     className="grid grid-cols-[1fr_120px_100px_110px] gap-4 px-5 py-3.5 items-center hover:bg-gray-50/50 transition-colors"
                   >
-                    {/* Student name + avatar */}
                     <div className="flex items-center gap-3 min-w-0">
                       {row.profile_image_url ? (
                         <img
@@ -432,34 +411,25 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
                             </span>
                           )}
                         </div>
-                        {row.grade && (
-                          <p className="text-xs text-gray-400 truncate">{row.grade}</p>
-                        )}
+                        {row.grade && <p className="text-xs text-gray-400 truncate">{row.grade}</p>}
                       </div>
                     </div>
 
-                    {/* Checkbox */}
                     <div className="flex items-center justify-center">
                       {isSaving ? (
                         <Loader2 className="w-4 h-4 animate-spin text-[#d97706]" />
                       ) : (
                         <button
                           onClick={() => handleToggle(row.student_id, dayDetail.date, row)}
-                          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                          className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors border-2 ${
                             isChecked
                               ? "bg-[#d97706] border-[#d97706]"
-                              : "bg-white border-gray-300 hover:border-[#d97706]"
+                              : "bg-transparent border-gray-300 hover:border-[#d97706]"
                           }`}
                           aria-label={isChecked ? "Remove from attendance" : "Mark present"}
                         >
                           {isChecked && (
-                            <svg
-                              className="w-3 h-3 text-white"
-                              fill="none"
-                              viewBox="0 0 12 12"
-                              stroke="currentColor"
-                              strokeWidth={2.5}
-                            >
+                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth={2.5}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M2 6l3 3 5-5" />
                             </svg>
                           )}
@@ -467,7 +437,6 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
                       )}
                     </div>
 
-                    {/* Status */}
                     <div className="flex items-center justify-center">
                       {isSaving ? (
                         <span className="text-xs text-gray-400">Saving…</span>
@@ -480,7 +449,6 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
                       )}
                     </div>
 
-                    {/* Paid */}
                     <div className="flex items-center justify-center">
                       {row.hasEnrollment ? (
                         <span className="text-xs font-medium text-[#d97706] bg-[#d97706]/10 px-2.5 py-1 rounded-full">

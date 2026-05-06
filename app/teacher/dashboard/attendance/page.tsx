@@ -40,7 +40,7 @@ export default async function AttendancePage() {
   const initialStudents = await getAftercareStudentsForDate(initialDate)
 
   return (
-    <div className="bg-welcome-bg min-h-screen flex flex-col">
+    <div className="bg-white min-h-screen flex flex-col">
       <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-[auto_1fr_auto] items-center">
         <div className="flex items-center">
           <Link href="/">

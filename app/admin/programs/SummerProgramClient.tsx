@@ -670,9 +670,51 @@ export function SummerProgramClient({
                 {activeTeacherId === 'no_teacher' ? (
                   <div>
                     {filteredNoTeacherStudents.length > 0 ? (
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                      <div className="divide-y" style={{ borderColor: colors.border, borderTop: `1px solid ${colors.border}` }}>
                         {filteredNoTeacherStudents.map((student) => (
-                          <StudentCard key={student.id} student={student} onClick={handleStudentClick} />
+                          <div
+                            key={student.id}
+                            className="flex items-center gap-3 px-4 py-2.5 cursor-pointer"
+                            style={{ borderColor: colors.border }}
+                            onClick={() => handleStudentClick(student)}
+                          >
+                            {student.profile_image_url ? (
+                              <img
+                                src={student.profile_image_url}
+                                alt={student.child_legal_name ?? 'Student'}
+                                className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                                style={{ border: `1px solid ${colors.border}` }}
+                              />
+                            ) : (
+                              <div
+                                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0"
+                                style={{ backgroundColor: avatarColor(student.id) }}
+                              >
+                                {getInitials(student.child_legal_name)}
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate" style={{ color: colors.textPrimary }}>
+                                {student.child_legal_name ?? '—'}
+                              </p>
+                              {student.child_grade && (
+                                <p className="text-xs" style={{ color: colors.textSecondary }}>Grade {student.child_grade}</p>
+                              )}
+                            </div>
+                            {student.admin_tags.length > 0 && (
+                              <div className="flex flex-wrap gap-1 justify-end flex-shrink-0">
+                                {student.admin_tags.map((tag) => (
+                                  <span
+                                    key={tag}
+                                    className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded-full"
+                                    style={{ backgroundColor: colors.accentLight, color: colors.accent, border: `1px solid ${colors.accentLight}` }}
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         ))}
                       </div>
                     ) : (
@@ -684,9 +726,51 @@ export function SummerProgramClient({
                 ) : activeGroup && (
                   <div>
                     {visibleActiveStudents.length > 0 ? (
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                      <div className="divide-y" style={{ borderColor: colors.border, borderTop: `1px solid ${colors.border}` }}>
                         {visibleActiveStudents.map((student) => (
-                          <StudentCard key={student.id} student={student} onClick={handleStudentClick} />
+                          <div
+                            key={student.id}
+                            className="flex items-center gap-3 px-4 py-2.5 cursor-pointer"
+                            style={{ borderColor: colors.border }}
+                            onClick={() => handleStudentClick(student)}
+                          >
+                            {student.profile_image_url ? (
+                              <img
+                                src={student.profile_image_url}
+                                alt={student.child_legal_name ?? 'Student'}
+                                className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                                style={{ border: `1px solid ${colors.border}` }}
+                              />
+                            ) : (
+                              <div
+                                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0"
+                                style={{ backgroundColor: avatarColor(student.id) }}
+                              >
+                                {getInitials(student.child_legal_name)}
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate" style={{ color: colors.textPrimary }}>
+                                {student.child_legal_name ?? '—'}
+                              </p>
+                              {student.child_grade && (
+                                <p className="text-xs" style={{ color: colors.textSecondary }}>Grade {student.child_grade}</p>
+                              )}
+                            </div>
+                            {student.admin_tags.length > 0 && (
+                              <div className="flex flex-wrap gap-1 justify-end flex-shrink-0">
+                                {student.admin_tags.map((tag) => (
+                                  <span
+                                    key={tag}
+                                    className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded-full"
+                                    style={{ backgroundColor: colors.accentLight, color: colors.accent, border: `1px solid ${colors.accentLight}` }}
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         ))}
                       </div>
                     ) : (
@@ -1129,50 +1213,39 @@ export function SummerProgramClient({
                   No drop-off submissions found.
                 </div>
               ) : (
-                <Table headers={['Parent', 'Slot', 'Kids', 'Updated']}>
-                  {filtered.map((row, i) => (
-                    <TableRow key={row.parent_id} index={i} onClick={() => setSelectedDropoff(row)}>
-                      <TableCell>
-                        <div className="font-medium" style={{ color: colors.textPrimary }}>
+                <div className="divide-y" style={{ borderColor: colors.border, borderTop: `1px solid ${colors.border}` }}>
+                  {filtered.map((row) => (
+                    <div
+                      key={row.parent_id}
+                      className="flex items-center gap-3 px-4 py-3 cursor-pointer"
+                      style={{ borderColor: colors.border }}
+                      onClick={() => setSelectedDropoff(row)}
+                    >
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0"
+                        style={{ backgroundColor: avatarColor(row.parent_id) }}
+                      >
+                        {getInitials(row.parent_name)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate" style={{ color: colors.textPrimary }}>
                           {row.parent_name ?? '—'}
-                        </div>
-                        <div className="text-xs mt-0.5" style={{ color: colors.textTertiary }}>
+                        </p>
+                        <p className="text-xs truncate" style={{ color: colors.textTertiary }}>
                           {row.parent_email ?? '—'}
-                        </div>
-                      </TableCell>
-                      <TableCell>
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
                         <SlotBadge slot={row.slot} />
-                      </TableCell>
-                      <TableCell>
-                        {row.kids.length === 0 ? (
-                          <span style={{ color: colors.textTertiary }}>—</span>
-                        ) : (
-                          <div className="space-y-0.5">
-                            {row.kids.map((k) => {
-                              const age = kidAge(k.dob_year)
-                              return (
-                                <div key={k.id} style={{ color: colors.textSecondary }}>
-                                  {k.name ?? 'Unknown'}
-                                  {k.grade && (
-                                    <span className="ml-1.5 text-xs" style={{ color: colors.textTertiary }}>
-                                      Grade {k.grade}
-                                    </span>
-                                  )}
-                                  {age !== null && (
-                                    <span className="ml-1 text-xs" style={{ color: colors.textTertiary }}>
-                                      · {age}y
-                                    </span>
-                                  )}
-                                </div>
-                              )
-                            })}
-                          </div>
+                        {row.kids.length > 0 && (
+                          <p className="text-xs" style={{ color: colors.textTertiary }}>
+                            {row.kids.map((k) => k.name ?? 'Unknown').join(', ')}
+                          </p>
                         )}
-                      </TableCell>
-                      <TableCell>{formatUpdated(row.updated_at)}</TableCell>
-                    </TableRow>
+                      </div>
+                    </div>
                   ))}
-                </Table>
+                </div>
               )
             })()}
 
