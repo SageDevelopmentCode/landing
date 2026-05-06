@@ -1356,7 +1356,7 @@ export default function TourPage() {
             <div className="absolute bottom-5 left-5 bg-white/95 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-lg flex items-center gap-3">
               <div className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
                 <Image
-                  src="/assets/team/sabrina.png"
+                  src="/assets/team/sabrina.jpg"
                   alt="Ms. Sabrina"
                   fill
                   className="object-cover"

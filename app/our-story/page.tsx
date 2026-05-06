@@ -11,7 +11,7 @@ const FOUNDERS = [
   {
     name: "Sabrina Grace Obnamia",
     role: "Lead Teacher & Director",
-    image: "/assets/team/sabrina.png",
+    image: "/assets/team/sabrina.jpg",
     description:
       "Ms. Sabrina brings a wealth of experience to SageField. She holds a Bachelor's degree in Elementary Education with a concentration in Early Childhood Development from Biola University and a Teaching Credential. Her background includes working with children in a wide range of roles both in the U.S. and internationally—spanning special education, preschool, homeschooling, tutoring, coaching, traditional schooling, nature school guide, and more. She values movement, outdoor learning, and most importantly, the joy of slowing down to be present, intentional, and thankful.",
   },
