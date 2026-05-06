@@ -122,7 +122,7 @@ export default function DashboardNav({
         {moreOpen && (
           <div className="absolute left-1/2 -translate-x-1/2 mt-1.5 w-52 bg-white border border-gray-100 rounded-xl shadow-sm z-50 py-1.5">
             {moreItems.map(({ label, icon: Icon, href, action }) => {
-              if (action === "manage-access" && isSharedAccess) return null;
+              if (action === "manage-access") return null;
               const resolvedHref = href ? navHref(href) : undefined;
               const isActive = !!resolvedHref && pathname === resolvedHref;
               const baseClass = `flex items-center gap-1.5 w-full text-left px-4 py-2 text-sm font-body transition-colors cursor-pointer ${
