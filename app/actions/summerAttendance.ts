@@ -27,6 +27,7 @@ export type SummerStudentRow = {
   profile_image_url: string | null
   record: SummerRecord | null
   hasEnrollment: boolean
+  isHomeschool: boolean
 }
 
 export type SummerDayData = {
@@ -123,7 +124,7 @@ export async function getSummerStudentsForDay(date: string): Promise<SummerStude
     adminClient
       .schema('parent_app')
       .from('applications')
-      .select('student_id')
+      .select('student_id, program')
       .eq('status', 'enrolled')
       .in('program', ['summer_26', 'both', 'homeschool_drop_in']),
     adminClient
@@ -144,7 +145,13 @@ export async function getSummerStudentsForDay(date: string): Promise<SummerStude
 
   // Only show students who have an enrolled summer application
   const enrolledIds = new Set(
-    (enrolledApps ?? []).map((a: { student_id: string }) => a.student_id).filter(Boolean)
+    (enrolledApps ?? []).map((a: { student_id: string; program: string }) => a.student_id).filter(Boolean)
+  )
+  const homeschoolIds = new Set(
+    (enrolledApps ?? [])
+      .filter((a: { student_id: string; program: string }) => a.program === 'homeschool_drop_in')
+      .map((a: { student_id: string; program: string }) => a.student_id)
+      .filter(Boolean)
   )
   const enrolledStudents = (students ?? []).filter((s: { id: string }) => enrolledIds.has(s.id))
 
@@ -189,6 +196,7 @@ export async function getSummerStudentsForDay(date: string): Promise<SummerStude
     profile_image_url: s.profile_image_url ?? null,
     record: recordMap.get(s.id) ?? null,
     hasEnrollment: paidIds.has(s.id),
+    isHomeschool: homeschoolIds.has(s.id),
   }))
 }
 

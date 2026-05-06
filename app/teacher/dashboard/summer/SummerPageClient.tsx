@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Search, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, Loader2, Home } from "lucide-react";
 import {
   getSummerStudentsForWeek,
   upsertSummerAttendanceRecord,
@@ -312,9 +312,16 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
                             )}
 
                             {/* Name */}
-                            <p className="text-xs font-medium text-gray-700 truncate flex-1 min-w-0">
-                              {row.name ?? "—"}
-                            </p>
+                            <div className="flex items-center gap-1 flex-1 min-w-0">
+                              <p className="text-xs font-medium text-gray-700 truncate min-w-0">
+                                {row.name ?? "—"}
+                              </p>
+                              {row.isHomeschool && (
+                                <span title="Homeschool drop-in" className="flex-shrink-0">
+                                  <Home className="w-3 h-3 text-[#4a7c59]" />
+                                </span>
+                              )}
+                            </div>
 
                             {/* Paid badge */}
                             {row.hasEnrollment ? (
@@ -417,7 +424,14 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
                         </div>
                       )}
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-800 truncate">{row.name ?? "—"}</p>
+                        <div className="flex items-center gap-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-800 truncate">{row.name ?? "—"}</p>
+                          {row.isHomeschool && (
+                            <span title="Homeschool drop-in" className="flex-shrink-0">
+                              <Home className="w-3.5 h-3.5 text-[#4a7c59]" />
+                            </span>
+                          )}
+                        </div>
                         {row.grade && (
                           <p className="text-xs text-gray-400 truncate">{row.grade}</p>
                         )}

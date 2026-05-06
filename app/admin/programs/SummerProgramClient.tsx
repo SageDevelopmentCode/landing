@@ -6,7 +6,7 @@ import { useState } from 'react'
 import { Poppins } from 'next/font/google'
 import {
   ChevronLeft, ChevronRight, Search, Loader2,
-  Users, CalendarDays, TrendingUp, CreditCard,
+  Users, CalendarDays, TrendingUp, CreditCard, Home,
 } from 'lucide-react'
 import {
   getSummerStudentsForWeek,
@@ -704,127 +704,87 @@ export function SummerProgramClient({
         {/* ── Attendance Tab ─────────────────────────────────────────────── */}
         {activeTab === 'attendance' && (
           <div className="flex flex-col min-h-0">
-            {/* Stats strip */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-              <StatCard
-                icon={<Users className="w-4 h-4" />}
-                label="Total Enrolled"
-                value={stats.totalEnrolled}
-              />
-              <StatCard
-                icon={<CalendarDays className="w-4 h-4" />}
-                label="Days Held"
-                value={stats.totalDaysHeld}
-                sub={`${stats.avgPerDay} avg/day`}
-              />
-              <StatCard
-                icon={<TrendingUp className="w-4 h-4" />}
-                label="Total Attendances"
-                value={stats.totalAttendances}
-                sub={stats.presentToday > 0 ? `${stats.presentToday} present today` : 'across all days'}
-              />
-              <StatCard
-                icon={<CreditCard className="w-4 h-4" />}
-                label="Paid Rate"
-                value={`${stats.paidRate}%`}
-                sub={`${stats.paidAttendances} paid · ${stats.unpaidAttendances} unpaid`}
-              />
-            </div>
+            {/* Page header + nav bar */}
+            <div className="flex items-start justify-between gap-4 mb-6">
+              <div>
+                <h2 className="text-2xl font-bold" style={{ color: colors.textPrimary }}>Attendance</h2>
+                <p className="text-sm mt-0.5" style={{ color: colors.textSecondary }}>
+                  {viewMode === 'week'
+                    ? `Week ${weekNum} of ${TOTAL_WEEKS} · ${totalExpectedThisWeek} student${totalExpectedThisWeek !== 1 ? 's' : ''}`
+                    : `${dayDetailExpected} expected · ${dayDetailPresent} present`}
+                </p>
+              </div>
 
-            {/* Week navigation bar */}
-            <div className="flex items-center gap-3 mb-6">
-              <button
-                onClick={() => handleWeekChange(weekNum - 1)}
-                disabled={loadingWeek || weekNum <= 1}
-                className="p-2 rounded-lg border transition-colors disabled:opacity-40"
-                style={{
-                  border: `1px solid ${colors.border}`,
-                  backgroundColor: colors.elevated,
-                }}
-              >
-                <ChevronLeft className="w-4 h-4" style={{ color: colors.textSecondary }} />
-              </button>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {viewMode === 'day' && selectedDate && (
+                  <button
+                    onClick={() => { setViewMode('week'); setSelectedDate(null) }}
+                    className="text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
+                    style={{
+                      color: colors.mistyForest,
+                      border: `1px solid ${colors.accentLight}`,
+                      backgroundColor: colors.accentLight,
+                    }}
+                  >
+                    ← Week overview
+                  </button>
+                )}
 
-              <span
-                className="text-sm font-semibold min-w-[200px] text-center"
-                style={{ color: colors.textPrimary }}
-              >
-                Week {weekNum} — {formatWeekRange(weekNum)}
-              </span>
+                <div className="relative">
+                  <Search
+                    className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none"
+                    style={{ color: colors.textTertiary }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Search students…"
+                    value={attendanceSearch}
+                    onChange={(e) => setAttendanceSearch(e.target.value)}
+                    className="pl-8 pr-3 py-2 text-sm rounded-lg w-48 transition-colors outline-none"
+                    style={{
+                      border: `1px solid ${colors.border}`,
+                      backgroundColor: colors.elevated,
+                      color: colors.textPrimary,
+                    }}
+                  />
+                </div>
 
-              <button
-                onClick={() => handleWeekChange(weekNum + 1)}
-                disabled={loadingWeek || weekNum >= TOTAL_WEEKS}
-                className="p-2 rounded-lg border transition-colors disabled:opacity-40"
-                style={{
-                  border: `1px solid ${colors.border}`,
-                  backgroundColor: colors.elevated,
-                }}
-              >
-                <ChevronRight className="w-4 h-4" style={{ color: colors.textSecondary }} />
-              </button>
-
-              {viewMode === 'day' && selectedDate && (
-                <button
-                  onClick={() => { setViewMode('week'); setSelectedDate(null) }}
-                  className="text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
-                  style={{
-                    color: colors.mistyForest,
-                    border: `1px solid ${colors.accentLight}`,
-                    backgroundColor: colors.accentLight,
-                  }}
-                >
-                  ← Week overview
-                </button>
-              )}
-
-              <div className="relative ml-auto">
-                <Search
-                  className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none"
-                  style={{ color: colors.textTertiary }}
-                />
-                <input
-                  type="text"
-                  placeholder="Search students…"
-                  value={attendanceSearch}
-                  onChange={(e) => setAttendanceSearch(e.target.value)}
-                  className="pl-8 pr-3 py-2 text-sm rounded-lg w-56 transition-colors outline-none"
-                  style={{
-                    border: `1px solid ${colors.border}`,
-                    backgroundColor: colors.elevated,
-                    color: colors.textPrimary,
-                  }}
-                />
+                <div className="flex items-center gap-1 rounded-lg px-1 py-1" style={{ border: `1px solid ${colors.border}`, backgroundColor: colors.elevated }}>
+                  <button
+                    onClick={() => handleWeekChange(weekNum - 1)}
+                    disabled={loadingWeek || weekNum <= 1}
+                    className="p-1 rounded transition-colors disabled:opacity-40"
+                  >
+                    <ChevronLeft className="w-4 h-4" style={{ color: colors.textSecondary }} />
+                  </button>
+                  <span
+                    className="text-xs font-semibold px-2 min-w-[140px] text-center"
+                    style={{ color: colors.textPrimary }}
+                  >
+                    Week {weekNum} — {formatWeekRange(weekNum)}
+                  </span>
+                  <button
+                    onClick={() => handleWeekChange(weekNum + 1)}
+                    disabled={loadingWeek || weekNum >= TOTAL_WEEKS}
+                    className="p-1 rounded transition-colors disabled:opacity-40"
+                  >
+                    <ChevronRight className="w-4 h-4" style={{ color: colors.textSecondary }} />
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* Sub-header */}
-            <p className="text-sm mb-4" style={{ color: colors.textSecondary }}>
-              {viewMode === 'week'
-                ? `Week ${weekNum} of ${TOTAL_WEEKS}  •  ${totalExpectedThisWeek} unique student${totalExpectedThisWeek !== 1 ? 's' : ''} expected this week`
-                : `${dayDetailExpected} expected  •  ${dayDetailPresent} marked present`}
-            </p>
-
-            {/* Week view: 5-column grid */}
+            {/* Week view: flat 5-column grid */}
             {viewMode === 'week' && (
-              <div className="grid grid-cols-5 gap-3">
+              <div className="grid grid-cols-5 divide-x" style={{ borderTop: `1px solid ${colors.border}`, borderBottom: loadingWeek ? `1px solid ${colors.border}` : undefined, borderColor: colors.border }}>
                 {loadingWeek
                   ? DAY_LABELS.map((label) => (
-                      <div
-                        key={label}
-                        className="rounded-2xl overflow-hidden"
-                        style={{ border: `1px solid ${colors.border}`, backgroundColor: colors.elevated }}
-                      >
-                        <div
-                          className="px-3 py-3 border-b animate-pulse"
-                          style={{ borderColor: colors.border, backgroundColor: colors.surface }}
-                        >
-                          <div className="h-4 rounded w-20 mb-1" style={{ backgroundColor: colors.border }} />
-                          <div className="h-3 rounded w-16" style={{ backgroundColor: colors.border }} />
-                        </div>
-                        <div className="p-3 space-y-2">
-                          {[1, 2, 3].map((i) => (
-                            <div key={i} className="h-10 rounded-lg animate-pulse" style={{ backgroundColor: colors.border }} />
+                      <div key={label} className="px-4 py-4">
+                        <div className="h-5 rounded w-12 mb-1 animate-pulse" style={{ backgroundColor: colors.border }} />
+                        <div className="h-3 rounded w-16 mb-3 animate-pulse" style={{ backgroundColor: colors.border }} />
+                        <div className="space-y-3">
+                          {[1, 2, 3, 4].map((i) => (
+                            <div key={i} className="h-9 rounded-lg animate-pulse" style={{ backgroundColor: colors.border }} />
                           ))}
                         </div>
                       </div>
@@ -844,48 +804,38 @@ export function SummerProgramClient({
                       const isToday = day.date === todayStr
 
                       return (
-                        <div
-                          key={day.date}
-                          className="rounded-2xl overflow-hidden flex flex-col"
-                          style={{
-                            border: `1px solid ${colors.border}`,
-                            backgroundColor: colors.elevated,
-                          }}
-                        >
+                        <div key={day.date} className="flex flex-col">
                           {/* Day column header */}
-                          <button
-                            onClick={() => handleDrillDown(day.date)}
-                            className="px-3 py-3 border-b text-left w-full transition-colors"
-                            style={{ borderColor: colors.border, backgroundColor: colors.surface }}
-                          >
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
+                          <div className="px-4 pt-4 pb-3" style={{ borderBottom: `1px solid ${colors.border}` }}>
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <span className="text-sm font-bold" style={{ color: colors.textPrimary }}>
                                 {DAY_LABELS[colIdx]}
                               </span>
                               {isToday && (
                                 <span
-                                  className="text-xs font-medium px-1.5 py-0.5 rounded-full leading-tight"
+                                  className="text-[10px] font-medium px-1.5 py-0.5 rounded-full leading-tight"
                                   style={{ color: colors.mistyForest, backgroundColor: colors.accentLight }}
                                 >
                                   Today
                                 </span>
                               )}
                             </div>
-                            <p className="text-xs mt-0.5" style={{ color: colors.textTertiary }}>
+                            <p className="text-xs" style={{ color: colors.textSecondary }}>
                               {formatShortDate(day.date)}
                             </p>
-                            <p className="text-xs mt-1" style={{ color: colors.textSecondary }}>
-                              {expectedCount} expected · {presentCount} present
+                            <p className="text-xs mt-1.5" style={{ color: colors.textTertiary }}>
+                              <span style={{ color: colors.textSecondary }}>{expectedCount} expected</span>
+                              {' · '}
+                              <span style={{ color: presentCount > 0 ? colors.mistyForest : colors.textTertiary, fontWeight: presentCount > 0 ? 600 : 400 }}>
+                                {presentCount} present
+                              </span>
                             </p>
-                          </button>
+                          </div>
 
                           {/* Student list */}
-                          <div className="flex-1 min-h-0 divide-y overflow-y-auto" style={{ maxHeight: 320, borderColor: colors.border }}>
+                          <div className="divide-y" style={{ borderColor: colors.border }}>
                             {filtered.length === 0 && (
-                              <p
-                                className="text-xs text-center py-4 px-2"
-                                style={{ color: colors.textTertiary }}
-                              >
+                              <p className="text-xs text-center py-6 px-3" style={{ color: colors.textTertiary }}>
                                 {attendanceSearch.trim() ? 'No match' : 'No students'}
                               </p>
                             )}
@@ -895,57 +845,50 @@ export function SummerProgramClient({
                               return (
                                 <div
                                   key={row.student_id}
-                                  className="flex items-center gap-2 px-2.5 py-2 transition-colors"
+                                  className="flex items-center gap-2.5 px-4 py-2.5"
                                   style={{ borderColor: colors.border }}
                                 >
                                   {row.profile_image_url ? (
                                     <img
                                       src={row.profile_image_url}
                                       alt={row.name ?? ''}
-                                      className="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                                      className="w-8 h-8 rounded-full object-cover flex-shrink-0"
                                     />
                                   ) : (
                                     <div
-                                      className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0"
+                                      className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0"
                                       style={{ backgroundColor: avatarColor(row.student_id) }}
                                     >
                                       {getInitials(row.name)}
                                     </div>
                                   )}
-                                  <p
-                                    className="text-xs font-medium truncate flex-1 min-w-0"
-                                    style={{ color: colors.textPrimary }}
-                                  >
-                                    {row.name ?? '—'}
-                                  </p>
-                                  {row.hasEnrollment ? (
-                                    <span
-                                      className="text-[10px] font-medium px-1.5 py-0.5 rounded-full whitespace-nowrap flex-shrink-0"
-                                      style={{ color: colors.mistyForest, backgroundColor: colors.accentLight }}
-                                    >
-                                      Paid
-                                    </span>
-                                  ) : (
-                                    <span
-                                      className="text-[10px] font-medium px-1.5 py-0.5 rounded-full whitespace-nowrap flex-shrink-0"
-                                      style={{ color: colors.textTertiary, backgroundColor: colors.border }}
-                                    >
-                                      Unpaid
-                                    </span>
-                                  )}
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1 min-w-0">
+                                      <p className="text-xs font-medium truncate min-w-0" style={{ color: colors.textPrimary }}>
+                                        {row.name ?? '—'}
+                                      </p>
+                                      {row.isHomeschool && (
+                                        <span title="Homeschool drop-in" className="flex-shrink-0">
+                                          <Home className="w-3 h-3" style={{ color: colors.mistyForest }} />
+                                        </span>
+                                      )}
+                                    </div>
+                                    {row.hasEnrollment ? (
+                                      <span className="text-[10px]" style={{ color: colors.mistyForest }}>Paid</span>
+                                    ) : (
+                                      <span className="text-[10px]" style={{ color: colors.textTertiary }}>Unpaid</span>
+                                    )}
+                                  </div>
                                   <div className="flex-shrink-0">
                                     {isSaving ? (
-                                      <Loader2
-                                        className="w-3.5 h-3.5 animate-spin"
-                                        style={{ color: colors.mistyForest }}
-                                      />
+                                      <Loader2 className="w-5 h-5 animate-spin" style={{ color: colors.mistyForest }} />
                                     ) : (
                                       <button
                                         onClick={() => handleToggle(row.student_id, day.date, row)}
-                                        className="w-4 h-4 rounded border-2 flex items-center justify-center transition-colors"
+                                        className="w-5 h-5 rounded-full flex items-center justify-center transition-colors"
                                         style={{
                                           backgroundColor: isChecked ? colors.mistyForest : 'transparent',
-                                          borderColor: isChecked ? colors.mistyForest : colors.borderStrong,
+                                          border: `2px solid ${isChecked ? colors.mistyForest : colors.borderStrong}`,
                                         }}
                                         aria-label={isChecked ? 'Remove attendance' : 'Mark present'}
                                       >
@@ -962,14 +905,11 @@ export function SummerProgramClient({
                             })}
                           </div>
 
-                          {/* View all link */}
+                          {/* Drill-down link */}
                           <button
                             onClick={() => handleDrillDown(day.date)}
-                            className="px-3 py-2 text-xs border-t text-center transition-colors"
-                            style={{
-                              color: colors.mistyForest,
-                              borderColor: colors.border,
-                            }}
+                            className="px-4 py-2 text-xs mt-auto transition-colors text-left"
+                            style={{ color: colors.textTertiary, borderTop: `1px solid ${colors.border}` }}
                           >
                             View full day →
                           </button>
@@ -1035,9 +975,16 @@ export function SummerProgramClient({
                               </div>
                             )}
                             <div className="min-w-0">
-                              <p className="text-sm font-medium truncate" style={{ color: colors.textPrimary }}>
-                                {row.name ?? '—'}
-                              </p>
+                              <div className="flex items-center gap-1 min-w-0">
+                                <p className="text-sm font-medium truncate" style={{ color: colors.textPrimary }}>
+                                  {row.name ?? '—'}
+                                </p>
+                                {row.isHomeschool && (
+                                  <span title="Homeschool drop-in" className="flex-shrink-0">
+                                    <Home className="w-3.5 h-3.5" style={{ color: colors.mistyForest }} />
+                                  </span>
+                                )}
+                              </div>
                               {row.grade && (
                                 <p className="text-xs truncate" style={{ color: colors.textSecondary }}>
                                   {row.grade}
