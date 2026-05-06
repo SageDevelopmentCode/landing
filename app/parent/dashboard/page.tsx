@@ -10,6 +10,7 @@ import Footer from "@/app/components/Footer";
 import ChildTabs from "./ChildTabs";
 import DashboardNav from "./DashboardNav";
 import OnboardingChecklistButton from "@/app/parent/components/OnboardingChecklistButton";
+import SharedAccessBanner from "./SharedAccessBanner";
 import type { StudentSignatureMap } from "@/app/types/enrollment-signatures";
 import type { Database } from "@/app/types/database.types";
 import { getAllStudentAssignments } from "@/app/actions/teacherAssignments";
@@ -37,19 +38,43 @@ export default async function ParentDashboard() {
   }
 
   const adminClient = createAdminClient();
+
+  // Check if this user was granted access to someone else's dashboard
+  const { data: grant } = await adminClient
+    .schema("parent_app")
+    .from("dashboard_access_grants")
+    .select("owner_id")
+    .eq("grantee_id", user.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  const effectiveParentId = grant?.owner_id ?? user.id;
+  const isSharedAccess = !!grant;
+
+  let primaryOwnerName: string | null = null;
+  if (isSharedAccess) {
+    const { data: ownerUser } = await adminClient
+      .schema("admin")
+      .from("users")
+      .select("full_name")
+      .eq("id", effectiveParentId)
+      .single();
+    primaryOwnerName = ownerUser?.full_name ?? null;
+  }
+
   const [{ data: apps }, { data: pendingAppsData }, { data: adminUser }] =
     await Promise.all([
       adminClient
         .schema("parent_app")
         .from("applications")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", effectiveParentId)
         .eq("approved", true),
       adminClient
         .schema("parent_app")
         .from("applications")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", effectiveParentId)
         .eq("approved", false)
         .eq("denied", false),
       adminClient
@@ -120,49 +145,49 @@ export default async function ParentDashboard() {
         .schema("parent_app")
         .from("enrollment_signatures")
         .select("*")
-        .eq("parent_id", user.id)
+        .eq("parent_id", effectiveParentId)
         .in("student_id", studentIds),
       adminClient
         .schema("parent_app")
         .from("student_health_info")
         .select("*")
-        .eq("parent_id", user.id)
+        .eq("parent_id", effectiveParentId)
         .in("student_id", studentIds),
       adminClient
         .schema("parent_app")
         .from("student_medication_plan")
         .select("*")
-        .eq("parent_id", user.id)
+        .eq("parent_id", effectiveParentId)
         .in("student_id", studentIds),
       adminClient
         .schema("parent_app")
         .from("student_medications")
         .select("*")
-        .eq("parent_id", user.id)
+        .eq("parent_id", effectiveParentId)
         .in("student_id", studentIds),
       adminClient
         .schema("parent_app")
         .from("student_photo_release_consent")
         .select("*")
-        .eq("parent_id", user.id)
+        .eq("parent_id", effectiveParentId)
         .in("student_id", studentIds),
       adminClient
         .schema("parent_app")
         .from("student_authorized_pickup_plan")
         .select("*")
-        .eq("parent_id", user.id)
+        .eq("parent_id", effectiveParentId)
         .in("student_id", studentIds),
       adminClient
         .schema("parent_app")
         .from("student_authorized_pickup_persons")
         .select("*")
-        .eq("parent_id", user.id)
+        .eq("parent_id", effectiveParentId)
         .in("student_id", studentIds),
       adminClient
         .schema("parent_app")
         .from("student_health_statement")
         .select("*")
-        .eq("parent_id", user.id)
+        .eq("parent_id", effectiveParentId)
         .in("student_id", studentIds),
       adminClient
         .schema("admin")
@@ -181,7 +206,7 @@ export default async function ParentDashboard() {
         studentIds.map(async (sid) => {
           const { data } = await adminClient.storage
             .from("immunization-records")
-            .list(`${user.id}/${sid}`);
+            .list(`${effectiveParentId}/${sid}`);
           const count = (data ?? []).filter(
             (f) => f.name !== ".emptyFolderPlaceholder",
           ).length;
@@ -192,7 +217,7 @@ export default async function ParentDashboard() {
         studentIds.map(async (sid) => {
           const { data } = await adminClient.storage
             .from("religious-exemption-affidavits")
-            .list(`${user.id}/${sid}`);
+            .list(`${effectiveParentId}/${sid}`);
           const count = (data ?? []).filter(
             (f) => f.name !== ".emptyFolderPlaceholder",
           ).length;
@@ -273,7 +298,10 @@ export default async function ParentDashboard() {
             </Link>
           </div>
           <div className="flex items-center justify-center">
-            <DashboardNav hasEnrolledStudent={approvedApps.some((a) => a.status === "enrolled")} />
+            <DashboardNav
+              hasEnrolledStudent={approvedApps.some((a) => a.status === "enrolled")}
+              isSharedAccess={isSharedAccess}
+            />
           </div>
           <div className="flex items-center justify-end gap-1">
             <OnboardingChecklistButton />
@@ -288,6 +316,8 @@ export default async function ParentDashboard() {
           </div>
         </header>
 
+        <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={primaryOwnerName} />
+
         <main className="flex-1 flex overflow-hidden">
           <ChildTabs
             apps={approvedApps}
@@ -295,8 +325,8 @@ export default async function ParentDashboard() {
             signaturesByStudent={signaturesByStudent}
             healthInfoByStudent={healthInfoByStudent}
             medicationPlanByStudent={medicationPlanByStudent}
-            parentName={fullName ?? ""}
-            parentId={user.id}
+            parentName={primaryOwnerName ?? fullName ?? ""}
+            parentId={effectiveParentId}
             parentEmail={user.email ?? ""}
             immunizationFileCountByStudent={immunizationFileCountByStudent}
             consentByStudent={consentByStudent}

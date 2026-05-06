@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 import HelpWidget from "../components/HelpWidget";
+import ManageAccessModal from "./ManageAccessModal";
 
 const primaryNavItems: { label: string; icon: LucideIcon; href: string }[] = [
   { label: "Home", icon: Home, href: "/parent/home" },
@@ -44,17 +45,21 @@ const moreItems: {
     href: "/parent/emergency-contacts",
   },
   { label: "Need Help", icon: HelpCircle, action: "help" },
+  { label: "Manage Access", icon: Users, action: "manage-access" },
 ];
 
 export default function DashboardNav({
   parentId,
   hasEnrolledStudent = true,
+  isSharedAccess = false,
 }: {
   parentId?: string;
   hasEnrolledStudent?: boolean;
+  isSharedAccess?: boolean;
 } = {}) {
   const [moreOpen, setMoreOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [manageAccessOpen, setManageAccessOpen] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
@@ -117,6 +122,7 @@ export default function DashboardNav({
         {moreOpen && (
           <div className="absolute left-1/2 -translate-x-1/2 mt-1.5 w-52 bg-white border border-gray-100 rounded-xl shadow-sm z-50 py-1.5">
             {moreItems.map(({ label, icon: Icon, href, action }) => {
+              if (action === "manage-access" && isSharedAccess) return null;
               const resolvedHref = href ? navHref(href) : undefined;
               const isActive = !!resolvedHref && pathname === resolvedHref;
               const baseClass = `flex items-center gap-1.5 w-full text-left px-4 py-2 text-sm font-body transition-colors cursor-pointer ${
@@ -131,6 +137,21 @@ export default function DashboardNav({
                     onClick={() => {
                       setMoreOpen(false);
                       setHelpOpen(true);
+                    }}
+                    className={baseClass}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {label}
+                  </button>
+                );
+              }
+              if (action === "manage-access") {
+                return (
+                  <button
+                    key={label}
+                    onClick={() => {
+                      setMoreOpen(false);
+                      setManageAccessOpen(true);
                     }}
                     className={baseClass}
                   >
@@ -167,6 +188,10 @@ export default function DashboardNav({
         hideFloatingButton
         open={helpOpen}
         onOpenChange={setHelpOpen}
+      />
+      <ManageAccessModal
+        isOpen={manageAccessOpen}
+        onClose={() => setManageAccessOpen(false)}
       />
     </nav>
   );

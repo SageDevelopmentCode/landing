@@ -19,19 +19,33 @@ export async function GET(request: NextRequest) {
 
     if (session?.user) {
       const adminClient = createAdminClient()
-      const { data: adminUser } = await adminClient
-        .schema('admin')
-        .from('users')
-        .select('role')
-        .eq('id', session.user.id)
-        .single()
-
-      if (adminUser?.role === 'parent') {
-        return NextResponse.redirect(`${origin}/apply/dashboard`)
-      }
+      const [{ data: adminUser }, { data: grantRows }] = await Promise.all([
+        adminClient
+          .schema('admin')
+          .from('users')
+          .select('role')
+          .eq('id', session.user.id)
+          .single(),
+        adminClient
+          .schema('parent_app')
+          .from('dashboard_access_grants')
+          .select('id')
+          .eq('grantee_id', session.user.id)
+          .eq('status', 'active')
+          .limit(1),
+      ])
 
       if (adminUser?.role === 'teacher') {
         return NextResponse.redirect(`${origin}/teacher/dashboard`)
+      }
+
+      if (adminUser?.role === 'parent' || adminUser?.role === 'super_admin') {
+        if ((grantRows ?? []).length > 0) {
+          return NextResponse.redirect(`${origin}/parent/dashboard`)
+        }
+        if (adminUser?.role === 'parent') {
+          return NextResponse.redirect(`${origin}/apply/dashboard`)
+        }
       }
     }
   }

@@ -13,21 +13,29 @@ export default async function LoginPage() {
 
   if (user) {
     const adminClient = createAdminClient();
-    const [{ data: adminUser }, { data: enrolledApp }] = await Promise.all([
-      adminClient
-        .schema("admin")
-        .from("users")
-        .select("role")
-        .eq("id", user.id)
-        .single(),
-      adminClient
-        .schema("parent_app")
-        .from("applications")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("status", "enrolled")
-        .limit(1),
-    ]);
+    const [{ data: adminUser }, { data: enrolledApp }, { data: grantRows }] =
+      await Promise.all([
+        adminClient
+          .schema("admin")
+          .from("users")
+          .select("role")
+          .eq("id", user.id)
+          .single(),
+        adminClient
+          .schema("parent_app")
+          .from("applications")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("status", "enrolled")
+          .limit(1),
+        adminClient
+          .schema("parent_app")
+          .from("dashboard_access_grants")
+          .select("id")
+          .eq("grantee_id", user.id)
+          .eq("status", "active")
+          .limit(1),
+      ]);
 
     if (adminUser?.role === "super_admin") {
       redirect("/admin");
@@ -35,6 +43,8 @@ export default async function LoginPage() {
       redirect("/teacher/dashboard");
     } else if ((enrolledApp ?? []).length > 0) {
       redirect("/parent/home");
+    } else if ((grantRows ?? []).length > 0) {
+      redirect("/parent/dashboard");
     } else {
       redirect("/apply/dashboard");
     }
