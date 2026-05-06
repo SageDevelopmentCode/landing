@@ -816,7 +816,9 @@ function HomeschoolDropInCard({
           alt=""
           className={`w-full h-full object-cover ${isDisabled ? "grayscale" : "transition-transform duration-500 group-hover:scale-105"}`}
         />
-        <div className={`absolute inset-0 ${isDisabled ? "bg-black/20" : "bg-black/10"}`} />
+        <div
+          className={`absolute inset-0 ${isDisabled ? "bg-black/20" : "bg-black/10"}`}
+        />
         {!isDisabled && (
           <span
             className={`absolute top-2.5 right-2.5 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold shadow-sm ${hasPriorPayment ? "bg-emerald-500 text-white" : "bg-white/80 backdrop-blur-sm text-gray-600"}`}
@@ -898,7 +900,9 @@ function HomeschoolPaymentModal({
   const [error, setError] = useState<string | null>(null);
   const [noteText, setNoteText] = useState(initialNote);
   const [noteSaving, setNoteSaving] = useState(false);
-  const [noteSaveResult, setNoteSaveResult] = useState<"success" | "error" | null>(null);
+  const [noteSaveResult, setNoteSaveResult] = useState<
+    "success" | "error" | null
+  >(null);
 
   // Build paid days per week across all prior transactions
   const paidDaysByWeek: Record<number, Set<string>> = {};
@@ -1258,7 +1262,8 @@ function HomeschoolPaymentModal({
                   Planning to add more days later?
                 </p>
                 <p className="text-xs text-gray-400 font-body mb-3">
-                  Leave a note letting us know which days you&apos;re planning to commit to — we&apos;ll hold your spot.
+                  Leave a note letting us know which days you&apos;re planning
+                  to commit to — we&apos;ll hold your spot.
                 </p>
                 <textarea
                   value={noteText}
@@ -1274,10 +1279,14 @@ function HomeschoolPaymentModal({
                 <div className="flex items-center justify-between mt-2">
                   <div className="text-xs">
                     {noteSaveResult === "success" && (
-                      <span className="text-emerald-600 font-body">Note saved.</span>
+                      <span className="text-emerald-600 font-body">
+                        Note saved.
+                      </span>
                     )}
                     {noteSaveResult === "error" && (
-                      <span className="text-red-500 font-body">Couldn&apos;t save — please try again.</span>
+                      <span className="text-red-500 font-body">
+                        Couldn&apos;t save — please try again.
+                      </span>
                     )}
                   </div>
                   <button
@@ -4014,7 +4023,11 @@ function TuitionCodeEntryModal({
 }: {
   parentId: string;
   onClose: () => void;
-  onValidated: (result: { label: string; amount_cents: number; code: string }) => void;
+  onValidated: (result: {
+    label: string;
+    amount_cents: number;
+    code: string;
+  }) => void;
 }) {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -4068,7 +4081,11 @@ function TuitionCodeEntryModal({
                 className="w-7 h-7 rounded-full flex items-center justify-center"
                 style={{ backgroundColor: "#ccfbf1" }}
               >
-                <Tag className="w-3.5 h-3.5" style={{ color: "#0d9488" }} strokeWidth={2} />
+                <Tag
+                  className="w-3.5 h-3.5"
+                  style={{ color: "#0d9488" }}
+                  strokeWidth={2}
+                />
               </div>
               <h2 className="text-lg font-bold font-heading text-gray-800">
                 Enter Tuition Code
@@ -4084,7 +4101,7 @@ function TuitionCodeEntryModal({
         </div>
         <form onSubmit={handleSubmit} className="px-6 py-6 space-y-4">
           <p className="text-sm text-gray-500 font-body">
-            Enter the tuition code provided by the school to access your custom tuition rate.
+            Enter the tuition code provided by the school.
           </p>
           <input
             type="text"
@@ -4131,7 +4148,11 @@ function TuitionCodePaymentModal({
   const cardFee =
     Math.round((intendedAmountCents + 30) / (1 - 0.029)) - intendedAmountCents;
   const achFee = Math.min(Math.round(intendedAmountCents * 0.008), 500);
-  const feeCents = coverFees ? (paymentMethod === "card" ? cardFee : achFee) : 0;
+  const feeCents = coverFees
+    ? paymentMethod === "card"
+      ? cardFee
+      : achFee
+    : 0;
   const totalWithFees = intendedAmountCents + feeCents;
 
   async function handlePayNow() {
@@ -4188,7 +4209,11 @@ function TuitionCodePaymentModal({
                 className="w-7 h-7 rounded-full flex items-center justify-center"
                 style={{ backgroundColor: "#ccfbf1" }}
               >
-                <Tag className="w-3.5 h-3.5" style={{ color: "#0d9488" }} strokeWidth={2} />
+                <Tag
+                  className="w-3.5 h-3.5"
+                  style={{ color: "#0d9488" }}
+                  strokeWidth={2}
+                />
               </div>
               <h2 className="text-lg font-bold font-heading text-gray-800">
                 Confirm Payment
@@ -4204,10 +4229,20 @@ function TuitionCodePaymentModal({
         </div>
 
         <div className="px-6 py-6 space-y-5 overflow-y-auto">
-          <div className="rounded-xl p-4" style={{ backgroundColor: "#f0fdfa" }}>
-            <p className="text-xs text-gray-500 font-body mb-1">You&apos;re paying for</p>
-            <p className="text-sm font-semibold text-gray-800 font-body">{label}</p>
-            <p className="text-lg font-bold font-heading mt-1" style={{ color: "#0d9488" }}>
+          <div
+            className="rounded-xl p-4"
+            style={{ backgroundColor: "#f0fdfa" }}
+          >
+            <p className="text-xs text-gray-500 font-body mb-1">
+              You&apos;re paying for
+            </p>
+            <p className="text-sm font-semibold text-gray-800 font-body">
+              {label}
+            </p>
+            <p
+              className="text-lg font-bold font-heading mt-1"
+              style={{ color: "#0d9488" }}
+            >
               {formatCents(intendedAmountCents)}
             </p>
           </div>
@@ -4280,7 +4315,9 @@ function TuitionCodePaymentModal({
             style={{ backgroundColor: "#0d9488" }}
             onClick={handlePayNow}
           >
-            {loading ? "Processing…" : `Pay Now · ${formatCents(totalWithFees)}`}
+            {loading
+              ? "Processing…"
+              : `Pay Now · ${formatCents(totalWithFees)}`}
           </button>
         </div>
       </motion.div>
@@ -4808,7 +4845,9 @@ export default function BillingPage({
             parentId={parentId}
             parentEmail={parentEmail}
             paidData={paidHomeschoolByStudent[selectedHomeschoolApp.student_id]}
-            initialNote={homeschoolNotesByStudent[selectedHomeschoolApp.student_id] ?? ""}
+            initialNote={
+              homeschoolNotesByStudent[selectedHomeschoolApp.student_id] ?? ""
+            }
             onClose={() => setSelectedHomeschoolApp(null)}
           />
         )}
