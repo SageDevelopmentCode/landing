@@ -1379,3 +1379,27 @@ export function createDropOffTimeEmbed(data: {
     timestamp: new Date().toISOString(),
   };
 }
+
+export function createCustomTuitionEmbed(data: {
+  parentName: string;
+  parentEmail: string;
+  childName: string;
+  label: string;
+  tuitionCode: string;
+  amountCents: number;
+}): DiscordEmbed {
+  const amountDollars = (data.amountCents / 100).toFixed(2);
+  return {
+    title: "🏷️ Custom Tuition Paid",
+    color: 0x0d9488,
+    fields: [
+      { name: "Parent", value: data.parentName || "N/A", inline: true },
+      { name: "Email", value: data.parentEmail || "N/A", inline: true },
+      { name: "Child", value: data.childName || "N/A", inline: true },
+      { name: "Code", value: data.tuitionCode, inline: true },
+      { name: "Label", value: data.label, inline: true },
+      { name: "Amount Paid", value: `$${amountDollars}`, inline: true },
+    ],
+    timestamp: new Date().toISOString(),
+  };
+}

@@ -2250,3 +2250,29 @@ export async function buildPaySummerTuitionEmail(opts: {
 
   return { subject, content };
 }
+
+export async function buildCustomTuitionConfirmationEmail(opts: {
+  g1FullName: string;
+  label: string;
+  amountDollars: string;
+}): Promise<{ subject: string; content: string }> {
+  const subject = "Tuition Payment Received — Thank You!";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${opts.g1FullName},</p>
+
+  <p>We are pleased to confirm that your tuition payment of <strong>$${opts.amountDollars}</strong> has been received for <strong>${opts.label}</strong>.</p>
+
+  <p>Thank you for your continued support of Sage Field School. If you have any questions, please reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> or text <a href="sms:+15126775872" style="color: #5a7a5a;">(512) 677-5872</a>.</p>
+
+  <p style="margin-top: 32px;">With warmth,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}

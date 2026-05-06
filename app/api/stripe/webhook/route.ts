@@ -10,6 +10,7 @@ import {
   createHomeschoolDropInEmbed,
   createDonationEmbed,
   createShadowDayPaymentEmbed,
+  createCustomTuitionEmbed,
   createErrorEmbed,
   sendDiscordNotification,
 } from "@/app/lib/discord";
@@ -21,6 +22,7 @@ import {
   buildShadowDayPaymentConfirmationEmail,
   buildAftercareConfirmationEmail,
   buildFunFridayConfirmationEmail,
+  buildCustomTuitionConfirmationEmail,
   sendZohoEmail,
 } from "@/app/lib/zoho";
 
@@ -730,6 +732,83 @@ export async function POST(request: NextRequest) {
               context: "Shadow day fee confirmation email",
               error: String(err),
               details: { bookingId: bookingId ?? "N/A" },
+            }),
+          ).catch(() => {});
+        }
+      })();
+    } else if (session.metadata?.payment_type === "custom_tuition") {
+      const parentId = session.metadata?.parent_id;
+      const studentId = session.metadata?.student_id;
+      const parentEmailAddr = session.metadata?.parent_email ?? session.customer_email ?? "N/A";
+      const tuitionCode = session.metadata?.tuition_code ?? "N/A";
+      const label = session.metadata?.label ?? "Custom Tuition";
+      const amountCents = session.amount_total ?? 0;
+      const amountDollars = (amountCents / 100).toFixed(2);
+
+      let parentName = "N/A";
+      let childName = "N/A";
+
+      if (parentId) {
+        const { data: userRow } = await supabase
+          .schema("admin")
+          .from("users")
+          .select("full_name")
+          .eq("id", parentId)
+          .single();
+        if (userRow) parentName = userRow.full_name ?? "N/A";
+      }
+      if (studentId) {
+        const { data: student } = await supabase
+          .schema("admin")
+          .from("students")
+          .select("child_legal_name")
+          .eq("id", studentId)
+          .single();
+        if (student) childName = student.child_legal_name ?? "N/A";
+      }
+
+      sendDiscordNotification(
+        createCustomTuitionEmbed({
+          parentName,
+          parentEmail: parentEmailAddr,
+          childName,
+          label,
+          tuitionCode,
+          amountCents,
+        }),
+      ).catch((err) => console.error("Custom tuition Discord notification failed:", err));
+
+      (async () => {
+        try {
+          const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
+          if (!toAddress) return;
+
+          const { subject, content } = await buildCustomTuitionConfirmationEmail({
+            g1FullName: parentName !== "N/A" ? parentName : "Parent",
+            label,
+            amountDollars,
+          });
+
+          const emailResult = await sendZohoEmail({ toAddress, subject, content });
+
+          if (emailResult.success) {
+            await supabase.schema("email_logs").from("sends").insert({
+              to_address: toAddress,
+              subject,
+              template: "custom_tuition_confirmation",
+              application_id: null,
+              status: "success",
+            });
+          } else {
+            throw new Error(emailResult.error ?? "Unknown email error");
+          }
+        } catch (err) {
+          console.error("Custom tuition confirmation email failed:", err);
+          sendDiscordNotification(
+            createErrorEmbed({
+              context: "Custom tuition confirmation email",
+              error: String(err),
+              details: { parentId: parentId ?? "N/A", tuitionCode },
             }),
           ).catch(() => {});
         }

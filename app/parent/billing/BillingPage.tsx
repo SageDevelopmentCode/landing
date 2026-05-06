@@ -12,6 +12,7 @@ import {
   Clock,
   PartyPopper,
   Sparkles,
+  Tag,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -4006,6 +4007,287 @@ function UpgradeToFullTimeCard({ childNames }: { childNames: string[] }) {
   );
 }
 
+function TuitionCodeEntryModal({
+  parentId,
+  onClose,
+  onValidated,
+}: {
+  parentId: string;
+  onClose: () => void;
+  onValidated: (result: { label: string; amount_cents: number; code: string }) => void;
+}) {
+  const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!code.trim()) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/billing/validate-tuition-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: code.trim(), parentId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Invalid code. Please check and try again.");
+        return;
+      }
+      onValidated(data);
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <motion.div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        onClick={onClose}
+      />
+      <motion.div
+        className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+        transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+      >
+        <div className="px-6 pt-6 pb-4 border-b border-gray-100">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: "#ccfbf1" }}
+              >
+                <Tag className="w-3.5 h-3.5" style={{ color: "#0d9488" }} strokeWidth={2} />
+              </div>
+              <h2 className="text-lg font-bold font-heading text-gray-800">
+                Enter Tuition Code
+              </h2>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+        <form onSubmit={handleSubmit} className="px-6 py-6 space-y-4">
+          <p className="text-sm text-gray-500 font-body">
+            Enter the tuition code provided by the school to access your custom tuition rate.
+          </p>
+          <input
+            type="text"
+            value={code}
+            onChange={(e) => setCode(e.target.value.toUpperCase())}
+            placeholder="e.g. SMITH900"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm font-body font-semibold tracking-widest text-gray-800 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:border-transparent uppercase"
+            style={{ "--tw-ring-color": "#0d9488" } as React.CSSProperties}
+            autoFocus
+          />
+          {error && <p className="text-sm text-red-600 font-body">{error}</p>}
+          <button
+            type="submit"
+            disabled={loading || !code.trim()}
+            className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ backgroundColor: "#0d9488" }}
+          >
+            {loading ? "Checking…" : "Apply Code"}
+          </button>
+        </form>
+      </motion.div>
+    </div>
+  );
+}
+
+function TuitionCodePaymentModal({
+  parentId,
+  parentEmail,
+  tuitionResult,
+  onClose,
+}: {
+  parentId: string;
+  parentEmail: string;
+  tuitionResult: { label: string; amount_cents: number; code: string };
+  onClose: () => void;
+}) {
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "ach">("card");
+  const [coverFees, setCoverFees] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const { label, amount_cents: intendedAmountCents, code } = tuitionResult;
+
+  const cardFee =
+    Math.round((intendedAmountCents + 30) / (1 - 0.029)) - intendedAmountCents;
+  const achFee = Math.min(Math.round(intendedAmountCents * 0.008), 500);
+  const feeCents = coverFees ? (paymentMethod === "card" ? cardFee : achFee) : 0;
+  const totalWithFees = intendedAmountCents + feeCents;
+
+  async function handlePayNow() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/stripe/create-custom-tuition-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          parentId,
+          parentEmail,
+          tuitionCode: code,
+          label,
+          intendedAmountCents,
+          coverFees,
+          paymentMethod,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Something went wrong. Please try again.");
+        return;
+      }
+      window.location.href = data.url;
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <motion.div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        onClick={onClose}
+      />
+      <motion.div
+        className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+        transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+      >
+        <div className="px-6 pt-6 pb-4 border-b border-gray-100">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: "#ccfbf1" }}
+              >
+                <Tag className="w-3.5 h-3.5" style={{ color: "#0d9488" }} strokeWidth={2} />
+              </div>
+              <h2 className="text-lg font-bold font-heading text-gray-800">
+                Confirm Payment
+              </h2>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        <div className="px-6 py-6 space-y-5 overflow-y-auto">
+          <div className="rounded-xl p-4" style={{ backgroundColor: "#f0fdfa" }}>
+            <p className="text-xs text-gray-500 font-body mb-1">You&apos;re paying for</p>
+            <p className="text-sm font-semibold text-gray-800 font-body">{label}</p>
+            <p className="text-lg font-bold font-heading mt-1" style={{ color: "#0d9488" }}>
+              {formatCents(intendedAmountCents)}
+            </p>
+          </div>
+
+          <div>
+            <p className="text-sm font-medium text-gray-700 font-body mb-2">
+              How will you be paying?
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setPaymentMethod("card")}
+                className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${
+                  paymentMethod === "card"
+                    ? "border-teal-600 bg-teal-50 text-teal-700"
+                    : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                Credit/Debit Card
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaymentMethod("ach")}
+                className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${
+                  paymentMethod === "ach"
+                    ? "border-teal-600 bg-teal-50 text-teal-700"
+                    : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                ACH / US bank account
+              </button>
+            </div>
+            <p className="text-xs text-gray-400 font-body mt-1.5">
+              {paymentMethod === "card"
+                ? `Processing fee (est.): ~${formatCents(cardFee)}`
+                : `Processing fee (est.): ~${formatCents(achFee)} (0.8%, max $5.00)`}
+            </p>
+          </div>
+
+          <label className="flex items-start gap-3 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={coverFees}
+              onChange={(e) => setCoverFees(e.target.checked)}
+              className="mt-0.5 w-4 h-4 rounded cursor-pointer"
+              style={{ accentColor: "#0d9488" }}
+            />
+            <span className="text-sm text-gray-600 font-body group-hover:text-gray-800 transition-colors">
+              I agree to pay the processing fee
+            </span>
+          </label>
+
+          <p className="text-xs text-gray-400 font-body">
+            Prefer to pay by check? Email us at{" "}
+            <a
+              href="mailto:sabrina@sagefield.co"
+              className="underline hover:text-gray-600 transition-colors"
+            >
+              sabrina@sagefield.co
+            </a>
+          </p>
+
+          {error && <p className="text-sm text-red-600 font-body">{error}</p>}
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-100">
+          <button
+            disabled={loading || !coverFees}
+            className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ backgroundColor: "#0d9488" }}
+            onClick={handlePayNow}
+          >
+            {loading ? "Processing…" : `Pay Now · ${formatCents(totalWithFees)}`}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 export default function BillingPage({
   transactions,
   studentMap,
@@ -4037,6 +4319,12 @@ export default function BillingPage({
     useState<HomeschoolDropInApp | null>(null);
   const [selectedHomeschoolHistoryApp, setSelectedHomeschoolHistoryApp] =
     useState<HomeschoolDropInApp | null>(null);
+  const [tuitionCodeModalOpen, setTuitionCodeModalOpen] = useState(false);
+  const [validatedTuitionResult, setValidatedTuitionResult] = useState<{
+    label: string;
+    amount_cents: number;
+    code: string;
+  } | null>(null);
 
   const nonEnrolledMap = new Map(nonEnrolledApps.map((a) => [a.student_id, a]));
 
@@ -4214,9 +4502,17 @@ export default function BillingPage({
 
           {hasPendingContent && (
             <div>
-              <h2 className="text-lg font-semibold font-heading text-gray-700 mb-4">
-                Pending Payments
-              </h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold font-heading text-gray-700">
+                  Pending Payments
+                </h2>
+                <button
+                  onClick={() => setTuitionCodeModalOpen(true)}
+                  className="text-sm font-body text-gray-400 hover:text-gray-500 transition-colors cursor-pointer"
+                >
+                  Have a tuition code?
+                </button>
+              </div>
               <PendingPaymentsSection
                 summerEnrollments={summerEnrollments}
                 unpaidSummerEnrollments={unpaidSummerEnrollments}
@@ -4534,6 +4830,24 @@ export default function BillingPage({
               }}
             />
           )}
+        {tuitionCodeModalOpen && !validatedTuitionResult && (
+          <TuitionCodeEntryModal
+            parentId={parentId}
+            onClose={() => setTuitionCodeModalOpen(false)}
+            onValidated={(result) => setValidatedTuitionResult(result)}
+          />
+        )}
+        {validatedTuitionResult && (
+          <TuitionCodePaymentModal
+            parentId={parentId}
+            parentEmail={parentEmail}
+            tuitionResult={validatedTuitionResult}
+            onClose={() => {
+              setValidatedTuitionResult(null);
+              setTuitionCodeModalOpen(false);
+            }}
+          />
+        )}
       </AnimatePresence>
     </div>
   );
