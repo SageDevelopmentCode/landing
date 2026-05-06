@@ -242,7 +242,46 @@ export default async function ProgramPage({
     }
 
     const teacherGroups: TeacherGroup[] = [...groupMap.values()]
-    const totalStudentCount = [...new Set(rows.map((r) => r.student_id).filter(Boolean))].length
+    const assignedStudentIds = new Set(rows.map((r) => r.student_id).filter(Boolean))
+
+    // Fetch all enrolled summer students (direct + homeschool drop-in) to find unassigned ones
+    const { data: summerApps } = await client
+      .schema('parent_app')
+      .from('applications')
+      .select('student_id, admin_tags, program, drop_in_program')
+      .eq('status', 'enrolled')
+      .eq('is_active', true)
+      .or('program.eq.summer_26,and(program.eq.homeschool_drop_in,drop_in_program.in.(summer_26,both))')
+
+    const allEnrolledApps = summerApps ?? []
+    const unassignedAppIds = [...new Set(
+      allEnrolledApps
+        .map((a) => a.student_id)
+        .filter((id): id is string => !!id && !assignedStudentIds.has(id))
+    )]
+
+    const allEnrolledTagsByStudentId = Object.fromEntries(
+      allEnrolledApps
+        .filter((a): a is typeof a & { student_id: string } => !!a.student_id)
+        .map((a) => [a.student_id, (a.admin_tags as string[] | null) ?? []])
+    )
+
+    let noTeacherStudents: StudentInfo[] = []
+    if (unassignedAppIds.length > 0) {
+      const { data: unassignedStudentRows } = await client
+        .schema('admin')
+        .from('students')
+        .select('id, child_legal_name, child_grade, dob_month, dob_day, dob_year, profile_image_url')
+        .in('id', unassignedAppIds)
+        .eq('is_deleted', false)
+
+      noTeacherStudents = (unassignedStudentRows ?? []).map((s) => ({
+        ...(s as Omit<StudentInfo, 'admin_tags'>),
+        admin_tags: allEnrolledTagsByStudentId[s.id] ?? [],
+      }))
+    }
+
+    const totalStudentCount = assignedStudentIds.size + noTeacherStudents.length
 
     // Enrich dropoff data
     const dropoffParentIds = [...new Set((dropoffTimes ?? []).map((d) => d.parent_id))]
@@ -276,6 +315,7 @@ export default async function ProgramPage({
       <SummerProgramClient
         teacherGroups={teacherGroups}
         totalStudentCount={totalStudentCount}
+        noTeacherStudents={noTeacherStudents}
         fetchStudentDetail={fetchStudentDetail}
         initialWeekData={initialWeekData}
         initialWeekNum={weekNum}

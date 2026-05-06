@@ -1303,15 +1303,6 @@ export default function TourPage() {
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center relative">
           {/* Left column */}
           <div>
-            <motion.span
-              className="inline-block px-5 py-2 bg-badge-bg border border-primary/20 text-gray-700 text-sm font-semibold rounded-full mb-6 font-body"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-            >
-              Campus Tours · Round Rock, TX
-            </motion.span>
-
             <motion.h1
               className="text-4xl md:text-5xl lg:text-6xl font-bold font-heading text-gray-800 leading-tight mb-5"
               initial={{ opacity: 0, x: -24 }}
@@ -1365,7 +1356,7 @@ export default function TourPage() {
             <div className="absolute bottom-5 left-5 bg-white/95 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-lg flex items-center gap-3">
               <div className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
                 <Image
-                  src="/assets/Headshot.jpeg"
+                  src="/assets/team/Sabrina.PNG"
                   alt="Ms. Sabrina"
                   fill
                   className="object-cover"

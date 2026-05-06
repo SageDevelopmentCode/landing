@@ -113,6 +113,7 @@ type DropoffRow = {
 interface SummerProgramClientProps {
   teacherGroups: TeacherGroup[]
   totalStudentCount: number
+  noTeacherStudents: StudentInfo[]
   fetchStudentDetail: (studentId: string) => Promise<FullStudent>
   initialWeekData: SummerDayData[]
   initialWeekNum: number
@@ -321,6 +322,7 @@ function StudentCard({ student, onClick }: { student: StudentInfo; onClick: (s: 
 export function SummerProgramClient({
   teacherGroups,
   totalStudentCount,
+  noTeacherStudents,
   fetchStudentDetail,
   initialWeekData,
   initialWeekNum,
@@ -382,7 +384,8 @@ export function SummerProgramClient({
   }
 
   const visibleActiveStudents = activeGroup ? filterStudents(activeGroup.students) : []
-  const allStudentsForProgram = teacherGroups.flatMap((g) => g.students)
+  const filteredNoTeacherStudents = filterStudents(noTeacherStudents)
+  const allStudentsForProgram = [...teacherGroups.flatMap((g) => g.students), ...noTeacherStudents]
   const hasAnyTags = allStudentsForProgram.some((s) => s.admin_tags.length > 0)
 
   // ── Attendance tab helpers ────────────────────────────────────────────────
@@ -629,10 +632,56 @@ export function SummerProgramClient({
                       </button>
                     )
                   })}
+                  {filteredNoTeacherStudents.length > 0 && (
+                    <button
+                      onClick={() => setActiveTeacherId('no_teacher')}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150"
+                      style={{
+                        backgroundColor: activeTeacherId === 'no_teacher' ? colors.pastelSage : 'transparent',
+                        color: activeTeacherId === 'no_teacher' ? colors.mistyForest : colors.textSecondary,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <div
+                        className="flex items-center justify-center shrink-0 text-xs font-bold"
+                        style={{
+                          width: 32, height: 32, borderRadius: '50%',
+                          backgroundColor: activeTeacherId === 'no_teacher' ? colors.mistyForest : colors.border,
+                          color: activeTeacherId === 'no_teacher' ? 'white' : colors.textSecondary,
+                        }}
+                      >
+                        ?
+                      </div>
+                      No Teacher
+                      <span
+                        className="text-xs font-medium px-2 py-0.5 rounded-full"
+                        style={{
+                          backgroundColor: activeTeacherId === 'no_teacher' ? colors.mistyForest : colors.warmLinen,
+                          color: activeTeacherId === 'no_teacher' ? 'white' : colors.textTertiary,
+                        }}
+                      >
+                        {filteredNoTeacherStudents.length}
+                      </span>
+                    </button>
+                  )}
                 </div>
 
                 {/* Active teacher panel */}
-                {activeGroup && (
+                {activeTeacherId === 'no_teacher' ? (
+                  <div>
+                    {filteredNoTeacherStudents.length > 0 ? (
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                        {filteredNoTeacherStudents.map((student) => (
+                          <StudentCard key={student.id} student={student} onClick={handleStudentClick} />
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm pl-1" style={{ color: colors.textTertiary }}>
+                        No students without a teacher
+                      </p>
+                    )}
+                  </div>
+                ) : activeGroup && (
                   <div>
                     {visibleActiveStudents.length > 0 ? (
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
