@@ -78,6 +78,7 @@ interface PeopleClientProps {
   fetchStudentDetail: (studentId: string) => Promise<Student>
   assignmentsByStudentId: Record<string, TeacherAssignment[]>
   tagsByStudentId: Record<string, string[]>
+  programByStudentId: Record<string, { program: string | null; drop_in_program: string | null }>
 }
 
 type Tab = 'parents' | 'students'
@@ -89,6 +90,7 @@ export function PeopleClient({
   fetchStudentDetail,
   assignmentsByStudentId,
   tagsByStudentId,
+  programByStudentId,
 }: PeopleClientProps) {
   const [activeTab, setActiveTab] = useState<Tab>('parents')
 
@@ -123,6 +125,7 @@ export function PeopleClient({
           fetchStudentDetail={fetchStudentDetail}
           assignmentsByStudentId={assignmentsByStudentId}
           tagsByStudentId={tagsByStudentId}
+          programByStudentId={programByStudentId}
         />
       )}
     </div>

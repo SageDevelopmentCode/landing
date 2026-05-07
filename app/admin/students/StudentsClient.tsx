@@ -36,18 +36,31 @@ type Student = {
   profile_image_url?: string | null
 }
 
+const PROGRAM_LABELS: Record<string, string> = {
+  summer_26: 'Summer 2026',
+  school_year_26_27: 'School Year 2026–2027',
+  both: 'Both',
+  homeschool_drop_in: 'Homeschool Drop-In',
+}
+
+function formatProgram(value: string | null): string {
+  if (!value) return '—'
+  return PROGRAM_LABELS[value] ?? value
+}
+
 interface StudentsClientProps {
   students: Student[]
   fetchStudentDetail: (studentId: string) => Promise<Student>
   assignmentsByStudentId: Record<string, TeacherAssignment[]>
   tagsByStudentId?: Record<string, string[]>
+  programByStudentId?: Record<string, { program: string | null; drop_in_program: string | null }>
 }
 
-export function StudentsClient({ students: initialStudents, fetchStudentDetail, assignmentsByStudentId, tagsByStudentId = {} }: StudentsClientProps) {
+export function StudentsClient({ students: initialStudents, fetchStudentDetail, assignmentsByStudentId, tagsByStudentId = {}, programByStudentId = {} }: StudentsClientProps) {
   const router = useRouter()
   const [students, setStudents] = useState<Student[]>(initialStudents)
   const [searchQuery, setSearchQuery] = useState('')
-  const [activeTagFilter, setActiveTagFilter] = useState<string | null>(null)
+  const [activeTagFilter, setActiveTagFilter] = useState<string | null>("Don't Include")
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
   const [studentDetail, setStudentDetail] = useState<Student | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
@@ -91,7 +104,9 @@ export function StudentsClient({ students: initialStudents, fetchStudentDetail, 
     }
     if (activeTagFilter) {
       const tags = tagsByStudentId[s.id] ?? []
-      if (!tags.includes(activeTagFilter)) return false
+      if (activeTagFilter === "Don't Include") {
+        if (tags.includes(activeTagFilter)) return false
+      } else if (!tags.includes(activeTagFilter)) return false
     }
     return true
   })
@@ -130,7 +145,7 @@ export function StudentsClient({ students: initialStudents, fetchStudentDetail, 
         )}
       </div>
       <Table
-        headers={['Name', 'Grade', 'DOB', 'Parent', 'Teacher', 'Tags']}
+        headers={['Name', 'Grade', 'Program', 'DOB', 'Parent', 'Teacher', 'Tags']}
       >
         {filteredStudents.map((student, index) => {
           const dob =
@@ -143,6 +158,21 @@ export function StudentsClient({ students: initialStudents, fetchStudentDetail, 
                 <div className="font-medium">{student.child_legal_name ?? '—'}</div>
               </TableCell>
               <TableCell>{student.child_grade ?? '—'}</TableCell>
+              <TableCell>
+                {(() => {
+                  const p = programByStudentId[student.id]
+                  if (!p?.program) return <span className="text-gray-300">—</span>
+                  if (p.program === 'homeschool_drop_in' && p.drop_in_program) {
+                    return (
+                      <div>
+                        <div>{formatProgram(p.program)}</div>
+                        <div className="text-xs text-gray-400">{formatProgram(p.drop_in_program)}</div>
+                      </div>
+                    )
+                  }
+                  return formatProgram(p.program)
+                })()}
+              </TableCell>
               <TableCell>{dob}</TableCell>
               <TableCell>{student.parent_name ?? '—'}</TableCell>
               <TableCell>

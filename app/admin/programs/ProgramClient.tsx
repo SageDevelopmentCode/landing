@@ -335,50 +335,55 @@ export function ProgramClient({
         )}
 
         {visibleUnassigned && visibleUnassigned.length > 0 ? (
-          <div className="divide-y" style={{ borderColor: colors.border, borderTop: `1px solid ${colors.border}` }}>
+          <div
+            className="grid gap-3"
+            style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}
+          >
             {visibleUnassigned.map((student) => (
               <div
                 key={student.id}
-                className="flex items-center gap-3 px-4 py-2.5 cursor-pointer"
-                style={{ borderColor: colors.border }}
+                className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-150"
+                style={{
+                  backgroundColor: colors.surface,
+                  border: `1px solid ${colors.warmLinen}`,
+                }}
                 onClick={() => handleStudentClick(student)}
               >
                 {student.profile_image_url ? (
                   <img
                     src={student.profile_image_url}
                     alt={student.child_legal_name ?? 'Student'}
-                    className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                    style={{ border: `1px solid ${colors.border}` }}
+                    className="w-10 h-10 rounded-full object-cover flex-shrink-0"
                   />
                 ) : (
                   <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0"
-                    style={{ backgroundColor: colors.warmLinen, color: colors.mistyForest, border: `1px solid ${colors.border}` }}
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                    style={{ backgroundColor: colors.warmLinen, color: colors.mistyForest }}
                   >
                     {getInitials(student.child_legal_name)}
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate" style={{ color: colors.textPrimary }}>
+                  <p className="text-sm font-semibold truncate" style={{ color: colors.textPrimary }}>
                     {student.child_legal_name ?? '—'}
                   </p>
                   {student.child_grade && (
-                    <p className="text-xs" style={{ color: colors.textSecondary }}>Grade {student.child_grade}</p>
+                    <p className="text-xs" style={{ color: colors.textTertiary }}>{student.child_grade}</p>
+                  )}
+                  {student.admin_tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {student.admin_tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="inline-flex items-center px-1.5 py-0.5 text-[9px] font-semibold rounded-full"
+                          style={{ backgroundColor: colors.accentLight, color: colors.accent }}
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
                   )}
                 </div>
-                {student.admin_tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1 justify-end flex-shrink-0">
-                    {student.admin_tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded-full"
-                        style={{ backgroundColor: colors.accentLight, color: colors.accent, border: `1px solid ${colors.accentLight}` }}
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
               </div>
             ))}
           </div>
@@ -396,31 +401,27 @@ export function ProgramClient({
         ) : (
           <>
             {/* Teacher tab bar */}
-            <div
-              className="flex gap-2 flex-wrap mb-6 pb-1"
-              style={{ borderBottom: `1px solid ${colors.border}` }}
-            >
+            <div className="flex gap-2 flex-wrap mb-5">
               {teacherGroups.map((group) => {
                 const isActive = group.teacher.id === activeTeacherId
                 return (
                   <button
                     key={group.teacher.id}
                     onClick={() => setActiveTeacherId(group.teacher.id)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-150"
                     style={{
-                      backgroundColor: isActive ? colors.pastelSage : 'transparent',
-                      color: isActive ? colors.mistyForest : colors.textSecondary,
-                      cursor: 'pointer',
+                      backgroundColor: isActive ? colors.mistyForest : colors.warmLinen,
+                      color: isActive ? 'white' : colors.textSecondary,
                     }}
                   >
                     <div
                       className="flex items-center justify-center shrink-0 text-xs font-bold"
                       style={{
-                        width: 32,
-                        height: 32,
+                        width: 24,
+                        height: 24,
                         borderRadius: '50%',
-                        backgroundColor: isActive ? colors.mistyForest : colors.border,
-                        color: isActive ? 'white' : colors.textSecondary,
+                        backgroundColor: isActive ? 'rgba(255,255,255,0.25)' : colors.pastelSage,
+                        color: isActive ? 'white' : colors.mistyForest,
                       }}
                     >
                       {getInitials(group.teacher.full_name)}
@@ -428,10 +429,10 @@ export function ProgramClient({
                     {group.teacher.full_name ?? '—'}
                     {group.classroom && (
                       <span
-                        className="text-xs font-medium px-2 py-0.5 rounded-full"
+                        className="text-xs font-medium px-1.5 py-0.5 rounded-full"
                         style={{
-                          backgroundColor: isActive ? colors.mistyForest : colors.warmLinen,
-                          color: isActive ? 'white' : colors.textTertiary,
+                          backgroundColor: isActive ? 'rgba(255,255,255,0.2)' : colors.pastelSage,
+                          color: isActive ? 'white' : colors.mistyForest,
                         }}
                       >
                         {CLASSROOM_LABELS[group.classroom] ?? group.classroom}
@@ -446,50 +447,55 @@ export function ProgramClient({
             {activeGroup && (
               <div>
                 {visibleActiveStudents.length > 0 ? (
-                  <div className="divide-y" style={{ borderColor: colors.border, borderTop: `1px solid ${colors.border}` }}>
+                  <div
+                    className="grid gap-3"
+                    style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}
+                  >
                     {visibleActiveStudents.map((student) => (
                       <div
                         key={student.id}
-                        className="flex items-center gap-3 px-4 py-2.5 cursor-pointer"
-                        style={{ borderColor: colors.border }}
+                        className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-150"
+                        style={{
+                          backgroundColor: colors.surface,
+                          border: `1px solid ${colors.warmLinen}`,
+                        }}
                         onClick={() => handleStudentClick(student)}
                       >
                         {student.profile_image_url ? (
                           <img
                             src={student.profile_image_url}
                             alt={student.child_legal_name ?? 'Student'}
-                            className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                            style={{ border: `1px solid ${colors.border}` }}
+                            className="w-10 h-10 rounded-full object-cover flex-shrink-0"
                           />
                         ) : (
                           <div
-                            className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0"
-                            style={{ backgroundColor: colors.warmLinen, color: colors.mistyForest, border: `1px solid ${colors.border}` }}
+                            className="w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                            style={{ backgroundColor: colors.warmLinen, color: colors.mistyForest }}
                           >
                             {getInitials(student.child_legal_name)}
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate" style={{ color: colors.textPrimary }}>
+                          <p className="text-sm font-semibold truncate" style={{ color: colors.textPrimary }}>
                             {student.child_legal_name ?? '—'}
                           </p>
                           {student.child_grade && (
-                            <p className="text-xs" style={{ color: colors.textSecondary }}>Grade {student.child_grade}</p>
+                            <p className="text-xs" style={{ color: colors.textTertiary }}>{student.child_grade}</p>
+                          )}
+                          {student.admin_tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {student.admin_tags.map((tag) => (
+                                <span
+                                  key={tag}
+                                  className="inline-flex items-center px-1.5 py-0.5 text-[9px] font-semibold rounded-full"
+                                  style={{ backgroundColor: colors.accentLight, color: colors.accent }}
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
                           )}
                         </div>
-                        {student.admin_tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1 justify-end flex-shrink-0">
-                            {student.admin_tags.map((tag) => (
-                              <span
-                                key={tag}
-                                className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded-full"
-                                style={{ backgroundColor: colors.accentLight, color: colors.accent, border: `1px solid ${colors.accentLight}` }}
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-                        )}
                       </div>
                     ))}
                   </div>

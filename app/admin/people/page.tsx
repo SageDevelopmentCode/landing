@@ -133,7 +133,7 @@ export default async function PeoplePage() {
   ] = await Promise.all([
     client.schema('admin').from('users').select('*').eq('role', 'parent').eq('is_deleted', false).order('full_name'),
     client.schema('admin').from('students').select('*').eq('is_deleted', false).order('child_legal_name'),
-    client.schema('parent_app').from('applications').select('student_id, admin_tags').eq('status', 'enrolled'),
+    client.schema('parent_app').from('applications').select('student_id, admin_tags, program, drop_in_program').eq('status', 'enrolled'),
     getAllStudentAssignments(),
   ])
 
@@ -142,9 +142,11 @@ export default async function PeoplePage() {
   )
 
   const tagsByStudentId: Record<string, string[]> = {}
+  const programByStudentId: Record<string, { program: string | null; drop_in_program: string | null }> = {}
   for (const a of enrolledApps ?? []) {
-    if (a.student_id && a.admin_tags?.length) {
-      tagsByStudentId[a.student_id] = a.admin_tags
+    if (a.student_id) {
+      if (a.admin_tags?.length) tagsByStudentId[a.student_id] = a.admin_tags
+      programByStudentId[a.student_id] = { program: a.program, drop_in_program: a.drop_in_program }
     }
   }
 
@@ -196,6 +198,7 @@ export default async function PeoplePage() {
         fetchStudentDetail={fetchStudentDetail}
         assignmentsByStudentId={assignmentsByStudentId}
         tagsByStudentId={tagsByStudentId}
+        programByStudentId={programByStudentId}
       />
     </div>
   )
