@@ -226,6 +226,21 @@ function isTxMatch(
 
 // --- Sub-components ---
 
+const AVATAR_COLORS = [
+  { bg: '#4f7c5e', text: '#ffffff' },
+  { bg: '#5b6fa8', text: '#ffffff' },
+  { bg: '#9b5a8a', text: '#ffffff' },
+  { bg: '#c0773a', text: '#ffffff' },
+  { bg: '#4a8a8a', text: '#ffffff' },
+  { bg: '#7a5c9b', text: '#ffffff' },
+]
+
+function getAvatarColor(key: string) {
+  let hash = 0
+  for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0
+  return AVATAR_COLORS[hash % AVATAR_COLORS.length]
+}
+
 function StatusBadge({ status }: { status: string }) {
   const isSuccess =
     status === "complete" || status === "paid" || status === "succeeded" || status === "completed";
@@ -796,7 +811,7 @@ export function TransactionsClient({
   enrolledChildrenMap,
   paidHomeschoolByStudent,
 }: TransactionsClientProps) {
-  const [activeTab, setActiveTab] = useState<"list" | "by-parent">("by-parent");
+  const [showAllTransactions, setShowAllTransactions] = useState(false);
   const [selectedTransaction, setSelectedTransaction] =
     useState<StripeTransaction | null>(null);
   const [localTransactions, setLocalTransactions] = useState(transactions);
@@ -844,6 +859,16 @@ export function TransactionsClient({
   const selectedGroup = selectedParentKey
     ? (parentGroups.find((g) => g.key === selectedParentKey) ?? null)
     : null;
+
+  const parentBillingTransactions = useMemo(() => {
+    if (!selectedParentKey) return []
+    return localTransactions
+      .filter(tx =>
+        tx.parent_id === selectedParentKey ||
+        (selectedGroup?.email && tx.payer_email === selectedGroup.email && !tx.parent_id)
+      )
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  }, [localTransactions, selectedParentKey, selectedGroup?.email])
 
   const childGroups = useMemo((): ChildGroup[] => {
     if (!selectedGroup) return [];
@@ -907,317 +932,427 @@ export function TransactionsClient({
     enrolledProgram === "both");
 
   return (
-    <>
-      {/* Tab switcher */}
-      <div className="flex gap-2 mb-4">
-        {(["by-parent", "list"] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors cursor-pointer"
-            style={{
-              backgroundColor:
-                activeTab === tab ? colors.mistyForest : "transparent",
-              color: activeTab === tab ? "#ffffff" : colors.textSecondary,
-              border: `1px solid ${activeTab === tab ? colors.mistyForest : colors.border}`,
-            }}
+    // Full-height 3-column layout: parent list | checklist/transactions | billing history
+    <div
+      className="flex flex-col flex-1 min-h-0"
+      style={{
+        marginLeft: "-1.5rem",
+        marginRight: "-1.5rem",
+        marginTop: "-1px",
+      }}
+    >
+      {/* Unified header row — one shared border bottom across all columns */}
+      <div
+        className="flex-shrink-0 flex"
+        style={{ borderBottom: `1px solid ${colors.border}` }}
+      >
+        {/* Col 1 header: PARENTS */}
+        <div
+          className="flex-shrink-0 flex items-center px-4 py-3"
+          style={{ width: "260px", borderRight: `1px solid ${colors.border}` }}
+        >
+          <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: colors.textTertiary }}>
+            Parents
+          </span>
+        </div>
+        {/* Col 2 header: ALL TRANSACTIONS toggle */}
+        <div className="flex-1 flex items-center px-6 py-3">
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <div
+              onClick={() => setShowAllTransactions((v) => !v)}
+              className="relative flex-shrink-0 w-8 h-4 rounded-full transition-colors"
+              style={{ backgroundColor: showAllTransactions ? colors.mistyForest : colors.border }}
+            >
+              <div
+                className="absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform"
+                style={{ transform: showAllTransactions ? "translateX(18px)" : "translateX(2px)" }}
+              />
+            </div>
+            <span
+              className="text-xs font-semibold uppercase tracking-wide"
+              style={{ color: showAllTransactions ? colors.mistyForest : colors.textTertiary }}
+            >
+              All Transactions
+            </span>
+          </label>
+        </div>
+        {/* Col 3 header: BILLING HISTORY (only when panel is visible) */}
+        {selectedGroup && (
+          <div
+            className="flex-shrink-0 flex items-center px-4 py-3"
+            style={{ width: "340px", borderLeft: `1px solid ${colors.border}` }}
           >
-            {tab === "list" ? "All Transactions" : "Parent Tuition Checklist"}
-          </button>
-        ))}
+            <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: colors.textTertiary }}>
+              Billing History
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Tab 1 — All Transactions */}
-      {activeTab === "list" && (
-        <Table
-          headers={["Type", "Status", "Payer", "Amount", "Net Amount", "Date"]}
-        >
-          {localTransactions.map((tx, index) => (
-            <TableRow
-              key={tx.id}
-              index={index}
-              onClick={() => setSelectedTransaction(tx)}
-            >
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  {formatPaymentType(tx.payment_type)}
-                  {tx.stripe_session_id?.startsWith('check_') && (
-                    <span
-                      className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-semibold"
-                      style={{ backgroundColor: '#FEF3C7', color: '#92400E' }}
-                    >
-                      Check
-                    </span>
-                  )}
-                  {stripeUrl(tx) && (
-                    <a
-                      href={stripeUrl(tx)!}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="opacity-40 hover:opacity-100 transition-opacity"
-                      style={{ color: colors.mistyForest }}
-                      title="View in Stripe"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                  )}
-                </div>
-              </TableCell>
-              <TableCell>
-                <StatusBadge status={tx.status} />
-              </TableCell>
-              <TableCell>
-                <div>
-                  {tx.payment_type !== "donation" && (
-                    <div className="font-medium text-gray-800">
-                      {tx.payer_name ?? (tx.parent_id ? (parentNameMap[tx.parent_id] ?? null) : null) ?? "—"}
-                    </div>
-                  )}
-                  {tx.payer_email && (
-                    <div className="text-gray-500 text-xs">{tx.payer_email}</div>
-                  )}
-                  {!tx.student_id && tx.parent_id && (enrolledChildrenMap[tx.parent_id] ?? []).length > 0 && (
-                    <div className="text-gray-400 text-xs">
-                      {(enrolledChildrenMap[tx.parent_id] ?? []).map(c => c.name).join(", ")}
-                    </div>
-                  )}
-                </div>
-              </TableCell>
-              <TableCell>{formatCents(tx.amount_cents, tx.currency)}</TableCell>
-              <TableCell>
-                {tx.cover_fees
-                  ? formatCents(tx.intended_amount_cents, tx.currency)
-                  : "—"}
-              </TableCell>
-              <TableCell>
-                {new Date(tx.created_at).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                })}
-              </TableCell>
-            </TableRow>
-          ))}
-        </Table>
-      )}
+      {/* Body row — columns share full remaining height */}
+      <div className="flex flex-1 min-h-0">
 
-      {/* Tab 2 — By Parent */}
-      {activeTab === "by-parent" && (
-        <div className="flex gap-4" style={{ minHeight: "400px" }}>
-          {/* Left panel — parent list */}
-          <div
-            className="flex-shrink-0 overflow-y-auto rounded-xl"
-            style={{
-              width: "280px",
-              border: `1px solid ${colors.border}`,
-              backgroundColor: colors.softCloud,
-            }}
-          >
-            {parentGroups.map((group) => {
-              const isActive = group.key === selectedParentKey;
-              return (
-                <button
-                  key={group.key}
-                  onClick={() => {
-                    setSelectedParentKey(group.key);
-                    setSelectedChildKey(null);
-                  }}
-                  className="w-full text-left px-4 py-3 flex items-center gap-3 transition-colors"
+      {/* Column 1 — Parent list */}
+      <div
+        className="flex-shrink-0 flex flex-col"
+        style={{
+          width: "260px",
+          borderRight: `1px solid ${colors.border}`,
+          backgroundColor: colors.softCloud,
+        }}
+      >
+        {/* Scrollable list */}
+        <div className="flex-1 overflow-y-auto min-h-0">
+          {parentGroups.map((group) => {
+            const isActive = group.key === selectedParentKey;
+            return (
+              <button
+                key={group.key}
+                onClick={() => {
+                  setSelectedParentKey(group.key);
+                  setSelectedChildKey(null);
+                }}
+                className="w-full text-left px-4 py-3 flex items-center gap-3 transition-colors"
+                style={{
+                  backgroundColor: isActive ? colors.pastelSage : "transparent",
+                  borderBottom: `1px solid ${colors.divider}`,
+                }}
+              >
+                {/* Avatar */}
+                <div
+                  className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
                   style={{
-                    backgroundColor: isActive
-                      ? colors.pastelSage
-                      : "transparent",
-                    borderBottom: `1px solid ${colors.divider}`,
+                    backgroundColor: getAvatarColor(group.key).bg,
+                    color: getAvatarColor(group.key).text,
                   }}
                 >
-                  {/* Avatar */}
+                  {getInitials(group.name, group.email)}
+                </div>
+                {/* Name + email */}
+                <div className="flex-1 min-w-0">
                   <div
-                    className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
-                    style={{
-                      backgroundColor: colors.paleMarigold,
-                      color: colors.warningText,
-                    }}
+                    className="text-sm font-medium truncate"
+                    style={{ color: colors.textPrimary }}
                   >
-                    {getInitials(group.name, group.email)}
+                    {group.name ?? group.email ?? "Unknown"}
                   </div>
-                  {/* Name + email */}
-                  <div className="flex-1 min-w-0">
+                  {group.name && (
                     <div
-                      className="text-sm font-medium truncate"
-                      style={{ color: colors.textPrimary }}
+                      className="text-xs truncate"
+                      style={{ color: colors.textTertiary }}
                     >
-                      {group.name ?? group.email ?? "Unknown"}
+                      {group.email ?? ""}
                     </div>
-                    {group.name && (
-                      <div
-                        className="text-xs truncate"
-                        style={{ color: colors.textTertiary }}
-                      >
-                        {group.email ?? ""}
+                  )}
+                </div>
+                {/* Payment status badge */}
+                {(() => {
+                  const hasAwaiting = pendingRequests.some(r => r.parent_id === group.key);
+                  return (
+                    <span
+                      className="flex-shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap"
+                      style={{
+                        backgroundColor: hasAwaiting ? colors.paleMarigold : "#d1fae5",
+                        color: hasAwaiting ? colors.warningText : "#065f46",
+                      }}
+                    >
+                      {hasAwaiting ? "Awaiting" : "Up to date"}
+                    </span>
+                  );
+                })()}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Column 2 — Main content: checklist or all-transactions */}
+      <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
+        {/* Scrollable content area */}
+        <div className="flex-1 overflow-y-auto px-6 py-6">
+          {/* All Transactions view */}
+          {showAllTransactions && (
+            <Table
+              headers={["Type", "Status", "Payer", "Amount", "Net Amount", "Date"]}
+            >
+              {localTransactions.map((tx, index) => (
+                <TableRow
+                  key={tx.id}
+                  index={index}
+                  onClick={() => setSelectedTransaction(tx)}
+                >
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {formatPaymentType(tx.payment_type)}
+                      {tx.stripe_session_id?.startsWith('check_') && (
+                        <span
+                          className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-semibold"
+                          style={{ backgroundColor: '#FEF3C7', color: '#92400E' }}
+                        >
+                          Check
+                        </span>
+                      )}
+                      {stripeUrl(tx) && (
+                        <a
+                          href={stripeUrl(tx)!}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="opacity-40 hover:opacity-100 transition-opacity"
+                          style={{ color: colors.mistyForest }}
+                          title="View in Stripe"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge status={tx.status} />
+                  </TableCell>
+                  <TableCell>
+                    <div>
+                      {tx.payment_type !== "donation" && (
+                        <div className="font-medium text-gray-800">
+                          {tx.payer_name ?? (tx.parent_id ? (parentNameMap[tx.parent_id] ?? null) : null) ?? "—"}
+                        </div>
+                      )}
+                      {tx.payer_email && (
+                        <div className="text-gray-500 text-xs">{tx.payer_email}</div>
+                      )}
+                      {!tx.student_id && tx.parent_id && (enrolledChildrenMap[tx.parent_id] ?? []).length > 0 && (
+                        <div className="text-gray-400 text-xs">
+                          {(enrolledChildrenMap[tx.parent_id] ?? []).map(c => c.name).join(", ")}
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>{formatCents(tx.amount_cents, tx.currency)}</TableCell>
+                  <TableCell>
+                    {tx.cover_fees
+                      ? formatCents(tx.intended_amount_cents, tx.currency)
+                      : "—"}
+                  </TableCell>
+                  <TableCell>
+                    {new Date(tx.created_at).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </Table>
+          )}
+
+          {/* Parent Tuition Checklist */}
+          {!showAllTransactions && (
+            <>
+              {!selectedGroup ? (
+                <div
+                  className="h-full flex items-center justify-center rounded-xl"
+                  style={{
+                    border: `1px dashed ${colors.border}`,
+                    color: colors.textTertiary,
+                    minHeight: "200px",
+                  }}
+                >
+                  <p className="text-sm">Select a parent to view their payment checklist</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {/* Parent name header */}
+                  <div>
+                    <div className="text-base font-semibold" style={{ color: colors.textPrimary }}>
+                      {selectedGroup.name ?? selectedGroup.email ?? "Unknown"}
+                    </div>
+                    {selectedGroup.name && (
+                      <div className="text-sm" style={{ color: colors.textSecondary }}>
+                        {selectedGroup.email}
                       </div>
                     )}
                   </div>
-                  {/* Payment status badge */}
-                  {(() => {
-                    const hasAwaiting = pendingRequests.some(r => r.parent_id === group.key);
-                    return (
-                      <span
-                        className="flex-shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap"
+
+                  {/* Child tabs */}
+                  <div className="flex gap-2 flex-wrap">
+                    {childGroups.map((child) => {
+                      const isActive = child.key === effectiveChildKey;
+                      return (
+                        <button
+                          key={child.key}
+                          onClick={() => setSelectedChildKey(child.key)}
+                          className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
+                          style={{
+                            backgroundColor: isActive ? colors.mistyForest : "transparent",
+                            color: isActive ? "#ffffff" : colors.textSecondary,
+                            border: `1px solid ${isActive ? colors.mistyForest : colors.border}`,
+                          }}
+                        >
+                          {child.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Checklist cards */}
+                  <div className="flex gap-4 items-start flex-wrap">
+                    {hasSummer && (
+                      <ProgramChecklist
+                        key={`summer-${effectiveChildKey}`}
+                        title="Summer 2026"
+                        items={SUMMER_ITEMS}
+                        txs={selectedChildGroup?.txs ?? []}
+                        program="summer_26"
+                        onSelectTx={setSelectedTransaction}
+                        parentId={selectedGroup?.key ?? null}
+                        studentId={effectiveChildKey !== "unknown" ? effectiveChildKey : null}
+                        pendingRequests={pendingRequests.filter(
+                          (r) =>
+                            r.parent_id === selectedGroup?.key &&
+                            r.student_id === (effectiveChildKey !== "unknown" ? effectiveChildKey : null)
+                        )}
+                        enrolledChild={(enrolledChildrenMap[selectedGroup?.key ?? ""] ?? []).find(
+                          (c) => c.studentId === effectiveChildKey
+                        )}
+                      />
+                    )}
+                    {hasSchoolYear && (
+                      <ProgramChecklist
+                        key={`school-${effectiveChildKey}`}
+                        title="School Year 2026–2027"
+                        items={SCHOOL_YEAR_ITEMS}
+                        txs={selectedChildGroup?.txs ?? []}
+                        program="school_year_26_27"
+                        onSelectTx={setSelectedTransaction}
+                        parentId={selectedGroup?.key ?? null}
+                        studentId={effectiveChildKey !== "unknown" ? effectiveChildKey : null}
+                        pendingRequests={pendingRequests.filter(
+                          (r) =>
+                            r.parent_id === selectedGroup?.key &&
+                            r.student_id === (effectiveChildKey !== "unknown" ? effectiveChildKey : null)
+                        )}
+                        enrolledChild={(enrolledChildrenMap[selectedGroup?.key ?? ""] ?? []).find(
+                          (c) => c.studentId === effectiveChildKey
+                        )}
+                      />
+                    )}
+                    {hasHomeschool && (
+                      <HomeschoolChecklist
+                        key={`homeschool-${effectiveChildKey}`}
+                        txs={selectedChildGroup?.txs ?? []}
+                        paidData={effectiveChildKey && effectiveChildKey !== "unknown" ? paidHomeschoolByStudent[effectiveChildKey] : undefined}
+                        enrolledChild={(enrolledChildrenMap[selectedGroup?.key ?? ""] ?? []).find(
+                          (c) => c.studentId === effectiveChildKey
+                        )}
+                        onSelectTx={setSelectedTransaction}
+                        parentId={selectedGroup?.key ?? null}
+                        studentId={effectiveChildKey !== "unknown" ? effectiveChildKey : null}
+                        pendingRequests={pendingRequests.filter(
+                          (r) =>
+                            r.parent_id === selectedGroup?.key &&
+                            r.student_id === (effectiveChildKey !== "unknown" ? effectiveChildKey : null)
+                        )}
+                      />
+                    )}
+                    {!hasSummer && !hasSchoolYear && !hasHomeschool && (
+                      <div
+                        className="flex-1 flex items-center justify-center rounded-xl py-12"
                         style={{
-                          backgroundColor: hasAwaiting ? colors.paleMarigold : "#d1fae5",
-                          color: hasAwaiting ? colors.warningText : "#065f46",
+                          border: `1px dashed ${colors.border}`,
+                          color: colors.textTertiary,
                         }}
                       >
-                        {hasAwaiting ? "Awaiting" : "Up to date"}
-                      </span>
-                    );
-                  })()}
-                </button>
-              );
-            })}
+                        <p className="text-sm">No program transactions found</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Column 3 — Billing history (visible when a parent is selected) */}
+      {!showAllTransactions && selectedGroup && (
+        <div
+          className="flex-shrink-0 flex flex-col overflow-hidden"
+          style={{
+            width: "340px",
+            borderLeft: `1px solid ${colors.border}`,
+            backgroundColor: colors.softCloud,
+          }}
+        >
+          {/* Parent name sub-header */}
+          <div
+            className="px-4 py-3 flex-shrink-0"
+            style={{ borderBottom: `1px solid ${colors.border}` }}
+          >
+            <div className="text-sm font-semibold truncate" style={{ color: colors.textPrimary }}>
+              {selectedGroup.name ?? selectedGroup.email ?? "Unknown"}
+            </div>
           </div>
 
-          {/* Right panel — program checklists */}
-          <div className="flex-1 min-w-0">
-            {!selectedGroup ? (
+          {/* Transaction list */}
+          <div className="flex-1 overflow-y-auto">
+            {parentBillingTransactions.length === 0 ? (
               <div
-                className="h-full flex items-center justify-center rounded-xl"
-                style={{
-                  border: `1px dashed ${colors.border}`,
-                  color: colors.textTertiary,
-                }}
+                className="flex flex-col items-center justify-center py-16 gap-2"
+                style={{ color: colors.textTertiary }}
               >
-                <p className="text-sm">
-                  Select a parent to view their payment checklist
-                </p>
+                <p className="text-sm">No transactions found</p>
               </div>
             ) : (
-              <div className="flex flex-col gap-4 h-full">
-                {/* Parent header */}
-                <div>
-                  <div
-                    className="text-base font-semibold"
-                    style={{ color: colors.textPrimary }}
+              <div>
+                {parentBillingTransactions.map((tx) => (
+                  <button
+                    key={tx.id}
+                    onClick={() => setSelectedTransaction(tx)}
+                    className="w-full text-left px-4 py-3 flex flex-col gap-1 transition-colors"
+                    style={{ borderBottom: `1px solid ${colors.divider}` }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = colors.pastelSage)}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                   >
-                    {selectedGroup.name ?? selectedGroup.email ?? "Unknown"}
-                  </div>
-                  {selectedGroup.name && (
-                    <div
-                      className="text-sm"
-                      style={{ color: colors.textSecondary }}
-                    >
-                      {selectedGroup.email}
+                    {/* Top row: type + amount */}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-medium truncate" style={{ color: colors.textPrimary }}>
+                        {formatPaymentType(tx.payment_type)}
+                      </span>
+                      <span className="text-sm font-semibold flex-shrink-0" style={{ color: colors.textPrimary }}>
+                        {formatCents(tx.amount_cents, tx.currency)}
+                      </span>
                     </div>
-                  )}
-                </div>
-
-                {/* Child tabs */}
-                <div className="flex gap-2 flex-wrap">
-                  {childGroups.map((child) => {
-                    const isActive = child.key === effectiveChildKey;
-                    return (
-                      <button
-                        key={child.key}
-                        onClick={() => setSelectedChildKey(child.key)}
-                        className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
-                        style={{
-                          backgroundColor: isActive
-                            ? colors.mistyForest
-                            : "transparent",
-                          color: isActive ? "#ffffff" : colors.textSecondary,
-                          border: `1px solid ${isActive ? colors.mistyForest : colors.border}`,
-                        }}
-                      >
-                        {child.name}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Checklist cards */}
-                <div className="flex gap-4 flex-1 items-start flex-wrap">
-                  {hasSummer && (
-                    <ProgramChecklist
-                      key={`summer-${effectiveChildKey}`}
-                      title="Summer 2026"
-                      items={SUMMER_ITEMS}
-                      txs={selectedChildGroup?.txs ?? []}
-                      program="summer_26"
-                      onSelectTx={setSelectedTransaction}
-                      parentId={selectedGroup?.key ?? null}
-                      studentId={effectiveChildKey !== "unknown" ? effectiveChildKey : null}
-                      pendingRequests={pendingRequests.filter(
-                        (r) =>
-                          r.parent_id === selectedGroup?.key &&
-                          r.student_id === (effectiveChildKey !== "unknown" ? effectiveChildKey : null)
+                    {/* Bottom row: date + student + status */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs" style={{ color: colors.textTertiary }}>
+                        {new Date(tx.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      </span>
+                      {tx.student_id && studentMap[tx.student_id] && (
+                        <>
+                          <span style={{ color: colors.divider }}>·</span>
+                          <span className="text-xs truncate" style={{ color: colors.textTertiary }}>
+                            {studentMap[tx.student_id]}
+                          </span>
+                        </>
                       )}
-                      enrolledChild={(enrolledChildrenMap[selectedGroup?.key ?? ""] ?? []).find(
-                        (c) => c.studentId === effectiveChildKey
-                      )}
-                    />
-                  )}
-                  {hasSchoolYear && (
-                    <ProgramChecklist
-                      key={`school-${effectiveChildKey}`}
-                      title="School Year 2026–2027"
-                      items={SCHOOL_YEAR_ITEMS}
-                      txs={selectedChildGroup?.txs ?? []}
-                      program="school_year_26_27"
-                      onSelectTx={setSelectedTransaction}
-                      parentId={selectedGroup?.key ?? null}
-                      studentId={effectiveChildKey !== "unknown" ? effectiveChildKey : null}
-                      pendingRequests={pendingRequests.filter(
-                        (r) =>
-                          r.parent_id === selectedGroup?.key &&
-                          r.student_id === (effectiveChildKey !== "unknown" ? effectiveChildKey : null)
-                      )}
-                      enrolledChild={(enrolledChildrenMap[selectedGroup?.key ?? ""] ?? []).find(
-                        (c) => c.studentId === effectiveChildKey
-                      )}
-                    />
-                  )}
-                  {hasHomeschool && (
-                    <HomeschoolChecklist
-                      key={`homeschool-${effectiveChildKey}`}
-                      txs={selectedChildGroup?.txs ?? []}
-                      paidData={effectiveChildKey && effectiveChildKey !== "unknown" ? paidHomeschoolByStudent[effectiveChildKey] : undefined}
-                      enrolledChild={(enrolledChildrenMap[selectedGroup?.key ?? ""] ?? []).find(
-                        (c) => c.studentId === effectiveChildKey
-                      )}
-                      onSelectTx={setSelectedTransaction}
-                      parentId={selectedGroup?.key ?? null}
-                      studentId={effectiveChildKey !== "unknown" ? effectiveChildKey : null}
-                      pendingRequests={pendingRequests.filter(
-                        (r) =>
-                          r.parent_id === selectedGroup?.key &&
-                          r.student_id === (effectiveChildKey !== "unknown" ? effectiveChildKey : null)
-                      )}
-                    />
-                  )}
-                  {!hasSummer && !hasSchoolYear && !hasHomeschool && (
-                    <div
-                      className="flex-1 flex items-center justify-center rounded-xl py-12"
-                      style={{
-                        border: `1px dashed ${colors.border}`,
-                        color: colors.textTertiary,
-                      }}
-                    >
-                      <p className="text-sm">No program transactions found</p>
+                      <span style={{ color: colors.divider }}>·</span>
+                      <StatusBadge status={tx.status} />
                     </div>
-                  )}
-                </div>
+                  </button>
+                ))}
               </div>
             )}
           </div>
         </div>
       )}
 
+      </div>{/* end body row */}
+
       <TransactionDetailSidebar
         transaction={selectedTransaction}
         onClose={() => setSelectedTransaction(null)}
         onDeleted={handleDeleted}
       />
-    </>
+    </div>
   );
 }

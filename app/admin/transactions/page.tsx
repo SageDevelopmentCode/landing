@@ -173,20 +173,6 @@ export default async function TransactionsPage() {
   const pendingRequests = (pendingData ?? []) as PendingPaymentRequest[]
 
   return (
-    <div className="space-y-6 pt-6">
-      <div>
-        <h1
-          className={`text-2xl font-bold ${merriweather.className}`}
-          style={{ color: colors.mistyForest }}
-        >
-          Transactions
-        </h1>
-        <p className="mt-2" style={{ color: colors.textSecondary }}>
-          {rows.length} transaction{rows.length !== 1 ? 's' : ''}
-        </p>
-      </div>
-
-      <TransactionsClient transactions={rows} studentMap={studentMap} parentNameMap={parentNameMap} pendingRequests={pendingRequests} enrolledChildrenMap={enrolledChildrenMap} paidHomeschoolByStudent={paidHomeschoolByStudent} />
-    </div>
+    <TransactionsClient transactions={rows} studentMap={studentMap} parentNameMap={parentNameMap} pendingRequests={pendingRequests} enrolledChildrenMap={enrolledChildrenMap} paidHomeschoolByStudent={paidHomeschoolByStudent} />
   )
 }

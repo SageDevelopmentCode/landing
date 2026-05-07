@@ -94,7 +94,7 @@ export default async function AdminLayout({
           pendingApplications={pendingApplications ?? 0}
           userEmail={user.email}
         />
-        <main className="flex-1 px-4 sm:px-6 lg:px-8 w-full overflow-auto">
+        <main className="flex-1 px-4 sm:px-6 lg:px-8 w-full overflow-auto flex flex-col">
           {children}
         </main>
       </div>
