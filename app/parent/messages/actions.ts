@@ -84,6 +84,28 @@ export async function getConversations(userId: string): Promise<ConversationWith
 
   const userMap = new Map((adminUsers ?? []).map((u) => [u.id, u]));
 
+  // For parents without a profile_image_url, fall back to their first child's image
+  const parentIdsWithoutImage = (adminUsers ?? [])
+    .filter((u) => u.role === "parent" && !u.profile_image_url)
+    .map((u) => u.id);
+
+  const childImageMap = new Map<string, string>();
+  if (parentIdsWithoutImage.length > 0) {
+    const { data: childRows } = await adminClient
+      .schema("admin")
+      .from("students")
+      .select("parent_id, profile_image_url")
+      .in("parent_id", parentIdsWithoutImage)
+      .eq("is_deleted", false)
+      .not("profile_image_url", "is", null);
+
+    for (const row of childRows ?? []) {
+      if (!childImageMap.has(row.parent_id) && row.profile_image_url) {
+        childImageMap.set(row.parent_id, row.profile_image_url);
+      }
+    }
+  }
+
   // Get latest message + unread count for each conversation
   const result: ConversationWithMeta[] = await Promise.all(
     convos.map(async (convo) => {
@@ -119,7 +141,7 @@ export async function getConversations(userId: string): Promise<ConversationWith
           id: otherUser?.id ?? otherParticipant?.user_id ?? "",
           full_name: otherUser?.full_name ?? "Unknown",
           role: otherUser?.role ?? null,
-          profile_image_url: otherUser?.profile_image_url ?? null,
+          profile_image_url: otherUser?.profile_image_url ?? childImageMap.get(otherUser?.id ?? "") ?? null,
         },
         lastMessage: lastMessage
           ? {

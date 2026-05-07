@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Search, Send, ChevronLeft, Loader2, ImageIcon, X } from "lucide-react";
+import { Search, Send, ChevronLeft, Loader2, ImageIcon, X, GraduationCap } from "lucide-react";
 import { Poppins } from 'next/font/google'
 import { createClient } from "@/app/lib/supabase-browser";
 import { cssColors as colors, cssShadows as shadows } from "@/app/admin/design-system";
@@ -14,6 +14,7 @@ import {
   type ConversationWithMeta,
   type MessageRow,
 } from "@/app/parent/messages/actions";
+import { getStudentsByParentId, type ChildInfo } from "./actions";
 
 const merriweather = Poppins({
   weight: ["400", "700"],
@@ -34,6 +35,19 @@ function initialsFor(name: string): string {
     .slice(0, 2)
     .map((w) => w[0].toUpperCase())
     .join("");
+}
+
+function formatProgram(program: string | null): string {
+  if (!program) return "—";
+  const map: Record<string, string> = {
+    summer_26: "Summer 2026",
+    school_year_26_27: "School Year 26–27",
+    both: "Summer + School Year",
+    homeschool_drop_in: "Homeschool Drop-In",
+    aftercare: "Aftercare",
+    field_friday: "Field Friday",
+  };
+  return map[program] ?? program;
 }
 
 function formatTime(iso: string): string {
@@ -59,6 +73,9 @@ export default function AdminMessagesPage({ userId }: { userId: string }) {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [showChildInfo, setShowChildInfo] = useState(false);
+  const [childInfoData, setChildInfoData] = useState<ChildInfo[]>([]);
+  const [loadingChildInfo, setLoadingChildInfo] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -72,6 +89,8 @@ export default function AdminMessagesPage({ userId }: { userId: string }) {
   }, [userId]);
 
   useEffect(() => {
+    setShowChildInfo(false);
+    setChildInfoData([]);
     if (!activeId) return;
     setLoadingMessages(true);
     getMessages(activeId).then((data) => {
@@ -224,6 +243,16 @@ export default function AdminMessagesPage({ userId }: { userId: string }) {
     setSending(false);
   }, [draft, imageFile, activeId, sending, userId]);
 
+  const handleViewChild = async () => {
+    if (!active) return;
+    if (childInfoData.length > 0) { setShowChildInfo(true); return; }
+    setLoadingChildInfo(true);
+    setShowChildInfo(true);
+    const data = await getStudentsByParentId(active.otherUser.id);
+    setChildInfoData(data);
+    setLoadingChildInfo(false);
+  };
+
   const filtered = conversations.filter((c) =>
     c.otherUser.full_name.toLowerCase().includes(search.toLowerCase())
   );
@@ -342,7 +371,7 @@ export default function AdminMessagesPage({ userId }: { userId: string }) {
         </div>
 
         {/* Chat area */}
-        <div className={`flex-1 min-h-0 flex flex-col overflow-hidden ${mobileShowChat ? "flex" : "hidden md:flex"}`}>
+        <div className={`flex-1 min-h-0 flex flex-col overflow-hidden relative ${mobileShowChat ? "flex" : "hidden md:flex"}`}>
           {!active ? (
             <div className="flex-1 flex items-center justify-center">
               <p className="text-sm" style={{ color: colors.textTertiary }}>
@@ -372,7 +401,88 @@ export default function AdminMessagesPage({ userId }: { userId: string }) {
                 <p className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
                   {active.otherUser.full_name}
                 </p>
+                {active.otherUser.role === "parent" && (
+                  <button
+                    onClick={handleViewChild}
+                    className="ml-auto flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg cursor-pointer transition-colors"
+                    style={{ backgroundColor: colors.pastelSage + "40", color: colors.mistyForest }}
+                  >
+                    <GraduationCap className="w-3.5 h-3.5" />
+                    View Child
+                  </button>
+                )}
               </div>
+
+              {/* Child info panel */}
+              {showChildInfo && (
+                <div
+                  className="absolute inset-y-0 right-0 w-72 bg-white border-l shadow-lg z-20 flex flex-col"
+                  style={{ borderColor: colors.border }}
+                >
+                  <div
+                    className="flex items-center justify-between px-4 py-3 border-b shrink-0"
+                    style={{ borderColor: colors.border }}
+                  >
+                    <p className="text-sm font-semibold" style={{ color: colors.textPrimary }}>Child Info</p>
+                    <button
+                      onClick={() => setShowChildInfo(false)}
+                      className="cursor-pointer"
+                      style={{ color: colors.textTertiary }}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-y-auto">
+                    {loadingChildInfo ? (
+                      <div className="flex items-center justify-center py-10">
+                        <Loader2 className="w-5 h-5 animate-spin" style={{ color: colors.textTertiary }} />
+                      </div>
+                    ) : childInfoData.length === 0 ? (
+                      <p className="text-sm text-center py-8" style={{ color: colors.textTertiary }}>No students found</p>
+                    ) : (
+                      childInfoData.map((child) => (
+                        <div key={child.id} className="p-4 flex gap-3 items-start border-b" style={{ borderColor: colors.border }}>
+                          <div className="shrink-0">
+                            {child.profile_image_url ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={child.profile_image_url}
+                                alt={child.child_legal_name ?? ""}
+                                className="w-10 h-10 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div
+                                className="w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-semibold"
+                                style={{ backgroundColor: colorForId(child.id) }}
+                              >
+                                {initialsFor(child.child_legal_name ?? "?")}
+                              </div>
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold truncate" style={{ color: colors.textPrimary }}>
+                              {child.child_legal_name ?? "—"}
+                            </p>
+                            {child.child_grade && (
+                              <p className="text-xs mt-0.5" style={{ color: colors.textSecondary }}>
+                                Grade: {child.child_grade}
+                              </p>
+                            )}
+                            {child.program && (
+                              <p className="text-xs mt-0.5" style={{ color: colors.textSecondary }}>
+                                {formatProgram(child.program)}
+                                {child.program === "homeschool_drop_in" && child.drop_in_program && (
+                                  <span style={{ color: colors.textTertiary }}> · {formatProgram(child.drop_in_program)}</span>
+                                )}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Messages */}
               <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Search, Send, ChevronLeft, SquarePen, X, Loader2, ImageIcon, Paperclip, FileText, Download } from "lucide-react";
+import { Search, Send, ChevronLeft, SquarePen, X, Loader2, ImageIcon, Paperclip, FileText, Download, GraduationCap } from "lucide-react";
 import { createClient } from "@/app/lib/supabase-browser";
 import {
   getConversations,
@@ -15,6 +15,7 @@ import {
   type MessageRow,
 } from "@/app/parent/messages/actions";
 import { searchParents } from "./actions";
+import { getStudentsByParentId, type ChildInfo } from "@/app/admin/messages/actions";
 
 // Renders images, converting HEIC/HEIF URLs on-the-fly for browsers that can't display them natively
 function HeicImage({ src, className, onClick }: { src: string; className?: string; onClick?: () => void }) {
@@ -94,6 +95,19 @@ function UserAvatar({ id, name, imageUrl, size = "md" }: { id: string; name: str
   );
 }
 
+function formatProgram(program: string | null): string {
+  if (!program) return "—";
+  const map: Record<string, string> = {
+    summer_26: "Summer 2026",
+    school_year_26_27: "School Year 26–27",
+    both: "Summer + School Year",
+    homeschool_drop_in: "Homeschool Drop-In",
+    aftercare: "Aftercare",
+    field_friday: "Field Friday",
+  };
+  return map[program] ?? program;
+}
+
 function formatTime(iso: string): string {
   const date = new Date(iso);
   const now = new Date();
@@ -131,6 +145,10 @@ export default function TeacherMessagesPage({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const attachmentInputRef = useRef<HTMLInputElement>(null);
 
+  const [showChildInfo, setShowChildInfo] = useState(false);
+  const [childInfoData, setChildInfoData] = useState<ChildInfo[]>([]);
+  const [loadingChildInfo, setLoadingChildInfo] = useState(false);
+
   const [isComposingNew, setIsComposingNew] = useState(false);
   const [selectedRecipient, setSelectedRecipient] = useState<{ id: string; full_name: string; profile_image_url: string | null } | null>(null);
   const [recipientSearch, setRecipientSearch] = useState("");
@@ -165,6 +183,8 @@ export default function TeacherMessagesPage({
   }, [loadingConvos]);
 
   useEffect(() => {
+    setShowChildInfo(false);
+    setChildInfoData([]);
     if (!activeId) return;
     setLoadingMessages(true);
     getMessages(activeId).then((data) => {
@@ -435,6 +455,16 @@ export default function TeacherMessagesPage({
     setSending(false);
   };
 
+  const handleViewChild = async () => {
+    if (!active) return;
+    if (childInfoData.length > 0) { setShowChildInfo(true); return; }
+    setLoadingChildInfo(true);
+    setShowChildInfo(true);
+    const data = await getStudentsByParentId(active.otherUser.id);
+    setChildInfoData(data);
+    setLoadingChildInfo(false);
+  };
+
   const filtered = conversations.filter((c) =>
     c.otherUser.full_name.toLowerCase().includes(search.toLowerCase())
   );
@@ -533,7 +563,7 @@ export default function TeacherMessagesPage({
       </div>
 
       {/* Chat area */}
-      <div className={`flex-1 min-h-0 flex flex-col ${mobileShowChat ? "flex" : "hidden md:flex"}`}>
+      <div className={`flex-1 min-h-0 flex flex-col relative ${mobileShowChat ? "flex" : "hidden md:flex"}`}>
         {isComposingNew ? (
           <>
             <div className="flex items-center gap-3 px-5 py-3.5 border-b border-gray-100 shrink-0">
@@ -718,7 +748,77 @@ export default function TeacherMessagesPage({
                   </p>
                 )}
               </div>
+              {active.otherUser.role === "parent" && (
+                <button
+                  onClick={handleViewChild}
+                  className="ml-auto flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg cursor-pointer transition-colors bg-[#4a7c59]/10 text-[#4a7c59] hover:bg-[#4a7c59]/20"
+                >
+                  <GraduationCap className="w-3.5 h-3.5" />
+                  View Child
+                </button>
+              )}
             </div>
+
+            {/* Child info panel */}
+            {showChildInfo && (
+              <div className="absolute inset-y-0 right-0 w-72 bg-white border-l border-gray-100 shadow-lg z-20 flex flex-col">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 shrink-0">
+                  <p className="text-sm font-semibold font-body text-gray-800">Child Info</p>
+                  <button
+                    onClick={() => setShowChildInfo(false)}
+                    className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto">
+                  {loadingChildInfo ? (
+                    <div className="flex items-center justify-center py-10">
+                      <Loader2 className="w-5 h-5 animate-spin text-gray-300" />
+                    </div>
+                  ) : childInfoData.length === 0 ? (
+                    <p className="text-sm text-gray-400 font-body text-center py-8">No students found</p>
+                  ) : (
+                    childInfoData.map((child) => (
+                      <div key={child.id} className="p-4 flex gap-3 items-start border-b border-gray-100">
+                        <div className="shrink-0">
+                          {child.profile_image_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={child.profile_image_url}
+                              alt={child.child_legal_name ?? ""}
+                              className="w-10 h-10 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className={`${colorForId(child.id)} w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-semibold font-body shrink-0`}>
+                              {initialsFor(child.child_legal_name ?? "?")}
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold font-body text-gray-800 truncate">
+                            {child.child_legal_name ?? "—"}
+                          </p>
+                          {child.child_grade && (
+                            <p className="text-xs font-body text-gray-500 mt-0.5">
+                              Grade: {child.child_grade}
+                            </p>
+                          )}
+                          {child.program && (
+                            <p className="text-xs font-body text-gray-500 mt-0.5">
+                              {formatProgram(child.program)}
+                              {child.program === "homeschool_drop_in" && child.drop_in_program && (
+                                <span className="text-gray-400"> · {formatProgram(child.drop_in_program)}</span>
+                              )}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
 
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
               {loadingMessages ? (
