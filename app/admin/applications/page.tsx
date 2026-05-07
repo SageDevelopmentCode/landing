@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { createBrowserClient } from '@supabase/ssr'
-import { Table, TableRow, TableCell } from '../components/Table'
+
 import { ApplicationDetailSidebar } from '../components/ApplicationDetailSidebar'
 import type { CachedEnrollmentData } from '../components/ApplicationDetailSidebar'
 import { AdminEnrollmentItemDrawer } from '../components/AdminEnrollmentItemDrawer'
@@ -806,80 +806,75 @@ export default function ApplicationsPage() {
             transition={{ duration: 0.15 }}
           >
             {tableFilteredApplications.length > 0 ? (
-              <Table
-                headers={[
-                  'Parent',
-                  'Child Name',
-                  'Age / Grade',
-                  'Program',
-                  'Status',
-                  'Approved',
-                  'Tags',
-                  'Submitted',
-                  'Actions',
-                ]}
-              >
-                {tableFilteredApplications.map((app, index) => {
-                  const isApproving = approvingId === app.id
+              <>
+                {/* Header row */}
+                <div
+                  className="grid gap-4 px-2 py-2"
+                  style={{
+                    gridTemplateColumns: '1.5fr 1fr 0.75fr 1fr 100px 90px 1fr 80px 140px',
+                    borderBottom: `1px solid ${colors.border}`,
+                  }}
+                >
+                  {['Parent', 'Child Name', 'Age / Grade', 'Program', 'Status', 'Approved', 'Tags', 'Submitted', 'Actions'].map((h) => (
+                    <span key={h} className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: colors.textTertiary }}>
+                      {h}
+                    </span>
+                  ))}
+                </div>
 
-                  return (
-                    <TableRow
-                      key={app.id}
-                      index={index}
-                      onClick={() => setSelectedApp(app)}
-                    >
-                      <TableCell>
-                        <div className="font-medium">{app.g1_full_name ?? '—'}</div>
-                        <div className="text-xs text-gray-400 font-body">
-                          {app.g1_email ?? '—'}
+                {/* Rows */}
+                <div className="divide-y" style={{ borderColor: colors.border }}>
+                  {tableFilteredApplications.map((app) => {
+                    const isApproving = approvingId === app.id
+                    return (
+                      <div
+                        key={app.id}
+                        onClick={() => setSelectedApp(app)}
+                        className="grid gap-4 px-2 py-2.5 cursor-pointer transition-colors duration-100 hover:bg-[var(--admin-elevated)] items-center"
+                        style={{
+                          gridTemplateColumns: '1.5fr 1fr 0.75fr 1fr 100px 90px 1fr 80px 140px',
+                          borderColor: colors.border,
+                        }}
+                      >
+                        <div className="min-w-0">
+                          <div className="text-xs font-medium truncate" style={{ color: colors.textPrimary }}>{app.g1_full_name ?? '—'}</div>
+                          <div className="text-xs truncate" style={{ color: colors.textTertiary }}>{app.g1_email ?? '—'}</div>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>{app.child_legal_name ?? '—'}</div>
-                        {app.preferred_name && (
-                          <div className="text-xs text-gray-400 font-body">
-                            "{app.preferred_name}"
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div>{app.child_age != null ? `Age ${app.child_age}` : '—'}</div>
-                        {app.child_grade && (
-                          <div className="text-xs text-gray-400 font-body">
-                            {app.child_grade}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-gray-600">{formatProgram(app.program)}</div>
-                      </TableCell>
-                      <TableCell>
-                        <span className={`inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full border ${formatStatus(app.status).className}`}>
+                        <div className="min-w-0">
+                          <div className="text-xs truncate" style={{ color: colors.textSecondary }}>{app.child_legal_name ?? '—'}</div>
+                          {app.preferred_name && (
+                            <div className="text-xs truncate" style={{ color: colors.textTertiary }}>"{app.preferred_name}"</div>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-xs" style={{ color: colors.textSecondary }}>{app.child_age != null ? `Age ${app.child_age}` : '—'}</div>
+                          {app.child_grade && (
+                            <div className="text-xs" style={{ color: colors.textTertiary }}>{app.child_grade}</div>
+                          )}
+                        </div>
+                        <span className="text-xs truncate" style={{ color: colors.textSecondary }}>{formatProgram(app.program)}</span>
+                        <span className={`inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full border w-fit ${formatStatus(app.status).className}`}>
                           {formatStatus(app.status).label}
                         </span>
-                      </TableCell>
-                      <TableCell>
-                        {app.approved ? (
-                          <span className="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full bg-green-50 text-green-700 border border-green-200">
-                            Approved
-                          </span>
-                        ) : app.denied ? (
-                          <span className="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full bg-red-50 text-red-600 border border-red-200">
-                            Denied
-                          </span>
-                        ) : (
-                          <span className="text-gray-400 text-sm">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell style={{ overflow: 'visible', position: 'relative' }}>
-                        <TagCell app={app} onTagsChanged={handleTagsChanged} />
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-gray-600">
-                          {app.created_at ? new Date(app.created_at).toLocaleDateString() : '—'}
+                        <div>
+                          {app.approved ? (
+                            <span className="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full bg-green-50 text-green-700 border border-green-200">
+                              Approved
+                            </span>
+                          ) : app.denied ? (
+                            <span className="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full bg-red-50 text-red-600 border border-red-200">
+                              Denied
+                            </span>
+                          ) : (
+                            <span style={{ color: colors.textTertiary }}>—</span>
+                          )}
                         </div>
-                      </TableCell>
-                      <TableCell>
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <TagCell app={app} onTagsChanged={handleTagsChanged} />
+                        </div>
+                        <span className="text-xs" style={{ color: colors.textSecondary }}>
+                          {app.created_at ? new Date(app.created_at).toLocaleDateString() : '—'}
+                        </span>
                         <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                           <button
                             onClick={(e) => { e.stopPropagation(); setSelectedApp(app) }}
@@ -901,11 +896,11 @@ export default function ApplicationsPage() {
                             {isApproving ? '...' : app.approved ? 'Approved' : 'Approve'}
                           </button>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-              </Table>
+                      </div>
+                    )
+                  })}
+                </div>
+              </>
             ) : (
               <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm text-center">
                 <p className="text-gray-500">No applications yet</p>

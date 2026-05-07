@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { createBrowserClient } from '@supabase/ssr'
-import { Table, TableRow, TableCell } from '../components/Table'
+
 import { InlineStatusEditor } from '../components/InlineStatusEditor'
 import { TagEditor, PREDEFINED_TAGS, getTagColor } from '../components/TagEditor'
 import { LeadsDetailSidebar } from '../components/LeadsDetailSidebar'
@@ -465,118 +465,127 @@ export default function LeadsPage() {
         </div>
       ) : (
         <>
-          {/* Desktop: table view */}
+          {/* Desktop: inline grid view */}
           <div className="hidden md:block">
-            <Table
-              headers={COLUMNS.filter((c) => !hiddenColumns.has(c.key)).map((c) => c.label)}
+            {/* Header row */}
+            <div
+              className="grid gap-4 px-2 py-2"
+              style={{
+                gridTemplateColumns: `repeat(${COLUMNS.filter((c) => !hiddenColumns.has(c.key)).length}, minmax(0, 1fr))`,
+                borderBottom: `1px solid ${colors.border}`,
+              }}
             >
-              {filteredLeads.map((lead, index) => {
+              {COLUMNS.filter((c) => !hiddenColumns.has(c.key)).map((col) => (
+                <span
+                  key={col.key}
+                  className="text-[11px] font-semibold uppercase tracking-wide"
+                  style={{ color: colors.textTertiary }}
+                >
+                  {col.label}
+                </span>
+              ))}
+            </div>
+
+            {/* Rows */}
+            <div className="divide-y" style={{ borderColor: colors.border }}>
+              {filteredLeads.map((lead) => {
                 const isWaitlist = lead.type === 'waitlist'
                 const isContact = lead.type === 'contact'
+                const visibleCount = COLUMNS.filter((c) => !hiddenColumns.has(c.key)).length
 
                 return (
-                  <TableRow
+                  <div
                     key={lead.id}
-                    index={index}
                     onClick={() => setSelectedLead(lead)}
+                    className="grid gap-4 px-2 py-2.5 cursor-pointer transition-colors duration-100 hover:bg-[var(--admin-elevated)] items-center"
+                    style={{
+                      gridTemplateColumns: `repeat(${visibleCount}, minmax(0, 1fr))`,
+                      borderColor: colors.border,
+                    }}
                   >
                     {!hiddenColumns.has('type') && (
-                      <TableCell>
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full border ${
-                            isWaitlist
-                              ? 'bg-amber-50 text-amber-700 border-amber-200'
-                              : 'bg-blue-50 text-blue-700 border-blue-200'
-                          }`}
-                        >
-                          {isWaitlist ? 'Waitlist' : 'Contact'}
-                        </span>
-                      </TableCell>
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full border w-fit ${
+                          isWaitlist
+                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : 'bg-blue-50 text-blue-700 border-blue-200'
+                        }`}
+                      >
+                        {isWaitlist ? 'Waitlist' : 'Contact'}
+                      </span>
                     )}
                     {!hiddenColumns.has('name') && (
-                      <TableCell>
-                        <div className="font-medium">
-                          {isWaitlist ? lead.parent_name : lead.name}
-                        </div>
-                      </TableCell>
+                      <span className="text-xs font-medium truncate" style={{ color: colors.textPrimary }}>
+                        {isWaitlist ? lead.parent_name : lead.name}
+                      </span>
                     )}
                     {!hiddenColumns.has('contact') && (
-                      <TableCell>
-                        <div className="max-w-[160px] truncate">{lead.email}</div>
-                        <div className="text-xs text-gray-400 font-body max-w-[160px] truncate">
-                          {lead.phone}
-                        </div>
-                      </TableCell>
+                      <div className="min-w-0">
+                        <div className="text-xs truncate" style={{ color: colors.textSecondary }}>{lead.email}</div>
+                        <div className="text-xs truncate" style={{ color: colors.textTertiary }}>{lead.phone}</div>
+                      </div>
                     )}
                     {!hiddenColumns.has('child') && (
-                      <TableCell>
+                      <div className="min-w-0">
                         {isWaitlist ? (
                           <>
-                            <div className="max-w-[120px] truncate">{lead.child_name}</div>
-                            <div className="text-xs text-gray-400 font-body">
-                              Age: {lead.child_age || 'N/A'}
-                            </div>
+                            <div className="text-xs truncate" style={{ color: colors.textSecondary }}>{lead.child_name}</div>
+                            <div className="text-xs" style={{ color: colors.textTertiary }}>Age: {lead.child_age || 'N/A'}</div>
                           </>
                         ) : (
-                          <div className="text-gray-400">—</div>
+                          <span style={{ color: colors.textTertiary }}>—</span>
                         )}
-                      </TableCell>
+                      </div>
                     )}
                     {!hiddenColumns.has('message') && (
-                      <TableCell>
+                      <div className="min-w-0">
                         {isContact ? (
-                          <div className="max-w-[160px] truncate" title={lead.message}>
+                          <span className="text-xs truncate block" style={{ color: colors.textSecondary }} title={lead.message}>
                             {lead.message}
-                          </div>
+                          </span>
                         ) : isWaitlist && lead.special_interests ? (
-                          <div className="max-w-[160px] truncate" title={lead.special_interests}>
+                          <span className="text-xs truncate block" style={{ color: colors.textSecondary }} title={lead.special_interests}>
                             {lead.special_interests}
-                          </div>
+                          </span>
                         ) : (
-                          <div className="text-gray-400">—</div>
+                          <span style={{ color: colors.textTertiary }}>—</span>
                         )}
-                      </TableCell>
+                      </div>
                     )}
                     {!hiddenColumns.has('start_date') && (
-                      <TableCell>
-                        <div className="text-gray-600">
-                          {isWaitlist && lead.preferred_start_date
-                            ? lead.preferred_start_date
-                            : '—'}
-                        </div>
-                      </TableCell>
+                      <span className="text-xs" style={{ color: colors.textSecondary }}>
+                        {isWaitlist && lead.preferred_start_date ? lead.preferred_start_date : '—'}
+                      </span>
                     )}
                     {!hiddenColumns.has('status') && (
-                      <TableCell>
+                      <div onClick={(e) => e.stopPropagation()}>
                         <InlineStatusEditor
                           status={lead.status}
                           leadId={lead.id}
                           leadType={lead.type}
                           onStatusChange={handleLeadUpdate}
                         />
-                      </TableCell>
+                      </div>
                     )}
                     {!hiddenColumns.has('tags') && (
-                      <TableCell>
+                      <div onClick={(e) => e.stopPropagation()}>
                         <TagEditor
                           tags={lead.tags ?? []}
                           leadId={lead.id}
                           leadType={lead.type}
                           onTagsChange={handleTagsUpdate}
                         />
-                      </TableCell>
+                      </div>
                     )}
                     {!hiddenColumns.has('submitted') && (
-                      <TableCell>
-                        <div className="text-gray-600">
-                          {new Date(lead.created_at).toLocaleDateString()}
-                        </div>
-                      </TableCell>
+                      <span className="text-xs" style={{ color: colors.textSecondary }}>
+                        {new Date(lead.created_at).toLocaleDateString()}
+                      </span>
                     )}
-                  </TableRow>
+                  </div>
                 )
               })}
-            </Table>
+            </div>
           </div>
 
           {/* Mobile: card list view */}
