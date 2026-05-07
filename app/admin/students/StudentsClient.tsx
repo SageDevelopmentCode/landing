@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Table, TableRow, TableCell } from '../components/Table'
 import { StudentDetailSidebar } from '../components/StudentDetailSidebar'
 import { TeacherAssignSidebar } from '../components/TeacherAssignSidebar'
+import { cssColors as colors } from '../design-system'
 import type { TeacherAssignment } from '../../actions/teacherAssignments'
 
 type Student = {
@@ -54,6 +54,27 @@ interface StudentsClientProps {
   assignmentsByStudentId: Record<string, TeacherAssignment[]>
   tagsByStudentId?: Record<string, string[]>
   programByStudentId?: Record<string, { program: string | null; drop_in_program: string | null }>
+}
+
+const HEADERS = ['Name', 'Grade', 'Program', 'DOB', 'Parent', 'Teacher', 'Tags']
+const COLS = 'grid-cols-[2fr_0.6fr_1.5fr_0.9fr_1.2fr_1.2fr_1fr]'
+
+const AVATAR_COLORS = [
+  '#4a7c59', '#5E7C68', '#6b9e7a', '#3d6b4f', '#527a60',
+  '#4f8865', '#3a6b52', '#629973', '#456a55', '#5a8c6a',
+]
+
+function avatarColor(id: string): string {
+  let hash = 0
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) & 0xfffffff
+  return AVATAR_COLORS[hash % AVATAR_COLORS.length]
+}
+
+function getInitials(name: string | null): string {
+  if (!name) return '?'
+  const parts = name.trim().split(/\s+/)
+  if (parts.length === 1) return parts[0][0].toUpperCase()
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
 
 export function StudentsClient({ students: initialStudents, fetchStudentDetail, assignmentsByStudentId, tagsByStudentId = {}, programByStudentId = {} }: StudentsClientProps) {
@@ -144,46 +165,105 @@ export function StudentsClient({ students: initialStudents, fetchStudentDetail, 
           </div>
         )}
       </div>
-      <Table
-        headers={['Name', 'Grade', 'Program', 'DOB', 'Parent', 'Teacher', 'Tags']}
+
+      {/* Column header row */}
+      <div
+        className={`grid ${COLS} gap-4 px-2 py-2`}
+        style={{ borderBottom: `1px solid ${colors.border}` }}
       >
-        {filteredStudents.map((student, index) => {
+        {HEADERS.map((h) => (
+          <span
+            key={h}
+            className="text-[11px] font-semibold uppercase tracking-wide"
+            style={{ color: colors.textTertiary }}
+          >
+            {h}
+          </span>
+        ))}
+      </div>
+
+      {/* Rows */}
+      <div className="divide-y" style={{ borderColor: colors.border }}>
+        {filteredStudents.length === 0 && (
+          <div className="px-2 py-12 text-center text-sm" style={{ color: colors.textTertiary }}>
+            No students found.
+          </div>
+        )}
+        {filteredStudents.map((student) => {
           const dob =
             student.dob_month && student.dob_day && student.dob_year
               ? `${student.dob_month}/${student.dob_day}/${student.dob_year}`
               : '—'
+          const p = programByStudentId[student.id]
+          const assignments = assignmentsByStudentId[student.id]
+          const tags = tagsByStudentId[student.id] ?? []
+
           return (
-            <TableRow key={student.id} index={index} onClick={() => handleRowClick(student)}>
-              <TableCell>
-                <div className="font-medium">{student.child_legal_name ?? '—'}</div>
-              </TableCell>
-              <TableCell>{student.child_grade ?? '—'}</TableCell>
-              <TableCell>
-                {(() => {
-                  const p = programByStudentId[student.id]
-                  if (!p?.program) return <span className="text-gray-300">—</span>
-                  if (p.program === 'homeschool_drop_in' && p.drop_in_program) {
-                    return (
-                      <div>
-                        <div>{formatProgram(p.program)}</div>
-                        <div className="text-xs text-gray-400">{formatProgram(p.drop_in_program)}</div>
-                      </div>
-                    )
-                  }
-                  return formatProgram(p.program)
-                })()}
-              </TableCell>
-              <TableCell>{dob}</TableCell>
-              <TableCell>{student.parent_name ?? '—'}</TableCell>
-              <TableCell>
-                {(assignmentsByStudentId[student.id]?.length ?? 0) > 0 ? (
+            <div
+              key={student.id}
+              onClick={() => handleRowClick(student)}
+              className={`grid ${COLS} gap-4 px-2 py-2.5 cursor-pointer transition-colors duration-100 hover:bg-[var(--admin-elevated)] items-center`}
+              style={{ borderColor: colors.border }}
+            >
+              {/* Name + avatar */}
+              <div className="flex items-center gap-2.5 min-w-0">
+                {student.profile_image_url ? (
+                  <img
+                    src={student.profile_image_url}
+                    alt={student.child_legal_name ?? 'Student'}
+                    className="w-7 h-7 rounded-full object-cover flex-shrink-0"
+                  />
+                ) : (
+                  <div
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
+                    style={{ backgroundColor: avatarColor(student.id) }}
+                  >
+                    {getInitials(student.child_legal_name)}
+                  </div>
+                )}
+                <span className="text-xs font-medium truncate" style={{ color: colors.textPrimary }}>
+                  {student.child_legal_name ?? '—'}
+                </span>
+              </div>
+
+              {/* Grade */}
+              <span className="text-xs truncate" style={{ color: colors.textSecondary }}>
+                {student.child_grade ?? '—'}
+              </span>
+
+              {/* Program */}
+              <div className="text-xs min-w-0" style={{ color: colors.textSecondary }}>
+                {!p?.program ? (
+                  <span style={{ color: colors.textTertiary }}>—</span>
+                ) : p.program === 'homeschool_drop_in' && p.drop_in_program ? (
+                  <div>
+                    <div className="truncate">{formatProgram(p.program)}</div>
+                    <div className="truncate" style={{ color: colors.textTertiary, fontSize: 11 }}>{formatProgram(p.drop_in_program)}</div>
+                  </div>
+                ) : (
+                  <span className="truncate">{formatProgram(p.program)}</span>
+                )}
+              </div>
+
+              {/* DOB */}
+              <span className="text-xs truncate" style={{ color: colors.textSecondary }}>
+                {dob}
+              </span>
+
+              {/* Parent */}
+              <span className="text-xs truncate" style={{ color: colors.textSecondary }}>
+                {student.parent_name ?? '—'}
+              </span>
+
+              {/* Teacher */}
+              <div className="text-xs min-w-0">
+                {(assignments?.length ?? 0) > 0 ? (
                   <button
                     onClick={(e) => { e.stopPropagation(); setAssignStudent(student) }}
-                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-                             color: '#4B6A4F', fontSize: 'inherit', textDecoration: 'underline' }}
+                    className="text-xs truncate text-left underline"
+                    style={{ color: colors.accent, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
                   >
                     {(() => {
-                      const assignments = assignmentsByStudentId[student.id]
                       const first = assignments[0]?.teacher_name ?? '—'
                       const remaining = assignments.length - 1
                       return remaining > 0 ? `${first} +${remaining} more` : first
@@ -192,33 +272,40 @@ export function StudentsClient({ students: initialStudents, fetchStudentDetail, 
                 ) : (
                   <button
                     onClick={(e) => { e.stopPropagation(); setAssignStudent(student) }}
-                    style={{ fontSize: 12, padding: '3px 10px', borderRadius: 20,
-                             border: '1px solid #D1D5DB', color: '#4B6A4F', background: 'white',
-                             cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    className="text-xs whitespace-nowrap"
+                    style={{
+                      padding: '3px 10px',
+                      borderRadius: 20,
+                      border: `1px solid ${colors.border}`,
+                      color: colors.accent,
+                      background: colors.surface,
+                      cursor: 'pointer',
+                    }}
                   >
                     Assign teacher(s)
                   </button>
                 )}
-              </TableCell>
-              <TableCell>
-                <div className="flex flex-wrap gap-1">
-                  {(tagsByStudentId[student.id] ?? []).length > 0
-                    ? (tagsByStudentId[student.id] ?? []).map(tag => (
-                        <span
-                          key={tag}
-                          className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-violet-50 text-violet-700 border border-violet-200"
-                        >
-                          {tag}
-                        </span>
-                      ))
-                    : <span className="text-gray-300">—</span>
-                  }
-                </div>
-              </TableCell>
-            </TableRow>
+              </div>
+
+              {/* Tags */}
+              <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
+                {tags.length > 0 ? (
+                  tags.map(tag => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-violet-50 text-violet-700 border border-violet-200"
+                    >
+                      {tag}
+                    </span>
+                  ))
+                ) : (
+                  <span style={{ color: colors.textTertiary }}>—</span>
+                )}
+              </div>
+            </div>
           )
         })}
-      </Table>
+      </div>
 
       <StudentDetailSidebar
         student={studentDetail ?? selectedStudent}

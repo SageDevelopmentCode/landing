@@ -1,13 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { Table, TableRow, TableCell } from '../components/Table'
 import { ParentDetailSidebar } from '../components/ParentDetailSidebar'
+import { cssColors as colors } from '../design-system'
 
 type Parent = {
   id: string
   email: string | null
   full_name: string | null
+  profile_image_url?: string | null
   g1_cell_phone: string | null
   g1_work_phone: string | null
   g1_preferred_contact: boolean | null
@@ -44,6 +45,27 @@ type ParentDetail = {
 interface ParentsClientProps {
   parents: Parent[]
   fetchParentDetail: (parentId: string) => Promise<ParentDetail>
+}
+
+const HEADERS = ['Full Name', 'G1 Cell Phone', 'G2 Full Name', 'G2 Relationship', 'G2 Email', 'G2 Cell Phone']
+const COLS = 'grid-cols-[2fr_1fr_1.5fr_1fr_1.5fr_1fr]'
+
+const AVATAR_COLORS = [
+  '#4a7c59', '#5E7C68', '#6b9e7a', '#3d6b4f', '#527a60',
+  '#4f8865', '#3a6b52', '#629973', '#456a55', '#5a8c6a',
+]
+
+function avatarColor(id: string): string {
+  let hash = 0
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) & 0xfffffff
+  return AVATAR_COLORS[hash % AVATAR_COLORS.length]
+}
+
+function getInitials(name: string | null): string {
+  if (!name) return '?'
+  const parts = name.trim().split(/\s+/)
+  if (parts.length === 1) return parts[0][0].toUpperCase()
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
 
 export function ParentsClient({ parents: initialParents, fetchParentDetail }: ParentsClientProps) {
@@ -102,29 +124,75 @@ export function ParentsClient({ parents: initialParents, fetchParentDetail }: Pa
           className="pr-2 py-0.5 text-xs font-semibold bg-transparent border-none outline-none w-40 placeholder:font-normal text-gray-500"
         />
       </div>
-      <Table
-        headers={[
-          'Full Name',
-          'G1 Cell Phone',
-          'G2 Full Name',
-          'G2 Relationship',
-          'G2 Email',
-          'G2 Cell Phone',
-        ]}
+
+      {/* Column header row */}
+      <div
+        className={`grid ${COLS} gap-4 px-2 py-2`}
+        style={{ borderBottom: `1px solid ${colors.border}` }}
       >
-        {filteredParents.map((parent, index) => (
-          <TableRow key={parent.id} index={index} onClick={() => handleRowClick(parent)}>
-            <TableCell>
-              <div className="font-medium">{parent.full_name ?? '—'}</div>
-            </TableCell>
-            <TableCell>{parent.g1_cell_phone ?? '—'}</TableCell>
-            <TableCell>{parent.g2_full_name ?? '—'}</TableCell>
-            <TableCell>{parent.g2_relationship ?? '—'}</TableCell>
-            <TableCell>{parent.g2_email ?? '—'}</TableCell>
-            <TableCell>{parent.g2_cell_phone ?? '—'}</TableCell>
-          </TableRow>
+        {HEADERS.map((h) => (
+          <span
+            key={h}
+            className="text-[11px] font-semibold uppercase tracking-wide"
+            style={{ color: colors.textTertiary }}
+          >
+            {h}
+          </span>
         ))}
-      </Table>
+      </div>
+
+      {/* Rows */}
+      <div className="divide-y" style={{ borderColor: colors.border }}>
+        {filteredParents.length === 0 && (
+          <div className="px-2 py-12 text-center text-sm" style={{ color: colors.textTertiary }}>
+            No parents found.
+          </div>
+        )}
+        {filteredParents.map((parent) => (
+          <div
+            key={parent.id}
+            onClick={() => handleRowClick(parent)}
+            className={`grid ${COLS} gap-4 px-2 py-2.5 cursor-pointer transition-colors duration-100 hover:bg-[var(--admin-elevated)] items-center`}
+            style={{ borderColor: colors.border }}
+          >
+            {/* Name + avatar */}
+            <div className="flex items-center gap-2.5 min-w-0">
+              {parent.profile_image_url ? (
+                <img
+                  src={parent.profile_image_url}
+                  alt={parent.full_name ?? 'Parent'}
+                  className="w-7 h-7 rounded-full object-cover flex-shrink-0"
+                />
+              ) : (
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
+                  style={{ backgroundColor: avatarColor(parent.id) }}
+                >
+                  {getInitials(parent.full_name)}
+                </div>
+              )}
+              <span className="text-xs font-medium truncate" style={{ color: colors.textPrimary }}>
+                {parent.full_name ?? '—'}
+              </span>
+            </div>
+            <span className="text-xs truncate" style={{ color: colors.textSecondary }}>
+              {parent.g1_cell_phone ?? '—'}
+            </span>
+            <span className="text-xs truncate" style={{ color: colors.textSecondary }}>
+              {parent.g2_full_name ?? '—'}
+            </span>
+            <span className="text-xs truncate" style={{ color: colors.textSecondary }}>
+              {parent.g2_relationship ?? '—'}
+            </span>
+            <span className="text-xs truncate" style={{ color: colors.textSecondary }}>
+              {parent.g2_email ?? '—'}
+            </span>
+            <span className="text-xs truncate" style={{ color: colors.textSecondary }}>
+              {parent.g2_cell_phone ?? '—'}
+            </span>
+          </div>
+        ))}
+      </div>
 
       <ParentDetailSidebar
         parent={selectedParent}
