@@ -124,7 +124,7 @@ export async function getSummerStudentsForDay(date: string): Promise<SummerStude
     adminClient
       .schema('parent_app')
       .from('applications')
-      .select('student_id, program')
+      .select('student_id, program, admin_tags')
       .eq('status', 'enrolled')
       .in('program', ['summer_26', 'both', 'homeschool_drop_in']),
     adminClient
@@ -144,16 +144,23 @@ export async function getSummerStudentsForDay(date: string): Promise<SummerStude
   ])
 
   // Only show students who have an enrolled summer application
+  type AppRow = { student_id: string; program: string; admin_tags: string[] | null }
   const enrolledIds = new Set(
-    (enrolledApps ?? []).map((a: { student_id: string; program: string }) => a.student_id).filter(Boolean)
+    (enrolledApps ?? []).map((a: AppRow) => a.student_id).filter(Boolean)
+  )
+  const dontIncludeIds = new Set(
+    (enrolledApps ?? [])
+      .filter((a: AppRow) => (a.admin_tags ?? []).includes("Don't Include"))
+      .map((a: AppRow) => a.student_id)
+      .filter(Boolean)
   )
   const homeschoolIds = new Set(
     (enrolledApps ?? [])
-      .filter((a: { student_id: string; program: string }) => a.program === 'homeschool_drop_in')
-      .map((a: { student_id: string; program: string }) => a.student_id)
+      .filter((a: AppRow) => a.program === 'homeschool_drop_in')
+      .map((a: AppRow) => a.student_id)
       .filter(Boolean)
   )
-  const enrolledStudents = (students ?? []).filter((s: { id: string }) => enrolledIds.has(s.id))
+  const enrolledStudents = (students ?? []).filter((s: { id: string }) => enrolledIds.has(s.id) && !dontIncludeIds.has(s.id))
 
   if (enrolledStudents.length === 0) return []
 

@@ -53,7 +53,7 @@ export async function getFieldFridayStudentsForDate(date: string): Promise<Field
     adminClient
       .schema('parent_app')
       .from('applications')
-      .select('student_id')
+      .select('student_id, admin_tags')
       .eq('status', 'enrolled'),
     adminClient
       .schema('billing')
@@ -64,8 +64,14 @@ export async function getFieldFridayStudentsForDate(date: string): Promise<Field
       .eq('is_deleted', false),
   ])
 
-  const enrolledIds = new Set((enrolledApps ?? []).map((a: { student_id: string }) => a.student_id).filter(Boolean))
-  const enrolledStudents = (students ?? []).filter((s: { id: string }) => enrolledIds.has(s.id))
+  const enrolledIds = new Set((enrolledApps ?? []).map((a: { student_id: string; admin_tags: string[] | null }) => a.student_id).filter(Boolean))
+  const dontIncludeIds = new Set(
+    (enrolledApps ?? [])
+      .filter((a: { student_id: string; admin_tags: string[] | null }) => (a.admin_tags ?? []).includes("Don't Include"))
+      .map((a: { student_id: string; admin_tags: string[] | null }) => a.student_id)
+      .filter(Boolean)
+  )
+  const enrolledStudents = (students ?? []).filter((s: { id: string }) => enrolledIds.has(s.id) && !dontIncludeIds.has(s.id))
 
   if (enrolledStudents.length === 0) return []
 
