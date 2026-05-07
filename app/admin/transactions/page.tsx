@@ -26,7 +26,22 @@ type EnrolledChild = {
   name: string
   program: string
   applicationId: string
+  dropInProgram: string | null
 }
+
+type PaidHomeschoolEntry = {
+  weeks: number[]
+  tier: string
+  days: string[]
+  weekDays: Record<number, string[]>
+  amountCents: number
+  createdAt: string
+}
+
+type PaidHomeschoolByStudent = Record<string, {
+  summer: PaidHomeschoolEntry[]
+  schoolYear: PaidHomeschoolEntry[]
+}>
 
 type StripeTransaction = {
   id: string
@@ -97,7 +112,7 @@ export default async function TransactionsPage() {
   const { data: enrolledApps } = await client
     .schema('parent_app')
     .from('applications')
-    .select('id, user_id, student_id, child_legal_name, program')
+    .select('id, user_id, student_id, child_legal_name, program, drop_in_program')
     .eq('approved', true)
     .eq('status', 'enrolled')
 
@@ -110,10 +125,40 @@ export default async function TransactionsPage() {
       name: app.child_legal_name ?? app.student_id.slice(0, 8),
       program: app.program ?? 'school_year_26_27',
       applicationId: app.id,
+      dropInProgram: (app.drop_in_program as string | null) ?? null,
     })
     // Ensure studentMap includes these students
     if (app.student_id && app.child_legal_name && !studentMap[app.student_id]) {
       studentMap[app.student_id] = app.child_legal_name
+    }
+  }
+
+  const paidHomeschoolByStudent: PaidHomeschoolByStudent = {}
+  for (const tx of rows) {
+    if (tx.payment_type !== 'homeschool_dropin' || !tx.student_id) continue
+    const status = tx.status
+    if (status !== 'completed' && status !== 'succeeded' && status !== 'paid') continue
+    const meta = (tx.metadata ?? {}) as Record<string, string>
+    const program = meta.program ?? 'summer_26'
+    const tier = meta.tier ?? 'dropin'
+    const days = meta.selected_days?.split(',').filter(Boolean) ?? []
+    const weeks = meta.selected_weeks?.split(',').map(Number).filter(Boolean) ?? []
+    let weekDays: Record<number, string[]> = {}
+    if (meta.week_selections) {
+      try {
+        const parsed: { week: number; days: string[] }[] = JSON.parse(meta.week_selections)
+        parsed.forEach(({ week, days: d }) => { weekDays[week] = d })
+      } catch { /* fall through */ }
+    }
+    if (Object.keys(weekDays).length === 0) {
+      weeks.forEach((w) => { weekDays[w] = days })
+    }
+    paidHomeschoolByStudent[tx.student_id] ??= { summer: [], schoolYear: [] }
+    const entry: PaidHomeschoolEntry = { weeks, tier, days, weekDays, amountCents: tx.amount_cents, createdAt: tx.created_at }
+    if (program === 'summer_26') {
+      paidHomeschoolByStudent[tx.student_id].summer.push(entry)
+    } else {
+      paidHomeschoolByStudent[tx.student_id].schoolYear.push(entry)
     }
   }
 
@@ -141,7 +186,7 @@ export default async function TransactionsPage() {
         </p>
       </div>
 
-      <TransactionsClient transactions={rows} studentMap={studentMap} parentNameMap={parentNameMap} pendingRequests={pendingRequests} enrolledChildrenMap={enrolledChildrenMap} />
+      <TransactionsClient transactions={rows} studentMap={studentMap} parentNameMap={parentNameMap} pendingRequests={pendingRequests} enrolledChildrenMap={enrolledChildrenMap} paidHomeschoolByStudent={paidHomeschoolByStudent} />
     </div>
   )
 }

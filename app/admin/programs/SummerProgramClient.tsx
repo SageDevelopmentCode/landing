@@ -2,11 +2,11 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Poppins } from 'next/font/google'
 import {
   ChevronLeft, ChevronRight, Search, Loader2,
-  Users, CalendarDays, TrendingUp, CreditCard, Home,
+  Users, CalendarDays, TrendingUp, CreditCard, Home, Eye, EyeOff,
 } from 'lucide-react'
 import {
   getSummerStudentsForWeek,
@@ -349,6 +349,7 @@ export function SummerProgramClient({
   const [loadingWeek, setLoadingWeek] = useState(false)
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set())
   const [attendanceSearch, setAttendanceSearch] = useState('')
+  const [showDontInclude, setShowDontInclude] = useState(false)
 
   // Drop-offs tab state
   const [dropoffSearch, setDropoffSearch] = useState('')
@@ -428,17 +429,22 @@ export function SummerProgramClient({
     removeSaving(studentId)
   }
 
-  async function handleWeekChange(newWeekNum: number) {
+  async function handleWeekChange(newWeekNum: number, includeDontInclude = showDontInclude) {
     if (newWeekNum < 1 || newWeekNum > TOTAL_WEEKS) return
     setLoadingWeek(true)
     setWeekNum(newWeekNum)
     setViewMode('week')
     setSelectedDate(null)
     const monday = weekNumToMonday(newWeekNum)
-    const data = await getSummerStudentsForWeek(monday)
+    const data = await getSummerStudentsForWeek(monday, includeDontInclude)
     setWeekData(data)
     setLoadingWeek(false)
   }
+
+  useEffect(() => {
+    handleWeekChange(weekNum, showDontInclude)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showDontInclude])
 
   function handleDrillDown(date: string) {
     setSelectedDate(date)
@@ -838,6 +844,22 @@ export function SummerProgramClient({
                   />
                 </div>
 
+                <button
+                  onClick={() => setShowDontInclude((v) => !v)}
+                  className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg border transition-colors"
+                  style={showDontInclude
+                    ? { backgroundColor: 'rgba(220,38,38,0.08)', color: '#DC2626', borderColor: 'rgba(220,38,38,0.25)' }
+                    : { backgroundColor: colors.elevated, color: colors.textSecondary, borderColor: colors.border }
+                  }
+                  title={showDontInclude ? 'Click to hide "Don\'t Include" students' : 'Click to show "Don\'t Include" students'}
+                >
+                  {showDontInclude
+                    ? <Eye className="w-3.5 h-3.5 flex-shrink-0" />
+                    : <EyeOff className="w-3.5 h-3.5 flex-shrink-0" />
+                  }
+                  {showDontInclude ? 'Showing all' : "Don't Include hidden"}
+                </button>
+
                 <div className="flex items-center gap-1 rounded-lg px-1 py-1" style={{ border: `1px solid ${colors.border}`, backgroundColor: colors.elevated }}>
                   <button
                     onClick={() => handleWeekChange(weekNum - 1)}
@@ -865,7 +887,7 @@ export function SummerProgramClient({
 
             {/* Week view: flat 5-column grid */}
             {viewMode === 'week' && (
-              <div className="grid grid-cols-5 divide-x" style={{ borderTop: `1px solid ${colors.border}`, borderBottom: loadingWeek ? `1px solid ${colors.border}` : undefined, borderColor: colors.border }}>
+              <div className="grid grid-cols-5 divide-x" style={{ borderTop: `1px solid ${colors.border}`, borderBottomWidth: loadingWeek ? '1px' : '0px', borderBottomStyle: 'solid', borderBottomColor: colors.border, borderLeftColor: colors.border, borderRightColor: colors.border }}>
                 {loadingWeek
                   ? DAY_LABELS.map((label) => (
                       <div key={label} className="px-4 py-4">

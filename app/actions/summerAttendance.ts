@@ -101,7 +101,7 @@ function isTxPaidForDate(
   return false
 }
 
-export async function getSummerStudentsForDay(date: string): Promise<SummerStudentRow[]> {
+export async function getSummerStudentsForDay(date: string, includeDontInclude = false): Promise<SummerStudentRow[]> {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return []
@@ -160,7 +160,9 @@ export async function getSummerStudentsForDay(date: string): Promise<SummerStude
       .map((a: AppRow) => a.student_id)
       .filter(Boolean)
   )
-  const enrolledStudents = (students ?? []).filter((s: { id: string }) => enrolledIds.has(s.id) && !dontIncludeIds.has(s.id))
+  const enrolledStudents = (students ?? []).filter(
+    (s: { id: string }) => enrolledIds.has(s.id) && (includeDontInclude || !dontIncludeIds.has(s.id))
+  )
 
   if (enrolledStudents.length === 0) return []
 
@@ -207,7 +209,7 @@ export async function getSummerStudentsForDay(date: string): Promise<SummerStude
   }))
 }
 
-export async function getSummerStudentsForWeek(weekStartDate: string): Promise<SummerDayData[]> {
+export async function getSummerStudentsForWeek(weekStartDate: string, includeDontInclude = false): Promise<SummerDayData[]> {
   const [y, m, d] = weekStartDate.split('-').map(Number)
   const dates: string[] = []
   for (let i = 0; i < 5; i++) {
@@ -215,7 +217,7 @@ export async function getSummerStudentsForWeek(weekStartDate: string): Promise<S
     dates.push(toDateStr(date))
   }
 
-  const dayDataResults = await Promise.all(dates.map(getSummerStudentsForDay))
+  const dayDataResults = await Promise.all(dates.map((date) => getSummerStudentsForDay(date, includeDontInclude)))
   return dates.map((date, i) => ({ date, students: dayDataResults[i] }))
 }
 

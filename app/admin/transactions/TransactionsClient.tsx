@@ -52,7 +52,22 @@ type EnrolledChild = {
   name: string;
   program: string;
   applicationId: string;
+  dropInProgram: string | null;
 };
+
+type PaidHomeschoolEntry = {
+  weeks: number[];
+  tier: string;
+  days: string[];
+  weekDays: Record<number, string[]>;
+  amountCents: number;
+  createdAt: string;
+};
+
+type PaidHomeschoolByStudent = Record<string, {
+  summer: PaidHomeschoolEntry[];
+  schoolYear: PaidHomeschoolEntry[];
+}>;
 
 interface TransactionsClientProps {
   transactions: StripeTransaction[];
@@ -60,6 +75,7 @@ interface TransactionsClientProps {
   parentNameMap: Record<string, string>;
   pendingRequests: PendingPaymentRequest[];
   enrolledChildrenMap: Record<string, EnrolledChild[]>;
+  paidHomeschoolByStudent: PaidHomeschoolByStudent;
 }
 
 type ChildGroup = {
@@ -114,6 +130,46 @@ const SCHOOL_YEAR_ITEMS: ChecklistItem[] = [
   })),
 ];
 
+const INCLUDED_PAYMENT_TYPES = new Set([
+  "summer_tuition",
+  "registration_fee",
+  "supply_fee",
+  "tuition",
+  "homeschool_dropin",
+]);
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function flattenWeekDays(entries: PaidHomeschoolEntry[]): Record<number, string[]> {
+  const result: Record<number, string[]> = {};
+  for (const entry of entries) {
+    for (const [wk, days] of Object.entries(entry.weekDays)) {
+      const w = Number(wk);
+      result[w] = [...new Set([...(result[w] ?? []), ...days])];
+    }
+  }
+  return result;
+}
+
+function latestDateByWeek(entries: PaidHomeschoolEntry[]): Record<number, string> {
+  const result: Record<number, string> = {};
+  for (const entry of entries) {
+    for (const wk of Object.keys(entry.weekDays)) {
+      const w = Number(wk);
+      if (!result[w] || entry.createdAt > result[w]) {
+        result[w] = entry.createdAt;
+      }
+    }
+  }
+  return result;
+}
+
 function parseMeta(tx: StripeTransaction): Record<string, unknown> {
   if (!tx.metadata) return {};
   if (typeof tx.metadata === "string") {
@@ -150,6 +206,16 @@ function isTxMatch(
       .map((s) => s.trim())
       .filter(Boolean);
     if (appIds.length === 0) return true; // old tx format, assume match
+    return appIds.includes(enrolledChild.applicationId);
+  }
+  // Registration fee with explicit homeschool_drop_in program: resolve via application_ids
+  if (prog === "homeschool_drop_in" && item.payment_type === "registration_fee") {
+    if (!enrolledChild) return true;
+    const appIds = ((meta.application_ids as string | undefined) ?? "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (appIds.length === 0) return true;
     return appIds.includes(enrolledChild.applicationId);
   }
   if (prog !== program && prog !== "both") return false;
@@ -296,13 +362,7 @@ function ProgramChecklist({
           const isPaid = match !== null;
           const isSent = sentItems.has(item.id);
           const isLoading = loadingItems.has(item.id);
-          const dateStr = isPaid
-            ? new Date(match!.created_at).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })
-            : null;
+          const dateStr = isPaid ? formatDate(match!.created_at) : null;
 
           return (
             <div
@@ -407,6 +467,325 @@ function ProgramChecklist({
   );
 }
 
+function HomeschoolWeekRow({
+  week,
+  isPaid,
+  dayLabel,
+  dateStr,
+}: {
+  week: number;
+  isPaid: boolean;
+  dayLabel: string;
+  dateStr: string | null;
+}) {
+  return (
+    <div
+      className="flex items-center gap-3 px-4 py-2.5"
+      style={{
+        backgroundColor: isPaid ? "rgba(232, 240, 233, 0.4)" : "transparent",
+      }}
+    >
+      {isPaid ? (
+        <CheckCircle2
+          className="flex-shrink-0 w-4 h-4"
+          style={{ color: colors.mistyForest }}
+        />
+      ) : (
+        <Circle
+          className="flex-shrink-0 w-4 h-4"
+          style={{ color: colors.border }}
+        />
+      )}
+      <span
+        className="flex-1 text-sm"
+        style={{
+          color: isPaid ? colors.mistyForest : colors.textSecondary,
+          fontWeight: isPaid ? 600 : 400,
+        }}
+      >
+        Week {week}{isPaid && dayLabel ? `: ${dayLabel}` : ""}
+      </span>
+      {isPaid && dateStr && (
+        <span
+          className="flex-shrink-0 text-xs px-2 py-0.5 rounded-full font-medium"
+          style={{
+            backgroundColor: colors.pastelSage,
+            color: colors.mistyForest,
+          }}
+        >
+          {dateStr}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function HomeschoolChecklist({
+  txs,
+  paidData,
+  enrolledChild,
+  onSelectTx,
+  parentId,
+  studentId,
+  pendingRequests,
+}: {
+  txs: StripeTransaction[];
+  paidData: PaidHomeschoolByStudent[string] | undefined;
+  enrolledChild: EnrolledChild | undefined;
+  onSelectTx: (tx: StripeTransaction) => void;
+  parentId: string | null;
+  studentId: string | null;
+  pendingRequests: PendingPaymentRequest[];
+}) {
+  const REG_ITEM: ChecklistItem = {
+    id: "reg",
+    label: "Registration Fee",
+    payment_type: "registration_fee",
+  };
+
+  const regMatch =
+    txs.find((tx) => isTxMatch(tx, REG_ITEM, "summer_26", enrolledChild)) ??
+    null;
+
+  const [regSent, setRegSent] = useState(() =>
+    pendingRequests.some((r) => r.payment_type === "registration_fee")
+  );
+  const [regLoading, setRegLoading] = useState(false);
+
+  async function handleSendReg() {
+    if (!parentId || regSent || regLoading) return;
+    setRegLoading(true);
+    try {
+      const res = await fetch("/api/admin/pending-payment-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          parent_id: parentId,
+          student_id: studentId,
+          program: "homeschool_drop_in",
+          payment_type: "registration_fee",
+          week: null,
+          month: null,
+          label: "Registration Fee",
+        }),
+      });
+      if (res.ok) setRegSent(true);
+    } finally {
+      setRegLoading(false);
+    }
+  }
+
+  const dropInProgram = enrolledChild?.dropInProgram ?? null;
+  const showSummer = dropInProgram === "summer_26" || dropInProgram === "both";
+  const showSchoolYear =
+    dropInProgram === "school_year_26_27" || dropInProgram === "both";
+
+  const summerWeekDays = flattenWeekDays(paidData?.summer ?? []);
+  const summerDateByWeek = latestDateByWeek(paidData?.summer ?? []);
+  const schoolYearWeekDays = flattenWeekDays(paidData?.schoolYear ?? []);
+  const schoolYearDateByWeek = latestDateByWeek(paidData?.schoolYear ?? []);
+
+  const summerPaidWeeks = Object.keys(summerWeekDays).length;
+  const schoolYearPaidWeeks = Object.keys(schoolYearWeekDays).length;
+
+  const subtitle =
+    dropInProgram === "both"
+      ? `${summerPaidWeeks} / 12 summer weeks · ${schoolYearPaidWeeks} school year weeks`
+      : showSummer
+      ? `${summerPaidWeeks} / 12 weeks paid`
+      : `${schoolYearPaidWeeks} weeks paid`;
+
+  return (
+    <div
+      className="rounded-xl overflow-hidden flex-1 min-w-0"
+      style={{
+        border: `1px solid ${colors.border}`,
+        backgroundColor: colors.softCloud,
+      }}
+    >
+      {/* Header */}
+      <div
+        className="px-4 py-3 border-b"
+        style={{
+          borderColor: colors.divider,
+          backgroundColor: colors.softCloud,
+        }}
+      >
+        <div
+          className="text-sm font-semibold"
+          style={{ color: colors.textPrimary }}
+        >
+          Homeschool Drop-In
+        </div>
+        <div className="text-xs mt-0.5" style={{ color: colors.textTertiary }}>
+          {subtitle}
+        </div>
+      </div>
+
+      <div className="divide-y" style={{ borderColor: colors.divider }}>
+        {/* Registration Fee row */}
+        <div
+          onClick={() => regMatch && onSelectTx(regMatch)}
+          className="flex items-center gap-3 px-4 py-2.5 transition-colors group"
+          style={{
+            cursor: regMatch ? "pointer" : "default",
+            backgroundColor: regMatch
+              ? "rgba(232, 240, 233, 0.4)"
+              : regSent
+              ? "rgba(249, 115, 22, 0.06)"
+              : "transparent",
+          }}
+          onMouseEnter={(e) => {
+            if (regMatch)
+              (e.currentTarget as HTMLDivElement).style.backgroundColor =
+                colors.pastelSage;
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLDivElement).style.backgroundColor = regMatch
+              ? "rgba(232, 240, 233, 0.4)"
+              : regSent
+              ? "rgba(249, 115, 22, 0.06)"
+              : "transparent";
+          }}
+        >
+          {regMatch ? (
+            <CheckCircle2
+              className="flex-shrink-0 w-4 h-4"
+              style={{ color: colors.mistyForest }}
+            />
+          ) : regSent ? (
+            <div
+              className="flex-shrink-0 w-4 h-4 rounded-full"
+              style={{ backgroundColor: "#f97316" }}
+            />
+          ) : (
+            <Circle
+              className="flex-shrink-0 w-4 h-4"
+              style={{ color: colors.border }}
+            />
+          )}
+          <span
+            className="flex-1 text-sm"
+            style={{
+              color: regMatch ? colors.mistyForest : colors.textSecondary,
+              fontWeight: regMatch ? 600 : 400,
+            }}
+          >
+            Registration Fee
+          </span>
+          {regMatch && (
+            <span
+              className="flex-shrink-0 text-xs px-2 py-0.5 rounded-full font-medium"
+              style={{
+                backgroundColor: colors.pastelSage,
+                color: colors.mistyForest,
+              }}
+            >
+              {formatDate(regMatch.created_at)}
+            </span>
+          )}
+          {!regMatch && parentId && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSendReg();
+              }}
+              disabled={regSent || regLoading}
+              className="flex-shrink-0 flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium transition-all"
+              style={{
+                backgroundColor: regSent ? "#fff7ed" : "transparent",
+                color: regSent ? "#f97316" : colors.textTertiary,
+                border: `1px solid ${regSent ? "#f97316" : colors.border}`,
+                cursor: regSent ? "default" : regLoading ? "wait" : "pointer",
+                opacity: regLoading ? 0.6 : 1,
+              }}
+            >
+              {regSent ? (
+                <>
+                  <CheckCircle2 className="w-3 h-3" />
+                  Sent
+                </>
+              ) : (
+                <>
+                  <Send className="w-3 h-3" />
+                  {regLoading ? "Sending…" : "Send to Parent"}
+                </>
+              )}
+            </button>
+          )}
+        </div>
+
+        {/* Summer weeks */}
+        {showSummer && (
+          <div>
+            <div
+              className="px-4 py-2 text-xs font-semibold uppercase tracking-wide"
+              style={{ color: colors.textTertiary }}
+            >
+              Summer 2026
+            </div>
+            {Array.from({ length: 12 }, (_, i) => i + 1).map((wk) => {
+              const days = summerWeekDays[wk] ?? [];
+              const isPaid = days.length > 0;
+              const dayLabel = days
+                .map((d) => d.charAt(0).toUpperCase() + d.slice(1))
+                .join(", ");
+              return (
+                <HomeschoolWeekRow
+                  key={`summer-wk-${wk}`}
+                  week={wk}
+                  isPaid={isPaid}
+                  dayLabel={dayLabel}
+                  dateStr={isPaid && summerDateByWeek[wk] ? formatDate(summerDateByWeek[wk]) : null}
+                />
+              );
+            })}
+          </div>
+        )}
+
+        {/* School year weeks */}
+        {showSchoolYear && (
+          <div>
+            <div
+              className="px-4 py-2 text-xs font-semibold uppercase tracking-wide"
+              style={{ color: colors.textTertiary }}
+            >
+              School Year 2026–2027
+            </div>
+            {schoolYearPaidWeeks === 0 ? (
+              <div
+                className="px-4 py-3 text-xs"
+                style={{ color: colors.textTertiary }}
+              >
+                No weeks paid yet
+              </div>
+            ) : (
+              Object.keys(schoolYearWeekDays)
+                .map(Number)
+                .sort((a, b) => a - b)
+                .map((wk) => {
+                  const days = schoolYearWeekDays[wk] ?? [];
+                  const dayLabel = days
+                    .map((d) => d.charAt(0).toUpperCase() + d.slice(1))
+                    .join(", ");
+                  return (
+                    <HomeschoolWeekRow
+                      key={`sy-wk-${wk}`}
+                      week={wk}
+                      isPaid={true}
+                      dayLabel={dayLabel}
+                      dateStr={schoolYearDateByWeek[wk] ? formatDate(schoolYearDateByWeek[wk]) : null}
+                    />
+                  );
+                })
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // --- Main component ---
 
 export function TransactionsClient({
@@ -415,6 +794,7 @@ export function TransactionsClient({
   parentNameMap,
   pendingRequests,
   enrolledChildrenMap,
+  paidHomeschoolByStudent,
 }: TransactionsClientProps) {
   const [activeTab, setActiveTab] = useState<"list" | "by-parent">("by-parent");
   const [selectedTransaction, setSelectedTransaction] =
@@ -441,12 +821,7 @@ export function TransactionsClient({
     >();
     for (const tx of localTransactions) {
       const meta = parseMeta(tx);
-      if (
-        !meta.program &&
-        tx.payment_type !== "summer_tuition" &&
-        tx.payment_type !== "registration_fee" &&
-        tx.payment_type !== "supply_fee"
-      ) continue;
+      if (!meta.program && !INCLUDED_PAYMENT_TYPES.has(tx.payment_type)) continue;
       const key = tx.parent_id ?? tx.payer_email ?? "unknown";
       if (!map.has(key)) {
         const resolvedName = tx.parent_id
@@ -510,22 +885,26 @@ export function TransactionsClient({
       )?.program ?? null
     : null;
 
+  const hasHomeschool = enrolledProgram === "homeschool_drop_in";
+
   const hasSummer =
-    (selectedChildGroup?.txs.some((tx) => {
+    !hasHomeschool &&
+    ((selectedChildGroup?.txs.some((tx) => {
       if (tx.payment_type === "summer_tuition") return true;
       const prog = parseMeta(tx).program as string | undefined;
       return prog === "summer_26" || prog === "both";
     }) ?? false) ||
     enrolledProgram === "summer_26" ||
-    enrolledProgram === "both";
+    enrolledProgram === "both");
 
   const hasSchoolYear =
-    (selectedChildGroup?.txs.some((tx) => {
+    !hasHomeschool &&
+    ((selectedChildGroup?.txs.some((tx) => {
       const prog = parseMeta(tx).program as string | undefined;
       return prog === "school_year_26_27" || prog === "both";
     }) ?? false) ||
     enrolledProgram === "school_year_26_27" ||
-    enrolledProgram === "both";
+    enrolledProgram === "both");
 
   return (
     <>
@@ -757,7 +1136,7 @@ export function TransactionsClient({
                 </div>
 
                 {/* Checklist cards */}
-                <div className="flex gap-4 flex-1 items-start">
+                <div className="flex gap-4 flex-1 items-start flex-wrap">
                   {hasSummer && (
                     <ProgramChecklist
                       key={`summer-${effectiveChildKey}`}
@@ -798,7 +1177,25 @@ export function TransactionsClient({
                       )}
                     />
                   )}
-                  {!hasSummer && !hasSchoolYear && (
+                  {hasHomeschool && (
+                    <HomeschoolChecklist
+                      key={`homeschool-${effectiveChildKey}`}
+                      txs={selectedChildGroup?.txs ?? []}
+                      paidData={effectiveChildKey && effectiveChildKey !== "unknown" ? paidHomeschoolByStudent[effectiveChildKey] : undefined}
+                      enrolledChild={(enrolledChildrenMap[selectedGroup?.key ?? ""] ?? []).find(
+                        (c) => c.studentId === effectiveChildKey
+                      )}
+                      onSelectTx={setSelectedTransaction}
+                      parentId={selectedGroup?.key ?? null}
+                      studentId={effectiveChildKey !== "unknown" ? effectiveChildKey : null}
+                      pendingRequests={pendingRequests.filter(
+                        (r) =>
+                          r.parent_id === selectedGroup?.key &&
+                          r.student_id === (effectiveChildKey !== "unknown" ? effectiveChildKey : null)
+                      )}
+                    />
+                  )}
+                  {!hasSummer && !hasSchoolYear && !hasHomeschool && (
                     <div
                       className="flex-1 flex items-center justify-center rounded-xl py-12"
                       style={{
