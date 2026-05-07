@@ -1,7 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { PenLine, X, Check } from "lucide-react";
 import type { ParentEmergencyContactsRecord } from "@/app/actions/getParentEmergencyContacts";
+import { updateEmergencyContacts } from "@/app/actions/updateEmergencyContacts";
+import { updateEmergencyContactsGuardian } from "@/app/actions/updateEmergencyContactsGuardian";
+import { formatPhone } from "@/app/utils/formatPhone";
 
 function CopyButton({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
@@ -52,45 +56,88 @@ function ContactRow({ icon, label, value, href }: { icon: React.ReactNode; label
   );
 }
 
+function FormField({ label, value, onChange, type = "text", placeholder }: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+  placeholder?: string;
+}) {
+  return (
+    <div>
+      <label className="block text-[11px] text-gray-400 font-medium mb-1">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 w-full focus:outline-none focus:border-[#3d6b4f] transition-colors"
+      />
+    </div>
+  );
+}
+
 function ContactCard({
   title,
   badge,
   name,
   relationship,
   rows,
+  onEdit,
+  editContent,
 }: {
   title: string;
   badge?: string;
   name?: string | null;
   relationship?: string | null;
   rows: { icon: React.ReactNode; label: string; value: string; href?: string }[];
+  onEdit?: () => void;
+  editContent?: React.ReactNode;
 }) {
   const visibleRows = rows.filter((r) => !!r.value);
   return (
     <div className="border-b border-gray-200 pb-4 mb-4 last:border-0 last:mb-0 last:pb-0">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body">{title}</h3>
-        {badge && (
-          <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full capitalize">
-            {badge}
-          </span>
+        <div className="flex items-center gap-2">
+          <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body">{title}</h3>
+          {badge && (
+            <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full capitalize">
+              {badge}
+            </span>
+          )}
+        </div>
+        {onEdit && !editContent && (
+          <button
+            onClick={onEdit}
+            className="p-1.5 rounded-md text-gray-400 hover:text-[#3d6b4f] hover:bg-gray-100 transition-colors"
+            title="Edit"
+          >
+            <PenLine className="w-3.5 h-3.5" />
+          </button>
         )}
       </div>
-      {name && (
-        <div className="flex items-center gap-3 pb-3 mb-1 border-b border-gray-100">
-          <div className="w-9 h-9 rounded-full bg-[#3d6b4f]/10 flex items-center justify-center text-[#3d6b4f] font-semibold text-sm flex-shrink-0">
-            {name.trim().charAt(0).toUpperCase()}
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-gray-800 leading-tight">{name}</p>
-            {relationship && <p className="text-xs text-gray-400 capitalize">{relationship}</p>}
-          </div>
-        </div>
-      )}
-      {visibleRows.length > 0 ? (
-        visibleRows.map((r, i) => <ContactRow key={i} icon={r.icon} label={r.label} value={r.value} href={r.href} />)
+
+      {editContent ? (
+        editContent
       ) : (
-        <p className="text-sm text-gray-400 py-2">No contact info available</p>
+        <>
+          {name && (
+            <div className="flex items-center gap-3 pb-3 mb-1 border-b border-gray-100">
+              <div className="w-9 h-9 rounded-full bg-[#3d6b4f]/10 flex items-center justify-center text-[#3d6b4f] font-semibold text-sm flex-shrink-0">
+                {name.trim().charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-800 leading-tight">{name}</p>
+                {relationship && <p className="text-xs text-gray-400 capitalize">{relationship}</p>}
+              </div>
+            </div>
+          )}
+          {visibleRows.length > 0 ? (
+            visibleRows.map((r, i) => <ContactRow key={i} icon={r.icon} label={r.label} value={r.value} href={r.href} />)
+          ) : (
+            <p className="text-sm text-gray-400 py-2">No contact info available</p>
+          )}
+        </>
       )}
     </div>
   );
@@ -112,14 +159,27 @@ const workPhoneIcon = (
   </svg>
 );
 
+type EditingCard = 'g1' | 'g2' | 'in_state' | 'out_of_state' | null;
+
 interface Props {
   contacts: ParentEmergencyContactsRecord[];
 }
 
 export default function EmergencyContactsPage({ contacts }: Props) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [localContacts, setLocalContacts] = useState(contacts);
+  const [editing, setEditing] = useState<EditingCard>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
-  if (contacts.length === 0) {
+  // Guardian draft state
+  const [g1Draft, setG1Draft] = useState({ full_name: "", email: "", cell_phone: "", work_phone: "", relationship: "" });
+  const [g2Draft, setG2Draft] = useState({ full_name: "", email: "", cell_phone: "", work_phone: "", relationship: "" });
+  // Emergency contact draft state
+  const [inStateDraft, setInStateDraft] = useState({ name: "", relation: "", phone: "" });
+  const [outOfStateDraft, setOutOfStateDraft] = useState({ name: "", relation: "", phone: "" });
+
+  if (localContacts.length === 0) {
     return (
       <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
         <p className="text-gray-400 text-sm">No children enrolled yet.</p>
@@ -127,16 +187,166 @@ export default function EmergencyContactsPage({ contacts }: Props) {
     );
   }
 
-  const c = contacts[activeIndex];
+  const c = localContacts[activeIndex];
+
+  function openEdit(card: EditingCard) {
+    setSaveError(null);
+    if (card === 'g1') {
+      setG1Draft({
+        full_name: c.g1_full_name ?? "",
+        email: c.g1_email ?? "",
+        cell_phone: c.g1_cell_phone ?? "",
+        work_phone: c.g1_work_phone ?? "",
+        relationship: c.g1_relationship ?? "",
+      });
+    } else if (card === 'g2') {
+      setG2Draft({
+        full_name: c.g2_full_name ?? "",
+        email: c.g2_email ?? "",
+        cell_phone: c.g2_cell_phone ?? "",
+        work_phone: c.g2_work_phone ?? "",
+        relationship: c.g2_relationship ?? "",
+      });
+    } else if (card === 'in_state') {
+      setInStateDraft({
+        name: c.in_state_contact_name ?? "",
+        relation: c.in_state_contact_relation ?? "",
+        phone: c.in_state_contact_phone ?? "",
+      });
+    } else if (card === 'out_of_state') {
+      setOutOfStateDraft({
+        name: c.out_of_state_contact_name ?? "",
+        relation: c.out_of_state_contact_relation ?? "",
+        phone: c.out_of_state_contact_phone ?? "",
+      });
+    }
+    setEditing(card);
+  }
+
+  function cancelEdit() {
+    setEditing(null);
+    setSaveError(null);
+  }
+
+  function saveGuardian(guardian: 'g1' | 'g2') {
+    const draft = guardian === 'g1' ? g1Draft : g2Draft;
+    startTransition(async () => {
+      const result = await updateEmergencyContactsGuardian({
+        studentId: c.studentId,
+        guardian,
+        ...draft,
+      });
+      if (result.error) {
+        setSaveError(result.error);
+        return;
+      }
+      setLocalContacts((prev) =>
+        prev.map((contact, i) => {
+          if (i !== activeIndex) return contact;
+          if (guardian === 'g1') {
+            return {
+              ...contact,
+              g1_full_name: draft.full_name || null,
+              g1_email: draft.email || null,
+              g1_cell_phone: draft.cell_phone || null,
+              g1_work_phone: draft.work_phone || null,
+              g1_relationship: draft.relationship || null,
+            };
+          }
+          return {
+            ...contact,
+            g2_full_name: draft.full_name || null,
+            g2_email: draft.email || null,
+            g2_cell_phone: draft.cell_phone || null,
+            g2_work_phone: draft.work_phone || null,
+            g2_relationship: draft.relationship || null,
+          };
+        })
+      );
+      setEditing(null);
+      setSaveError(null);
+    });
+  }
+
+  function saveEmergencyContacts(type: 'in_state' | 'out_of_state') {
+    const currentInState = type === 'in_state' ? inStateDraft : { name: c.in_state_contact_name ?? "", relation: c.in_state_contact_relation ?? "", phone: c.in_state_contact_phone ?? "" };
+    const currentOutOfState = type === 'out_of_state' ? outOfStateDraft : { name: c.out_of_state_contact_name ?? "", relation: c.out_of_state_contact_relation ?? "", phone: c.out_of_state_contact_phone ?? "" };
+
+    startTransition(async () => {
+      const result = await updateEmergencyContacts({
+        studentId: c.studentId,
+        inStateContactName: currentInState.name,
+        inStateContactRelation: currentInState.relation,
+        inStateContactPhone: currentInState.phone,
+        outOfStateContactName: currentOutOfState.name,
+        outOfStateContactRelation: currentOutOfState.relation,
+        outOfStateContactPhone: currentOutOfState.phone,
+      });
+      if (result.error) {
+        setSaveError(result.error);
+        return;
+      }
+      setLocalContacts((prev) =>
+        prev.map((contact, i) => {
+          if (i !== activeIndex) return contact;
+          return {
+            ...contact,
+            in_state_contact_name: currentInState.name || null,
+            in_state_contact_relation: currentInState.relation || null,
+            in_state_contact_phone: currentInState.phone || null,
+            out_of_state_contact_name: currentOutOfState.name || null,
+            out_of_state_contact_relation: currentOutOfState.relation || null,
+            out_of_state_contact_phone: currentOutOfState.phone || null,
+          };
+        })
+      );
+      setEditing(null);
+      setSaveError(null);
+    });
+  }
+
+  function guardianEditForm(guardian: 'g1' | 'g2') {
+    const draft = guardian === 'g1' ? g1Draft : g2Draft;
+    const setDraft = guardian === 'g1' ? setG1Draft : setG2Draft;
+    return (
+      <div className="space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <FormField label="Full Name" value={draft.full_name} onChange={(v) => setDraft((d) => ({ ...d, full_name: v }))} />
+          <FormField label="Relationship" value={draft.relationship} onChange={(v) => setDraft((d) => ({ ...d, relationship: v }))} />
+          <FormField label="Email" type="email" value={draft.email} onChange={(v) => setDraft((d) => ({ ...d, email: v }))} />
+          <FormField label="Cell Phone" type="tel" value={draft.cell_phone} onChange={(v) => setDraft((d) => ({ ...d, cell_phone: formatPhone(v) }))} />
+          <FormField label="Work Phone" type="tel" value={draft.work_phone} onChange={(v) => setDraft((d) => ({ ...d, work_phone: formatPhone(v) }))} />
+        </div>
+        {saveError && <p className="text-xs text-red-500">{saveError}</p>}
+        <EditActions onSave={() => saveGuardian(guardian)} onCancel={cancelEdit} saving={isPending} />
+      </div>
+    );
+  }
+
+  function emergencyContactEditForm(type: 'in_state' | 'out_of_state') {
+    const draft = type === 'in_state' ? inStateDraft : outOfStateDraft;
+    const setDraft = type === 'in_state' ? setInStateDraft : setOutOfStateDraft;
+    return (
+      <div className="space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <FormField label="Name" value={draft.name} onChange={(v) => setDraft((d) => ({ ...d, name: v }))} />
+          <FormField label="Relationship" value={draft.relation} onChange={(v) => setDraft((d) => ({ ...d, relation: v }))} />
+          <FormField label="Phone" type="tel" value={draft.phone} onChange={(v) => setDraft((d) => ({ ...d, phone: formatPhone(v) }))} />
+        </div>
+        {saveError && <p className="text-xs text-red-500">{saveError}</p>}
+        <EditActions onSave={() => saveEmergencyContacts(type)} onCancel={cancelEdit} saving={isPending} />
+      </div>
+    );
+  }
 
   return (
     <div>
-      {contacts.length > 1 && (
+      {localContacts.length > 1 && (
         <div className="flex flex-wrap gap-2 mb-6">
-          {contacts.map((child, i) => (
+          {localContacts.map((child, i) => (
             <button
               key={child.studentId}
-              onClick={() => setActiveIndex(i)}
+              onClick={() => { setActiveIndex(i); setEditing(null); setSaveError(null); }}
               className={`px-4 py-1.5 text-sm rounded-full border transition-colors cursor-pointer whitespace-nowrap ${
                 i === activeIndex
                   ? "bg-[#4a7c59] text-white border-[#4a7c59] font-semibold"
@@ -152,45 +362,76 @@ export default function EmergencyContactsPage({ contacts }: Props) {
       <div className="bg-white rounded-2xl border border-gray-100 p-6">
         <ContactCard
           title="Guardian 1"
-          badge={c.g1_relationship ?? undefined}
-          name={c.g1_full_name}
-          relationship={c.g1_relationship}
+          badge={editing === 'g1' ? undefined : (c.g1_relationship ?? undefined)}
+          name={editing === 'g1' ? undefined : c.g1_full_name}
+          relationship={editing === 'g1' ? undefined : c.g1_relationship}
           rows={[
             { icon: emailIcon, label: "Email", value: c.g1_email ?? "", href: c.g1_email ? `mailto:${c.g1_email}` : undefined },
             { icon: phoneIcon, label: "Cell Phone", value: c.g1_cell_phone ?? "", href: c.g1_cell_phone ? `tel:${c.g1_cell_phone}` : undefined },
             { icon: workPhoneIcon, label: "Work Phone", value: c.g1_work_phone ?? "", href: c.g1_work_phone ? `tel:${c.g1_work_phone}` : undefined },
           ]}
+          onEdit={() => openEdit('g1')}
+          editContent={editing === 'g1' ? guardianEditForm('g1') : undefined}
         />
         <ContactCard
           title="Guardian 2"
-          badge={c.g2_relationship ?? undefined}
-          name={c.g2_full_name}
-          relationship={c.g2_relationship}
+          badge={editing === 'g2' ? undefined : (c.g2_relationship ?? undefined)}
+          name={editing === 'g2' ? undefined : c.g2_full_name}
+          relationship={editing === 'g2' ? undefined : c.g2_relationship}
           rows={[
             { icon: emailIcon, label: "Email", value: c.g2_email ?? "", href: c.g2_email ? `mailto:${c.g2_email}` : undefined },
             { icon: phoneIcon, label: "Cell Phone", value: c.g2_cell_phone ?? "", href: c.g2_cell_phone ? `tel:${c.g2_cell_phone}` : undefined },
             { icon: workPhoneIcon, label: "Work Phone", value: c.g2_work_phone ?? "", href: c.g2_work_phone ? `tel:${c.g2_work_phone}` : undefined },
           ]}
+          onEdit={() => openEdit('g2')}
+          editContent={editing === 'g2' ? guardianEditForm('g2') : undefined}
         />
         <ContactCard
           title="In-State Contact"
-          badge={c.in_state_contact_relation ?? undefined}
-          name={c.in_state_contact_name}
-          relationship={c.in_state_contact_relation}
+          badge={editing === 'in_state' ? undefined : (c.in_state_contact_relation ?? undefined)}
+          name={editing === 'in_state' ? undefined : c.in_state_contact_name}
+          relationship={editing === 'in_state' ? undefined : c.in_state_contact_relation}
           rows={[
             { icon: phoneIcon, label: "Phone", value: c.in_state_contact_phone ?? "", href: c.in_state_contact_phone ? `tel:${c.in_state_contact_phone}` : undefined },
           ]}
+          onEdit={() => openEdit('in_state')}
+          editContent={editing === 'in_state' ? emergencyContactEditForm('in_state') : undefined}
         />
         <ContactCard
           title="Out-of-State Contact"
-          badge={c.out_of_state_contact_relation ?? undefined}
-          name={c.out_of_state_contact_name}
-          relationship={c.out_of_state_contact_relation}
+          badge={editing === 'out_of_state' ? undefined : (c.out_of_state_contact_relation ?? undefined)}
+          name={editing === 'out_of_state' ? undefined : c.out_of_state_contact_name}
+          relationship={editing === 'out_of_state' ? undefined : c.out_of_state_contact_relation}
           rows={[
             { icon: phoneIcon, label: "Phone", value: c.out_of_state_contact_phone ?? "", href: c.out_of_state_contact_phone ? `tel:${c.out_of_state_contact_phone}` : undefined },
           ]}
+          onEdit={() => openEdit('out_of_state')}
+          editContent={editing === 'out_of_state' ? emergencyContactEditForm('out_of_state') : undefined}
         />
       </div>
+    </div>
+  );
+}
+
+function EditActions({ onSave, onCancel, saving }: { onSave: () => void; onCancel: () => void; saving: boolean }) {
+  return (
+    <div className="flex items-center gap-2 pt-1">
+      <button
+        onClick={onSave}
+        disabled={saving}
+        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[#3d6b4f] text-white rounded-lg hover:bg-[#2f5540] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <Check className="w-3 h-3" />
+        {saving ? "Saving…" : "Save"}
+      </button>
+      <button
+        onClick={onCancel}
+        disabled={saving}
+        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+      >
+        <X className="w-3 h-3" />
+        Cancel
+      </button>
     </div>
   );
 }
