@@ -8,19 +8,21 @@ export default async function ImpersonateLayout({
 }) {
   const adminClient = createAdminClient();
 
-  const [{ data: parents }, { data: appRows }] = await Promise.all([
-    adminClient
-      .schema("admin")
-      .from("users")
-      .select("id, full_name, email")
-      .eq("role", "parent")
-      .eq("is_deleted", false)
-      .order("full_name"),
-    adminClient
-      .schema("parent_app")
-      .from("applications")
-      .select("user_id, status, approved, denied"),
-  ]);
+  const [{ data: parents }, { data: appRows }, { data: authData }] =
+    await Promise.all([
+      adminClient
+        .schema("admin")
+        .from("users")
+        .select("id, full_name, email")
+        .eq("role", "parent")
+        .eq("is_deleted", false)
+        .order("full_name"),
+      adminClient
+        .schema("parent_app")
+        .from("applications")
+        .select("user_id, status, approved, denied"),
+      adminClient.auth.admin.listUsers({ perPage: 1000 }),
+    ]);
 
   // Derive a single display status per parent from their applications
   const statusByParent: Record<string, string> = {};
@@ -47,9 +49,15 @@ export default async function ImpersonateLayout({
     }
   }
 
+  const lastSignInMap: Record<string, string | null> = {};
+  for (const u of authData?.users ?? []) {
+    lastSignInMap[u.id] = u.last_sign_in_at ?? null;
+  }
+
   const parentsWithStatus = (parents ?? []).map((p) => ({
     ...p,
     status: statusByParent[p.id] ?? null,
+    lastSignIn: lastSignInMap[p.id] ?? null,
   }));
 
   return (

@@ -9,7 +9,20 @@ type ParentRow = {
   full_name: string | null;
   email: string | null;
   status: string | null;
+  lastSignIn: string | null;
 };
+
+function formatRelative(iso: string | null): string {
+  if (!iso) return "Never signed in";
+  const diff = Date.now() - new Date(iso).getTime();
+  const days = Math.floor(diff / 86400000);
+  if (days === 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 30) return `${days}d ago`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months}mo ago`;
+  return `${Math.floor(months / 12)}y ago`;
+}
 
 const STATUS_CONFIG: Record<
   string,
@@ -123,6 +136,12 @@ export default function ImpersonateShell({
                       {statusCfg.label}
                     </span>
                   )}
+                </div>
+                <div
+                  className="text-xs mt-0.5"
+                  style={{ color: colors.textQuaternary, fontSize: "10px" }}
+                >
+                  {formatRelative(parent.lastSignIn)}
                 </div>
               </button>
             );
