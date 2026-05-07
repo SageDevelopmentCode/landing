@@ -1,18 +1,12 @@
 import { CountdownCard } from './components/CountdownCard'
 import { cssColors as colors } from './design-system'
-import { Plus_Jakarta_Sans } from 'next/font/google'
-
-const jakarta = Plus_Jakarta_Sans({
-  weight: ['400', '500', '600', '700'],
-  subsets: ['latin'],
-})
 
 export default async function AdminDashboard() {
   return (
     <div className="space-y-8 pt-6">
       <div>
         <h1
-          className={`text-2xl font-bold ${jakarta.className}`}
+          className="text-2xl font-bold"
           style={{ color: colors.textPrimary }}
         >
           Dashboard
