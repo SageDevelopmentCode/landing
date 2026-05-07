@@ -11,7 +11,7 @@ async function getTeachersWithRates() {
   const { data } = await adminClient
     .schema('admin')
     .from('users')
-    .select('id, full_name, email, hourly_rate')
+    .select('id, full_name, email, hourly_rate, employee_code')
     .in('role', ['teacher', 'super_admin'])
     .eq('is_deleted', false)
     .order('full_name')
@@ -20,6 +20,7 @@ async function getTeachersWithRates() {
     full_name: string | null
     email: string
     hourly_rate: number | null
+    employee_code: string | null
   }>
 }
 

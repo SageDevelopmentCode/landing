@@ -37,6 +37,22 @@ function initialsFor(name: string): string {
     .join("");
 }
 
+function UserAvatar({ id, name, imageUrl, size = "md" }: { id: string; name: string; imageUrl: string | null; size?: "sm" | "md" }) {
+  const dim = size === "sm" ? "w-9 h-9" : "w-10 h-10";
+  if (imageUrl) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={imageUrl} alt={name} className={`${dim} rounded-full object-cover shrink-0`} />;
+  }
+  return (
+    <div
+      className={`${dim} rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0`}
+      style={{ backgroundColor: colorForId(id) }}
+    >
+      {initialsFor(name)}
+    </div>
+  );
+}
+
 function formatProgram(program: string | null): string {
   if (!program) return "—";
   const map: Record<string, string> = {
@@ -333,12 +349,7 @@ export default function AdminMessagesPage({ userId }: { userId: string }) {
                     borderRight: convo.id === activeId ? `2px solid ${colors.mistyForest}` : "2px solid transparent",
                   }}
                 >
-                  <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0"
-                    style={{ backgroundColor: colorForId(convo.otherUser.id) }}
-                  >
-                    {initialsFor(convo.otherUser.full_name)}
-                  </div>
+                  <UserAvatar id={convo.otherUser.id} name={convo.otherUser.full_name} imageUrl={convo.otherUser.profile_image_url} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-semibold truncate" style={{ color: colors.textPrimary }}>
@@ -392,12 +403,7 @@ export default function AdminMessagesPage({ userId }: { userId: string }) {
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
-                <div
-                  className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0"
-                  style={{ backgroundColor: colorForId(active.otherUser.id) }}
-                >
-                  {initialsFor(active.otherUser.full_name)}
-                </div>
+                <UserAvatar id={active.otherUser.id} name={active.otherUser.full_name} imageUrl={active.otherUser.profile_image_url} size="sm" />
                 <p className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
                   {active.otherUser.full_name}
                 </p>

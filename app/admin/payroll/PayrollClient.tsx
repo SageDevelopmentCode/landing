@@ -14,12 +14,15 @@ import {
 import type { PaystubWithTeacher } from '@/app/actions/paystubs'
 import { TeacherOverviewTab } from './TeacherOverviewTab'
 import { PayPeriodHoursTab } from './PayPeriodHoursTab'
+import { EmployeeCodesTab } from './EmployeeCodesTab'
+import type { TeacherWithCode } from './EmployeeCodesTab'
 
 export type TeacherRate = {
   id: string
   full_name: string | null
   email: string
   hourly_rate: number | null
+  employee_code?: string | null
 }
 
 interface Props {
@@ -316,7 +319,7 @@ function TeacherRatesTab({ teachers: initial }: { teachers: TeacherRate[] }) {
 
 export function PayrollClient({ paystubs: initial, teachers }: Props) {
   const [paystubs, setPaystubs] = useState<PaystubWithTeacher[]>(initial)
-  const [tab, setTab] = useState<'paystubs' | 'overview' | 'periods' | 'rates'>('paystubs')
+  const [tab, setTab] = useState<'paystubs' | 'overview' | 'periods' | 'rates' | 'codes'>('paystubs')
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [selectedStub, setSelectedStub] = useState<PaystubWithTeacher | null>(null)
@@ -376,6 +379,7 @@ export function PayrollClient({ paystubs: initial, teachers }: Props) {
         <button style={tabStyle(tab === 'overview')}  onClick={() => setTab('overview')}>Teacher Overview</button>
         <button style={tabStyle(tab === 'periods')}   onClick={() => setTab('periods')}>Pay Period Hours</button>
         <button style={tabStyle(tab === 'rates')}     onClick={() => setTab('rates')}>Teacher Rates</button>
+        <button style={tabStyle(tab === 'codes')}     onClick={() => setTab('codes')}>Employee Codes</button>
       </div>
 
       {tab === 'paystubs' && (
@@ -479,6 +483,7 @@ export function PayrollClient({ paystubs: initial, teachers }: Props) {
       {tab === 'overview' && <TeacherOverviewTab paystubs={paystubs} teachers={teachers} />}
       {tab === 'periods'  && <PayPeriodHoursTab paystubs={paystubs} />}
       {tab === 'rates'    && <TeacherRatesTab teachers={teachers} />}
+      {tab === 'codes'    && <EmployeeCodesTab teachers={teachers as TeacherWithCode[]} />}
     </div>
   )
 }
