@@ -598,12 +598,15 @@ export default function ApplyPage() {
           ].map((src, i) => (
             <div
               key={i}
-              className="w-[88%] flex-shrink-0 aspect-square overflow-hidden"
+              className="relative w-[88%] flex-shrink-0 aspect-square overflow-hidden"
             >
-              <img
+              <Image
                 src={src}
                 alt="Program photo"
-                className="w-full h-full object-cover"
+                fill
+                className="object-cover"
+                sizes="88vw"
+                priority={i === 0}
               />
             </div>
           ))}
@@ -726,12 +729,14 @@ export default function ApplyPage() {
                     {tabContent[activeTab].images.map((src, i) => (
                       <div
                         key={i}
-                        className="sm:w-full aspect-[4/3] rounded-xl overflow-hidden shadow-md"
+                        className="relative sm:w-full aspect-[4/3] rounded-xl overflow-hidden shadow-md"
                       >
-                        <img
+                        <Image
                           src={src}
                           alt="Program photo"
-                          className="w-full h-full object-cover hover:scale-[1.02] transition-transform duration-500"
+                          fill
+                          className="object-cover hover:scale-[1.02] transition-transform duration-500"
+                          sizes="(max-width: 1024px) 50vw, 33vw"
                         />
                       </div>
                     ))}
