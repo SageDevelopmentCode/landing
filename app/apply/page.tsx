@@ -551,7 +551,7 @@ export default function ApplyPage() {
     let pos = el.scrollLeft;
     const tick = () => {
       if (!isPausedRef.current && el) {
-        pos += 0.6;
+        pos += 0.5;
         el.scrollLeft = Math.round(pos);
         if (el.scrollLeft >= el.scrollWidth / 2) {
           pos = 0;

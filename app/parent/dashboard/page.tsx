@@ -286,7 +286,7 @@ export default async function ParentDashboard() {
       <div className="min-h-screen flex flex-col">
         {/* Header */}
         <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-[auto_1fr_auto] items-center">
-          <div className="flex items-center">
+          <div className="hidden md:flex items-center">
             <Link href="/">
               <Image
                 src="/assets/Logo.png"

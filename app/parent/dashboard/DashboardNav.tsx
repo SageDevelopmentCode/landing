@@ -16,6 +16,8 @@ import {
   Phone,
   Rss,
   HelpCircle,
+  Menu,
+  X,
 } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 import HelpWidget from "../components/HelpWidget";
@@ -60,6 +62,7 @@ export default function DashboardNav({
   const [moreOpen, setMoreOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [manageAccessOpen, setManageAccessOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
@@ -86,72 +89,156 @@ export default function DashboardNav({
   }, [moreOpen]);
 
   return (
-    <nav className="flex items-center gap-2">
-      {primaryNavItems.map(({ label, icon: Icon, href }) => {
-        const resolvedHref = navHref(href);
-        const isActive = href !== "#" && pathname === resolvedHref;
-        return (
-          <Link
-            key={label}
-            href={resolvedHref}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-body rounded-md transition-colors whitespace-nowrap ${
-              isActive
-                ? "text-[#4a7c59] bg-[#4a7c59]/8 font-semibold"
-                : "text-gray-600 hover:text-[#4a7c59] hover:bg-gray-50"
-            }`}
-          >
-            <Icon className="w-4 h-4" />
-            {label}
-          </Link>
-        );
-      })}
+    <>
+      {/* Mobile hamburger button */}
+      <button
+        className="md:hidden p-2 text-gray-600 hover:text-[#4a7c59] rounded-md transition-colors cursor-pointer"
+        onClick={() => setMobileMenuOpen((v) => !v)}
+        aria-label="Toggle navigation"
+      >
+        {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+      </button>
 
-      {/* More dropdown */}
-      <div className="relative" ref={moreRef}>
-        <button
-          onClick={() => setMoreOpen((v) => !v)}
-          className="flex items-center gap-1 px-3 py-1.5 text-sm font-body text-gray-600 hover:text-[#4a7c59] hover:bg-gray-50 rounded-md transition-colors cursor-pointer"
-        >
-          More
-          <ChevronDown
-            className={`w-3.5 h-3.5 transition-transform ${moreOpen ? "rotate-180" : ""}`}
-            strokeWidth={2.5}
-          />
-        </button>
-
-        {moreOpen && (
-          <div className="absolute left-1/2 -translate-x-1/2 mt-1.5 w-52 bg-white border border-gray-100 rounded-xl shadow-sm z-50 py-1.5">
-            {moreItems.map(({ label, icon: Icon, href, action }) => {
-              if (action === "manage-access") return null;
-              const resolvedHref = href ? navHref(href) : undefined;
-              const isActive = !!resolvedHref && pathname === resolvedHref;
-              const baseClass = `flex items-center gap-1.5 w-full text-left px-4 py-2 text-sm font-body transition-colors cursor-pointer ${
+      {/* Desktop nav — unchanged */}
+      <nav className="hidden md:flex items-center gap-2">
+        {primaryNavItems.map(({ label, icon: Icon, href }) => {
+          const resolvedHref = navHref(href);
+          const isActive = href !== "#" && pathname === resolvedHref;
+          return (
+            <Link
+              key={label}
+              href={resolvedHref}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-body rounded-md transition-colors whitespace-nowrap ${
                 isActive
                   ? "text-[#4a7c59] bg-[#4a7c59]/8 font-semibold"
-                  : "text-gray-700 hover:bg-gray-50 hover:text-[#4a7c59]"
-              }`;
-              if (action === "help") {
-                return (
+                  : "text-gray-600 hover:text-[#4a7c59] hover:bg-gray-50"
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {label}
+            </Link>
+          );
+        })}
+
+        {/* More dropdown */}
+        <div className="relative" ref={moreRef}>
+          <button
+            onClick={() => setMoreOpen((v) => !v)}
+            className="flex items-center gap-1 px-3 py-1.5 text-sm font-body text-gray-600 hover:text-[#4a7c59] hover:bg-gray-50 rounded-md transition-colors cursor-pointer"
+          >
+            More
+            <ChevronDown
+              className={`w-3.5 h-3.5 transition-transform ${moreOpen ? "rotate-180" : ""}`}
+              strokeWidth={2.5}
+            />
+          </button>
+
+          {moreOpen && (
+            <div className="absolute left-1/2 -translate-x-1/2 mt-1.5 w-52 bg-white border border-gray-100 rounded-xl shadow-sm z-50 py-1.5">
+              {moreItems.map(({ label, icon: Icon, href, action }) => {
+                if (action === "manage-access") return null;
+                const resolvedHref = href ? navHref(href) : undefined;
+                const isActive = !!resolvedHref && pathname === resolvedHref;
+                const baseClass = `flex items-center gap-1.5 w-full text-left px-4 py-2 text-sm font-body transition-colors cursor-pointer ${
+                  isActive
+                    ? "text-[#4a7c59] bg-[#4a7c59]/8 font-semibold"
+                    : "text-gray-700 hover:bg-gray-50 hover:text-[#4a7c59]"
+                }`;
+                if (action === "help") {
+                  return (
+                    <button
+                      key={label}
+                      onClick={() => {
+                        setMoreOpen(false);
+                        setHelpOpen(true);
+                      }}
+                      className={baseClass}
+                    >
+                      <Icon className="w-4 h-4" />
+                      {label}
+                    </button>
+                  );
+                }
+                if (action === "manage-access") {
+                  return (
+                    <button
+                      key={label}
+                      onClick={() => {
+                        setMoreOpen(false);
+                        setManageAccessOpen(true);
+                      }}
+                      className={baseClass}
+                    >
+                      <Icon className="w-4 h-4" />
+                      {label}
+                    </button>
+                  );
+                }
+                return resolvedHref ? (
+                  <Link
+                    key={label}
+                    href={resolvedHref}
+                    onClick={() => setMoreOpen(false)}
+                    className={baseClass}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {label}
+                  </Link>
+                ) : (
                   <button
                     key={label}
-                    onClick={() => {
-                      setMoreOpen(false);
-                      setHelpOpen(true);
-                    }}
+                    onClick={() => setMoreOpen(false)}
                     className={baseClass}
                   >
                     <Icon className="w-4 h-4" />
                     {label}
                   </button>
                 );
-              }
-              if (action === "manage-access") {
+              })}
+            </div>
+          )}
+        </div>
+      </nav>
+
+      {/* Mobile menu panel */}
+      {mobileMenuOpen && (
+        <div className="md:hidden fixed inset-x-0 top-[57px] z-40 bg-white border-b border-gray-100 shadow-sm">
+          <div className="px-4 pt-2 pb-3 grid grid-cols-2 gap-1">
+            {primaryNavItems.map(({ label, icon: Icon, href }) => {
+              const resolvedHref = navHref(href);
+              const isActive = href !== "#" && pathname === resolvedHref;
+              return (
+                <Link
+                  key={label}
+                  href={resolvedHref}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-body transition-colors ${
+                    isActive
+                      ? "text-[#4a7c59] bg-[#4a7c59]/8 font-semibold"
+                      : "text-gray-600 hover:text-[#4a7c59] hover:bg-gray-50"
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {label}
+                </Link>
+              );
+            })}
+            {moreItems.map(({ label, icon: Icon, href, action }) => {
+              if (action === "manage-access") return null;
+              const resolvedHref = href ? navHref(href) : undefined;
+              const isActive = !!resolvedHref && pathname === resolvedHref;
+              const baseClass = `flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-body transition-colors cursor-pointer ${
+                isActive
+                  ? "text-[#4a7c59] bg-[#4a7c59]/8 font-semibold"
+                  : "text-gray-600 hover:text-[#4a7c59] hover:bg-gray-50"
+              }`;
+              if (action === "help") {
                 return (
                   <button
                     key={label}
                     onClick={() => {
-                      setMoreOpen(false);
-                      setManageAccessOpen(true);
+                      setMobileMenuOpen(false);
+                      setHelpOpen(true);
                     }}
                     className={baseClass}
                   >
@@ -164,7 +251,7 @@ export default function DashboardNav({
                 <Link
                   key={label}
                   href={resolvedHref}
-                  onClick={() => setMoreOpen(false)}
+                  onClick={() => setMobileMenuOpen(false)}
                   className={baseClass}
                 >
                   <Icon className="w-4 h-4" />
@@ -173,7 +260,7 @@ export default function DashboardNav({
               ) : (
                 <button
                   key={label}
-                  onClick={() => setMoreOpen(false)}
+                  onClick={() => setMobileMenuOpen(false)}
                   className={baseClass}
                 >
                   <Icon className="w-4 h-4" />
@@ -182,8 +269,9 @@ export default function DashboardNav({
               );
             })}
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
       <HelpWidget
         hideFloatingButton
         open={helpOpen}
@@ -193,6 +281,6 @@ export default function DashboardNav({
         isOpen={manageAccessOpen}
         onClose={() => setManageAccessOpen(false)}
       />
-    </nav>
+    </>
   );
 }

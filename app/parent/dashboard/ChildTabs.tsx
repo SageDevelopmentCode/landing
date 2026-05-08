@@ -858,7 +858,7 @@ function Checklist({
         </motion.div>
       )}
       <div className="mb-5 bg-white border border-gray-200 rounded-2xl px-5 py-4 shadow-sm">
-        <div className="flex items-start justify-between gap-4 mb-3">
+        <div className="flex flex-col gap-2 mb-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
           <div className="flex items-center gap-3">
             <StudentTabAvatar id={applicationId} name={childName} profileImageUrl={profileImageUrl} size="md" />
             <div>
@@ -870,7 +870,7 @@ function Checklist({
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
             {programLabelWithEmoji && (
               <span className="text-xs font-medium font-body text-gray-500 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1">
                 {programLabelWithEmoji}
@@ -1466,8 +1466,67 @@ export default function ChildTabs({
       </aside>
 
       {/* ── Right: Main content ── */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto px-6 py-10">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Mobile-only children tab bar */}
+        <div className="md:hidden flex-shrink-0 bg-white border-b border-gray-100 px-3 py-2 flex gap-2 overflow-x-auto">
+          {apps.map((app) => {
+            const label = app.preferred_name ?? app.child_legal_name ?? "Student";
+            const isActive = app.id === activeTabId;
+            const sid = app.student_id ?? "";
+            const isComplete = computeIsEnrollmentComplete(
+              localSigs[sid] ?? {},
+              localImmunizationCounts[sid] ?? 0,
+              localRegistrationFeePaid[sid] ?? false,
+            );
+            return (
+              <button
+                key={app.id}
+                onClick={() => setActiveTabId(app.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-body font-medium whitespace-nowrap flex-shrink-0 transition-colors cursor-pointer ${
+                  isActive
+                    ? "bg-[#4a7c59]/10 text-gray-800 ring-1 ring-[#4a7c59]/30"
+                    : "text-gray-500 bg-gray-50"
+                }`}
+              >
+                <StudentTabAvatar id={app.id} name={label} profileImageUrl={profileImageByStudent[app.student_id ?? ""] ?? null} />
+                <span className="max-w-[10ch] truncate">{label}</span>
+                {isComplete ? (
+                  <CheckCircle className="w-3 h-3 text-emerald-500 flex-shrink-0" />
+                ) : (
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
+                )}
+              </button>
+            );
+          })}
+          {pendingApps.map((app) => {
+            const label = app.preferred_name ?? app.child_legal_name ?? "Student";
+            const isActive = app.id === activeTabId;
+            return (
+              <button
+                key={app.id}
+                onClick={() => setActiveTabId(app.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-body font-medium whitespace-nowrap flex-shrink-0 transition-colors cursor-pointer ${
+                  isActive
+                    ? "bg-[#4a7c59]/10 text-gray-800 ring-1 ring-[#4a7c59]/30"
+                    : "text-gray-500 bg-gray-50"
+                }`}
+              >
+                <StudentTabAvatar id={app.id} name={label} profileImageUrl={profileImageByStudent[app.student_id ?? ""] ?? null} />
+                <span className="max-w-[10ch] truncate">{label}</span>
+                <Clock className="w-3 h-3 text-amber-400 flex-shrink-0" />
+              </button>
+            );
+          })}
+          <Link
+            href="/apply/step/1?new=1"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-body font-medium whitespace-nowrap flex-shrink-0 text-gray-400 border border-dashed border-gray-300 transition-colors hover:text-gray-600"
+          >
+            <PlusCircle className="w-3.5 h-3.5 flex-shrink-0" />
+            <span>New Application</span>
+          </Link>
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-3xl mx-auto px-6 py-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTabId}
@@ -1736,6 +1795,7 @@ export default function ChildTabs({
           />
         )}
       </AnimatePresence>
+        </div>
         </div>
       </div>
     </div>
