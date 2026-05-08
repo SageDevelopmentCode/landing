@@ -215,7 +215,6 @@ export default function LoginForm() {
               priority
             />
           </div>
-          /
           <h1 className="text-3xl font-bold font-heading text-gray-800 mb-8">
             {view === "otp-email" || view === "otp-code"
               ? "Welcome back"
