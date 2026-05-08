@@ -538,6 +538,11 @@ export default function ApplyPage() {
     }
   };
 
+  const inlineFormRef = useRef<HTMLDivElement>(null);
+  const scrollToForm = () => {
+    inlineFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   const galleryRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
   const isPausedRef = useRef(false);
@@ -1275,7 +1280,7 @@ export default function ApplyPage() {
                 )}
 
                 {/* Mobile inline form — above "Have any questions?" */}
-                <div className="lg:hidden mb-10 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <div ref={inlineFormRef} className="lg:hidden mb-10 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                   <h3 className="font-heading font-bold text-xl text-gray-800 mb-2">
                     Ready to apply?
                   </h3>
@@ -1570,6 +1575,31 @@ export default function ApplyPage() {
 
       <Footer />
 
+      {/* Floating footer CTA — mobile only */}
+      <motion.div
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 pt-2"
+        initial={{ y: 80, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.6, duration: 0.4, ease: "easeOut" as const }}
+      >
+        <div className="bg-primary rounded-2xl shadow-xl flex items-center justify-between px-5 py-3 gap-3">
+          <div>
+            <p className="text-white font-heading font-bold text-sm leading-tight">
+              Interested in Sage Field?
+            </p>
+            <p className="text-white/75 font-body text-xs">
+              Apply for a spot today
+            </p>
+          </div>
+          <button
+            onClick={scrollToForm}
+            className="flex-shrink-0 bg-white text-primary font-semibold text-sm font-body px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+          >
+            Apply Now →
+          </button>
+        </div>
+      </motion.div>
+
       <ContactDialog
         isOpen={contactOpen}
         onClose={() => setContactOpen(false)}
@@ -1578,7 +1608,9 @@ export default function ApplyPage() {
         isOpen={waitlistOpen}
         onClose={() => setWaitlistOpen(false)}
       />
-      <FloatingSMSButton />
+      <div className="hidden lg:block">
+        <FloatingSMSButton />
+      </div>
     </div>
   );
 }
