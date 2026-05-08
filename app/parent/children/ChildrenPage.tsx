@@ -1650,7 +1650,44 @@ export default function ChildrenPage({
       </aside>
 
       {/* ── Right: Main content ── */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Mobile: horizontal child tab bar */}
+        <div className="md:hidden flex gap-2 overflow-x-auto px-4 py-2 border-b border-gray-100 bg-white shrink-0">
+          {sortedChildren.map((child, i) => {
+            const isActive = i === activeIndex;
+            const profileImageUrl =
+              ((child as Record<string, unknown>).profile_image_url as
+                | string
+                | null) ?? null;
+            const name = child.child_legal_name ?? `Child ${i + 1}`;
+            return (
+              <button
+                key={child.id}
+                onClick={() => setActiveIndex(i)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-body font-medium whitespace-nowrap transition-colors shrink-0 ${
+                  isActive
+                    ? "bg-[#4a7c59]/10 text-gray-800"
+                    : "text-gray-400 hover:text-gray-600 hover:bg-black/5"
+                }`}
+              >
+                {profileImageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={profileImageUrl}
+                    alt={name}
+                    className="w-6 h-6 rounded-full object-cover shrink-0"
+                  />
+                ) : (
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-semibold shrink-0 bg-[#4a7c59]">
+                    {getInitials(name)}
+                  </div>
+                )}
+                <span className="max-w-[10ch] truncate">{name}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto px-6 py-12">
           <div className="mb-10">
             <h1 className="text-3xl font-bold font-heading text-gray-800 mb-2">
@@ -1673,6 +1710,7 @@ export default function ChildrenPage({
             initialNotes={notesByStudent[activeChild.id] ?? []}
           />
         </div>
+      </div>
       </div>
     </div>
   );

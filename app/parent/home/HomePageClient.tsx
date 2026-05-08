@@ -377,15 +377,15 @@ export default function HomePageClient({
   );
   const [dropOffSaving, setDropOffSaving] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
-  const [showMobileWarning, setShowMobileWarning] = useState(false);
   const [referralPopupOpen, setReferralPopupOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    if (window.innerWidth < 1024) setShowMobileWarning(true);
+    setIsMobile(window.innerWidth < 1024);
   }, []);
 
   useEffect(() => {
-    if (window.innerWidth >= 1024 && !sessionStorage.getItem("referralPopupSeen")) {
+    if (!sessionStorage.getItem("referralPopupSeen")) {
       const t = setTimeout(() => setReferralPopupOpen(true), 1000);
       return () => clearTimeout(t);
     }
@@ -441,103 +441,188 @@ export default function HomePageClient({
         />
       </div>
 
-      {/* Referral popup — shown once per session */}
+      {/* Referral popup — shown once per session; bottom sheet on mobile, centered modal on desktop */}
       <AnimatePresence>
         {referralPopupOpen && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            onClick={closeReferralPopup}
-          >
-            <motion.div
-              className="relative w-full max-w-lg rounded-2xl shadow-2xl bg-white overflow-hidden"
-              initial={{ opacity: 0, scale: 0.92, y: 16 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 8 }}
-              transition={{ type: "spring", damping: 26, stiffness: 300 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Banner image */}
-              <div className="relative h-40 w-full overflow-hidden">
-                <img
-                  src="/assets/Kid1.png"
-                  alt=""
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-              </div>
-
-              <div className="p-6">
-                <button
-                  onClick={closeReferralPopup}
-                  className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-[#4a7c59]/10 flex items-center justify-center flex-shrink-0">
-                    <Gift
-                      className="w-5 h-5 text-[#4a7c59]"
-                      strokeWidth={1.5}
-                    />
-                  </div>
-                  <h2 className="text-lg font-heading font-semibold text-gray-900">
-                    Refer a Family
-                  </h2>
-                  <span className="bg-[#4a7c59] text-white text-xs font-body px-2.5 py-1 rounded-full font-medium">
-                    $150 gift card
-                  </span>
+          isMobile ? (
+            <>
+              <motion.div
+                className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                onClick={closeReferralPopup}
+              />
+              <motion.div
+                className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl overflow-hidden"
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", stiffness: 280, damping: 30 }}
+              >
+                <div className="w-10 h-1 rounded-full bg-gray-200 mx-auto mt-3" />
+                {/* Banner image */}
+                <div className="relative h-36 w-full overflow-hidden mt-3">
+                  <img
+                    src="/assets/Kid1.png"
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                 </div>
 
-                <p className="text-sm font-body text-gray-600 leading-relaxed mb-6">
-                  Know a family who&apos;d be a great fit for Sage Field? Share
-                  your link — when they enroll and pay their registration fee,
-                  you&apos;ll receive a{" "}
-                  <strong className="text-gray-800">$150 gift card</strong> of
-                  your choice.
-                </p>
-
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 min-w-0 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5">
-                    <p className="text-sm font-body text-gray-500 truncate">
-                      {referralLink}
-                    </p>
+                <div className="p-6 pb-10">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-[#4a7c59]/10 flex items-center justify-center flex-shrink-0">
+                      <Gift className="w-5 h-5 text-[#4a7c59]" strokeWidth={1.5} />
+                    </div>
+                    <h2 className="text-lg font-heading font-semibold text-gray-900">
+                      Refer a Family
+                    </h2>
+                    <span className="bg-[#4a7c59] text-white text-xs font-body px-2.5 py-1 rounded-full font-medium">
+                      $150 gift card
+                    </span>
                   </div>
+
+                  <p className="text-sm font-body text-gray-600 leading-relaxed mb-6">
+                    Know a family who&apos;d be a great fit for Sage Field? Share
+                    your link — when they enroll and pay their registration fee,
+                    you&apos;ll receive a{" "}
+                    <strong className="text-gray-800">$150 gift card</strong> of
+                    your choice.
+                  </p>
+
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 min-w-0 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5">
+                      <p className="text-sm font-body text-gray-500 truncate">
+                        {referralLink}
+                      </p>
+                    </div>
+                    <button
+                      onClick={copyReferralLink}
+                      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold font-body transition-colors whitespace-nowrap cursor-pointer ${
+                        copied
+                          ? "bg-green-600 text-white"
+                          : "bg-[#4a7c59] text-white hover:bg-[#3d6b4a]"
+                      }`}
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="w-4 h-4" />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4" />
+                          Copy link
+                        </>
+                      )}
+                    </button>
+                  </div>
+
                   <button
-                    onClick={copyReferralLink}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold font-body transition-colors whitespace-nowrap cursor-pointer ${
-                      copied
-                        ? "bg-green-600 text-white"
-                        : "bg-[#4a7c59] text-white hover:bg-[#3d6b4a]"
-                    }`}
+                    onClick={closeReferralPopup}
+                    className="mt-5 w-full text-center text-xs font-body text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
                   >
-                    {copied ? (
-                      <>
-                        <Check className="w-4 h-4" />
-                        Copied!
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-4 h-4" />
-                        Copy link
-                      </>
-                    )}
+                    Maybe later
                   </button>
                 </div>
+              </motion.div>
+            </>
+          ) : (
+            <motion.div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={closeReferralPopup}
+            >
+              <motion.div
+                className="relative w-full max-w-lg rounded-2xl shadow-2xl bg-white overflow-hidden"
+                initial={{ opacity: 0, scale: 0.92, y: 16 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 8 }}
+                transition={{ type: "spring", damping: 26, stiffness: 300 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Banner image */}
+                <div className="relative h-40 w-full overflow-hidden">
+                  <img
+                    src="/assets/Kid1.png"
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                </div>
 
-                <button
-                  onClick={closeReferralPopup}
-                  className="mt-5 w-full text-center text-xs font-body text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-                >
-                  Maybe later
-                </button>
-              </div>
+                <div className="p-6">
+                  <button
+                    onClick={closeReferralPopup}
+                    className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-[#4a7c59]/10 flex items-center justify-center flex-shrink-0">
+                      <Gift className="w-5 h-5 text-[#4a7c59]" strokeWidth={1.5} />
+                    </div>
+                    <h2 className="text-lg font-heading font-semibold text-gray-900">
+                      Refer a Family
+                    </h2>
+                    <span className="bg-[#4a7c59] text-white text-xs font-body px-2.5 py-1 rounded-full font-medium">
+                      $150 gift card
+                    </span>
+                  </div>
+
+                  <p className="text-sm font-body text-gray-600 leading-relaxed mb-6">
+                    Know a family who&apos;d be a great fit for Sage Field? Share
+                    your link — when they enroll and pay their registration fee,
+                    you&apos;ll receive a{" "}
+                    <strong className="text-gray-800">$150 gift card</strong> of
+                    your choice.
+                  </p>
+
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 min-w-0 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5">
+                      <p className="text-sm font-body text-gray-500 truncate">
+                        {referralLink}
+                      </p>
+                    </div>
+                    <button
+                      onClick={copyReferralLink}
+                      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold font-body transition-colors whitespace-nowrap cursor-pointer ${
+                        copied
+                          ? "bg-green-600 text-white"
+                          : "bg-[#4a7c59] text-white hover:bg-[#3d6b4a]"
+                      }`}
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="w-4 h-4" />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4" />
+                          Copy link
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={closeReferralPopup}
+                    className="mt-5 w-full text-center text-xs font-body text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                  >
+                    Maybe later
+                  </button>
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
+          )
         )}
       </AnimatePresence>
 
@@ -1358,50 +1443,6 @@ export default function HomePageClient({
         onClose={() => setAttendanceStudent(null)}
       />
 
-      {/* Mobile warning bottom sheet */}
-      <AnimatePresence>
-        {showMobileWarning && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", stiffness: 280, damping: 30 }}
-              style={{ width: "100vw", left: 0 }}
-              className="fixed bottom-0 z-[61] bg-white rounded-t-3xl shadow-2xl px-6 pt-6 pb-10 flex flex-col items-center text-center gap-4"
-            >
-              <div className="w-10 h-1 rounded-full bg-gray-200 mb-1" />
-              <div className="w-12 h-12 rounded-2xl bg-[#eef4ec] flex items-center justify-center">
-                <Smartphone className="w-6 h-6 text-[#5a8a6a]" />
-              </div>
-              <div className="flex flex-col gap-2">
-                <h2 className="text-lg font-heading font-bold text-gray-900">
-                  Best on Desktop
-                </h2>
-                <p className="text-sm text-gray-500 font-body leading-relaxed">
-                  This dashboard is designed for laptop or desktop screens. For
-                  the best experience, please visit on a larger device.
-                </p>
-                <p className="text-sm text-[#5a8a6a] font-body font-medium">
-                  Our Sage Field mobile app is coming soon!
-                </p>
-              </div>
-              <button
-                onClick={() => setShowMobileWarning(false)}
-                className="mt-1 w-full bg-[#5a8a6a] hover:bg-[#4a7a5a] text-white text-sm font-semibold rounded-xl py-2.5 transition-colors"
-              >
-                Got it
-              </button>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
