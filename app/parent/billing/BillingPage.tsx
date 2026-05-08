@@ -4490,7 +4490,46 @@ export default function BillingPage({
       )}
 
       {/* ── Right: Main content ── */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Mobile: horizontal child tab bar */}
+        <div className="md:hidden flex gap-2 overflow-x-auto px-4 py-2 border-b border-gray-100 bg-white shrink-0">
+          {allStudentIds.map((id) => {
+            const isNonEnrolled = nonEnrolledMap.has(id);
+            const studentInfo = studentMap[id];
+            const name = isNonEnrolled
+              ? (nonEnrolledMap.get(id)!.name ?? "Student")
+              : (studentInfo?.name ?? "Unknown");
+            const profileImageUrl = isNonEnrolled ? null : (studentInfo?.profileImageUrl ?? null);
+            const isActive = activeStudentId === id;
+            return (
+              <button
+                key={id}
+                onClick={() => setActiveStudentId(id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-body font-medium whitespace-nowrap transition-colors shrink-0 ${
+                  isActive
+                    ? "bg-[#4a7c59]/10 text-gray-800"
+                    : "text-gray-400 hover:text-gray-600 hover:bg-black/5"
+                }`}
+              >
+                <StudentTabAvatar id={id} name={name} profileImageUrl={profileImageUrl} isActive={isActive} />
+                <span className="max-w-[10ch] truncate">{name}</span>
+              </button>
+            );
+          })}
+          {hasOrphans && (
+            <button
+              onClick={() => setActiveStudentId("__other__")}
+              className={`flex items-center px-3 py-1.5 rounded-full text-sm font-body font-medium whitespace-nowrap transition-colors shrink-0 ${
+                activeStudentId === "__other__"
+                  ? "bg-[#4a7c59]/10 text-gray-800"
+                  : "text-gray-400 hover:text-gray-600 hover:bg-black/5"
+              }`}
+            >
+              Other
+            </button>
+          )}
+        </div>
+        <div className="flex-1 overflow-y-auto">
         <div className="max-w-5xl mx-auto px-6 py-10 space-y-8">
           <div>
             <h1 className="text-3xl font-bold font-heading text-gray-800 mb-2">
@@ -4687,6 +4726,7 @@ export default function BillingPage({
             )}
           </div>
         </div>
+      </div>
       </div>
 
       <PendingDetailSidebar
