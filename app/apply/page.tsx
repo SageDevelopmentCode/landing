@@ -271,13 +271,19 @@ const tabContent = {
       { label: "Group Size", value: "~10 children" },
     ],
     images: [
-      "/assets/After1.png",
-      "/assets/After4.png",
-      "/assets/After5.PNG",
-      "/assets/After6.PNG",
-      "/assets/After7.PNG",
-      "/assets/ImageOne.jpg",
-      "/assets/After2.png",
+      "/assets/Stock1.jpg",
+      "/assets/Kid1.png",
+      "/assets/Kid2.png",
+      "/assets/Stock2.jpg",
+      "/assets/Stock3.png",
+      "/assets/Stock4.jpg",
+      "/assets/Stock5.jpg",
+      "/assets/Stock6.png",
+      "/assets/Stock7.png",
+      "/assets/Stock8.png",
+      "/assets/Stock9.PNG",
+      "/assets/Stock10.PNG",
+      "/assets/Stock11.PNG",
     ],
   },
   "school-year": {
@@ -294,13 +300,19 @@ const tabContent = {
       { label: "Term", value: "6-month commitment" },
     ],
     images: [
-      "/assets/After1.png",
-      "/assets/After4.png",
-      "/assets/After5.PNG",
-      "/assets/After6.PNG",
-      "/assets/After7.PNG",
-      "/assets/After2.png",
-      "/assets/After3.png",
+      "/assets/Stock1.jpg",
+      "/assets/Kid1.png",
+      "/assets/Kid2.png",
+      "/assets/Stock2.jpg",
+      "/assets/Stock3.png",
+      "/assets/Stock4.jpg",
+      "/assets/Stock5.jpg",
+      "/assets/Stock6.png",
+      "/assets/Stock7.png",
+      "/assets/Stock8.png",
+      "/assets/Stock9.PNG",
+      "/assets/Stock10.PNG",
+      "/assets/Stock11.PNG",
     ],
   },
   homeschool: {
@@ -317,9 +329,19 @@ const tabContent = {
       { label: "Class Size", value: "~10 Kids" },
     ],
     images: [
-      "/assets/Homeschool.jpg",
-      "/assets/Homeschool2.jpg",
-      "/assets/Homeschool3.jpg",
+      "/assets/Stock1.jpg",
+      "/assets/Kid1.png",
+      "/assets/Kid2.png",
+      "/assets/Stock2.jpg",
+      "/assets/Stock3.png",
+      "/assets/Stock4.jpg",
+      "/assets/Stock5.jpg",
+      "/assets/Stock6.png",
+      "/assets/Stock7.png",
+      "/assets/Stock8.png",
+      "/assets/Stock9.PNG",
+      "/assets/Stock10.PNG",
+      "/assets/Stock11.PNG",
     ],
   },
 };
@@ -337,19 +359,36 @@ export default function ApplyPage() {
     ? `/apply/start?ref=${encodeURIComponent(refParam)}`
     : "/apply/start";
   const [activeTab, setActiveTab] = useState<Tab>(initialTab);
+  const [descExpanded, setDescExpanded] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [waitlistOpen, setWaitlistOpen] = useState(false);
   const router = useRouter();
+
+  const handleTabChange = (tab: Tab) => {
+    setActiveTab(tab);
+    setDescExpanded(false);
+  };
 
   return (
     <div className="min-h-screen bg-welcome-bg">
       <Navbar />
 
+      {/* Mobile hero gallery — above heading */}
+      <div className="sm:hidden pt-20">
+        <div className="overflow-x-auto flex snap-x snap-mandatory gap-0 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
+          {tabContent[activeTab].images.map((src, i) => (
+            <div key={i} className="w-[88%] flex-shrink-0 snap-start aspect-square overflow-hidden">
+              <img src={src} alt="Program photo" className="w-full h-full object-cover" />
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Header Section */}
-      <section className="pt-32 px-8 sm:px-12 lg:px-16">
+      <section className="pt-4 sm:pt-32 px-8 sm:px-12 lg:px-16">
         <div className="max-w-6xl mx-auto text-center">
           <motion.div
-            className="flex justify-center mb-8"
+            className="hidden sm:flex justify-center mb-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" as const }}
@@ -360,18 +399,18 @@ export default function ApplyPage() {
           </motion.div>
 
           <motion.h1
-            className="text-4xl md:text-5xl font-bold text-center mb-6 font-heading text-gray-800"
+            className="hidden sm:block text-4xl md:text-5xl font-bold text-center mb-3 sm:mb-6 font-heading text-gray-800"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
-            Apply to Sage Field
+            Enroll Now to a Program!
           </motion.h1>
         </div>
       </section>
 
       {/* Two-Column Content Section */}
-      <section className="pb-16 pt-12 px-8 sm:px-12 lg:px-16">
+      <section className="pb-16 pt-6 sm:pt-12 px-8 sm:px-12 lg:px-16">
         <div className="max-w-6xl mx-auto">
           <AnimatePresence mode="wait">
             <motion.div
@@ -385,23 +424,23 @@ export default function ApplyPage() {
               {/* LEFT COLUMN — content */}
               <div className="lg:col-span-7">
                 {/* Tab Switcher */}
-                <div className="flex gap-3 flex-wrap mb-6">
+                <div className="flex gap-3 mb-6 overflow-x-auto flex-nowrap [&::-webkit-scrollbar]:hidden [scrollbar-width:none] sm:flex-wrap">
                   {(["summer", "school-year", "homeschool"] as Tab[]).map(
                     (tab) => (
                       <button
                         key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        className={`px-6 py-3 rounded-full font-semibold font-body transition-all duration-200 cursor-pointer ${
+                        onClick={() => handleTabChange(tab)}
+                        className={`flex-shrink-0 px-4 py-2 text-sm sm:px-6 sm:py-3 sm:text-base rounded-full font-semibold font-body transition-all duration-200 cursor-pointer ${
                           activeTab === tab
                             ? "bg-primary text-white shadow-md"
                             : "border-2 border-gray-300 text-gray-600 bg-white hover:border-primary"
                         }`}
                       >
                         {tab === "summer"
-                          ? "Summer 2026"
+                          ? "☀️ Summer 2026"
                           : tab === "school-year"
-                            ? "School Year 2026"
-                            : "Homeschool Drop-In"}
+                            ? "📚 School Year 2026"
+                            : "🏡 Homeschool Drop-In"}
                       </button>
                     ),
                   )}
@@ -417,25 +456,35 @@ export default function ApplyPage() {
                   {tabContent[activeTab].description.map((para, i) => (
                     <p
                       key={i}
-                      className="text-lg text-gray-600 font-body leading-relaxed"
+                      className={`text-lg text-gray-600 font-body leading-relaxed ${
+                        i > 0 ? (descExpanded ? "block" : "hidden sm:block") : ""
+                      }`}
                     >
                       {para}
                     </p>
                   ))}
+                  {tabContent[activeTab].description.length > 1 && (
+                    <button
+                      onClick={() => setDescExpanded(!descExpanded)}
+                      className="sm:hidden text-sm font-semibold text-primary font-body hover:underline cursor-pointer"
+                    >
+                      {descExpanded ? "Read less ↑" : "Read more ↓"}
+                    </button>
+                  )}
                 </div>
 
                 <div className="lg:hidden mb-10">
                   <button
-                    onClick={() => router.push(applyStartUrl)}
+                    onClick={() => setWaitlistOpen(true)}
                     className="w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
                   >
-                    Apply Now
+                    I&apos;m interested!
                   </button>
                   <button
-                    onClick={() => setWaitlistOpen(true)}
+                    onClick={() => router.push(applyStartUrl)}
                     className="w-full mt-3 px-8 py-3 text-sm text-gray-500 font-body font-semibold hover:text-primary transition-colors duration-200 cursor-pointer"
                   >
-                    Have any questions?
+                    I&apos;m ready to enroll
                   </button>
                 </div>
 
@@ -456,20 +505,13 @@ export default function ApplyPage() {
                   ))}
                 </div>
 
-                {/* Image Gallery */}
-                <div className="mb-10">
-                  <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-lg mb-3">
-                    <img
-                      src={tabContent[activeTab].images[0]}
-                      alt="Program photo"
-                      className="w-full h-full object-cover hover:scale-[1.02] transition-transform duration-500"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    {tabContent[activeTab].images.slice(1).map((src, i) => (
+                {/* Image Gallery — desktop only (mobile version is above the heading) */}
+                <div className="hidden sm:block mb-10">
+                  <div className="sm:overflow-visible sm:grid sm:grid-cols-2 sm:gap-3">
+                    {tabContent[activeTab].images.map((src, i) => (
                       <div
                         key={i}
-                        className="aspect-[4/3] rounded-xl overflow-hidden shadow-md"
+                        className="sm:w-full aspect-[4/3] rounded-xl overflow-hidden shadow-md"
                       >
                         <img
                           src={src}
@@ -1082,16 +1124,16 @@ export default function ApplyPage() {
                     Have any questions?
                   </button>
                   <button
-                    onClick={() => router.push(applyStartUrl)}
+                    onClick={() => setWaitlistOpen(true)}
                     className="lg:hidden w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
                   >
-                    Apply Now
+                    I&apos;m interested!
                   </button>
                   <button
-                    onClick={() => setWaitlistOpen(true)}
+                    onClick={() => router.push(applyStartUrl)}
                     className="lg:hidden w-full mt-3 px-8 py-3 text-sm text-gray-500 font-body font-semibold hover:text-primary transition-colors duration-200 cursor-pointer"
                   >
-                    Have any questions?
+                    I&apos;m ready to enroll
                   </button>
                 </div>
               </div>

@@ -51,7 +51,7 @@ function getInitials(name: string | null): string {
 }
 
 interface TeacherAssignSidebarProps {
-  student: { id: string; child_legal_name: string | null } | null;
+  student: { id: string; child_legal_name: string | null; child_grade: string | null } | null;
   onClose: () => void;
   onAssigned?: () => void;
 }
@@ -191,6 +191,11 @@ export function TeacherAssignSidebar({
   return (
     <DetailSidebar isOpen={!!student} onClose={onClose} title={title}>
       <div className="space-y-4">
+        {student?.child_grade && (
+          <p style={{ fontSize: 12, color: "#9CA3AF", margin: "0 0 8px" }}>
+            Grade: {student.child_grade}
+          </p>
+        )}
         <SidebarSection title="Teacher Assignments">
           {assignmentsLoading ? (
             <SkeletonBlock className="h-4 w-full" />
