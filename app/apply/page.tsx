@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -364,6 +364,47 @@ export default function ApplyPage() {
   const [waitlistOpen, setWaitlistOpen] = useState(false);
   const router = useRouter();
 
+  const galleryRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number | null>(null);
+  const isPausedRef = useRef(false);
+  const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const el = galleryRef.current;
+    if (!el) return;
+    el.scrollLeft = 0;
+
+    let pos = el.scrollLeft;
+    const tick = () => {
+      if (!isPausedRef.current && el) {
+        pos += 0.4;
+        el.scrollLeft = Math.round(pos);
+        if (el.scrollLeft >= el.scrollWidth / 2) {
+          pos = 0;
+          el.scrollLeft = 0;
+        }
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [activeTab]);
+
+  const handleGalleryInteractionStart = () => {
+    isPausedRef.current = true;
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+  };
+
+  const handleGalleryInteractionEnd = () => {
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    resumeTimerRef.current = setTimeout(() => {
+      isPausedRef.current = false;
+    }, 2500);
+  };
+
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);
     setDescExpanded(false);
@@ -375,10 +416,27 @@ export default function ApplyPage() {
 
       {/* Mobile hero gallery — above heading */}
       <div className="sm:hidden pt-20">
-        <div className="overflow-x-auto flex snap-x snap-mandatory gap-0 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
-          {tabContent[activeTab].images.map((src, i) => (
-            <div key={i} className="w-[88%] flex-shrink-0 snap-start aspect-square overflow-hidden">
-              <img src={src} alt="Program photo" className="w-full h-full object-cover" />
+        <div
+          ref={galleryRef}
+          className="overflow-x-auto flex gap-0 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
+          onTouchStart={handleGalleryInteractionStart}
+          onTouchEnd={handleGalleryInteractionEnd}
+          onMouseDown={handleGalleryInteractionStart}
+          onMouseUp={handleGalleryInteractionEnd}
+        >
+          {[
+            ...tabContent[activeTab].images,
+            ...tabContent[activeTab].images,
+          ].map((src, i) => (
+            <div
+              key={i}
+              className="w-[88%] flex-shrink-0 aspect-square overflow-hidden"
+            >
+              <img
+                src={src}
+                alt="Program photo"
+                className="w-full h-full object-cover"
+              />
             </div>
           ))}
         </div>
@@ -457,7 +515,11 @@ export default function ApplyPage() {
                     <p
                       key={i}
                       className={`text-lg text-gray-600 font-body leading-relaxed ${
-                        i > 0 ? (descExpanded ? "block" : "hidden sm:block") : ""
+                        i > 0
+                          ? descExpanded
+                            ? "block"
+                            : "hidden sm:block"
+                          : ""
                       }`}
                     >
                       {para}
