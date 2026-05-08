@@ -8,8 +8,12 @@ import dynamic from "next/dynamic";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
-const ContactDialog = dynamic(() => import("../components/ContactDialog"), { ssr: false });
-const WaitlistDialog = dynamic(() => import("../components/WaitlistDialog"), { ssr: false });
+const ContactDialog = dynamic(() => import("../components/ContactDialog"), {
+  ssr: false,
+});
+const WaitlistDialog = dynamic(() => import("../components/WaitlistDialog"), {
+  ssr: false,
+});
 import FloatingSMSButton from "../components/FloatingSMSButton";
 import MeetTheTeamSection from "../components/MeetTheTeamSection";
 import FAQAccordion from "../components/FAQAccordion";
@@ -547,7 +551,7 @@ export default function ApplyPage() {
     let pos = el.scrollLeft;
     const tick = () => {
       if (!isPausedRef.current && el) {
-        pos += 0.4;
+        pos += 0.6;
         el.scrollLeft = Math.round(pos);
         if (el.scrollLeft >= el.scrollWidth / 2) {
           pos = 0;
@@ -1363,8 +1367,7 @@ export default function ApplyPage() {
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-text-gray mb-2 font-body">
-                        Child&apos;s Age{" "}
-                        <span className="text-red-500">*</span>
+                        Child&apos;s Age <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="number"
@@ -1381,8 +1384,7 @@ export default function ApplyPage() {
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-text-gray mb-2 font-body">
-                        Program Interest{" "}
-                        <span className="text-red-500">*</span>
+                        Program Interest <span className="text-red-500">*</span>
                       </label>
                       <select
                         name="programInterest"
@@ -1440,7 +1442,8 @@ export default function ApplyPage() {
                     Ready to enroll?
                   </h3>
                   <p className="text-gray-500 font-body text-sm mb-5">
-                    Skip the form — start your application directly and secure your child&apos;s spot.
+                    Skip the form — start your application directly and secure
+                    your child&apos;s spot.
                   </p>
                   <button
                     onClick={() => router.push(applyStartUrl)}
@@ -1449,7 +1452,6 @@ export default function ApplyPage() {
                     Start Application →
                   </button>
                 </div>
-
               </div>
 
               {/* RIGHT COLUMN — sticky CTA */}
