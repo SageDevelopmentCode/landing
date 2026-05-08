@@ -4,10 +4,12 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import ContactDialog from "../components/ContactDialog";
-import WaitlistDialog from "../components/WaitlistDialog";
+
+const ContactDialog = dynamic(() => import("../components/ContactDialog"), { ssr: false });
+const WaitlistDialog = dynamic(() => import("../components/WaitlistDialog"), { ssr: false });
 import FloatingSMSButton from "../components/FloatingSMSButton";
 import MeetTheTeamSection from "../components/MeetTheTeamSection";
 import FAQAccordion from "../components/FAQAccordion";
