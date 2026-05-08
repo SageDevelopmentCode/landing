@@ -10,6 +10,10 @@ import ContactDialog from "../components/ContactDialog";
 import WaitlistDialog from "../components/WaitlistDialog";
 import FloatingSMSButton from "../components/FloatingSMSButton";
 import MeetTheTeamSection from "../components/MeetTheTeamSection";
+import FAQAccordion from "../components/FAQAccordion";
+import { submitWaitlist } from "@/app/actions/waitlist";
+import { formatPhone } from "@/app/utils/formatPhone";
+import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
 
 type Tab = "summer" | "school-year" | "homeschool";
 
@@ -346,7 +350,101 @@ const tabContent = {
   },
 };
 
+const aboutSageFieldFAQs = [
+  {
+    question: "What is Sage Field?",
+    answer:
+      "Sage Field Private School is an outdoor-focused private microschool in Round Rock, Texas. Sage Field operates as a private microschool, not a child-care or daycare center. We are a small-group, outdoor-centered education that fosters curiosity, confidence, and wisdom — a structured drop-off program without the rigidity of traditional school.",
+  },
+  {
+    question: "Are you a school? Will Sage Field keep grades or transcripts?",
+    answer:
+      "Yes — Sage Field Private School is a private microschool operating under Texas private school law. We are not a traditional accredited school and do not issue grades, report cards, or transcripts in the conventional sense. Instead, we provide descriptive, portfolio-based feedback on each child's growth and progress. We handle the in-school program; families manage any additional records they personally wish to keep.",
+  },
+  {
+    question: "What is a microschool?",
+    answer:
+      "A microschool is a small, independent private school — typically serving no more than 10 - 12 students per class — that offers a more personalized, flexible alternative to traditional schooling. Microschools prioritize small class sizes, individualized pacing, and innovative approaches to learning.",
+  },
+  {
+    question: "What is the Family Partnership model?",
+    answer:
+      "At Sage Field, we believe the best outcomes happen when school and family are aligned. Our Family Partnership model means we stay in close communication with parents about their child's strengths, needs, and growth — and we invite families to extend the curiosity and reflection we spark at school into everyday life at home. Parents are not expected to run the curriculum; that's our job. But we do ask that families stay engaged, communicative, and supportive of the learning journey.",
+  },
+  {
+    question: "What does 'Wisdom vs. Knowledge' mean at Sage Field?",
+    answer:
+      "The name Sage Field carries two meanings. Sage represents wisdom — the kind of understanding that comes from curiosity, reflection, and experience. Field reminds us of the open ground where growth happens — a place to plant, tend, and harvest the potential in every child. We see children as seeds of endless possibility. Knowledge is the starting point, but wisdom is what transforms learning into living — helping children connect ideas to real experiences, build empathy, and make thoughtful choices. In this shared garden of growth, every child has the chance to blossom into their fullest, wisest self.",
+  },
+];
+
+const programDetailsFAQs = [
+  {
+    question: "What ages do you serve and how big are the groups?",
+    answer:
+      "We serve ages 4-11, with flexibility based on developmental fit. Students learn together in mixed-age groups so children can move at their own pace. We intentionally keep our groups small — typically no more than 10–12 children per class — so that our adults can stay closely attuned to each child's needs.",
+  },
+  {
+    question: "What does a typical day at Sage Field look like?",
+    answer:
+      "Our days are designed to feel calm, connected, and alive with curiosity. Mornings are for focused academics in reading, writing, fluency, and math, individualized to each child's abilities rather than a grade label. Afternoons flow into nature exploration, science, art, movement, sports-like games, and social-emotional learning. We prioritize real-world, hands-on experiences, movement, and time outdoors over worksheets and repetition.  Sage Field operates as a private microschool, not a child-care or daycare center.",
+  },
+  {
+    question: "What subjects does Sage Field teach?",
+    answer:
+      "Our school provides a comprehensive, bona fide education centered on a rigorous core curriculum that includes reading, spelling, grammar, mathematics, and good citizenship. We complement these foundations with nature study, art, music, movement, and social-emotional learning, drawing from Montessori, Waldorf, and Reggio-inspired approaches with broadly TEKS-aligned academics. We operate as an academic institution rather than a child care center, featuring structured, teacher-led instruction, formal attendance tracking, and consistent learning objectives for every student. Because we are a full drop-off school, families do not need to supplement our academic program at home unless they choose to. By prioritizing a set academic scope and sequence, we ensure that our students receive a formal education in a focused, classroom-based environment.",
+  },
+];
+
+const supportingLearnersFAQs = [
+  {
+    question: "Do you support neurodivergent or high-sensitivity children?",
+    answer:
+      "We intentionally create a gentle, regulated environment that works well for many neurodivergent and outside-the-box thinkers. We focus on emotional regulation, clear rhythms, and relationship-based support. At the same time, we are not a therapeutic program or medical provider, and we cannot safely accommodate all needs (such as ongoing elopement/running away, significant medical fragility, or violent outbursts). In some situations, we may require a 1:1 aide provided by the family or may determine that Sage Field is not an appropriate fit to keep everyone safe.",
+  },
+  {
+    question: "What is your approach to play, safety, and behavior?",
+    answer:
+      "We believe children grow when they're trusted to 'try risky things safely' with strong boundaries and supervision. We teach children to notice their bodies, respect their own limits, and consider others' safety. When behavior challenges arise, we prioritize regulation, connection, and collaborative problem-solving, but we also have clear lines: if a child's behavior repeatedly endangers themselves, others, or the environment (for example, serious aggression or ongoing unsafe actions), we issue a formal written warning and, if necessary, end enrollment to protect the community.",
+  },
+  {
+    question: "Do you provide food, medications, or transportation?",
+    answer:
+      "Families send all snacks and lunches from home, and children do not share food except with siblings/household members. For health and allergy safety, we do not allow routine or over-the-counter medications at Sage Field, and staff do not administer them. The only exception is life-saving emergency medications (such as EpiPens or rescue inhalers) that parents provide and document; staff may assist in good faith during emergencies. We do not provide vehicle transportation. Any off-site experiences are limited to supervised walking field trips in the surrounding area, with prior parent consent.",
+  },
+];
+
 export default function ApplyPage() {
+  const enrollmentFAQs = [
+    {
+      question:
+        "How does enrollment work and what is the financial commitment?",
+      answer:
+        "Families start by completing an application and connecting with us to ensure a good mutual fit. If we offer a place, enrollment is finalized when you: Sign our Enrollment Agreement (including a six-month commitment), Sign our risk, medical, and media forms, and Pay the non-refundable registration/materials fee. Because we keep groups small and hold a space for your child, tuition is committed for the six-month term, with limited, clearly stated exceptions.",
+    },
+    {
+      question: "What role do parents play?",
+      answer:
+        "Sage Field handles the in-school program and we ask that families stay engaged and communicative: share important updates about your child, attend check-ins when scheduled, and support a culture of curiosity and reflection at home. We see parents as partners in their child's growth, not as co-teachers.",
+    },
+    {
+      question: "How do we enroll?",
+      answer: (
+        <div>
+          <p className="mb-4">
+            Enrollment for Summer 2026 and School Year 2026-2027 is now open.
+            Complete our interest form to begin the enrollment process.
+          </p>
+          <button
+            onClick={() => setWaitlistOpen(true)}
+            className="px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
+          >
+            Enroll Now
+          </button>
+        </div>
+      ),
+    },
+  ];
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
   const initialTab: Tab = (
@@ -363,6 +461,76 @@ export default function ApplyPage() {
   const [contactOpen, setContactOpen] = useState(false);
   const [waitlistOpen, setWaitlistOpen] = useState(false);
   const router = useRouter();
+
+  const [inlineFormData, setInlineFormData] = useState({
+    parentName: "",
+    email: "",
+    phone: "",
+    childName: "",
+    childAge: "",
+    programInterest: "",
+    specialInterests: "",
+  });
+  const [isInlineSubmitting, setIsInlineSubmitting] = useState(false);
+  const [inlineSubmitStatus, setInlineSubmitStatus] = useState<{
+    type: "success" | "error" | null;
+    message: string;
+  }>({ type: null, message: "" });
+
+  const handleInlineChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
+    const { name, value } = e.target;
+    if (name === "phone") {
+      setInlineFormData((prev) => ({ ...prev, phone: formatPhone(value) }));
+    } else {
+      setInlineFormData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleInlineSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsInlineSubmitting(true);
+    setInlineSubmitStatus({ type: null, message: "" });
+    try {
+      const result = await submitWaitlist({
+        parentName: inlineFormData.parentName,
+        email: inlineFormData.email,
+        phone: inlineFormData.phone || undefined,
+        childName: inlineFormData.childName,
+        childAge: parseInt(inlineFormData.childAge),
+        programInterest: inlineFormData.programInterest as
+          | "summer-2026"
+          | "school-year-2026"
+          | "both"
+          | "homeschool_drop_in",
+        specialInterests: inlineFormData.specialInterests || undefined,
+      });
+      if (result.success) {
+        setInlineSubmitStatus({ type: "success", message: result.message });
+        setInlineFormData({
+          parentName: "",
+          email: "",
+          phone: "",
+          childName: "",
+          childAge: "",
+          programInterest: "",
+          specialInterests: "",
+        });
+      } else {
+        setInlineSubmitStatus({ type: "error", message: result.message });
+      }
+    } catch {
+      setInlineSubmitStatus({
+        type: "error",
+        message: "An unexpected error occurred. Please try again.",
+      });
+    } finally {
+      setIsInlineSubmitting(false);
+    }
+  };
 
   const galleryRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
@@ -533,21 +701,6 @@ export default function ApplyPage() {
                       {descExpanded ? "Read less ↑" : "Read more ↓"}
                     </button>
                   )}
-                </div>
-
-                <div className="lg:hidden mb-10">
-                  <button
-                    onClick={() => setWaitlistOpen(true)}
-                    className="w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
-                  >
-                    I&apos;m interested!
-                  </button>
-                  <button
-                    onClick={() => router.push(applyStartUrl)}
-                    className="w-full mt-3 px-8 py-3 text-sm text-gray-500 font-body font-semibold hover:text-primary transition-colors duration-200 cursor-pointer"
-                  >
-                    I&apos;m ready to enroll
-                  </button>
                 </div>
 
                 {/* Key Details */}
@@ -1110,59 +1263,174 @@ export default function ApplyPage() {
                   </motion.div>
                 )}
 
-                {/* Have any questions? */}
-                <motion.div
-                  className="mb-10 bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6, ease: "easeOut" as const }}
-                >
-                  <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4">
-                    Questions?
-                  </span>
-                  <h2 className="text-2xl font-bold text-gray-800 font-heading mb-2">
-                    Have any questions?
-                  </h2>
-                  <p className="text-gray-500 font-body text-sm mb-6 max-w-md mx-auto">
-                    We&apos;d love to hear from you. Reach out directly or send
-                    us a message.
+                {/* Mobile inline form — above "Have any questions?" */}
+                <div className="lg:hidden mb-10 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                  <h3 className="font-heading font-bold text-xl text-gray-800 mb-2">
+                    Ready to apply?
+                  </h3>
+                  <p className="text-gray-500 font-body text-sm mb-4">
+                    Spots are limited — apply early to secure your child&apos;s
+                    place.
                   </p>
-                  <a
-                    href="mailto:sabrina@sagefield.co"
-                    className="inline-flex items-center gap-2 text-primary font-semibold font-body text-sm mb-6 hover:underline"
-                  >
-                    sabrina@sagefield.co
-                  </a>
-                  <div className="flex flex-col sm:flex-row gap-3 justify-center mt-2">
+                  <form className="space-y-4" onSubmit={handleInlineSubmit}>
+                    {inlineSubmitStatus.type && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`flex items-center gap-2 p-4 rounded-lg ${
+                          inlineSubmitStatus.type === "success"
+                            ? "bg-green-50 text-green-800 border border-green-200"
+                            : "bg-red-50 text-red-800 border border-red-200"
+                        }`}
+                      >
+                        {inlineSubmitStatus.type === "success" ? (
+                          <CheckCircle className="w-5 h-5 flex-shrink-0" />
+                        ) : (
+                          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                        )}
+                        <p className="text-sm font-body">
+                          {inlineSubmitStatus.message}
+                        </p>
+                      </motion.div>
+                    )}
+                    <div>
+                      <label className="block text-sm font-semibold text-text-gray mb-2 font-body">
+                        Parent/Guardian Name{" "}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="parentName"
+                        value={inlineFormData.parentName}
+                        onChange={handleInlineChange}
+                        required
+                        disabled={isInlineSubmitting}
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary focus:outline-none transition-colors font-body text-gray-900 placeholder:text-gray-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        placeholder="Your full name"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-text-gray mb-2 font-body">
+                        Email <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={inlineFormData.email}
+                        onChange={handleInlineChange}
+                        required
+                        disabled={isInlineSubmitting}
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary focus:outline-none transition-colors font-body text-gray-900 placeholder:text-gray-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        placeholder="your@email.com"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-text-gray mb-2 font-body">
+                        Phone (Optional)
+                      </label>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={inlineFormData.phone}
+                        onChange={handleInlineChange}
+                        disabled={isInlineSubmitting}
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary focus:outline-none transition-colors font-body text-gray-900 placeholder:text-gray-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        placeholder="(123) 456-7890"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-text-gray mb-2 font-body">
+                        Child&apos;s Name{" "}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="childName"
+                        value={inlineFormData.childName}
+                        onChange={handleInlineChange}
+                        required
+                        disabled={isInlineSubmitting}
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary focus:outline-none transition-colors font-body text-gray-900 placeholder:text-gray-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        placeholder="First and last name"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-text-gray mb-2 font-body">
+                        Child&apos;s Age{" "}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        name="childAge"
+                        value={inlineFormData.childAge}
+                        onChange={handleInlineChange}
+                        min="1"
+                        max="18"
+                        required
+                        disabled={isInlineSubmitting}
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary focus:outline-none transition-colors font-body text-gray-900 placeholder:text-gray-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        placeholder="e.g., 7"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-text-gray mb-2 font-body">
+                        Program Interest{" "}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        name="programInterest"
+                        value={inlineFormData.programInterest}
+                        onChange={handleInlineChange}
+                        required
+                        disabled={isInlineSubmitting}
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary focus:outline-none transition-colors font-body text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      >
+                        <option value="">Select a program...</option>
+                        <option value="summer-2026">Summer 2026</option>
+                        <option value="school-year-2026">
+                          School Year 2026-2027
+                        </option>
+                        <option value="both">Both Programs</option>
+                        <option value="homeschool_drop_in">
+                          Homeschool Drop-In
+                        </option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-text-gray mb-2 font-body">
+                        Special Interests & Learning Needs
+                      </label>
+                      <textarea
+                        name="specialInterests"
+                        value={inlineFormData.specialInterests}
+                        onChange={handleInlineChange}
+                        rows={4}
+                        disabled={isInlineSubmitting}
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary focus:outline-none transition-colors font-body resize-none text-gray-900 placeholder:text-gray-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        placeholder="Tell us about your child's interests, learning style, or any special considerations..."
+                      />
+                    </div>
                     <button
-                      onClick={() => setContactOpen(true)}
-                      className="px-8 py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:border-primary hover:text-primary transition-colors duration-200 font-body cursor-pointer"
+                      type="submit"
+                      disabled={isInlineSubmitting}
+                      className="w-full px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-all duration-200 font-body cursor-pointer disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                      Contact Us
+                      {isInlineSubmitting ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Submitting...
+                        </>
+                      ) : (
+                        "Submit Interest Form"
+                      )}
                     </button>
-                    <button
-                      onClick={() => setWaitlistOpen(true)}
-                      className="px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
-                    >
-                      Fill out Interest Form
-                    </button>
-                  </div>
-                </motion.div>
-
-                {/* Mobile CTA — hidden (covered by early button and right-column card) */}
-                <div className="hidden">
-                  <button
-                    onClick={() => router.push(applyStartUrl)}
-                    className="w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
-                  >
-                    Start Application
-                  </button>
+                  </form>
                 </div>
+
               </div>
 
               {/* RIGHT COLUMN — sticky CTA */}
-              <div className="lg:col-span-5 lg:sticky lg:top-28">
+              <div className="hidden lg:block lg:col-span-5 lg:sticky lg:top-28">
                 {/* CTA Card */}
                 <div className="mt-4 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                   <h3 className="font-heading font-bold text-xl text-gray-800 mb-2">
@@ -1184,22 +1452,94 @@ export default function ApplyPage() {
                   >
                     Have any questions?
                   </button>
-                  <button
-                    onClick={() => setWaitlistOpen(true)}
-                    className="lg:hidden w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
-                  >
-                    I&apos;m interested!
-                  </button>
-                  <button
-                    onClick={() => router.push(applyStartUrl)}
-                    className="lg:hidden w-full mt-3 px-8 py-3 text-sm text-gray-500 font-body font-semibold hover:text-primary transition-colors duration-200 cursor-pointer"
-                  >
-                    I&apos;m ready to enroll
-                  </button>
                 </div>
               </div>
             </motion.div>
           </AnimatePresence>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="pb-16 px-8 sm:px-12 lg:px-16">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex justify-center mb-8">
+            <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
+              FAQ
+            </span>
+          </div>
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 font-heading text-gray-800">
+            Frequently Asked Questions
+          </h2>
+          <div className="space-y-12">
+            <div>
+              <h3 className="text-2xl font-bold mb-6 font-heading text-gray-800">
+                About Sage Field & Our Approach
+              </h3>
+              <FAQAccordion items={aboutSageFieldFAQs} />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold mb-6 font-heading text-gray-800">
+                Program Details
+              </h3>
+              <FAQAccordion items={programDetailsFAQs} />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold mb-6 font-heading text-gray-800">
+                Supporting All Learners
+              </h3>
+              <FAQAccordion items={supportingLearnersFAQs} />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold mb-6 font-heading text-gray-800">
+                Enrollment & Parent Partnership
+              </h3>
+              <FAQAccordion items={enrollmentFAQs} />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Have any questions? */}
+      <section className="pb-16 px-8 sm:px-12 lg:px-16">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, ease: "easeOut" as const }}
+          >
+            <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4">
+              Questions?
+            </span>
+            <h2 className="text-2xl font-bold text-gray-800 font-heading mb-2">
+              Have any questions?
+            </h2>
+            <p className="text-gray-500 font-body text-sm mb-6 max-w-md mx-auto">
+              We&apos;d love to hear from you. Reach out directly or send us a
+              message.
+            </p>
+            <a
+              href="mailto:sabrina@sagefield.co"
+              className="inline-flex items-center gap-2 text-primary font-semibold font-body text-sm mb-6 hover:underline"
+            >
+              sabrina@sagefield.co
+            </a>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center mt-2">
+              <button
+                onClick={() => setContactOpen(true)}
+                className="px-8 py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:border-primary hover:text-primary transition-colors duration-200 font-body cursor-pointer"
+              >
+                Contact Us
+              </button>
+              <button
+                onClick={() => setWaitlistOpen(true)}
+                className="px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
+              >
+                Fill out Interest Form
+              </button>
+            </div>
+          </motion.div>
         </div>
       </section>
 
