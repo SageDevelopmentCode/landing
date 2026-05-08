@@ -751,8 +751,7 @@ export default function ApplyPage() {
                         },
                         {
                           title: "Emotional Regulation",
-                          image:
-                            "/assets/kelly-sikkema-_4WVngcGz5Q-unsplash.jpg",
+                          image: "/assets/stock2.jpg",
                           description:
                             "Mindfulness practices for students & educators",
                         },

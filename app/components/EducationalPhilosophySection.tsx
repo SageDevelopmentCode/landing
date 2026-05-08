@@ -14,7 +14,7 @@ export default function EducationalPhilosophySection() {
     {
       icon: "🧘",
       title: "Emotional Regulation",
-      image: "/assets/kelly-sikkema-_4WVngcGz5Q-unsplash.jpg",
+      image: "/assets/stock2.jpg",
       description: "Mindfulness practices for students & educators",
     },
     {
@@ -32,7 +32,10 @@ export default function EducationalPhilosophySection() {
   ];
 
   return (
-    <section id="educational-philosophy" className="bg-welcome-bg min-h-[80vh] py-16 px-8 sm:px-12 lg:px-16 flex items-center justify-center">
+    <section
+      id="educational-philosophy"
+      className="bg-welcome-bg min-h-[80vh] py-16 px-8 sm:px-12 lg:px-16 flex items-center justify-center"
+    >
       <div className="max-w-7xl mx-auto w-full">
         {/* How We Learn Badge */}
         <motion.div
@@ -57,7 +60,11 @@ export default function EducationalPhilosophySection() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
+              transition={{
+                duration: 0.6,
+                delay: 0.1,
+                ease: "easeOut" as const,
+              }}
             >
               How We Learn
             </motion.h2>
@@ -68,7 +75,11 @@ export default function EducationalPhilosophySection() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
+              transition={{
+                duration: 0.6,
+                delay: 0.2,
+                ease: "easeOut" as const,
+              }}
             >
               Educational Philosophy
             </motion.p>
@@ -79,14 +90,16 @@ export default function EducationalPhilosophySection() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
+              transition={{
+                duration: 0.6,
+                delay: 0.3,
+                ease: "easeOut" as const,
+              }}
             >
               Our approach integrates elements of{" "}
               <span className="text-primary font-semibold">Montessori</span>,{" "}
               <span className="text-primary font-semibold">Waldorf</span>, and{" "}
-              <span className="text-primary font-semibold">
-                Reggio Emilia
-              </span>{" "}
+              <span className="text-primary font-semibold">Reggio Emilia</span>{" "}
               methods with{" "}
               <span className="text-primary font-semibold">
                 TEKS-aligned academics
@@ -100,7 +113,11 @@ export default function EducationalPhilosophySection() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" as const }}
+              transition={{
+                duration: 0.6,
+                delay: 0.4,
+                ease: "easeOut" as const,
+              }}
             >
               We value{" "}
               <span className="text-primary font-semibold">
@@ -127,7 +144,11 @@ export default function EducationalPhilosophySection() {
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: 0.3 + index * 0.1, ease: "easeOut" as const }}
+                  transition={{
+                    duration: 0.5,
+                    delay: 0.3 + index * 0.1,
+                    ease: "easeOut" as const,
+                  }}
                 >
                   {/* Image */}
                   <div className="relative w-full h-40 rounded-t-lg overflow-hidden">
