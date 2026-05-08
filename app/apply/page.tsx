@@ -1434,6 +1434,22 @@ export default function ApplyPage() {
                   </form>
                 </div>
 
+                {/* Mobile enroll CTA — below interest form */}
+                <div className="lg:hidden mb-10 bg-primary/5 rounded-2xl p-6 border border-primary/20 text-center">
+                  <h3 className="font-heading font-bold text-xl text-gray-800 mb-2">
+                    Ready to enroll?
+                  </h3>
+                  <p className="text-gray-500 font-body text-sm mb-5">
+                    Skip the form — start your application directly and secure your child&apos;s spot.
+                  </p>
+                  <button
+                    onClick={() => router.push(applyStartUrl)}
+                    className="w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
+                  >
+                    Start Application →
+                  </button>
+                </div>
+
               </div>
 
               {/* RIGHT COLUMN — sticky CTA */}
