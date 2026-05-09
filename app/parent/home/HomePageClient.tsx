@@ -60,11 +60,18 @@ const DROP_OFF_SLOTS = [
 ] as const;
 
 const BANNER_IMAGES = [
-  "/assets/ImageSix.jpg",
-  "/assets/ImageTen.jpg",
-  "/assets/ImageFive.jpg",
-  "/assets/After1.png",
-  "/assets/After3.png",
+  "/assets/Kid1.png",
+  "/assets/Kid2.png",
+  "/assets/Stock1.jpg",
+  "/assets/Stock2.jpg",
+  "/assets/Stock3.png",
+  "/assets/Stock4.jpg",
+  "/assets/Stock5.jpg",
+  "/assets/Stock6.png",
+  "/assets/Stock7.png",
+  "/assets/Stock8.png",
+  "/assets/Stock9.PNG",
+  "/assets/Stock10.PNG",
 ];
 
 function getGreeting(): string {
@@ -364,7 +371,7 @@ export default function HomePageClient({
   checklistInteractive,
 }: Props) {
   const [checklistOpen, setChecklistOpen] = useState(false);
-  const [bannerIdx, setBannerIdx] = useState<number | null>(null);
+  const [bannerIdx, setBannerIdx] = useState(0);
   const [greeting, setGreeting] = useState("");
   const [attendanceStudent, setAttendanceStudent] =
     useState<HomeStudent | null>(null);
@@ -422,8 +429,11 @@ export default function HomePageClient({
     referrals.filter((r) => r.status === "rewarded").length * 150;
 
   useEffect(() => {
-    setBannerIdx(Math.floor(Math.random() * BANNER_IMAGES.length));
     setGreeting(getGreeting());
+    const id = setInterval(() => {
+      setBannerIdx((i) => (i + 1) % BANNER_IMAGES.length);
+    }, 4000);
+    return () => clearInterval(id);
   }, []);
 
   const firstName = fullName?.split(" ")[0] ?? "there";
@@ -627,22 +637,27 @@ export default function HomePageClient({
       </AnimatePresence>
 
       {/* Banner */}
-      {bannerIdx !== null && (
-        <div className="relative h-48 rounded-2xl overflow-hidden shadow-sm">
-          <img
+      <div className="relative h-48 rounded-2xl overflow-hidden shadow-sm">
+        <AnimatePresence initial={false}>
+          <motion.img
+            key={bannerIdx}
             src={BANNER_IMAGES[bannerIdx]}
             alt=""
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8 }}
             className="absolute inset-0 w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent" />
-          <div className="absolute bottom-5 left-6">
-            <p className="text-white/75 text-sm font-body">{greeting},</p>
-            <p className="text-white text-3xl font-heading font-bold leading-tight">
-              {firstName}.
-            </p>
-          </div>
+        </AnimatePresence>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent" />
+        <div className="absolute bottom-5 left-6">
+          <p className="text-white/75 text-sm font-body">{greeting},</p>
+          <p className="text-white text-3xl font-heading font-bold leading-tight">
+            {firstName}.
+          </p>
         </div>
-      )}
+      </div>
 
       {/* Two-column grid on desktop, single column on mobile */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8 items-start lg:items-stretch">
