@@ -119,6 +119,22 @@ const TOUR_EXPECTATIONS = [
   { icon: Star, text: "Private, one-on-one family tour experience" },
 ];
 
+const TOUR_IMAGES = [
+  "/assets/Stock1.jpg",
+  "/assets/Kid1.png",
+  "/assets/Kid2.png",
+  "/assets/Stock2.jpg",
+  "/assets/Stock3.png",
+  "/assets/Stock4.jpg",
+  "/assets/Stock5.jpg",
+  "/assets/Stock6.png",
+  "/assets/Stock7.png",
+  "/assets/Stock8.png",
+  "/assets/Stock9.PNG",
+  "/assets/Stock10.PNG",
+  "/assets/Stock11.PNG",
+];
+
 const TODAY = new Date();
 TODAY.setHours(0, 0, 0, 0);
 
@@ -947,6 +963,11 @@ export default function TourPage() {
   const [calendarMonth, setCalendarMonth] = useState(now.getMonth());
   const [calendarYear, setCalendarYear] = useState(now.getFullYear());
 
+  const galleryRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number | null>(null);
+  const isPausedRef = useRef(false);
+  const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [isContactOpen, setIsContactOpen] = useState(false);
 
   const [unavailability, setUnavailability] = useState<UnavailabilityEntry[]>(
@@ -955,6 +976,42 @@ export default function TourPage() {
   const [isSubmitting, startSubmitTransition] = useTransition();
   const [submitError, setSubmitError] = useState("");
   const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    const el = galleryRef.current;
+    if (!el) return;
+    el.scrollLeft = 0;
+
+    let pos = el.scrollLeft;
+    const tick = () => {
+      if (!isPausedRef.current && el) {
+        pos += 0.5;
+        el.scrollLeft = Math.round(pos);
+        if (el.scrollLeft >= el.scrollWidth / 2) {
+          pos = 0;
+          el.scrollLeft = 0;
+        }
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
+  const handleGalleryInteractionStart = () => {
+    isPausedRef.current = true;
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+  };
+
+  const handleGalleryInteractionEnd = () => {
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    resumeTimerRef.current = setTimeout(() => {
+      isPausedRef.current = false;
+    }, 2500);
+  };
 
   useEffect(() => {
     fetch("/api/tour-unavailability")
@@ -1294,8 +1351,36 @@ export default function TourPage() {
     <div className="min-h-screen bg-welcome-bg">
       <Navbar darkStyle />
 
+      {/* Mobile hero gallery — above heading */}
+      <div className="sm:hidden pt-20">
+        <div
+          ref={galleryRef}
+          className="overflow-x-auto flex gap-0 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
+          onTouchStart={handleGalleryInteractionStart}
+          onTouchEnd={handleGalleryInteractionEnd}
+          onMouseDown={handleGalleryInteractionStart}
+          onMouseUp={handleGalleryInteractionEnd}
+        >
+          {[...TOUR_IMAGES, ...TOUR_IMAGES].map((src, i) => (
+            <div
+              key={i}
+              className="relative w-[88%] flex-shrink-0 aspect-square overflow-hidden"
+            >
+              <Image
+                src={src}
+                alt="Sage Field tour"
+                fill
+                className="object-cover"
+                sizes="88vw"
+                priority={i === 0}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* ── Hero ── */}
-      <section className="relative pt-28 pb-16 px-6 sm:px-12 lg:px-16 bg-welcome-bg overflow-hidden">
+      <section className="relative pt-8 sm:pt-28 pb-16 px-6 sm:px-12 lg:px-16 bg-welcome-bg overflow-hidden">
         {/* Decorative blobs */}
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-12 -left-12 w-72 h-72 bg-sage-100/60 rounded-full blur-3xl pointer-events-none" />
