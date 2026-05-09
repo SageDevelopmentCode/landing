@@ -637,7 +637,7 @@ export default function HomePageClient({
       </AnimatePresence>
 
       {/* Banner */}
-      <div className="relative h-48 rounded-2xl overflow-hidden shadow-sm">
+      <div className="relative h-64 rounded-2xl overflow-hidden shadow-sm">
         <AnimatePresence initial={false}>
           <motion.img
             key={bannerIdx}
