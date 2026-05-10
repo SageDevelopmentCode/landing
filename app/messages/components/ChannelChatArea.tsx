@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import { Send, ChevronLeft, Loader2, ImageIcon, Paperclip, FileText, Download, X, Hash, LogOut, Pencil, Trash2, Check, MoreVertical, Smile } from "lucide-react";
 import { createClient } from "@/app/lib/supabase-browser";
 import {
@@ -113,22 +114,40 @@ function DateSeparator({ label }: { label: string }) {
   );
 }
 
-const QUICK_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
+const QUICK_EMOJIS = ["❤️", "🎉", "🙌", "👀", "💡", "✅"];
 
 function ReactionPicker({ onSelect, onClose }: { onSelect: (e: string) => void; onClose: () => void }) {
+  const [showFull, setShowFull] = useState(false);
   return (
     <>
-      <div className="fixed inset-0 z-30" onClick={onClose} />
-      <div className="absolute z-40 bottom-full mb-1.5 flex items-center gap-1 bg-white border border-gray-100 rounded-2xl shadow-lg px-2 py-1.5">
-        {QUICK_EMOJIS.map((e) => (
+      <div className="fixed inset-0 z-[60]" onClick={onClose} />
+      <div className="absolute z-[70] bottom-full mb-1.5 bg-white border border-gray-100 rounded-2xl shadow-lg overflow-visible">
+        <div className="flex items-center gap-3 px-3 py-2">
+          {QUICK_EMOJIS.map((e) => (
+            <button
+              key={e}
+              onClick={() => onSelect(e)}
+              className="text-xl hover:scale-125 transition-transform cursor-pointer leading-none"
+            >
+              {e}
+            </button>
+          ))}
           <button
-            key={e}
-            onClick={() => onSelect(e)}
-            className="text-lg hover:scale-125 transition-transform cursor-pointer leading-none"
+            onClick={(ev) => { ev.stopPropagation(); setShowFull((v) => !v); }}
+            className="text-gray-400 hover:text-[#4a7c59] transition-colors text-base font-semibold px-1 cursor-pointer leading-none"
           >
-            {e}
+            +
           </button>
-        ))}
+        </div>
+        {showFull && (
+          <div className="absolute top-full left-0 mt-1 z-[70]" onClick={(e) => e.stopPropagation()}>
+            <EmojiPicker
+              onEmojiClick={(data: EmojiClickData) => { onSelect(data.emoji); onClose(); }}
+              height={350}
+              width={300}
+            />
+          </div>
+        )}
       </div>
     </>
   );
@@ -170,6 +189,7 @@ export default function ChannelChatArea({
   const [bottomSheetMsgId, setBottomSheetMsgId] = useState<string | null>(null);
   const [reactionPickerMsgId, setReactionPickerMsgId] = useState<string | null>(null);
   const [reactionSheetMsgId, setReactionSheetMsgId] = useState<string | null>(null);
+  const [fullPickerSheet, setFullPickerSheet] = useState<"bottom" | "reaction" | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -801,7 +821,7 @@ export default function ChannelChatArea({
             <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mt-3 mb-2" />
             <div className="px-6 py-3 border-b border-gray-100">
               <p className="text-xs text-gray-400 font-body mb-2.5">React</p>
-              <div className="flex gap-4">
+              <div className="flex gap-5 items-center">
                 {QUICK_EMOJIS.map((e) => (
                   <button
                     key={e}
@@ -811,6 +831,12 @@ export default function ChannelChatArea({
                     {e}
                   </button>
                 ))}
+                <button
+                  onClick={() => setFullPickerSheet("bottom")}
+                  className="text-gray-400 hover:text-[#4a7c59] transition-colors text-xl font-semibold cursor-pointer leading-none"
+                >
+                  +
+                </button>
               </div>
             </div>
             <button
@@ -850,7 +876,7 @@ export default function ChannelChatArea({
             <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mt-3 mb-2" />
             <div className="px-6 py-4">
               <p className="text-xs text-gray-400 font-body mb-3">React</p>
-              <div className="flex gap-4">
+              <div className="flex gap-5 items-center">
                 {QUICK_EMOJIS.map((e) => (
                   <button
                     key={e}
@@ -860,9 +886,39 @@ export default function ChannelChatArea({
                     {e}
                   </button>
                 ))}
+                <button
+                  onClick={() => setFullPickerSheet("reaction")}
+                  className="text-gray-400 hover:text-[#4a7c59] transition-colors text-xl font-semibold cursor-pointer leading-none"
+                >
+                  +
+                </button>
               </div>
             </div>
             <div className="h-6" />
+          </div>
+        </>
+      )}
+
+      {/* Mobile full emoji picker sheet */}
+      {fullPickerSheet && (
+        <>
+          <div
+            className="fixed inset-0 z-50 bg-black/30 md:hidden"
+            onClick={() => setFullPickerSheet(null)}
+          />
+          <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white rounded-t-2xl shadow-xl pb-6">
+            <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mt-3 mb-2" />
+            <EmojiPicker
+              onEmojiClick={(data: EmojiClickData) => {
+                const msgId = fullPickerSheet === "bottom" ? bottomSheetMsgId : reactionSheetMsgId;
+                if (msgId) handleReact(msgId, data.emoji);
+                setFullPickerSheet(null);
+                setBottomSheetMsgId(null);
+                setReactionSheetMsgId(null);
+              }}
+              width="100%"
+              height={400}
+            />
           </div>
         </>
       )}

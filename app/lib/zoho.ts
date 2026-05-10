@@ -2332,12 +2332,12 @@ export async function buildPaySummerTuitionEmail2(opts: {
 
   <p>We have <strong>2 weeks left</strong> until our summer program starts!</p>
 
-  <p>We're getting close! If you haven't selected your weeks yet, please do so — we still need <strong>${opts.childLegalName}'s confirmed weeks</strong> to finalize our rosters. Locking this in helps us make sure every group is set up just right.</p>
+  <p>We're getting close! If you haven't selected your weeks yet, please do so. Locking this in helps us make sure every group is set up just right.</p>
 
   <p>Log into your parent portal with the same email you registered with — from there you can head straight to the Tuition tab and confirm your child's summer schedule.</p>
 
   <p style="text-align: center; margin: 28px 0;">
-    <a href="https://www.sagefield.co/parent/dashboard"
+    <a href="https://www.sagefield.co/parent/home"
        style="display: inline-block; background-color: #2C5F2E; color: #ffffff; text-decoration: none; font-weight: bold; padding: 12px 28px; border-radius: 8px; font-size: 15px;">
       Go to Parent Portal →
     </a>
