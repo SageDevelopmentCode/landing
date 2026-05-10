@@ -380,3 +380,42 @@ export async function getSenderProfile(
   if (!data) return null;
   return { full_name: data.full_name ?? "Unknown", profile_image_url: data.profile_image_url ?? null };
 }
+
+export async function editChannelMessage(
+  messageId: string,
+  newBody: string
+): Promise<boolean> {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  const adminClient = createAdminClient();
+  const { error } = await adminClient
+    .schema("messaging")
+    .from("channel_messages")
+    .update({ body: newBody.trim() })
+    .eq("id", messageId)
+    .eq("sender_id", user.id);
+
+  if (error) console.error("[editChannelMessage] error:", error);
+  return !error;
+}
+
+export async function deleteChannelMessage(
+  messageId: string
+): Promise<boolean> {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  const adminClient = createAdminClient();
+  const { error } = await adminClient
+    .schema("messaging")
+    .from("channel_messages")
+    .delete()
+    .eq("id", messageId)
+    .eq("sender_id", user.id);
+
+  if (error) console.error("[deleteChannelMessage] error:", error);
+  return !error;
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, ChevronLeft, Loader2, ImageIcon, Paperclip, FileText, Download, X, Hash, LogOut } from "lucide-react";
+import { Send, ChevronLeft, Loader2, ImageIcon, Paperclip, FileText, Download, X, Hash, LogOut, Pencil, Trash2, Check, MoreVertical } from "lucide-react";
 import { createClient } from "@/app/lib/supabase-browser";
 import {
   getChannelMessages,
@@ -12,6 +12,8 @@ import {
   uploadChannelImage,
   uploadChannelFile,
   getSenderProfile,
+  editChannelMessage,
+  deleteChannelMessage,
   type ChannelWithMeta,
   type ChannelMessageRow,
 } from "@/app/messages/channel-actions";
@@ -82,6 +84,10 @@ export default function ChannelChatArea({
   const [joining, setJoining] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [isMember, setIsMember] = useState(channel.isMember);
+  const [editingMsgId, setEditingMsgId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState("");
+  const [deletingMsgId, setDeletingMsgId] = useState<string | null>(null);
+  const [bottomSheetMsgId, setBottomSheetMsgId] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -160,6 +166,24 @@ export default function ChannelChatArea({
           if (raw.sender_id !== userId) {
             markChannelRead(channel.id, userId);
           }
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "messaging", table: "channel_messages", filter: `channel_id=eq.${channel.id}` },
+        (payload) => {
+          const updated = payload.new as { id: string; body: string };
+          setMessages((prev) =>
+            prev.map((m) => (m.id === updated.id ? { ...m, body: updated.body } : m))
+          );
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "messaging", table: "channel_messages", filter: `channel_id=eq.${channel.id}` },
+        (payload) => {
+          const deleted = payload.old as { id: string };
+          setMessages((prev) => prev.filter((m) => m.id !== deleted.id));
         }
       )
       .subscribe();
@@ -298,6 +322,32 @@ export default function ChannelChatArea({
     setSending(false);
   };
 
+  const handleEditStart = (msg: ChannelMessageRow) => {
+    setEditingMsgId(msg.id);
+    setEditDraft(msg.body);
+  };
+
+  const handleEditSave = async (msgId: string) => {
+    if (!editDraft.trim()) return;
+    const ok = await editChannelMessage(msgId, editDraft);
+    if (ok) {
+      setMessages((prev) =>
+        prev.map((m) => (m.id === msgId ? { ...m, body: editDraft.trim() } : m))
+      );
+    }
+    setEditingMsgId(null);
+    setEditDraft("");
+  };
+
+  const handleDelete = async (msgId: string) => {
+    setDeletingMsgId(msgId);
+    const ok = await deleteChannelMessage(msgId);
+    if (ok) {
+      setMessages((prev) => prev.filter((m) => m.id !== msgId));
+    }
+    setDeletingMsgId(null);
+  };
+
   const green = "#4a7c59";
   const greenDark = "#3d6849";
 
@@ -375,51 +425,112 @@ export default function ChannelChatArea({
         ) : (
           messages.map((msg) => {
             const fromMe = msg.sender_id === userId;
+            const isEditing = editingMsgId === msg.id;
+            const isDeleting = deletingMsgId === msg.id;
+            const isTemp = msg.id.startsWith("temp-");
             return (
-              <div key={msg.id} className={`flex ${fromMe ? "justify-end" : "justify-start"} gap-2`}>
+              <div key={msg.id} className={`flex ${fromMe ? "justify-end" : "justify-start"} gap-2 group`}>
                 {!fromMe && (
                   <MsgAvatar senderId={msg.sender_id} senderName={msg.sender_name} senderImageUrl={msg.sender_image_url} />
                 )}
-                <div className="max-w-[75%]">
+                {fromMe && !isTemp && !isEditing && (
+                  <button
+                    onClick={() => setBottomSheetMsgId(msg.id)}
+                    className="md:hidden self-center p-1 text-gray-400 cursor-pointer shrink-0"
+                  >
+                    <MoreVertical className="w-4 h-4" />
+                  </button>
+                )}
+                <div className="max-w-[75%] relative">
                   {!fromMe && (
                     <p className="text-[11px] text-gray-500 font-body mb-1 ml-1">{msg.sender_name}</p>
                   )}
-                  <div
-                    className={`px-4 py-2.5 rounded-2xl text-sm font-body leading-relaxed ${
-                      fromMe
-                        ? "text-white rounded-br-md"
-                        : "bg-gray-100 text-gray-800 rounded-bl-md"
-                    }`}
-                    style={fromMe ? { backgroundColor: green } : undefined}
-                  >
-                    {msg.image_url && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={msg.image_url}
-                        alt="attachment"
-                        className="rounded-xl max-w-full max-h-60 object-cover cursor-pointer mb-1"
-                        onClick={() => window.open(msg.image_url!, "_blank")}
-                      />
-                    )}
-                    {msg.file_url && msg.file_name && (
-                      <a
-                        href={msg.file_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`flex items-center gap-2 mb-1 px-3 py-2 rounded-xl border ${fromMe ? "border-white/20 bg-white/10 hover:bg-white/20" : "border-gray-200 bg-white hover:bg-gray-50"} transition-colors`}
+                  {fromMe && !isTemp && !isEditing && (
+                    <div className="hidden md:group-hover:flex absolute top-1/2 -translate-y-1/2 -left-[72px] items-center gap-0.5 bg-white border border-gray-100 rounded-lg shadow-sm px-1 py-0.5 z-10">
+                      <button
+                        onClick={() => handleEditStart(msg)}
+                        className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 cursor-pointer transition-colors"
+                        title="Edit message"
                       >
-                        <FileText className={`w-4 h-4 shrink-0 ${fromMe ? "text-white/80" : "text-gray-400"}`} />
-                        <span className={`text-xs font-body truncate max-w-[160px] ${fromMe ? "text-white" : "text-gray-700"}`}>
-                          {msg.file_name}
-                        </span>
-                        <Download className={`w-3.5 h-3.5 shrink-0 ${fromMe ? "text-white/70" : "text-gray-400"}`} />
-                      </a>
-                    )}
-                    {msg.body && <p>{msg.body}</p>}
-                    <p className={`text-[10px] mt-1 ${fromMe ? "text-white/60" : "text-gray-400"}`}>
-                      {formatTime(msg.created_at)}
-                    </p>
-                  </div>
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(msg.id)}
+                        disabled={isDeleting}
+                        className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 cursor-pointer transition-colors disabled:opacity-50"
+                        title="Delete message"
+                      >
+                        {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  )}
+                  {isEditing ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={editDraft}
+                        onChange={(e) => setEditDraft(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleEditSave(msg.id); }
+                          if (e.key === "Escape") { setEditingMsgId(null); setEditDraft(""); }
+                        }}
+                        autoFocus
+                        className="flex-1 px-3 py-2 text-sm font-body bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59]/40 text-gray-800"
+                      />
+                      <button
+                        onClick={() => handleEditSave(msg.id)}
+                        className="w-8 h-8 rounded-xl flex items-center justify-center text-white shrink-0 cursor-pointer"
+                        style={{ backgroundColor: green }}
+                        title="Save"
+                      >
+                        <Check className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => { setEditingMsgId(null); setEditDraft(""); }}
+                        className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 shrink-0 cursor-pointer transition-colors"
+                        title="Cancel"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      className={`px-4 py-2.5 rounded-2xl text-sm font-body leading-relaxed ${
+                        fromMe
+                          ? "text-white rounded-br-md"
+                          : "bg-gray-100 text-gray-800 rounded-bl-md"
+                      }`}
+                      style={fromMe ? { backgroundColor: green } : undefined}
+                    >
+                      {msg.image_url && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={msg.image_url}
+                          alt="attachment"
+                          className="rounded-xl max-w-full max-h-60 object-cover cursor-pointer mb-1"
+                          onClick={() => window.open(msg.image_url!, "_blank")}
+                        />
+                      )}
+                      {msg.file_url && msg.file_name && (
+                        <a
+                          href={msg.file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`flex items-center gap-2 mb-1 px-3 py-2 rounded-xl border ${fromMe ? "border-white/20 bg-white/10 hover:bg-white/20" : "border-gray-200 bg-white hover:bg-gray-50"} transition-colors`}
+                        >
+                          <FileText className={`w-4 h-4 shrink-0 ${fromMe ? "text-white/80" : "text-gray-400"}`} />
+                          <span className={`text-xs font-body truncate max-w-[160px] ${fromMe ? "text-white" : "text-gray-700"}`}>
+                            {msg.file_name}
+                          </span>
+                          <Download className={`w-3.5 h-3.5 shrink-0 ${fromMe ? "text-white/70" : "text-gray-400"}`} />
+                        </a>
+                      )}
+                      {msg.body && <p>{msg.body}</p>}
+                      <p className={`text-[10px] mt-1 ${fromMe ? "text-white/60" : "text-gray-400"}`}>
+                        {formatTime(msg.created_at)}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -509,6 +620,41 @@ export default function ChannelChatArea({
           </div>
         )}
       </div>
+
+      {/* Mobile bottom sheet */}
+      {bottomSheetMsgId && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/30 md:hidden"
+            onClick={() => setBottomSheetMsgId(null)}
+          />
+          <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white rounded-t-2xl shadow-xl">
+            <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mt-3 mb-4" />
+            <button
+              onClick={() => {
+                const msg = messages.find((m) => m.id === bottomSheetMsgId);
+                if (msg) handleEditStart(msg);
+                setBottomSheetMsgId(null);
+              }}
+              className="w-full flex items-center gap-3 px-6 py-4 text-sm font-body text-gray-800 hover:bg-gray-50 transition-colors cursor-pointer"
+            >
+              <Pencil className="w-4 h-4 text-gray-400" />
+              Edit Message
+            </button>
+            <button
+              onClick={() => {
+                handleDelete(bottomSheetMsgId);
+                setBottomSheetMsgId(null);
+              }}
+              className="w-full flex items-center gap-3 px-6 py-4 text-sm font-body text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete Message
+            </button>
+            <div className="h-6" />
+          </div>
+        </>
+      )}
     </>
   );
 }
