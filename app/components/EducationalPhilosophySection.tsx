@@ -14,7 +14,7 @@ export default function EducationalPhilosophySection() {
     {
       icon: "🧘",
       title: "Emotional Regulation",
-      image: "/assets/stock2.jpg",
+      image: "/assets/stock3.png",
       description: "Mindfulness practices for students & educators",
     },
     {

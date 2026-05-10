@@ -284,7 +284,7 @@ const tabContent = {
       "/assets/Stock1.jpg",
       "/assets/Kid1.png",
       "/assets/Kid2.png",
-      "/assets/Stock2.jpg",
+      // "/assets/Stock2.jpg",
       "/assets/Stock3.png",
       "/assets/Stock4.jpg",
       "/assets/Stock5.jpg",
@@ -313,7 +313,7 @@ const tabContent = {
       "/assets/Stock1.jpg",
       "/assets/Kid1.png",
       "/assets/Kid2.png",
-      "/assets/Stock2.jpg",
+      // "/assets/Stock2.jpg",
       "/assets/Stock3.png",
       "/assets/Stock4.jpg",
       "/assets/Stock5.jpg",
@@ -342,7 +342,7 @@ const tabContent = {
       "/assets/Stock1.jpg",
       "/assets/Kid1.png",
       "/assets/Kid2.png",
-      "/assets/Stock2.jpg",
+      // "/assets/Stock2.jpg",
       "/assets/Stock3.png",
       "/assets/Stock4.jpg",
       "/assets/Stock5.jpg",
@@ -540,7 +540,10 @@ export default function ApplyPage() {
 
   const inlineFormRef = useRef<HTMLDivElement>(null);
   const scrollToForm = () => {
-    inlineFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    inlineFormRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
   };
 
   const galleryRef = useRef<HTMLDivElement>(null);
@@ -920,7 +923,7 @@ export default function ApplyPage() {
                         },
                         {
                           title: "Emotional Regulation",
-                          image: "/assets/stock2.jpg",
+                          image: "/assets/stock3.png",
                           description:
                             "Mindfulness practices for students & educators",
                         },
@@ -1280,7 +1283,10 @@ export default function ApplyPage() {
                 )}
 
                 {/* Mobile inline form — above "Have any questions?" */}
-                <div ref={inlineFormRef} className="lg:hidden mb-10 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <div
+                  ref={inlineFormRef}
+                  className="lg:hidden mb-10 bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
+                >
                   <h3 className="font-heading font-bold text-xl text-gray-800 mb-2">
                     Ready to apply?
                   </h3>

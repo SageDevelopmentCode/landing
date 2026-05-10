@@ -63,7 +63,7 @@ const BANNER_IMAGES = [
   "/assets/Kid1.png",
   "/assets/Kid2.png",
   "/assets/Stock1.jpg",
-  "/assets/Stock2.jpg",
+  // "/assets/Stock2.jpg",
   "/assets/Stock3.png",
   "/assets/Stock4.jpg",
   "/assets/Stock5.jpg",
@@ -453,8 +453,8 @@ export default function HomePageClient({
 
       {/* Referral popup — shown once per session; bottom sheet on mobile, centered modal on desktop */}
       <AnimatePresence>
-        {referralPopupOpen && (
-          isMobile ? (
+        {referralPopupOpen &&
+          (isMobile ? (
             <>
               <motion.div
                 className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
@@ -485,7 +485,10 @@ export default function HomePageClient({
                 <div className="p-6 pb-10">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-full bg-[#4a7c59]/10 flex items-center justify-center flex-shrink-0">
-                      <Gift className="w-5 h-5 text-[#4a7c59]" strokeWidth={1.5} />
+                      <Gift
+                        className="w-5 h-5 text-[#4a7c59]"
+                        strokeWidth={1.5}
+                      />
                     </div>
                     <h2 className="text-lg font-heading font-semibold text-gray-900">
                       Refer a Family
@@ -496,9 +499,9 @@ export default function HomePageClient({
                   </div>
 
                   <p className="text-sm font-body text-gray-600 leading-relaxed mb-6">
-                    Know a family who&apos;d be a great fit for Sage Field? Share
-                    your link — when they enroll and pay their registration fee,
-                    you&apos;ll receive a{" "}
+                    Know a family who&apos;d be a great fit for Sage Field?
+                    Share your link — when they enroll and pay their
+                    registration fee, you&apos;ll receive a{" "}
                     <strong className="text-gray-800">$150 gift card</strong> of
                     your choice.
                   </p>
@@ -577,7 +580,10 @@ export default function HomePageClient({
 
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-full bg-[#4a7c59]/10 flex items-center justify-center flex-shrink-0">
-                      <Gift className="w-5 h-5 text-[#4a7c59]" strokeWidth={1.5} />
+                      <Gift
+                        className="w-5 h-5 text-[#4a7c59]"
+                        strokeWidth={1.5}
+                      />
                     </div>
                     <h2 className="text-lg font-heading font-semibold text-gray-900">
                       Refer a Family
@@ -588,9 +594,9 @@ export default function HomePageClient({
                   </div>
 
                   <p className="text-sm font-body text-gray-600 leading-relaxed mb-6">
-                    Know a family who&apos;d be a great fit for Sage Field? Share
-                    your link — when they enroll and pay their registration fee,
-                    you&apos;ll receive a{" "}
+                    Know a family who&apos;d be a great fit for Sage Field?
+                    Share your link — when they enroll and pay their
+                    registration fee, you&apos;ll receive a{" "}
                     <strong className="text-gray-800">$150 gift card</strong> of
                     your choice.
                   </p>
@@ -632,8 +638,7 @@ export default function HomePageClient({
                 </div>
               </motion.div>
             </motion.div>
-          )
-        )}
+          ))}
       </AnimatePresence>
 
       {/* Banner */}
@@ -1457,7 +1462,6 @@ export default function HomePageClient({
         student={attendanceStudent}
         onClose={() => setAttendanceStudent(null)}
       />
-
     </div>
   );
 }

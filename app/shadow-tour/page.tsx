@@ -99,7 +99,7 @@ const SHADOW_TOUR_IMAGES = [
   "/assets/Stock1.jpg",
   "/assets/Kid1.png",
   "/assets/Kid2.png",
-  "/assets/Stock2.jpg",
+  // "/assets/Stock2.jpg",
   "/assets/Stock3.png",
   "/assets/Stock4.jpg",
   "/assets/Stock5.jpg",
