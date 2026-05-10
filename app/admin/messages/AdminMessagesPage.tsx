@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Search, Send, ChevronLeft, Loader2, ImageIcon, X, GraduationCap } from "lucide-react";
+import { Search, Send, ChevronLeft, Loader2, ImageIcon, X, GraduationCap, Hash, Plus } from "lucide-react";
 import { Poppins } from 'next/font/google'
 import { createClient } from "@/app/lib/supabase-browser";
-import { cssColors as colors, cssShadows as shadows } from "@/app/admin/design-system";
+import { cssColors as colors } from "@/app/admin/design-system";
 import {
   getConversations,
   getMessages,
@@ -15,6 +15,13 @@ import {
   type MessageRow,
 } from "@/app/parent/messages/actions";
 import { getStudentsByParentId, type ChildInfo } from "./actions";
+import {
+  getChannels,
+  ensureDefaultChannelMembership,
+  createChannel,
+  type ChannelWithMeta,
+} from "@/app/messages/channel-actions";
+import ChannelChatArea from "@/app/messages/components/ChannelChatArea";
 
 const merriweather = Poppins({
   weight: ["400", "700"],
@@ -94,8 +101,19 @@ export default function AdminMessagesPage({ userId }: { userId: string }) {
   const [loadingChildInfo, setLoadingChildInfo] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Community channels
+  const [activeTab, setActiveTab] = useState<"direct" | "community">("direct");
+  const [channels, setChannels] = useState<ChannelWithMeta[]>([]);
+  const [loadingChannels, setLoadingChannels] = useState(true);
+  const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
+  const [showCreateChannel, setShowCreateChannel] = useState(false);
+  const [newChannelName, setNewChannelName] = useState("");
+  const [newChannelDesc, setNewChannelDesc] = useState("");
+  const [creatingChannel, setCreatingChannel] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const active = conversations.find((c) => c.id === activeId) ?? null;
+  const activeChannel = channels.find((c) => c.id === activeChannelId) ?? null;
 
   useEffect(() => {
     getConversations(userId).then((data) => {
@@ -103,6 +121,32 @@ export default function AdminMessagesPage({ userId }: { userId: string }) {
       setLoadingConvos(false);
     });
   }, [userId]);
+
+  useEffect(() => {
+    ensureDefaultChannelMembership(userId).then(() => {
+      getChannels(userId).then((data) => {
+        setChannels(data);
+        setLoadingChannels(false);
+      });
+    });
+  }, [userId]);
+
+  const handleCreateChannel = async () => {
+    if (!newChannelName.trim() || creatingChannel) return;
+    setCreatingChannel(true);
+    const id = await createChannel(newChannelName, newChannelDesc || null, userId);
+    if (id) {
+      const updated = await getChannels(userId);
+      setChannels(updated);
+      setActiveChannelId(id);
+      setActiveId(null);
+      setMobileShowChat(true);
+    }
+    setNewChannelName("");
+    setNewChannelDesc("");
+    setShowCreateChannel(false);
+    setCreatingChannel(false);
+  };
 
   useEffect(() => {
     setShowChildInfo(false);
@@ -306,84 +350,233 @@ export default function AdminMessagesPage({ userId }: { userId: string }) {
           className={`w-full md:w-80 md:min-w-[300px] flex flex-col min-h-0 border-r overflow-hidden ${mobileShowChat ? "hidden md:flex" : "flex"}`}
           style={{ borderColor: colors.border }}
         >
-          {/* Search */}
-          <div className="p-3 border-b shrink-0" style={{ borderColor: colors.border }}>
-            <div className="relative">
-              <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
-                style={{ color: colors.textTertiary }}
-              />
-              <input
-                type="text"
-                placeholder="Search conversations..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 placeholder:text-gray-400"
-                style={{
-                  backgroundColor: colors.warmLinen,
-                  border: `1px solid ${colors.border}`,
-                  color: colors.textPrimary,
-                }}
-              />
-            </div>
+          {/* Tabs */}
+          <div className="flex border-b shrink-0" style={{ borderColor: colors.border }}>
+            <button
+              onClick={() => setActiveTab("direct")}
+              className="flex-1 py-2.5 text-xs font-semibold transition-colors relative"
+              style={{ color: activeTab === "direct" ? colors.mistyForest : colors.textTertiary }}
+            >
+              Direct Messages
+              {activeTab === "direct" && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5" style={{ backgroundColor: colors.mistyForest }} />
+              )}
+              {activeTab !== "direct" && conversations.reduce((s, c) => s + c.unreadCount, 0) > 0 && (
+                <span className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full text-white text-[9px] font-bold" style={{ backgroundColor: colors.successText }}>
+                  {conversations.reduce((s, c) => s + c.unreadCount, 0)}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab("community")}
+              className="flex-1 py-2.5 text-xs font-semibold transition-colors relative"
+              style={{ color: activeTab === "community" ? colors.mistyForest : colors.textTertiary }}
+            >
+              Community
+              {activeTab === "community" && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5" style={{ backgroundColor: colors.mistyForest }} />
+              )}
+              {activeTab !== "community" && channels.reduce((s, c) => s + c.unreadCount, 0) > 0 && (
+                <span className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full text-white text-[9px] font-bold" style={{ backgroundColor: colors.successText }}>
+                  {channels.reduce((s, c) => s + c.unreadCount, 0)}
+                </span>
+              )}
+            </button>
           </div>
 
-          {/* List */}
-          <div className="flex-1 overflow-y-auto">
-            {loadingConvos ? (
-              <div className="flex items-center justify-center py-10">
-                <Loader2 className="w-5 h-5 animate-spin" style={{ color: colors.textTertiary }} />
+          {activeTab === "direct" ? (
+            <>
+              {/* Search */}
+              <div className="p-3 border-b shrink-0" style={{ borderColor: colors.border }}>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: colors.textTertiary }} />
+                  <input
+                    type="text"
+                    placeholder="Search conversations..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 placeholder:text-gray-400"
+                    style={{ backgroundColor: colors.warmLinen, border: `1px solid ${colors.border}`, color: colors.textPrimary }}
+                  />
+                </div>
               </div>
-            ) : filtered.length === 0 ? (
-              <p className="text-sm text-center py-8" style={{ color: colors.textTertiary }}>
-                {search ? "No conversations found" : "No messages yet"}
-              </p>
-            ) : (
-              filtered.map((convo) => (
-                <button
-                  key={convo.id}
-                  onClick={() => { setActiveId(convo.id); setMobileShowChat(true); }}
-                  className="w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors cursor-pointer"
-                  style={{
-                    backgroundColor: convo.id === activeId ? colors.pastelSage + "40" : "transparent",
-                    borderRight: convo.id === activeId ? `2px solid ${colors.mistyForest}` : "2px solid transparent",
-                  }}
-                >
-                  <UserAvatar id={convo.otherUser.id} name={convo.otherUser.full_name} imageUrl={convo.otherUser.profile_image_url} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold truncate" style={{ color: colors.textPrimary }}>
-                        {convo.otherUser.full_name}
-                      </span>
-                      {convo.lastMessage && (
-                        <span className="text-[11px] shrink-0 ml-2" style={{ color: colors.textTertiary }}>
-                          {formatTime(convo.lastMessage.created_at)}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <p className="text-xs truncate flex-1" style={{ color: colors.textSecondary }}>
-                        {convo.lastMessage?.body ?? "No messages yet"}
-                      </p>
-                      {convo.unreadCount > 0 && (
-                        <span
-                          className="text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shrink-0"
-                          style={{ backgroundColor: colors.successText }}
-                        >
-                          {convo.unreadCount}
-                        </span>
-                      )}
-                    </div>
+
+              {/* DM List */}
+              <div className="flex-1 overflow-y-auto">
+                {loadingConvos ? (
+                  <div className="flex items-center justify-center py-10">
+                    <Loader2 className="w-5 h-5 animate-spin" style={{ color: colors.textTertiary }} />
                   </div>
+                ) : filtered.length === 0 ? (
+                  <p className="text-sm text-center py-8" style={{ color: colors.textTertiary }}>
+                    {search ? "No conversations found" : "No messages yet"}
+                  </p>
+                ) : (
+                  filtered.map((convo) => (
+                    <button
+                      key={convo.id}
+                      onClick={() => { setActiveId(convo.id); setActiveChannelId(null); setMobileShowChat(true); }}
+                      className="w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors cursor-pointer"
+                      style={{
+                        backgroundColor: convo.id === activeId ? colors.pastelSage + "40" : "transparent",
+                        borderRight: convo.id === activeId ? `2px solid ${colors.mistyForest}` : "2px solid transparent",
+                      }}
+                    >
+                      <UserAvatar id={convo.otherUser.id} name={convo.otherUser.full_name} imageUrl={convo.otherUser.profile_image_url} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-semibold truncate" style={{ color: colors.textPrimary }}>
+                            {convo.otherUser.full_name}
+                          </span>
+                          {convo.lastMessage && (
+                            <span className="text-[11px] shrink-0 ml-2" style={{ color: colors.textTertiary }}>
+                              {formatTime(convo.lastMessage.created_at)}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <p className="text-xs truncate flex-1" style={{ color: colors.textSecondary }}>
+                            {convo.lastMessage?.body ?? "No messages yet"}
+                          </p>
+                          {convo.unreadCount > 0 && (
+                            <span className="text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: colors.successText }}>
+                              {convo.unreadCount}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            </>
+          ) : (
+            /* Community tab */
+            <div className="flex flex-col flex-1 min-h-0">
+              <div className="p-3 border-b shrink-0" style={{ borderColor: colors.border }}>
+                <button
+                  onClick={() => setShowCreateChannel(true)}
+                  className="w-full flex items-center justify-center gap-2 text-sm font-medium py-2 rounded-lg border transition-colors cursor-pointer"
+                  style={{ color: colors.mistyForest, borderColor: colors.mistyForest + "50", backgroundColor: "transparent" }}
+                >
+                  <Plus className="w-4 h-4" />
+                  New Channel
                 </button>
-              ))
-            )}
-          </div>
+              </div>
+
+              {showCreateChannel && (
+                <div className="p-3 border-b shrink-0" style={{ borderColor: colors.border, backgroundColor: colors.warmLinen }}>
+                  <input
+                    autoFocus
+                    type="text"
+                    placeholder="Channel name"
+                    value={newChannelName}
+                    onChange={(e) => setNewChannelName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleCreateChannel(); if (e.key === "Escape") setShowCreateChannel(false); }}
+                    className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 placeholder:text-gray-400 mb-2"
+                    style={{ backgroundColor: "white", border: `1px solid ${colors.border}`, color: colors.textPrimary }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Description (optional)"
+                    value={newChannelDesc}
+                    onChange={(e) => setNewChannelDesc(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleCreateChannel(); }}
+                    className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 placeholder:text-gray-400 mb-2"
+                    style={{ backgroundColor: "white", border: `1px solid ${colors.border}`, color: colors.textPrimary }}
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleCreateChannel}
+                      disabled={!newChannelName.trim() || creatingChannel}
+                      className="flex-1 py-1.5 text-xs font-semibold text-white rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                      style={{ backgroundColor: colors.mistyForest }}
+                    >
+                      {creatingChannel ? "Creating..." : "Create"}
+                    </button>
+                    <button
+                      onClick={() => { setShowCreateChannel(false); setNewChannelName(""); setNewChannelDesc(""); }}
+                      className="flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-colors cursor-pointer"
+                      style={{ color: colors.textSecondary, borderColor: colors.border }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex-1 overflow-y-auto">
+                {loadingChannels ? (
+                  <div className="flex items-center justify-center py-10">
+                    <Loader2 className="w-5 h-5 animate-spin" style={{ color: colors.textTertiary }} />
+                  </div>
+                ) : channels.length === 0 ? (
+                  <p className="text-sm text-center py-8" style={{ color: colors.textTertiary }}>No channels yet</p>
+                ) : (
+                  channels.map((ch) => (
+                    <button
+                      key={ch.id}
+                      onClick={() => { setActiveChannelId(ch.id); setActiveId(null); setMobileShowChat(true); }}
+                      className="w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors cursor-pointer"
+                      style={{
+                        backgroundColor: ch.id === activeChannelId ? colors.pastelSage + "40" : "transparent",
+                        borderRight: ch.id === activeChannelId ? `2px solid ${colors.mistyForest}` : "2px solid transparent",
+                      }}
+                    >
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0" style={{ backgroundColor: colors.mistyForest }}>
+                        <Hash className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm font-semibold truncate" style={{ color: colors.textPrimary }}>{ch.name}</span>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {ch.lastMessage && (
+                              <span className="text-[11px]" style={{ color: colors.textTertiary }}>{formatTime(ch.lastMessage.created_at)}</span>
+                            )}
+                            {!ch.isMember && (
+                              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full border" style={{ color: colors.mistyForest, borderColor: colors.mistyForest + "50" }}>
+                                Join
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-[11px]" style={{ color: colors.textTertiary }}>{ch.memberCount} member{ch.memberCount !== 1 ? "s" : ""}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <p className="text-xs truncate flex-1" style={{ color: colors.textSecondary }}>
+                            {ch.lastMessage?.body ?? "No messages yet"}
+                          </p>
+                          {ch.isMember && ch.unreadCount > 0 && (
+                            <span className="text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: colors.successText }}>
+                              {ch.unreadCount}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Chat area */}
         <div className={`flex-1 min-h-0 flex flex-col overflow-hidden relative ${mobileShowChat ? "flex" : "hidden md:flex"}`}>
-          {!active ? (
+          {activeChannel ? (
+            <ChannelChatArea
+              channel={activeChannel}
+              userId={userId}
+              userRole="super_admin"
+              onBack={() => { setActiveChannelId(null); setMobileShowChat(false); }}
+              onMembershipChange={(channelId, isMember) => {
+                setChannels((prev) => prev.map((c) => c.id === channelId ? { ...c, isMember } : c));
+              }}
+              onMessageSent={(channelId, lastMsg) => {
+                setChannels((prev) => prev.map((c) => c.id === channelId ? { ...c, lastMessage: lastMsg, unreadCount: 0 } : c));
+              }}
+              adminStyle
+            />
+          ) : !active ? (
             <div className="flex-1 flex items-center justify-center">
               <p className="text-sm" style={{ color: colors.textTertiary }}>
                 Select a conversation to view messages

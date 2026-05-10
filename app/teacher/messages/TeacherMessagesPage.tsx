@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Search, Send, ChevronLeft, SquarePen, X, Loader2, ImageIcon, Paperclip, FileText, Download, GraduationCap } from "lucide-react";
+import { Search, Send, ChevronLeft, SquarePen, X, Loader2, ImageIcon, Paperclip, FileText, Download, GraduationCap, Hash, Plus } from "lucide-react";
 import { createClient } from "@/app/lib/supabase-browser";
 import {
   getConversations,
@@ -16,6 +16,13 @@ import {
 } from "@/app/parent/messages/actions";
 import { searchParents } from "./actions";
 import { getStudentsByParentId, type ChildInfo } from "@/app/admin/messages/actions";
+import {
+  getChannels,
+  ensureDefaultChannelMembership,
+  createChannel,
+  type ChannelWithMeta,
+} from "@/app/messages/channel-actions";
+import ChannelChatArea from "@/app/messages/components/ChannelChatArea";
 
 // Renders images, converting HEIC/HEIF URLs on-the-fly for browsers that can't display them natively
 function HeicImage({ src, className, onClick }: { src: string; className?: string; onClick?: () => void }) {
@@ -149,6 +156,16 @@ export default function TeacherMessagesPage({
   const [childInfoData, setChildInfoData] = useState<ChildInfo[]>([]);
   const [loadingChildInfo, setLoadingChildInfo] = useState(false);
 
+  // Community channels
+  const [activeTab, setActiveTab] = useState<"direct" | "community">("direct");
+  const [channels, setChannels] = useState<ChannelWithMeta[]>([]);
+  const [loadingChannels, setLoadingChannels] = useState(true);
+  const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
+  const [showCreateChannel, setShowCreateChannel] = useState(false);
+  const [newChannelName, setNewChannelName] = useState("");
+  const [newChannelDesc, setNewChannelDesc] = useState("");
+  const [creatingChannel, setCreatingChannel] = useState(false);
+
   const [isComposingNew, setIsComposingNew] = useState(false);
   const [selectedRecipient, setSelectedRecipient] = useState<{ id: string; full_name: string; profile_image_url: string | null } | null>(null);
   const [recipientSearch, setRecipientSearch] = useState("");
@@ -160,6 +177,7 @@ export default function TeacherMessagesPage({
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const active = conversations.find((c) => c.id === activeId) ?? null;
+  const activeChannel = channels.find((c) => c.id === activeChannelId) ?? null;
 
   useEffect(() => {
     getConversations(userId).then((data) => {
@@ -167,6 +185,33 @@ export default function TeacherMessagesPage({
       setLoadingConvos(false);
     });
   }, [userId]);
+
+  useEffect(() => {
+    ensureDefaultChannelMembership(userId).then(() => {
+      getChannels(userId).then((data) => {
+        setChannels(data);
+        setLoadingChannels(false);
+      });
+    });
+  }, [userId]);
+
+  const handleCreateChannel = async () => {
+    if (!newChannelName.trim() || creatingChannel) return;
+    setCreatingChannel(true);
+    const id = await createChannel(newChannelName, newChannelDesc || null, userId);
+    if (id) {
+      const updated = await getChannels(userId);
+      setChannels(updated);
+      setActiveChannelId(id);
+      setActiveId(null);
+      setIsComposingNew(false);
+      setMobileShowChat(true);
+    }
+    setNewChannelName("");
+    setNewChannelDesc("");
+    setShowCreateChannel(false);
+    setCreatingChannel(false);
+  };
 
   useEffect(() => {
     if (!initialRecipientId || loadingConvos) return;
@@ -473,98 +518,258 @@ export default function TeacherMessagesPage({
     <div className="flex flex-1 min-h-0 bg-white overflow-hidden">
       {/* Conversation list */}
       <div className={`w-full md:w-80 md:min-w-[320px] border-r border-gray-100 flex flex-col min-h-0 overflow-hidden ${mobileShowChat ? "hidden md:flex" : "flex"}`}>
-        <div className="p-3 border-b border-gray-100 shrink-0">
-          <div className="relative mb-2">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search conversations..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-sm font-body bg-gray-50 border border-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59]/40 text-gray-800 placeholder:text-gray-400"
-            />
-          </div>
+        {/* Tabs */}
+        <div className="flex border-b border-gray-100 shrink-0">
           <button
-            onClick={() => {
-              setIsComposingNew(true);
-              setActiveId(null);
-              setMessages([]);
-              setSelectedRecipient(null);
-              setRecipientSearch("");
-              setRecipientResults([]);
-              setMobileShowChat(true);
-            }}
-            className={`w-full flex items-center justify-center gap-2 text-white text-sm font-medium py-2 rounded-lg transition-colors cursor-pointer ${
-              isComposingNew ? "bg-[#3d6849]" : "bg-[#4a7c59] hover:bg-[#3d6849]"
+            onClick={() => setActiveTab("direct")}
+            className={`flex-1 py-2.5 text-xs font-semibold font-body transition-colors relative ${
+              activeTab === "direct" ? "text-[#4a7c59]" : "text-gray-400 hover:text-gray-600"
             }`}
           >
-            <SquarePen className="w-4 h-4" />
-            New Message
+            Direct Messages
+            {activeTab === "direct" && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#4a7c59]" />}
+            {activeTab !== "direct" && conversations.reduce((s, c) => s + c.unreadCount, 0) > 0 && (
+              <span className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#4a7c59] text-white text-[9px] font-bold">
+                {conversations.reduce((s, c) => s + c.unreadCount, 0)}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab("community")}
+            className={`flex-1 py-2.5 text-xs font-semibold font-body transition-colors relative ${
+              activeTab === "community" ? "text-[#4a7c59]" : "text-gray-400 hover:text-gray-600"
+            }`}
+          >
+            Community
+            {activeTab === "community" && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#4a7c59]" />}
+            {activeTab !== "community" && channels.reduce((s, c) => s + c.unreadCount, 0) > 0 && (
+              <span className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#4a7c59] text-white text-[9px] font-bold">
+                {channels.reduce((s, c) => s + c.unreadCount, 0)}
+              </span>
+            )}
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
-          {loadingConvos ? (
-            <div className="flex items-center justify-center py-10">
-              <Loader2 className="w-5 h-5 animate-spin text-gray-300" />
-            </div>
-          ) : filtered.length === 0 ? (
-            <p className="text-sm text-gray-400 font-body text-center py-8">
-              {search ? "No conversations found" : "No messages yet. Start one!"}
-            </p>
-          ) : (
-            filtered.map((convo) => (
+        {activeTab === "direct" ? (
+          <>
+            <div className="p-3 border-b border-gray-100 shrink-0">
+              <div className="relative mb-2">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search conversations..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 text-sm font-body bg-gray-50 border border-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59]/40 text-gray-800 placeholder:text-gray-400"
+                />
+              </div>
               <button
-                key={convo.id}
                 onClick={() => {
-                  setActiveId(convo.id);
-                  setIsComposingNew(false);
+                  setIsComposingNew(true);
+                  setActiveId(null);
+                  setActiveChannelId(null);
+                  setMessages([]);
                   setSelectedRecipient(null);
+                  setRecipientSearch("");
+                  setRecipientResults([]);
                   setMobileShowChat(true);
                 }}
-                className={`w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors cursor-pointer ${
-                  convo.id === activeId
-                    ? "bg-[#4a7c59]/5 border-r-2 border-[#4a7c59]"
-                    : "hover:bg-gray-50"
+                className={`w-full flex items-center justify-center gap-2 text-white text-sm font-medium py-2 rounded-lg transition-colors cursor-pointer ${
+                  isComposingNew ? "bg-[#3d6849]" : "bg-[#4a7c59] hover:bg-[#3d6849]"
                 }`}
               >
-                <UserAvatar id={convo.otherUser.id} name={convo.otherUser.full_name} imageUrl={convo.otherUser.profile_image_url} />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold font-body text-gray-800 truncate">
-                      {convo.otherUser.full_name}
-                    </span>
-                    {convo.lastMessage && (
-                      <span className="text-[11px] text-gray-400 font-body shrink-0 ml-2">
-                        {formatTime(convo.lastMessage.created_at)}
-                      </span>
-                    )}
-                  </div>
-                  {roleLabel(convo.otherUser.role) && (
-                    <p className="text-[11px] text-gray-400 font-body">
-                      {roleLabel(convo.otherUser.role)}
-                    </p>
-                  )}
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <p className="text-xs text-gray-500 font-body truncate flex-1">
-                      {convo.lastMessage?.body ?? "No messages yet"}
-                    </p>
-                    {convo.unreadCount > 0 && (
-                      <span className="bg-[#4a7c59] text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shrink-0">
-                        {convo.unreadCount}
-                      </span>
-                    )}
-                  </div>
-                </div>
+                <SquarePen className="w-4 h-4" />
+                New Message
               </button>
-            ))
-          )}
-        </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              {loadingConvos ? (
+                <div className="flex items-center justify-center py-10">
+                  <Loader2 className="w-5 h-5 animate-spin text-gray-300" />
+                </div>
+              ) : filtered.length === 0 ? (
+                <p className="text-sm text-gray-400 font-body text-center py-8">
+                  {search ? "No conversations found" : "No messages yet. Start one!"}
+                </p>
+              ) : (
+                filtered.map((convo) => (
+                  <button
+                    key={convo.id}
+                    onClick={() => {
+                      setActiveId(convo.id);
+                      setActiveChannelId(null);
+                      setIsComposingNew(false);
+                      setSelectedRecipient(null);
+                      setMobileShowChat(true);
+                    }}
+                    className={`w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors cursor-pointer ${
+                      convo.id === activeId
+                        ? "bg-[#4a7c59]/5 border-r-2 border-[#4a7c59]"
+                        : "hover:bg-gray-50"
+                    }`}
+                  >
+                    <UserAvatar id={convo.otherUser.id} name={convo.otherUser.full_name} imageUrl={convo.otherUser.profile_image_url} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-semibold font-body text-gray-800 truncate">
+                          {convo.otherUser.full_name}
+                        </span>
+                        {convo.lastMessage && (
+                          <span className="text-[11px] text-gray-400 font-body shrink-0 ml-2">
+                            {formatTime(convo.lastMessage.created_at)}
+                          </span>
+                        )}
+                      </div>
+                      {roleLabel(convo.otherUser.role) && (
+                        <p className="text-[11px] text-gray-400 font-body">
+                          {roleLabel(convo.otherUser.role)}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <p className="text-xs text-gray-500 font-body truncate flex-1">
+                          {convo.lastMessage?.body ?? "No messages yet"}
+                        </p>
+                        {convo.unreadCount > 0 && (
+                          <span className="bg-[#4a7c59] text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shrink-0">
+                            {convo.unreadCount}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          </>
+        ) : (
+          /* Community tab */
+          <div className="flex flex-col flex-1 min-h-0">
+            {/* New Channel button */}
+            <div className="p-3 border-b border-gray-100 shrink-0">
+              <button
+                onClick={() => setShowCreateChannel(true)}
+                className="w-full flex items-center justify-center gap-2 text-[#4a7c59] text-sm font-medium py-2 rounded-lg border border-[#4a7c59]/30 hover:bg-[#4a7c59]/5 transition-colors cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                New Channel
+              </button>
+            </div>
+
+            {/* Create channel form */}
+            {showCreateChannel && (
+              <div className="p-3 border-b border-gray-100 bg-gray-50 shrink-0">
+                <input
+                  autoFocus
+                  type="text"
+                  placeholder="Channel name"
+                  value={newChannelName}
+                  onChange={(e) => setNewChannelName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleCreateChannel(); if (e.key === "Escape") setShowCreateChannel(false); }}
+                  className="w-full px-3 py-2 text-sm font-body bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59]/40 text-gray-800 placeholder:text-gray-400 mb-2"
+                />
+                <input
+                  type="text"
+                  placeholder="Description (optional)"
+                  value={newChannelDesc}
+                  onChange={(e) => setNewChannelDesc(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleCreateChannel(); }}
+                  className="w-full px-3 py-2 text-sm font-body bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59]/40 text-gray-800 placeholder:text-gray-400 mb-2"
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleCreateChannel}
+                    disabled={!newChannelName.trim() || creatingChannel}
+                    className="flex-1 py-1.5 text-xs font-semibold font-body text-white bg-[#4a7c59] hover:bg-[#3d6849] rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    {creatingChannel ? "Creating..." : "Create"}
+                  </button>
+                  <button
+                    onClick={() => { setShowCreateChannel(false); setNewChannelName(""); setNewChannelDesc(""); }}
+                    className="flex-1 py-1.5 text-xs font-semibold font-body text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="flex-1 overflow-y-auto">
+              {loadingChannels ? (
+                <div className="flex items-center justify-center py-10">
+                  <Loader2 className="w-5 h-5 animate-spin text-gray-300" />
+                </div>
+              ) : channels.length === 0 ? (
+                <p className="text-sm text-gray-400 font-body text-center py-8">No channels yet</p>
+              ) : (
+                channels.map((ch) => (
+                  <button
+                    key={ch.id}
+                    onClick={() => {
+                      setActiveChannelId(ch.id);
+                      setActiveId(null);
+                      setIsComposingNew(false);
+                      setMobileShowChat(true);
+                    }}
+                    className={`w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors cursor-pointer ${
+                      ch.id === activeChannelId
+                        ? "bg-[#4a7c59]/5 border-r-2 border-[#4a7c59]"
+                        : "hover:bg-gray-50"
+                    }`}
+                  >
+                    <div className="w-10 h-10 rounded-full bg-[#4a7c59] flex items-center justify-center text-white shrink-0">
+                      <Hash className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm font-semibold font-body text-gray-800 truncate">{ch.name}</span>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {ch.lastMessage && (
+                            <span className="text-[11px] text-gray-400 font-body">{formatTime(ch.lastMessage.created_at)}</span>
+                          )}
+                          {!ch.isMember && (
+                            <span className="text-[10px] font-semibold font-body text-[#4a7c59] border border-[#4a7c59]/30 px-1.5 py-0.5 rounded-full">
+                              Join
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-gray-400 font-body">{ch.memberCount} member{ch.memberCount !== 1 ? "s" : ""}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <p className="text-xs text-gray-500 font-body truncate flex-1">
+                          {ch.lastMessage?.body ?? "No messages yet"}
+                        </p>
+                        {ch.isMember && ch.unreadCount > 0 && (
+                          <span className="bg-[#4a7c59] text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shrink-0">
+                            {ch.unreadCount}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Chat area */}
       <div className={`flex-1 min-h-0 flex flex-col relative ${mobileShowChat ? "flex" : "hidden md:flex"}`}>
-        {isComposingNew ? (
+        {activeChannel ? (
+          <ChannelChatArea
+            channel={activeChannel}
+            userId={userId}
+            userRole="teacher"
+            onBack={() => { setActiveChannelId(null); setMobileShowChat(false); }}
+            onMembershipChange={(channelId, isMember) => {
+              setChannels((prev) => prev.map((c) => c.id === channelId ? { ...c, isMember } : c));
+            }}
+            onMessageSent={(channelId, lastMsg) => {
+              setChannels((prev) => prev.map((c) => c.id === channelId ? { ...c, lastMessage: lastMsg, unreadCount: 0 } : c));
+            }}
+          />
+        ) : isComposingNew ? (
           <>
             <div className="flex items-center gap-3 px-5 py-3.5 border-b border-gray-100 shrink-0">
               <button
