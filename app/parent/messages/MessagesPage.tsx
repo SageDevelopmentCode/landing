@@ -123,10 +123,12 @@ export default function MessagesPage({
   userId,
   initialRecipientId,
   initialRecipientName,
+  initialTab,
 }: {
   userId: string;
   initialRecipientId?: string | null;
   initialRecipientName?: string | null;
+  initialTab?: "direct" | "community";
 }) {
   const [conversations, setConversations] = useState<ConversationWithMeta[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -145,7 +147,7 @@ export default function MessagesPage({
   const attachmentInputRef = useRef<HTMLInputElement>(null);
 
   // Community channels
-  const [activeTab, setActiveTab] = useState<"direct" | "community">("direct");
+  const [activeTab, setActiveTab] = useState<"direct" | "community">(initialTab ?? "direct");
   const [channels, setChannels] = useState<ChannelWithMeta[]>([]);
   const [loadingChannels, setLoadingChannels] = useState(true);
   const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
@@ -505,7 +507,7 @@ export default function MessagesPage({
               activeTab === "direct" ? "text-[#4a7c59]" : "text-gray-400 hover:text-gray-600"
             }`}
           >
-            Direct Messages
+            Messages
             {activeTab === "direct" && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#4a7c59]" />}
             {activeTab !== "direct" && conversations.reduce((s, c) => s + c.unreadCount, 0) > 0 && (
               <span className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#4a7c59] text-white text-[9px] font-bold">
@@ -520,6 +522,9 @@ export default function MessagesPage({
             }`}
           >
             Community
+            <span className="ml-1 inline-flex items-center px-1 py-0.5 rounded text-[9px] font-bold bg-[#4a7c59] text-white leading-none">
+              New!
+            </span>
             {activeTab === "community" && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#4a7c59]" />}
             {activeTab !== "community" && channels.reduce((s, c) => s + c.unreadCount, 0) > 0 && (
               <span className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#4a7c59] text-white text-[9px] font-bold">

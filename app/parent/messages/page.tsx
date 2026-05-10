@@ -12,7 +12,7 @@ import { createAdminClient } from "@/app/lib/supabase-server";
 export default async function MessagesRoute({
   searchParams,
 }: {
-  searchParams: Promise<{ recipientId?: string; recipientName?: string }>;
+  searchParams: Promise<{ recipientId?: string; recipientName?: string; tab?: string }>;
 }) {
   const supabase = await createServerSupabaseClient();
   const {
@@ -48,6 +48,7 @@ export default async function MessagesRoute({
   const params = await searchParams;
   const initialRecipientId = params.recipientId ?? null;
   const initialRecipientName = params.recipientName ?? null;
+  const initialTab = params.tab === "community" ? "community" : "direct";
 
   return (
     <div className="bg-welcome-bg h-screen overflow-hidden">
@@ -80,6 +81,7 @@ export default async function MessagesRoute({
             userId={user.id}
             initialRecipientId={initialRecipientId}
             initialRecipientName={initialRecipientName}
+            initialTab={initialTab}
           />
         </main>
       </div>

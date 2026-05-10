@@ -3,6 +3,7 @@ import {
   createAdminClient,
 } from "@/app/lib/supabase-server";
 import { getOnboardingProgress } from "@/app/actions/getOnboardingProgress";
+import { getChannels, getChannelMessages } from "@/app/messages/channel-actions";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -113,7 +114,7 @@ export default async function ParentHomePage() {
   if ((enrolledCheck ?? []).length === 0) redirect("/parent/dashboard");
   const studentIds = students.map((s) => s.id);
 
-  const [{ data: checkInsData }, { data: eventsData }, { data: paymentsData }, { data: referralsData }, { data: dropOffData }, { data: txData }, { data: summerData }, onboardingCompletedIds] =
+  const [{ data: checkInsData }, { data: eventsData }, { data: paymentsData }, { data: referralsData }, { data: dropOffData }, { data: txData }, { data: summerData }, onboardingCompletedIds, channels] =
     await Promise.all([
       studentIds.length > 0
         ? adminClient
@@ -167,6 +168,7 @@ export default async function ParentHomePage() {
         .eq("approved", true)
         .in("program", ["summer_26", "both", "homeschool_drop_in"]),
       getOnboardingProgress(),
+      getChannels(user.id),
     ]);
 
   const studentMap: StudentMap = {};
@@ -288,6 +290,28 @@ export default async function ParentHomePage() {
 
   const checklistComplete = onboardingCompletedIds.length >= 8;
 
+  const generalChannel = (channels ?? []).find(
+    (c) => c.is_default || c.name.toLowerCase() === "general",
+  );
+
+  let generalChannelMessages: {
+    body: string;
+    senderName: string;
+    senderImageUrl: string | null;
+  }[] = [];
+
+  if (generalChannel) {
+    const msgs = await getChannelMessages(generalChannel.id);
+    generalChannelMessages = msgs
+      .slice(-5)
+      .reverse()
+      .map((m) => ({
+        body: m.body,
+        senderName: m.sender_name,
+        senderImageUrl: m.sender_image_url,
+      }));
+  }
+
   const unpaidSummerEnrollments = summerEnrollments.filter(
     (e) => e.program !== "homeschool_drop_in" && (paidWeeksByStudent[e.student_id]?.length ?? 0) < 12
   );
@@ -342,6 +366,7 @@ export default async function ParentHomePage() {
           paidAftercareByStudent={paidAftercareByStudent}
           paidFunFridayByStudent={paidFunFridayByStudent}
           checklistComplete={checklistComplete}
+          generalChannelMessages={generalChannelMessages}
         />
       </main>
 
