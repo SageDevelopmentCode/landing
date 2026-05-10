@@ -690,21 +690,13 @@ export default function ChannelChatArea({
                     </div>
                   )}
 
-                  {/* Mobile triggers */}
+                  {/* Mobile three-dot trigger — own messages only */}
                   {fromMe && !isTemp && !isEditing && (
                     <button
                       onClick={() => setBottomSheetMsgId(msg.id)}
                       className="md:hidden self-start mt-1 p-1 text-gray-400 cursor-pointer shrink-0"
                     >
                       <MoreVertical className="w-4 h-4" />
-                    </button>
-                  )}
-                  {!fromMe && !isTemp && !isEditing && (
-                    <button
-                      onClick={() => setReactionSheetMsgId(msg.id)}
-                      className="md:hidden self-start mt-1 p-1 text-gray-300 cursor-pointer shrink-0"
-                    >
-                      <Smile className="w-4 h-4" />
                     </button>
                   )}
                 </div>
