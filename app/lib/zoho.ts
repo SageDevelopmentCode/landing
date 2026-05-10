@@ -1220,12 +1220,18 @@ export async function buildWaitlistConfirmationEmail(opts: {
   <p style="font-size: 14px; margin-bottom: 8px;">Sage Field integrates elements of <strong>Montessori</strong>, <strong>Waldorf</strong>, and <strong>Reggio Emilia</strong> methods with <strong>TEKS-aligned academics</strong>. We enrich every day with social-emotional education, arts, music, movement, and creative problem-solving — all in a small outdoor setting where children feel seen and supported.</p>
   <p style="font-size: 14px;">We value emotional regulation for both students and educators. A calm, connected teacher creates a community where children truly thrive.</p>
 
-  <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin: 28px 0;">
-    <p style="margin: 0 0 6px 0; font-weight: bold; font-size: 15px;">Join Us at Our Open House</p>
-    <p style="margin: 4px 0; color: #555; font-size: 14px;">Saturday, April 25, 2026 &nbsp;·&nbsp; 2:00 PM – 4:00 PM</p>
-    <p style="margin: 4px 0; color: #555; font-size: 14px;">2760 Gattis School Rd, Round Rock, TX 78664</p>
-    <p style="margin: 10px 0 0 0; font-size: 14px;">Come tour the space, meet Sabrina and our educators, and see the outdoor learning environment in person. It's a wonderful chance to get a real feel for what Sage Field is all about.</p>
-    <p style="margin: 10px 0 0 0; font-size: 14px;"><a href="https://www.sagefield.co/rsvp" style="color: #5a7a5a; font-weight: bold;">RSVP for the Open House →</a></p>
+  <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin: 28px 0 12px 0;">
+    <p style="margin: 0 0 6px 0; font-weight: bold; font-size: 15px;">Schedule a Private Campus Tour</p>
+    <p style="margin: 4px 0; color: #555; font-size: 14px;">Private &nbsp;·&nbsp; ~45 Minutes &nbsp;·&nbsp; Mon – Sat &nbsp;·&nbsp; 100% Free</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;">Walk our outdoor learning areas, meet Ms. Sabrina and our educators, and get a real feel for what makes Sage Field special. Tours are personal, unhurried, and completely free.</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;"><a href="https://www.sagefield.co/tour" style="color: #5a7a5a; font-weight: bold;">Schedule My Tour →</a></p>
+  </div>
+
+  <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin: 0 0 28px 0;">
+    <p style="margin: 0 0 6px 0; font-weight: bold; font-size: 15px;">Book a Shadow Day</p>
+    <p style="margin: 4px 0; color: #555; font-size: 14px;">Full School Day &nbsp;·&nbsp; 9 AM – 3 PM &nbsp;·&nbsp; Mon – Thu &nbsp;·&nbsp; $95 (waived if you enroll)</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;">Want your child to actually experience a day at Sage Field? A Shadow Day puts them in real lessons, outdoor time, and lunch with classmates — so they can tell you if it feels like home. The $95 fee is waived if you enroll within 14 days.</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;"><a href="https://www.sagefield.co/shadow-tour" style="color: #5a7a5a; font-weight: bold;">Book a Shadow Day →</a></p>
   </div>
 
   <p style="margin-top: 8px; font-size: 14px;">Ready to take the next step? <a href="https://www.sagefield.co/apply" style="color: #5a7a5a; font-weight: bold;">Start your application →</a></p>
