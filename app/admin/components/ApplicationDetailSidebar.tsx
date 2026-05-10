@@ -19,6 +19,7 @@ import { EnrollmentProgressCard, type ApprovedApplication } from './EnrollmentPr
 import { EmailThread } from './EmailThread'
 import { sendEnrollmentReminderEmail } from '../../actions/sendEnrollmentReminderEmail'
 import { sendEnrollmentReminder2Email } from '../../actions/sendEnrollmentReminder2Email'
+import { sendEnrollmentReminder3Email } from '../../actions/sendEnrollmentReminder3Email'
 import { sendEnrollmentConfirmationEmail } from '../../actions/sendEnrollmentConfirmationEmail'
 import { sendInfoSessionInviteEmail } from '../../actions/sendInfoSessionInviteEmail'
 import { sendOpenHouseEnrollmentEmail } from '../../actions/sendOpenHouseEnrollmentEmail'
@@ -166,6 +167,9 @@ export function ApplicationDetailSidebar({
   const [reminder2Sending, setReminder2Sending] = useState(false)
   const [reminder2Sent, setReminder2Sent] = useState(false)
   const [reminder2Error, setReminder2Error] = useState<string | null>(null)
+  const [reminder3Sending, setReminder3Sending] = useState(false)
+  const [reminder3Sent, setReminder3Sent] = useState(false)
+  const [reminder3Error, setReminder3Error] = useState<string | null>(null)
   const [confirmationSending, setConfirmationSending] = useState(false)
   const [confirmationSent, setConfirmationSent] = useState(false)
   const [confirmationError, setConfirmationError] = useState<string | null>(null)
@@ -530,6 +534,26 @@ export function ApplicationDetailSidebar({
       setTimeout(() => setReminder2Sent(false), 3000)
     } else {
       setReminder2Error(result.error ?? 'Failed to send')
+    }
+  }
+
+  const handleSendEnrollmentReminder3 = async () => {
+    if (reminder3Sending || !application.g1_email) return
+    setReminder3Sending(true)
+    setReminder3Error(null)
+    const result = await sendEnrollmentReminder3Email({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      program: application.program,
+      email: application.g1_email,
+    })
+    setReminder3Sending(false)
+    if (result.success) {
+      setReminder3Sent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setReminder3Sent(false), 3000)
+    } else {
+      setReminder3Error(result.error ?? 'Failed to send')
     }
   }
 
@@ -1025,6 +1049,17 @@ export function ApplicationDetailSidebar({
                   {reminder2Sending ? 'Sending…' : reminder2Sent ? '✓ Sent!' : 'Send Enrollment Reminder 2'}
                 </button>
                 {reminder2Error && <span className="text-xs text-red-600">{reminder2Error}</span>}
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleSendEnrollmentReminder3}
+                  disabled={reminder3Sending || reminder3Sent}
+                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                >
+                  {reminder3Sending ? 'Sending…' : reminder3Sent ? '✓ Sent!' : 'Send Enrollment Reminder 3'}
+                </button>
+                {reminder3Error && <span className="text-xs text-red-600">{reminder3Error}</span>}
               </div>
               <div className="flex items-center gap-3">
                 <button

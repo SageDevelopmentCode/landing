@@ -12,6 +12,7 @@ import { sendFacebookLeadEmail } from '../../actions/sendFacebookLeadEmail'
 import { sendInfoSessionInviteEmail } from '../../actions/sendInfoSessionInviteEmail'
 import { sendInfoSessionReminderEmail } from '../../actions/sendInfoSessionReminderEmail'
 import { sendSummerUrgencyEmail } from '../../actions/sendSummerUrgencyEmail'
+import { sendEnrollmentReminder3Email } from '../../actions/sendEnrollmentReminder3Email'
 import { TagEditor } from './TagEditor'
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
@@ -137,6 +138,9 @@ export function LeadsDetailSidebar({
   const [urgencySending, setUrgencySending] = useState(false)
   const [urgencySent, setUrgencySent] = useState(false)
   const [urgencyError, setUrgencyError] = useState<string | null>(null)
+  const [enrollReminder3Sending, setEnrollReminder3Sending] = useState(false)
+  const [enrollReminder3Sent, setEnrollReminder3Sent] = useState(false)
+  const [enrollReminder3Error, setEnrollReminder3Error] = useState<string | null>(null)
 
   const callNotesEditor = useEditor({
     extensions: [StarterKit, Highlight, TextStyle],
@@ -172,6 +176,8 @@ export function LeadsDetailSidebar({
       setReminderError(null)
       setUrgencySent(false)
       setUrgencyError(null)
+      setEnrollReminder3Sent(false)
+      setEnrollReminder3Error(null)
     }
   }, [submission?.id])
 
@@ -370,6 +376,26 @@ export function LeadsDetailSidebar({
       setTimeout(() => setUrgencySent(false), 3000)
     } else {
       setUrgencyError(result.error ?? 'Failed to send email')
+    }
+  }
+
+  const handleSendEnrollReminder3Email = async () => {
+    if (enrollReminder3Sending || enrollReminder3Sent || !isWaitlist) return
+    setEnrollReminder3Sending(true)
+    setEnrollReminder3Error(null)
+    const sub = currentSubmission as WaitlistLead
+    const result = await sendEnrollmentReminder3Email({
+      g1FullName: sub.parent_name,
+      childLegalName: sub.child_name,
+      program: null,
+      email: sub.email,
+    })
+    setEnrollReminder3Sending(false)
+    if (result.success) {
+      setEnrollReminder3Sent(true)
+      setTimeout(() => setEnrollReminder3Sent(false), 3000)
+    } else {
+      setEnrollReminder3Error(result.error ?? 'Failed to send email')
     }
   }
 
@@ -830,6 +856,19 @@ export function LeadsDetailSidebar({
               {urgencySending ? 'Sending…' : urgencySent ? '✓ Sent!' : 'Send Summer Urgency Email'}
             </button>
             {urgencyError && <span className="text-xs text-red-600">{urgencyError}</span>}
+            {isWaitlist && (
+              <>
+                <button
+                  onClick={handleSendEnrollReminder3Email}
+                  disabled={enrollReminder3Sending || enrollReminder3Sent}
+                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+                >
+                  {enrollReminder3Sending ? 'Sending…' : enrollReminder3Sent ? '✓ Sent!' : 'Send Enrollment Reminder 3'}
+                </button>
+                {enrollReminder3Error && <span className="text-xs text-red-600">{enrollReminder3Error}</span>}
+              </>
+            )}
           </div>
         </div>
 
