@@ -14,6 +14,7 @@ import {
   CalendarDays,
   UserCheck,
   ClipboardCheck,
+  Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { getOnboardingProgress } from "@/app/actions/getOnboardingProgress";
@@ -63,6 +64,15 @@ const TASKS: {
     icon: MessageCircle,
     iconBg: "bg-sky-100",
     iconColor: "text-sky-500",
+  },
+  {
+    id: "introduce_community",
+    label: "Introduce yourself to the community",
+    description: "Say hello in the community chat",
+    href: "/parent/messages?tab=community",
+    icon: Users,
+    iconBg: "bg-indigo-100",
+    iconColor: "text-indigo-500",
   },
   {
     id: "setup_tuition",

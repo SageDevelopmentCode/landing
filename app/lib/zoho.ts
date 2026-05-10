@@ -2336,10 +2336,17 @@ export async function buildPaySummerTuitionEmail2(opts: {
 
   <p>Log into your parent portal with the same email you registered with — from there you can head straight to the Tuition tab and confirm your child's summer schedule.</p>
 
-  <p style="text-align: center; margin: 28px 0;">
-    <a href="https://www.sagefield.co/parent/home"
+  <p style="text-align: center; margin: 28px 0 12px 0;">
+    <a href="https://www.sagefield.co/parent/billing"
        style="display: inline-block; background-color: #2C5F2E; color: #ffffff; text-decoration: none; font-weight: bold; padding: 12px 28px; border-radius: 8px; font-size: 15px;">
-      Go to Parent Portal →
+      Select Your Weeks →
+    </a>
+  </p>
+
+  <p style="text-align: center; margin: 0 0 28px 0;">
+    <a href="https://www.sagefield.co/parent/home"
+       style="color: #5a7a5a; font-weight: bold; text-decoration: underline; font-size: 14px;">
+      Go to Parent Portal
     </a>
   </p>
 
@@ -2362,16 +2369,13 @@ export async function buildPaySummerTuitionEmail2(opts: {
       <strong>📱 Mobile App — Coming May 15:</strong> We're releasing the Sage Field app to all enrolled families. You'll get the full parent portal experience right from your phone — we can't wait for you to try it.
     </li>
     <li style="margin-bottom: 12px;">
-      <strong>💬 Community Feature — Now Live:</strong> Head to your parent portal, click <strong>Messages</strong>, and open the <strong>Community</strong> tab. This is a shared space where all Sage Field families can introduce themselves, connect with one another, and ask questions directly to our teachers. We'd love for you to say hello!
+      <strong>💬 Community Feature — Now Live:</strong> Head to your parent portal, click <strong>Messages</strong>, and open the <strong>Community</strong> tab. This is a shared space where all Sage Field families can introduce themselves, connect with one another, and ask questions directly to our teachers. We'd love for you to say hello! <a href="https://www.sagefield.co/parent/messages" style="color: #5a7a5a; font-weight: bold;">Go to Messages →</a>
     </li>
     <li style="margin-bottom: 12px;">
       <strong>📲 Mobile-Friendly Portal:</strong> Your entire parent portal — dashboard, billing, forms, calendar, and more — is now fully optimized for mobile browsers. No app needed to get started.
     </li>
     <li style="margin-bottom: 12px;">
-      <strong>👩‍🏫 Meet Your Child's Teachers:</strong> In the <strong>My Children</strong> section of your portal, open the <strong>Teacher Info</strong> tab to see who will be teaching your child this summer.
-    </li>
-    <li style="margin-bottom: 12px;">
-      <strong>📝 Submit Learning Requests:</strong> In the same <strong>My Children</strong> section, use the <strong>Learning</strong> tab to share any special notes or requests so our teachers can be best prepared for your child.
+      <strong>📝 Submit Learning Requests:</strong> In the <strong>My Children</strong> section, use the <strong>Learning</strong> tab to share any special notes or requests so our teachers can be best prepared for your child. <a href="https://www.sagefield.co/parent/children" style="color: #5a7a5a; font-weight: bold;">Go to My Children →</a>
     </li>
   </ul>
 
