@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, ChevronLeft, Loader2, ImageIcon, Paperclip, FileText, Download, X, Hash, LogOut, Pencil, Trash2, Check, MoreVertical } from "lucide-react";
+import { Send, ChevronLeft, Loader2, ImageIcon, Paperclip, FileText, Download, X, Hash, LogOut, Pencil, Trash2, Check, MoreVertical, Smile } from "lucide-react";
 import { createClient } from "@/app/lib/supabase-browser";
 import {
   getChannelMessages,
@@ -14,6 +14,8 @@ import {
   getSenderProfile,
   editChannelMessage,
   deleteChannelMessage,
+  toggleReaction,
+  getReactionsForMessage,
   type ChannelWithMeta,
   type ChannelMessageRow,
 } from "@/app/messages/channel-actions";
@@ -54,6 +56,27 @@ function MsgAvatar({ senderId, senderName, senderImageUrl }: { senderId: string;
   );
 }
 
+const QUICK_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
+
+function ReactionPicker({ onSelect, onClose }: { onSelect: (e: string) => void; onClose: () => void }) {
+  return (
+    <>
+      <div className="fixed inset-0 z-30" onClick={onClose} />
+      <div className="absolute z-40 bottom-full mb-1.5 flex items-center gap-1 bg-white border border-gray-100 rounded-2xl shadow-lg px-2 py-1.5">
+        {QUICK_EMOJIS.map((e) => (
+          <button
+            key={e}
+            onClick={() => onSelect(e)}
+            className="text-lg hover:scale-125 transition-transform cursor-pointer leading-none"
+          >
+            {e}
+          </button>
+        ))}
+      </div>
+    </>
+  );
+}
+
 interface ChannelChatAreaProps {
   channel: ChannelWithMeta;
   userId: string;
@@ -88,6 +111,8 @@ export default function ChannelChatArea({
   const [editDraft, setEditDraft] = useState("");
   const [deletingMsgId, setDeletingMsgId] = useState<string | null>(null);
   const [bottomSheetMsgId, setBottomSheetMsgId] = useState<string | null>(null);
+  const [reactionPickerMsgId, setReactionPickerMsgId] = useState<string | null>(null);
+  const [reactionSheetMsgId, setReactionSheetMsgId] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -103,7 +128,7 @@ export default function ChannelChatArea({
     if (!isMember) { setLoadingMessages(false); return; }
     setLoadingMessages(true);
     setMessages([]);
-    getChannelMessages(channel.id).then((data) => {
+    getChannelMessages(channel.id, userId).then((data) => {
       data.forEach((m) => {
         senderCacheRef.current.set(m.sender_id, { full_name: m.sender_name, profile_image_url: m.sender_image_url });
       });
@@ -154,6 +179,7 @@ export default function ChannelChatArea({
             file_url: raw.file_url,
             file_name: raw.file_name,
             created_at: raw.created_at,
+            reactions: [],
           };
 
           setMessages((prev) => {
@@ -184,6 +210,19 @@ export default function ChannelChatArea({
         (payload) => {
           const deleted = payload.old as { id: string };
           setMessages((prev) => prev.filter((m) => m.id !== deleted.id));
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "messaging", table: "message_reactions" },
+        async (payload) => {
+          const msgId = (payload.new as { message_id?: string })?.message_id
+            ?? (payload.old as { message_id?: string })?.message_id;
+          if (!msgId) return;
+          const updated = await getReactionsForMessage(msgId, userId);
+          setMessages((prev) =>
+            prev.map((m) => (m.id === msgId ? { ...m, reactions: updated } : m))
+          );
         }
       )
       .subscribe();
@@ -300,6 +339,7 @@ export default function ChannelChatArea({
       file_url: fileUrl ?? null,
       file_name: fileName ?? null,
       created_at: new Date().toISOString(),
+      reactions: [],
     };
     setMessages((prev) => [...prev, optimistic]);
 
@@ -310,9 +350,10 @@ export default function ChannelChatArea({
         full_name: saved.sender_name,
         profile_image_url: saved.sender_image_url,
       });
+      const savedWithReactions: ChannelMessageRow = { ...saved, reactions: [] };
       setMessages((prev) => {
-        const deduped = prev.filter((m) => m.id !== saved.id);
-        return deduped.map((m) => (m.id === tempId ? saved : m));
+        const deduped = prev.filter((m) => m.id !== savedWithReactions.id);
+        return deduped.map((m) => (m.id === tempId ? savedWithReactions : m));
       });
       onMessageSent(channel.id, { body: saved.body, created_at: saved.created_at, sender_id: saved.sender_id });
     } else {
@@ -320,6 +361,17 @@ export default function ChannelChatArea({
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
     }
     setSending(false);
+  };
+
+  const handleReact = async (msgId: string, emoji: string) => {
+    setReactionPickerMsgId(null);
+    setReactionSheetMsgId(null);
+    const updated = await toggleReaction(msgId, emoji);
+    if (updated !== null) {
+      setMessages((prev) =>
+        prev.map((m) => (m.id === msgId ? { ...m, reactions: updated } : m))
+      );
+    }
   };
 
   const handleEditStart = (msg: ChannelMessageRow) => {
@@ -433,6 +485,7 @@ export default function ChannelChatArea({
                 {!fromMe && (
                   <MsgAvatar senderId={msg.sender_id} senderName={msg.sender_name} senderImageUrl={msg.sender_image_url} />
                 )}
+                {/* Mobile: three-dots for own messages */}
                 {fromMe && !isTemp && !isEditing && (
                   <button
                     onClick={() => setBottomSheetMsgId(msg.id)}
@@ -441,12 +494,29 @@ export default function ChannelChatArea({
                     <MoreVertical className="w-4 h-4" />
                   </button>
                 )}
+                {/* Mobile: smiley for others' messages */}
+                {!fromMe && !isTemp && (
+                  <button
+                    onClick={() => setReactionSheetMsgId(msg.id)}
+                    className="md:hidden self-end mb-1 p-1 text-gray-300 cursor-pointer shrink-0"
+                  >
+                    <Smile className="w-4 h-4" />
+                  </button>
+                )}
                 <div className="max-w-[75%] relative">
                   {!fromMe && (
                     <p className="text-[11px] text-gray-500 font-body mb-1 ml-1">{msg.sender_name}</p>
                   )}
+                  {/* Desktop: react/edit/delete popup for own messages */}
                   {fromMe && !isTemp && !isEditing && (
-                    <div className="hidden md:group-hover:flex absolute top-1/2 -translate-y-1/2 -left-[72px] items-center gap-0.5 bg-white border border-gray-100 rounded-lg shadow-sm px-1 py-0.5 z-10">
+                    <div className="hidden md:group-hover:flex absolute top-1/2 -translate-y-1/2 -left-[96px] items-center gap-0.5 bg-white border border-gray-100 rounded-lg shadow-sm px-1 py-0.5 z-10">
+                      <button
+                        onClick={() => setReactionPickerMsgId(reactionPickerMsgId === msg.id ? null : msg.id)}
+                        className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-[#4a7c59] cursor-pointer transition-colors"
+                        title="React"
+                      >
+                        <Smile className="w-3.5 h-3.5" />
+                      </button>
                       <button
                         onClick={() => handleEditStart(msg)}
                         className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 cursor-pointer transition-colors"
@@ -462,6 +532,12 @@ export default function ChannelChatArea({
                       >
                         {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                       </button>
+                      {reactionPickerMsgId === msg.id && (
+                        <ReactionPicker
+                          onSelect={(e) => handleReact(msg.id, e)}
+                          onClose={() => setReactionPickerMsgId(null)}
+                        />
+                      )}
                     </div>
                   )}
                   {isEditing ? (
@@ -495,7 +571,9 @@ export default function ChannelChatArea({
                     </div>
                   ) : (
                     <div
-                      className={`px-4 py-2.5 rounded-2xl text-sm font-body leading-relaxed ${
+                      className={`px-4 pt-2.5 rounded-2xl text-sm font-body leading-relaxed ${
+                        msg.reactions.length > 0 ? "pb-4" : "pb-2.5"
+                      } ${
                         fromMe
                           ? "text-white rounded-br-md"
                           : "bg-gray-100 text-gray-800 rounded-bl-md"
@@ -529,6 +607,61 @@ export default function ChannelChatArea({
                       <p className={`text-[10px] mt-1 ${fromMe ? "text-white/60" : "text-gray-400"}`}>
                         {formatTime(msg.created_at)}
                       </p>
+                    </div>
+                  )}
+                  {/* Reaction pills */}
+                  {msg.reactions.length > 0 && (
+                    <div className={`flex flex-wrap items-center gap-1 -mt-2 relative z-10 px-1 ${fromMe ? "justify-end" : "justify-start"}`}>
+                      {msg.reactions.map((r) => (
+                        <button
+                          key={r.emoji}
+                          onClick={() => handleReact(msg.id, r.emoji)}
+                          className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-body border transition-colors cursor-pointer ${
+                            r.reactedByMe
+                              ? "bg-[#eef4f0] border-gray-200 text-[#4a7c59]"
+                              : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                          }`}
+                        >
+                          <span>{r.emoji}</span>
+                          <span>{r.count}</span>
+                        </button>
+                      ))}
+                      {/* Inline add-reaction pill — visible on hover */}
+                      {!isTemp && (
+                        <div className="relative hidden group-hover:block">
+                          <button
+                            onClick={() => setReactionPickerMsgId(reactionPickerMsgId === msg.id ? null : msg.id)}
+                            className="flex items-center px-2 py-0.5 rounded-full text-xs border bg-white border-gray-200 text-gray-400 hover:text-[#4a7c59] hover:border-[#b5cebe] shadow-sm cursor-pointer transition-colors"
+                          >
+                            <Smile className="w-3 h-3" />
+                          </button>
+                          {reactionPickerMsgId === msg.id && (
+                            <ReactionPicker
+                              onSelect={(e) => handleReact(msg.id, e)}
+                              onClose={() => setReactionPickerMsgId(null)}
+                            />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {/* Smiley pill when no reactions yet — on hover (others' messages only; own messages use the action bar) */}
+                  {msg.reactions.length === 0 && !fromMe && !isTemp && !isEditing && (
+                    <div className={`hidden group-hover:flex mt-1 ${fromMe ? "justify-end" : "justify-start"}`}>
+                      <div className="relative">
+                        <button
+                          onClick={() => setReactionPickerMsgId(reactionPickerMsgId === msg.id ? null : msg.id)}
+                          className="flex items-center px-2 py-0.5 rounded-full text-xs border bg-white border-gray-200 text-gray-400 hover:text-[#4a7c59] hover:border-[#b5cebe] shadow-sm cursor-pointer transition-colors"
+                        >
+                          <Smile className="w-3.5 h-3.5" />
+                        </button>
+                        {reactionPickerMsgId === msg.id && (
+                          <ReactionPicker
+                            onSelect={(e) => handleReact(msg.id, e)}
+                            onClose={() => setReactionPickerMsgId(null)}
+                          />
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -621,7 +754,7 @@ export default function ChannelChatArea({
         )}
       </div>
 
-      {/* Mobile bottom sheet */}
+      {/* Mobile bottom sheet — own messages (edit/delete + react) */}
       {bottomSheetMsgId && (
         <>
           <div
@@ -629,7 +762,21 @@ export default function ChannelChatArea({
             onClick={() => setBottomSheetMsgId(null)}
           />
           <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white rounded-t-2xl shadow-xl">
-            <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mt-3 mb-4" />
+            <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mt-3 mb-2" />
+            <div className="px-6 py-3 border-b border-gray-100">
+              <p className="text-xs text-gray-400 font-body mb-2.5">React</p>
+              <div className="flex gap-4">
+                {QUICK_EMOJIS.map((e) => (
+                  <button
+                    key={e}
+                    onClick={() => { handleReact(bottomSheetMsgId, e); setBottomSheetMsgId(null); }}
+                    className="text-2xl cursor-pointer hover:scale-110 transition-transform leading-none"
+                  >
+                    {e}
+                  </button>
+                ))}
+              </div>
+            </div>
             <button
               onClick={() => {
                 const msg = messages.find((m) => m.id === bottomSheetMsgId);
@@ -651,6 +798,34 @@ export default function ChannelChatArea({
               <Trash2 className="w-4 h-4" />
               Delete Message
             </button>
+            <div className="h-6" />
+          </div>
+        </>
+      )}
+
+      {/* Mobile reaction-only sheet — others' messages */}
+      {reactionSheetMsgId && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/30 md:hidden"
+            onClick={() => setReactionSheetMsgId(null)}
+          />
+          <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white rounded-t-2xl shadow-xl">
+            <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mt-3 mb-2" />
+            <div className="px-6 py-4">
+              <p className="text-xs text-gray-400 font-body mb-3">React</p>
+              <div className="flex gap-4">
+                {QUICK_EMOJIS.map((e) => (
+                  <button
+                    key={e}
+                    onClick={() => { handleReact(reactionSheetMsgId, e); setReactionSheetMsgId(null); }}
+                    className="text-2xl cursor-pointer hover:scale-110 transition-transform leading-none"
+                  >
+                    {e}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="h-6" />
           </div>
         </>

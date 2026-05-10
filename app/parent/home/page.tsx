@@ -301,7 +301,7 @@ export default async function ParentHomePage() {
   }[] = [];
 
   if (generalChannel) {
-    const msgs = await getChannelMessages(generalChannel.id);
+    const msgs = await getChannelMessages(generalChannel.id, user.id);
     generalChannelMessages = msgs
       .slice(-5)
       .reverse()

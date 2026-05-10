@@ -14,6 +14,8 @@ export type ChannelWithMeta = {
   updated_at: string;
 };
 
+export type ReactionSummary = { emoji: string; count: number; reactedByMe: boolean };
+
 export type ChannelMessageRow = {
   id: string;
   channel_id: string;
@@ -25,6 +27,7 @@ export type ChannelMessageRow = {
   file_url: string | null;
   file_name: string | null;
   created_at: string;
+  reactions: ReactionSummary[];
 };
 
 export async function getChannels(userId: string): Promise<ChannelWithMeta[]> {
@@ -161,7 +164,7 @@ export async function leaveChannel(channelId: string, userId: string): Promise<b
   return !error;
 }
 
-export async function getChannelMessages(channelId: string): Promise<ChannelMessageRow[]> {
+export async function getChannelMessages(channelId: string, userId: string): Promise<ChannelMessageRow[]> {
   const adminClient = createAdminClient();
 
   const { data: msgs, error } = await adminClient
@@ -173,16 +176,26 @@ export async function getChannelMessages(channelId: string): Promise<ChannelMess
 
   if (error || !msgs?.length) return [];
 
-  const senderIds = [...new Set(msgs.map((m) => m.sender_id))];
-  const { data: senderProfiles } = await adminClient
-    .schema("admin")
-    .from("users")
-    .select("id, full_name, profile_image_url")
-    .in("id", senderIds);
+  const msgIds = msgs.map((m) => m.id);
+
+  const [senderProfilesResult, reactionsResult] = await Promise.all([
+    adminClient
+      .schema("admin")
+      .from("users")
+      .select("id, full_name, profile_image_url")
+      .in("id", [...new Set(msgs.map((m) => m.sender_id))]),
+    adminClient
+      .schema("messaging")
+      .from("message_reactions")
+      .select("message_id, user_id, emoji")
+      .in("message_id", msgIds),
+  ]);
 
   const senderMap = new Map(
-    (senderProfiles ?? []).map((u) => [u.id, { full_name: u.full_name ?? "Unknown", profile_image_url: u.profile_image_url ?? null }])
+    (senderProfilesResult.data ?? []).map((u) => [u.id, { full_name: u.full_name ?? "Unknown", profile_image_url: u.profile_image_url ?? null }])
   );
+
+  const reactionsMap = buildReactionsMap(reactionsResult.data ?? [], userId);
 
   return msgs.map((m) => {
     const sender = senderMap.get(m.sender_id);
@@ -197,8 +210,30 @@ export async function getChannelMessages(channelId: string): Promise<ChannelMess
       file_url: m.file_url ?? null,
       file_name: m.file_name ?? null,
       created_at: m.created_at,
+      reactions: reactionsMap.get(m.id) ?? [],
     };
   });
+}
+
+function buildReactionsMap(
+  rows: { message_id: string; user_id: string; emoji: string }[],
+  userId: string
+): Map<string, ReactionSummary[]> {
+  const map = new Map<string, Map<string, { count: number; reactedByMe: boolean }>>();
+  for (const row of rows) {
+    if (!map.has(row.message_id)) map.set(row.message_id, new Map());
+    const emojiMap = map.get(row.message_id)!;
+    const existing = emojiMap.get(row.emoji) ?? { count: 0, reactedByMe: false };
+    emojiMap.set(row.emoji, {
+      count: existing.count + 1,
+      reactedByMe: existing.reactedByMe || row.user_id === userId,
+    });
+  }
+  const result = new Map<string, ReactionSummary[]>();
+  for (const [msgId, emojiMap] of map.entries()) {
+    result.set(msgId, [...emojiMap.entries()].map(([emoji, { count, reactedByMe }]) => ({ emoji, count, reactedByMe })));
+  }
+  return result;
 }
 
 export async function sendChannelMessage(
@@ -256,6 +291,7 @@ export async function sendChannelMessage(
     file_url: data.file_url ?? null,
     file_name: data.file_name ?? null,
     created_at: data.created_at,
+    reactions: [],
   };
 }
 
@@ -418,4 +454,65 @@ export async function deleteChannelMessage(
 
   if (error) console.error("[deleteChannelMessage] error:", error);
   return !error;
+}
+
+export async function toggleReaction(
+  messageId: string,
+  emoji: string
+): Promise<ReactionSummary[] | null> {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const adminClient = createAdminClient();
+
+  const { data: existing } = await adminClient
+    .schema("messaging")
+    .from("message_reactions")
+    .select("emoji")
+    .eq("message_id", messageId)
+    .eq("user_id", user.id)
+    .eq("emoji", emoji)
+    .maybeSingle();
+
+  if (existing) {
+    await adminClient
+      .schema("messaging")
+      .from("message_reactions")
+      .delete()
+      .eq("message_id", messageId)
+      .eq("user_id", user.id)
+      .eq("emoji", emoji);
+  } else {
+    await adminClient
+      .schema("messaging")
+      .from("message_reactions")
+      .insert({ message_id: messageId, user_id: user.id, emoji });
+  }
+
+  return getReactionsForMessage(messageId, user.id);
+}
+
+export async function getReactionsForMessage(
+  messageId: string,
+  userId: string
+): Promise<ReactionSummary[]> {
+  const adminClient = createAdminClient();
+  const { data } = await adminClient
+    .schema("messaging")
+    .from("message_reactions")
+    .select("user_id, emoji")
+    .eq("message_id", messageId);
+
+  if (!data?.length) return [];
+
+  const emojiMap = new Map<string, { count: number; reactedByMe: boolean }>();
+  for (const row of data) {
+    const existing = emojiMap.get(row.emoji) ?? { count: 0, reactedByMe: false };
+    emojiMap.set(row.emoji, {
+      count: existing.count + 1,
+      reactedByMe: existing.reactedByMe || row.user_id === userId,
+    });
+  }
+  return [...emojiMap.entries()].map(([emoji, { count, reactedByMe }]) => ({ emoji, count, reactedByMe }));
 }
