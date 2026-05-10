@@ -2257,6 +2257,79 @@ export async function buildPaySummerTuitionEmail(opts: {
   return { subject, content };
 }
 
+export async function buildPaySummerTuitionEmail2(opts: {
+  g1FullName: string;
+  childLegalName: string;
+}): Promise<{ subject: string; content: string }> {
+  const subject = "2 Weeks Left + Portal Updates for Summer";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Happy Sunday, ${opts.g1FullName}!</p>
+
+  <p>We have <strong>2 weeks left</strong> until our summer program starts!</p>
+
+  <p>We're getting close! Before we finalize our summer rosters, we still need <strong>${opts.childLegalName}'s confirmed weeks.</strong> Locking this in helps us make sure every group is set up just right.</p>
+
+  <p>Log into your parent portal with the same email you registered with — from there you can head straight to the Tuition tab and confirm your child's summer schedule.</p>
+
+  <p style="text-align: center; margin: 28px 0;">
+    <a href="https://www.sagefield.co/parent/dashboard"
+       style="display: inline-block; background-color: #2C5F2E; color: #ffffff; text-decoration: none; font-weight: bold; padding: 12px 28px; border-radius: 8px; font-size: 15px;">
+      Go to Parent Portal →
+    </a>
+  </p>
+
+  <p><strong>Once you're logged in:</strong></p>
+  <ol style="padding-left: 20px; margin-bottom: 20px;">
+    <li style="margin-bottom: 8px;">Click on the <strong>Tuition</strong> tab</li>
+    <li style="margin-bottom: 8px;">Select <strong>Summer 2026 Tuition</strong></li>
+    <li style="margin-bottom: 8px;">Choose the weeks your child will be attending</li>
+    <li style="margin-bottom: 8px;">Submit to confirm your schedule</li>
+  </ol>
+
+  <p style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 12px 16px; margin: 20px 0; font-size: 14px;">
+    With 2 weeks to go, finalizing your child's weeks now gives our team the time we need to plan the best possible experience for each group.
+  </p>
+
+  <p style="margin-top: 28px;"><strong>A few exciting updates while we have you:</strong></p>
+
+  <ul style="padding-left: 20px; margin-bottom: 20px;">
+    <li style="margin-bottom: 12px;">
+      <strong>📱 Mobile App — Coming May 15:</strong> We're releasing the Sage Field app to all enrolled families. You'll get the full parent portal experience right from your phone — we can't wait for you to try it.
+    </li>
+    <li style="margin-bottom: 12px;">
+      <strong>💬 Community Feature — Now Live:</strong> Head to your parent portal, click <strong>Messages</strong>, and open the <strong>Community</strong> tab. This is a shared space where all Sage Field families can introduce themselves, connect with one another, and ask questions directly to our teachers. We'd love for you to say hello!
+    </li>
+    <li style="margin-bottom: 12px;">
+      <strong>📲 Mobile-Friendly Portal:</strong> Your entire parent portal — dashboard, billing, forms, calendar, and more — is now fully optimized for mobile browsers. No app needed to get started.
+    </li>
+    <li style="margin-bottom: 12px;">
+      <strong>👩‍🏫 Meet Your Child's Teachers:</strong> In the <strong>My Children</strong> section of your portal, open the <strong>Teacher Info</strong> tab to see who will be teaching your child this summer.
+    </li>
+    <li style="margin-bottom: 12px;">
+      <strong>📝 Submit Learning Requests:</strong> In the same <strong>My Children</strong> section, use the <strong>Learning</strong> tab to share any special notes or requests so our teachers can be best prepared for your child.
+    </li>
+  </ul>
+
+  <p>If you have any questions or need help accessing your account, I'm happy to guide you through it. Don't hesitate to reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> or text <a href="sms:+15126775872" style="color: #5a7a5a;">(512) 677-5872</a>.</p>
+
+  <p style="margin-top: 32px;">Wishing you a restful Sunday,</p>
+  <p style="margin-top: 4px;">
+    <strong>Sabrina Grace Obnamia</strong><br />
+    Sage Field School<br />
+    <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a><br />
+    (512) 677-5872
+  </p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
 export async function buildCustomTuitionConfirmationEmail(opts: {
   g1FullName: string;
   label: string;
