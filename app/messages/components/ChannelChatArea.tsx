@@ -30,6 +30,51 @@ function formatTime(iso: string): string {
   return date.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
+function formatMessageTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+}
+
+function formatHoverTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+}
+
+function formatDateSeparator(iso: string): string {
+  const date = new Date(iso);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const msgDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diffDays = Math.round((today.getTime() - msgDay.getTime()) / 86400000);
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return date.toLocaleDateString([], { weekday: "long" });
+  return date.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
+}
+
+function calendarDay(iso: string): string {
+  return iso.slice(0, 10);
+}
+
+const GROUP_THRESHOLD_MS = 5 * 60 * 1000;
+
+interface AnnotatedMessage extends ChannelMessageRow {
+  isGroupStart: boolean;
+  showDateSep: boolean;
+  dateSepLabel: string;
+}
+
+function annotateMessages(msgs: ChannelMessageRow[]): AnnotatedMessage[] {
+  return msgs.map((msg, i) => {
+    const prev = msgs[i - 1] ?? null;
+    const diffFromPrev = prev
+      ? new Date(msg.created_at).getTime() - new Date(prev.created_at).getTime()
+      : Infinity;
+    const isGroupStart =
+      !prev || prev.sender_id !== msg.sender_id || diffFromPrev > GROUP_THRESHOLD_MS;
+    const showDateSep = !prev || calendarDay(prev.created_at) !== calendarDay(msg.created_at);
+    return { ...msg, isGroupStart, showDateSep, dateSepLabel: showDateSep ? formatDateSeparator(msg.created_at) : "" };
+  });
+}
+
 const AVATAR_COLORS = [
   "bg-[#4a7c59]", "bg-[#7c6b4a]", "bg-[#5a6b8a]", "bg-[#8a5a6b]", "bg-[#6b7c4a]", "bg-[#4a6b7c]",
 ];
@@ -47,11 +92,23 @@ function initialsFor(name: string): string {
 function MsgAvatar({ senderId, senderName, senderImageUrl }: { senderId: string; senderName: string; senderImageUrl: string | null }) {
   if (senderImageUrl) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={senderImageUrl} alt={senderName} className="w-7 h-7 rounded-full object-cover shrink-0" />;
+    return <img src={senderImageUrl} alt={senderName} className="w-9 h-9 rounded-full object-cover shrink-0" />;
   }
   return (
-    <div className={`${colorForId(senderId)} w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-semibold font-body shrink-0`}>
+    <div className={`${colorForId(senderId)} w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-semibold font-body shrink-0`}>
       {initialsFor(senderName)}
+    </div>
+  );
+}
+
+function DateSeparator({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-3 py-2 my-2">
+      <div className="flex-1 h-px bg-gray-100" />
+      <span className="text-[11px] font-semibold font-body text-gray-400 tracking-widest uppercase px-1">
+        {label}
+      </span>
+      <div className="flex-1 h-px bg-gray-100" />
     </div>
   );
 }
@@ -403,6 +460,8 @@ export default function ChannelChatArea({
   const green = "#4a7c59";
   const greenDark = "#3d6849";
 
+  const annotated = annotateMessages(messages);
+
   return (
     <>
       {/* Header */}
@@ -444,7 +503,8 @@ export default function ChannelChatArea({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+      <div className="flex-1 overflow-y-auto py-4">
+        <div className="max-w-4xl mx-auto px-6">
         {!isMember ? (
           <div className="flex flex-col items-center justify-center py-16 gap-4">
             <div
@@ -475,194 +535,177 @@ export default function ChannelChatArea({
         ) : messages.length === 0 ? (
           <p className="text-sm text-gray-400 font-body text-center py-8">No messages yet. Say hello!</p>
         ) : (
-          messages.map((msg) => {
+          annotated.map((msg) => {
             const fromMe = msg.sender_id === userId;
             const isEditing = editingMsgId === msg.id;
             const isDeleting = deletingMsgId === msg.id;
             const isTemp = msg.id.startsWith("temp-");
             return (
-              <div key={msg.id} className={`flex ${fromMe ? "justify-end" : "justify-start"} gap-2 group`}>
-                {!fromMe && (
-                  <MsgAvatar senderId={msg.sender_id} senderName={msg.sender_name} senderImageUrl={msg.sender_image_url} />
-                )}
-                {/* Mobile: three-dots for own messages */}
-                {fromMe && !isTemp && !isEditing && (
-                  <button
-                    onClick={() => setBottomSheetMsgId(msg.id)}
-                    className="md:hidden self-center p-1 text-gray-400 cursor-pointer shrink-0"
-                  >
-                    <MoreVertical className="w-4 h-4" />
-                  </button>
-                )}
-                {/* Mobile: smiley for others' messages */}
-                {!fromMe && !isTemp && (
-                  <button
-                    onClick={() => setReactionSheetMsgId(msg.id)}
-                    className="md:hidden self-end mb-1 p-1 text-gray-300 cursor-pointer shrink-0"
-                  >
-                    <Smile className="w-4 h-4" />
-                  </button>
-                )}
-                <div className="max-w-[75%] relative">
-                  {!fromMe && (
-                    <p className="text-[11px] text-gray-500 font-body mb-1 ml-1">{msg.sender_name}</p>
-                  )}
-                  {/* Desktop: react/edit/delete popup for own messages */}
+              <div key={msg.id}>
+                {msg.showDateSep && <DateSeparator label={msg.dateSepLabel} />}
+
+                <div
+                  className={`group relative flex items-start gap-3 px-3 py-1.5 rounded-xl transition-colors duration-100 ${
+                    msg.isGroupStart ? "mt-4" : "mt-0.5"
+                  } ${fromMe ? "hover:bg-[#eef5f0]" : "hover:bg-gray-50"}`}
+                >
+                  {/* Left column: avatar (group-start) or hover timestamp (grouped) */}
+                  <div className="w-9 shrink-0 flex items-start justify-center pt-0.5">
+                    {msg.isGroupStart ? (
+                      <MsgAvatar senderId={msg.sender_id} senderName={msg.sender_name} senderImageUrl={msg.sender_image_url} />
+                    ) : (
+                      <span className="hidden group-hover:block text-[10px] text-gray-400 font-body w-full text-center mt-1">
+                        {formatHoverTime(msg.created_at)}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Right column */}
+                  <div className="flex-1 min-w-0">
+                    {/* Header line — group-start only */}
+                    {msg.isGroupStart && (
+                      <div className="flex items-baseline gap-2 mb-0.5">
+                        <span className={`text-sm font-semibold font-body ${fromMe ? "text-[#4a7c59]" : "text-gray-800"}`}>
+                          {fromMe ? "You" : msg.sender_name}
+                        </span>
+                        <span className="text-[11px] text-gray-400 font-body">
+                          {formatMessageTime(msg.created_at)}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Edit mode */}
+                    {isEditing ? (
+                      <div className="flex items-center gap-2 mt-1">
+                        <input
+                          type="text"
+                          value={editDraft}
+                          onChange={(e) => setEditDraft(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleEditSave(msg.id); }
+                            if (e.key === "Escape") { setEditingMsgId(null); setEditDraft(""); }
+                          }}
+                          autoFocus
+                          className="flex-1 px-3 py-1.5 text-sm font-body bg-white border border-[#4a7c59]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 text-gray-800"
+                        />
+                        <button
+                          onClick={() => handleEditSave(msg.id)}
+                          className="w-7 h-7 rounded-lg flex items-center justify-center text-white shrink-0 cursor-pointer"
+                          style={{ backgroundColor: green }}
+                          title="Save"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => { setEditingMsgId(null); setEditDraft(""); }}
+                          className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 shrink-0 cursor-pointer transition-colors"
+                          title="Cancel"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        {msg.image_url && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={msg.image_url}
+                            alt="attachment"
+                            className="rounded-xl max-w-sm max-h-72 object-cover cursor-pointer mt-1 mb-1 border border-gray-100"
+                            onClick={() => window.open(msg.image_url!, "_blank")}
+                          />
+                        )}
+                        {msg.file_url && msg.file_name && (
+                          <a
+                            href={msg.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 mt-1 mb-1 px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors max-w-xs"
+                          >
+                            <FileText className="w-4 h-4 shrink-0 text-gray-400" />
+                            <span className="text-xs font-body truncate text-gray-700">{msg.file_name}</span>
+                            <Download className="w-3.5 h-3.5 shrink-0 text-gray-400" />
+                          </a>
+                        )}
+                        {msg.body && (
+                          <p className={`text-sm font-body leading-relaxed text-gray-800 break-words ${isTemp ? "opacity-60" : ""}`}>
+                            {msg.body}
+                          </p>
+                        )}
+                        {/* Reactions row — always visible, emoji button always shown */}
+                        {!isTemp && (
+                          <div className="flex flex-wrap items-center gap-1 mt-1.5">
+                            {msg.reactions.map((r) => (
+                              <button
+                                key={r.emoji}
+                                onClick={() => handleReact(msg.id, r.emoji)}
+                                className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-sm font-body border transition-colors cursor-pointer ${
+                                  r.reactedByMe
+                                    ? "bg-[#eef4f0] border-[#b5cebe] text-[#4a7c59]"
+                                    : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                                }`}
+                              >
+                                <span>{r.emoji}</span>
+                                <span className="text-xs">{r.count}</span>
+                              </button>
+                            ))}
+                            <div className="relative">
+                              <button
+                                onClick={() => setReactionPickerMsgId(reactionPickerMsgId === msg.id ? null : msg.id)}
+                                className="flex items-center px-2.5 py-1 rounded-full text-sm border bg-white border-gray-200 text-gray-400 hover:text-[#4a7c59] hover:border-[#b5cebe] cursor-pointer transition-colors"
+                              >
+                                <Smile className="w-4 h-4" />
+                              </button>
+                              {reactionPickerMsgId === msg.id && (
+                                <ReactionPicker
+                                  onSelect={(e) => handleReact(msg.id, e)}
+                                  onClose={() => setReactionPickerMsgId(null)}
+                                />
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  {/* Always-visible edit/delete — own messages, desktop only */}
                   {fromMe && !isTemp && !isEditing && (
-                    <div className="hidden md:group-hover:flex absolute top-1/2 -translate-y-1/2 -left-[96px] items-center gap-0.5 bg-white border border-gray-100 rounded-lg shadow-sm px-1 py-0.5 z-10">
-                      <button
-                        onClick={() => setReactionPickerMsgId(reactionPickerMsgId === msg.id ? null : msg.id)}
-                        className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-[#4a7c59] cursor-pointer transition-colors"
-                        title="React"
-                      >
-                        <Smile className="w-3.5 h-3.5" />
-                      </button>
+                    <div className="hidden md:flex items-center gap-0.5 self-start mt-0.5 shrink-0">
                       <button
                         onClick={() => handleEditStart(msg)}
-                        className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 cursor-pointer transition-colors"
-                        title="Edit message"
+                        className="p-1.5 rounded-lg text-gray-300 hover:text-gray-500 hover:bg-gray-100 cursor-pointer transition-colors"
+                        title="Edit"
                       >
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => handleDelete(msg.id)}
                         disabled={isDeleting}
-                        className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 cursor-pointer transition-colors disabled:opacity-50"
-                        title="Delete message"
+                        className="p-1.5 rounded-lg text-gray-300 hover:text-red-400 hover:bg-red-50 cursor-pointer transition-colors disabled:opacity-50"
+                        title="Delete"
                       >
                         {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                       </button>
-                      {reactionPickerMsgId === msg.id && (
-                        <ReactionPicker
-                          onSelect={(e) => handleReact(msg.id, e)}
-                          onClose={() => setReactionPickerMsgId(null)}
-                        />
-                      )}
                     </div>
                   )}
-                  {isEditing ? (
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={editDraft}
-                        onChange={(e) => setEditDraft(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleEditSave(msg.id); }
-                          if (e.key === "Escape") { setEditingMsgId(null); setEditDraft(""); }
-                        }}
-                        autoFocus
-                        className="flex-1 px-3 py-2 text-sm font-body bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59]/40 text-gray-800"
-                      />
-                      <button
-                        onClick={() => handleEditSave(msg.id)}
-                        className="w-8 h-8 rounded-xl flex items-center justify-center text-white shrink-0 cursor-pointer"
-                        style={{ backgroundColor: green }}
-                        title="Save"
-                      >
-                        <Check className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => { setEditingMsgId(null); setEditDraft(""); }}
-                        className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 shrink-0 cursor-pointer transition-colors"
-                        title="Cancel"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div
-                      className={`px-4 pt-2.5 rounded-2xl text-sm font-body leading-relaxed ${
-                        msg.reactions.length > 0 ? "pb-4" : "pb-2.5"
-                      } ${
-                        fromMe
-                          ? "text-white rounded-br-md"
-                          : "bg-gray-100 text-gray-800 rounded-bl-md"
-                      }`}
-                      style={fromMe ? { backgroundColor: green } : undefined}
+
+                  {/* Mobile triggers */}
+                  {fromMe && !isTemp && !isEditing && (
+                    <button
+                      onClick={() => setBottomSheetMsgId(msg.id)}
+                      className="md:hidden self-start mt-1 p-1 text-gray-400 cursor-pointer shrink-0"
                     >
-                      {msg.image_url && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={msg.image_url}
-                          alt="attachment"
-                          className="rounded-xl max-w-full max-h-60 object-cover cursor-pointer mb-1"
-                          onClick={() => window.open(msg.image_url!, "_blank")}
-                        />
-                      )}
-                      {msg.file_url && msg.file_name && (
-                        <a
-                          href={msg.file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`flex items-center gap-2 mb-1 px-3 py-2 rounded-xl border ${fromMe ? "border-white/20 bg-white/10 hover:bg-white/20" : "border-gray-200 bg-white hover:bg-gray-50"} transition-colors`}
-                        >
-                          <FileText className={`w-4 h-4 shrink-0 ${fromMe ? "text-white/80" : "text-gray-400"}`} />
-                          <span className={`text-xs font-body truncate max-w-[160px] ${fromMe ? "text-white" : "text-gray-700"}`}>
-                            {msg.file_name}
-                          </span>
-                          <Download className={`w-3.5 h-3.5 shrink-0 ${fromMe ? "text-white/70" : "text-gray-400"}`} />
-                        </a>
-                      )}
-                      {msg.body && <p>{msg.body}</p>}
-                      <p className={`text-[10px] mt-1 ${fromMe ? "text-white/60" : "text-gray-400"}`}>
-                        {formatTime(msg.created_at)}
-                      </p>
-                    </div>
+                      <MoreVertical className="w-4 h-4" />
+                    </button>
                   )}
-                  {/* Reaction pills */}
-                  {msg.reactions.length > 0 && (
-                    <div className={`flex flex-wrap items-center gap-1 -mt-2 relative z-10 px-1 ${fromMe ? "justify-end" : "justify-start"}`}>
-                      {msg.reactions.map((r) => (
-                        <button
-                          key={r.emoji}
-                          onClick={() => handleReact(msg.id, r.emoji)}
-                          className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-body border transition-colors cursor-pointer ${
-                            r.reactedByMe
-                              ? "bg-[#eef4f0] border-gray-200 text-[#4a7c59]"
-                              : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
-                          }`}
-                        >
-                          <span>{r.emoji}</span>
-                          <span>{r.count}</span>
-                        </button>
-                      ))}
-                      {/* Inline add-reaction pill — visible on hover */}
-                      {!isTemp && (
-                        <div className="relative hidden group-hover:block">
-                          <button
-                            onClick={() => setReactionPickerMsgId(reactionPickerMsgId === msg.id ? null : msg.id)}
-                            className="flex items-center px-2 py-0.5 rounded-full text-xs border bg-white border-gray-200 text-gray-400 hover:text-[#4a7c59] hover:border-[#b5cebe] shadow-sm cursor-pointer transition-colors"
-                          >
-                            <Smile className="w-3 h-3" />
-                          </button>
-                          {reactionPickerMsgId === msg.id && (
-                            <ReactionPicker
-                              onSelect={(e) => handleReact(msg.id, e)}
-                              onClose={() => setReactionPickerMsgId(null)}
-                            />
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {/* Smiley pill when no reactions yet — on hover (others' messages only; own messages use the action bar) */}
-                  {msg.reactions.length === 0 && !fromMe && !isTemp && !isEditing && (
-                    <div className={`hidden group-hover:flex mt-1 ${fromMe ? "justify-end" : "justify-start"}`}>
-                      <div className="relative">
-                        <button
-                          onClick={() => setReactionPickerMsgId(reactionPickerMsgId === msg.id ? null : msg.id)}
-                          className="flex items-center px-2 py-0.5 rounded-full text-xs border bg-white border-gray-200 text-gray-400 hover:text-[#4a7c59] hover:border-[#b5cebe] shadow-sm cursor-pointer transition-colors"
-                        >
-                          <Smile className="w-3.5 h-3.5" />
-                        </button>
-                        {reactionPickerMsgId === msg.id && (
-                          <ReactionPicker
-                            onSelect={(e) => handleReact(msg.id, e)}
-                            onClose={() => setReactionPickerMsgId(null)}
-                          />
-                        )}
-                      </div>
-                    </div>
+                  {!fromMe && !isTemp && !isEditing && (
+                    <button
+                      onClick={() => setReactionSheetMsgId(msg.id)}
+                      className="md:hidden self-start mt-1 p-1 text-gray-300 cursor-pointer shrink-0"
+                    >
+                      <Smile className="w-4 h-4" />
+                    </button>
                   )}
                 </div>
               </div>
@@ -670,6 +713,7 @@ export default function ChannelChatArea({
           })
         )}
         <div ref={messagesEndRef} />
+        </div>
       </div>
 
       {/* Input */}
