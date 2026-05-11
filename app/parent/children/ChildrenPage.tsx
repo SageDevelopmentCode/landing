@@ -21,6 +21,7 @@ import {
   Check,
 } from "lucide-react";
 import { uploadStudentProfileImage } from "@/app/actions/uploadStudentProfileImage";
+import { compressImage } from "@/app/utils/compressImage";
 import {
   saveAuthorizedPickup,
   type PickupPersonEntry,
@@ -1303,9 +1304,10 @@ function ChildProfile({
   }, [child.id]);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const raw = e.target.files?.[0];
+    if (!raw) return;
     setUploading(true);
+    const file = await compressImage(raw, { maxDimension: 400 });
     const formData = new FormData();
     formData.append("file", file);
     formData.append("studentId", child.id);

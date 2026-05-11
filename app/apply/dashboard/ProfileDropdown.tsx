@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, Camera, Loader2 } from "lucide-react";
 import { signOut } from "@/app/actions/auth";
 import { uploadProfileImage } from "@/app/actions/uploadProfileImage";
+import { compressImage } from "@/app/utils/compressImage";
 
 interface ProfileDropdownProps {
   email: string;
@@ -50,10 +51,11 @@ export default function ProfileDropdown({
   }, [open]);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const raw = e.target.files?.[0];
+    if (!raw) return;
     setUploading(true);
     setUploadError(null);
+    const file = await compressImage(raw, { maxDimension: 400 });
     const formData = new FormData();
     formData.append("file", file);
     const result = await uploadProfileImage(formData);

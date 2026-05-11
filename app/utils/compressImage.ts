@@ -1,7 +1,9 @@
 const COMPRESS_QUALITY = 0.8;
-const MAX_DIMENSION = 1920;
 
-export async function compressImage(file: File): Promise<File> {
+export async function compressImage(
+  file: File,
+  { maxDimension = 1920 }: { maxDimension?: number } = {},
+): Promise<File> {
   if (file.type.startsWith("video/")) return file;
   if (file.type === "image/gif") return file;
 
@@ -23,7 +25,7 @@ export async function compressImage(file: File): Promise<File> {
   const bitmap = await createImageBitmap(workingFile);
   const { width: origW, height: origH } = bitmap;
   const longest = Math.max(origW, origH);
-  const scale = longest > MAX_DIMENSION ? MAX_DIMENSION / longest : 1;
+  const scale = longest > maxDimension ? maxDimension / longest : 1;
   const outW = Math.round(origW * scale);
   const outH = Math.round(origH * scale);
 
