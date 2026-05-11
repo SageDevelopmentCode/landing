@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(npm run:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(sips -g pixelWidth /Users/juliuscecilia/Desktop/Desktop/Projects/sagefield-school-landing/public/assets/Stock10.PNG)",
+      "Bash(awk '/pixelWidth/{print $2}')"
     ]
   }
 }

@@ -8,7 +8,7 @@ import WaitlistDialog from "./WaitlistDialog";
 
 const slides = [
   {
-    image: "/assets/After1.png",
+    image: "/assets/Stock1.jpg",
     title: "Welcome to Sage Field!",
     description:
       "A small, outdoor-focused private microschool in Round Rock, Texas.",
@@ -16,7 +16,7 @@ const slides = [
     buttonAction: "waitlist" as const,
   },
   {
-    image: "/assets/After5.PNG",
+    image: "/assets/Stock3.jpg",
     title: "Summer 2026 Program",
     description:
       "12 weeks of themed adventures, nature play, art, and academic enrichment — May 26 to August 13.",
@@ -24,7 +24,7 @@ const slides = [
     buttonHref: "/summer-2026",
   },
   {
-    image: "/assets/After7.PNG",
+    image: "/assets/Stock4.jpg",
     title: "School Year 2026–2027",
     description:
       "Up to 4 days a week of enriched, Montessori-inspired learning for ages 4–11 starting August 17.",
@@ -32,7 +32,7 @@ const slides = [
     buttonHref: "/school-year-2026-2027",
   },
   {
-    image: "/assets/After3.png",
+    image: "/assets/Stock6.jpg",
     title: "Apply to Sage Field",
     description:
       "Spots are limited. Apply early to secure your child's place in our Summer or School Year program.",
@@ -40,7 +40,7 @@ const slides = [
     buttonHref: "/apply",
   },
   {
-    image: "/assets/After2.png",
+    image: "/assets/Stock7.jpg",
     title: "Book a Private Tour",
     description:
       "Walk the campus, meet Ms. Sabrina, and see Sage Field in person — free, private, 45 minutes.",
@@ -48,7 +48,7 @@ const slides = [
     buttonHref: "/tour",
   },
   {
-    image: "/assets/ImageTen.jpg",
+    image: "/assets/Stock8.jpg",
     title: "Homeschool Drop-In",
     description:
       "1 to 5 days a week of flexible enrichment — academics, art, music, and Friday Field Days.",
@@ -56,7 +56,7 @@ const slides = [
     buttonHref: "/homeschool",
   },
   {
-    image: "/assets/ImageFour.jpg",
+    image: "/assets/Stock11.jpg",
     title: "Our Educational Philosophy",
     description:
       "Montessori, Waldorf, and Reggio Emilia methods woven together with TEKS-aligned academics.",
@@ -64,7 +64,7 @@ const slides = [
     buttonHref: "/educational-philosophy",
   },
   {
-    image: "/assets/After4.png",
+    image: "/assets/Kid1.jpg",
     title: "Our Vision",
     description:
       "We've secured our LLC and our property. Come see what we're building for the children of Round Rock.",
@@ -72,7 +72,7 @@ const slides = [
     buttonHref: "/vision",
   },
   {
-    image: "/assets/ImageNine.jpg",
+    image: "/assets/Kid2.jpg",
     title: "Our Story",
     description:
       "Sage Field was born from a belief that children deserve to learn through movement, wonder, and joy.",

@@ -121,18 +121,18 @@ const TOUR_EXPECTATIONS = [
 
 const TOUR_IMAGES = [
   "/assets/Stock1.jpg",
-  "/assets/Kid1.png",
-  "/assets/Kid2.png",
+  "/assets/Kid1.jpg",
+  "/assets/Kid2.jpg",
   // "/assets/Stock2.jpg",
-  "/assets/Stock3.png",
+  "/assets/Stock3.jpg",
   "/assets/Stock4.jpg",
   "/assets/Stock5.jpg",
-  "/assets/Stock6.png",
-  "/assets/Stock7.png",
-  "/assets/Stock8.png",
+  "/assets/Stock6.jpg",
+  "/assets/Stock7.jpg",
+  "/assets/Stock8.jpg",
   "/assets/Stock9.PNG",
-  "/assets/Stock10.PNG",
-  "/assets/Stock11.PNG",
+  "/assets/Stock10.jpg",
+  "/assets/Stock11.jpg",
 ];
 
 const TODAY = new Date();

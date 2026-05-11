@@ -61,18 +61,18 @@ const DROP_OFF_SLOTS = [
 ] as const;
 
 const BANNER_IMAGES = [
-  "/assets/Kid1.png",
-  "/assets/Kid2.png",
+  "/assets/Kid1.jpg",
+  "/assets/Kid2.jpg",
   "/assets/Stock1.jpg",
   // "/assets/Stock2.jpg",
-  "/assets/Stock3.png",
+  "/assets/Stock3.jpg",
   "/assets/Stock4.jpg",
   "/assets/Stock5.jpg",
-  "/assets/Stock6.png",
-  "/assets/Stock7.png",
-  "/assets/Stock8.png",
+  "/assets/Stock6.jpg",
+  "/assets/Stock7.jpg",
+  "/assets/Stock8.jpg",
   "/assets/Stock9.PNG",
-  "/assets/Stock10.PNG",
+  "/assets/Stock10.jpg",
 ];
 
 function getGreeting(): string {
@@ -491,7 +491,7 @@ export default function HomePageClient({
                 {/* Banner image */}
                 <div className="relative h-36 w-full overflow-hidden mt-3">
                   <img
-                    src="/assets/Kid1.png"
+                    src="/assets/Kid1.jpg"
                     alt=""
                     className="absolute inset-0 w-full h-full object-cover"
                   />
@@ -579,7 +579,7 @@ export default function HomePageClient({
                 {/* Banner image */}
                 <div className="relative h-40 w-full overflow-hidden">
                   <img
-                    src="/assets/Kid1.png"
+                    src="/assets/Kid1.jpg"
                     alt=""
                     className="absolute inset-0 w-full h-full object-cover"
                   />
