@@ -290,6 +290,7 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
                           <div
                             key={row.student_id}
                             className="flex items-center gap-2.5 px-4 py-2.5"
+                            style={row.hasEnrollment ? { backgroundColor: 'rgba(74,124,89,0.05)' } : undefined}
                           >
                             {row.profile_image_url ? (
                               <img
@@ -386,6 +387,7 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
                   <div
                     key={row.student_id}
                     className="grid grid-cols-[1fr_120px_100px_110px] gap-4 px-5 py-3.5 items-center hover:bg-gray-50/50 transition-colors"
+                    style={row.hasEnrollment ? { backgroundColor: 'rgba(74,124,89,0.05)' } : undefined}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       {row.profile_image_url ? (

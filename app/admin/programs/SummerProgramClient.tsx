@@ -956,8 +956,9 @@ export function SummerProgramClient({
                               return (
                                 <div
                                   key={row.student_id}
-                                  className="flex items-center gap-2.5 px-4 py-2.5"
-                                  style={{ borderColor: colors.border }}
+                                  className="flex items-center gap-2.5 px-4 py-2.5 cursor-pointer"
+                                  style={{ borderColor: colors.border, backgroundColor: row.hasEnrollment ? 'rgba(74,99,84,0.04)' : undefined }}
+                                  onClick={() => handleStudentClick({ id: row.student_id, child_legal_name: row.name, child_grade: row.grade, dob_month: null, dob_day: null, dob_year: null, profile_image_url: row.profile_image_url, admin_tags: [] })}
                                 >
                                   {row.profile_image_url ? (
                                     <img
@@ -985,7 +986,7 @@ export function SummerProgramClient({
                                       )}
                                     </div>
                                     {row.hasEnrollment ? (
-                                      <span className="text-[10px]" style={{ color: colors.mistyForest }}>Paid</span>
+                                      <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full" style={{ color: colors.mistyForest, backgroundColor: colors.accentLight }}>Paid</span>
                                     ) : (
                                       <span className="text-[10px]" style={{ color: colors.textTertiary }}>Unpaid</span>
                                     )}
@@ -995,7 +996,7 @@ export function SummerProgramClient({
                                       <Loader2 className="w-5 h-5 animate-spin" style={{ color: colors.mistyForest }} />
                                     ) : (
                                       <button
-                                        onClick={() => handleToggle(row.student_id, day.date, row)}
+                                        onClick={(e) => { e.stopPropagation(); handleToggle(row.student_id, day.date, row) }}
                                         className="w-5 h-5 rounded-full flex items-center justify-center transition-colors"
                                         style={{
                                           backgroundColor: isChecked ? colors.mistyForest : 'transparent',
@@ -1066,8 +1067,9 @@ export function SummerProgramClient({
                       return (
                         <div
                           key={row.student_id}
-                          className="grid grid-cols-[1fr_120px_100px_110px] gap-4 px-5 py-3.5 items-center"
-                          style={{ borderColor: colors.border }}
+                          className="grid grid-cols-[1fr_120px_100px_110px] gap-4 px-5 py-3.5 items-center cursor-pointer"
+                          style={{ borderColor: colors.border, backgroundColor: row.hasEnrollment ? 'rgba(74,99,84,0.04)' : undefined }}
+                          onClick={() => handleStudentClick({ id: row.student_id, child_legal_name: row.name, child_grade: row.grade, dob_month: null, dob_day: null, dob_year: null, profile_image_url: row.profile_image_url, admin_tags: [] })}
                         >
                           {/* Student */}
                           <div className="flex items-center gap-3 min-w-0">
@@ -1110,7 +1112,7 @@ export function SummerProgramClient({
                               <Loader2 className="w-4 h-4 animate-spin" style={{ color: colors.mistyForest }} />
                             ) : (
                               <button
-                                onClick={() => handleToggle(row.student_id, dayDetail.date, row)}
+                                onClick={(e) => { e.stopPropagation(); handleToggle(row.student_id, dayDetail.date, row) }}
                                 className="w-5 h-5 rounded border-2 flex items-center justify-center transition-colors"
                                 style={{
                                   backgroundColor: isChecked ? colors.mistyForest : 'transparent',

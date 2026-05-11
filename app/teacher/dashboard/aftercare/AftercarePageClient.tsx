@@ -397,6 +397,7 @@ export default function AftercarePageClient({ initialStudents, initialDate }: Pr
                 <div
                   key={row.student_id}
                   className="flex items-center gap-3 px-5 py-3 transition-colors"
+                  style={row.hasEnrollment ? { backgroundColor: 'rgba(74,124,89,0.05)' } : undefined}
                 >
                   {/* Avatar */}
                   {row.profile_image_url ? (
