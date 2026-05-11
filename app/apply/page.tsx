@@ -1588,7 +1588,7 @@ export default function ApplyPage() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.6, duration: 0.4, ease: "easeOut" as const }}
       >
-        <div className="bg-primary rounded-2xl shadow-xl flex items-center justify-between px-5 py-3 gap-3">
+        <div className="bg-sage-700 rounded-2xl shadow-xl flex items-center justify-between px-5 py-3 gap-3">
           <div>
             <p className="text-white font-heading font-bold text-sm leading-tight">
               Interested in Sage Field?
@@ -1599,7 +1599,7 @@ export default function ApplyPage() {
           </div>
           <button
             onClick={scrollToForm}
-            className="flex-shrink-0 bg-white text-primary font-semibold text-sm font-body px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+            className="flex-shrink-0 bg-white text-sage-700 font-semibold text-sm font-body px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
           >
             Apply Now →
           </button>
