@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
-import { Send, ChevronLeft, Loader2, ImageIcon, Paperclip, FileText, Download, X, Hash, LogOut, Pencil, Trash2, Check, MoreVertical, Smile } from "lucide-react";
+import { Send, ChevronLeft, Loader2, ImageIcon, Paperclip, FileText, Download, X, Hash, LogOut, Pencil, Trash2, Check, MoreVertical, Smile, User } from "lucide-react";
 import { createClient } from "@/app/lib/supabase-browser";
 import {
   getChannelMessages,
@@ -17,8 +17,10 @@ import {
   deleteChannelMessage,
   toggleReaction,
   getReactionsForMessage,
+  getChannelMembers,
   type ChannelWithMeta,
   type ChannelMessageRow,
+  type ChannelMember,
 } from "@/app/messages/channel-actions";
 
 function formatTime(iso: string): string {
@@ -190,6 +192,29 @@ export default function ChannelChatArea({
   const [reactionPickerMsgId, setReactionPickerMsgId] = useState<string | null>(null);
   const [reactionSheetMsgId, setReactionSheetMsgId] = useState<string | null>(null);
   const [fullPickerSheet, setFullPickerSheet] = useState<"bottom" | "reaction" | null>(null);
+
+  const [membersDrawerOpen, setMembersDrawerOpen] = useState(false);
+  const [membersList, setMembersList] = useState<ChannelMember[] | null>(null);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+  const membersLoadedForChannel = useRef<string | null>(null);
+
+  const handleOpenMembers = useCallback(() => {
+    setMembersDrawerOpen(true);
+    if (membersLoadedForChannel.current === channel.id) return;
+    membersLoadedForChannel.current = channel.id;
+    setMembersList(null);
+    setLoadingMembers(true);
+    getChannelMembers(channel.id).then((data) => {
+      setMembersList(data);
+      setLoadingMembers(false);
+    });
+  }, [channel.id]);
+
+  useEffect(() => {
+    membersLoadedForChannel.current = null;
+    setMembersList(null);
+    setMembersDrawerOpen(false);
+  }, [channel.id]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -497,7 +522,12 @@ export default function ChannelChatArea({
         </div>
         <div>
           <p className="text-sm font-semibold font-body text-gray-800">{channel.name}</p>
-          <p className="text-[11px] text-gray-400 font-body">{channel.memberCount} member{channel.memberCount !== 1 ? "s" : ""}</p>
+          <button
+            onClick={handleOpenMembers}
+            className="text-[11px] text-[#4a7c59] font-body hover:underline underline-offset-2 text-left cursor-pointer"
+          >
+            {channel.memberCount} member{channel.memberCount !== 1 ? "s" : ""}
+          </button>
         </div>
         {!channel.is_default && isMember && (
           <button
@@ -919,6 +949,75 @@ export default function ChannelChatArea({
               width="100%"
               height={400}
             />
+          </div>
+        </>
+      )}
+
+      {/* Members drawer */}
+      {membersDrawerOpen && (
+        <>
+          <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setMembersDrawerOpen(false)} />
+          <div className="fixed right-0 top-0 h-full w-80 z-50 bg-white border-l border-gray-100 shadow-xl flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
+              <div>
+                <p className="text-sm font-semibold font-body text-gray-800">Members</p>
+                <p className="text-[11px] text-gray-400 font-body truncate">#{channel.name}</p>
+              </div>
+              <button onClick={() => setMembersDrawerOpen(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              {loadingMembers ? (
+                <div className="flex items-center justify-center py-16">
+                  <div className="w-5 h-5 border-2 border-[#4a7c59] border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : membersList?.length === 0 ? (
+                <p className="text-sm text-gray-400 font-body text-center py-10">No members found</p>
+              ) : (
+                <ul className="divide-y divide-gray-50">
+                  {(membersList ?? []).map((member) => (
+                    <li key={member.id} className="px-5 py-3.5">
+                      <div className="flex items-center gap-3">
+                        {member.profile_image_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={member.profile_image_url} alt={member.full_name} className="w-9 h-9 rounded-full object-cover shrink-0" />
+                        ) : (
+                          <div className={`${colorForId(member.id)} w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-semibold font-body shrink-0`}>
+                            {initialsFor(member.full_name)}
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold font-body text-gray-800 truncate">{member.full_name}</p>
+                          {(member.role === "parent" || member.role === "teacher" || member.role === "super_admin") && (
+                            <p className="text-[11px] text-gray-400 font-body">
+                              {member.role === "parent" ? "Parent" : "Teacher"}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      {member.children.length > 0 && (
+                        <ul className="mt-2 ml-12 space-y-1.5">
+                          {member.children.map((child) => (
+                            <li key={child.id} className="flex items-center gap-2">
+                              {child.profile_image_url ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={child.profile_image_url} alt={child.child_legal_name} className="w-6 h-6 rounded-full object-cover shrink-0" />
+                              ) : (
+                                <div className={`${colorForId(child.id)} w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-semibold font-body shrink-0`}>
+                                  {initialsFor(child.child_legal_name)}
+                                </div>
+                              )}
+                              <span className="text-[11px] text-gray-500 font-body truncate">{child.child_legal_name}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
         </>
       )}

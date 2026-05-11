@@ -349,6 +349,7 @@ interface Props {
   checklistComplete: boolean;
   initialCompletedIds?: string[];
   checklistInteractive?: boolean;
+  suppressReferralPopup?: boolean;
   generalChannelMessages: {
     body: string;
     senderName: string;
@@ -375,6 +376,7 @@ export default function HomePageClient({
   checklistComplete,
   initialCompletedIds,
   checklistInteractive,
+  suppressReferralPopup,
   generalChannelMessages,
 }: Props) {
   const [checklistOpen, setChecklistOpen] = useState(false);
@@ -400,11 +402,12 @@ export default function HomePageClient({
   }, []);
 
   useEffect(() => {
+    if (suppressReferralPopup) return;
     if (!sessionStorage.getItem("referralPopupSeen")) {
       const t = setTimeout(() => setReferralPopupOpen(true), 1000);
       return () => clearTimeout(t);
     }
-  }, []);
+  }, [suppressReferralPopup]);
 
   function closeReferralPopup() {
     sessionStorage.setItem("referralPopupSeen", "1");

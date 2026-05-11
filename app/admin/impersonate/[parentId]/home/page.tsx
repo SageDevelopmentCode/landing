@@ -268,6 +268,7 @@ export default async function ImpersonateHomePage({
           checklistComplete={checklistComplete}
           initialCompletedIds={onboardingCompletedIds}
           checklistInteractive
+          suppressReferralPopup
           generalChannelMessages={[]}
         />
       </main>

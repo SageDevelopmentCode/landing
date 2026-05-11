@@ -403,6 +403,21 @@ export async function uploadChannelFile(
   return { url: publicUrl, name: file.name };
 }
 
+export type ChannelMember = {
+  id: string;
+  full_name: string;
+  profile_image_url: string | null;
+  role: string | null;
+  children: { id: string; child_legal_name: string; profile_image_url: string | null }[];
+};
+
+export async function getChannelMembers(channelId: string): Promise<ChannelMember[]> {
+  const adminClient = createAdminClient();
+  const { data, error } = await adminClient.rpc("get_channel_members", { p_channel_id: channelId });
+  if (error || !data) return [];
+  return (data as ChannelMember[]) ?? [];
+}
+
 export async function getSenderProfile(
   userId: string
 ): Promise<{ full_name: string; profile_image_url: string | null } | null> {
