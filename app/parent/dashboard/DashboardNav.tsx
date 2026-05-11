@@ -202,7 +202,7 @@ export default function DashboardNav({
 
       {/* Mobile menu panel */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-x-0 top-[57px] z-40 bg-white border-b border-gray-100 shadow-sm">
+        <div className="md:hidden absolute inset-x-0 top-full z-40 bg-white border-b border-gray-100 shadow-sm">
           <div className="px-4 pt-2 pb-3 grid grid-cols-2 gap-1">
             {primaryNavItems.map(({ label, icon: Icon, href }) => {
               const resolvedHref = navHref(href);

@@ -29,6 +29,12 @@ const DASHBOARD_ANNOUNCEMENTS = [
     buttonLabel: "View Calendar",
     href: "/parent/calendar",
   },
+  {
+    short: "🏡 Meet other families",
+    full: "🏡 Introduce yourself and connect with parents & teachers in the community!",
+    buttonLabel: "Join Community",
+    href: "/parent/messages?tab=community",
+  },
 ];
 
 interface DashboardHeaderProps {
@@ -52,8 +58,8 @@ export default function DashboardHeader({
   }, []);
 
   return (
-    <div className={sticky ? "sticky top-0 z-50" : undefined}>
-      <div className="hidden sm:block w-full bg-[#4a7c59] text-white text-sm py-1.5 px-4 overflow-hidden">
+    <div className={sticky ? "relative sticky top-0 z-50" : "relative"}>
+      <div className="w-full bg-[#4a7c59] text-white text-sm py-1.5 px-4 overflow-hidden">
         <AnimatePresence mode="wait" custom={announcementDirection}>
           <motion.div
             key={announcementIndex}
