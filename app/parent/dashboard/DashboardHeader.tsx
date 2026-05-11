@@ -58,7 +58,7 @@ export default function DashboardHeader({
   }, []);
 
   return (
-    <div className={sticky ? "relative sticky top-0 z-50" : "relative"}>
+    <div className={sticky ? "sticky top-0 z-50" : "relative"}>
       <div className="w-full bg-[#4a7c59] text-white text-sm py-1.5 px-4 overflow-hidden">
         <AnimatePresence mode="wait" custom={announcementDirection}>
           <motion.div
@@ -91,7 +91,7 @@ export default function DashboardHeader({
         </AnimatePresence>
       </div>
 
-      <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-[auto_1fr_auto] items-center">
+      <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-[auto_1fr_auto] items-center *:first:hidden *:first:md:flex">
         {children}
       </header>
     </div>
