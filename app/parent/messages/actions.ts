@@ -2,6 +2,7 @@
 
 import { createServerSupabaseClient, createAdminClient } from "@/app/lib/supabase-server";
 import { revalidatePath } from "next/cache";
+import { sendDiscordNotification, createErrorEmbed } from "@/app/lib/discord";
 
 export type ConversationWithMeta = {
   id: string;
@@ -33,129 +34,53 @@ export type MessageRow = {
 };
 
 export async function getConversations(userId: string): Promise<ConversationWithMeta[]> {
-  const supabase = await createServerSupabaseClient();
   const adminClient = createAdminClient();
 
-  // Get all conversation IDs the user is in
-  const { data: participantRows, error: pErr } = await supabase
-    .schema("messaging")
-    .from("conversation_participants")
-    .select("conversation_id")
-    .eq("user_id", userId);
+  const { data, error } = await adminClient.rpc("get_conversations_with_meta", {
+    p_user_id: userId,
+  });
 
-  if (pErr) console.error("[getConversations] participantRows error:", pErr);
-  if (pErr || !participantRows?.length) return [];
-
-  const conversationIds = participantRows.map((r) => r.conversation_id);
-
-  // Get conversations
-  const { data: convos, error: cErr } = await supabase
-    .schema("messaging")
-    .from("conversations")
-    .select("id, updated_at")
-    .in("id", conversationIds)
-    .order("updated_at", { ascending: false });
-
-  if (cErr) console.error("[getConversations] convos error:", cErr);
-  if (cErr || !convos?.length) return [];
-
-  // For each conversation, get the other participant's user_id
-  const { data: allParticipants } = await supabase
-    .schema("messaging")
-    .from("conversation_participants")
-    .select("conversation_id, user_id")
-    .in("conversation_id", conversationIds);
-
-  // Get the other user ids (not current user)
-  const otherUserIds = [
-    ...new Set(
-      (allParticipants ?? [])
-        .filter((p) => p.user_id !== userId)
-        .map((p) => p.user_id)
-    ),
-  ];
-
-  // Fetch full_name from admin.users for those ids
-  const { data: adminUsers } = await adminClient
-    .schema("admin")
-    .from("users")
-    .select("id, full_name, role, profile_image_url")
-    .in("id", otherUserIds);
-
-  const userMap = new Map((adminUsers ?? []).map((u) => [u.id, u]));
-
-  // For parents without a profile_image_url, fall back to their first child's image
-  const parentIdsWithoutImage = (adminUsers ?? [])
-    .filter((u) => u.role === "parent" && !u.profile_image_url)
-    .map((u) => u.id);
-
-  const childImageMap = new Map<string, string>();
-  if (parentIdsWithoutImage.length > 0) {
-    const { data: childRows } = await adminClient
-      .schema("admin")
-      .from("students")
-      .select("parent_id, profile_image_url")
-      .in("parent_id", parentIdsWithoutImage)
-      .eq("is_deleted", false)
-      .not("profile_image_url", "is", null);
-
-    for (const row of childRows ?? []) {
-      if (!childImageMap.has(row.parent_id) && row.profile_image_url) {
-        childImageMap.set(row.parent_id, row.profile_image_url);
-      }
-    }
+  if (error) {
+    console.error("[getConversations] rpc error:", error);
+    void sendDiscordNotification(
+      createErrorEmbed({
+        context: "getConversations – get_conversations_with_meta RPC",
+        error: error.message,
+        details: { userId },
+      })
+    ).catch(() => {});
+    return [];
   }
 
-  // Get latest message + unread count for each conversation
-  const result: ConversationWithMeta[] = await Promise.all(
-    convos.map(async (convo) => {
-      const otherParticipant = (allParticipants ?? []).find(
-        (p) => p.conversation_id === convo.id && p.user_id !== userId
-      );
-      const otherUser = otherParticipant
-        ? userMap.get(otherParticipant.user_id)
-        : null;
-
-      const { data: messages } = await supabase
-        .schema("messaging")
-        .from("messages")
-        .select("id, body, created_at, sender_id, read_at")
-        .eq("conversation_id", convo.id)
-        .order("created_at", { ascending: false })
-        .limit(1);
-
-      const lastMessage = messages?.[0] ?? null;
-
-      const { count: unreadCount } = await supabase
-        .schema("messaging")
-        .from("messages")
-        .select("id", { count: "exact", head: true })
-        .eq("conversation_id", convo.id)
-        .neq("sender_id", userId)
-        .is("read_at", null);
-
-      return {
-        id: convo.id,
-        updated_at: convo.updated_at,
-        otherUser: {
-          id: otherUser?.id ?? otherParticipant?.user_id ?? "",
-          full_name: otherUser?.full_name ?? "Unknown",
-          role: otherUser?.role ?? null,
-          profile_image_url: otherUser?.profile_image_url ?? childImageMap.get(otherUser?.id ?? "") ?? null,
-        },
-        lastMessage: lastMessage
-          ? {
-              body: lastMessage.body,
-              created_at: lastMessage.created_at,
-              sender_id: lastMessage.sender_id,
-            }
-          : null,
-        unreadCount: unreadCount ?? 0,
-      };
-    })
-  );
-
-  return result;
+  return (data ?? []).map((row: {
+    conversation_id: string;
+    updated_at: string;
+    other_user_id: string;
+    other_full_name: string | null;
+    other_role: string | null;
+    other_profile_image_url: string | null;
+    last_message_body: string | null;
+    last_message_created_at: string | null;
+    last_message_sender_id: string | null;
+    unread_count: number;
+  }) => ({
+    id: row.conversation_id,
+    updated_at: row.updated_at,
+    otherUser: {
+      id: row.other_user_id,
+      full_name: row.other_full_name ?? "Unknown",
+      role: row.other_role ?? null,
+      profile_image_url: row.other_profile_image_url ?? null,
+    },
+    lastMessage: row.last_message_body
+      ? {
+          body: row.last_message_body,
+          created_at: row.last_message_created_at!,
+          sender_id: row.last_message_sender_id!,
+        }
+      : null,
+    unreadCount: Number(row.unread_count ?? 0),
+  }));
 }
 
 export async function getMessages(conversationId: string): Promise<MessageRow[]> {
