@@ -1,6 +1,7 @@
 "use server";
 
 import { createServerSupabaseClient, createAdminClient } from "@/app/lib/supabase-server";
+import { sendDiscordNotification, createErrorEmbed } from "@/app/lib/discord";
 
 export type ChannelWithMeta = {
   id: string;
@@ -33,82 +34,51 @@ export type ChannelMessageRow = {
 export async function getChannels(userId: string): Promise<ChannelWithMeta[]> {
   const adminClient = createAdminClient();
 
-  const [{ data: channels }, { data: memberships }] = await Promise.all([
-    adminClient
-      .schema("messaging")
-      .from("channels")
-      .select("id, name, description, is_default, updated_at")
-      .order("is_default", { ascending: false })
-      .order("name", { ascending: true }),
-    adminClient
-      .schema("messaging")
-      .from("channel_members")
-      .select("channel_id, last_read_at")
-      .eq("user_id", userId),
-  ]);
+  const { data, error } = await adminClient.rpc("get_channels_with_meta", {
+    p_user_id: userId,
+  });
 
-  if (!channels?.length) return [];
+  if (error) {
+    console.error("[getChannels] rpc error:", error);
+    void sendDiscordNotification(
+      createErrorEmbed({
+        context: "getChannels – get_channels_with_meta RPC",
+        error: error.message,
+        details: { userId },
+      })
+    ).catch(() => {});
+    return [];
+  }
 
-  const membershipMap = new Map(
-    (memberships ?? []).map((m) => [m.channel_id, m.last_read_at as string | null])
-  );
-
-  const result: ChannelWithMeta[] = await Promise.all(
-    channels.map(async (ch) => {
-      const isMember = membershipMap.has(ch.id);
-      const lastReadAt = membershipMap.get(ch.id) ?? null;
-
-      const [{ count: memberCount }, { data: lastMsgRows }, { count: unreadCount }] =
-        await Promise.all([
-          adminClient
-            .schema("messaging")
-            .from("channel_members")
-            .select("user_id", { count: "exact", head: true })
-            .eq("channel_id", ch.id),
-          adminClient
-            .schema("messaging")
-            .from("channel_messages")
-            .select("body, created_at, sender_id")
-            .eq("channel_id", ch.id)
-            .order("created_at", { ascending: false })
-            .limit(1),
-          isMember && lastReadAt
-            ? adminClient
-                .schema("messaging")
-                .from("channel_messages")
-                .select("id", { count: "exact", head: true })
-                .eq("channel_id", ch.id)
-                .neq("sender_id", userId)
-                .gt("created_at", lastReadAt)
-            : isMember
-            ? adminClient
-                .schema("messaging")
-                .from("channel_messages")
-                .select("id", { count: "exact", head: true })
-                .eq("channel_id", ch.id)
-                .neq("sender_id", userId)
-            : Promise.resolve({ count: 0 }),
-        ]);
-
-      const lastMsg = lastMsgRows?.[0] ?? null;
-
-      return {
-        id: ch.id,
-        name: ch.name,
-        description: ch.description ?? null,
-        is_default: ch.is_default,
-        isMember,
-        memberCount: memberCount ?? 0,
-        lastMessage: lastMsg
-          ? { body: lastMsg.body, created_at: lastMsg.created_at, sender_id: lastMsg.sender_id }
-          : null,
-        unreadCount: isMember ? (unreadCount ?? 0) : 0,
-        updated_at: ch.updated_at,
-      };
-    })
-  );
-
-  return result;
+  return (data ?? []).map((row: {
+    channel_id: string;
+    name: string;
+    description: string | null;
+    is_default: boolean;
+    updated_at: string;
+    is_member: boolean;
+    member_count: number;
+    last_message_body: string | null;
+    last_message_created_at: string | null;
+    last_message_sender_id: string | null;
+    unread_count: number;
+  }) => ({
+    id: row.channel_id,
+    name: row.name,
+    description: row.description ?? null,
+    is_default: row.is_default,
+    updated_at: row.updated_at,
+    isMember: row.is_member,
+    memberCount: Number(row.member_count ?? 0),
+    lastMessage: row.last_message_body
+      ? {
+          body: row.last_message_body,
+          created_at: row.last_message_created_at!,
+          sender_id: row.last_message_sender_id!,
+        }
+      : null,
+    unreadCount: Number(row.unread_count ?? 0),
+  }));
 }
 
 export async function ensureDefaultChannelMembership(userId: string): Promise<void> {
