@@ -1,6 +1,7 @@
 'use server'
 
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
+import { sendDiscordNotification, createErrorEmbed } from '@/app/lib/discord'
 
 export async function uploadProfileImage(formData: FormData): Promise<{ url: string } | { error: string }> {
   const supabase = await createServerSupabaseClient()
@@ -19,7 +20,10 @@ export async function uploadProfileImage(formData: FormData): Promise<{ url: str
     .from('profile-images')
     .upload(path, file, { contentType: file.type, upsert: true })
 
-  if (uploadError) return { error: uploadError.message }
+  if (uploadError) {
+    void sendDiscordNotification(createErrorEmbed({ context: 'uploadProfileImage – Storage Upload', error: uploadError.message, details: { userId: user.id, path } })).catch(() => {})
+    return { error: uploadError.message }
+  }
 
   const { data: { publicUrl } } = adminClient.storage
     .from('profile-images')
@@ -31,7 +35,10 @@ export async function uploadProfileImage(formData: FormData): Promise<{ url: str
     .update({ profile_image_url: publicUrl })
     .eq('id', user.id)
 
-  if (dbError) return { error: dbError.message }
+  if (dbError) {
+    void sendDiscordNotification(createErrorEmbed({ context: 'uploadProfileImage – DB Update', error: dbError.message, details: { userId: user.id } })).catch(() => {})
+    return { error: dbError.message }
+  }
 
   return { url: publicUrl }
 }
