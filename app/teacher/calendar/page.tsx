@@ -8,6 +8,7 @@ import Image from "next/image";
 import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import Footer from "@/app/components/Footer";
 import TeacherNav from "../dashboard/TeacherNav";
+import TeacherNotificationBell from "../components/TeacherNotificationBell";
 import TeacherCalendarClient from "./TeacherCalendarClient";
 
 export default async function TeacherCalendarPage() {
@@ -76,7 +77,8 @@ export default async function TeacherCalendarPage() {
         <div className="flex items-center justify-center">
           <TeacherNav />
         </div>
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-end gap-2">
+          <TeacherNotificationBell userId={user.id} />
           {user?.email && (
             <ProfileDropdown
               email={user.email}

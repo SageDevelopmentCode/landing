@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import ProfileDropdown from '@/app/apply/dashboard/ProfileDropdown'
 import TeacherNav from '../TeacherNav'
+import TeacherNotificationBell from '../../components/TeacherNotificationBell'
 import { type StudentRow } from '../MyStudentsSection'
 import StudentsPageClient from './StudentsPageClient'
 
@@ -73,7 +74,8 @@ export default async function StudentsPage() {
         <div className="flex items-center justify-center">
           <TeacherNav />
         </div>
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-end gap-2">
+          <TeacherNotificationBell userId={user.id} />
           {user?.email && (
             <ProfileDropdown email={user.email} fullName={fullName} userId={user.id} profileImageUrl={profileImageUrl} />
           )}

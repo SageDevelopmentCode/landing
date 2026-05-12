@@ -30,9 +30,11 @@ function formatTime(iso: string): string {
 export default function NotificationBell({
   items,
   totalUnread,
+  baseMessagesPath = "/parent/messages",
 }: {
   items: NotificationItem[];
   totalUnread: number;
+  baseMessagesPath?: string;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -53,9 +55,9 @@ export default function NotificationBell({
   function handleItemClick(item: NotificationItem) {
     setOpen(false);
     if (item.kind === "direct") {
-      router.push(`/parent/messages?recipientId=${item.otherUserId}`);
+      router.push(`${baseMessagesPath}?recipientId=${item.otherUserId}`);
     } else {
-      router.push(`/parent/messages?tab=community`);
+      router.push(`${baseMessagesPath}?tab=community`);
     }
   }
 
@@ -81,7 +83,7 @@ export default function NotificationBell({
               Unread Messages
             </span>
             <Link
-              href="/parent/messages"
+              href={baseMessagesPath}
               onClick={() => setOpen(false)}
               className="text-xs text-[#4a7c59] hover:underline font-body"
             >

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import ProfileDropdown from '@/app/apply/dashboard/ProfileDropdown'
+import TeacherNotificationBell from '../../components/TeacherNotificationBell'
 import TeacherNav from '../TeacherNav'
 import PayrollPageClient from './PayrollPageClient'
 import { getMyPaystubs, getMyHourlyRate } from '@/app/actions/paystubs'
@@ -39,7 +40,8 @@ export default async function PayrollPage() {
         <div className="flex items-center justify-center">
           <TeacherNav />
         </div>
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-end gap-2">
+          <TeacherNotificationBell userId={user.id} />
           {user?.email && (
             <ProfileDropdown
               email={user.email}

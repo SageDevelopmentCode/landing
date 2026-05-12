@@ -16,6 +16,7 @@ import {
 import type { TourBooking } from './page'
 import { sendTourReminderEmail } from '@/app/actions/sendTourReminderEmail'
 import { sendTourThankYouEmail } from '@/app/actions/sendTourThankYouEmail'
+import { EmailThread } from '../components/EmailThread'
 
 const merriweather = Poppins({ weight: ['300', '400', '700', '900'], subsets: ['latin'] })
 
@@ -1066,6 +1067,13 @@ function TourBookingsTable({ bookings }: { bookings: TourBooking[] }) {
                 >
                   {thankYouSending ? 'Sending…' : thankYouSent ? 'Thank You Sent ✓' : 'Send Thank You Email'}
                 </button>
+              </div>
+
+              <div style={{ marginTop: '28px', borderTop: `1px solid ${colors.divider}`, paddingTop: '20px' }}>
+                <p style={{ fontSize: '11px', color: colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '12px' }}>
+                  Email History
+                </p>
+                <EmailThread emailAddress={selected.email} />
               </div>
             </motion.div>
           </>

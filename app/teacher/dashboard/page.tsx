@@ -5,6 +5,7 @@ import Image from 'next/image'
 import ProfileDropdown from '@/app/apply/dashboard/ProfileDropdown'
 import Footer from '@/app/components/Footer'
 import TeacherNav from './TeacherNav'
+import TeacherNotificationBell from '../components/TeacherNotificationBell'
 import MyStudentsSection, { type StudentRow } from './MyStudentsSection'
 import DashboardHomeClient, { type CalendarEvent } from './DashboardHomeClient'
 import { getTeacherSessions } from '@/app/actions/teacherHours'
@@ -120,7 +121,8 @@ export default async function TeacherDashboard() {
           <div className="flex items-center justify-center">
             <TeacherNav />
           </div>
-          <div className="flex items-center justify-end">
+          <div className="flex items-center justify-end gap-2">
+            <TeacherNotificationBell userId={user.id} />
             {user?.email && (
               <ProfileDropdown
                 email={user.email}

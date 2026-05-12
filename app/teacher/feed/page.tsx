@@ -7,6 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import TeacherNav from "../dashboard/TeacherNav";
+import TeacherNotificationBell from "../components/TeacherNotificationBell";
 import TeacherFeedClient from "./TeacherFeedClient";
 import { getFeedPosts } from "./actions";
 
@@ -66,7 +67,8 @@ export default async function TeacherFeedPage() {
         <div className="flex items-center justify-center">
           <TeacherNav />
         </div>
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-end gap-2">
+          <TeacherNotificationBell userId={user.id} />
           {user?.email && (
             <ProfileDropdown
               email={user.email}
