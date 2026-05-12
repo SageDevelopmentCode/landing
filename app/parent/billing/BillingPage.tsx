@@ -4781,7 +4781,9 @@ export default function BillingPage({
     nonEnrolledApps.map((a) => a.student_id),
   );
   const visibleTransactions = transactions.filter(
-    (tx) => !tx.student_id || !nonEnrolledStudentIds.has(tx.student_id),
+    (tx) =>
+      (!tx.student_id || !nonEnrolledStudentIds.has(tx.student_id)) &&
+      (tx.metadata as Record<string, string> | null)?.is_sibling_split !== "true",
   );
 
   const multiChildSummerEligible =
@@ -5087,8 +5089,17 @@ export default function BillingPage({
                         <td className="px-4 py-3.5 text-gray-800 max-w-[220px] truncate">
                           {tx.description ?? "—"}
                         </td>
-                        <td className="px-4 py-3.5 text-gray-600 whitespace-nowrap">
-                          {studentMap[tx.student_id ?? ""]?.name ?? "—"}
+                        <td className="px-4 py-3.5 text-gray-600 max-w-[180px] truncate">
+                          {(() => {
+                            const primaryName = studentMap[tx.student_id ?? ""]?.name ?? "—";
+                            const meta = (tx.metadata ?? {}) as Record<string, string>;
+                            const sibIds = meta.sibling_student_ids?.split(",").filter(Boolean) ?? [];
+                            if (sibIds.length === 0) return primaryName;
+                            const sibNames = sibIds.map((id) => studentMap[id]?.name).filter(Boolean);
+                            return sibNames.length > 0
+                              ? [primaryName, ...sibNames].join(", ")
+                              : primaryName;
+                          })()}
                         </td>
                         <td className="px-4 py-3.5 text-gray-600 whitespace-nowrap">
                           {formatPaymentType(tx.payment_type)}
@@ -5167,6 +5178,30 @@ export default function BillingPage({
                 value={selectedTx.cover_fees ? "Yes" : "No"}
               />
             </SidebarSection>
+
+            {(() => {
+              const meta = (selectedTx.metadata ?? {}) as Record<string, string>;
+              const sibIds = meta.sibling_student_ids?.split(",").filter(Boolean) ?? [];
+              if (sibIds.length === 0) return null;
+              const sibWeekGroups = meta.sibling_weeks?.split(";") ?? [];
+              const sibCents = meta.sibling_intended_cents?.split(",") ?? [];
+              return (
+                <SidebarSection title="Sibling Payments Included">
+                  {sibIds.map((sibId, i) => {
+                    const name = studentMap[sibId]?.name ?? sibId;
+                    const weeks = sibWeekGroups[i]?.split(",").filter(Boolean) ?? [];
+                    const cents = parseInt(sibCents[i] ?? "0", 10);
+                    return (
+                      <SidebarField
+                        key={sibId}
+                        label={name}
+                        value={`${weeks.length} week${weeks.length !== 1 ? "s" : ""} — ${formatCents(cents)}`}
+                      />
+                    );
+                  })}
+                </SidebarSection>
+              );
+            })()}
 
             <SidebarSection title="Payer">
               <SidebarField label="Name" value={selectedTx.payer_name} />
