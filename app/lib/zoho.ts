@@ -707,12 +707,31 @@ export async function buildSummerTuitionConfirmationEmail(opts: {
   planType: "weekly" | "full";
   amountDollars: string;
   weeks?: number[];
+  siblings?: Array<{
+    childLegalName: string;
+    planType: "weekly" | "full";
+    weeks?: number[];
+  }>;
 }): Promise<{ subject: string; content: string }> {
   const subject = "Summer 2026 Tuition Received — See You This Summer!";
-  const planLabel =
-    opts.planType === "full"
+
+  function makePlanLabel(planType: "weekly" | "full", weeks?: number[]): string {
+    return planType === "full"
       ? "Full Summer — all 12 weeks (May 26 – Aug 13, 2026)"
-      : `${opts.weeks?.length ?? 0} week${(opts.weeks?.length ?? 0) !== 1 ? "s" : ""}${opts.weeks && opts.weeks.length > 0 ? ` (Weeks ${opts.weeks.join(", ")})` : ""}`;
+      : `${weeks?.length ?? 0} week${(weeks?.length ?? 0) !== 1 ? "s" : ""}${weeks && weeks.length > 0 ? ` (Weeks ${weeks.join(", ")})` : ""}`;
+  }
+
+  const hasSiblings = opts.siblings && opts.siblings.length > 0;
+
+  const childrenHtml = hasSiblings
+    ? `<p>We are so excited to confirm that your Summer 2026 tuition payment of <strong>$${opts.amountDollars}</strong> has been received for the following children:</p>
+  <ul style="margin: 8px 0 16px 0; padding-left: 20px;">
+    <li><strong>${opts.childLegalName}</strong> — ${makePlanLabel(opts.planType, opts.weeks)}</li>
+    ${opts.siblings!.map((s) => `<li><strong>${s.childLegalName}</strong> — ${makePlanLabel(s.planType, s.weeks)}</li>`).join("\n    ")}
+  </ul>`
+    : `<p>We are so excited to confirm that your Summer 2026 tuition payment of <strong>$${opts.amountDollars}</strong> has been received for <strong>${opts.childLegalName}</strong>!</p>
+
+  <p><strong>Plan:</strong> ${makePlanLabel(opts.planType, opts.weeks)}</p>`;
 
   const content = `
 <!DOCTYPE html>
@@ -721,11 +740,9 @@ export async function buildSummerTuitionConfirmationEmail(opts: {
 <body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
   <p style="margin-bottom: 24px;">Dear ${opts.g1FullName},</p>
 
-  <p>We are so excited to confirm that your Summer 2026 tuition payment of <strong>$${opts.amountDollars}</strong> has been received for <strong>${opts.childLegalName}</strong>!</p>
+  ${childrenHtml}
 
-  <p><strong>Plan:</strong> ${planLabel}</p>
-
-  <p>Your child's spot is officially secured for summer camp. We can't wait to welcome them for a season full of adventure, learning, and fun at Sage Field.</p>
+  <p>Your ${hasSiblings ? "children's spots are" : "child's spot is"} officially secured for summer camp. We can't wait to welcome them for a season full of adventure, learning, and fun at Sage Field.</p>
 
   <p>If you have any questions in the meantime, please reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a>.</p>
 

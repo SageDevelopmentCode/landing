@@ -338,12 +338,57 @@ export async function POST(request: NextRequest) {
           const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
           if (!toAddress) return;
 
+          // Parse sibling data for bundled multi-child payments
+          type SiblingEmailData = { childLegalName: string; planType: "weekly" | "full"; weeks?: number[] };
+          const emailSiblings: SiblingEmailData[] = [];
+
+          if (session.metadata?.sibling_student_ids) {
+            const sibStudentIds = session.metadata.sibling_student_ids.split(",").filter(Boolean);
+            const sibAppIds = session.metadata.sibling_application_ids?.split(",") ?? [];
+            const sibPlanTypes = session.metadata.sibling_plan_types?.split(",") ?? [];
+            // sibling_weeks format: "1;2;3,4;5" — semicolons delimit weeks within a sibling, commas separate siblings
+            const sibWeeksArr = session.metadata.sibling_weeks?.split(",") ?? [];
+
+            for (let i = 0; i < sibStudentIds.length; i++) {
+              const sibWeeks = (sibWeeksArr[i] ?? "").split(";").map(Number).filter((n) => !isNaN(n) && n > 0);
+              const sibPlanType: "weekly" | "full" = sibPlanTypes[i] === "full" ? "full" : "weekly";
+
+              let sibName = "your child";
+              const sibAppId = sibAppIds[i];
+              if (sibAppId) {
+                const { data: sibApp } = await supabase
+                  .schema("parent_app")
+                  .from("applications")
+                  .select("child_legal_name")
+                  .eq("id", sibAppId)
+                  .single();
+                if (sibApp?.child_legal_name) sibName = sibApp.child_legal_name;
+              }
+              if (sibName === "your child") {
+                const { data: sibStudent } = await supabase
+                  .schema("admin")
+                  .from("students")
+                  .select("child_legal_name")
+                  .eq("id", sibStudentIds[i])
+                  .single();
+                if (sibStudent?.child_legal_name) sibName = sibStudent.child_legal_name;
+              }
+
+              emailSiblings.push({
+                childLegalName: sibName,
+                planType: sibPlanType,
+                weeks: sibWeeks.length > 0 ? sibWeeks : undefined,
+              });
+            }
+          }
+
           const { subject, content } = await buildSummerTuitionConfirmationEmail({
             g1FullName: parentName !== "N/A" ? parentName : "Parent",
             childLegalName: childName !== "N/A" ? childName : "your child",
             planType,
             amountDollars,
             weeks: weeks.length > 0 ? weeks : undefined,
+            siblings: emailSiblings.length > 0 ? emailSiblings : undefined,
           });
 
           const emailResult = await sendZohoEmail({ toAddress, subject, content });
