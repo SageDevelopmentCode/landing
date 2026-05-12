@@ -497,7 +497,7 @@ export default function HomeDemoPage() {
 
           {/* Right 7/12 — stacked photos with depth */}
           <motion.div
-            className="w-full lg:w-7/12 relative"
+            className="w-full lg:w-7/12 relative overflow-hidden lg:overflow-visible"
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
@@ -612,12 +612,12 @@ export default function HomeDemoPage() {
 
           <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
             {/* Tab list — left */}
-            <div className="w-full lg:w-[340px] flex flex-row lg:flex-col gap-3 overflow-x-auto lg:overflow-visible pb-1 lg:pb-0 flex-shrink-0">
+            <div className="w-full lg:w-[340px] flex flex-col sm:grid sm:grid-cols-3 lg:flex lg:flex-col gap-3 flex-shrink-0">
               {PROGRAMS.map((p, i) => (
                 <button
                   key={p.title}
                   onClick={() => setActiveProgram(i)}
-                  className={`flex-shrink-0 lg:flex-shrink text-left p-5 rounded-2xl border-2 transition-all duration-250 w-64 lg:w-full cursor-pointer ${
+                  className={`w-full text-left p-5 rounded-2xl border-2 transition-all duration-250 cursor-pointer ${
                     activeProgram === i
                       ? "border-primary bg-primary/5 shadow-sm"
                       : "border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm"
@@ -695,7 +695,7 @@ export default function HomeDemoPage() {
 
       {/* ─── 6. PHOTO MOSAIC — Visual storytelling, no text ───────────────── */}
       <section className="bg-white px-4 pb-4">
-        <div className="max-w-7xl mx-auto grid grid-cols-3 grid-rows-2 gap-3 h-[340px] md:h-[480px]">
+        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-3 grid-rows-2 gap-3 h-[280px] sm:h-[340px] md:h-[480px]">
           <motion.div
             className="col-span-1 row-span-2 relative rounded-2xl overflow-hidden"
             initial={{ opacity: 0, scale: 0.97 }}
@@ -711,7 +711,7 @@ export default function HomeDemoPage() {
             />
           </motion.div>
           <motion.div
-            className="col-span-2 row-span-1 relative rounded-2xl overflow-hidden"
+            className="col-span-1 md:col-span-2 row-span-1 relative rounded-2xl overflow-hidden"
             initial={{ opacity: 0, scale: 0.97 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
@@ -725,7 +725,7 @@ export default function HomeDemoPage() {
             />
           </motion.div>
           <motion.div
-            className="col-span-2 row-span-1 relative rounded-2xl overflow-hidden"
+            className="col-span-1 md:col-span-2 row-span-1 relative rounded-2xl overflow-hidden"
             initial={{ opacity: 0, scale: 0.97 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
@@ -793,7 +793,7 @@ export default function HomeDemoPage() {
           {[...STRIP_IMAGES, ...STRIP_IMAGES].map((src, i) => (
             <motion.div
               key={i}
-              className="relative w-64 h-44 flex-shrink-0 rounded-2xl overflow-hidden shadow-sm"
+              className="relative w-48 sm:w-64 h-36 sm:h-44 flex-shrink-0 rounded-2xl overflow-hidden shadow-sm"
               whileHover={{ scale: 1.03 }}
               transition={{ duration: 0.25 }}
             >
@@ -857,7 +857,7 @@ export default function HomeDemoPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.97 }}
                 transition={{ duration: 0.45, ease: "easeOut" as const }}
-                className="relative h-[420px] md:h-[520px] rounded-3xl overflow-hidden shadow-2xl"
+                className="relative h-[280px] sm:h-[420px] md:h-[520px] rounded-3xl overflow-hidden shadow-2xl"
               >
                 <Image
                   src={TIMELINE[activeStep].image}
@@ -968,7 +968,7 @@ export default function HomeDemoPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.7, ease: "easeOut" as const }}
           >
-            <div className="relative h-[520px] rounded-3xl overflow-hidden shadow-2xl">
+            <div className="relative h-[380px] lg:h-[520px] rounded-3xl overflow-hidden shadow-2xl">
               <Image
                 src="/assets/ImageTen.jpg"
                 fill
