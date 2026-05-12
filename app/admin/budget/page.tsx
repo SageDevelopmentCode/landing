@@ -5108,7 +5108,11 @@ function RevenueTab({
     );
   }
 
-  const visibleTx = transactions.filter((tx) => !tx.exclude_from_revenue);
+  const visibleTx = transactions.filter(
+    (tx) =>
+      !tx.exclude_from_revenue &&
+      (tx.metadata as Record<string, string> | null)?.is_sibling_split !== "true",
+  );
 
   const byMonth = visibleTx.reduce<Record<string, StripeTransaction[]>>(
     (acc, tx) => {
@@ -5347,10 +5351,20 @@ function RevenueTab({
                               </span>
                             </TableCell>
                             <TableCell>
-                              {tx.student_id
-                                ? (students.find((s) => s.id === tx.student_id)
-                                    ?.child_legal_name ?? tx.student_id)
-                                : "—"}
+                              {(() => {
+                                const primaryName = tx.student_id
+                                  ? (students.find((s) => s.id === tx.student_id)?.child_legal_name ?? tx.student_id)
+                                  : "—";
+                                const meta = (tx.metadata ?? {}) as Record<string, string>;
+                                const sibIds = meta.sibling_student_ids?.split(",").filter(Boolean) ?? [];
+                                if (sibIds.length === 0) return primaryName;
+                                const sibNames = sibIds
+                                  .map((id) => students.find((s) => s.id === id)?.child_legal_name)
+                                  .filter(Boolean);
+                                return sibNames.length > 0
+                                  ? [primaryName, ...sibNames].join(", ")
+                                  : primaryName;
+                              })()}
                             </TableCell>
                             <TableCell>
                               {tx.application_id ? "✓" : "—"}
