@@ -2,6 +2,7 @@ import { createAdminClient } from "@/app/lib/supabase-server";
 import { notFound } from "next/navigation";
 import AdminPreviewBanner from "../../AdminPreviewBanner";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
+import ImpersonateNotificationBell from "../../ImpersonateNotificationBell";
 import EmergencyContactsPage from "@/app/parent/emergency-contacts/EmergencyContactsPage";
 import type { ParentEmergencyContactsRecord } from "@/app/actions/getParentEmergencyContacts";
 
@@ -83,8 +84,11 @@ export default async function ImpersonateEmergencyContactsPage({
   return (
     <div className="bg-welcome-bg min-h-screen flex flex-col">
       <AdminPreviewBanner parentName={fullName} parentEmail={email} />
-      <header className="bg-white border-b border-gray-100 px-5 py-3 flex items-center justify-center">
-        <DashboardNav parentId={parentId} />
+      <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-[1fr_auto] items-center">
+        <div className="flex items-center justify-center">
+          <DashboardNav parentId={parentId} />
+        </div>
+        <ImpersonateNotificationBell parentId={parentId} />
       </header>
       <main className="flex-1 max-w-2xl mx-auto px-6 py-12 w-full pointer-events-none select-none">
         <div className="mb-10">

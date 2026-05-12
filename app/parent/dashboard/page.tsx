@@ -5,11 +5,10 @@ import {
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import Footer from "@/app/components/Footer";
 import ChildTabs from "./ChildTabs";
 import DashboardNav from "./DashboardNav";
-import OnboardingChecklistButton from "@/app/parent/components/OnboardingChecklistButton";
+import ParentHeaderRight from "@/app/parent/components/ParentHeaderRight";
 import SharedAccessBanner from "./SharedAccessBanner";
 import type { StudentSignatureMap } from "@/app/types/enrollment-signatures";
 import type { Database } from "@/app/types/database.types";
@@ -303,17 +302,7 @@ export default async function ParentDashboard() {
               isSharedAccess={isSharedAccess}
             />
           </div>
-          <div className="flex items-center justify-end gap-1">
-            <OnboardingChecklistButton />
-            {user?.email && (
-              <ProfileDropdown
-                email={user.email}
-                fullName={fullName}
-                userId={user.id}
-                profileImageUrl={profileImageUrl}
-              />
-            )}
-          </div>
+          <ParentHeaderRight userId={user.id} email={user.email ?? ""} fullName={fullName} profileImageUrl={profileImageUrl} />
         </header>
 
         <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={primaryOwnerName} />

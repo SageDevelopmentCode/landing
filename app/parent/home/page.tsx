@@ -4,15 +4,14 @@ import {
 } from "@/app/lib/supabase-server";
 import { getOnboardingProgress } from "@/app/actions/getOnboardingProgress";
 import { getChannels, getChannelMessages } from "@/app/messages/channel-actions";
+import ParentHeaderRight from "@/app/parent/components/ParentHeaderRight";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import Footer from "@/app/components/Footer";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import DashboardHeader from "@/app/parent/dashboard/DashboardHeader";
 import HomePageClient from "./HomePageClient";
-import OnboardingChecklistButton from "@/app/parent/components/OnboardingChecklistButton";
 import type {
   PaidWeeksByStudent,
   PaidHomeschoolByStudent,
@@ -333,17 +332,7 @@ export default async function ParentHomePage() {
         <div className="flex items-center justify-center">
           <DashboardNav hasEnrolledStudent={(enrolledCheck ?? []).length > 0} />
         </div>
-        <div className="flex items-center justify-end gap-1">
-          <OnboardingChecklistButton />
-          {user?.email && (
-            <ProfileDropdown
-              email={user.email}
-              fullName={fullName}
-              userId={user.id}
-              profileImageUrl={profileImageUrl}
-            />
-          )}
-        </div>
+        <ParentHeaderRight userId={user.id} email={user.email ?? ""} fullName={fullName} profileImageUrl={profileImageUrl} />
       </DashboardHeader>
 
       <main className="flex-1 overflow-y-auto">

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import ApplicationList from "@/app/apply/dashboard/ApplicationList";
 import ChildTabs from "@/app/parent/dashboard/ChildTabs";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
+import ImpersonateNotificationBell from "../ImpersonateNotificationBell";
 import AdminPreviewBanner from "../AdminPreviewBanner";
 import type { StudentSignatureMap } from "@/app/types/enrollment-signatures";
 import type { Database } from "@/app/types/database.types";
@@ -224,8 +225,11 @@ export default async function ImpersonateParentPage({
     return (
       <div>
         <AdminPreviewBanner parentName={fullName} parentEmail={email} />
-        <header className="bg-white border-b border-gray-100 px-5 py-3 flex items-center justify-center">
-          <DashboardNav parentId={parentId} />
+        <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-[1fr_auto] items-center">
+          <div className="flex items-center justify-center">
+            <DashboardNav parentId={parentId} />
+          </div>
+          <ImpersonateNotificationBell parentId={parentId} />
         </header>
         <div className="max-w-4xl mx-auto px-6 py-12">
           <div className="mb-10">

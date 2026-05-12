@@ -1,13 +1,11 @@
-import { createServerSupabaseClient } from "@/app/lib/supabase-server";
+import { createServerSupabaseClient, createAdminClient } from "@/app/lib/supabase-server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import DashboardHeader from "@/app/parent/dashboard/DashboardHeader";
 import MessagesPage from "./MessagesPage";
-import OnboardingChecklistButton from "@/app/parent/components/OnboardingChecklistButton";
-import { createAdminClient } from "@/app/lib/supabase-server";
+import ParentHeaderRight from "@/app/parent/components/ParentHeaderRight";
 
 export default async function MessagesRoute({
   searchParams,
@@ -68,12 +66,7 @@ export default async function MessagesRoute({
           <div className="flex items-center justify-center">
             <DashboardNav hasEnrolledStudent={(enrolledCheck ?? []).length > 0} />
           </div>
-          <div className="flex items-center justify-end gap-1">
-            <OnboardingChecklistButton />
-            {user?.email && (
-              <ProfileDropdown email={user.email} fullName={fullName} userId={user.id} profileImageUrl={profileImageUrl} />
-            )}
-          </div>
+          <ParentHeaderRight userId={user.id} email={user.email ?? ""} fullName={fullName} profileImageUrl={profileImageUrl} />
         </DashboardHeader>
 
         <main className="flex-1 min-h-0 flex flex-col">

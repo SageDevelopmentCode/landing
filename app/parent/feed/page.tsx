@@ -5,11 +5,10 @@ import {
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import DashboardNav from "../dashboard/DashboardNav";
 import DashboardHeader from "../dashboard/DashboardHeader";
 import ParentFeedClient from "./ParentFeedClient";
-import OnboardingChecklistButton from "@/app/parent/components/OnboardingChecklistButton";
+import ParentHeaderRight from "@/app/parent/components/ParentHeaderRight";
 import { getFeedPosts } from "@/app/teacher/feed/actions";
 
 export default async function ParentFeedPage() {
@@ -77,17 +76,7 @@ export default async function ParentFeedPage() {
         <div className="flex items-center justify-center">
           <DashboardNav hasEnrolledStudent={(enrolledCheck ?? []).length > 0} />
         </div>
-        <div className="flex items-center justify-end gap-1">
-          <OnboardingChecklistButton />
-          {user?.email && (
-            <ProfileDropdown
-              email={user.email}
-              fullName={currentUser?.full_name ?? null}
-              userId={user.id}
-              profileImageUrl={adminUser?.profile_image_url ?? null}
-            />
-          )}
-        </div>
+        <ParentHeaderRight userId={user.id} email={user.email ?? ""} fullName={currentUser?.full_name ?? null} profileImageUrl={adminUser?.profile_image_url ?? null} />
       </DashboardHeader>
 
       <main className="flex-1 flex flex-col overflow-hidden">

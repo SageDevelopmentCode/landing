@@ -2,12 +2,11 @@ import { createServerSupabaseClient, createAdminClient } from "@/app/lib/supabas
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import Footer from "@/app/components/Footer";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import DashboardHeader from "@/app/parent/dashboard/DashboardHeader";
 import EmergencyContactsPage from "./EmergencyContactsPage";
-import OnboardingChecklistButton from "@/app/parent/components/OnboardingChecklistButton";
+import ParentHeaderRight from "@/app/parent/components/ParentHeaderRight";
 import { getParentEmergencyContacts } from "@/app/actions/getParentEmergencyContacts";
 
 export default async function EmergencyContactsRoute() {
@@ -62,17 +61,7 @@ export default async function EmergencyContactsRoute() {
           <div className="flex items-center justify-center">
             <DashboardNav hasEnrolledStudent={(enrolledCheck ?? []).length > 0} />
           </div>
-          <div className="flex items-center justify-end gap-1">
-            <OnboardingChecklistButton />
-            {user?.email && (
-              <ProfileDropdown
-                email={user.email}
-                fullName={fullName}
-                userId={user.id}
-                profileImageUrl={profileImageUrl}
-              />
-            )}
-          </div>
+          <ParentHeaderRight userId={user.id} email={user.email ?? ""} fullName={fullName} profileImageUrl={profileImageUrl} />
         </DashboardHeader>
 
         <main className="flex-1 max-w-2xl mx-auto px-6 py-12 w-full">

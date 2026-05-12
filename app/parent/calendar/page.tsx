@@ -5,12 +5,11 @@ import {
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 import Footer from "@/app/components/Footer";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import DashboardHeader from "@/app/parent/dashboard/DashboardHeader";
 import ParentCalendarClient from "./ParentCalendarClient";
-import OnboardingChecklistButton from "@/app/parent/components/OnboardingChecklistButton";
+import ParentHeaderRight from "@/app/parent/components/ParentHeaderRight";
 
 export default async function ParentCalendarPage() {
   const supabase = await createServerSupabaseClient();
@@ -71,12 +70,7 @@ export default async function ParentCalendarPage() {
         <div className="flex items-center justify-center">
           <DashboardNav hasEnrolledStudent={(enrolledCheck ?? []).length > 0} />
         </div>
-        <div className="flex items-center justify-end gap-1">
-          <OnboardingChecklistButton />
-          {user?.email && (
-            <ProfileDropdown email={user.email} fullName={fullName} userId={user.id} profileImageUrl={profileImageUrl} />
-          )}
-        </div>
+        <ParentHeaderRight userId={user.id} email={user.email ?? ""} fullName={fullName} profileImageUrl={profileImageUrl} />
       </DashboardHeader>
 
       <main className="flex-1 flex flex-col">

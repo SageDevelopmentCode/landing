@@ -2,6 +2,7 @@ import { createAdminClient } from "@/app/lib/supabase-server";
 import { notFound } from "next/navigation";
 import AdminPreviewBanner from "../../AdminPreviewBanner";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
+import ImpersonateNotificationBell from "../../ImpersonateNotificationBell";
 import HomePageClient from "@/app/parent/home/HomePageClient";
 import { getOnboardingProgressForParent } from "@/app/actions/getOnboardingProgress";
 import type {
@@ -243,8 +244,11 @@ export default async function ImpersonateHomePage({
   return (
     <div className="bg-welcome-bg min-h-screen flex flex-col">
       <AdminPreviewBanner parentName={fullName} parentEmail={email} />
-      <header className="bg-white border-b border-gray-100 px-5 py-3 flex items-center justify-center">
-        <DashboardNav parentId={parentId} />
+      <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-[1fr_auto] items-center">
+        <div className="flex items-center justify-center">
+          <DashboardNav parentId={parentId} />
+        </div>
+        <ImpersonateNotificationBell parentId={parentId} />
       </header>
       <main className="flex-1 overflow-y-auto pointer-events-none select-none">
         <HomePageClient
