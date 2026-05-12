@@ -5139,76 +5139,152 @@ export default function BillingPage({
         onClose={() => setSelectedTx(null)}
         title="Transaction Details"
       >
-        {selectedTx && (
-          <div className="space-y-2">
-            <SidebarSection title="Payment">
-              <SidebarField
-                label="Amount"
-                value={formatCents(selectedTx.amount_cents)}
-              />
-              {selectedTx.intended_amount_cents != null && (
-                <SidebarField
-                  label="Base Amount"
-                  value={formatCents(selectedTx.intended_amount_cents)}
-                />
-              )}
-              <SidebarField
-                label="Type"
-                value={formatPaymentType(selectedTx.payment_type)}
-              />
-              <SidebarField label="Status" value={selectedTx.status} />
-              <SidebarField
-                label="Student"
-                value={
-                  selectedTx.student_id
-                    ? (studentMap[selectedTx.student_id]?.name ?? "—")
-                    : "—"
-                }
-              />
-              <SidebarField
-                label="Description"
-                value={selectedTx.description}
-              />
-              <SidebarField
-                label="Date"
-                value={formatDate(selectedTx.created_at)}
-              />
-              <SidebarField
-                label="Cover Fees"
-                value={selectedTx.cover_fees ? "Yes" : "No"}
-              />
-            </SidebarSection>
+        {selectedTx && (() => {
+          const meta = (selectedTx.metadata ?? {}) as Record<string, string>;
+          const sibIds = meta.sibling_student_ids?.split(",").filter(Boolean) ?? [];
+          const sibCentsArr = meta.sibling_intended_cents?.split(",").map(Number).filter(Boolean) ?? [];
+          const sibCentsTotal = sibCentsArr.reduce((a, b) => a + b, 0);
+          const primaryIntended = selectedTx.intended_amount_cents != null
+            ? selectedTx.intended_amount_cents - sibCentsTotal
+            : null;
+          const primaryWeeks = meta.weeks?.split(",").filter(Boolean) ?? [];
+          const primaryPlan = meta.plan_type === "full"
+            ? "Full Summer"
+            : primaryWeeks.length > 0
+              ? `${primaryWeeks.length} week${primaryWeeks.length !== 1 ? "s" : ""} · Weekly`
+              : null;
+          const sibWeekGroups = meta.sibling_weeks?.split(";") ?? [];
+          const sibPlanTypes = meta.sibling_plan_types?.split(",") ?? [];
+          const fee = selectedTx.cover_fees && selectedTx.intended_amount_cents != null
+            ? selectedTx.amount_cents - selectedTx.intended_amount_cents
+            : 0;
 
-            {(() => {
-              const meta = (selectedTx.metadata ?? {}) as Record<string, string>;
-              const sibIds = meta.sibling_student_ids?.split(",").filter(Boolean) ?? [];
-              if (sibIds.length === 0) return null;
-              const sibWeekGroups = meta.sibling_weeks?.split(";") ?? [];
-              const sibCents = meta.sibling_intended_cents?.split(",") ?? [];
-              return (
-                <SidebarSection title="Sibling Payments Included">
+          function getSubLine(): string | null {
+            if (selectedTx!.payment_type === "summer_tuition") return null;
+            if (meta.selected_months) {
+              const months = meta.selected_months.split(",").filter(Boolean);
+              if (months.length > 0) return months.join(", ");
+            }
+            if (meta.selected_weeks) {
+              const wks = meta.selected_weeks.split(",").filter(Boolean);
+              if (wks.length > 0) return `${wks.length} week${wks.length !== 1 ? "s" : ""}`;
+            }
+            if (meta.selected_fridays) {
+              const fridays = meta.selected_fridays.split(",").filter(Boolean);
+              if (fridays.length > 0) return `${fridays.length} Friday${fridays.length !== 1 ? "s" : ""}`;
+            }
+            return null;
+          }
+          const nonSummerSubLine = getSubLine();
+          const hasSiblings = sibIds.length > 0;
+          const hasStudents = !!selectedTx.student_id || hasSiblings;
+
+          return (
+            <div className="space-y-0 font-body">
+              {/* Header: status + date */}
+              <div className="flex items-center justify-between mb-1">
+                <StatusBadge status={selectedTx.status} />
+                <span className="text-xs text-gray-400">{formatDate(selectedTx.created_at)}</span>
+              </div>
+
+              {/* Type + description */}
+              <p className="text-base font-semibold text-gray-800 mt-3">
+                {formatPaymentType(selectedTx.payment_type)}
+              </p>
+              {selectedTx.description && (
+                <p className="text-sm text-gray-400 mt-0.5">{selectedTx.description}</p>
+              )}
+
+              <div className="border-t border-gray-100 my-4" />
+
+              {/* Students & amounts */}
+              {hasStudents && (
+                <>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                    {hasSiblings ? "Students & Amounts" : "Student"}
+                  </p>
+
+                  {/* Primary student */}
+                  {selectedTx.student_id && (
+                    <div className="mb-3">
+                      <div className="flex justify-between items-baseline text-sm">
+                        <span className="text-gray-700 font-medium">
+                          {studentMap[selectedTx.student_id]?.name ?? "—"}
+                        </span>
+                        {primaryIntended != null && (
+                          <span className="text-gray-800 font-semibold">{formatCents(primaryIntended)}</span>
+                        )}
+                      </div>
+                      {primaryPlan && (
+                        <p className="text-xs text-gray-400 mt-0.5">{primaryPlan}</p>
+                      )}
+                      {nonSummerSubLine && (
+                        <p className="text-xs text-gray-400 mt-0.5">{nonSummerSubLine}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Siblings */}
                   {sibIds.map((sibId, i) => {
-                    const name = studentMap[sibId]?.name ?? sibId;
-                    const weeks = sibWeekGroups[i]?.split(",").filter(Boolean) ?? [];
-                    const cents = parseInt(sibCents[i] ?? "0", 10);
+                    const sibName = studentMap[sibId]?.name ?? sibId;
+                    const sibWeeks = sibWeekGroups[i]?.split(",").filter(Boolean) ?? [];
+                    const sibPlan = sibPlanTypes[i] === "full"
+                      ? "Full Summer"
+                      : sibWeeks.length > 0
+                        ? `${sibWeeks.length} week${sibWeeks.length !== 1 ? "s" : ""} · Weekly`
+                        : null;
+                    const sibCents = sibCentsArr[i] ?? 0;
                     return (
-                      <SidebarField
-                        key={sibId}
-                        label={name}
-                        value={`${weeks.length} week${weeks.length !== 1 ? "s" : ""} — ${formatCents(cents)}`}
-                      />
+                      <div key={sibId} className="mb-3">
+                        <div className="flex justify-between items-baseline text-sm">
+                          <span className="text-gray-700 font-medium">{sibName}</span>
+                          {sibCents > 0 && (
+                            <span className="text-gray-800 font-semibold">{formatCents(sibCents)}</span>
+                          )}
+                        </div>
+                        {sibPlan && (
+                          <p className="text-xs text-gray-400 mt-0.5">{sibPlan}</p>
+                        )}
+                      </div>
                     );
                   })}
-                </SidebarSection>
-              );
-            })()}
 
-            <SidebarSection title="Payer">
-              <SidebarField label="Name" value={selectedTx.payer_name} />
-              <SidebarField label="Email" value={selectedTx.payer_email} />
-            </SidebarSection>
-          </div>
-        )}
+                  <div className="border-t border-gray-100 my-4" />
+                </>
+              )}
+
+              {/* Totals */}
+              <div className="space-y-2">
+                {selectedTx.intended_amount_cents != null && (
+                  <div className="flex justify-between items-baseline text-sm">
+                    <span className="text-gray-500">Subtotal</span>
+                    <span className="text-gray-700">{formatCents(selectedTx.intended_amount_cents)}</span>
+                  </div>
+                )}
+                {selectedTx.cover_fees && fee > 0 && (
+                  <div className="flex justify-between items-baseline text-sm">
+                    <span className="text-gray-500">Card processing fee</span>
+                    <span className="text-gray-700">{formatCents(fee)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-baseline text-sm font-semibold border-t border-gray-200 pt-3 mt-1">
+                  <span className="text-gray-800">Total charged</span>
+                  <span className="text-gray-800">{formatCents(selectedTx.amount_cents)}</span>
+                </div>
+              </div>
+
+              {/* Payer */}
+              {selectedTx.payer_email && (
+                <>
+                  <div className="border-t border-gray-100 my-4" />
+                  <p className="text-xs text-gray-400">
+                    Paid by <span className="text-gray-600">{selectedTx.payer_email}</span>
+                  </p>
+                </>
+              )}
+            </div>
+          );
+        })()}
       </DetailSidebar>
 
       <AnimatePresence>
