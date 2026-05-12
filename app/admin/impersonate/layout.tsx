@@ -51,7 +51,7 @@ export default async function ImpersonateLayout({
 
   const lastSignInMap: Record<string, string | null> = {};
   for (const u of authData?.users ?? []) {
-    lastSignInMap[u.id] = u.last_sign_in_at ?? null;
+    lastSignInMap[u.id] = u.updated_at ?? null;
   }
 
   const parentsWithStatus = (parents ?? []).map((p) => ({
