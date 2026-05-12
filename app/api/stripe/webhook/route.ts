@@ -938,6 +938,54 @@ export async function POST(request: NextRequest) {
     if (billingError) {
       console.error("Failed to record billing transaction:", billingError);
     }
+
+    // Insert sibling rows if this was a bundled multi-child summer payment
+    if (session.metadata?.sibling_student_ids) {
+      const sibStudentIds = session.metadata.sibling_student_ids.split(",").filter(Boolean);
+      const sibAppIds = session.metadata.sibling_application_ids?.split(",") ?? [];
+      const sibPlanTypes = session.metadata.sibling_plan_types?.split(",") ?? [];
+      const sibWeeksArr = session.metadata.sibling_weeks?.split(",") ?? [];
+      const sibGradeTiers = session.metadata.sibling_grade_tiers?.split(",") ?? [];
+      const sibCents = session.metadata.sibling_intended_cents?.split(",").map(Number) ?? [];
+      const paymentIntentId =
+        typeof session.payment_intent === "string"
+          ? session.payment_intent
+          : (session.payment_intent?.id ?? null);
+
+      for (let i = 0; i < sibStudentIds.length; i++) {
+        const { error: sibError } = await supabase
+          .schema("billing")
+          .from("stripe_transactions")
+          .upsert(
+            {
+              stripe_session_id: `${session.id}_sib_${i}`,
+              stripe_payment_intent_id: paymentIntentId,
+              payment_type: "summer_tuition",
+              amount_cents: sibCents[i] ?? 0,
+              intended_amount_cents: sibCents[i] ?? null,
+              currency: session.currency ?? "usd",
+              cover_fees: false,
+              payer_email: session.metadata?.parent_email || session.customer_email || "",
+              student_id: sibStudentIds[i],
+              application_id: sibAppIds[i] ?? null,
+              parent_id: session.metadata?.parent_id ?? null,
+              metadata: {
+                payment_type: "summer_tuition",
+                plan_type: sibPlanTypes[i] ?? "weekly",
+                weeks: (sibWeeksArr[i] ?? "").replace(/;/g, ","),
+                grade_tier: sibGradeTiers[i] ?? "primary",
+                is_sibling_split: "true",
+                primary_session_id: session.id,
+              },
+              status: "completed",
+            },
+            { onConflict: "stripe_session_id" },
+          );
+        if (sibError) {
+          console.error(`Failed to record sibling[${i}] billing transaction:`, sibError);
+        }
+      }
+    }
   }
 
   if (event.type === "payment_intent.payment_failed") {

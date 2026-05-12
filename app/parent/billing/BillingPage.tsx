@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Receipt,
@@ -1427,6 +1427,9 @@ function SummerPaymentModal({
   paidWeeks,
   initialNote,
   onClose,
+  siblingEnrollments = [],
+  siblingPaidWeeks = {},
+  siblingStudentMap = {},
 }: {
   enrollment: SummerEnrollment;
   studentName: string | null;
@@ -1435,9 +1438,12 @@ function SummerPaymentModal({
   paidWeeks: number[];
   initialNote: string;
   onClose: () => void;
+  siblingEnrollments?: SummerEnrollment[];
+  siblingPaidWeeks?: Record<string, number[]>;
+  siblingStudentMap?: Record<string, StudentInfo>;
 }) {
   const isOnWeeklyPlan = paidWeeks.length > 0;
-  const [step, setStep] = useState<"plan" | "payment">("plan");
+  const [step, setStep] = useState<"plan" | "payment" | "sibling">("plan");
   const [tab, setTab] = useState<"weekly" | "full">("weekly");
   const [selectedWeeks, setSelectedWeeks] = useState<Set<number>>(new Set());
   const [paymentMethod, setPaymentMethod] = useState<"card" | "ach">("card");
@@ -1449,6 +1455,10 @@ function SummerPaymentModal({
   const [noteSaveResult, setNoteSaveResult] = useState<
     "success" | "error" | null
   >(null);
+  const [includedSiblings, setIncludedSiblings] = useState<Record<string, boolean>>({});
+  const [siblingWeekOverrides, setSiblingWeekOverrides] = useState<Record<string, Set<number>>>({});
+  const [siblingEditorOpen, setSiblingEditorOpen] = useState<Record<string, boolean>>({});
+  const [siblingEditorDirty, setSiblingEditorDirty] = useState<Record<string, boolean>>({});
 
   const tier = getGradeTier(enrollment.child_grade);
   const weeklyRate = SUMMER_WEEKLY_CENTS[tier];
@@ -1462,18 +1472,93 @@ function SummerPaymentModal({
 
   const intendedAmountCents = tab === "full" ? fullRate : effectiveTotal;
 
+  // Siblings eligible to bundle: have unpaid weeks that overlap with what the parent just selected
+  const eligibleSiblings = siblingEnrollments.filter((sib) => {
+    const paid = siblingPaidWeeks[sib.student_id] ?? [];
+    if (paid.length >= 12) return false;
+    if (tab === "full") return paid.length === 0; // full plan: only siblings with nothing paid
+    return Array.from(selectedWeeks).some((w) => !paid.includes(w));
+  });
+
+  // Sync sibling defaults whenever the primary week selection changes.
+  // Dirty siblings (manually edited by parent) keep their overrides; clean ones track the primary.
+  useEffect(() => {
+    setIncludedSiblings((prev) =>
+      Object.fromEntries(eligibleSiblings.map((s) => [s.student_id, prev[s.student_id] ?? true])),
+    );
+    setSiblingEditorDirty((prev) =>
+      Object.fromEntries(eligibleSiblings.map((s) => [s.student_id, prev[s.student_id] ?? false])),
+    );
+    setSiblingWeekOverrides((prev) =>
+      Object.fromEntries(
+        eligibleSiblings.map((s) => {
+          if (siblingEditorDirty[s.student_id]) return [s.student_id, prev[s.student_id] ?? new Set()];
+          const paid = siblingPaidWeeks[s.student_id] ?? [];
+          const defaultWeeks = Array.from(selectedWeeks).filter((w) => !paid.includes(w));
+          return [s.student_id, new Set(defaultWeeks)];
+        }),
+      ),
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    eligibleSiblings.map((s) => s.student_id).join(","),
+    Array.from(selectedWeeks).sort((a, b) => a - b).join(","),
+  ]);
+
+  function toggleSiblingWeek(studentId: string, week: number) {
+    const paid = siblingPaidWeeks[studentId] ?? [];
+    if (paid.includes(week)) return;
+    setSiblingEditorDirty((prev) => ({ ...prev, [studentId]: true }));
+    setSiblingWeekOverrides((prev) => {
+      const next = new Set(prev[studentId] ?? []);
+      if (next.has(week)) next.delete(week);
+      else next.add(week);
+      return { ...prev, [studentId]: next };
+    });
+  }
+
+  // Build sibling payloads for checkout
+  const siblingPayloads = eligibleSiblings
+    .filter((sib) => includedSiblings[sib.student_id])
+    .map((sib) => {
+      const sibTier = getGradeTier(sib.child_grade);
+      const paid = siblingPaidWeeks[sib.student_id] ?? [];
+      const override = siblingWeekOverrides[sib.student_id];
+      const sibWeeks = override
+        ? Array.from(override).filter((w) => !paid.includes(w)).sort((a, b) => a - b)
+        : Array.from(selectedWeeks).filter((w) => !paid.includes(w)).sort((a, b) => a - b);
+      const sibPlanType: "weekly" | "full" =
+        tab === "full" && paid.length === 0 ? "full" : "weekly";
+      const sibAmount =
+        sibPlanType === "full"
+          ? SUMMER_FULL_CENTS[sibTier]
+          : sibWeeks.length * SUMMER_WEEKLY_CENTS[sibTier];
+      return {
+        studentId: sib.student_id,
+        applicationId: sib.id,
+        planType: sibPlanType,
+        selectedWeeks: sibWeeks,
+        gradeTier: sibTier,
+        intendedAmountCents: sibAmount,
+        studentName: siblingStudentMap[sib.student_id]?.name,
+      };
+    });
+
+  const siblingTotal = siblingPayloads.reduce((s, sib) => s + sib.intendedAmountCents, 0);
+  const combinedIntendedCents = intendedAmountCents + siblingTotal;
+
   const feeCents = coverFees
     ? paymentMethod === "ach"
-      ? Math.min(Math.round(intendedAmountCents * 0.008), 500)
-      : Math.round((intendedAmountCents + 30) / (1 - 0.029)) -
-        intendedAmountCents
+      ? Math.min(Math.round(combinedIntendedCents * 0.008), 500)
+      : Math.round((combinedIntendedCents + 30) / (1 - 0.029)) -
+        combinedIntendedCents
     : 0;
-  const totalWithFees = intendedAmountCents + feeCents;
+  const totalWithFees = combinedIntendedCents + feeCents;
 
   const cardFeeDisplay =
-    Math.round(((intendedAmountCents / 100) * 0.029 + 0.3) * 100) / 100;
+    Math.round(((combinedIntendedCents / 100) * 0.029 + 0.3) * 100) / 100;
   const achFeeDisplay = Math.min(
-    Math.round((intendedAmountCents / 100) * 0.008 * 100) / 100,
+    Math.round((combinedIntendedCents / 100) * 0.008 * 100) / 100,
     5.0,
   );
 
@@ -1505,6 +1590,7 @@ function SummerPaymentModal({
           intendedAmountCents,
           coverFees,
           paymentMethod,
+          siblings: siblingPayloads,
         }),
       });
       const data = await res.json();
@@ -1673,7 +1759,255 @@ function SummerPaymentModal({
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-6 py-5">
           <AnimatePresence mode="wait">
-            {step === "payment" ? (
+            {step === "sibling" ? (
+              <motion.div
+                key="sibling"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2, ease: "easeInOut" as const }}
+                className="space-y-4"
+              >
+                <div>
+                  <p className="text-base font-bold font-heading text-gray-800 mb-1">
+                    Add a sibling to this payment?
+                  </p>
+                  <p className="text-sm text-gray-500 font-body">
+                    Pay for both children in one transaction and save the extra processing fee.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  {eligibleSiblings.map((sib) => {
+                    const sibTier = getGradeTier(sib.child_grade);
+                    const paid = siblingPaidWeeks[sib.student_id] ?? [];
+                    const override = siblingWeekOverrides[sib.student_id];
+                    const sibWeeks = override
+                      ? Array.from(override).filter((w) => !paid.includes(w)).sort((a, b) => a - b)
+                      : Array.from(selectedWeeks).filter((w) => !paid.includes(w)).sort((a, b) => a - b);
+                    const sibPlan: "weekly" | "full" =
+                      tab === "full" && paid.length === 0 ? "full" : "weekly";
+                    const sibAmount =
+                      sibPlan === "full"
+                        ? SUMMER_FULL_CENTS[sibTier]
+                        : sibWeeks.length * SUMMER_WEEKLY_CENTS[sibTier];
+                    const sibName =
+                      siblingStudentMap[sib.student_id]?.name ?? "Sibling";
+                    const isIncluded = includedSiblings[sib.student_id] ?? true;
+
+                    // Detect if sibling weeks match the primary's selection (default state)
+                    const primaryWeeksForSib = Array.from(selectedWeeks)
+                      .filter((w) => !paid.includes(w))
+                      .sort((a, b) => a - b);
+                    const isSameAsPrimary =
+                      sibWeeks.length === primaryWeeksForSib.length &&
+                      sibWeeks.every((w, i) => w === primaryWeeksForSib[i]);
+                    const isEditorOpen = siblingEditorOpen[sib.student_id] ?? false;
+
+                    return (
+                      <div
+                        key={sib.student_id}
+                        className={`w-full rounded-xl border transition-colors ${
+                          isIncluded
+                            ? "border-emerald-300 bg-emerald-50"
+                            : "border-gray-200 bg-white"
+                        }`}
+                      >
+                        {/* Top row: checkbox toggle + name + amount */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIncludedSiblings((prev) => ({
+                              ...prev,
+                              [sib.student_id]: !prev[sib.student_id],
+                            }));
+                            setSiblingEditorOpen((prev) => ({
+                              ...prev,
+                              [sib.student_id]: false,
+                            }));
+                          }}
+                          className="w-full flex items-start gap-3 p-4 text-left cursor-pointer"
+                        >
+                          <span
+                            className={`flex-shrink-0 mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                              isIncluded
+                                ? "border-emerald-600 bg-emerald-600"
+                                : "border-gray-300 bg-white"
+                            }`}
+                          >
+                            {isIncluded && (
+                              <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                            )}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-sm font-semibold text-gray-800 font-heading">
+                                {sibName}
+                              </span>
+                              <span
+                                className="text-sm font-bold font-heading"
+                                style={{ color: sibAmount > 0 ? "#4a7c59" : "#9ca3af" }}
+                              >
+                                {sibPlan === "full" || sibAmount > 0 ? formatCents(sibAmount) : "—"}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              {sib.child_grade && (
+                                <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
+                                  {sib.child_grade}
+                                </span>
+                              )}
+                              <span className="text-xs text-gray-500 font-body">
+                                {sibPlan === "full"
+                                  ? "Full Summer · 12 weeks"
+                                  : sibWeeks.length === 0
+                                  ? "No weeks selected"
+                                  : isSameAsPrimary
+                                  ? `Weeks ${sibWeeks.join(", ")} · same as ${studentName ?? "first child"}`
+                                  : `Weeks ${sibWeeks.join(", ")}`}
+                              </span>
+                            </div>
+                          </div>
+                        </button>
+
+                        {/* "Edit weeks" toggle + expandable week editor */}
+                        {isIncluded && sibPlan === "weekly" && (
+                          <div className="px-4 pb-4">
+                            {!isEditorOpen ? (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setSiblingEditorOpen((prev) => ({
+                                    ...prev,
+                                    [sib.student_id]: true,
+                                  }))
+                                }
+                                className="text-xs font-semibold underline-offset-2 hover:underline cursor-pointer transition-colors"
+                                style={{ color: "#4a7c59" }}
+                              >
+                                Edit weeks
+                              </button>
+                            ) : (
+                              <div>
+                                <div className="flex items-center justify-between mb-2">
+                                  <p className="text-xs font-semibold text-gray-500 font-body">
+                                    Weeks for {sibName}
+                                  </p>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setSiblingEditorOpen((prev) => ({
+                                        ...prev,
+                                        [sib.student_id]: false,
+                                      }))
+                                    }
+                                    className="text-xs font-semibold cursor-pointer transition-colors"
+                                    style={{ color: "#4a7c59" }}
+                                  >
+                                    Done
+                                  </button>
+                                </div>
+                                <div className="grid grid-cols-3 gap-2">
+                                  {SUMMER_WEEKS.map((w) => {
+                                    const isPaidBySib = paid.includes(w.week);
+                                    const isSelected =
+                                      isPaidBySib ||
+                                      (override
+                                        ? override.has(w.week)
+                                        : sibWeeks.includes(w.week));
+                                    return (
+                                      <motion.button
+                                        key={w.week}
+                                        type="button"
+                                        disabled={isPaidBySib}
+                                        onClick={() =>
+                                          toggleSiblingWeek(sib.student_id, w.week)
+                                        }
+                                        className={`flex flex-col gap-1.5 rounded-xl px-3 py-3 text-left transition-colors ${isPaidBySib ? "cursor-default" : "cursor-pointer"}`}
+                                        animate={{
+                                          backgroundColor: isPaidBySib
+                                            ? "#f0fdf4"
+                                            : isSelected
+                                            ? "#f0f7f1"
+                                            : "#f9fafb",
+                                        }}
+                                        whileTap={isPaidBySib ? {} : { scale: 0.99 }}
+                                        transition={{ duration: 0.15 }}
+                                        style={
+                                          isPaidBySib
+                                            ? { boxShadow: "inset 3px 0 0 #16a34a" }
+                                            : isSelected
+                                            ? { boxShadow: "inset 3px 0 0 #4a7c59" }
+                                            : {}
+                                        }
+                                      >
+                                        <div className="flex items-center gap-2">
+                                          <div
+                                            className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-colors"
+                                            style={
+                                              isPaidBySib
+                                                ? { backgroundColor: "#16a34a" }
+                                                : isSelected
+                                                ? { backgroundColor: "#4a7c59" }
+                                                : {
+                                                    backgroundColor: "transparent",
+                                                    border: "2px solid #d1d5db",
+                                                  }
+                                            }
+                                          >
+                                            {(isPaidBySib || isSelected) && (
+                                              <Check
+                                                className="w-3 h-3 text-white"
+                                                strokeWidth={3}
+                                              />
+                                            )}
+                                          </div>
+                                          <span
+                                            className={`text-sm font-semibold font-heading ${isPaidBySib ? "text-green-700" : "text-gray-800"}`}
+                                          >
+                                            Week {w.week}
+                                          </span>
+                                        </div>
+                                        <p
+                                          className={`text-xs font-body ${isPaidBySib ? "text-green-600" : "text-gray-400"}`}
+                                        >
+                                          {w.dates}
+                                        </p>
+                                        {isPaidBySib ? (
+                                          <p className="text-xs font-semibold text-green-600 font-body">
+                                            Paid ✓
+                                          </p>
+                                        ) : (
+                                          <p className="text-xs text-gray-500 font-body truncate">
+                                            {w.theme}
+                                          </p>
+                                        )}
+                                      </motion.button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {siblingPayloads.length > 0 && (
+                  <div
+                    className="rounded-xl p-3 flex items-center justify-between"
+                    style={{ backgroundColor: "#f0f7f1" }}
+                  >
+                    <span className="text-sm text-gray-600 font-body">Combined total</span>
+                    <span className="text-sm font-bold font-heading" style={{ color: "#4a7c59" }}>
+                      {formatCents(combinedIntendedCents)}
+                    </span>
+                  </div>
+                )}
+              </motion.div>
+            ) : step === "payment" ? (
               <motion.div
                 key="payment"
                 initial={{ opacity: 0, x: 10 }}
@@ -2036,22 +2370,32 @@ function SummerPaymentModal({
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
-          {step === "payment" && (
+          {(step === "payment" || step === "sibling") && (
             <button
-              onClick={() => setStep("plan")}
+              onClick={() => step === "payment" ? (eligibleSiblings.length > 0 ? setStep("sibling") : setStep("plan")) : setStep("plan")}
               className="px-4 py-3 rounded-xl text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer"
             >
               Back
             </button>
           )}
           <button
-            disabled={step === "plan" ? !canContinue : loading || !coverFees}
+            disabled={step === "plan" ? !canContinue : step === "sibling" ? false : loading || !coverFees}
             className="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             style={{ backgroundColor: "#4a7c59" }}
-            onClick={step === "plan" ? () => setStep("payment") : handlePayNow}
+            onClick={
+              step === "plan"
+                ? () => { eligibleSiblings.length > 0 ? setStep("sibling") : setStep("payment"); }
+                : step === "sibling"
+                ? () => setStep("payment")
+                : handlePayNow
+            }
           >
             {step === "plan"
               ? continueLabel
+              : step === "sibling"
+              ? siblingPayloads.length > 0
+                ? `Continue · ${formatCents(combinedIntendedCents)}`
+                : "Continue"
               : loading
                 ? "Processing…"
                 : `Pay Now · ${formatCents(totalWithFees)}`}
@@ -3415,6 +3759,8 @@ function PendingPaymentsSection({
   paidHomeschoolByStudent,
   activeStudentId,
   schoolYearOnlyApps,
+  showMultiChildBanner,
+  onOpenFirstSummer,
 }: {
   summerEnrollments: SummerEnrollment[];
   unpaidSummerEnrollments: SummerEnrollment[];
@@ -3432,6 +3778,8 @@ function PendingPaymentsSection({
   paidHomeschoolByStudent: PaidHomeschoolByStudent;
   activeStudentId: string | null;
   schoolYearOnlyApps: SchoolYearOnlyApp[];
+  showMultiChildBanner: boolean;
+  onOpenFirstSummer: () => void;
 }) {
   const nonEnrolledMap = new Map(nonEnrolledApps.map((a) => [a.student_id, a]));
 
@@ -3484,7 +3832,29 @@ function PendingPaymentsSection({
     : undefined;
 
   return (
-    <AnimatePresence mode="wait">
+    <>
+      {showMultiChildBanner && (
+        <div className="mb-4 flex items-start gap-3 rounded-xl border border-[#4a7c59]/20 bg-[#4a7c59]/5 px-4 py-3">
+          <svg className="mt-0.5 shrink-0 text-[#4a7c59]" width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+          </svg>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold font-body text-[#4a7c59]">
+              Pay for both children in one transaction
+            </p>
+            <p className="text-xs font-body text-gray-500 mt-0.5">
+              Add siblings during checkout and pay only one processing fee.
+            </p>
+          </div>
+          <button
+            onClick={onOpenFirstSummer}
+            className="shrink-0 text-xs font-semibold font-body text-[#4a7c59] border border-[#4a7c59]/30 rounded-lg px-3 py-1.5 hover:bg-[#4a7c59]/10 transition-colors cursor-pointer"
+          >
+            View tuition
+          </button>
+        </div>
+      )}
+      <AnimatePresence mode="wait">
       <motion.div
         key={activeStudentId}
         initial={{ opacity: 0, y: 6 }}
@@ -3583,6 +3953,7 @@ function PendingPaymentsSection({
         )}
       </motion.div>
     </AnimatePresence>
+    </>
   );
 }
 
@@ -4413,6 +4784,11 @@ export default function BillingPage({
     (tx) => !tx.student_id || !nonEnrolledStudentIds.has(tx.student_id),
   );
 
+  const multiChildSummerEligible =
+    unpaidSummerEnrollments.filter(
+      (e) => e.program === "summer_26" || e.program === "both",
+    ).length >= 2;
+
   const hasPendingContent =
     unpaidSummerEnrollments.length > 0 ||
     pendingRequests.length > 0 ||
@@ -4606,6 +4982,14 @@ export default function BillingPage({
                 paidHomeschoolByStudent={paidHomeschoolByStudent}
                 activeStudentId={activeStudentId}
                 schoolYearOnlyApps={schoolYearOnlyApps}
+                showMultiChildBanner={multiChildSummerEligible}
+                onOpenFirstSummer={() =>
+                  setSelectedSummerEnrollment(
+                    unpaidSummerEnrollments.find(
+                      (e) => e.program === "summer_26" || e.program === "both",
+                    ) ?? null,
+                  )
+                }
               />
             </div>
           )}
@@ -4808,6 +5192,13 @@ export default function BillingPage({
               summerNotesByStudent[selectedSummerEnrollment.student_id] ?? ""
             }
             onClose={() => setSelectedSummerEnrollment(null)}
+            siblingEnrollments={unpaidSummerEnrollments.filter(
+              (e) =>
+                e.student_id !== selectedSummerEnrollment.student_id &&
+                e.program !== "homeschool_drop_in",
+            )}
+            siblingPaidWeeks={paidWeeksByStudent}
+            siblingStudentMap={studentMap}
           />
         )}
         {selectedAftercareEnrollment && (

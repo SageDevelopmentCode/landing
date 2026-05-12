@@ -6,6 +6,16 @@ import { getOrCreateStripeCustomer } from "@/app/lib/stripe-customer";
 const SUMMER_WEEKLY_CENTS = { primary: 37500, upper: 35000 };
 const SUMMER_FULL_CENTS = { primary: 405000, upper: 378000 };
 
+const siblingSchema = z.object({
+  studentId: z.string(),
+  applicationId: z.string(),
+  planType: z.enum(["weekly", "full"]),
+  selectedWeeks: z.array(z.number()).default([]),
+  gradeTier: z.enum(["primary", "upper"]),
+  intendedAmountCents: z.number().int().positive(),
+  studentName: z.string().optional(),
+});
+
 const schema = z.object({
   parentId: z.string(),
   parentEmail: z.string().email("Valid email required"),
@@ -17,6 +27,7 @@ const schema = z.object({
   intendedAmountCents: z.number().int().positive(),
   coverFees: z.boolean().optional().default(false),
   paymentMethod: z.enum(["card", "ach"]).optional().default("card"),
+  siblings: z.array(siblingSchema).optional().default([]),
 });
 
 export async function POST(request: NextRequest) {
@@ -35,6 +46,7 @@ export async function POST(request: NextRequest) {
       intendedAmountCents,
       coverFees,
       paymentMethod,
+      siblings,
     } = validated;
 
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
@@ -76,11 +88,42 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Add sibling line items
+    for (const sib of siblings) {
+      if (sib.planType === "full") {
+        lineItems.push({
+          quantity: 1,
+          price_data: {
+            currency: "usd",
+            unit_amount: SUMMER_FULL_CENTS[sib.gradeTier],
+            product_data: {
+              name: `${sib.studentName ? sib.studentName + " — " : ""}Summer 2026 Tuition — Full Summer (12 Weeks)`,
+              description: "Sage Field Private School — May 26 – Aug 13, 2026",
+            },
+          },
+        });
+      } else {
+        lineItems.push({
+          quantity: sib.selectedWeeks.length,
+          price_data: {
+            currency: "usd",
+            unit_amount: SUMMER_WEEKLY_CENTS[sib.gradeTier],
+            product_data: {
+              name: `${sib.studentName ? sib.studentName + " — " : ""}Summer 2026 Tuition — Weekly (${sib.selectedWeeks.length} week${sib.selectedWeeks.length !== 1 ? "s" : ""})`,
+              description: `Weeks: ${sib.selectedWeeks.join(", ")}`,
+            },
+          },
+        });
+      }
+    }
+
+    const totalIntendedCents = intendedAmountCents + siblings.reduce((sum, s) => sum + s.intendedAmountCents, 0);
+
     if (coverFees) {
       const feeCents =
         paymentMethod === "ach"
-          ? Math.min(Math.round(intendedAmountCents * 0.008), 500)
-          : Math.round((intendedAmountCents + 30) / (1 - 0.029)) - intendedAmountCents;
+          ? Math.min(Math.round(totalIntendedCents * 0.008), 500)
+          : Math.round((totalIntendedCents + 30) / (1 - 0.029)) - totalIntendedCents;
 
       lineItems.push({
         quantity: 1,
@@ -125,8 +168,16 @@ export async function POST(request: NextRequest) {
         grade_tier: gradeTier,
         cover_fees: String(coverFees),
         payment_method: paymentMethod,
-        intended_amount_cents: String(intendedAmountCents),
+        intended_amount_cents: String(totalIntendedCents),
         description,
+        ...(siblings.length > 0 && {
+          sibling_student_ids: siblings.map((s) => s.studentId).join(","),
+          sibling_application_ids: siblings.map((s) => s.applicationId).join(","),
+          sibling_plan_types: siblings.map((s) => s.planType).join(","),
+          sibling_weeks: siblings.map((s) => s.selectedWeeks.join(";")).join(","),
+          sibling_grade_tiers: siblings.map((s) => s.gradeTier).join(","),
+          sibling_intended_cents: siblings.map((s) => String(s.intendedAmountCents)).join(","),
+        }),
       },
       success_url: `${baseUrl}/parent/billing/summer-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/parent/billing`,
