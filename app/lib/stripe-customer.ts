@@ -1,5 +1,6 @@
 import { getStripe } from "@/app/lib/stripe";
 import { createAdminClient } from "@/app/lib/supabase-server";
+import Stripe from "stripe";
 
 /**
  * Returns an existing Stripe Customer ID for the user, or creates one and stores it.
@@ -20,7 +21,16 @@ export async function getOrCreateStripeCustomer(
     .single();
 
   if (data?.stripe_customer_id) {
-    return data.stripe_customer_id;
+    try {
+      const existing = await getStripe().customers.retrieve(data.stripe_customer_id);
+      if (!existing.deleted) return data.stripe_customer_id;
+      // deleted customer — fall through to create a new one
+    } catch (err: unknown) {
+      if (!(err instanceof Stripe.errors.StripeError && err.code === "resource_missing")) {
+        throw err; // unexpected error, re-throw
+      }
+      // resource_missing = stale ID from wrong mode/account — fall through
+    }
   }
 
   const customer = await getStripe().customers.create({
