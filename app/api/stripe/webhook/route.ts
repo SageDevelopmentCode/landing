@@ -1033,6 +1033,302 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  if (event.type === "payment_intent.succeeded") {
+    const intent = event.data.object as Stripe.PaymentIntent;
+    const metadata = intent.metadata ?? {};
+    const parentId = metadata.parent_id ?? null;
+    const payerEmail = metadata.parent_email ?? intent.receipt_email ?? null;
+
+    const supabase = createAdminClient();
+
+    // Backfill stripe_customer_id if missing
+    if (parentId && intent.customer) {
+      await supabase
+        .schema("admin")
+        .from("users")
+        .update({ stripe_customer_id: String(intent.customer) })
+        .eq("id", parentId)
+        .is("stripe_customer_id", null);
+    }
+
+    // Write to billing.stripe_transactions
+    // stripe_session_id reuses the PaymentIntent ID (satisfies NOT NULL UNIQUE constraint)
+    const { error: billingError } = await supabase
+      .schema("billing")
+      .from("stripe_transactions")
+      .upsert(
+        {
+          stripe_session_id: intent.id,
+          stripe_payment_intent_id: intent.id,
+          payment_type: metadata.payment_type ?? "unknown",
+          amount_cents: intent.amount,
+          intended_amount_cents: metadata.intended_amount_cents
+            ? parseInt(metadata.intended_amount_cents)
+            : null,
+          currency: intent.currency,
+          cover_fees: metadata.cover_fees === "true",
+          payer_name: null,
+          payer_email: payerEmail,
+          description: metadata.description ?? null,
+          student_id: metadata.student_id ?? null,
+          application_id: metadata.application_id ?? null,
+          parent_id: parentId,
+          metadata: intent.metadata,
+          status: "completed",
+          is_deleted: false,
+        },
+        { onConflict: "stripe_session_id" },
+      );
+
+    if (billingError) {
+      console.error("Failed to record mobile billing transaction:", billingError);
+    }
+
+    // Per-payment-type Discord + email notifications
+    if (metadata.payment_type === "summer_tuition") {
+      const applicationId = metadata.application_id;
+      const studentId = metadata.student_id;
+      const planType = (metadata.plan_type ?? "full") as "weekly" | "full";
+      const weeksStr = metadata.weeks ?? "";
+      const weeks = weeksStr ? weeksStr.split(",").map(Number).filter((n: number) => !isNaN(n)) : [];
+      const amountCents = intent.amount;
+      const amountDollars = (amountCents / 100).toFixed(2);
+
+      let parentName = "N/A";
+      let parentEmailAddr = payerEmail ?? "N/A";
+      let childName = "N/A";
+
+      if (applicationId) {
+        const { data: application } = await supabase
+          .schema("parent_app")
+          .from("applications")
+          .select("g1_full_name, g1_email, child_legal_name")
+          .eq("id", applicationId)
+          .single();
+        if (application) {
+          parentName = application.g1_full_name ?? "N/A";
+          parentEmailAddr = application.g1_email ?? payerEmail ?? "N/A";
+          childName = application.child_legal_name ?? "N/A";
+        }
+      }
+      if (childName === "N/A" && studentId) {
+        const { data: student } = await supabase
+          .schema("admin")
+          .from("students")
+          .select("child_legal_name")
+          .eq("id", studentId)
+          .single();
+        if (student) childName = student.child_legal_name ?? "N/A";
+      }
+
+      sendDiscordNotification(
+        createSummerTuitionEmbed({ parentName, parentEmail: parentEmailAddr, childName, planType, amountCents, weeks: weeks.length > 0 ? weeks : undefined }),
+      ).catch((err) => console.error("Mobile summer tuition Discord notification failed:", err));
+
+      (async () => {
+        try {
+          const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
+          if (!toAddress) return;
+          const { subject, content } = await buildSummerTuitionConfirmationEmail({
+            g1FullName: parentName !== "N/A" ? parentName : "Parent",
+            childLegalName: childName !== "N/A" ? childName : "your child",
+            planType,
+            amountDollars,
+            weeks: weeks.length > 0 ? weeks : undefined,
+          });
+          const emailResult = await sendZohoEmail({ toAddress, subject, content });
+          if (emailResult.success) {
+            await supabase.schema("email_logs").from("sends").insert({
+              to_address: toAddress,
+              subject,
+              template: "summer_tuition_confirmation",
+              application_id: applicationId ?? null,
+              status: "success",
+            });
+          } else {
+            throw new Error(emailResult.error ?? "Unknown email error");
+          }
+        } catch (err) {
+          console.error("Mobile summer tuition confirmation email failed:", err);
+          sendDiscordNotification(createErrorEmbed({ context: "Mobile summer tuition confirmation email", error: String(err), details: { applicationId: applicationId ?? "N/A", studentId: studentId ?? "N/A" } })).catch(() => {});
+        }
+      })();
+    } else if (metadata.payment_type === "aftercare_tuition") {
+      const applicationId = metadata.application_id;
+      const studentId = metadata.student_id;
+      const planType = (metadata.plan_type ?? "monthly") as "monthly" | "daily";
+      const selectedMonths = metadata.selected_months ? metadata.selected_months.split(",").filter(Boolean) : [];
+      const selectedDays = metadata.selected_days ? metadata.selected_days.split(",").filter(Boolean) : [];
+      const amountCents = intent.amount;
+      const amountDollars = (amountCents / 100).toFixed(2);
+
+      let parentName = "N/A";
+      let parentEmailAddr = payerEmail ?? "N/A";
+      let childName = "N/A";
+
+      if (applicationId) {
+        const { data: application } = await supabase
+          .schema("parent_app")
+          .from("applications")
+          .select("g1_full_name, g1_email, child_legal_name")
+          .eq("id", applicationId)
+          .single();
+        if (application) {
+          parentName = application.g1_full_name ?? "N/A";
+          parentEmailAddr = application.g1_email ?? payerEmail ?? "N/A";
+          childName = application.child_legal_name ?? "N/A";
+        }
+      } else if (studentId) {
+        const { data: student } = await supabase.schema("admin").from("students").select("child_legal_name").eq("id", studentId).single();
+        if (student) childName = student.child_legal_name ?? "N/A";
+      }
+
+      sendDiscordNotification(
+        createAftercareTuitionEmbed({ parentName, parentEmail: parentEmailAddr, childName, planType, amountCents, selectedMonths: selectedMonths.length > 0 ? selectedMonths : undefined, selectedDays: selectedDays.length > 0 ? selectedDays : undefined }),
+      ).catch((err) => console.error("Mobile aftercare Discord notification failed:", err));
+
+      (async () => {
+        try {
+          const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
+          if (!toAddress) return;
+          const { subject, content } = await buildAftercareConfirmationEmail({
+            g1FullName: parentName !== "N/A" ? parentName : "Parent",
+            childLegalName: childName !== "N/A" ? childName : "your child",
+            planType,
+            selectedMonths,
+            selectedDays,
+            amountDollars,
+          });
+          const emailResult = await sendZohoEmail({ toAddress, subject, content });
+          if (emailResult.success) {
+            await supabase.schema("email_logs").from("sends").insert({ to_address: toAddress, subject, template: "aftercare_tuition_confirmation", application_id: applicationId ?? null, status: "success" });
+          } else {
+            throw new Error(emailResult.error ?? "Unknown email error");
+          }
+        } catch (err) {
+          console.error("Mobile aftercare confirmation email failed:", err);
+          sendDiscordNotification(createErrorEmbed({ context: "Mobile aftercare confirmation email", error: String(err), details: { applicationId: applicationId ?? "N/A", studentId: studentId ?? "N/A" } })).catch(() => {});
+        }
+      })();
+    } else if (metadata.payment_type === "homeschool_dropin") {
+      const applicationId = metadata.application_id;
+      const studentId = metadata.student_id;
+      const program = metadata.program ?? "summer_26";
+      const tier = metadata.tier ?? "dropin";
+      const selectedDays = metadata.selected_days ? metadata.selected_days.split(",").filter(Boolean) : [];
+      const selectedWeeks = metadata.selected_weeks ? metadata.selected_weeks.split(",").map(Number).filter(Boolean) : [];
+      const amountCents = intent.amount;
+      const amountDollars = (amountCents / 100).toFixed(2);
+
+      let parentName = "N/A";
+      let parentEmailAddr = payerEmail ?? "N/A";
+      let childName = "N/A";
+
+      if (applicationId) {
+        const { data: application } = await supabase
+          .schema("parent_app")
+          .from("applications")
+          .select("g1_full_name, g1_email, child_legal_name")
+          .eq("id", applicationId)
+          .single();
+        if (application) {
+          parentName = application.g1_full_name ?? "N/A";
+          parentEmailAddr = application.g1_email ?? payerEmail ?? "N/A";
+          childName = application.child_legal_name ?? "N/A";
+        }
+      } else if (studentId) {
+        const { data: student } = await supabase.schema("admin").from("students").select("child_legal_name").eq("id", studentId).single();
+        if (student) childName = student.child_legal_name ?? "N/A";
+      }
+
+      sendDiscordNotification(
+        createHomeschoolDropInEmbed({ parentName, parentEmail: parentEmailAddr, childName, program, tier, selectedDays: selectedDays.length > 0 ? selectedDays : undefined, selectedWeeks: selectedWeeks.length > 0 ? selectedWeeks : undefined, amountCents }),
+      ).catch((err) => console.error("Mobile homeschool Discord notification failed:", err));
+
+      (async () => {
+        try {
+          const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
+          if (!toAddress) return;
+          const { subject, content } = await buildHomeschoolDropInConfirmationEmail({
+            g1FullName: parentName !== "N/A" ? parentName : "Parent",
+            childLegalName: childName !== "N/A" ? childName : "your child",
+            program,
+            tier,
+            selectedDays,
+            selectedWeeks,
+            amountDollars,
+          });
+          const emailResult = await sendZohoEmail({ toAddress, subject, content });
+          if (emailResult.success) {
+            await supabase.schema("email_logs").from("sends").insert({ to_address: toAddress, subject, template: "homeschool_dropin_confirmation", application_id: applicationId ?? null, status: "success" });
+          } else {
+            throw new Error(emailResult.error ?? "Unknown email error");
+          }
+        } catch (err) {
+          console.error("Mobile homeschool drop-in confirmation email failed:", err);
+          sendDiscordNotification(createErrorEmbed({ context: "Mobile homeschool drop-in confirmation email", error: String(err), details: { applicationId: applicationId ?? "N/A", studentId: studentId ?? "N/A" } })).catch(() => {});
+        }
+      })();
+    } else if (metadata.payment_type === "fun_friday_tuition") {
+      const applicationId = metadata.application_id;
+      const studentId = metadata.student_id;
+      const planType = (metadata.plan_type ?? "monthly") as "monthly" | "dropin";
+      const selectedMonths = metadata.selected_months ? metadata.selected_months.split(",").filter(Boolean) : [];
+      const selectedFridays = metadata.selected_fridays ? metadata.selected_fridays.split(",").filter(Boolean) : [];
+      const amountCents = intent.amount;
+      const amountDollars = (amountCents / 100).toFixed(2);
+
+      let parentName = "N/A";
+      let parentEmailAddr = payerEmail ?? "N/A";
+      let childName = "N/A";
+
+      if (applicationId) {
+        const { data: application } = await supabase
+          .schema("parent_app")
+          .from("applications")
+          .select("g1_full_name, g1_email, child_legal_name")
+          .eq("id", applicationId)
+          .single();
+        if (application) {
+          parentName = application.g1_full_name ?? "N/A";
+          parentEmailAddr = application.g1_email ?? payerEmail ?? "N/A";
+          childName = application.child_legal_name ?? "N/A";
+        }
+      } else if (studentId) {
+        const { data: student } = await supabase.schema("admin").from("students").select("child_legal_name").eq("id", studentId).single();
+        if (student) childName = student.child_legal_name ?? "N/A";
+      }
+
+      sendDiscordNotification(
+        createFunFridayTuitionEmbed({ parentName, parentEmail: parentEmailAddr, childName, planType, amountCents, selectedMonths: selectedMonths.length > 0 ? selectedMonths : undefined, selectedFridays: selectedFridays.length > 0 ? selectedFridays : undefined }),
+      ).catch((err) => console.error("Mobile fun friday Discord notification failed:", err));
+
+      (async () => {
+        try {
+          const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
+          if (!toAddress) return;
+          const { subject, content } = await buildFunFridayConfirmationEmail({
+            g1FullName: parentName !== "N/A" ? parentName : "Parent",
+            childLegalName: childName !== "N/A" ? childName : "your child",
+            planType,
+            selectedMonths,
+            selectedFridays,
+            amountDollars,
+          });
+          const emailResult = await sendZohoEmail({ toAddress, subject, content });
+          if (emailResult.success) {
+            await supabase.schema("email_logs").from("sends").insert({ to_address: toAddress, subject, template: "fun_friday_tuition_confirmation", application_id: applicationId ?? null, status: "success" });
+          } else {
+            throw new Error(emailResult.error ?? "Unknown email error");
+          }
+        } catch (err) {
+          console.error("Mobile fun friday confirmation email failed:", err);
+          sendDiscordNotification(createErrorEmbed({ context: "Mobile fun friday confirmation email", error: String(err), details: { applicationId: applicationId ?? "N/A", studentId: studentId ?? "N/A" } })).catch(() => {});
+        }
+      })();
+    }
+  }
+
   if (event.type === "payment_intent.payment_failed") {
     const intent = event.data.object as Stripe.PaymentIntent;
     const failureMessage = intent.last_payment_error?.message ?? "Unknown error";

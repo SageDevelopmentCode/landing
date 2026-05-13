@@ -42,6 +42,7 @@ const schema = z.object({
   intendedAmountCents: z.number().int().positive(),
   coverFees: z.boolean().optional().default(false),
   paymentMethod: z.enum(["card", "ach"]).optional().default("card"),
+  mobile: z.boolean().optional().default(false),
 });
 
 export async function POST(request: NextRequest) {
@@ -63,6 +64,7 @@ export async function POST(request: NextRequest) {
       intendedAmountCents,
       coverFees,
       paymentMethod,
+      mobile,
     } = validated;
 
     const programLabel = PROGRAM_LABELS[program];
@@ -112,6 +114,40 @@ export async function POST(request: NextRequest) {
     }
 
     const stripeCustomerId = await getOrCreateStripeCustomer(parentId, parentEmail);
+
+    if (mobile) {
+      const mobileFee = coverFees
+        ? paymentMethod === "ach"
+          ? Math.min(Math.round(intendedAmountCents * 0.008), 500)
+          : Math.round((intendedAmountCents + 30) / (1 - 0.029)) - intendedAmountCents
+        : 0;
+      const paymentIntent = await getStripe().paymentIntents.create({
+        amount: intendedAmountCents + mobileFee,
+        currency: "usd",
+        customer: stripeCustomerId,
+        payment_method_types: ["card", "us_bank_account"],
+        receipt_email: parentEmail,
+        setup_future_usage: "off_session",
+        metadata: {
+          payment_type: "homeschool_dropin",
+          parent_id: parentId,
+          parent_email: parentEmail,
+          student_id: studentId,
+          application_id: applicationId,
+          program,
+          tier,
+          grade_tier: gradeTier,
+          selected_days: selectedDays.join(","),
+          selected_weeks: selectedWeeks.join(","),
+          week_selections: weekSelectionsJson ?? "",
+          cover_fees: String(coverFees),
+          payment_method: paymentMethod,
+          intended_amount_cents: String(intendedAmountCents),
+          description,
+        },
+      });
+      return NextResponse.json({ clientSecret: paymentIntent.client_secret });
+    }
 
     const session = await getStripe().checkout.sessions.create({
       mode: "payment",

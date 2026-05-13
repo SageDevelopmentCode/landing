@@ -28,6 +28,7 @@ const schema = z.object({
   coverFees: z.boolean().optional().default(false),
   paymentMethod: z.enum(["card", "ach"]).optional().default("card"),
   siblings: z.array(siblingSchema).optional().default([]),
+  mobile: z.boolean().optional().default(false),
 });
 
 export async function POST(request: NextRequest) {
@@ -47,6 +48,7 @@ export async function POST(request: NextRequest) {
       coverFees,
       paymentMethod,
       siblings,
+      mobile,
     } = validated;
 
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
@@ -143,6 +145,37 @@ export async function POST(request: NextRequest) {
         : `Summer 2026 Tuition — ${selectedWeeks.length} Week${selectedWeeks.length !== 1 ? "s" : ""}`;
 
     const stripeCustomerId = await getOrCreateStripeCustomer(parentId, parentEmail);
+
+    if (mobile) {
+      const mobileFee = coverFees
+        ? paymentMethod === "ach"
+          ? Math.min(Math.round(totalIntendedCents * 0.008), 500)
+          : Math.round((totalIntendedCents + 30) / (1 - 0.029)) - totalIntendedCents
+        : 0;
+      const paymentIntent = await getStripe().paymentIntents.create({
+        amount: totalIntendedCents + mobileFee,
+        currency: "usd",
+        customer: stripeCustomerId,
+        payment_method_types: ["card", "us_bank_account"],
+        receipt_email: parentEmail,
+        setup_future_usage: "off_session",
+        metadata: {
+          payment_type: "summer_tuition",
+          parent_id: parentId,
+          parent_email: parentEmail,
+          student_id: studentId,
+          application_id: applicationId,
+          plan_type: planType,
+          weeks: planType === "weekly" ? selectedWeeks.join(",") : "1,2,3,4,5,6,7,8,9,10,11,12",
+          grade_tier: gradeTier,
+          cover_fees: String(coverFees),
+          payment_method: paymentMethod,
+          intended_amount_cents: String(totalIntendedCents),
+          description,
+        },
+      });
+      return NextResponse.json({ clientSecret: paymentIntent.client_secret });
+    }
 
     const session = await getStripe().checkout.sessions.create({
       mode: "payment",

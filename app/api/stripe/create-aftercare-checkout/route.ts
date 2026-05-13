@@ -34,6 +34,7 @@ const schema = z.object({
   intendedAmountCents: z.number().int().positive(),
   coverFees: z.boolean().optional().default(false),
   paymentMethod: z.enum(["card", "ach"]).optional().default("card"),
+  mobile: z.boolean().optional().default(false),
 });
 
 const MONTH_LABELS: Record<string, string> = {
@@ -59,6 +60,7 @@ export async function POST(request: NextRequest) {
       intendedAmountCents,
       coverFees,
       paymentMethod,
+      mobile,
     } = validated;
 
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
@@ -129,6 +131,37 @@ export async function POST(request: NextRequest) {
     }
 
     const stripeCustomerId = await getOrCreateStripeCustomer(parentId, parentEmail);
+
+    if (mobile) {
+      const mobileFee = coverFees
+        ? paymentMethod === "ach"
+          ? Math.min(Math.round(intendedAmountCents * 0.008), 500)
+          : Math.round((intendedAmountCents + 30) / (1 - 0.029)) - intendedAmountCents
+        : 0;
+      const paymentIntent = await getStripe().paymentIntents.create({
+        amount: intendedAmountCents + mobileFee,
+        currency: "usd",
+        customer: stripeCustomerId,
+        payment_method_types: ["card", "us_bank_account"],
+        receipt_email: parentEmail,
+        setup_future_usage: "off_session",
+        metadata: {
+          payment_type: "aftercare_tuition",
+          parent_id: parentId,
+          parent_email: parentEmail,
+          student_id: studentId,
+          application_id: applicationId,
+          plan_type: planType,
+          selected_months: selectedMonths.join(","),
+          selected_days: selectedDays.join(","),
+          cover_fees: String(coverFees),
+          payment_method: paymentMethod,
+          intended_amount_cents: String(intendedAmountCents),
+          description,
+        },
+      });
+      return NextResponse.json({ clientSecret: paymentIntent.client_secret });
+    }
 
     const session = await getStripe().checkout.sessions.create({
       mode: "payment",
