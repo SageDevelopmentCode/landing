@@ -146,7 +146,15 @@ export async function POST(request: NextRequest) {
           description,
         },
       });
-      return NextResponse.json({ clientSecret: paymentIntent.client_secret });
+      const ephemeralKey = await getStripe().ephemeralKeys.create(
+        { customer: stripeCustomerId },
+        { apiVersion: "2026-02-25.clover" },
+      );
+      return NextResponse.json({
+        clientSecret: paymentIntent.client_secret,
+        ephemeralKey: ephemeralKey.secret,
+        customerId: stripeCustomerId,
+      });
     }
 
     const session = await getStripe().checkout.sessions.create({
