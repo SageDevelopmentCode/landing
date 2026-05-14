@@ -362,6 +362,7 @@ export async function recordSummerPickup(
       {
         student_id: studentId,
         date,
+        recorded_by: user.id,
         pickup_time: pickupTime,
         picked_up_by_name: pickedUpByName,
         picked_up_by_relationship: pickedUpByRelationship,
@@ -373,9 +374,12 @@ export async function recordSummerPickup(
     .select('id, date, student_id, recorded_by, notes, paid_for_day, pickup_time, picked_up_by_name, picked_up_by_relationship')
     .single()
 
-  if (error || !data) return null
+  if (error || !data) {
+    console.error('[recordSummerPickup] error:', error)
+    return null
+  }
 
-  return {
+  const record: SummerRecord = {
     id: data.id,
     date: data.date,
     student_id: data.student_id,
@@ -386,6 +390,31 @@ export async function recordSummerPickup(
     picked_up_by_name: data.picked_up_by_name ?? null,
     picked_up_by_relationship: data.picked_up_by_relationship ?? null,
   }
+
+  adminClient
+    .schema('admin')
+    .from('students')
+    .select('child_legal_name')
+    .eq('id', studentId)
+    .single()
+    .then(({ data: student }) => {
+      void sendDiscordNotification(
+        {
+          title: '🚗 Summer Pickup Recorded',
+          color: 0xd97706,
+          fields: [
+            { name: 'Student', value: student?.child_legal_name ?? 'Unknown Student', inline: true },
+            { name: 'Picked Up By', value: pickedUpByName, inline: true },
+            { name: 'Pickup Time', value: pickupTime, inline: true },
+            { name: 'Date', value: date, inline: true },
+          ],
+          timestamp: new Date().toISOString(),
+        },
+        SUMMER_WEBHOOK,
+      )
+    })
+
+  return record
 }
 
 export async function getPickupPersonsForStudent(studentId: string): Promise<PickupPerson[]> {

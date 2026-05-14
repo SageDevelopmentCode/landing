@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Search, Loader2, Home, ChevronDown, Clock, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, Loader2, Home, ChevronDown, Clock, X, Car } from "lucide-react";
 import {
   getSummerStudentsForWeek,
   upsertSummerAttendanceRecord,
@@ -133,7 +133,11 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
   }
 
   async function handleConfirmPickup(studentId: string, date: string) {
-    if (!selectedPickupPerson || !pickupTime) return;
+    console.log('[handleConfirmPickup] called', { studentId, date, selectedPickupPerson, pickupTime })
+    if (!selectedPickupPerson || !pickupTime) {
+      console.warn('[handleConfirmPickup] bailing early — missing person or time')
+      return
+    }
     setPickupSaving(true);
     const record = await recordSummerPickup(
       studentId, date, pickupTime,
@@ -380,17 +384,18 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
                                 <span className="text-[10px] text-gray-400">Unpaid</span>
                               )}
                             </div>
-                            <div className="flex-shrink-0">
+                            <div className="flex-shrink-0 flex flex-col items-center gap-1">
                               {isSaving ? (
                                 <Loader2 className="w-5 h-5 animate-spin text-[#d97706]" />
                               ) : (
                                 <button
-                                  onClick={() => handleToggle(row.student_id, day.date, row)}
+                                  onClick={() => { if (!row.record?.pickup_time) handleToggle(row.student_id, day.date, row) }}
+                                  disabled={!!row.record?.pickup_time}
                                   className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors border-2 ${
                                     isChecked
                                       ? "bg-[#d97706] border-[#d97706]"
                                       : "bg-transparent border-gray-300 hover:border-[#d97706]"
-                                  }`}
+                                  } ${row.record?.pickup_time ? "opacity-60 cursor-not-allowed" : ""}`}
                                   aria-label={isChecked ? "Remove attendance" : "Mark present"}
                                 >
                                   {isChecked && (
@@ -399,6 +404,11 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
                                     </svg>
                                   )}
                                 </button>
+                              )}
+                              {row.record?.pickup_time && (
+                                <span title={`Picked up at ${fmt12h(row.record.pickup_time)}`}>
+                                  <Car className="w-3 h-3 text-blue-400" />
+                                </span>
                               )}
                             </div>
                           </div>
@@ -480,12 +490,13 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
                         <Loader2 className="w-4 h-4 animate-spin text-[#d97706]" />
                       ) : (
                         <button
-                          onClick={() => handleToggle(row.student_id, dayDetail.date, row)}
+                          onClick={() => { if (!row.record?.pickup_time) handleToggle(row.student_id, dayDetail.date, row) }}
+                          disabled={!!row.record?.pickup_time}
                           className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors border-2 ${
                             isChecked
                               ? "bg-[#d97706] border-[#d97706]"
                               : "bg-transparent border-gray-300 hover:border-[#d97706]"
-                          }`}
+                          } ${row.record?.pickup_time ? "opacity-60 cursor-not-allowed" : ""}`}
                           aria-label={isChecked ? "Remove from attendance" : "Mark present"}
                         >
                           {isChecked && (
@@ -500,6 +511,10 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
                     <div className="flex items-center justify-center">
                       {isSaving ? (
                         <span className="text-xs text-gray-400">Saving…</span>
+                      ) : row.record?.pickup_time ? (
+                        <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
+                          Picked Up
+                        </span>
                       ) : isChecked ? (
                         <span className="text-xs font-medium text-[#d97706] bg-[#d97706]/10 px-2.5 py-1 rounded-full">
                           Present
@@ -649,8 +664,8 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
             <button
               disabled={!selectedPickupPerson || !pickupTime || pickupSaving}
               onClick={() => {
-                if (dayDetail && openPickupPanel) {
-                  handleConfirmPickup(openPickupPanel, dayDetail.date);
+                if (selectedDate && openPickupPanel) {
+                  handleConfirmPickup(openPickupPanel, selectedDate);
                 }
               }}
               className="w-full px-4 py-2.5 bg-[#d97706] text-white text-sm font-semibold rounded-xl hover:bg-[#b45309] disabled:opacity-40 transition-colors"

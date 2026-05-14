@@ -171,6 +171,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
+    if (type === "summer_pickup_recorded") {
+      const { studentName, date, pickupTime, pickedUpBy } = data;
+      if (!studentName || !date || !pickupTime) {
+        return NextResponse.json(
+          { error: "summer_pickup_recorded requires studentName, date, and pickupTime" },
+          { status: 400 },
+        );
+      }
+      await sendDiscordNotification(
+        {
+          title: "🚗 Summer Pickup Recorded",
+          color: 0xd97706,
+          fields: [
+            { name: "Student", value: studentName, inline: true },
+            { name: "Picked Up By", value: pickedUpBy ?? "Unknown", inline: true },
+            { name: "Pickup Time", value: pickupTime, inline: true },
+            { name: "Date", value: date, inline: true },
+          ],
+          timestamp: new Date().toISOString(),
+        },
+        process.env.DISCORD_STUDENT_WEBHOOK_URL,
+      );
+      return NextResponse.json({ success: true });
+    }
+
     if (type === "aftercare_checked_in") {
       const { studentName, date } = data;
       if (!studentName || !date) {
