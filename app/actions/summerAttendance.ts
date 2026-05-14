@@ -18,6 +18,14 @@ export type SummerRecord = {
   recorded_by: string
   notes: string | null
   paid_for_day: boolean
+  pickup_time: string | null
+  picked_up_by_name: string | null
+  picked_up_by_relationship: string | null
+}
+
+export type PickupPerson = {
+  name: string
+  relationship: string
 }
 
 export type SummerStudentRow = {
@@ -181,7 +189,7 @@ export async function getSummerStudentsForDay(date: string, includeDontInclude =
   const { data: records } = await adminClient
     .schema('attendance')
     .from('summer_records')
-    .select('id, date, student_id, recorded_by, notes, paid_for_day')
+    .select('id, date, student_id, recorded_by, notes, paid_for_day, pickup_time, picked_up_by_name, picked_up_by_relationship')
     .eq('date', date)
     .in('student_id', studentIds)
 
@@ -194,6 +202,9 @@ export async function getSummerStudentsForDay(date: string, includeDontInclude =
       recorded_by: r.recorded_by,
       notes: r.notes ?? null,
       paid_for_day: r.paid_for_day ?? true,
+      pickup_time: r.pickup_time ?? null,
+      picked_up_by_name: r.picked_up_by_name ?? null,
+      picked_up_by_relationship: r.picked_up_by_relationship ?? null,
     })
   }
 
@@ -244,7 +255,7 @@ export async function upsertSummerAttendanceRecord(
       },
       { onConflict: 'student_id,date' },
     )
-    .select('id, date, student_id, recorded_by, notes, paid_for_day')
+    .select('id, date, student_id, recorded_by, notes, paid_for_day, pickup_time, picked_up_by_name, picked_up_by_relationship')
     .single()
 
   if (error || !data) return null
@@ -256,6 +267,9 @@ export async function upsertSummerAttendanceRecord(
     recorded_by: data.recorded_by,
     notes: data.notes ?? null,
     paid_for_day: data.paid_for_day ?? true,
+    pickup_time: data.pickup_time ?? null,
+    picked_up_by_name: data.picked_up_by_name ?? null,
+    picked_up_by_relationship: data.picked_up_by_relationship ?? null,
   }
 
   adminClient
@@ -327,4 +341,95 @@ export async function removeSummerAttendanceRecord(recordId: string): Promise<{ 
   }
 
   return { ok: !error }
+}
+
+export async function recordSummerPickup(
+  studentId: string,
+  date: string,
+  pickupTime: string,
+  pickedUpByName: string,
+  pickedUpByRelationship: string,
+): Promise<SummerRecord | null> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const adminClient = createAdminClient()
+  const { data, error } = await adminClient
+    .schema('attendance')
+    .from('summer_records')
+    .upsert(
+      {
+        student_id: studentId,
+        date,
+        pickup_time: pickupTime,
+        picked_up_by_name: pickedUpByName,
+        picked_up_by_relationship: pickedUpByRelationship,
+        pickup_recorded_by: user.id,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'student_id,date' },
+    )
+    .select('id, date, student_id, recorded_by, notes, paid_for_day, pickup_time, picked_up_by_name, picked_up_by_relationship')
+    .single()
+
+  if (error || !data) return null
+
+  return {
+    id: data.id,
+    date: data.date,
+    student_id: data.student_id,
+    recorded_by: data.recorded_by,
+    notes: data.notes ?? null,
+    paid_for_day: data.paid_for_day ?? true,
+    pickup_time: data.pickup_time ?? null,
+    picked_up_by_name: data.picked_up_by_name ?? null,
+    picked_up_by_relationship: data.picked_up_by_relationship ?? null,
+  }
+}
+
+export async function getPickupPersonsForStudent(studentId: string): Promise<PickupPerson[]> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const adminClient = createAdminClient()
+
+  const [{ data: appRow }, { data: authorizedPersons }] = await Promise.all([
+    adminClient
+      .schema('parent_app')
+      .from('applications')
+      .select('g1_full_name, g1_relationship, g2_full_name, g2_relationship')
+      .eq('student_id', studentId)
+      .eq('status', 'enrolled')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    adminClient
+      .schema('parent_app')
+      .from('student_authorized_pickup_persons')
+      .select('full_name, relationship, sort_order')
+      .eq('student_id', studentId)
+      .order('sort_order', { ascending: true }),
+  ])
+
+  const persons: PickupPerson[] = []
+
+  if (appRow?.g1_full_name) {
+    persons.push({ name: appRow.g1_full_name, relationship: appRow.g1_relationship ?? 'Guardian' })
+  }
+  if (appRow?.g2_full_name) {
+    persons.push({ name: appRow.g2_full_name, relationship: appRow.g2_relationship ?? 'Guardian' })
+  }
+  for (const p of authorizedPersons ?? []) {
+    if (p.full_name) persons.push({ name: p.full_name, relationship: p.relationship ?? 'Authorized Person' })
+  }
+
+  const seen = new Set<string>()
+  return persons.filter((p) => {
+    const key = p.name.trim().toLowerCase()
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
 }
