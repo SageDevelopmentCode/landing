@@ -1,1 +1,1 @@
-export const DEFAULT_REACTIONS = ["❤️", "👍", "😂", "😮", "🙏"];
+export const DEFAULT_REACTIONS = ["❤️", "🌱", "🌻", "🦋"];
