@@ -25,6 +25,7 @@ import { sendInfoSessionInviteEmail } from '../../actions/sendInfoSessionInviteE
 import { sendOpenHouseEnrollmentEmail } from '../../actions/sendOpenHouseEnrollmentEmail'
 import { sendPaySummerTuitionEmail } from '../../actions/sendPaySummerTuitionEmail'
 import { sendPaySummerTuitionEmail2 } from '../../actions/sendPaySummerTuitionEmail2'
+import { sendSummerWelcomeEmail } from '../../actions/sendSummerWelcomeEmail'
 import { enrollApplication } from '../../actions/enrollApplication'
 import { updateApplicationProgram } from '../../actions/updateApplicationProgram'
 import { updateApplicationTags } from '../../actions/updateApplicationTags'
@@ -185,6 +186,9 @@ export function ApplicationDetailSidebar({
   const [summerTuition2Sending, setSummerTuition2Sending] = useState(false)
   const [summerTuition2Sent, setSummerTuition2Sent] = useState(false)
   const [summerTuition2Error, setSummerTuition2Error] = useState<string | null>(null)
+  const [summerWelcomeSending, setSummerWelcomeSending] = useState(false)
+  const [summerWelcomeSent, setSummerWelcomeSent] = useState(false)
+  const [summerWelcomeError, setSummerWelcomeError] = useState<string | null>(null)
   const [tagInput, setTagInput] = useState('')
   const [tagSaving, setTagSaving] = useState(false)
   const [tagError, setTagError] = useState<string | null>(null)
@@ -592,6 +596,25 @@ export function ApplicationDetailSidebar({
       setTimeout(() => setSummerTuition2Sent(false), 3000)
     } else {
       setSummerTuition2Error(result.error ?? 'Failed to send')
+    }
+  }
+
+  const handleSendSummerWelcome = async () => {
+    if (summerWelcomeSending || !application.g1_email) return
+    setSummerWelcomeSending(true)
+    setSummerWelcomeError(null)
+    const result = await sendSummerWelcomeEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+    })
+    setSummerWelcomeSending(false)
+    if (result.success) {
+      setSummerWelcomeSent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setSummerWelcomeSent(false), 3000)
+    } else {
+      setSummerWelcomeError(result.error ?? 'Failed to send')
     }
   }
 
@@ -1115,6 +1138,17 @@ export function ApplicationDetailSidebar({
                   {summerTuition2Sending ? 'Sending…' : summerTuition2Sent ? '✓ Sent!' : 'Send Summer Week Selection 2'}
                 </button>
                 {summerTuition2Error && <span className="text-xs text-red-600">{summerTuition2Error}</span>}
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleSendSummerWelcome}
+                  disabled={summerWelcomeSending || summerWelcomeSent}
+                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                >
+                  {summerWelcomeSending ? 'Sending…' : summerWelcomeSent ? '✓ Sent!' : 'Send Summer Welcome'}
+                </button>
+                {summerWelcomeError && <span className="text-xs text-red-600">{summerWelcomeError}</span>}
               </div>
             </div>
           </SidebarSection>

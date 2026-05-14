@@ -2437,3 +2437,132 @@ export async function buildCustomTuitionConfirmationEmail(opts: {
 
   return { subject, content };
 }
+
+export async function buildSummerWelcomeEmail(opts: {
+  g1FullName: string
+  childLegalName: string
+}): Promise<{ subject: string; content: string }> {
+  const subject = "Welcome to Sage Field Summer — What to Expect ☀️"
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+
+  <p style="margin-bottom: 24px;">Dear ${opts.g1FullName},</p>
+
+  <p style="margin-bottom: 24px;">We are so excited to welcome your family to Sage Field this summer! With May 26th right around the corner, we wanted to share what the first few weeks will look like and answer some of the questions we've been hearing from families.</p>
+
+  <h2 style="font-size: 18px; margin-top: 32px; margin-bottom: 12px; color: #2c2c2c;">🌿 What Summer at Sage Field Actually Looks Like</h2>
+  <p style="margin-bottom: 16px;">Summer at Sage Field is not a daycare or drop-in camp — it's a school program with a real schedule designed to balance academics, creativity, outdoor play, and meaningful friendships.</p>
+
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 14px 18px; margin: 20px 0; border-radius: 4px;">
+    <p style="margin: 0 0 4px 0; font-size: 14px;"><strong>Weekly Schedule</strong></p>
+    <p style="margin: 0 0 2px 0; font-size: 14px;">📅 Monday – Thursday</p>
+    <p style="margin: 0; font-size: 14px;">⏰ 9:00 AM – 3:00 PM</p>
+  </div>
+
+  <p style="margin-bottom: 8px;"><strong>A Typical Day Includes:</strong></p>
+  <ul style="padding-left: 20px; margin-bottom: 20px; font-size: 15px;">
+    <li style="margin-bottom: 6px;">Morning drop-off + outdoor play beginning at 8:15 AM</li>
+    <li style="margin-bottom: 6px;">Short, engaging academic blocks in Reading / ELA and Math<br /><span style="color: #666; font-size: 13px;">(around 15 minutes each — ability-based)</span></li>
+    <li style="margin-bottom: 6px;">Daily themed activities</li>
+    <li style="margin-bottom: 6px;">Art + music</li>
+    <li style="margin-bottom: 6px;">Lunch + outdoor water play every afternoon</li>
+    <li style="margin-bottom: 6px;">Journaling</li>
+    <li style="margin-bottom: 6px;">Cooking / homesteading</li>
+    <li style="margin-bottom: 6px;">Garden + animal care to close the day</li>
+  </ul>
+
+  <p style="margin-bottom: 8px;">Each week brings a completely different theme and experience:</p>
+  <ul style="padding-left: 20px; margin-bottom: 20px; font-size: 15px;">
+    <li style="margin-bottom: 6px;">☀️ Week 1 — Welcome to Sage Field</li>
+    <li style="margin-bottom: 6px;">🕵️ Week 2 — Mystery Escape Chalay Bash</li>
+    <li style="margin-bottom: 6px; color: #666;">…and so on through Week 12's Finale in August!</li>
+  </ul>
+  <p style="margin-bottom: 24px; color: #555; font-size: 14px;">Every week includes new crafts, games, challenges, and adventures tied to that theme.</p>
+
+  <h2 style="font-size: 18px; margin-top: 32px; margin-bottom: 12px; color: #2c2c2c;">🌲 Field Day Fridays</h2>
+  <p style="margin-bottom: 12px;">For families who want more, we also offer outdoor, nature-focused field learning days with a unique theme every Friday. There will typically be 3 unique activities each Friday!</p>
+
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 14px 18px; margin: 20px 0; border-radius: 4px;">
+    <p style="margin: 0 0 4px 0; font-size: 14px;">📅 <strong>Fridays</strong> &nbsp;·&nbsp; ⏰ 9:00 AM – 1:00 PM</p>
+    <p style="margin: 6px 0 2px 0; font-size: 14px;">Drop-off: 8:30 – 9:00 AM</p>
+    <p style="margin: 0; font-size: 14px;">Pick-up: 1:00 – 1:30 PM</p>
+  </div>
+
+  <ul style="padding-left: 20px; margin-bottom: 24px; font-size: 14px; color: #555;">
+    <li style="margin-bottom: 4px;">Field Day Fridays are optional</li>
+    <li style="margin-bottom: 4px;">They are an add-on program for <strong>$200 a month</strong></li>
+    <li style="margin-bottom: 4px;">They are not included in the base summer tuition</li>
+  </ul>
+
+  <h2 style="font-size: 18px; margin-top: 32px; margin-bottom: 12px; color: #2c2c2c;">👩‍🏫 Your Child's Group</h2>
+  <p style="margin-bottom: 24px;">We intentionally keep groups small! Your child will be placed in a multi-aged, ability-based learning group, allowing them to be challenged at the right level academically while still building strong friendships throughout the summer. Because the assigned groupings stay consistent through the summer, children quickly become comfortable, connected, and genuinely known by their teachers.</p>
+
+  <h2 style="font-size: 18px; margin-top: 32px; margin-bottom: 12px; color: #2c2c2c;">🎒 What to Send With Your Child</h2>
+  <ul style="padding-left: 20px; margin-bottom: 12px; font-size: 15px;">
+    <li style="margin-bottom: 6px;">A packed snack + lunch</li>
+    <li style="margin-bottom: 6px;">A reusable water bottle</li>
+    <li style="margin-bottom: 6px;">Weather-appropriate clothing</li>
+    <li style="margin-bottom: 6px;">Closed-toe shoes</li>
+    <li style="margin-bottom: 6px;">Open-toe shoes (for ease before/after water play)</li>
+    <li style="margin-bottom: 6px;">A change of clothes</li>
+  </ul>
+  <p style="margin-bottom: 6px; font-size: 14px; color: #555;"><strong>We also recommend:</strong></p>
+  <ul style="padding-left: 20px; margin-bottom: 16px; font-size: 14px; color: #555;">
+    <li style="margin-bottom: 4px;">Sunscreen applied before drop-off</li>
+    <li style="margin-bottom: 4px;">Additional sunscreen &amp; bug spray</li>
+    <li style="margin-bottom: 4px;">A pair of boots</li>
+  </ul>
+  <p style="margin-bottom: 24px; font-size: 14px; color: #555;">Students may leave their additional shoes at Sage Field. Please ensure to pick them up on your last day.</p>
+
+  <h2 style="font-size: 18px; margin-top: 32px; margin-bottom: 12px; color: #2c2c2c;">💻 Join Us for a Live Q&amp;A</h2>
+  <p style="margin-bottom: 12px;">We know many families still have questions before Day 1, and we'd love to answer them. We're hosting two open drop-in Google Meet calls where you can join anytime, ask questions, hear from our team, and hop off whenever you'd like.</p>
+
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 14px 18px; margin: 20px 0; border-radius: 4px; font-size: 14px;">
+    <p style="margin: 0 0 6px 0;">📅 <strong>Saturday, May 16</strong> · 11:00 AM – 12:00 PM</p>
+    <p style="margin: 0 0 12px 0;">📅 <strong>Saturday, May 23</strong> · 11:00 AM – 12:00 PM</p>
+    <p style="margin: 0;">🔗 <a href="https://meet.google.com/jxk-xkfc-mnp" style="color: #5a7a5a;">Join Google Meet</a></p>
+  </div>
+
+  <p style="margin-bottom: 24px; font-size: 14px; color: #555;">Both sessions use the same link — you only need to attend one. Sabrina will be there to answer questions about the program, tuition, schedules, Day 1 expectations, and weekly themes.</p>
+
+  <h2 style="font-size: 18px; margin-top: 32px; margin-bottom: 12px; color: #2c2c2c;">💳 A Note on Tuition — Please Read</h2>
+  <p style="margin-bottom: 12px;">To keep our small-group program running smoothly and to hold your child's spot, tuition for each week must be received by the <strong>Friday before that week begins</strong>.</p>
+
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 14px 18px; margin: 20px 0; border-radius: 4px; font-size: 14px;">
+    <p style="margin: 0 0 6px 0;"><strong>Examples:</strong></p>
+    <p style="margin: 0 0 4px 0;">Week 1 begins May 26 → Tuition due by <strong>May 22</strong></p>
+    <p style="margin: 0 0 12px 0;">Week 2 begins June 1 → Tuition due by <strong>May 29</strong></p>
+    <p style="margin: 0; color: #c0392b; font-size: 13px;">⚠️ A <strong>$30 late fee</strong> applies if tuition is not received by Friday at 11:59 PM.</p>
+  </div>
+
+  <p style="margin-bottom: 20px; font-size: 14px; color: #555;">This allows us to properly plan staffing, supplies, activities, meals, and small group placement.</p>
+
+  <div style="text-align: center; margin: 28px 0;">
+    <a href="https://www.sagefield.co/parent/billing" style="background: #2C5F2E; color: #fff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-family: Georgia, serif; font-size: 15px; display: inline-block;">Pay Tuition</a>
+  </div>
+
+  <p style="margin-bottom: 24px; font-size: 14px; color: #555; text-align: center;">Not logged in yet? <a href="https://www.sagefield.co/parent/home" style="color: #5a7a5a;">Access your parent dashboard here.</a></p>
+
+  <h2 style="font-size: 18px; margin-top: 32px; margin-bottom: 12px; color: #2c2c2c;">💬 Have Questions? Ask the Community</h2>
+  <p style="margin-bottom: 24px;">Inside your parent dashboard we have a community messaging channel where families can ask questions, see announcements, and connect with other Sage Field parents. <a href="https://www.sagefield.co/parent/messages" style="color: #5a7a5a;">Visit the General channel here.</a></p>
+
+  <h2 style="font-size: 18px; margin-top: 32px; margin-bottom: 12px; color: #2c2c2c;">📧 Still Have Questions for Us Directly?</h2>
+  <p style="margin-bottom: 12px;">We want you to feel completely confident before summer begins. Please reach out anytime:</p>
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 14px 18px; margin: 16px 0 24px; border-radius: 4px; font-size: 14px;">
+    <p style="margin: 0 0 4px 0;">📧 <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+    <p style="margin: 0;">📱 <a href="sms:+15126775872" style="color: #5a7a5a;">512-677-5872</a></p>
+  </div>
+
+  <p style="margin-top: 36px; margin-bottom: 4px;">We cannot wait for summer! ☀️</p>
+  <p style="margin-top: 4px;">With warmth,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina &amp; the Sage Field Team</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+
+</body>
+</html>
+  `.trim()
+
+  return { subject, content }
+}
