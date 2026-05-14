@@ -207,8 +207,10 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
           )
         : dayDetail.students
       ).slice().sort((a, b) => {
-        if (a.hasEnrollment !== b.hasEnrollment) return a.hasEnrollment ? -1 : 1;
-        return (a.name ?? "").localeCompare(b.name ?? "");
+        const groupA = a.record !== null ? 0 : a.hasEnrollment ? 1 : 2
+        const groupB = b.record !== null ? 0 : b.hasEnrollment ? 1 : 2
+        if (groupA !== groupB) return groupA - groupB
+        return (a.name ?? "").localeCompare(b.name ?? "")
       })
     : [];
 
@@ -298,8 +300,10 @@ export default function SummerPageClient({ initialWeekData, initialWeekNum }: Pr
                     )
                   : day.students
                 ).slice().sort((a, b) => {
-                  if (a.hasEnrollment !== b.hasEnrollment) return a.hasEnrollment ? -1 : 1;
-                  return (a.name ?? "").localeCompare(b.name ?? "");
+                  const groupA = a.record !== null ? 0 : a.hasEnrollment ? 1 : 2
+                  const groupB = b.record !== null ? 0 : b.hasEnrollment ? 1 : 2
+                  if (groupA !== groupB) return groupA - groupB
+                  return (a.name ?? "").localeCompare(b.name ?? "")
                 });
                 const expectedCount = day.students.filter((s) => s.hasEnrollment).length;
                 const presentCount = day.students.filter((s) => s.record !== null).length;
