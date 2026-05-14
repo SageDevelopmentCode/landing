@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -19,15 +20,18 @@ import {
 import { DetailSidebar } from "@/app/admin/components/DetailSidebar";
 import {
   createPost,
+  updatePost,
   uploadFeedMedia,
   uploadFeedAttachment,
   addComment,
   deletePost,
+  deletePostMedia,
   deleteComment,
   toggleReaction,
   type FeedPost,
   type FeedCommentRow,
   type FeedReactionSummary,
+  type FeedMediaRow,
 } from "./actions";
 import { DEFAULT_REACTIONS } from "./constants";
 import { POST_TYPES, getPostType } from "./postTypes";
@@ -52,6 +56,47 @@ type Teacher = {
   role: string;
   profile_image_url: string | null;
 };
+
+// ─── Markdown components ───────────────────────────────────────────────────────
+
+const markdownComponents = {
+  p: ({ children }: { children?: React.ReactNode }) => (
+    <p className="text-sm font-body text-gray-700 leading-relaxed mb-2 last:mb-0">{children}</p>
+  ),
+  strong: ({ children }: { children?: React.ReactNode }) => (
+    <strong className="font-semibold text-gray-900">{children}</strong>
+  ),
+  em: ({ children }: { children?: React.ReactNode }) => (
+    <em className="italic">{children}</em>
+  ),
+  h1: ({ children }: { children?: React.ReactNode }) => (
+    <h1 className="text-base font-bold font-body text-gray-900 mt-7 mb-2">{children}</h1>
+  ),
+  h2: ({ children }: { children?: React.ReactNode }) => (
+    <h2 className="text-sm font-bold font-body text-gray-900 mt-7 mb-2">{children}</h2>
+  ),
+  h3: ({ children }: { children?: React.ReactNode }) => (
+    <h3 className="text-sm font-semibold font-body text-gray-800 mt-5 mb-1">{children}</h3>
+  ),
+  ul: ({ children }: { children?: React.ReactNode }) => (
+    <ul className="list-disc pl-5 my-3 space-y-1 text-sm font-body text-gray-700">{children}</ul>
+  ),
+  ol: ({ children }: { children?: React.ReactNode }) => (
+    <ol className="list-decimal pl-5 my-3 space-y-1 text-sm font-body text-gray-700">{children}</ol>
+  ),
+  li: ({ children }: { children?: React.ReactNode }) => (
+    <li className="leading-relaxed">{children}</li>
+  ),
+  code: ({ children }: { children?: React.ReactNode }) => (
+    <code className="bg-gray-100 text-gray-800 text-xs rounded px-1 py-0.5 font-mono">{children}</code>
+  ),
+  a: ({ href, children }: { href?: string; children?: React.ReactNode }) => (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="text-[#4a7c59] underline hover:text-[#3d6b4a]">{children}</a>
+  ),
+  blockquote: ({ children }: { children?: React.ReactNode }) => (
+    <blockquote className="border-l-2 border-gray-300 pl-3 my-2 text-sm text-gray-500 italic">{children}</blockquote>
+  ),
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -342,6 +387,7 @@ function PostCard({
   currentUserId,
   onReactionToggle,
   onDelete,
+  onEdit,
   onClick,
   profileHref,
 }: {
@@ -349,11 +395,14 @@ function PostCard({
   currentUserId: string | undefined;
   onReactionToggle: (postId: string, emoji: string) => void;
   onDelete: (postId: string) => void;
+  onEdit: () => void;
   onClick: () => void;
   profileHref: string;
 }) {
   const isOwner = currentUserId === post.teacher_id;
   const [menuOpen, setMenuOpen] = useState(false);
+  const [bodyExpanded, setBodyExpanded] = useState(false)
+  const isLongBody = post.body.length > 300
 
   const media: MediaItem[] = post.media.map((m, i) => ({
     type: m.kind,
@@ -416,6 +465,16 @@ function PostCard({
                 <button
                   onClick={() => {
                     setMenuOpen(false);
+                    onEdit();
+                  }}
+                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors font-body"
+                >
+                  <span className="w-3.5 h-3.5 text-xs">✏️</span>
+                  Edit post
+                </button>
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
                     onDelete(post.id);
                   }}
                   className="flex items-center gap-2 w-full px-3 py-2 text-sm text-rose-500 hover:bg-rose-50 transition-colors font-body"
@@ -437,7 +496,26 @@ function PostCard({
       )}
 
       {/* Body */}
-      <p className="text-sm font-body text-gray-700 leading-relaxed px-5">{post.body}</p>
+      <div className="px-5">
+        <div
+          className={`relative text-sm font-body text-gray-700 leading-relaxed [&>*:last-child]:mb-0 ${
+            isLongBody && !bodyExpanded ? 'max-h-24 overflow-hidden' : ''
+          }`}
+        >
+          <ReactMarkdown components={markdownComponents}>{post.body}</ReactMarkdown>
+          {isLongBody && !bodyExpanded && (
+            <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+          )}
+        </div>
+        {isLongBody && (
+          <button
+            onClick={(e) => { e.stopPropagation(); setBodyExpanded(v => !v) }}
+            className="mt-1 text-xs font-semibold text-[#4a7c59] hover:text-[#3d6b4a] transition-colors"
+          >
+            {bodyExpanded ? 'Show less' : 'Read more'}
+          </button>
+        )}
+      </div>
 
       {/* Media — full bleed */}
       {media.length > 0 && <MediaGrid media={media} />}
@@ -619,7 +697,9 @@ function PostSidebarContent({
       {post.post_type && <PostTypeBadge value={post.post_type} />}
 
       {/* Full body */}
-      <p className="text-sm font-body text-gray-700 leading-relaxed">{post.body}</p>
+      <div className="text-sm font-body text-gray-700 leading-relaxed [&>*:last-child]:mb-0">
+        <ReactMarkdown components={markdownComponents}>{post.body}</ReactMarkdown>
+      </div>
 
       {/* Full media */}
       {media.length > 0 && (
@@ -813,6 +893,8 @@ function ComposeBar({
   const [body, setBody] = useState("");
   const [postType, setPostType] = useState("announcement");
   const [isPending, startTransition] = useTransition();
+  const [expandedInput, setExpandedInput] = useState(false)
+  const [preview, setPreview] = useState(false)
 
   const [mediaQueue, setMediaQueue] = useState<QueuedFile[]>([]);
   const [attachmentQueue, setAttachmentQueue] = useState<QueuedFile[]>([]);
@@ -822,6 +904,36 @@ function ComposeBar({
 
   const mediaInputRef = useRef<HTMLInputElement>(null);
   const attachmentInputRef = useRef<HTMLInputElement>(null);
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+
+  const applyFormat = (prefix: string, suffix: string, placeholder: string) => {
+    const el = bodyRef.current
+    if (!el) return
+    const start = el.selectionStart
+    const end = el.selectionEnd
+    const selected = body.slice(start, end) || placeholder
+    const next = body.slice(0, start) + prefix + selected + suffix + body.slice(end)
+    setBody(next)
+    requestAnimationFrame(() => {
+      el.focus()
+      const cursor = start + prefix.length + selected.length + suffix.length
+      el.setSelectionRange(cursor, cursor)
+    })
+  }
+
+  const applyLinePrefix = (prefix: string) => {
+    const el = bodyRef.current
+    if (!el) return
+    const start = el.selectionStart
+    const lineStart = body.lastIndexOf('\n', start - 1) + 1
+    const next = body.slice(0, lineStart) + prefix + body.slice(lineStart)
+    setBody(next)
+    requestAnimationFrame(() => {
+      el.focus()
+      const cursor = start + prefix.length
+      el.setSelectionRange(cursor, cursor)
+    })
+  }
 
   async function addMediaFiles(files: FileList | File[]) {
     setUploadError(null);
@@ -906,6 +1018,8 @@ function ComposeBar({
     setPostType("announcement");
     setExpanded(false);
     setUploadError(null);
+    setExpandedInput(false)
+    setPreview(false)
   }
 
   function handlePost() {
@@ -983,19 +1097,77 @@ function ComposeBar({
                 Share something with parents...
               </motion.button>
             ) : (
-              <motion.textarea
-                key="textarea"
-                initial={{ opacity: 0, scaleY: 0.8, originY: 0 }}
-                animate={{ opacity: 1, scaleY: 1 }}
-                exit={{ opacity: 0, scaleY: 0.8 }}
-                transition={{ duration: 0.2, ease: "easeOut" as const }}
-                autoFocus
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                placeholder="What's happening in the classroom today?"
-                rows={3}
-                className="w-full bg-gray-50 rounded-2xl px-4 py-3 border border-gray-200 text-sm font-body text-gray-700 placeholder-gray-400 outline-none resize-none focus:border-[#4a7c59]/40 transition-colors"
-              />
+              <div key="textarea" className="flex flex-col gap-1">
+                {/* Markdown toolbar */}
+                <div className="flex items-center gap-0.5 px-1">
+                  {([
+                    { label: 'B',  title: 'Bold',           action: () => applyFormat('**', '**', 'bold text') },
+                    { label: 'I',  title: 'Italic',         action: () => applyFormat('_', '_', 'italic text') },
+                    { label: 'H',  title: 'Heading',        action: () => applyLinePrefix('## ') },
+                    { label: '•',  title: 'Bullet list',    action: () => applyLinePrefix('- ') },
+                    { label: '1.', title: 'Numbered list',  action: () => applyLinePrefix('1. ') },
+                    { label: '`',  title: 'Inline code',    action: () => applyFormat('`', '`', 'code') },
+                    { label: '🔗', title: 'Link',           action: () => applyFormat('[', '](url)', 'link text') },
+                  ] as { label: string; title: string; action: () => void }[]).map(({ label, title, action }) => (
+                    <button
+                      key={title}
+                      type="button"
+                      title={title}
+                      onMouseDown={(e) => { e.preventDefault(); action() }}
+                      className="px-2 py-0.5 text-xs font-mono text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                    >
+                      {label}
+                    </button>
+                  ))}
+                  <div className="ml-auto flex items-center gap-1">
+                    <button
+                      type="button"
+                      onMouseDown={(e) => { e.preventDefault(); setPreview(p => !p) }}
+                      className={`px-2 py-0.5 text-xs font-body rounded transition-colors ${
+                        preview
+                          ? 'bg-[#4a7c59] text-white'
+                          : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      {preview ? 'Edit' : 'Preview'}
+                    </button>
+                    <button
+                      type="button"
+                      title={expandedInput ? 'Collapse' : 'Expand'}
+                      onMouseDown={(e) => { e.preventDefault(); setExpandedInput(x => !x) }}
+                      className="px-2 py-0.5 text-xs text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                    >
+                      {expandedInput ? '↙' : '↗'}
+                    </button>
+                    <span className="text-[10px] text-gray-300 font-mono select-none pl-1">markdown</span>
+                  </div>
+                </div>
+                {preview ? (
+                  <div
+                    className="w-full min-h-[80px] bg-gray-50 rounded-2xl px-4 py-3 border border-gray-200 overflow-y-auto text-sm font-body text-gray-700 leading-relaxed [&>*:last-child]:mb-0"
+                    style={{ maxHeight: expandedInput ? '420px' : '180px' }}
+                  >
+                    {body.trim()
+                      ? <ReactMarkdown components={markdownComponents}>{body}</ReactMarkdown>
+                      : <p className="text-gray-400 text-sm font-body italic">Nothing to preview yet…</p>
+                    }
+                  </div>
+                ) : (
+                  <motion.textarea
+                    initial={{ opacity: 0, scaleY: 0.8, originY: 0 }}
+                    animate={{ opacity: 1, scaleY: 1 }}
+                    exit={{ opacity: 0, scaleY: 0.8 }}
+                    transition={{ duration: 0.2, ease: "easeOut" as const }}
+                    ref={bodyRef}
+                    autoFocus
+                    value={body}
+                    onChange={(e) => setBody(e.target.value)}
+                    placeholder="What's happening in the classroom today?"
+                    rows={expandedInput ? 14 : 4}
+                    className="w-full bg-gray-50 rounded-2xl px-4 py-3 border border-gray-200 text-sm font-body text-gray-700 placeholder-gray-400 outline-none resize-none focus:border-[#4a7c59]/40 transition-colors"
+                  />
+                )}
+              </div>
             )}
           </AnimatePresence>
         </div>
@@ -1218,6 +1390,252 @@ function ComposeBar({
   );
 }
 
+function MediaThumb({ storageUrl, kind }: { storageUrl: string; kind: 'image' | 'video' }) {
+  if (kind === 'image') {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={storageUrl} alt="" className="w-full h-full object-cover" />
+  }
+  return (
+    <div className="w-full h-full flex items-center justify-center bg-gray-100">
+      <Video className="w-6 h-6 text-gray-400" />
+    </div>
+  )
+}
+
+// ─── Edit Post Card ───────────────────────────────────────────────────────────
+
+function EditPostCard({
+  post,
+  onSave,
+  onCancel,
+}: {
+  post: FeedPost
+  onSave: (updated: FeedPost) => void
+  onCancel: () => void
+}) {
+  const [body, setBody] = useState(post.body)
+  const [postType, setPostType] = useState(post.post_type ?? 'announcement')
+  const [existingMedia, setExistingMedia] = useState<FeedMediaRow[]>(post.media)
+  const [newMediaQueue, setNewMediaQueue] = useState<{ file: File; previewUrl: string | null }[]>([])
+  const [deletingMediaId, setDeletingMediaId] = useState<string | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
+  const [expandedInput, setExpandedInput] = useState(false)
+  const [preview, setPreview] = useState(false)
+  const bodyRef = useRef<HTMLTextAreaElement>(null)
+  const mediaInputRef = useRef<HTMLInputElement>(null)
+
+  const applyFormat = (prefix: string, suffix: string, placeholder: string) => {
+    const el = bodyRef.current
+    if (!el) return
+    const start = el.selectionStart
+    const end = el.selectionEnd
+    const selected = body.slice(start, end) || placeholder
+    const next = body.slice(0, start) + prefix + selected + suffix + body.slice(end)
+    setBody(next)
+    requestAnimationFrame(() => {
+      el.focus()
+      el.setSelectionRange(start + prefix.length + selected.length + suffix.length, start + prefix.length + selected.length + suffix.length)
+    })
+  }
+
+  const applyLinePrefix = (prefix: string) => {
+    const el = bodyRef.current
+    if (!el) return
+    const start = el.selectionStart
+    const lineStart = body.lastIndexOf('\n', start - 1) + 1
+    const next = body.slice(0, lineStart) + prefix + body.slice(lineStart)
+    setBody(next)
+    requestAnimationFrame(() => {
+      el.focus()
+      el.setSelectionRange(start + prefix.length, start + prefix.length)
+    })
+  }
+
+  const addNewMedia = (files: FileList | File[]) => {
+    const arr = Array.from(files)
+    const valid: { file: File; previewUrl: string | null }[] = []
+    for (const f of arr) {
+      const isImage = f.type.startsWith('image/')
+      const isVideo = f.type.startsWith('video/')
+      if (!isImage && !isVideo) continue
+      valid.push({ file: f, previewUrl: isImage ? URL.createObjectURL(f) : null })
+    }
+    setNewMediaQueue(prev => [...prev, ...valid])
+  }
+
+  const handleRemoveExisting = async (mediaId: string) => {
+    setDeletingMediaId(mediaId)
+    await deletePostMedia(mediaId)
+    setExistingMedia(prev => prev.filter(m => m.id !== mediaId))
+    setDeletingMediaId(null)
+  }
+
+  const handleRemoveNew = (index: number) => {
+    setNewMediaQueue(prev => {
+      const next = [...prev]
+      if (next[index].previewUrl) URL.revokeObjectURL(next[index].previewUrl!)
+      next.splice(index, 1)
+      return next
+    })
+  }
+
+  const handleSave = () => {
+    if (!body.trim() || isPending) return
+    startTransition(async () => {
+      setError(null)
+      const fd = new FormData()
+      fd.append('postId', post.id)
+      fd.append('body', body.trim())
+      fd.append('post_type', postType)
+      const result = await updatePost(fd)
+      if (result.error) { setError(result.error); return }
+
+      for (let i = 0; i < newMediaQueue.length; i++) {
+        const mfd = new FormData()
+        mfd.append('postId', post.id)
+        mfd.append('file', newMediaQueue[i].file)
+        mfd.append('displayOrder', String(existingMedia.length + i))
+        await uploadFeedMedia(mfd)
+      }
+
+      onSave({ ...post, body: body.trim(), post_type: postType, media: existingMedia })
+    })
+  }
+
+  return (
+    <div className="bg-white rounded-2xl border border-[#4a7c59]/30 shadow-sm overflow-hidden">
+      <div className="px-5 pt-4 pb-3 flex flex-col gap-3">
+        {/* Toolbar */}
+        <div className="flex items-center gap-0.5 px-1">
+          {([
+            { label: 'B',  title: 'Bold',          action: () => applyFormat('**', '**', 'bold text') },
+            { label: 'I',  title: 'Italic',         action: () => applyFormat('_', '_', 'italic text') },
+            { label: 'H',  title: 'Heading',        action: () => applyLinePrefix('## ') },
+            { label: '•',  title: 'Bullet list',    action: () => applyLinePrefix('- ') },
+            { label: '1.', title: 'Numbered list',  action: () => applyLinePrefix('1. ') },
+            { label: '`',  title: 'Inline code',    action: () => applyFormat('`', '`', 'code') },
+            { label: '🔗', title: 'Link',           action: () => applyFormat('[', '](url)', 'link text') },
+          ] as { label: string; title: string; action: () => void }[]).map(({ label, title, action }) => (
+            <button key={title} type="button" title={title}
+              onMouseDown={(e) => { e.preventDefault(); action() }}
+              className="px-2 py-0.5 text-xs font-mono text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+            >{label}</button>
+          ))}
+          <div className="ml-auto flex items-center gap-1">
+            <button type="button"
+              onMouseDown={(e) => { e.preventDefault(); setPreview(p => !p) }}
+              className={`px-2 py-0.5 text-xs font-body rounded transition-colors ${preview ? 'bg-[#4a7c59] text-white' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'}`}
+            >{preview ? 'Edit' : 'Preview'}</button>
+            <button type="button" title={expandedInput ? 'Collapse' : 'Expand'}
+              onMouseDown={(e) => { e.preventDefault(); setExpandedInput(x => !x) }}
+              className="px-2 py-0.5 text-xs text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+            >{expandedInput ? '↙' : '↗'}</button>
+            <span className="text-[10px] text-gray-300 font-mono select-none pl-1">markdown</span>
+          </div>
+        </div>
+
+        {/* Textarea or preview */}
+        {preview ? (
+          <div className="w-full min-h-[80px] bg-gray-50 rounded-2xl px-4 py-3 border border-gray-200 overflow-y-auto text-sm font-body text-gray-700 leading-relaxed [&>*:last-child]:mb-0"
+            style={{ maxHeight: expandedInput ? '420px' : '180px' }}>
+            {body.trim()
+              ? <ReactMarkdown components={markdownComponents}>{body}</ReactMarkdown>
+              : <p className="text-gray-400 text-sm font-body italic">Nothing to preview yet…</p>}
+          </div>
+        ) : (
+          <textarea
+            ref={bodyRef}
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            rows={expandedInput ? 14 : 5}
+            className="w-full bg-gray-50 rounded-2xl px-4 py-3 border border-gray-200 text-sm font-body text-gray-700 placeholder-gray-400 outline-none resize-none focus:border-[#4a7c59]/40 transition-colors"
+          />
+        )}
+
+        {/* Existing media */}
+        {existingMedia.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {existingMedia.map((m) => (
+              <div key={m.id} className="relative group w-20 h-20 rounded-xl overflow-hidden bg-gray-100 border border-gray-200">
+                <MediaThumb storageUrl={m.storage_url} kind={m.kind} />
+                <button
+                  onClick={() => handleRemoveExisting(m.id)}
+                  disabled={deletingMediaId === m.id}
+                  className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-40"
+                >✕</button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* New media queue */}
+        {newMediaQueue.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {newMediaQueue.map((q, i) => (
+              <div key={i} className="relative group w-20 h-20 rounded-xl overflow-hidden bg-gray-100 border border-gray-200">
+                {q.previewUrl
+                  ? <img src={q.previewUrl} alt="" className="w-full h-full object-cover" />
+                  : <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">video</div>
+                }
+                <button onClick={() => handleRemoveNew(i)}
+                  className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >✕</button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Add media drop zone */}
+        <div
+          onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={(e) => { e.preventDefault(); setIsDragging(false); addNewMedia(e.dataTransfer.files) }}
+          onClick={() => mediaInputRef.current?.click()}
+          className={`flex flex-col items-center justify-center gap-1 py-3 border-2 border-dashed rounded-xl cursor-pointer transition-colors text-xs text-gray-400 ${isDragging ? 'border-[#4a7c59] bg-green-50' : 'border-gray-200 hover:border-[#4a7c59]/50 bg-gray-50'}`}
+        >
+          <span>Drop photos/videos or click to add</span>
+        </div>
+        <input ref={mediaInputRef} type="file" accept="image/*,video/*" multiple className="hidden"
+          onChange={(e) => { if (e.target.files) addNewMedia(e.target.files); e.target.value = '' }} />
+
+        {/* Post type selector */}
+        <div className="flex flex-wrap gap-2">
+          {POST_TYPES.map((pt) => {
+            const selected = postType === pt.value
+            return (
+              <button key={pt.value} type="button" onClick={() => setPostType(pt.value)}
+                style={{
+                  backgroundColor: selected ? pt.color : '#f9fafb',
+                  border: `1px solid ${selected ? pt.color : '#e5e7eb'}`,
+                  borderRadius: 9999, padding: '5px 11px',
+                  color: selected ? '#ffffff' : '#6b7280',
+                  fontWeight: 600, fontSize: 12, cursor: 'pointer',
+                }}
+              >{pt.emoji}{'  '}{pt.label}</button>
+            )
+          })}
+        </div>
+
+        {error && <p className="text-xs text-red-500">{error}</p>}
+
+        {/* Actions */}
+        <div className="flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
+          <button onClick={onCancel} disabled={isPending}
+            className="px-3 py-1.5 text-sm font-body text-gray-400 hover:text-gray-600 transition-colors">
+            Cancel
+          </button>
+          <button onClick={handleSave} disabled={!body.trim() || isPending}
+            className="px-4 py-1.5 bg-[#4a7c59] text-white text-sm font-semibold font-body rounded-full hover:bg-[#3d6b4a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            {isPending ? 'Saving…' : 'Save'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function TeacherFeedClient({
@@ -1234,6 +1652,7 @@ export default function TeacherFeedClient({
   const [posts, setPosts] = useState<FeedPost[]>(initialPosts);
   const [selectedPost, setSelectedPost] = useState<FeedPost | null>(null);
   const [selectedTeacherId, setSelectedTeacherId] = useState<string | null>(null);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const displayedPosts = selectedTeacherId
     ? posts.filter((p) => p.teacher_id === selectedTeacherId)
     : posts;
@@ -1280,6 +1699,12 @@ export default function TeacherFeedClient({
     setPosts((prev) => prev.filter((p) => p.id !== postId));
     if (selectedPost?.id === postId) setSelectedPost(null);
     deletePost(postId).catch(() => window.location.reload());
+  }
+
+  function handleEditSave(updated: FeedPost) {
+    setPosts((prev) => prev.map((p) => p.id === updated.id ? updated : p));
+    if (selectedPost?.id === updated.id) setSelectedPost(updated);
+    setEditingPostId(null);
   }
 
   function handleCommentAdded(postId: string, comment: FeedCommentRow & { profile_image_url?: string | null }) {
@@ -1435,14 +1860,23 @@ export default function TeacherFeedClient({
                       exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.2 } }}
                       layout
                     >
-                      <PostCard
-                        post={post}
-                        currentUserId={currentUser?.id}
-                        onReactionToggle={handleReactionToggle}
-                        onDelete={handleDeletePost}
-                        onClick={() => setSelectedPost(post)}
-                        profileHref={`/teacher/profile/${post.teacher_id}`}
-                      />
+                      {editingPostId === post.id ? (
+                        <EditPostCard
+                          post={post}
+                          onSave={handleEditSave}
+                          onCancel={() => setEditingPostId(null)}
+                        />
+                      ) : (
+                        <PostCard
+                          post={post}
+                          currentUserId={currentUser?.id}
+                          onReactionToggle={handleReactionToggle}
+                          onDelete={handleDeletePost}
+                          onEdit={() => setEditingPostId(post.id)}
+                          onClick={() => setSelectedPost(post)}
+                          profileHref={`/teacher/profile/${post.teacher_id}`}
+                        />
+                      )}
                     </motion.div>
                   ))}
                 </AnimatePresence>

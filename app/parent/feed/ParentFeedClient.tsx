@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -43,6 +44,47 @@ type Teacher = {
   role: string;
   profile_image_url: string | null;
 };
+
+// ─── Markdown components ───────────────────────────────────────────────────────
+
+const markdownComponents = {
+  p: ({ children }: { children?: React.ReactNode }) => (
+    <p className="text-sm font-body text-gray-700 leading-relaxed mb-2 last:mb-0">{children}</p>
+  ),
+  strong: ({ children }: { children?: React.ReactNode }) => (
+    <strong className="font-semibold text-gray-900">{children}</strong>
+  ),
+  em: ({ children }: { children?: React.ReactNode }) => (
+    <em className="italic">{children}</em>
+  ),
+  h1: ({ children }: { children?: React.ReactNode }) => (
+    <h1 className="text-base font-bold font-body text-gray-900 mt-7 mb-2">{children}</h1>
+  ),
+  h2: ({ children }: { children?: React.ReactNode }) => (
+    <h2 className="text-sm font-bold font-body text-gray-900 mt-7 mb-2">{children}</h2>
+  ),
+  h3: ({ children }: { children?: React.ReactNode }) => (
+    <h3 className="text-sm font-semibold font-body text-gray-800 mt-5 mb-1">{children}</h3>
+  ),
+  ul: ({ children }: { children?: React.ReactNode }) => (
+    <ul className="list-disc pl-5 my-3 space-y-1 text-sm font-body text-gray-700">{children}</ul>
+  ),
+  ol: ({ children }: { children?: React.ReactNode }) => (
+    <ol className="list-decimal pl-5 my-3 space-y-1 text-sm font-body text-gray-700">{children}</ol>
+  ),
+  li: ({ children }: { children?: React.ReactNode }) => (
+    <li className="leading-relaxed">{children}</li>
+  ),
+  code: ({ children }: { children?: React.ReactNode }) => (
+    <code className="bg-gray-100 text-gray-800 text-xs rounded px-1 py-0.5 font-mono">{children}</code>
+  ),
+  a: ({ href, children }: { href?: string; children?: React.ReactNode }) => (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="text-[#4a7c59] underline hover:text-[#3d6b4a]">{children}</a>
+  ),
+  blockquote: ({ children }: { children?: React.ReactNode }) => (
+    <blockquote className="border-l-2 border-gray-300 pl-3 my-2 text-sm text-gray-500 italic">{children}</blockquote>
+  ),
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -345,6 +387,8 @@ function PostCard({
   // the isOwner check for structural parity.
   const isOwner = currentUserId === post.teacher_id;
   const [menuOpen, setMenuOpen] = useState(false);
+  const [bodyExpanded, setBodyExpanded] = useState(false)
+  const isLongBody = post.body.length > 300
 
   const media: MediaItem[] = post.media.map((m, i) => ({
     type: m.kind,
@@ -425,7 +469,26 @@ function PostCard({
       )}
 
       {/* Body */}
-      <p className="text-sm font-body text-gray-700 leading-relaxed px-5">{post.body}</p>
+      <div className="px-5">
+        <div
+          className={`relative text-sm font-body text-gray-700 leading-relaxed [&>*:last-child]:mb-0 ${
+            isLongBody && !bodyExpanded ? 'max-h-24 overflow-hidden' : ''
+          }`}
+        >
+          <ReactMarkdown components={markdownComponents}>{post.body}</ReactMarkdown>
+          {isLongBody && !bodyExpanded && (
+            <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+          )}
+        </div>
+        {isLongBody && (
+          <button
+            onClick={(e) => { e.stopPropagation(); setBodyExpanded(v => !v) }}
+            className="mt-1 text-xs font-semibold text-[#4a7c59] hover:text-[#3d6b4a] transition-colors"
+          >
+            {bodyExpanded ? 'Show less' : 'Read more'}
+          </button>
+        )}
+      </div>
 
       {/* Media — full bleed */}
       {media.length > 0 && <MediaGrid media={media} />}
@@ -607,7 +670,9 @@ function PostSidebarContent({
       {post.post_type && <PostTypeBadge value={post.post_type} />}
 
       {/* Full body */}
-      <p className="text-sm font-body text-gray-700 leading-relaxed">{post.body}</p>
+      <div className="text-sm font-body text-gray-700 leading-relaxed [&>*:last-child]:mb-0">
+        <ReactMarkdown components={markdownComponents}>{post.body}</ReactMarkdown>
+      </div>
 
       {/* Full media */}
       {media.length > 0 && (

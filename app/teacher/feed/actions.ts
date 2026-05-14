@@ -465,3 +465,65 @@ export async function toggleReaction(
     return { added: true };
   }
 }
+
+// ─── Update Post ──────────────────────────────────────────────────────────────
+
+export async function updatePost(formData: FormData): Promise<{ success?: boolean; error?: string }> {
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
+  const postId = formData.get("postId") as string;
+  const body = (formData.get("body") as string)?.trim();
+  const postType = formData.get("post_type") as string;
+
+  if (!body) return { error: "Body is required" };
+
+  const adminClient = createAdminClient();
+
+  const { error } = await adminClient
+    .schema("feed")
+    .from("posts")
+    .update({ body, post_type: postType })
+    .eq("id", postId)
+    .eq("teacher_id", user.id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/teacher/feed");
+  return { success: true };
+}
+
+// ─── Delete Post Media ────────────────────────────────────────────────────────
+
+export async function deletePostMedia(mediaId: string): Promise<{ success?: boolean; error?: string }> {
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
+  const adminClient = createAdminClient();
+
+  const { data: media } = await adminClient
+    .schema("feed")
+    .from("post_media")
+    .select("storage_url, post_id")
+    .eq("id", mediaId)
+    .single();
+
+  if (!media) return { error: "Not found" };
+
+  await adminClient.storage.from("feed-media").remove([media.storage_url]);
+
+  const { error } = await adminClient
+    .schema("feed")
+    .from("post_media")
+    .delete()
+    .eq("id", mediaId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
