@@ -1263,12 +1263,13 @@ export function createAftercareEmbed(data: {
   date: string;
   event: "checked_in" | "checked_out" | "pickup_time_set";
   pickupTime?: string | null;
+  pickedUpByName?: string | null;
   paidForDay?: boolean;
 }): DiscordEmbed {
   const EVENT_META = {
     checked_in:      { title: "🟢 Student Added to Aftercare", color: 0x4a7c59 },
     checked_out:     { title: "🔴 Student Removed from Aftercare", color: 0xe74c3c },
-    pickup_time_set: { title: "🕒 Pickup Time Updated", color: 0xe07a3a },
+    pickup_time_set: { title: "🚗 Aftercare Pickup Recorded", color: 0xe07a3a },
   };
   const { title, color } = EVENT_META[data.event];
 
@@ -1286,6 +1287,9 @@ export function createAftercareEmbed(data: {
     const ampm = h >= 12 ? "PM" : "AM";
     const h12 = h % 12 || 12;
     fields.push({ name: "Pickup Time", value: `${h12}:${String(m).padStart(2, "0")} ${ampm}`, inline: true });
+    if (data.pickedUpByName) {
+      fields.push({ name: "Picked Up By", value: data.pickedUpByName, inline: true });
+    }
   }
 
   return { title, color, fields, timestamp: new Date().toISOString() };

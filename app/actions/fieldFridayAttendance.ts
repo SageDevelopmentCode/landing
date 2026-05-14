@@ -9,6 +9,9 @@ export type FieldFridayRecord = {
   id: string
   date: string
   student_id: string
+  pickup_time: string | null
+  picked_up_by_name: string | null
+  picked_up_by_relationship: string | null
   recorded_by: string
   notes: string | null
   paid_for_day: boolean
@@ -93,7 +96,7 @@ export async function getFieldFridayStudentsForDate(date: string): Promise<Field
   const { data: records } = await adminClient
     .schema('attendance')
     .from('field_friday_records')
-    .select('id, date, student_id, recorded_by, notes, paid_for_day')
+    .select('id, date, student_id, pickup_time, picked_up_by_name, picked_up_by_relationship, recorded_by, notes, paid_for_day')
     .eq('date', date)
     .in('student_id', studentIds)
 
@@ -103,6 +106,9 @@ export async function getFieldFridayStudentsForDate(date: string): Promise<Field
       id: r.id,
       date: r.date,
       student_id: r.student_id,
+      pickup_time: r.pickup_time ?? null,
+      picked_up_by_name: r.picked_up_by_name ?? null,
+      picked_up_by_relationship: r.picked_up_by_relationship ?? null,
       recorded_by: r.recorded_by,
       notes: r.notes ?? null,
       paid_for_day: r.paid_for_day ?? false,
@@ -142,7 +148,7 @@ export async function upsertFieldFridayRecord(
       },
       { onConflict: 'student_id,date' },
     )
-    .select('id, date, student_id, recorded_by, notes, paid_for_day')
+    .select('id, date, student_id, pickup_time, picked_up_by_name, picked_up_by_relationship, recorded_by, notes, paid_for_day')
     .single()
 
   if (error || !data) return null
@@ -151,6 +157,9 @@ export async function upsertFieldFridayRecord(
     id: data.id,
     date: data.date,
     student_id: data.student_id,
+    pickup_time: data.pickup_time ?? null,
+    picked_up_by_name: data.picked_up_by_name ?? null,
+    picked_up_by_relationship: data.picked_up_by_relationship ?? null,
     recorded_by: data.recorded_by,
     notes: data.notes ?? null,
     paid_for_day: data.paid_for_day ?? false,
@@ -226,4 +235,75 @@ export async function removeFieldFridayRecord(recordId: string): Promise<{ ok: b
   }
 
   return { ok: !error }
+}
+
+export async function recordFieldFridayPickup(
+  studentId: string,
+  date: string,
+  pickupTime: string,
+  pickedUpByName: string,
+  pickedUpByRelationship: string,
+): Promise<FieldFridayRecord | null> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const adminClient = createAdminClient()
+  const { data, error } = await adminClient
+    .schema('attendance')
+    .from('field_friday_records')
+    .upsert(
+      {
+        student_id: studentId,
+        date,
+        recorded_by: user.id,
+        pickup_time: pickupTime,
+        picked_up_by_name: pickedUpByName,
+        picked_up_by_relationship: pickedUpByRelationship,
+        pickup_recorded_by: user.id,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'student_id,date' },
+    )
+    .select('id, date, student_id, pickup_time, picked_up_by_name, picked_up_by_relationship, recorded_by, notes, paid_for_day')
+    .single()
+
+  if (error || !data) return null
+
+  const record: FieldFridayRecord = {
+    id: data.id,
+    date: data.date,
+    student_id: data.student_id,
+    pickup_time: data.pickup_time ?? null,
+    picked_up_by_name: data.picked_up_by_name ?? null,
+    picked_up_by_relationship: data.picked_up_by_relationship ?? null,
+    recorded_by: data.recorded_by,
+    notes: data.notes ?? null,
+    paid_for_day: data.paid_for_day ?? false,
+  }
+
+  adminClient
+    .schema('admin')
+    .from('students')
+    .select('child_legal_name')
+    .eq('id', studentId)
+    .single()
+    .then(({ data: student }) => {
+      void sendDiscordNotification(
+        {
+          title: '🚗 Field Fun Friday Pickup Recorded',
+          color: 0x4a7c59,
+          fields: [
+            { name: 'Student', value: student?.child_legal_name ?? 'Unknown Student', inline: true },
+            { name: 'Picked Up By', value: pickedUpByName, inline: true },
+            { name: 'Pickup Time', value: pickupTime, inline: true },
+            { name: 'Date', value: date, inline: true },
+          ],
+          timestamp: new Date().toISOString(),
+        },
+        FIELD_FRIDAY_WEBHOOK,
+      )
+    })
+
+  return record
 }

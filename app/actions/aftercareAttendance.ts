@@ -10,6 +10,8 @@ export type AftercareRecord = {
   date: string
   student_id: string
   pickup_time: string | null
+  picked_up_by_name: string | null
+  picked_up_by_relationship: string | null
   recorded_by: string
   notes: string | null
   paid_for_day: boolean
@@ -91,7 +93,7 @@ export async function getAftercareStudentsForDate(date: string): Promise<Afterca
   const { data: records } = await adminClient
     .schema('attendance')
     .from('aftercare_records')
-    .select('id, date, student_id, pickup_time, recorded_by, notes, paid_for_day')
+    .select('id, date, student_id, pickup_time, picked_up_by_name, picked_up_by_relationship, recorded_by, notes, paid_for_day')
     .eq('date', date)
     .in('student_id', studentIds)
 
@@ -102,6 +104,8 @@ export async function getAftercareStudentsForDate(date: string): Promise<Afterca
       date: r.date,
       student_id: r.student_id,
       pickup_time: r.pickup_time ?? null,
+      picked_up_by_name: r.picked_up_by_name ?? null,
+      picked_up_by_relationship: r.picked_up_by_relationship ?? null,
       recorded_by: r.recorded_by,
       notes: r.notes ?? null,
       paid_for_day: r.paid_for_day ?? false,
@@ -143,7 +147,7 @@ export async function upsertAfterCareRecord(
       },
       { onConflict: 'student_id,date' },
     )
-    .select('id, date, student_id, pickup_time, recorded_by, notes, paid_for_day')
+    .select('id, date, student_id, pickup_time, picked_up_by_name, picked_up_by_relationship, recorded_by, notes, paid_for_day')
     .single()
 
   if (error || !data) return null
@@ -153,6 +157,8 @@ export async function upsertAfterCareRecord(
     date: data.date,
     student_id: data.student_id,
     pickup_time: data.pickup_time ?? null,
+    picked_up_by_name: data.picked_up_by_name ?? null,
+    picked_up_by_relationship: data.picked_up_by_relationship ?? null,
     recorded_by: data.recorded_by,
     notes: data.notes ?? null,
     paid_for_day: data.paid_for_day ?? false,
@@ -169,7 +175,7 @@ export async function upsertAfterCareRecord(
       const studentName = student?.child_legal_name ?? 'Unknown Student'
       const event = pickupTime ? 'pickup_time_set' : 'checked_in'
       void sendDiscordNotification(
-        createAftercareEmbed({ studentName, date, event, pickupTime, paidForDay }),
+        createAftercareEmbed({ studentName, date, event, pickupTime, paidForDay, pickedUpByName: null }),
         STUDENT_WEBHOOK,
       )
     })
@@ -219,4 +225,72 @@ export async function removeAfterCareRecord(recordId: string): Promise<{ ok: boo
   }
 
   return { ok: !error }
+}
+
+export async function recordAftercarePickup(
+  studentId: string,
+  date: string,
+  pickupTime: string,
+  pickedUpByName: string,
+  pickedUpByRelationship: string,
+): Promise<AftercareRecord | null> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const adminClient = createAdminClient()
+  const { data, error } = await adminClient
+    .schema('attendance')
+    .from('aftercare_records')
+    .upsert(
+      {
+        student_id: studentId,
+        date,
+        recorded_by: user.id,
+        pickup_time: pickupTime,
+        picked_up_by_name: pickedUpByName,
+        picked_up_by_relationship: pickedUpByRelationship,
+        pickup_recorded_by: user.id,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'student_id,date' },
+    )
+    .select('id, date, student_id, pickup_time, picked_up_by_name, picked_up_by_relationship, recorded_by, notes, paid_for_day')
+    .single()
+
+  if (error || !data) return null
+
+  const record: AftercareRecord = {
+    id: data.id,
+    date: data.date,
+    student_id: data.student_id,
+    pickup_time: data.pickup_time ?? null,
+    picked_up_by_name: data.picked_up_by_name ?? null,
+    picked_up_by_relationship: data.picked_up_by_relationship ?? null,
+    recorded_by: data.recorded_by,
+    notes: data.notes ?? null,
+    paid_for_day: data.paid_for_day ?? false,
+  }
+
+  adminClient
+    .schema('admin')
+    .from('students')
+    .select('child_legal_name')
+    .eq('id', studentId)
+    .single()
+    .then(({ data: student }) => {
+      void sendDiscordNotification(
+        createAftercareEmbed({
+          studentName: student?.child_legal_name ?? 'Unknown Student',
+          date,
+          event: 'pickup_time_set',
+          pickupTime,
+          pickedUpByName,
+          paidForDay: data.paid_for_day ?? false,
+        }),
+        STUDENT_WEBHOOK,
+      )
+    })
+
+  return record
 }

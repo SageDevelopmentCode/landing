@@ -1,13 +1,16 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Loader2, Calendar as CalendarIcon, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Calendar as CalendarIcon, Search, X, Clock, ChevronDown } from "lucide-react";
 import {
   getFieldFridayStudentsForDate,
   upsertFieldFridayRecord,
   removeFieldFridayRecord,
+  recordFieldFridayPickup,
 } from "@/app/actions/fieldFridayAttendance";
 import type { FieldFridayStudentRow } from "@/app/actions/fieldFridayAttendance";
+import { getPickupPersonsForStudent } from "@/app/actions/summerAttendance";
+import type { PickupPerson } from "@/app/actions/summerAttendance";
 
 interface Props {
   initialStudents: FieldFridayStudentRow[];
@@ -66,6 +69,25 @@ function toDateStr(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
+function getTimeSlots(): string[] {
+  const now = new Date();
+  const slots: string[] = [];
+  const end = now.getHours() * 60 + now.getMinutes();
+  for (let t = 6 * 60; t <= end; t += 5) {
+    const h = Math.floor(t / 60);
+    const m = t % 60;
+    slots.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+  }
+  return slots.reverse();
+}
+
+function fmt12h(time: string): string {
+  const [h, m] = time.split(":").map(Number);
+  const ampm = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
+}
+
 function getInitials(name: string | null): string {
   if (!name) return "?";
   const parts = name.trim().split(/\s+/);
@@ -97,6 +119,14 @@ export default function FieldFridayPageClient({ initialStudents, initialDate }: 
   const [calMonth, setCalMonth] = useState(() => Number(initialDate.split("-")[1]) - 1);
   const calRef = useRef<HTMLDivElement>(null);
   const [search, setSearch] = useState("");
+
+  const [openPickupPanel, setOpenPickupPanel] = useState<string | null>(null);
+  const [pickupPersons, setPickupPersons] = useState<PickupPerson[]>([]);
+  const [pickupPersonsLoading, setPickupPersonsLoading] = useState(false);
+  const [selectedPickupPerson, setSelectedPickupPerson] = useState<PickupPerson | null>(null);
+  const [pickupTime, setPickupTime] = useState<string>("");
+  const [pickupSaving, setPickupSaving] = useState(false);
+  const [openPickupTimePicker, setOpenPickupTimePicker] = useState(false);
 
   const todayFriday = getTodayFriday();
   const isThisFriday = selectedDate === todayFriday;
@@ -145,6 +175,38 @@ export default function FieldFridayPageClient({ initialStudents, initialDate }: 
       );
     }
     removeSaving(row.student_id);
+  }
+
+  async function handleOpenPickup(studentId: string) {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2, "0");
+    const m = String(now.getMinutes()).padStart(2, "0");
+    setPickupTime(`${h}:${m}`);
+    setSelectedPickupPerson(null);
+    setOpenPickupTimePicker(false);
+    setOpenPickupPanel(studentId);
+    setPickupPersonsLoading(true);
+    const persons = await getPickupPersonsForStudent(studentId);
+    setPickupPersons(persons);
+    if (persons.length === 1) setSelectedPickupPerson(persons[0]);
+    setPickupPersonsLoading(false);
+  }
+
+  async function handleConfirmPickup(studentId: string, date: string) {
+    if (!selectedPickupPerson || !pickupTime) return;
+    setPickupSaving(true);
+    const record = await recordFieldFridayPickup(
+      studentId, date, pickupTime,
+      selectedPickupPerson.name, selectedPickupPerson.relationship,
+    );
+    if (record) {
+      setStudents((prev) =>
+        prev.map((s) => (s.student_id === studentId ? { ...s, record } : s))
+      );
+    }
+    setPickupSaving(false);
+    setOpenPickupPanel(null);
+    setOpenPickupTimePicker(false);
   }
 
   const attendingCount = students.filter((s) => s.record !== null).length;
@@ -325,6 +387,7 @@ export default function FieldFridayPageClient({ initialStudents, initialDate }: 
             {filteredStudents.map((row) => {
               const isSaving = savingIds.has(row.student_id);
               const isChecked = row.record !== null;
+              const hasPickup = !!row.record?.pickup_time;
 
               return (
                 <div
@@ -356,8 +419,33 @@ export default function FieldFridayPageClient({ initialStudents, initialDate }: 
                     )}
                   </div>
 
-                  {/* Controls: enrollment badge + checkbox */}
+                  {/* Controls */}
                   <div className="flex items-center gap-2.5 flex-shrink-0">
+                    {/* Pickup display / button */}
+                    {isChecked && (
+                      hasPickup ? (
+                        <div className="flex flex-col items-end gap-0.5">
+                          <span className="text-xs font-semibold text-[#4a7c59]">
+                            {fmt12h(row.record!.pickup_time!)}
+                          </span>
+                          {row.record!.picked_up_by_name && (
+                            <span className="text-[10px] text-gray-500 truncate max-w-[130px]">
+                              {row.record!.picked_up_by_name}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <button
+                          disabled={isSaving}
+                          onClick={() => handleOpenPickup(row.student_id)}
+                          className="text-xs font-medium text-white bg-[#4a7c59] hover:bg-[#3d6b4a] px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-40"
+                        >
+                          Pickup
+                        </button>
+                      )
+                    )}
+
+                    {/* Enrollment badge */}
                     {row.hasEnrollment ? (
                       <span className="text-xs font-medium text-[#4a7c59] bg-[#4a7c59]/10 px-2.5 py-1 rounded-full">
                         Paid
@@ -368,16 +456,18 @@ export default function FieldFridayPageClient({ initialStudents, initialDate }: 
                       </span>
                     )}
 
+                    {/* Checkbox */}
                     {isSaving ? (
                       <Loader2 className="w-4 h-4 animate-spin text-[#4a7c59]" />
                     ) : (
                       <button
-                        onClick={() => handleCheckboxChange(row, !isChecked)}
+                        onClick={() => { if (!hasPickup) handleCheckboxChange(row, !isChecked); }}
+                        disabled={hasPickup}
                         className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors border-2 ${
                           isChecked
                             ? "bg-[#4a7c59] border-[#4a7c59]"
                             : "bg-transparent border-gray-300 hover:border-[#4a7c59]"
-                        }`}
+                        } ${hasPickup ? "opacity-60 cursor-not-allowed" : ""}`}
                         aria-label={isChecked ? "Remove from Field Fun Fridays" : "Mark attending Field Fun Fridays"}
                       >
                         {isChecked && (
@@ -394,6 +484,113 @@ export default function FieldFridayPageClient({ initialStudents, initialDate }: 
           </>
         )}
       </div>
+
+      {/* Pickup modal */}
+      {openPickupPanel && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) {
+              setOpenPickupPanel(null);
+              setOpenPickupTimePicker(false);
+            }
+          }}
+        >
+          <div className="bg-white rounded-2xl shadow-xl p-5 w-96 mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm font-semibold text-gray-800">Who picked up?</span>
+              <button
+                onClick={() => { setOpenPickupPanel(null); setOpenPickupTimePicker(false); }}
+                className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-4 h-4 text-gray-400" />
+              </button>
+            </div>
+
+            {pickupPersonsLoading ? (
+              <div className="flex items-center justify-center py-6">
+                <Loader2 className="w-5 h-5 animate-spin text-[#4a7c59]" />
+              </div>
+            ) : pickupPersons.length === 0 ? (
+              <p className="text-sm text-gray-400 py-3">No authorized persons on file.</p>
+            ) : (
+              <div className="flex flex-col gap-1 mb-4 max-h-48 overflow-y-auto">
+                {pickupPersons.map((person) => (
+                  <button
+                    key={person.name}
+                    onClick={() => setSelectedPickupPerson(person)}
+                    className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition-colors cursor-pointer flex items-center gap-3 ${
+                      selectedPickupPerson?.name === person.name
+                        ? "bg-[#4a7c59] text-white"
+                        : "text-gray-700 hover:bg-[#4a7c59]/10"
+                    }`}
+                  >
+                    <span className={`flex-shrink-0 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${
+                      selectedPickupPerson?.name === person.name
+                        ? "border-white bg-white"
+                        : "border-gray-300"
+                    }`}>
+                      {selectedPickupPerson?.name === person.name && (
+                        <span className="w-2 h-2 rounded-full bg-[#4a7c59]" />
+                      )}
+                    </span>
+                    <span>
+                      <span className="font-medium">{person.name}</span>
+                      <span className={`ml-1.5 text-xs ${selectedPickupPerson?.name === person.name ? "text-white/80" : "text-gray-400"}`}>
+                        ({person.relationship})
+                      </span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="relative mb-4 overflow-visible">
+              <button
+                onClick={() => setOpenPickupTimePicker((p) => !p)}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-xl border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <span className="flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-gray-400" />
+                  {pickupTime ? fmt12h(pickupTime) : "Select time"}
+                </span>
+                <ChevronDown className="w-4 h-4 text-gray-400" />
+              </button>
+              {openPickupTimePicker && (
+                <div className="absolute bottom-full left-0 right-0 mb-1 z-20 bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden">
+                  <div className="max-h-40 overflow-y-auto">
+                    {getTimeSlots().map((slot) => (
+                      <button
+                        key={slot}
+                        onClick={() => { setPickupTime(slot); setOpenPickupTimePicker(false); }}
+                        className={`w-full text-left px-3 py-2 text-sm transition-colors ${
+                          pickupTime === slot
+                            ? "bg-[#4a7c59] text-white"
+                            : "text-gray-700 hover:bg-[#4a7c59]/10"
+                        }`}
+                      >
+                        {fmt12h(slot)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <button
+              disabled={!selectedPickupPerson || !pickupTime || pickupSaving}
+              onClick={() => {
+                if (openPickupPanel) {
+                  handleConfirmPickup(openPickupPanel, selectedDate);
+                }
+              }}
+              className="w-full px-4 py-2.5 bg-[#4a7c59] text-white text-sm font-semibold rounded-xl hover:bg-[#3d6b4a] disabled:opacity-40 transition-colors"
+            >
+              {pickupSaving ? "Saving…" : "Confirm Pickup"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -289,6 +289,58 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
+    if (type === "aftercare_pickup_recorded") {
+      const { studentName, date, pickupTime, pickedUpBy, relationship } = data;
+      if (!studentName || !date || !pickupTime || !pickedUpBy) {
+        return NextResponse.json(
+          { error: "aftercare_pickup_recorded requires studentName, date, pickupTime, and pickedUpBy" },
+          { status: 400 },
+        );
+      }
+      await sendDiscordNotification(
+        {
+          title: "🚗 Aftercare Pickup Recorded",
+          color: 0x4a7c59,
+          fields: [
+            { name: "Student", value: studentName, inline: true },
+            { name: "Picked Up By", value: pickedUpBy, inline: true },
+            { name: "Pickup Time", value: pickupTime, inline: true },
+            { name: "Date", value: date, inline: true },
+            ...(relationship ? [{ name: "Relationship", value: relationship, inline: true }] : []),
+          ],
+          timestamp: new Date().toISOString(),
+        },
+        process.env.DISCORD_STUDENT_WEBHOOK_URL,
+      );
+      return NextResponse.json({ success: true });
+    }
+
+    if (type === "field_friday_pickup_recorded") {
+      const { studentName, date, pickupTime, pickedUpBy, relationship } = data;
+      if (!studentName || !date || !pickupTime || !pickedUpBy) {
+        return NextResponse.json(
+          { error: "field_friday_pickup_recorded requires studentName, date, pickupTime, and pickedUpBy" },
+          { status: 400 },
+        );
+      }
+      await sendDiscordNotification(
+        {
+          title: "🚗 Field Fun Friday Pickup Recorded",
+          color: 0x16a34a,
+          fields: [
+            { name: "Student", value: studentName, inline: true },
+            { name: "Picked Up By", value: pickedUpBy, inline: true },
+            { name: "Pickup Time", value: pickupTime, inline: true },
+            { name: "Date", value: date, inline: true },
+            ...(relationship ? [{ name: "Relationship", value: relationship, inline: true }] : []),
+          ],
+          timestamp: new Date().toISOString(),
+        },
+        process.env.DISCORD_STUDENT_WEBHOOK_URL,
+      );
+      return NextResponse.json({ success: true });
+    }
+
     if (type === "field_friday_checked_out") {
       const { studentName, date } = data;
       if (!studentName || !date) {
