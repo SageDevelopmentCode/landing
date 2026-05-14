@@ -27,7 +27,9 @@ import OnboardingChecklist from "@/app/parent/components/OnboardingChecklist";
 import HelpWidget from "@/app/parent/components/HelpWidget";
 import {
   getParentStudentAttendance,
-  type ParentCheckInRecord,
+  type UnifiedAttendanceRecord,
+  type UserMap,
+  type AttendanceProgram,
 } from "@/app/actions/getParentStudentAttendance";
 import { saveDropOffTime } from "@/app/actions/saveDropOffTime";
 import { DetailSidebar } from "@/app/admin/components/DetailSidebar";
@@ -150,27 +152,26 @@ function getEventDayMonth(dateStr: string): { day: string; month: string } {
   };
 }
 
-function formatAttendanceDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", {
+function formatAttendanceDate(ymd: string) {
+  return new Date(ymd + "T00:00:00").toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
   });
 }
 
-function formatAttendanceTime(iso: string) {
-  return new Date(iso).toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
+function formatPickupTime(hhmm: string) {
+  const [h, m] = hhmm.split(":").map(Number);
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
 }
 
-function isPastDay(iso: string) {
-  const d = new Date(iso);
-  const today = new Date();
-  return d.toDateString() !== today.toDateString() && d < today;
-}
+const PROGRAM_CONFIG: Record<AttendanceProgram, { label: string; color: string; bg: string }> = {
+  summer:       { label: "Summer 2026",      color: "#d97706", bg: "#fef9ee" },
+  aftercare:    { label: "Aftercare",         color: "#7c3aed", bg: "#f5f3ff" },
+  field_friday: { label: "Field Fun Fridays", color: "#0891b2", bg: "#ecfeff" },
+};
 
 interface AttendanceSidebarProps {
   student: HomeStudent | null;
@@ -178,19 +179,27 @@ interface AttendanceSidebarProps {
 }
 
 function AttendanceSidebar({ student, onClose }: AttendanceSidebarProps) {
-  const [records, setRecords] = useState<ParentCheckInRecord[]>([]);
+  const [records, setRecords] = useState<UnifiedAttendanceRecord[]>([]);
+  const [userMap, setUserMap] = useState<UserMap>({});
   const [loading, setLoading] = useState(false);
   const [selectedRecord, setSelectedRecord] =
-    useState<ParentCheckInRecord | null>(null);
+    useState<UnifiedAttendanceRecord | null>(null);
 
   useEffect(() => {
     if (!student) return;
     setLoading(true);
     setRecords([]);
+    setUserMap({});
     setSelectedRecord(null);
     getParentStudentAttendance(student.id)
-      .then(setRecords)
-      .catch(() => setRecords([]))
+      .then(({ records: r, userMap: m }) => {
+        setRecords(r);
+        setUserMap(m);
+      })
+      .catch(() => {
+        setRecords([]);
+        setUserMap({});
+      })
       .finally(() => setLoading(false));
   }, [student?.id]);
 
@@ -213,9 +222,8 @@ function AttendanceSidebar({ student, onClose }: AttendanceSidebarProps) {
                     className="flex items-center justify-between px-4 py-3 border-b border-gray-100"
                   >
                     <div className="h-4 w-28 bg-gray-100 rounded animate-pulse" />
-                    <div className="h-4 w-20 bg-gray-100 rounded animate-pulse" />
-                    <div className="h-4 w-20 bg-gray-100 rounded animate-pulse" />
-                    <div className="h-5 w-24 bg-gray-100 rounded-full animate-pulse" />
+                    <div className="h-4 w-24 bg-gray-100 rounded animate-pulse" />
+                    <div className="h-5 w-20 bg-gray-100 rounded-full animate-pulse" />
                   </div>
                 ))}
               </div>
@@ -225,54 +233,44 @@ function AttendanceSidebar({ student, onClose }: AttendanceSidebarProps) {
               </p>
             ) : (
               <div>
-                <div className="grid grid-cols-4 px-4 py-2 border-b border-gray-100 bg-gray-50">
+                <div className="grid grid-cols-3 px-4 py-2 border-b border-gray-100 bg-gray-50">
                   <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
                     Date
                   </span>
                   <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
-                    In
-                  </span>
-                  <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
-                    Out
+                    Program
                   </span>
                   <span className="text-xs font-semibold uppercase tracking-widest text-gray-400 text-right">
                     Status
                   </span>
                 </div>
                 {records.map((r, i) => {
-                  const notCheckedOut =
-                    !r.checked_out_at && isPastDay(r.checked_in_at);
+                  const cfg = PROGRAM_CONFIG[r.program];
                   return (
                     <div
                       key={r.id}
                       onClick={() => setSelectedRecord(r)}
-                      className={`grid grid-cols-4 px-4 py-3 cursor-pointer transition-colors hover:bg-gray-50 ${
+                      className={`grid grid-cols-3 px-4 py-3 cursor-pointer transition-colors hover:bg-gray-50 ${
                         i < records.length - 1 ? "border-b border-gray-100" : ""
                       }`}
                     >
                       <span className="text-xs text-gray-700">
-                        {formatAttendanceDate(r.checked_in_at)}
+                        {formatAttendanceDate(r.date)}
                       </span>
-                      <span className="text-xs text-gray-600">
-                        {formatAttendanceTime(r.checked_in_at)}
-                      </span>
-                      <span className="text-xs text-gray-600">
-                        {r.checked_out_at
-                          ? formatAttendanceTime(r.checked_out_at)
-                          : "—"}
+                      <span
+                        className="text-xs font-medium px-2 py-0.5 rounded-full self-center w-fit"
+                        style={{ color: cfg.color, backgroundColor: cfg.bg }}
+                      >
+                        {cfg.label}
                       </span>
                       <div className="flex justify-end">
-                        {r.checked_out_at ? (
+                        {r.pickup_time ? (
                           <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-700">
-                            Out
-                          </span>
-                        ) : notCheckedOut ? (
-                          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
-                            Missed
+                            Picked Up
                           </span>
                         ) : (
-                          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
-                            Active
+                          <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ backgroundColor: "#eaf2ec", color: "#4a7c59" }}>
+                            Attended
                           </span>
                         )}
                       </div>
@@ -281,15 +279,6 @@ function AttendanceSidebar({ student, onClose }: AttendanceSidebarProps) {
                 })}
               </div>
             )}
-            <div className="flex items-center gap-2 px-4 py-3 border-t border-gray-100 bg-gray-50">
-              <Smartphone
-                className="w-4 h-4 text-gray-400 flex-shrink-0"
-                strokeWidth={1.5}
-              />
-              <p className="text-xs text-gray-400">
-                To check in or out, use the Sage Field mobile app (Coming Soon).
-              </p>
-            </div>
           </div>
         </div>
       </DetailSidebar>
@@ -298,31 +287,47 @@ function AttendanceSidebar({ student, onClose }: AttendanceSidebarProps) {
       <DetailSidebar
         isOpen={!!selectedRecord}
         onClose={() => setSelectedRecord(null)}
-        title="Check-In Details"
+        title="Attendance Record"
       >
-        {selectedRecord && (
-          <SidebarSection title="Check-In Record">
-            <SidebarField
-              label="Date"
-              value={formatAttendanceDate(selectedRecord.checked_in_at)}
-            />
-            <SidebarField
-              label="Checked In"
-              value={formatAttendanceTime(selectedRecord.checked_in_at)}
-            />
-            <SidebarField
-              label="Checked Out"
-              value={
-                selectedRecord.checked_out_at
-                  ? formatAttendanceTime(selectedRecord.checked_out_at)
-                  : "Not checked out"
-              }
-            />
-            {selectedRecord.notes && (
-              <SidebarField label="Notes" value={selectedRecord.notes} />
-            )}
-          </SidebarSection>
-        )}
+        {selectedRecord && (() => {
+          const cfg = PROGRAM_CONFIG[selectedRecord.program];
+          const recordedBy = userMap[selectedRecord.recorded_by]?.full_name ?? "Staff";
+          const pickupRecordedBy = selectedRecord.pickup_recorded_by
+            ? (userMap[selectedRecord.pickup_recorded_by]?.full_name ?? "Staff")
+            : null;
+          return (
+            <SidebarSection title="Record Details">
+              <SidebarField label="Date" value={formatAttendanceDate(selectedRecord.date)} />
+              <div className="flex flex-col gap-0.5">
+                <span className="text-xs text-gray-400">Program</span>
+                <span
+                  className="text-xs font-medium px-2.5 py-0.5 rounded-full w-fit"
+                  style={{ color: cfg.color, backgroundColor: cfg.bg }}
+                >
+                  {cfg.label}
+                </span>
+              </div>
+              <SidebarField label="Recorded By" value={recordedBy} />
+              {selectedRecord.pickup_time && (
+                <>
+                  <SidebarField label="Pickup Time" value={formatPickupTime(selectedRecord.pickup_time)} />
+                  {selectedRecord.picked_up_by_name && (
+                    <SidebarField
+                      label="Picked Up By"
+                      value={[selectedRecord.picked_up_by_name, selectedRecord.picked_up_by_relationship].filter(Boolean).join(" · ")}
+                    />
+                  )}
+                  {pickupRecordedBy && (
+                    <SidebarField label="Pickup Recorded By" value={pickupRecordedBy} />
+                  )}
+                </>
+              )}
+              {selectedRecord.notes && (
+                <SidebarField label="Notes" value={selectedRecord.notes} />
+              )}
+            </SidebarSection>
+          );
+        })()}
       </DetailSidebar>
     </>
   );

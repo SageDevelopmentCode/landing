@@ -7,7 +7,6 @@ import {
   Image as ImageIcon,
   Mail,
   UserX,
-  Smartphone,
   MessageCircle,
   ChevronRight,
   Camera,
@@ -36,7 +35,9 @@ import {
 import { formatPhone } from "@/app/utils/formatPhone";
 import {
   getParentStudentAttendance,
-  type ParentCheckInRecord,
+  type UnifiedAttendanceRecord,
+  type UserMap,
+  type AttendanceProgram,
 } from "@/app/actions/getParentStudentAttendance";
 import { DetailSidebar } from "@/app/admin/components/DetailSidebar";
 import {
@@ -60,6 +61,12 @@ type ContentTab =
   | "photos"
   | "pickup"
   | "profile";
+
+const PROGRAM_CONFIG: Record<AttendanceProgram, { label: string; color: string; bg: string }> = {
+  summer:       { label: "Summer 2026",      color: "#d97706", bg: "#fef9ee" },
+  aftercare:    { label: "Aftercare",         color: "#7c3aed", bg: "#f5f3ff" },
+  field_friday: { label: "Field Fun Fridays", color: "#0891b2", bg: "#ecfeff" },
+};
 
 interface Props {
   children: Student[];
@@ -415,32 +422,28 @@ function TeacherTab({
 
 function AttendanceTab({
   records,
+  userMap,
   loading,
 }: {
-  records: ParentCheckInRecord[];
+  records: UnifiedAttendanceRecord[];
+  userMap: UserMap;
   loading: boolean;
 }) {
   const [selectedRecord, setSelectedRecord] =
-    useState<ParentCheckInRecord | null>(null);
+    useState<UnifiedAttendanceRecord | null>(null);
 
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString("en-US", {
+  const formatYMD = (ymd: string) =>
+    new Date(ymd + "T00:00:00").toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
     });
 
-  const formatTime = (iso: string) =>
-    new Date(iso).toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-
-  const isPastDay = (iso: string) => {
-    const d = new Date(iso);
-    const today = new Date();
-    return d.toDateString() !== today.toDateString() && d < today;
+  const formatPickupTime = (hhmm: string) => {
+    const [h, m] = hhmm.split(":").map(Number);
+    const d = new Date();
+    d.setHours(h, m, 0, 0);
+    return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
   };
 
   return (
@@ -454,9 +457,8 @@ function AttendanceTab({
                 className="flex items-center justify-between px-4 py-3 border-b border-gray-100"
               >
                 <div className="h-4 w-28 bg-gray-100 rounded animate-pulse" />
-                <div className="h-4 w-20 bg-gray-100 rounded animate-pulse" />
-                <div className="h-4 w-20 bg-gray-100 rounded animate-pulse" />
-                <div className="h-5 w-24 bg-gray-100 rounded-full animate-pulse" />
+                <div className="h-4 w-24 bg-gray-100 rounded animate-pulse" />
+                <div className="h-5 w-20 bg-gray-100 rounded-full animate-pulse" />
               </div>
             ))}
           </div>
@@ -466,52 +468,42 @@ function AttendanceTab({
           </p>
         ) : (
           <div>
-            <div className="grid grid-cols-4 px-4 py-2 border-b border-gray-100 bg-gray-50">
+            <div className="grid grid-cols-3 px-4 py-2 border-b border-gray-100 bg-gray-50">
               <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
                 Date
               </span>
               <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
-                Checked In
-              </span>
-              <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
-                Checked Out
+                Program
               </span>
               <span className="text-xs font-semibold uppercase tracking-widest text-gray-400 text-right">
                 Status
               </span>
             </div>
             {records.map((r, i) => {
-              const notCheckedOut =
-                !r.checked_out_at && isPastDay(r.checked_in_at);
+              const cfg = PROGRAM_CONFIG[r.program];
               return (
                 <div
                   key={r.id}
                   onClick={() => setSelectedRecord(r)}
-                  className={`grid grid-cols-4 px-4 py-3 cursor-pointer transition-colors hover:bg-gray-50 ${
+                  className={`grid grid-cols-3 px-4 py-3 cursor-pointer transition-colors hover:bg-gray-50 ${
                     i < records.length - 1 ? "border-b border-gray-100" : ""
                   }`}
                 >
-                  <span className="text-sm text-gray-700">
-                    {formatDate(r.checked_in_at)}
-                  </span>
-                  <span className="text-sm text-gray-600">
-                    {formatTime(r.checked_in_at)}
-                  </span>
-                  <span className="text-sm text-gray-600">
-                    {r.checked_out_at ? formatTime(r.checked_out_at) : "—"}
+                  <span className="text-sm text-gray-700">{formatYMD(r.date)}</span>
+                  <span
+                    className="text-xs font-medium px-2.5 py-0.5 rounded-full self-center w-fit"
+                    style={{ color: cfg.color, backgroundColor: cfg.bg }}
+                  >
+                    {cfg.label}
                   </span>
                   <div className="flex justify-end">
-                    {r.checked_out_at ? (
+                    {r.pickup_time ? (
                       <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-green-100 text-green-700">
-                        Checked Out
-                      </span>
-                    ) : notCheckedOut ? (
-                      <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700">
-                        Not Checked Out
+                        Picked Up
                       </span>
                     ) : (
-                      <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-500">
-                        In Progress
+                      <span className="text-xs font-medium px-2.5 py-0.5 rounded-full" style={{ backgroundColor: "#eaf2ec", color: "#4a7c59" }}>
+                        Attended
                       </span>
                     )}
                   </div>
@@ -520,46 +512,52 @@ function AttendanceTab({
             })}
           </div>
         )}
-        <div className="flex items-center gap-2 px-4 py-3 border-t border-gray-100 bg-gray-50">
-          <Smartphone
-            className="w-4 h-4 text-gray-400 flex-shrink-0"
-            strokeWidth={1.5}
-          />
-          <p className="text-xs text-gray-400">
-            To check your child in or out, use the Sage Field mobile app (Coming
-            Soon).
-          </p>
-        </div>
       </div>
 
       <DetailSidebar
         isOpen={!!selectedRecord}
         onClose={() => setSelectedRecord(null)}
-        title="Check-In Details"
+        title="Attendance Record"
       >
-        {selectedRecord && (
-          <SidebarSection title="Check-In Record">
-            <SidebarField
-              label="Date"
-              value={formatDate(selectedRecord.checked_in_at)}
-            />
-            <SidebarField
-              label="Checked In"
-              value={formatTime(selectedRecord.checked_in_at)}
-            />
-            <SidebarField
-              label="Checked Out"
-              value={
-                selectedRecord.checked_out_at
-                  ? formatTime(selectedRecord.checked_out_at)
-                  : "Not checked out"
-              }
-            />
-            {selectedRecord.notes && (
-              <SidebarField label="Notes" value={selectedRecord.notes} />
-            )}
-          </SidebarSection>
-        )}
+        {selectedRecord && (() => {
+          const cfg = PROGRAM_CONFIG[selectedRecord.program];
+          const recordedBy = userMap[selectedRecord.recorded_by]?.full_name ?? "Staff";
+          const pickupRecordedBy = selectedRecord.pickup_recorded_by
+            ? (userMap[selectedRecord.pickup_recorded_by]?.full_name ?? "Staff")
+            : null;
+          return (
+            <SidebarSection title="Record Details">
+              <SidebarField label="Date" value={formatYMD(selectedRecord.date)} />
+              <div className="flex flex-col gap-0.5">
+                <span className="text-xs text-gray-400">Program</span>
+                <span
+                  className="text-xs font-medium px-2.5 py-0.5 rounded-full w-fit"
+                  style={{ color: cfg.color, backgroundColor: cfg.bg }}
+                >
+                  {cfg.label}
+                </span>
+              </div>
+              <SidebarField label="Recorded By" value={recordedBy} />
+              {selectedRecord.pickup_time && (
+                <>
+                  <SidebarField label="Pickup Time" value={formatPickupTime(selectedRecord.pickup_time)} />
+                  {selectedRecord.picked_up_by_name && (
+                    <SidebarField
+                      label="Picked Up By"
+                      value={[selectedRecord.picked_up_by_name, selectedRecord.picked_up_by_relationship].filter(Boolean).join(" · ")}
+                    />
+                  )}
+                  {pickupRecordedBy && (
+                    <SidebarField label="Pickup Recorded By" value={pickupRecordedBy} />
+                  )}
+                </>
+              )}
+              {selectedRecord.notes && (
+                <SidebarField label="Notes" value={selectedRecord.notes} />
+              )}
+            </SidebarSection>
+          );
+        })()}
       </DetailSidebar>
     </>
   );
@@ -1288,9 +1286,8 @@ function ChildProfile({
   );
   const [avatarHovered, setAvatarHovered] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [attendanceRecords, setAttendanceRecords] = useState<
-    ParentCheckInRecord[]
-  >([]);
+  const [attendanceRecords, setAttendanceRecords] = useState<UnifiedAttendanceRecord[]>([]);
+  const [attendanceUserMap, setAttendanceUserMap] = useState<UserMap>({});
   const [attendanceLoading, setAttendanceLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -1298,8 +1295,14 @@ function ChildProfile({
   useEffect(() => {
     setAttendanceLoading(true);
     getParentStudentAttendance(child.id)
-      .then(setAttendanceRecords)
-      .catch(() => setAttendanceRecords([]))
+      .then(({ records, userMap }) => {
+        setAttendanceRecords(records);
+        setAttendanceUserMap(userMap);
+      })
+      .catch(() => {
+        setAttendanceRecords([]);
+        setAttendanceUserMap({});
+      })
       .finally(() => setAttendanceLoading(false));
   }, [child.id]);
 
@@ -1453,6 +1456,7 @@ function ChildProfile({
           {activeTab === "attendance" && (
             <AttendanceTab
               records={attendanceRecords}
+              userMap={attendanceUserMap}
               loading={attendanceLoading}
             />
           )}
