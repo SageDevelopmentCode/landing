@@ -142,7 +142,7 @@ export default function TuitionPage() {
           </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {/* Tier 1 — Explorer Day Pass */}
+            {/* Card 1 — Explorer Day Pass */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -188,7 +188,7 @@ export default function TuitionPage() {
               </p>
             </motion.div>
 
-            {/* Tier 2 — Part-Time Memberships */}
+            {/* Card 2 — 2-Day/Week */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -204,73 +204,37 @@ export default function TuitionPage() {
                 Most Popular
               </span>
               <h3 className="text-base font-bold text-black font-heading mb-1">
-                Part-Time Memberships
+                2-Day/Week
               </h3>
               <p className="text-xs text-gray-400 font-body mb-4">
-                2-Day &amp; 3-Day
+                Part-Time
               </p>
               {activePricingTab === "summer" ? (
-                <div className="space-y-4 mb-4">
-                  <div>
-                    <p className="text-xs font-semibold text-gray-500 mb-1.5 font-body">
-                      2-Day/Week
-                    </p>
-                    <div className="flex justify-between text-sm font-body">
-                      <span className="text-gray-600">2nd–4th</span>
-                      <span className="font-semibold text-black">$170/wk</span>
-                    </div>
-                    <div className="flex justify-between text-sm font-body">
-                      <span className="text-gray-600">Pre-K–1st</span>
-                      <span className="font-semibold text-black">$180/wk</span>
-                    </div>
+                <div className="space-y-2 mb-4">
+                  <div className="flex justify-between text-sm font-body">
+                    <span className="text-gray-600">2nd–4th</span>
+                    <span className="font-semibold text-black">$170/wk</span>
                   </div>
-                  <div>
-                    <p className="text-xs font-semibold text-gray-500 mb-1.5 font-body">
-                      3-Day/Week
-                    </p>
-                    <div className="flex justify-between text-sm font-body">
-                      <span className="text-gray-600">2nd–4th</span>
-                      <span className="font-semibold text-black">$240/wk</span>
-                    </div>
-                    <div className="flex justify-between text-sm font-body">
-                      <span className="text-gray-600">Pre-K–1st</span>
-                      <span className="font-semibold text-black">$255/wk</span>
-                    </div>
+                  <div className="flex justify-between text-sm font-body">
+                    <span className="text-gray-600">Pre-K–1st</span>
+                    <span className="font-semibold text-black">$180/wk</span>
                   </div>
                 </div>
               ) : (
-                <div className="space-y-4 mb-4">
-                  <div>
-                    <p className="text-xs font-semibold text-gray-500 mb-1.5 font-body">
-                      2-Day/Week
-                    </p>
-                    <div className="flex justify-between text-sm font-body">
-                      <span className="text-gray-600">2nd–4th</span>
-                      <span className="font-semibold text-black">$520/mo</span>
-                    </div>
-                    <div className="flex justify-between text-sm font-body">
-                      <span className="text-gray-600">Pre-K–1st</span>
-                      <span className="font-semibold text-black">$560/mo</span>
-                    </div>
+                <div className="space-y-2 mb-4">
+                  <div className="flex justify-between text-sm font-body">
+                    <span className="text-gray-600">2nd–4th</span>
+                    <span className="font-semibold text-black">$520/mo</span>
                   </div>
-                  <div>
-                    <p className="text-xs font-semibold text-gray-500 mb-1.5 font-body">
-                      3-Day/Week
-                    </p>
-                    <div className="flex justify-between text-sm font-body">
-                      <span className="text-gray-600">2nd–4th</span>
-                      <span className="font-semibold text-black">$720/mo</span>
-                    </div>
-                    <div className="flex justify-between text-sm font-body">
-                      <span className="text-gray-600">Pre-K–1st</span>
-                      <span className="font-semibold text-black">$780/mo</span>
-                    </div>
+                  <div className="flex justify-between text-sm font-body">
+                    <span className="text-gray-600">Pre-K–1st</span>
+                    <span className="font-semibold text-black">$560/mo</span>
                   </div>
                 </div>
               )}
             </motion.div>
 
-            {/* Tier 3 — Full-Time */}
+            {/* Card 3 — 3-Day/Week */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -280,37 +244,34 @@ export default function TuitionPage() {
                 delay: 0.3,
                 ease: "easeOut" as const,
               }}
-              className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col relative"
+              className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col"
             >
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-full">
-                Best Value
-              </span>
               <h3 className="text-base font-bold text-black font-heading mb-1">
-                Full-Time
+                3-Day/Week
               </h3>
               <p className="text-xs text-gray-400 font-body mb-4">
-                5 Days/Week
+                Part-Time
               </p>
               {activePricingTab === "summer" ? (
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-sm font-body">
                     <span className="text-gray-600">2nd–4th</span>
-                    <span className="font-semibold text-black">$350/wk</span>
+                    <span className="font-semibold text-black">$240/wk</span>
                   </div>
                   <div className="flex justify-between text-sm font-body">
                     <span className="text-gray-600">Pre-K–1st</span>
-                    <span className="font-semibold text-black">$375/wk</span>
+                    <span className="font-semibold text-black">$255/wk</span>
                   </div>
                 </div>
               ) : (
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-sm font-body">
                     <span className="text-gray-600">2nd–4th</span>
-                    <span className="font-semibold text-black">$1,095/mo</span>
+                    <span className="font-semibold text-black">$720/mo</span>
                   </div>
                   <div className="flex justify-between text-sm font-body">
                     <span className="text-gray-600">Pre-K–1st</span>
-                    <span className="font-semibold text-black">$1,195/mo</span>
+                    <span className="font-semibold text-black">$780/mo</span>
                   </div>
                 </div>
               )}
