@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Navbar from "../components/Navbar";
@@ -18,7 +19,24 @@ const PARTNERS = [
     fbHeight: 776,
     pullQuote:
       'Sending your children to an outdoor-focused school where they are encouraged to try "dangerous things safely" — climbing trees, testing their balance, building confidence, and racing down slip n\' slides — comes with a big responsibility: keeping them safe while they explore.',
-    body: "We're so grateful to have a partnership with Ally Medical ER Round Rock, just 6 minutes from our school, who generously gifted us two fully stocked first aid kits and additional supplies to help keep our students prepared, protected, and cared for. It truly takes a village, and we're thankful to have community partners who support adventurous childhoods as much as we do. 🌿🩹💚",
+    body: (
+      <>
+        We&apos;re so grateful to have a partnership with{" "}
+        <a
+          href="https://www.allymedical.com/locations/round-rock-emergency-room/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-bold text-primary hover:underline"
+        >
+          Ally Medical ER Round Rock
+        </a>
+        , just 6 minutes from our school, who generously gifted us two fully
+        stocked first aid kits and additional supplies to help keep our students
+        prepared, protected, and cared for. It truly takes a village, and
+        we&apos;re thankful to have community partners who support adventurous
+        childhoods as much as we do. 🌿🩹💚
+      </>
+    ),
     ctaLabel: "Visit Ally Medical ER",
   },
   {
@@ -30,7 +48,32 @@ const PARTNERS = [
     fbHeight: 737,
     pullQuote:
       "Proud to be part of the VELA Founder Network — a national community of education entrepreneurs building small, human-centered learning environments outside the traditional school system.",
-    body: `Sage Field is a VELA Microgrant Recipient and part of the VELA Founder Network, a national community of founders building small, human-centered learning environments outside the traditional school system.\n\nVELA Education Fund is a national nonprofit that invests in "indie" education models — microschools, homeschool co‑ops, after‑school programs, and more — through flexible grants, technology, and a growing network of peers. Their support helps us expand our outdoor-based, small-group programs and reach more families who are looking for a different kind of school experience.`,
+    body: (
+      <>
+        <p className="mb-4">
+          Sage Field is a VELA Microgrant Recipient and part of the VELA
+          Founder Network, a national community of founders building small,
+          human-centered learning environments outside the traditional school
+          system.
+        </p>
+        <p>
+          <a
+            href="https://vela.org/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-bold text-primary hover:underline"
+          >
+            VELA Education Fund
+          </a>{" "}
+          is a national nonprofit that invests in &ldquo;indie&rdquo; education
+          models — microschools, homeschool co&#8209;ops, after&#8209;school
+          programs, and more — through flexible grants, technology, and a
+          growing network of peers. Their support helps us expand our
+          outdoor-based, small-group programs and reach more families who are
+          looking for a different kind of school experience.
+        </p>
+      </>
+    ),
     ctaLabel: "Visit VELA Education Fund",
   },
 ];
@@ -137,9 +180,9 @@ export default function PartnershipsPage() {
                   </motion.blockquote>
 
                   {/* Body */}
-                  <p className="text-gray-600 font-body text-sm md:text-base leading-relaxed mb-8 whitespace-pre-line">
+                  <div className="text-gray-600 font-body text-sm md:text-base leading-relaxed mb-8">
                     {partner.body}
-                  </p>
+                  </div>
 
                   {/* CTA */}
                   <a
