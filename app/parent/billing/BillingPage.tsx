@@ -319,16 +319,19 @@ const FUN_FRIDAY_MONTHS = [
   {
     key: "aug",
     label: "August 2026",
-    fridays: [{ label: "Fri Aug 7", date: "2026-08-07" }],
+    fridays: [
+      { label: "Fri Aug 7", date: "2026-08-07" },
+      { label: "Fri Aug 14", date: "2026-08-14" },
+    ],
   },
 ];
 
 function funFridayMonthCents(
   month: (typeof FUN_FRIDAY_MONTHS)[number],
 ): number {
-  return month.fridays.length === 1
-    ? FUN_FRIDAY_DROPIN_CENTS
-    : FUN_FRIDAY_MONTHLY_CENTS;
+  return month.fridays.length >= 4
+    ? FUN_FRIDAY_MONTHLY_CENTS
+    : month.fridays.length * FUN_FRIDAY_DROPIN_CENTS;
 }
 
 // --- Homeschool Drop-In pricing ---

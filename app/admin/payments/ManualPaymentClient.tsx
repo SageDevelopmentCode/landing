@@ -115,7 +115,7 @@ const FUN_FRIDAY_MONTHS = [
       { label: 'Fri Jul 31', date: '2026-07-31' },
     ],
   },
-  { key: 'aug', label: 'August 2026', shortLabel: 'Aug', fridays: [{ label: 'Fri Aug 7', date: '2026-08-07' }] },
+  { key: 'aug', label: 'August 2026', shortLabel: 'Aug', fridays: [{ label: 'Fri Aug 7', date: '2026-08-07' }, { label: 'Fri Aug 14', date: '2026-08-14' }] },
 ]
 
 const WEEKDAYS = [
