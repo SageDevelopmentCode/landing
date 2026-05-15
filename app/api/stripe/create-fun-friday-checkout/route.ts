@@ -10,7 +10,7 @@ const FUN_FRIDAY_MONTHS = [
   { key: "may", label: "May 2026", fridayCount: 1 },
   { key: "jun", label: "June 2026", fridayCount: 4 },
   { key: "jul", label: "July 2026", fridayCount: 5 },
-  { key: "aug", label: "August 2026", fridayCount: 1 },
+  { key: "aug", label: "August 2026", fridayCount: 2 },
 ];
 
 const MONTH_LABELS: Record<string, string> = {
@@ -73,17 +73,18 @@ export async function POST(request: NextRequest) {
       description = `Fun Friday — ${selectedMonths.length} month${selectedMonths.length !== 1 ? "s" : ""} (${monthLabels})`;
       for (const monthKey of selectedMonths) {
         const month = FUN_FRIDAY_MONTHS.find((m) => m.key === monthKey);
-        const isSingleFriday = month?.fridayCount === 1;
+        const count = month?.fridayCount ?? 1;
+        const isMonthlyRate = count >= 4;
         lineItems.push({
           quantity: 1,
           price_data: {
             currency: "usd",
-            unit_amount: isSingleFriday ? FUN_FRIDAY_DROPIN_CENTS : FUN_FRIDAY_MONTHLY_CENTS,
+            unit_amount: isMonthlyRate ? FUN_FRIDAY_MONTHLY_CENTS : count * FUN_FRIDAY_DROPIN_CENTS,
             product_data: {
               name: `Fun Friday — ${MONTH_LABELS[monthKey] ?? monthKey}`,
-              description: isSingleFriday
-                ? "9:00 AM – 1:00 PM · Drop-in session"
-                : "9:00 AM – 1:00 PM · Package of 4 Fridays",
+              description: isMonthlyRate
+                ? "9:00 AM – 1:00 PM · Package of 4 Fridays"
+                : `9:00 AM – 1:00 PM · ${count} drop-in session${count !== 1 ? "s" : ""}`,
             },
           },
         });
