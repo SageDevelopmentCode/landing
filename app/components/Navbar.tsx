@@ -26,6 +26,7 @@ import {
   MapPin,
   User,
   Mail,
+  Handshake,
 } from "lucide-react";
 import ContactDialog from "./ContactDialog";
 import WaitlistDialog from "./WaitlistDialog";
@@ -79,6 +80,12 @@ const NAV_TABS: NavTab[] = [
         action: { kind: "link", href: "/team" },
         icon: Users,
         iconClass: "text-violet-500",
+      },
+      {
+        label: "Partnerships",
+        action: { kind: "link", href: "/partnerships" },
+        icon: Handshake,
+        iconClass: "text-emerald-600",
       },
       {
         label: "FAQ",
@@ -332,7 +339,8 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
       pathname === "/programs" ||
       pathname === "/contact" ||
       pathname === "/privacy" ||
-      pathname === "/terms");
+      pathname === "/terms" ||
+      pathname === "/partnerships");
 
   // Close everything on route change
   useEffect(() => {

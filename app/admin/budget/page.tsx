@@ -277,11 +277,12 @@ function CategoryBudgetRings({
           const emoji = CATEGORY_EMOJI[row.cat] ?? "💰";
           const clampedPct = Math.min(row.pct, 1);
           const dashLen = clampedPct * RING_CIRC;
-          const strokeColor = row.over
+          const displayOver = row.cat === "Savings" ? !row.over : row.over;
+          const strokeColor = displayOver
             ? colors.error
             : SLICE_COLORS[i % SLICE_COLORS.length];
           const textColor = "#ffffff";
-          const bgColor = row.over ? colors.error : colors.success;
+          const bgColor = displayOver ? colors.error : colors.success;
 
           return (
             <motion.div
@@ -1684,7 +1685,9 @@ function BudgetVsActual({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, i) => (
+            {rows.map((row, i) => {
+              const displayOver = row.cat === "Savings" ? !row.over : row.over;
+              return (
               <tr
                 key={row.cat}
                 style={{ borderBottom: `1px solid ${colors.border}` }}
@@ -1707,13 +1710,13 @@ function BudgetVsActual({
                 <td
                   className="py-3 px-3"
                   style={{
-                    color: row.over ? colors.error : colors.success,
+                    color: displayOver ? colors.error : colors.success,
                     fontWeight: 600,
                   }}
                 >
-                  {row.over ? "-" : "+"}
+                  {displayOver ? "-" : "+"}
                   {fmt(Math.abs(row.variance))}
-                  {row.over && " ⚠"}
+                  {displayOver && " ⚠"}
                 </td>
                 <td className="py-3 px-3" style={{ minWidth: "140px" }}>
                   <div className="flex items-center gap-2">
@@ -1731,7 +1734,7 @@ function BudgetVsActual({
                           width: `${Math.min(row.pct, 1) * 100}%`,
                           height: "100%",
                           borderRadius: "99px",
-                          backgroundColor: row.over
+                          backgroundColor: displayOver
                             ? colors.error
                             : SLICE_COLORS[i % SLICE_COLORS.length],
                           transition: "width 0.4s ease",
@@ -1740,7 +1743,7 @@ function BudgetVsActual({
                     </div>
                     <span
                       style={{
-                        color: row.over ? colors.error : colors.textSecondary,
+                        color: displayOver ? colors.error : colors.textSecondary,
                         fontSize: "12px",
                         minWidth: "38px",
                         textAlign: "right",
@@ -1751,7 +1754,8 @@ function BudgetVsActual({
                   </div>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
           <tfoot>
             <tr style={{ backgroundColor: colors.warmLinen }}>
@@ -3879,7 +3883,10 @@ function ExpensesTab({
                   </tr>
                 </thead>
                 <tbody>
-                  {budgetRows.map((row) => (
+                  {budgetRows.map((row) => {
+                    const isSavings = row.cat === "Savings";
+                    const displayOver = isSavings ? !row.over : row.over;
+                    return (
                     <tr
                       key={row.cat}
                       style={{ borderBottom: `1px solid ${colors.border}` }}
@@ -3919,7 +3926,7 @@ function ExpensesTab({
                           color:
                             row.planned === 0
                               ? colors.textTertiary
-                              : row.over
+                              : displayOver
                                 ? colors.error
                                 : colors.success,
                           fontWeight: 600,
@@ -3927,7 +3934,7 @@ function ExpensesTab({
                       >
                         {row.planned === 0
                           ? "—"
-                          : (row.over ? "-" : "+") +
+                          : (displayOver ? "-" : "+") +
                             fmt(Math.abs(row.variance))}
                       </td>
                       <td className="py-3 px-3" style={{ minWidth: "140px" }}>
@@ -3956,7 +3963,7 @@ function ExpensesTab({
                                   width: `${Math.min(row.pct, 1) * 100}%`,
                                   height: "100%",
                                   borderRadius: "99px",
-                                  backgroundColor: row.over
+                                  backgroundColor: displayOver
                                     ? colors.error
                                     : colors.mistyForest,
                                   transition: "width 0.4s ease",
@@ -3965,7 +3972,7 @@ function ExpensesTab({
                             </div>
                             <span
                               style={{
-                                color: row.over
+                                color: displayOver
                                   ? colors.error
                                   : colors.textSecondary,
                                 fontSize: "12px",
@@ -3979,7 +3986,7 @@ function ExpensesTab({
                         )}
                       </td>
                     </tr>
-                  ))}
+                  ); })}
                 </tbody>
                 <tfoot>
                   <tr style={{ backgroundColor: colors.warmLinen }}>
