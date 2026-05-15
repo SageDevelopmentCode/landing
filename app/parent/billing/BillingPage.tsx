@@ -3459,9 +3459,9 @@ function FunFridayPaymentModal({
                         <p className="text-xs text-gray-400 font-body mt-1 ml-7">
                           {m.fridays.length} Friday
                           {m.fridays.length !== 1 ? "s" : ""} ·{" "}
-                          {m.fridays.length === 1
-                            ? formatCents(FUN_FRIDAY_DROPIN_CENTS)
-                            : `${formatCents(FUN_FRIDAY_MONTHLY_CENTS)}/mo`}
+                          {m.fridays.length >= 4
+                            ? `${formatCents(FUN_FRIDAY_MONTHLY_CENTS)}/mo`
+                            : formatCents(m.fridays.length * FUN_FRIDAY_DROPIN_CENTS)}
                           {individualPaidFridaysInMonth > 0 && (
                             <span className="ml-1.5 text-green-600 font-semibold">
                               · {individualPaidFridaysInMonth} Friday
@@ -3495,7 +3495,7 @@ function FunFridayPaymentModal({
                             selectedMonths.has(m.key),
                           );
                           const allNormal = sel.every(
-                            (m) => m.fridays.length !== 1,
+                            (m) => m.fridays.length >= 4,
                           );
                           return allNormal
                             ? `${sel.length} month${sel.length !== 1 ? "s" : ""} × ${formatCents(FUN_FRIDAY_MONTHLY_CENTS)}/mo`
