@@ -24,6 +24,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import OnboardingChecklist from "@/app/parent/components/OnboardingChecklist";
+import SummerInfoSheet from "./SummerInfoSheet";
 import HelpWidget from "@/app/parent/components/HelpWidget";
 import {
   getParentStudentAttendance,
@@ -750,6 +751,9 @@ export default function HomePageClient({
               Join Now <ChevronRight size={13} />
             </Link>
           </div>
+
+          {/* Summer info banner */}
+          <SummerInfoSheet />
 
           {/* Student Cards */}
           <section>
