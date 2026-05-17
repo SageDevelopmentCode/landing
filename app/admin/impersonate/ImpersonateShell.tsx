@@ -5,6 +5,8 @@ import { useRouter, usePathname } from "next/navigation";
 import { DollarSign } from "lucide-react";
 import { cssColors as colors } from "../design-system";
 
+type StudentEntry = { id: string; name: string; profileImageUrl: string | null };
+
 type ParentRow = {
   id: string;
   full_name: string | null;
@@ -12,7 +14,22 @@ type ParentRow = {
   status: string | null;
   lastSignIn: string | null;
   hasPaid: boolean;
+  children: StudentEntry[];
 };
+
+const AVATAR_COLORS = [
+  "bg-rose-400", "bg-amber-400", "bg-teal-400", "bg-violet-400", "bg-sky-400",
+];
+function colorForId(id: string): string {
+  let n = 0;
+  for (let i = 0; i < id.length; i++) n += id.charCodeAt(i);
+  return AVATAR_COLORS[n % AVATAR_COLORS.length];
+}
+function initialsFor(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0][0]?.toUpperCase() ?? "?";
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
 
 function formatRelative(iso: string | null): string {
   if (!iso) return "Never signed in";
@@ -124,6 +141,7 @@ export default function ImpersonateShell({
                   borderLeft: isActive
                     ? `2px solid ${colors.accent}`
                     : "2px solid transparent",
+                  borderBottom: `1px solid ${colors.border}`,
                 }}
               >
                 <div className="flex items-center gap-1">
@@ -140,13 +158,33 @@ export default function ImpersonateShell({
                     {parent.full_name ?? "—"}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span
-                    className="text-xs truncate"
-                    style={{ color: colors.textTertiary }}
-                  >
-                    {parent.email ?? "—"}
-                  </span>
+                {parent.children.length > 0 && (
+                  <div className="flex flex-col gap-1.5 mt-2 pl-1">
+                    {parent.children.map((child) => (
+                      <div key={child.id} className="flex items-center gap-2">
+                        {child.profileImageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={child.profileImageUrl}
+                            alt={child.name}
+                            className="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                          />
+                        ) : (
+                          <div
+                            className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${colorForId(child.id)}`}
+                            style={{ fontSize: "9px", color: "white", fontWeight: 600 }}
+                          >
+                            {initialsFor(child.name)}
+                          </div>
+                        )}
+                        <span style={{ color: colors.textTertiary, fontSize: "12px" }}>
+                          {child.name}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="flex items-center gap-2 mt-2">
                   {statusCfg && (
                     <span
                       className="flex-shrink-0 text-xs font-medium px-1.5 py-0.5 rounded-full"
@@ -160,12 +198,9 @@ export default function ImpersonateShell({
                       {statusCfg.label}
                     </span>
                   )}
-                </div>
-                <div
-                  className="text-xs mt-0.5"
-                  style={{ color: colors.textQuaternary, fontSize: "10px" }}
-                >
-                  {formatRelative(parent.lastSignIn)}
+                  <span style={{ color: colors.textQuaternary, fontSize: "10px" }}>
+                    {formatRelative(parent.lastSignIn)}
+                  </span>
                 </div>
               </button>
             );

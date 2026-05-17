@@ -73,11 +73,36 @@ export default async function ImpersonateLayout({
       .filter(Boolean) as string[]
   );
 
+  type StudentEntry = { id: string; name: string; profileImageUrl: string | null };
+
+  const parentIds = (parents ?? []).map((p) => p.id);
+  const { data: studentRows } = parentIds.length > 0
+    ? await adminClient
+        .schema("admin")
+        .from("students")
+        .select("id, child_legal_name, profile_image_url, parent_id")
+        .in("parent_id", parentIds)
+        .eq("is_deleted", false)
+        .order("child_legal_name")
+    : { data: [] as { id: string; child_legal_name: string; profile_image_url: string | null; parent_id: string }[] };
+
+  const childrenByParent: Record<string, StudentEntry[]> = {};
+  for (const s of studentRows ?? []) {
+    if (!s.parent_id || !s.child_legal_name) continue;
+    if (!childrenByParent[s.parent_id]) childrenByParent[s.parent_id] = [];
+    childrenByParent[s.parent_id].push({
+      id: s.id,
+      name: s.child_legal_name,
+      profileImageUrl: s.profile_image_url ?? null,
+    });
+  }
+
   const parentsWithStatus = (parents ?? []).map((p) => ({
     ...p,
     status: statusByParent[p.id] ?? null,
     lastSignIn: lastSignInMap[p.id] ?? null,
     hasPaid: paidParentIds.has(p.id),
+    children: childrenByParent[p.id] ?? [],
   }));
 
   return (
