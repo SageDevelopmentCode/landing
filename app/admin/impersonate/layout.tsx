@@ -8,7 +8,7 @@ export default async function ImpersonateLayout({
 }) {
   const adminClient = createAdminClient();
 
-  const [{ data: parents }, { data: appRows }, { data: authData }] =
+  const [{ data: parents }, { data: appRows }, { data: authData }, { data: txData }] =
     await Promise.all([
       adminClient
         .schema("admin")
@@ -22,6 +22,19 @@ export default async function ImpersonateLayout({
         .from("applications")
         .select("user_id, status, approved, denied"),
       adminClient.auth.admin.listUsers({ perPage: 1000 }),
+      adminClient
+        .schema("billing")
+        .from("stripe_transactions")
+        .select("parent_id")
+        .eq("status", "completed")
+        .eq("is_deleted", false)
+        .in("payment_type", [
+          "summer_tuition",
+          "custom_tuition",
+          "homeschool_dropin",
+          "aftercare_tuition",
+          "fun_friday_tuition",
+        ]),
     ]);
 
   // Derive a single display status per parent from their applications
@@ -54,10 +67,17 @@ export default async function ImpersonateLayout({
     lastSignInMap[u.id] = u.updated_at ?? null;
   }
 
+  const paidParentIds = new Set(
+    (txData ?? [])
+      .map((r: { parent_id: string | null }) => r.parent_id)
+      .filter(Boolean) as string[]
+  );
+
   const parentsWithStatus = (parents ?? []).map((p) => ({
     ...p,
     status: statusByParent[p.id] ?? null,
     lastSignIn: lastSignInMap[p.id] ?? null,
+    hasPaid: paidParentIds.has(p.id),
   }));
 
   return (

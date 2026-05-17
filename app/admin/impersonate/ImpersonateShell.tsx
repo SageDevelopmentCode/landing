@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { DollarSign } from "lucide-react";
 import { cssColors as colors } from "../design-system";
 
 type ParentRow = {
@@ -10,6 +11,7 @@ type ParentRow = {
   email: string | null;
   status: string | null;
   lastSignIn: string | null;
+  hasPaid: boolean;
 };
 
 function formatRelative(iso: string | null): string {
@@ -57,6 +59,20 @@ export default function ImpersonateShell({
     );
   });
 
+  function groupPriority(p: ParentRow): number {
+    if (p.hasPaid && p.status === "enrolled") return 0;
+    if (p.status === "enrolled") return 1;
+    if (p.status === "enrolling") return 2;
+    if (p.status === "in_progress") return 3;
+    return 4;
+  }
+
+  const sorted = [...filtered].sort((a, b) => {
+    const diff = groupPriority(a) - groupPriority(b);
+    if (diff !== 0) return diff;
+    return (a.full_name ?? "").localeCompare(b.full_name ?? "");
+  });
+
   return (
     <div className="flex h-full overflow-hidden -mx-4 sm:-mx-6 lg:-mx-8">
       {/* Left panel */}
@@ -93,7 +109,7 @@ export default function ImpersonateShell({
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {filtered.map((parent) => {
+          {sorted.map((parent) => {
             const isActive = parent.id === selectedId;
             const statusCfg = parent.status
               ? STATUS_CONFIG[parent.status]
@@ -110,11 +126,19 @@ export default function ImpersonateShell({
                     : "2px solid transparent",
                 }}
               >
-                <div
-                  className="text-sm font-medium truncate"
-                  style={{ color: isActive ? colors.accent : colors.textPrimary }}
-                >
-                  {parent.full_name ?? "—"}
+                <div className="flex items-center gap-1">
+                  {parent.hasPaid && (
+                    <DollarSign
+                      className="flex-shrink-0 w-3 h-3"
+                      style={{ color: "#34D399" }}
+                    />
+                  )}
+                  <span
+                    className="text-sm font-medium truncate"
+                    style={{ color: isActive ? colors.accent : colors.textPrimary }}
+                  >
+                    {parent.full_name ?? "—"}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2 mt-0.5">
                   <span
@@ -146,7 +170,7 @@ export default function ImpersonateShell({
               </button>
             );
           })}
-          {filtered.length === 0 && (
+          {sorted.length === 0 && (
             <p
               className="px-4 py-8 text-xs text-center"
               style={{ color: colors.textTertiary }}
