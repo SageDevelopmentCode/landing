@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Search,
@@ -27,6 +27,7 @@ import {
   type InventoryItem,
   type InventoryPhoto,
   type InventoryCategory,
+  type InventoryStatus,
   type HistoryActionType,
   type ShoppingRequest,
   type HistoryEvent,
@@ -91,6 +92,19 @@ export default function InventoryPageClient() {
   const [shoppingSubmitting, setShoppingSubmitting] = useState(false);
   const [shoppingSuccess, setShoppingSuccess] = useState(false);
 
+  // ── Add item modal ───────────────────────────────────────────────────────
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [addForm, setAddForm] = useState<{
+    title: string;
+    category: InventoryCategory;
+    count: string;
+    notes: string;
+    status: InventoryStatus | "";
+    photoFile: File | null;
+    photoPreviewUrl: string | null;
+  }>({ title: "", category: "General", count: "", notes: "", status: "", photoFile: null, photoPreviewUrl: null });
+  const addPhotoInputRef = useRef<HTMLInputElement>(null);
+
   // ── Derived data ─────────────────────────────────────────────────────────
   const filteredItems = useMemo(() => {
     let result = items;
@@ -126,20 +140,21 @@ export default function InventoryPageClient() {
 
   // Scroll lock
   useEffect(() => {
-    document.body.style.overflow = isDrawerOpen || !!lightboxPhoto ? "hidden" : "unset";
+    document.body.style.overflow = isDrawerOpen || !!lightboxPhoto || addModalOpen ? "hidden" : "unset";
     return () => { document.body.style.overflow = "unset"; };
-  }, [isDrawerOpen, lightboxPhoto]);
+  }, [isDrawerOpen, lightboxPhoto, addModalOpen]);
 
   // Escape key
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       if (lightboxPhoto) { setLightboxPhoto(null); return; }
+      if (addModalOpen) { setAddModalOpen(false); return; }
       if (isDrawerOpen) { closeDrawer(); return; }
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [lightboxPhoto, isDrawerOpen]);
+  }, [lightboxPhoto, addModalOpen, isDrawerOpen]);
 
   // Reset photo index when item changes
   useEffect(() => { setActivePhotoIndex(0); }, [selectedItem?.id]);
@@ -153,7 +168,79 @@ export default function InventoryPageClient() {
     }
   }, [isDrawerOpen]);
 
+  // Revoke photo object URL when modal closes without submitting
+  useEffect(() => {
+    if (!addModalOpen && addForm.photoPreviewUrl) {
+      URL.revokeObjectURL(addForm.photoPreviewUrl);
+      setAddForm((f) => ({ ...f, photoFile: null, photoPreviewUrl: null }));
+    }
+  }, [addModalOpen]);
+
   // ── Handlers ─────────────────────────────────────────────────────────────
+
+  function handlePhotoSelect(file: File | null) {
+    if (!file) return;
+    if (addForm.photoPreviewUrl) URL.revokeObjectURL(addForm.photoPreviewUrl);
+    const url = URL.createObjectURL(file);
+    setAddForm((f) => ({ ...f, photoFile: file, photoPreviewUrl: url }));
+  }
+
+  function handleRemovePhoto() {
+    if (addForm.photoPreviewUrl) URL.revokeObjectURL(addForm.photoPreviewUrl);
+    setAddForm((f) => ({ ...f, photoFile: null, photoPreviewUrl: null }));
+  }
+
+  function handleAddItem() {
+    if (!addForm.title.trim()) return;
+    const now = new Date().toISOString();
+    const ts = Date.now();
+
+    const photos: InventoryPhoto[] = addForm.photoPreviewUrl
+      ? [{
+          id: `ph-${ts}`,
+          url: addForm.photoPreviewUrl,
+          uploaded_at: now,
+          uploaded_by: "You",
+          is_primary: true,
+        }]
+      : [];
+
+    const history_log: HistoryEvent[] = [
+      ...(photos.length > 0 ? [{
+        id: `he-${ts}-photo`,
+        action_type: "photo_added" as HistoryActionType,
+        teacher_name: "You",
+        count_before: null,
+        count_after: null,
+        timestamp: now,
+        note: null,
+      }] : []),
+      {
+        id: `he-${ts}`,
+        action_type: "created" as HistoryActionType,
+        teacher_name: "You",
+        count_before: null,
+        count_after: addForm.count !== "" ? Number(addForm.count) : null,
+        timestamp: now,
+        note: null,
+      },
+    ];
+
+    const newItem: InventoryItem = {
+      id: `inv-${ts}`,
+      title: addForm.title.trim(),
+      category: addForm.category,
+      photos,
+      status: (addForm.status as InventoryStatus) || null,
+      count: addForm.count !== "" ? Number(addForm.count) : null,
+      notes: addForm.notes.trim() || null,
+      history_log,
+      shopping_requests: [],
+    };
+    setItems((prev) => [newItem, ...prev]);
+    setAddModalOpen(false);
+    setAddForm({ title: "", category: "General", count: "", notes: "", status: "", photoFile: null, photoPreviewUrl: null });
+  }
 
   function openItem(item: InventoryItem) {
     setSelectedItem(item);
@@ -238,7 +325,10 @@ export default function InventoryPageClient() {
           <div className="flex-1" />
 
           {/* Add Item button */}
-          <button className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-[#4a7c59] hover:bg-[#3d6b4f] rounded-xl transition-colors font-body">
+          <button
+            onClick={() => setAddModalOpen(true)}
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-[#4a7c59] hover:bg-[#3d6b4f] rounded-xl transition-colors font-body"
+          >
             <Plus size={15} />
             Add Item
           </button>
@@ -774,6 +864,180 @@ export default function InventoryPageClient() {
                 year: "numeric",
               })}
             </div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ── Add Item Modal ──────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {addModalOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50"
+              onClick={() => setAddModalOpen(false)}
+            />
+
+            {/* Centered panel */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+            >
+              <div className="bg-white rounded-2xl shadow-xl w-full max-w-md pointer-events-auto flex flex-col overflow-hidden">
+
+                {/* Header */}
+                <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+                  <h2 className="text-base font-bold font-heading text-gray-800">Add Item</h2>
+                  <button
+                    onClick={() => setAddModalOpen(false)}
+                    className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                  >
+                    <X size={16} className="text-gray-500" />
+                  </button>
+                </div>
+
+                {/* Form */}
+                <div className="px-6 py-5 space-y-4 overflow-y-auto">
+
+                  {/* Photo upload */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-1.5 font-body">
+                      Photo <span className="text-gray-400 font-normal normal-case tracking-normal">(optional)</span>
+                    </label>
+                    <input
+                      ref={addPhotoInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handlePhotoSelect(e.target.files?.[0] ?? null)}
+                    />
+                    {addForm.photoPreviewUrl ? (
+                      <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-gray-200">
+                        <img src={addForm.photoPreviewUrl} alt="Preview" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={handleRemovePhoto}
+                          className="absolute top-2 right-2 w-7 h-7 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-black/60 transition-colors"
+                        >
+                          <X size={13} className="text-white" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => addPhotoInputRef.current?.click()}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => { e.preventDefault(); handlePhotoSelect(e.dataTransfer.files[0] ?? null); }}
+                        className="w-full border-2 border-dashed border-gray-200 rounded-xl py-8 flex flex-col items-center justify-center gap-2 text-gray-400 hover:border-[#4a7c59]/50 hover:text-[#4a7c59] transition-colors cursor-pointer"
+                      >
+                        <Camera size={22} />
+                        <span className="text-xs font-medium font-body">Click or drag to upload a photo</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Name */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-1.5 font-body">
+                      Name <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={addForm.title}
+                      onChange={(e) => setAddForm((f) => ({ ...f, title: e.target.value }))}
+                      placeholder="e.g. Watercolor Paint Set"
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59] transition-colors font-body"
+                    />
+                  </div>
+
+                  {/* Category */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-1.5 font-body">
+                      Category
+                    </label>
+                    <select
+                      value={addForm.category}
+                      onChange={(e) => setAddForm((f) => ({ ...f, category: e.target.value as InventoryCategory }))}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59] transition-colors font-body bg-white"
+                    >
+                      {ALL_CATEGORIES.map((cat) => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Count + Status row */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-1.5 font-body">
+                        Count
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={addForm.count}
+                        onChange={(e) => setAddForm((f) => ({ ...f, count: e.target.value }))}
+                        placeholder="Optional"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59] transition-colors font-body"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-1.5 font-body">
+                        Status
+                      </label>
+                      <select
+                        value={addForm.status ?? ""}
+                        onChange={(e) => setAddForm((f) => ({ ...f, status: e.target.value as InventoryStatus | "" }))}
+                        className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59] transition-colors font-body bg-white"
+                      >
+                        <option value="">None</option>
+                        <option value="Full">Full</option>
+                        <option value="Running Out">Running Out</option>
+                        <option value="Low">Low</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Notes */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-1.5 font-body">
+                      Notes
+                    </label>
+                    <textarea
+                      value={addForm.notes}
+                      onChange={(e) => setAddForm((f) => ({ ...f, notes: e.target.value }))}
+                      placeholder="Optional — storage location, condition, etc."
+                      rows={3}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59] transition-colors font-body"
+                    />
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="px-6 py-4 border-t border-gray-100 flex items-center gap-3">
+                  <button
+                    onClick={() => setAddModalOpen(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors font-body"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAddItem}
+                    disabled={!addForm.title.trim()}
+                    className="flex-1 px-5 py-2 text-sm font-semibold text-white bg-[#4a7c59] hover:bg-[#3d6b4f] rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-body"
+                  >
+                    Add Item
+                  </button>
+                </div>
+              </div>
+            </motion.div>
           </>
         )}
       </AnimatePresence>
