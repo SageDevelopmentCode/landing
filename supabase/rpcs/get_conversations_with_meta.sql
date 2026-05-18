@@ -57,5 +57,5 @@ AS $$
     LIMIT 1
   ) lm ON true
   WHERE cp.user_id = p_user_id
-  ORDER BY c.updated_at DESC;
+  ORDER BY lm.created_at DESC NULLS LAST;
 $$;

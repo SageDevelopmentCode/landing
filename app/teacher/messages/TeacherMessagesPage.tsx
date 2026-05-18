@@ -115,6 +115,12 @@ function formatProgram(program: string | null): string {
   return map[program] ?? program;
 }
 
+function sortByRecent(convos: ConversationWithMeta[]): ConversationWithMeta[] {
+  return [...convos].sort(
+    (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+  );
+}
+
 function formatTime(iso: string): string {
   const date = new Date(iso);
   const now = new Date();
@@ -273,18 +279,20 @@ export default function TeacherMessagesPage({
             return [...prev, newMsg];
           });
           setConversations((prev) =>
-            prev.map((c) =>
-              c.id === activeId
-                ? {
-                    ...c,
-                    lastMessage: {
-                      body: newMsg.body,
-                      created_at: newMsg.created_at,
-                      sender_id: newMsg.sender_id,
-                    },
-                    updated_at: newMsg.created_at,
-                  }
-                : c
+            sortByRecent(
+              prev.map((c) =>
+                c.id === activeId
+                  ? {
+                      ...c,
+                      lastMessage: {
+                        body: newMsg.body,
+                        created_at: newMsg.created_at,
+                        sender_id: newMsg.sender_id,
+                      },
+                      updated_at: newMsg.created_at,
+                    }
+                  : c
+              )
             )
           );
           if (newMsg.sender_id !== userId) {
@@ -548,14 +556,16 @@ export default function TeacherMessagesPage({
         return deduped.map((m) => (m.id === tempId ? saved : m));
       });
       setConversations((prev) =>
-        prev.map((c) =>
-          c.id === activeId
-            ? {
-                ...c,
-                lastMessage: { body: saved.body, created_at: saved.created_at, sender_id: saved.sender_id },
-                updated_at: saved.created_at,
-              }
-            : c
+        sortByRecent(
+          prev.map((c) =>
+            c.id === activeId
+              ? {
+                  ...c,
+                  lastMessage: { body: saved.body, created_at: saved.created_at, sender_id: saved.sender_id },
+                  updated_at: saved.created_at,
+                }
+              : c
+          )
         )
       );
     } else {
