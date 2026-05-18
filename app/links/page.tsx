@@ -95,6 +95,12 @@ const LINK_GROUPS: { label: string; links: LinkItem[] }[] = [
         href: "/faq",
       },
       {
+        emoji: "🌿",
+        title: "Educational Philosophy",
+        subtitle: "Our approach to learning",
+        href: "/educational-philosophy",
+      },
+      {
         emoji: "📬",
         title: "Contact Us",
         subtitle: "Get in touch with our team",
@@ -152,7 +158,10 @@ export default function LinksPage() {
   let cardIndex = 0;
 
   useEffect(() => {
-    const t = setInterval(() => setCurrent((i) => (i + 1) % SLIDES.length), 6000);
+    const t = setInterval(
+      () => setCurrent((i) => (i + 1) % SLIDES.length),
+      6000,
+    );
     return () => clearInterval(t);
   }, []);
 
@@ -190,17 +199,19 @@ export default function LinksPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
         >
-          <div className="w-20 h-20 relative mb-4">
-            <Image
-              src="/assets/Logo.png"
-              alt="Sage Field Private School"
-              fill
-              className="object-contain"
-              priority
-            />
-          </div>
+          <a href="/">
+            <div className="w-20 h-20 relative mb-4">
+              <Image
+                src="/assets/Logo.png"
+                alt="Sage Field Private School"
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
+          </a>
           <h1 className="text-xl font-bold font-heading text-white text-center">
-            Sage Field Private School
+            Sage Field Private Microschool
           </h1>
           <p className="text-sm font-body text-white/70 mt-1 text-center">
             Round Rock, TX · Ages 4–11
@@ -252,19 +263,30 @@ export default function LinksPage() {
                           }`}
                           style={
                             isSocial
-                              ? { backgroundColor: link.color, borderColor: link.color }
+                              ? {
+                                  backgroundColor: link.color,
+                                  borderColor: link.color,
+                                }
                               : undefined
                           }
                           onMouseEnter={(e) => {
                             if (isSocial && link.hoverColor) {
-                              (e.currentTarget as HTMLDivElement).style.backgroundColor = link.hoverColor;
-                              (e.currentTarget as HTMLDivElement).style.borderColor = link.hoverColor;
+                              (
+                                e.currentTarget as HTMLDivElement
+                              ).style.backgroundColor = link.hoverColor;
+                              (
+                                e.currentTarget as HTMLDivElement
+                              ).style.borderColor = link.hoverColor;
                             }
                           }}
                           onMouseLeave={(e) => {
                             if (isSocial && link.color) {
-                              (e.currentTarget as HTMLDivElement).style.backgroundColor = link.color;
-                              (e.currentTarget as HTMLDivElement).style.borderColor = link.color;
+                              (
+                                e.currentTarget as HTMLDivElement
+                              ).style.backgroundColor = link.color;
+                              (
+                                e.currentTarget as HTMLDivElement
+                              ).style.borderColor = link.color;
                             }
                           }}
                         >
@@ -283,7 +305,9 @@ export default function LinksPage() {
                               {link.subtitle && (
                                 <p
                                   className={`text-xs font-body mt-0.5 truncate ${
-                                    link.featured || isSocial ? "text-white/80" : "text-white/60"
+                                    link.featured || isSocial
+                                      ? "text-white/80"
+                                      : "text-white/60"
                                   }`}
                                 >
                                   {link.subtitle}
@@ -293,7 +317,9 @@ export default function LinksPage() {
                           </div>
                           <ChevronRight
                             className={`w-4 h-4 flex-shrink-0 ml-2 ${
-                              link.featured || isSocial ? "text-white/80" : "text-white/40"
+                              link.featured || isSocial
+                                ? "text-white/80"
+                                : "text-white/40"
                             }`}
                           />
                         </div>
