@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef, useTransition } from "react";
-import { createInventoryItem, submitShoppingRequest } from "@/app/actions/inventory";
+import { createInventoryItem, submitShoppingRequest, updateInventoryItem, addInventoryPhoto } from "@/app/actions/inventory";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Search,
@@ -18,6 +18,8 @@ import {
   Camera,
   StickyNote,
   RefreshCw,
+  Pencil,
+  ImagePlus,
 } from "lucide-react";
 import {
   MOCK_INVENTORY_ITEMS,
@@ -117,6 +119,24 @@ export default function InventoryPageClient({
   }>({ title: "", category: "General", count: "", notes: "", status: "", photoFile: null, photoPreviewUrl: null });
   const addPhotoInputRef = useRef<HTMLInputElement>(null);
 
+  // ── Edit item ────────────────────────────────────────────────────────────
+  const [isEditingItem, setIsEditingItem] = useState(false);
+  const [editForm, setEditForm] = useState<{
+    title: string;
+    category: InventoryCategory;
+    status: InventoryStatus | "";
+    count: string;
+    notes: string;
+    photoFile: File | null;
+    photoPreviewUrl: string | null;
+  } | null>(null);
+  const [editSaving, setEditSaving] = useState(false);
+  const editPhotoInputRef = useRef<HTMLInputElement>(null);
+
+  // ── Photo history gallery ────────────────────────────────────────────────
+  const [photoGalleryOpen, setPhotoGalleryOpen] = useState(false);
+  const [photoGalleryIndex, setPhotoGalleryIndex] = useState(0);
+
   // ── Derived data ─────────────────────────────────────────────────────────
   const filteredItems = useMemo(() => {
     let result = items;
@@ -152,21 +172,23 @@ export default function InventoryPageClient({
 
   // Scroll lock
   useEffect(() => {
-    document.body.style.overflow = isDrawerOpen || !!lightboxPhoto || addModalOpen ? "hidden" : "unset";
+    document.body.style.overflow = isDrawerOpen || !!lightboxPhoto || addModalOpen || photoGalleryOpen ? "hidden" : "unset";
     return () => { document.body.style.overflow = "unset"; };
-  }, [isDrawerOpen, lightboxPhoto, addModalOpen]);
+  }, [isDrawerOpen, lightboxPhoto, addModalOpen, photoGalleryOpen]);
 
   // Escape key
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       if (lightboxPhoto) { setLightboxPhoto(null); return; }
+      if (photoGalleryOpen) { setPhotoGalleryOpen(false); return; }
       if (addModalOpen) { setAddModalOpen(false); return; }
+      if (isEditingItem) { handleCancelEdit(); return; }
       if (isDrawerOpen) { closeDrawer(); return; }
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [lightboxPhoto, addModalOpen, isDrawerOpen]);
+  }, [lightboxPhoto, photoGalleryOpen, addModalOpen, isEditingItem, isDrawerOpen]);
 
   // Reset photo index when item changes
   useEffect(() => { setActivePhotoIndex(0); }, [selectedItem?.id]);
@@ -310,7 +332,97 @@ export default function InventoryPageClient({
 
   function closeDrawer() {
     setIsDrawerOpen(false);
+    setIsEditingItem(false);
+    if (editForm?.photoPreviewUrl) URL.revokeObjectURL(editForm.photoPreviewUrl);
+    setEditForm(null);
     setTimeout(() => setSelectedItem(null), 350);
+  }
+
+  function openEditMode() {
+    if (!selectedItem) return;
+    setEditForm({
+      title: selectedItem.title,
+      category: selectedItem.category,
+      status: selectedItem.status ?? "",
+      count: selectedItem.count !== null ? String(selectedItem.count) : "",
+      notes: selectedItem.notes ?? "",
+      photoFile: null,
+      photoPreviewUrl: null,
+    });
+    setIsEditingItem(true);
+  }
+
+  function handleCancelEdit() {
+    if (editForm?.photoPreviewUrl) URL.revokeObjectURL(editForm.photoPreviewUrl);
+    setEditForm(null);
+    setIsEditingItem(false);
+  }
+
+  async function handleEditPhotoSelect(file: File | null) {
+    if (!file || !editForm) return;
+    if (editForm.photoPreviewUrl) URL.revokeObjectURL(editForm.photoPreviewUrl);
+
+    let fileToCompress: File = file;
+    if (file.type === "image/heic" || file.name.toLowerCase().endsWith(".heic")) {
+      const heic2any = (await import("heic2any")).default;
+      const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
+      fileToCompress = new File(
+        [converted as Blob],
+        file.name.replace(/\.heic$/i, ".jpg"),
+        { type: "image/jpeg" }
+      );
+    }
+    const imageCompression = (await import("browser-image-compression")).default;
+    const compressed = await imageCompression(fileToCompress, {
+      maxSizeMB: 1,
+      maxWidthOrHeight: 1920,
+      useWebWorker: true,
+      fileType: "image/webp",
+    });
+    const url = URL.createObjectURL(compressed);
+    setEditForm((f) => f ? { ...f, photoFile: compressed, photoPreviewUrl: url } : f);
+  }
+
+  async function handleSaveEdit() {
+    if (!selectedItem || !editForm || editSaving) return;
+    setEditSaving(true);
+
+    const fd = new FormData();
+    fd.append("item_id", selectedItem.id);
+    fd.append("title", editForm.title.trim());
+    fd.append("category", editForm.category);
+    fd.append("status", editForm.status ?? "");
+    fd.append("count", editForm.count);
+    fd.append("notes", editForm.notes.trim());
+
+    const { error: updateError } = await updateInventoryItem(fd);
+
+    if (updateError) {
+      console.error("updateInventoryItem failed:", updateError);
+      setEditSaving(false);
+      return;
+    }
+
+    // Upload new photo if one was selected
+    if (editForm.photoFile) {
+      const photoFd = new FormData();
+      photoFd.append("item_id", selectedItem.id);
+      photoFd.append("photo", editForm.photoFile);
+      await addInventoryPhoto(photoFd);
+    }
+
+    // Fetch fresh item data and patch state
+    const { getInventoryItems } = await import("@/app/actions/inventory");
+    const freshItems = await getInventoryItems();
+    const freshItem = freshItems.find((i) => i.id === selectedItem.id) ?? null;
+
+    setItems(freshItems);
+    if (freshItem) setSelectedItem(freshItem);
+
+    if (editForm.photoPreviewUrl) URL.revokeObjectURL(editForm.photoPreviewUrl);
+    setEditForm(null);
+    setIsEditingItem(false);
+    setEditSaving(false);
   }
 
   function handleSubmitShoppingRequest() {
@@ -595,16 +707,52 @@ export default function InventoryPageClient({
               className="fixed top-0 right-0 bottom-0 w-full sm:w-[520px] z-50 bg-white flex flex-col shadow-xl overflow-hidden"
             >
               {/* Drawer header */}
-              <div className="sticky top-0 z-10 px-6 py-5 flex items-center justify-between border-b border-gray-100 flex-shrink-0 bg-white">
-                <h2 className="text-lg font-bold font-heading text-gray-800 truncate pr-4">
-                  {selectedItem.title}
-                </h2>
-                <button
-                  onClick={closeDrawer}
-                  className="p-2 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0"
-                >
-                  <X size={18} className="text-gray-500" />
-                </button>
+              <div className="sticky top-0 z-10 px-6 py-4 flex items-center gap-3 border-b border-gray-100 flex-shrink-0 bg-white">
+                {isEditingItem && editForm ? (
+                  <input
+                    value={editForm.title}
+                    onChange={(e) => setEditForm((f) => f ? { ...f, title: e.target.value } : f)}
+                    className="flex-1 text-lg font-bold font-heading text-gray-800 bg-gray-100 rounded-xl px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:bg-white border border-transparent focus:border-[#4a7c59] transition-colors min-w-0"
+                    placeholder="Item name"
+                  />
+                ) : (
+                  <h2 className="flex-1 text-lg font-bold font-heading text-gray-800 truncate">
+                    {selectedItem.title}
+                  </h2>
+                )}
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  {isEditingItem ? (
+                    <>
+                      <button
+                        onClick={handleCancelEdit}
+                        className="px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors font-body"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSaveEdit}
+                        disabled={editSaving || !editForm?.title.trim()}
+                        className="px-3 py-1.5 text-sm font-semibold text-white bg-[#4a7c59] hover:bg-[#3d6b4f] rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-body"
+                      >
+                        {editSaving ? "Saving…" : "Save"}
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={openEditMode}
+                      className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                      aria-label="Edit item"
+                    >
+                      <Pencil size={16} className="text-gray-500" />
+                    </button>
+                  )}
+                  <button
+                    onClick={closeDrawer}
+                    className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                  >
+                    <X size={18} className="text-gray-500" />
+                  </button>
+                </div>
               </div>
 
               {/* Drawer scrollable body */}
@@ -660,16 +808,19 @@ export default function InventoryPageClient({
                     </div>
                   )}
 
-                  {/* Photo history pill */}
-                  <div className="absolute bottom-3 left-3 z-10 bg-black/40 backdrop-blur-sm text-white text-xs font-medium px-2 py-1 rounded-full flex items-center gap-1 pointer-events-none">
+                  {/* Photo history pill — click to open gallery */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setPhotoGalleryIndex(0); setPhotoGalleryOpen(true); }}
+                    className="absolute bottom-3 left-3 z-10 bg-black/40 backdrop-blur-sm text-white text-xs font-medium px-2 py-1 rounded-full flex items-center gap-1 hover:bg-black/60 transition-colors"
+                  >
                     <Clock size={10} />
                     {selectedItem.photos.length} photo{selectedItem.photos.length !== 1 ? "s" : ""}
-                  </div>
+                  </button>
                 </div>
 
                 {/* Thumbnail strip */}
-                {selectedItem.photos.length > 1 && (
-                  <div className="flex gap-2 px-6 py-3 overflow-x-auto border-b border-gray-100 no-scrollbar flex-shrink-0">
+                {(selectedItem.photos.length > 1 || isEditingItem) && (
+                  <div className="flex gap-2 px-6 py-3 overflow-x-auto border-b border-gray-100 no-scrollbar flex-shrink-0 items-center">
                     {selectedItem.photos.map((photo, idx) => (
                       <button
                         key={photo.id}
@@ -689,6 +840,36 @@ export default function InventoryPageClient({
                         )}
                       </button>
                     ))}
+                    {/* Add photo button — edit mode only */}
+                    {isEditingItem && editForm && (
+                      <>
+                        <input
+                          ref={editPhotoInputRef}
+                          type="file"
+                          accept="image/jpeg,image/jpg,image/png,image/webp,image/heic"
+                          className="hidden"
+                          onChange={(e) => handleEditPhotoSelect(e.target.files?.[0] ?? null)}
+                        />
+                        {editForm.photoPreviewUrl ? (
+                          <div className="relative w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 border-2 border-dashed border-[#4a7c59]">
+                            <img src={editForm.photoPreviewUrl} alt="new" className="w-full h-full object-cover" />
+                            <button
+                              onClick={() => { if (editForm.photoPreviewUrl) URL.revokeObjectURL(editForm.photoPreviewUrl); setEditForm((f) => f ? { ...f, photoFile: null, photoPreviewUrl: null } : f); }}
+                              className="absolute top-0.5 right-0.5 w-4 h-4 bg-black/50 rounded-full flex items-center justify-center"
+                            >
+                              <X size={9} className="text-white" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => editPhotoInputRef.current?.click()}
+                            className="w-14 h-14 rounded-xl flex-shrink-0 border-2 border-dashed border-gray-300 hover:border-[#4a7c59] hover:bg-sage-50 transition-colors flex items-center justify-center"
+                          >
+                            <ImagePlus size={18} className="text-gray-400" />
+                          </button>
+                        )}
+                      </>
+                    )}
                   </div>
                 )}
 
@@ -711,37 +892,91 @@ export default function InventoryPageClient({
 
                 {/* Metadata row */}
                 <div className="px-6 py-5 border-b border-gray-100">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <h3 className="text-xl font-bold font-heading text-gray-800 mb-2">
-                        {selectedItem.title}
-                      </h3>
-                      <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
-                        {selectedItem.category}
-                      </span>
+                  {isEditingItem && editForm ? (
+                    <div className="space-y-3">
+                      {/* Category + Status row */}
+                      <div className="flex gap-3">
+                        <div className="flex-1">
+                          <label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 font-body mb-1 block">Category</label>
+                          <select
+                            value={editForm.category}
+                            onChange={(e) => setEditForm((f) => f ? { ...f, category: e.target.value as InventoryCategory } : f)}
+                            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59] transition-colors font-body"
+                          >
+                            {ALL_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                          </select>
+                        </div>
+                        <div className="flex-1">
+                          <label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 font-body mb-1 block">Status</label>
+                          <select
+                            value={editForm.status ?? ""}
+                            onChange={(e) => setEditForm((f) => f ? { ...f, status: e.target.value as InventoryStatus | "" } : f)}
+                            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59] transition-colors font-body"
+                          >
+                            <option value="">No status</option>
+                            <option value="Full">Full</option>
+                            <option value="Running Out">Running Out</option>
+                            <option value="Low">Low</option>
+                          </select>
+                        </div>
+                      </div>
+                      {/* Count */}
+                      <div>
+                        <label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 font-body mb-1 block">Count</label>
+                        <input
+                          type="number"
+                          min={0}
+                          value={editForm.count}
+                          onChange={(e) => setEditForm((f) => f ? { ...f, count: e.target.value } : f)}
+                          placeholder="Leave blank if not tracked"
+                          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59] transition-colors font-body"
+                        />
+                      </div>
                     </div>
-                    <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                      {selectedItem.status && (
-                        <span
-                          className={`text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1.5 ${STATUS_CONFIG[selectedItem.status].bg} ${STATUS_CONFIG[selectedItem.status].text}`}
-                        >
+                  ) : (
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="text-xl font-bold font-heading text-gray-800 mb-2">
+                          {selectedItem.title}
+                        </h3>
+                        <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
+                          {selectedItem.category}
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                        {selectedItem.status && (
                           <span
-                            className={`w-1.5 h-1.5 rounded-full ${STATUS_CONFIG[selectedItem.status].dot}`}
-                          />
-                          {selectedItem.status}
-                        </span>
-                      )}
-                      {selectedItem.count !== null && (
-                        <span className="text-sm font-semibold text-gray-700 bg-gray-100 px-2.5 py-1 rounded-full font-body">
-                          Count: {selectedItem.count}
-                        </span>
-                      )}
+                            className={`text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1.5 ${STATUS_CONFIG[selectedItem.status].bg} ${STATUS_CONFIG[selectedItem.status].text}`}
+                          >
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full ${STATUS_CONFIG[selectedItem.status].dot}`}
+                            />
+                            {selectedItem.status}
+                          </span>
+                        )}
+                        {selectedItem.count !== null && (
+                          <span className="text-sm font-semibold text-gray-700 bg-gray-100 px-2.5 py-1 rounded-full font-body">
+                            Count: {selectedItem.count}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Notes */}
-                {selectedItem.notes && (
+                {isEditingItem && editForm ? (
+                  <div className="px-6 py-4 border-b border-gray-100">
+                    <label className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-2 block">Notes</label>
+                    <textarea
+                      value={editForm.notes}
+                      onChange={(e) => setEditForm((f) => f ? { ...f, notes: e.target.value } : f)}
+                      placeholder="Any notes about this item..."
+                      rows={3}
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59] transition-colors font-body"
+                    />
+                  </div>
+                ) : selectedItem.notes ? (
                   <div className="px-6 py-4 border-b border-gray-100">
                     <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-2">
                       Notes
@@ -750,7 +985,7 @@ export default function InventoryPageClient({
                       {selectedItem.notes}
                     </p>
                   </div>
-                )}
+                ) : null}
 
                 {/* History timeline */}
                 <div className="px-6 py-4 border-b border-gray-100">
@@ -954,6 +1189,114 @@ export default function InventoryPageClient({
                 year: "numeric",
               })}
             </div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ── Photo History Gallery ───────────────────────────────────────────── */}
+      <AnimatePresence>
+        {photoGalleryOpen && selectedItem && selectedItem.photos.length > 0 && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-[70] bg-black/85"
+              onClick={() => setPhotoGalleryOpen(false)}
+            />
+
+            {/* Main image */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.94 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="fixed inset-0 z-[70] flex flex-col items-center justify-center p-6 pointer-events-none"
+            >
+              <div className="pointer-events-auto w-full max-w-lg flex flex-col items-center gap-4">
+                {/* Label */}
+                <p className="text-white/60 text-xs font-semibold uppercase tracking-widest font-body">
+                  Photo {photoGalleryIndex + 1} of {selectedItem.photos.length}
+                </p>
+
+                {/* Image */}
+                <div className="relative w-full">
+                  {selectedItem.photos[photoGalleryIndex]?.url ? (
+                    <img
+                      src={selectedItem.photos[photoGalleryIndex].url!}
+                      alt={`Photo ${photoGalleryIndex + 1}`}
+                      className="w-full max-h-[55vh] rounded-2xl shadow-2xl object-contain"
+                    />
+                  ) : (
+                    <div className="w-full h-64 rounded-2xl bg-white/10 flex items-center justify-center">
+                      <Package className="w-12 h-12 text-white/30" />
+                    </div>
+                  )}
+
+                  {/* Prev / Next */}
+                  {selectedItem.photos.length > 1 && (
+                    <>
+                      <button
+                        onClick={() => setPhotoGalleryIndex((i) => Math.max(0, i - 1))}
+                        disabled={photoGalleryIndex === 0}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-black/60 transition-colors disabled:opacity-30"
+                      >
+                        <ChevronLeft size={18} className="text-white" />
+                      </button>
+                      <button
+                        onClick={() => setPhotoGalleryIndex((i) => Math.min(selectedItem.photos.length - 1, i + 1))}
+                        disabled={photoGalleryIndex === selectedItem.photos.length - 1}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-black/60 transition-colors disabled:opacity-30"
+                      >
+                        <ChevronRight size={18} className="text-white" />
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* Uploader info */}
+                <p className="text-white/60 text-xs font-body text-center">
+                  Added by{" "}
+                  <span className="text-white/90 font-medium">
+                    {selectedItem.photos[photoGalleryIndex].uploaded_by}
+                  </span>{" "}
+                  ·{" "}
+                  {new Date(selectedItem.photos[photoGalleryIndex].uploaded_at).toLocaleDateString("en-US", {
+                    month: "short", day: "numeric", year: "numeric",
+                  })}
+                </p>
+
+                {/* Thumbnail strip */}
+                {selectedItem.photos.length > 1 && (
+                  <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                    {selectedItem.photos.map((photo, idx) => (
+                      <button
+                        key={photo.id}
+                        onClick={() => setPhotoGalleryIndex(idx)}
+                        className={`w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 border-2 transition-colors ${
+                          idx === photoGalleryIndex ? "border-white" : "border-white/20 hover:border-white/50"
+                        }`}
+                      >
+                        {photo.url ? (
+                          <img src={photo.url} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-white/10" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+
+            {/* Close button */}
+            <button
+              onClick={() => setPhotoGalleryOpen(false)}
+              className="fixed top-4 right-4 z-[70] w-10 h-10 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/20 transition-colors"
+            >
+              <X size={18} className="text-white" />
+            </button>
           </>
         )}
       </AnimatePresence>
