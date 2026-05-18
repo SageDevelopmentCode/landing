@@ -11,6 +11,7 @@ interface DiscordEmbedField {
 
 interface DiscordEmbed {
   title: string;
+  description?: string;
   color: number;
   fields: DiscordEmbedField[];
   timestamp: string;
@@ -827,66 +828,74 @@ export function createBudgetSummaryEmbed(data: {
     Other: "📎",
   };
 
-  const SECTIONS: Array<{ label: string; categories: string[] }> = [
-    { label: "Personnel", categories: ["Teacher Pay", "Staff Pay", "Contractor / 1099", "Payroll Taxes"] },
-    { label: "Facilities", categories: ["Rent", "Utilities", "Maintenance & Repairs", "Furniture & Equipment"] },
-    { label: "Program", categories: ["Supplies & Materials", "Curriculum", "Field Trips", "Technology & Software"] },
-    { label: "Operations", categories: ["Insurance", "Marketing", "Professional Services", "Administrative"] },
-    { label: "Other", categories: ["Savings", "Other"] },
-  ];
-
-  const byCategory = Object.fromEntries(data.categories.map((r) => [r.category, r]));
-  const overBudget = data.categories.filter((r) => r.pct !== null && r.pct > 100);
-
-  const fields: DiscordEmbedField[] = [];
-
-  for (const section of SECTIONS) {
-    const rows = section.categories
-      .map((cat) => byCategory[cat])
-      .filter(Boolean);
-    if (rows.length === 0) continue;
-
-    const lines = rows.map((r) => {
-      const emoji = CATEGORY_EMOJI[r.category] ?? "•";
-      const bar = r.pct !== null ? `${r.pct}%` : "—";
-      const flag = r.pct !== null && r.pct > 100 ? " ⚠️" : "";
-      return `${emoji} **${r.category}**${flag}\n  └ ${fmt(r.actual)} spent of ${fmt(r.planned)} (${bar})`;
-    });
-
-    fields.push({
-      name: `── ${section.label} ──`,
-      value: lines.join("\n\n"),
-      inline: false,
-    });
-  }
-
   const overallPct = data.totals.totalPlanned > 0
     ? Math.round((data.totals.totalActual / data.totals.totalPlanned) * 100)
     : 0;
 
-  fields.push({
-    name: "── Summary ──",
-    value: [
-      `💰 **Spent:** ${fmt(data.totals.totalActual)} (${overallPct}% of budget)`,
-      `📋 **Budgeted:** ${fmt(data.totals.totalPlanned)}`,
-      `✅ **Remaining:** ${fmt(data.totals.totalRemaining)}`,
-    ].join("\n"),
-    inline: false,
-  });
+  const isOverall = data.totals.totalActual > data.totals.totalPlanned;
+
+  const description = isOverall
+    ? `You're over budget by **${fmt(data.totals.totalActual - data.totals.totalPlanned)}** this month. Spent **${fmt(data.totals.totalActual)}** of **${fmt(data.totals.totalPlanned)}** budgeted.`
+    : `You have **${fmt(data.totals.totalRemaining)}** left this month — **${fmt(data.totals.totalActual)}** spent of **${fmt(data.totals.totalPlanned)}** budgeted (${overallPct}% used).`;
+
+  const overBudget = data.categories.filter((r) => r.pct !== null && r.pct > 100);
+  const runningLow = data.categories.filter((r) => r.pct !== null && r.pct >= 80 && r.pct <= 100);
+  const onTrack = data.categories.filter((r) => r.pct === null || r.pct < 80);
+
+  const fields: DiscordEmbedField[] = [];
 
   if (overBudget.length > 0) {
     fields.push({
       name: "⚠️ Over Budget",
-      value: overBudget.map((r) => `• ${r.category} (${r.pct}%)`).join("\n"),
+      value: overBudget.map((r) => {
+        const emoji = CATEGORY_EMOJI[r.category] ?? "•";
+        const overage = r.actual - r.planned;
+        return `${emoji} **${r.category}** — you're ${fmt(overage)} over (spent ${fmt(r.actual)}, had ${fmt(r.planned)})`;
+      }).join("\n"),
       inline: false,
     });
   }
 
-  const isOverall = data.totals.totalActual > data.totals.totalPlanned;
+  if (runningLow.length > 0) {
+    fields.push({
+      name: "🔶 Running Low",
+      value: runningLow.map((r) => {
+        const emoji = CATEGORY_EMOJI[r.category] ?? "•";
+        return `${emoji} **${r.category}** — ${fmt(r.remaining)} left (${r.pct}% used)`;
+      }).join("\n"),
+      inline: false,
+    });
+  }
+
+  if (onTrack.length > 0) {
+    fields.push({
+      name: "✅ On Track",
+      value: onTrack.map((r) => {
+        const emoji = CATEGORY_EMOJI[r.category] ?? "•";
+        return r.pct === null
+          ? `${emoji} **${r.category}** — ${fmt(r.actual)} spent (no budget set)`
+          : `${emoji} **${r.category}** — ${fmt(r.remaining)} left`;
+      }).join("\n"),
+      inline: false,
+    });
+  }
+
+  const breakdownLines = data.categories.map((r) => {
+    const emoji = CATEGORY_EMOJI[r.category] ?? "•";
+    const pctStr = r.pct !== null ? ` (${r.pct}%)` : "";
+    return `${emoji} ${r.category}: ${fmt(r.actual)} / ${fmt(r.planned)}${pctStr}`;
+  });
+  fields.push({
+    name: "📋 Full Breakdown",
+    value: breakdownLines.join("\n"),
+    inline: false,
+  });
+
   const color = isOverall ? 0xe74c3c : overBudget.length > 0 ? 0xe07a3a : 0x27ae60;
 
   return {
     title: `📊 Budget Report — ${data.month} ${data.year}`,
+    description,
     color,
     fields,
     timestamp: new Date().toISOString(),
