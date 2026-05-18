@@ -614,7 +614,7 @@ export default function InventoryPageClient({
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
               {filteredItems.map((item) => {
-                const primaryPhoto = item.photos.find((p) => p.is_primary) ?? item.photos[0] ?? null;
+                const primaryPhoto = item.photos[0] ?? null;
                 return (
                   <motion.div
                     key={item.id}

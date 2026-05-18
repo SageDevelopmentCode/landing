@@ -70,7 +70,7 @@ export async function getInventoryItems(): Promise<InventoryItem[]> {
   return rows.map((row): InventoryItem => {
     const photos: InventoryPhoto[] = ((row.photos as any[]) ?? [])
       .filter((p: any) => !p.is_deleted)
-      .sort((a: any, b: any) => (b.is_primary ? 1 : 0) - (a.is_primary ? 1 : 0))
+      .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .map((p: any) => ({
         id: p.id,
         url: signedUrlCache.get(p.storage_path) ?? null,
