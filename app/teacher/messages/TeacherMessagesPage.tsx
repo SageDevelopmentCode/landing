@@ -1192,24 +1192,31 @@ export default function TeacherMessagesPage({
                               <span className="text-sm font-semibold font-body text-gray-800 leading-tight pr-5">{parent.full_name}</span>
                             </div>
                             {parent.children.length > 0 && (
-                              <div className="space-y-1 mt-1">
-                                {parent.children.map((child) => (
-                                  <div key={child.id} className="flex items-center gap-1.5">
-                                    {child.profile_image_url ? (
-                                      // eslint-disable-next-line @next/next/no-img-element
-                                      <img src={child.profile_image_url} alt={child.child_legal_name ?? ""} className="w-6 h-6 rounded-full object-cover shrink-0" />
-                                    ) : (
-                                      <div className={`${colorForId(child.id)} w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-semibold shrink-0`}>
-                                        {initialsFor(child.child_legal_name ?? "?")}
-                                      </div>
-                                    )}
-                                    <span className="text-[11px] font-body text-gray-500 leading-snug">
-                                      {child.child_legal_name ?? "—"}
-                                      {child.child_grade && <span className="text-gray-400"> · {child.child_grade}</span>}
-                                      {child.program && <span className="text-gray-400"> · {formatProgram(child.program)}</span>}
-                                    </span>
-                                  </div>
-                                ))}
+                              <div className="mt-2 pl-2">
+                                {(() => {
+                                  const first = parent.children[0];
+                                  const extra = parent.children.length - 1;
+                                  return (
+                                    <div className="flex items-center gap-1.5">
+                                      {first.profile_image_url ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img src={first.profile_image_url} alt={first.child_legal_name ?? ""} className="w-6 h-6 rounded-full object-cover shrink-0" />
+                                      ) : (
+                                        <div className={`${colorForId(first.id)} w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-semibold shrink-0`}>
+                                          {initialsFor(first.child_legal_name ?? "?")}
+                                        </div>
+                                      )}
+                                      <span className="text-[11px] font-body text-gray-500 leading-snug flex-1 min-w-0 truncate">
+                                        {first.child_legal_name ?? "—"}
+                                        {first.child_grade && <span className="text-gray-400"> · {first.child_grade}</span>}
+                                        {first.program && <span className="text-gray-400"> · {formatProgram(first.program)}</span>}
+                                      </span>
+                                      {extra > 0 && (
+                                        <span className="text-[10px] font-semibold font-body text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full shrink-0">+{extra}</span>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
                               </div>
                             )}
                           </button>
