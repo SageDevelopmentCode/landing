@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
 import { ChevronRight, Instagram, Facebook } from "lucide-react";
 
 const SLIDES = [
@@ -82,6 +83,12 @@ const LINK_GROUPS: { label: string; links: LinkItem[] }[] = [
   {
     label: "Learn More",
     links: [
+      {
+        emoji: "🏫",
+        title: "About Us",
+        subtitle: "Our story and mission",
+        href: "/about",
+      },
       {
         emoji: "💰",
         title: "Tuition & Pricing",
@@ -199,7 +206,7 @@ export default function LinksPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
         >
-          <a href="/">
+          <Link href="/">
             <div className="w-20 h-20 relative mb-4">
               <Image
                 src="/assets/Logo.png"
@@ -209,7 +216,7 @@ export default function LinksPage() {
                 priority
               />
             </div>
-          </a>
+          </Link>
           <h1 className="text-xl font-bold font-heading text-white text-center">
             Sage Field Private Microschool
           </h1>
