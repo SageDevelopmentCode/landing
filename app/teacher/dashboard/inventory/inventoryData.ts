@@ -21,7 +21,7 @@ export type HistoryActionType =
   | "shopping_requested"
   | "created";
 
-export type ShoppingRequestStatus = "pending" | "approved" | "purchased";
+export type ShoppingRequestStatus = "pending" | "approved" | "purchased" | "denied";
 
 export type InventoryPhoto = {
   id: string;
@@ -48,6 +48,9 @@ export type ShoppingRequest = {
   note: string;
   status: ShoppingRequestStatus;
   created_at: string;
+  resolved_by?: string | null;
+  resolved_at?: string | null;
+  resolution_note?: string | null;
 };
 
 export type InventoryItem = {
@@ -84,6 +87,7 @@ export const SHOPPING_STATUS_CONFIG: Record<
   pending:   { label: "Pending",   bg: "bg-amber-100", text: "text-amber-700" },
   approved:  { label: "Approved",  bg: "bg-blue-100",  text: "text-blue-700"  },
   purchased: { label: "Purchased", bg: "bg-green-100", text: "text-green-700" },
+  denied:    { label: "Denied",    bg: "bg-red-100",   text: "text-red-600"   },
 };
 
 export const HISTORY_ACTION_LABELS: Record<HistoryActionType, string> = {

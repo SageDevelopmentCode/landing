@@ -6,6 +6,7 @@ import ProfileDropdown from '@/app/apply/dashboard/ProfileDropdown'
 import TeacherNotificationBell from '../../components/TeacherNotificationBell'
 import TeacherNav from '../TeacherNav'
 import InventoryPageClient from './InventoryPageClient'
+import { getInventoryItems } from '@/app/actions/inventory'
 
 export default async function InventoryPage() {
   const supabase = await createServerSupabaseClient()
@@ -14,12 +15,15 @@ export default async function InventoryPage() {
   if (!user) redirect('/login')
 
   const adminClient = createAdminClient()
-  const { data: adminUser } = await adminClient
-    .schema('admin')
-    .from('users')
-    .select('full_name, profile_image_url')
-    .eq('id', user.id)
-    .single()
+  const [{ data: adminUser }, initialItems] = await Promise.all([
+    adminClient
+      .schema('admin')
+      .from('users')
+      .select('full_name, profile_image_url')
+      .eq('id', user.id)
+      .single(),
+    getInventoryItems(),
+  ])
 
   return (
     <div className="bg-welcome-bg min-h-screen flex flex-col">
@@ -46,7 +50,11 @@ export default async function InventoryPage() {
       </header>
 
       <main className="flex-1 flex overflow-hidden">
-        <InventoryPageClient />
+        <InventoryPageClient
+          initialItems={initialItems}
+          currentUserId={user.id}
+          currentUserName={adminUser?.full_name ?? 'You'}
+        />
       </main>
     </div>
   )

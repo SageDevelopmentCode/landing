@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useTransition } from "react";
+import { createInventoryItem, submitShoppingRequest } from "@/app/actions/inventory";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Search,
@@ -70,9 +71,20 @@ const HISTORY_DOT_COLORS: Record<HistoryActionType, string> = {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export default function InventoryPageClient() {
+interface InventoryPageClientProps {
+  initialItems?: InventoryItem[];
+  currentUserId?: string;
+  currentUserName?: string;
+}
+
+export default function InventoryPageClient({
+  initialItems,
+  currentUserName = "You",
+}: InventoryPageClientProps) {
+  const [, startTransition] = useTransition();
+
   // ── Data state ───────────────────────────────────────────────────────────
-  const [items, setItems] = useState<InventoryItem[]>(MOCK_INVENTORY_ITEMS);
+  const [items, setItems] = useState<InventoryItem[]>(initialItems ?? MOCK_INVENTORY_ITEMS);
 
   // ── View / filter ────────────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState("");
@@ -178,11 +190,33 @@ export default function InventoryPageClient() {
 
   // ── Handlers ─────────────────────────────────────────────────────────────
 
-  function handlePhotoSelect(file: File | null) {
+  async function handlePhotoSelect(file: File | null) {
     if (!file) return;
     if (addForm.photoPreviewUrl) URL.revokeObjectURL(addForm.photoPreviewUrl);
-    const url = URL.createObjectURL(file);
-    setAddForm((f) => ({ ...f, photoFile: file, photoPreviewUrl: url }));
+
+    let fileToCompress: File = file;
+
+    // HEIC → JPEG before compression (heic2any is already in the project)
+    if (file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic')) {
+      const heic2any = (await import('heic2any')).default;
+      const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 });
+      fileToCompress = new File(
+        [converted as Blob],
+        file.name.replace(/\.heic$/i, '.jpg'),
+        { type: 'image/jpeg' }
+      );
+    }
+
+    const imageCompression = (await import('browser-image-compression')).default;
+    const compressed = await imageCompression(fileToCompress, {
+      maxSizeMB: 1,
+      maxWidthOrHeight: 1920,
+      useWebWorker: true,
+      fileType: 'image/webp',
+    });
+
+    const url = URL.createObjectURL(compressed);
+    setAddForm((f) => ({ ...f, photoFile: compressed, photoPreviewUrl: url }));
   }
 
   function handleRemovePhoto() {
@@ -194,13 +228,15 @@ export default function InventoryPageClient() {
     if (!addForm.title.trim()) return;
     const now = new Date().toISOString();
     const ts = Date.now();
+    const tempId = `inv-optimistic-${ts}`;
 
+    // Optimistic item so the UI responds immediately
     const photos: InventoryPhoto[] = addForm.photoPreviewUrl
       ? [{
           id: `ph-${ts}`,
           url: addForm.photoPreviewUrl,
           uploaded_at: now,
-          uploaded_by: "You",
+          uploaded_by: currentUserName,
           is_primary: true,
         }]
       : [];
@@ -209,7 +245,7 @@ export default function InventoryPageClient() {
       ...(photos.length > 0 ? [{
         id: `he-${ts}-photo`,
         action_type: "photo_added" as HistoryActionType,
-        teacher_name: "You",
+        teacher_name: currentUserName,
         count_before: null,
         count_after: null,
         timestamp: now,
@@ -218,7 +254,7 @@ export default function InventoryPageClient() {
       {
         id: `he-${ts}`,
         action_type: "created" as HistoryActionType,
-        teacher_name: "You",
+        teacher_name: currentUserName,
         count_before: null,
         count_after: addForm.count !== "" ? Number(addForm.count) : null,
         timestamp: now,
@@ -226,8 +262,8 @@ export default function InventoryPageClient() {
       },
     ];
 
-    const newItem: InventoryItem = {
-      id: `inv-${ts}`,
+    const optimisticItem: InventoryItem = {
+      id: tempId,
       title: addForm.title.trim(),
       category: addForm.category,
       photos,
@@ -237,9 +273,34 @@ export default function InventoryPageClient() {
       history_log,
       shopping_requests: [],
     };
-    setItems((prev) => [newItem, ...prev]);
+
+    setItems((prev) => [optimisticItem, ...prev]);
     setAddModalOpen(false);
+
+    const fd = new FormData();
+    fd.append("title", addForm.title.trim());
+    fd.append("category", addForm.category);
+    if (addForm.status) fd.append("status", addForm.status);
+    if (addForm.count !== "") fd.append("count", addForm.count);
+    if (addForm.notes.trim()) fd.append("notes", addForm.notes.trim());
+    if (addForm.photoFile) fd.append("photo", addForm.photoFile);
+
+    const capturedForm = { ...addForm };
     setAddForm({ title: "", category: "General", count: "", notes: "", status: "", photoFile: null, photoPreviewUrl: null });
+
+    startTransition(async () => {
+      const result = await createInventoryItem(fd);
+      if (result.error) {
+        // Roll back optimistic item on failure
+        setItems((prev) => prev.filter((i) => i.id !== tempId));
+        console.error("createInventoryItem failed:", result.error);
+      } else if (result.item) {
+        // Swap optimistic item with real item from DB
+        setItems((prev) => prev.map((i) => (i.id === tempId ? result.item! : i)));
+      }
+      // Revoke the object URL if we didn't already
+      if (capturedForm.photoPreviewUrl) URL.revokeObjectURL(capturedForm.photoPreviewUrl);
+    });
   }
 
   function openItem(item: InventoryItem) {
@@ -255,43 +316,72 @@ export default function InventoryPageClient() {
   function handleSubmitShoppingRequest() {
     if (!selectedItem || !shoppingNote.trim() || shoppingSubmitting) return;
     setShoppingSubmitting(true);
+    const noteText = shoppingNote.trim();
+    const itemId = selectedItem.id;
+    const now = new Date().toISOString();
 
-    setTimeout(() => {
-      const newRequest: ShoppingRequest = {
-        id: `sr-${Date.now()}`,
-        item_id: selectedItem.id,
-        requested_by: "You",
-        note: shoppingNote.trim(),
-        status: "pending",
-        created_at: new Date().toISOString(),
-      };
-      const newEvent: HistoryEvent = {
-        id: `he-${Date.now()}`,
-        action_type: "shopping_requested",
-        teacher_name: "You",
-        count_before: null,
-        count_after: null,
-        timestamp: new Date().toISOString(),
-        note: shoppingNote.trim(),
-      };
+    // Optimistic update
+    const optimisticRequest: ShoppingRequest = {
+      id: `sr-optimistic-${Date.now()}`,
+      item_id: itemId,
+      requested_by: currentUserName,
+      note: noteText,
+      status: "pending",
+      created_at: now,
+    };
+    const optimisticEvent: HistoryEvent = {
+      id: `he-optimistic-${Date.now()}`,
+      action_type: "shopping_requested",
+      teacher_name: currentUserName,
+      count_before: null,
+      count_after: null,
+      timestamp: now,
+      note: noteText,
+    };
 
-      const updateItem = (item: InventoryItem): InventoryItem => ({
-        ...item,
-        shopping_requests: [...item.shopping_requests, newRequest],
-        history_log: [newEvent, ...item.history_log],
-      });
+    const applyOptimistic = (item: InventoryItem): InventoryItem => ({
+      ...item,
+      shopping_requests: [...item.shopping_requests, optimisticRequest],
+      history_log: [optimisticEvent, ...item.history_log],
+    });
 
-      setItems((prev) => prev.map((i) => (i.id === selectedItem.id ? updateItem(i) : i)));
-      setSelectedItem((prev) => (prev ? updateItem(prev) : prev));
+    setItems((prev) => prev.map((i) => (i.id === itemId ? applyOptimistic(i) : i)));
+    setSelectedItem((prev) => (prev ? applyOptimistic(prev) : prev));
+    setShoppingNote("");
+    setShoppingSuccess(true);
+
+    startTransition(async () => {
+      const result = await submitShoppingRequest(itemId, noteText);
       setShoppingSubmitting(false);
-      setShoppingSuccess(true);
-      setShoppingNote("");
+
+      if (result.error) {
+        // Roll back optimistic entries
+        const rollback = (item: InventoryItem): InventoryItem => ({
+          ...item,
+          shopping_requests: item.shopping_requests.filter((r) => r.id !== optimisticRequest.id),
+          history_log: item.history_log.filter((h) => h.id !== optimisticEvent.id),
+        });
+        setItems((prev) => prev.map((i) => (i.id === itemId ? rollback(i) : i)));
+        setSelectedItem((prev) => (prev ? rollback(prev) : prev));
+        setShoppingSuccess(false);
+        console.error("submitShoppingRequest failed:", result.error);
+      } else if (result.request) {
+        // Swap optimistic request with real one
+        const swap = (item: InventoryItem): InventoryItem => ({
+          ...item,
+          shopping_requests: item.shopping_requests.map((r) =>
+            r.id === optimisticRequest.id ? result.request! : r
+          ),
+        });
+        setItems((prev) => prev.map((i) => (i.id === itemId ? swap(i) : i)));
+        setSelectedItem((prev) => (prev ? swap(prev) : prev));
+      }
 
       setTimeout(() => {
         setShoppingFormOpen(false);
         setShoppingSuccess(false);
       }, 1500);
-    }, 600);
+    });
   }
 
   // ─── Render ──────────────────────────────────────────────────────────────
