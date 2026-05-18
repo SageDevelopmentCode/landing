@@ -14,6 +14,7 @@ import {
   FileText,
   Users,
   ClipboardList,
+  Package,
 } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 
@@ -29,6 +30,7 @@ const primaryNavItems: { label: string; icon: LucideIcon; href: string }[] = [
 
 const moreItems: { label: string; icon: LucideIcon; href: string }[] = [
   { label: "Payroll",             icon: CreditCard, href: "/teacher/dashboard/payroll" },
+  { label: "Inventory",           icon: Package,    href: "/teacher/dashboard/inventory" },
   { label: "Forms and Documents", icon: FileText,   href: "#" },
 ];
 

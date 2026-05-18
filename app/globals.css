@@ -199,3 +199,7 @@ body {
 .tiptap-view em { font-style: italic; }
 .tiptap-view u  { text-decoration: underline; }
 .tiptap-view blockquote { border-left: 3px solid #BFD8C0; padding-left: 1rem; color: #6B6B6B; margin: 0.5rem 0; }
+
+/* Hide scrollbar while preserving scroll functionality */
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
