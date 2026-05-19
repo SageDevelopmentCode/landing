@@ -686,9 +686,19 @@ export async function buildRegistrationFeeConfirmationEmail(opts: {
 
   <p>We are thrilled to confirm that your registration fee of <strong>$${opts.amountDollars}</strong> has been received for <strong>${opts.childLegalName}</strong> in the <strong>${opts.program}</strong> program at Sage Field School.</p>
 
-  <p>Your child's spot is now secured and we cannot wait to welcome them. Our team will be in touch soon with more details about what to expect next.</p>
+  <p>Your child's spot is now secured — we cannot wait to welcome them to Sage Field!</p>
 
-  <p>If you have any questions in the meantime, please don't hesitate to reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a>.</p>
+  <p style="margin-top: 20px;"><strong>Your parent portal is ready.</strong> Here's what you can do right now:</p>
+  <ul style="padding-left: 20px; margin: 12px 0;">
+    <li style="margin-bottom: 8px;"><a href="https://sagefield.co/parent/home" style="color: #5a7a5a;">Parent Home</a> — your dashboard overview</li>
+    <li style="margin-bottom: 8px;"><a href="https://sagefield.co/parent/billing" style="color: #5a7a5a;">Tuition</a> — pay and manage tuition</li>
+    <li style="margin-bottom: 8px;"><a href="https://sagefield.co/parent/messages" style="color: #5a7a5a;">Messages</a> — connect with the Sage Field community</li>
+    <li style="margin-bottom: 8px;"><a href="https://sagefield.co/parent/children" style="color: #5a7a5a;">My Children</a> — view your children's information</li>
+    <li style="margin-bottom: 8px;"><a href="https://sagefield.co/parent/calendar" style="color: #5a7a5a;">Calendar</a> — upcoming school events</li>
+    <li style="margin-bottom: 8px;"><a href="https://sagefield.co/parent/feed" style="color: #5a7a5a;">Feed</a> — school posts and updates</li>
+  </ul>
+
+  <p>If you have any questions, please don't hesitate to reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a>.</p>
 
   <p style="margin-top: 32px;">With excitement,</p>
   <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
