@@ -154,6 +154,7 @@ export async function POST(request: NextRequest) {
         clientSecret: paymentIntent.client_secret,
         ephemeralKey: ephemeralKey.secret,
         customerId: stripeCustomerId,
+        publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
       });
     }
 
