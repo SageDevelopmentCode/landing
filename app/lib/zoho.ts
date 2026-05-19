@@ -684,23 +684,59 @@ export async function buildRegistrationFeeConfirmationEmail(opts: {
 <body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
   <p style="margin-bottom: 24px;">Dear ${opts.g1FullName},</p>
 
-  <p>We are thrilled to confirm that your registration fee of <strong>$${opts.amountDollars}</strong> has been received for <strong>${opts.childLegalName}</strong> in the <strong>${opts.program}</strong> program at Sage Field School.</p>
+  <p style="font-size: 22px; font-weight: bold; color: #2C5F2E; margin: 0 0 16px 0;">🎉 Welcome to the Sage Field Family!</p>
 
-  <p>Your child's spot is now secured — we cannot wait to welcome them to Sage Field!</p>
+  <p><strong>${opts.childLegalName}</strong> is now officially enrolled at Sage Field School. We are beyond excited to welcome your family into our community — this is just the beginning of something truly wonderful.</p>
 
-  <p style="margin-top: 20px;"><strong>Your parent portal is ready.</strong> Here's what you can do right now:</p>
-  <ul style="padding-left: 20px; margin: 12px 0;">
-    <li style="margin-bottom: 8px;"><a href="https://sagefield.co/parent/home" style="color: #5a7a5a;">Parent Home</a> — your dashboard overview</li>
-    <li style="margin-bottom: 8px;"><a href="https://sagefield.co/parent/billing" style="color: #5a7a5a;">Tuition</a> — pay and manage tuition</li>
-    <li style="margin-bottom: 8px;"><a href="https://sagefield.co/parent/messages" style="color: #5a7a5a;">Messages</a> — connect with the Sage Field community</li>
-    <li style="margin-bottom: 8px;"><a href="https://sagefield.co/parent/children" style="color: #5a7a5a;">My Children</a> — view your children's information</li>
-    <li style="margin-bottom: 8px;"><a href="https://sagefield.co/parent/calendar" style="color: #5a7a5a;">Calendar</a> — upcoming school events</li>
-    <li style="margin-bottom: 8px;"><a href="https://sagefield.co/parent/feed" style="color: #5a7a5a;">Feed</a> — school posts and updates</li>
-  </ul>
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; margin: 24px 0;">
+    <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 15px;">Enrollment Confirmation</p>
+    <p style="margin: 4px 0;"><strong>Student:</strong> ${opts.childLegalName}</p>
+    <p style="margin: 4px 0;"><strong>Program:</strong> ${opts.program}</p>
+    <p style="margin: 4px 0;"><strong>Registration Fee:</strong> $${opts.amountDollars} — Received ✓</p>
+  </div>
 
-  <p>If you have any questions, please don't hesitate to reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a>.</p>
+  <p style="margin-top: 28px;"><strong>Your parent portal is now active.</strong> Log in anytime to stay connected with everything happening at Sage Field:</p>
 
-  <p style="margin-top: 32px;">With excitement,</p>
+  <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin: 16px 0 8px 0;">
+    <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;"><a href="https://sagefield.co/parent/home" style="color: #2c2c2c; text-decoration: none;">🏠 Parent Home</a></p>
+    <p style="margin: 0; color: #555; font-size: 14px;">Your dashboard — see check-ins, upcoming events, and portal activity at a glance.</p>
+  </div>
+
+  <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin: 8px 0;">
+    <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;"><a href="https://sagefield.co/parent/billing" style="color: #2c2c2c; text-decoration: none;">💳 Tuition</a></p>
+    <p style="margin: 0; color: #555; font-size: 14px;">Pay and manage your tuition, view payment history, and select weeks.</p>
+  </div>
+
+  <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin: 8px 0;">
+    <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;"><a href="https://sagefield.co/parent/messages" style="color: #2c2c2c; text-decoration: none;">💬 Messages</a></p>
+    <p style="margin: 0; color: #555; font-size: 14px;">Connect with the Sage Field team and fellow families in the community.</p>
+  </div>
+
+  <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin: 8px 0;">
+    <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;"><a href="https://sagefield.co/parent/children" style="color: #2c2c2c; text-decoration: none;">👨‍👧 My Children</a></p>
+    <p style="margin: 0; color: #555; font-size: 14px;">View and manage your children's profiles and information.</p>
+  </div>
+
+  <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin: 8px 0;">
+    <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;"><a href="https://sagefield.co/parent/calendar" style="color: #2c2c2c; text-decoration: none;">📅 Calendar</a></p>
+    <p style="margin: 0; color: #555; font-size: 14px;">See all upcoming school events, field trips, and important dates.</p>
+  </div>
+
+  <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin: 8px 0 24px 0;">
+    <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;"><a href="https://sagefield.co/parent/feed" style="color: #2c2c2c; text-decoration: none;">📰 Feed</a></p>
+    <p style="margin: 0; color: #555; font-size: 14px;">Stay up to date with school posts, updates, and community news.</p>
+  </div>
+
+  <p style="text-align: center; margin: 28px 0;">
+    <a href="https://sagefield.co/parent/home"
+       style="display: inline-block; background-color: #2C5F2E; color: #ffffff; text-decoration: none; font-weight: bold; padding: 12px 28px; border-radius: 8px; font-size: 15px;">
+      Visit Your Parent Portal →
+    </a>
+  </p>
+
+  <p>If you have any questions, we are always here — just reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a>.</p>
+
+  <p style="margin-top: 32px;">With so much excitement,</p>
   <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
 </body>
 </html>

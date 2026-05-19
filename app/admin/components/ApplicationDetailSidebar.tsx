@@ -27,6 +27,7 @@ import { sendPaySummerTuitionEmail } from '../../actions/sendPaySummerTuitionEma
 import { sendPaySummerTuitionEmail2 } from '../../actions/sendPaySummerTuitionEmail2'
 import { sendSummerWelcomeEmail } from '../../actions/sendSummerWelcomeEmail'
 import { sendSummerTuitionDueDateReminderEmail } from '../../actions/sendSummerTuitionDueDateReminderEmail'
+import { sendRegistrationFeeConfirmationEmail } from '../../actions/sendRegistrationFeeConfirmationEmail'
 import { enrollApplication } from '../../actions/enrollApplication'
 import { updateApplicationProgram } from '../../actions/updateApplicationProgram'
 import { updateApplicationTags } from '../../actions/updateApplicationTags'
@@ -193,6 +194,9 @@ export function ApplicationDetailSidebar({
   const [tuitionDueSending, setTuitionDueSending] = useState(false)
   const [tuitionDueSent, setTuitionDueSent] = useState(false)
   const [tuitionDueError, setTuitionDueError] = useState<string | null>(null)
+  const [regFeeSending, setRegFeeSending] = useState(false)
+  const [regFeeSent, setRegFeeSent] = useState(false)
+  const [regFeeError, setRegFeeError] = useState<string | null>(null)
   const [tagInput, setTagInput] = useState('')
   const [tagSaving, setTagSaving] = useState(false)
   const [tagError, setTagError] = useState<string | null>(null)
@@ -464,6 +468,28 @@ export function ApplicationDetailSidebar({
       onProgramChanged?.(application.id, selectedProgram)
     } else {
       setProgramUpdateError(result.error ?? 'Failed to update program')
+    }
+  }
+
+  const handleSendRegFeeConfirmation = async () => {
+    if (regFeeSending || !application.g1_email) return
+    setRegFeeSending(true)
+    setRegFeeError(null)
+    const feeStr = (PROGRAM_FEES[application.program ?? ''] ?? '$0').replace('$', '')
+    const result = await sendRegistrationFeeConfirmationEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      program: application.program,
+      amountDollars: feeStr,
+      email: application.g1_email,
+    })
+    setRegFeeSending(false)
+    if (result.success) {
+      setRegFeeSent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setRegFeeSent(false), 3000)
+    } else {
+      setRegFeeError(result.error ?? 'Failed to send')
     }
   }
 
@@ -1074,6 +1100,17 @@ export function ApplicationDetailSidebar({
         {application.approved && application.g1_email && (
           <SidebarSection title="Outreach">
             <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleSendRegFeeConfirmation}
+                  disabled={regFeeSending || regFeeSent}
+                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                >
+                  {regFeeSending ? 'Sending…' : regFeeSent ? '✓ Sent!' : 'Send Reg Fee Confirmation'}
+                </button>
+                {regFeeError && <span className="text-xs text-red-600">{regFeeError}</span>}
+              </div>
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleSendEnrollmentReminder}
