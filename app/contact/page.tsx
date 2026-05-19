@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Mail,
@@ -10,11 +10,27 @@ import {
   CheckCircle,
   AlertCircle,
 } from "lucide-react";
+import Image from "next/image";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
 import FloatingSMSButton from "@/app/components/FloatingSMSButton";
 import { submitContact } from "@/app/actions/contact";
 import { formatPhone } from "@/app/utils/formatPhone";
+
+const galleryImages = [
+  "/assets/Stock1.jpg",
+  "/assets/Kid1.jpg",
+  "/assets/Kid2.jpg",
+  "/assets/Stock3.jpg",
+  "/assets/Stock4.jpg",
+  "/assets/Stock5.jpg",
+  "/assets/Stock6.jpg",
+  "/assets/Stock7.jpg",
+  "/assets/Stock8.jpg",
+  "/assets/Stock9.jpg",
+  "/assets/Stock10.jpg",
+  "/assets/Stock11.jpg",
+];
 
 export default function ContactPage() {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
@@ -25,6 +41,47 @@ export default function ContactPage() {
     subject: "",
     message: "",
   });
+  const galleryRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number | null>(null);
+  const isPausedRef = useRef(false);
+  const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const el = galleryRef.current;
+    if (!el) return;
+    el.scrollLeft = 0;
+
+    let pos = el.scrollLeft;
+    const tick = () => {
+      if (!isPausedRef.current && el) {
+        pos += 0.5;
+        el.scrollLeft = Math.round(pos);
+        if (el.scrollLeft >= el.scrollWidth / 2) {
+          pos = 0;
+          el.scrollLeft = 0;
+        }
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
+  const handleGalleryInteractionStart = () => {
+    isPausedRef.current = true;
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+  };
+
+  const handleGalleryInteractionEnd = () => {
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    resumeTimerRef.current = setTimeout(() => {
+      isPausedRef.current = false;
+    }, 2500);
+  };
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<{
     type: "success" | "error" | null;
@@ -76,7 +133,35 @@ export default function ContactPage() {
     <div className="min-h-screen bg-welcome-bg flex flex-col">
       <Navbar />
 
-      <main className="flex-1 py-16 px-8 sm:px-12 lg:px-16">
+      {/* Mobile hero gallery */}
+      <div className="sm:hidden pt-20">
+        <div
+          ref={galleryRef}
+          className="overflow-x-auto flex gap-0 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
+          onTouchStart={handleGalleryInteractionStart}
+          onTouchEnd={handleGalleryInteractionEnd}
+          onMouseDown={handleGalleryInteractionStart}
+          onMouseUp={handleGalleryInteractionEnd}
+        >
+          {[...galleryImages, ...galleryImages].map((src, i) => (
+            <div
+              key={i}
+              className="relative w-[88%] flex-shrink-0 aspect-square overflow-hidden"
+            >
+              <Image
+                src={src}
+                alt="Sage Field photo"
+                fill
+                className="object-cover"
+                sizes="88vw"
+                priority={i === 0}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <main className="flex-1 py-8 sm:py-16 px-8 sm:px-12 lg:px-16">
         <div className="max-w-7xl mx-auto w-full">
           {/* Badge */}
           <motion.div
@@ -97,7 +182,7 @@ export default function ContactPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-            className="text-4xl md:text-5xl font-bold mb-16 text-text-gray font-heading"
+            className="text-4xl md:text-5xl font-bold mb-8 sm:mb-16 text-text-gray font-heading"
           >
             Get in Touch
           </motion.h1>
@@ -109,7 +194,7 @@ export default function ContactPage() {
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-              className="w-full lg:w-1/2 space-y-8"
+              className="w-full lg:w-1/2 space-y-8 order-2 lg:order-1"
             >
               <p className="text-lg md:text-xl text-text-gray leading-relaxed font-body">
                 Have questions or want to learn more about Sage Field? Reach out
@@ -221,9 +306,9 @@ export default function ContactPage() {
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
-              className="w-full lg:w-1/2"
+              className="w-full lg:w-1/2 order-1 lg:order-2"
             >
-              <div className="bg-white rounded-2xl p-8 shadow-lg">
+              <div className="lg:bg-white lg:rounded-2xl lg:p-8 lg:shadow-lg">
                 <h2 className="text-2xl font-heading font-semibold text-text-gray mb-2">
                   Send Us a Message
                 </h2>
