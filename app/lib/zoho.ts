@@ -2566,3 +2566,63 @@ export async function buildSummerWelcomeEmail(opts: {
 
   return { subject, content }
 }
+
+export async function buildSummerTuitionDueDateReminderEmail(opts: {
+  g1FullName: string
+  childLegalName: string
+}): Promise<{ subject: string; content: string }> {
+  const subject = "Tuition Due This Friday — A Quick Note Before Summer Begins"
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+
+  <p style="margin-bottom: 24px;">Dear ${opts.g1FullName},</p>
+
+  <p style="margin-bottom: 12px;">If you've already paid — thank you so much, you're all set! 🎉 Feel free to skip ahead to the packing list and Q&amp;A info below.</p>
+
+  <p style="margin-bottom: 16px;">If you haven't yet, just a quick heads-up: tuition for <strong>${opts.childLegalName}</strong>'s first week is due this <strong>Friday, May 22</strong>. Your child's spot is held and we can't wait to welcome them on May 26th — we just need to receive payment to confirm it.</p>
+
+  <div style="text-align: center; margin: 28px 0;">
+    <a href="https://www.sagefield.co/parent/billing" style="background: #2C5F2E; color: #fff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-family: Georgia, serif; font-size: 15px; display: inline-block;">Pay Tuition</a>
+  </div>
+
+  <p style="margin-bottom: 24px; font-size: 14px; color: #555; text-align: center;">Not logged in yet? <a href="https://www.sagefield.co/parent/home" style="color: #5a7a5a;">Access your parent dashboard here.</a></p>
+
+  <h2 style="font-size: 18px; margin-top: 32px; margin-bottom: 12px; color: #2c2c2c;">🎒 What to Send With Your Child</h2>
+  <div style="line-height: 2.2; margin-bottom: 8px;">
+    <span style="display: inline-block; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 500; color: #374151; margin: 4px 4px 4px 0;">🍱 Snack + lunch</span><span style="display: inline-block; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 500; color: #374151; margin: 4px 4px 4px 0;">💧 Water bottle</span><span style="display: inline-block; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 500; color: #374151; margin: 4px 4px 4px 0;">👕 Change of clothes</span><span style="display: inline-block; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 500; color: #374151; margin: 4px 4px 4px 0;">👟 Closed-toe shoes</span><span style="display: inline-block; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 500; color: #374151; margin: 4px 4px 4px 0;">🩴 Open-toe shoes</span><span style="display: inline-block; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 500; color: #374151; margin: 4px 4px 4px 0;">☀️ Sunscreen</span><span style="display: inline-block; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 500; color: #374151; margin: 4px 4px 4px 0;">🥾 Boots</span>
+  </div>
+  <p style="margin-bottom: 24px; font-size: 13px; color: #888; font-style: italic;">Extra shoes may be left at Sage Field — pick them up on your last day.</p>
+
+  <h2 style="font-size: 18px; margin-top: 32px; margin-bottom: 12px; color: #2c2c2c;">💻 Join Us for a Live Q&amp;A</h2>
+  <p style="margin-bottom: 12px;">Still have questions before Day 1? Join us on Google Meet — drop in anytime, ask what's on your mind, and hop off whenever you'd like.</p>
+
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 14px 18px; margin: 20px 0; border-radius: 4px; font-size: 14px;">
+    <p style="margin: 0 0 6px 0;">📅 <strong>Saturday, May 23</strong> · 11:00 AM – 12:00 PM</p>
+    <p style="margin: 0;">🔗 <a href="https://meet.google.com/jxk-xkfc-mnp" style="color: #5a7a5a;">Join Google Meet</a></p>
+  </div>
+
+  <p style="margin-bottom: 24px; font-size: 14px; color: #555;">Sabrina will be there to answer questions about the program, schedules, Day 1 expectations, and anything else on your mind.</p>
+
+  <h2 style="font-size: 18px; margin-top: 32px; margin-bottom: 12px; color: #2c2c2c;">💳 A Note on Tuition</h2>
+  <p style="margin-bottom: 12px;">To keep our small-group program running smoothly and to hold your child's spot, tuition for each week must be received by the <strong>Friday before that week begins</strong>.</p>
+
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 14px 18px; margin: 20px 0; border-radius: 4px; font-size: 14px;">
+    <p style="margin: 0 0 6px 0;"><strong>Examples:</strong></p>
+    <p style="margin: 0 0 4px 0;">Week 1 begins May 26 → Tuition due by <strong>May 22</strong></p>
+    <p style="margin: 0 0 12px 0;">Week 2 begins June 1 → Tuition due by <strong>May 29</strong></p>
+    <p style="margin: 0; color: #c0392b; font-size: 13px;">⚠️ A <strong>$30 late fee</strong> applies if tuition is not received by Friday at 11:59 PM.</p>
+  </div>
+
+  <p style="margin-top: 32px; margin-bottom: 4px;">See you soon! ☀️</p>
+  <p style="margin-top: 4px;">With warmth,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina &amp; the Sage Field Team</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+
+</body>
+</html>
+  `.trim()
+
+  return { subject, content }
+}
