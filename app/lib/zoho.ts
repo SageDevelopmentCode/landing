@@ -698,33 +698,39 @@ export async function buildRegistrationFeeConfirmationEmail(opts: {
   <p style="margin-top: 28px;"><strong>Your parent portal is now active.</strong> Log in anytime to stay connected with everything happening at Sage Field:</p>
 
   <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin: 16px 0 8px 0;">
-    <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;"><a href="https://sagefield.co/parent/home" style="color: #2c2c2c; text-decoration: none;">🏠 Parent Home</a></p>
+    <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;"><a href="https://sagefield.co/parent/home" style="color: #5a7a5a; text-decoration: none;">🏠 Parent Home</a></p>
     <p style="margin: 0; color: #555; font-size: 14px;">Your dashboard — see check-ins, upcoming events, and portal activity at a glance.</p>
+    <p style="margin: 8px 0 0 0; font-size: 14px;"><a href="https://sagefield.co/parent/home" style="color: #5a7a5a;">Open →</a></p>
   </div>
 
   <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin: 8px 0;">
-    <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;"><a href="https://sagefield.co/parent/billing" style="color: #2c2c2c; text-decoration: none;">💳 Tuition</a></p>
+    <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;"><a href="https://sagefield.co/parent/billing" style="color: #5a7a5a; text-decoration: none;">💳 Tuition</a></p>
     <p style="margin: 0; color: #555; font-size: 14px;">Pay and manage your tuition, view payment history, and select weeks.</p>
+    <p style="margin: 8px 0 0 0; font-size: 14px;"><a href="https://sagefield.co/parent/billing" style="color: #5a7a5a;">Open →</a></p>
   </div>
 
   <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin: 8px 0;">
-    <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;"><a href="https://sagefield.co/parent/messages" style="color: #2c2c2c; text-decoration: none;">💬 Messages</a></p>
+    <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;"><a href="https://sagefield.co/parent/messages" style="color: #5a7a5a; text-decoration: none;">💬 Messages</a></p>
     <p style="margin: 0; color: #555; font-size: 14px;">Connect with the Sage Field team and fellow families in the community.</p>
+    <p style="margin: 8px 0 0 0; font-size: 14px;"><a href="https://sagefield.co/parent/messages" style="color: #5a7a5a;">Open →</a></p>
   </div>
 
   <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin: 8px 0;">
-    <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;"><a href="https://sagefield.co/parent/children" style="color: #2c2c2c; text-decoration: none;">👨‍👧 My Children</a></p>
+    <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;"><a href="https://sagefield.co/parent/children" style="color: #5a7a5a; text-decoration: none;">👨‍👧 My Children</a></p>
     <p style="margin: 0; color: #555; font-size: 14px;">View and manage your children's profiles and information.</p>
+    <p style="margin: 8px 0 0 0; font-size: 14px;"><a href="https://sagefield.co/parent/children" style="color: #5a7a5a;">Open →</a></p>
   </div>
 
   <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin: 8px 0;">
-    <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;"><a href="https://sagefield.co/parent/calendar" style="color: #2c2c2c; text-decoration: none;">📅 Calendar</a></p>
+    <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;"><a href="https://sagefield.co/parent/calendar" style="color: #5a7a5a; text-decoration: none;">📅 Calendar</a></p>
     <p style="margin: 0; color: #555; font-size: 14px;">See all upcoming school events, field trips, and important dates.</p>
+    <p style="margin: 8px 0 0 0; font-size: 14px;"><a href="https://sagefield.co/parent/calendar" style="color: #5a7a5a;">Open →</a></p>
   </div>
 
   <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin: 8px 0 24px 0;">
-    <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;"><a href="https://sagefield.co/parent/feed" style="color: #2c2c2c; text-decoration: none;">📰 Feed</a></p>
+    <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;"><a href="https://sagefield.co/parent/feed" style="color: #5a7a5a; text-decoration: none;">📰 Feed</a></p>
     <p style="margin: 0; color: #555; font-size: 14px;">Stay up to date with school posts, updates, and community news.</p>
+    <p style="margin: 8px 0 0 0; font-size: 14px;"><a href="https://sagefield.co/parent/feed" style="color: #5a7a5a;">Open →</a></p>
   </div>
 
   <p style="text-align: center; margin: 28px 0;">
