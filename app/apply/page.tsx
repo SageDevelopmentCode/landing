@@ -282,7 +282,7 @@ const tabContent = {
     ],
     images: [
       "/assets/Stock1.jpg",
-      "/assets/Kid1.jpg",
+      "/assets/Kid1.png",
       "/assets/Kid2.jpg",
       // "/assets/Stock2.jpg",
       "/assets/Stock3.jpg",
@@ -311,7 +311,7 @@ const tabContent = {
     ],
     images: [
       "/assets/Stock1.jpg",
-      "/assets/Kid1.jpg",
+      "/assets/Kid1.png",
       "/assets/Kid2.jpg",
       // "/assets/Stock2.jpg",
       "/assets/Stock3.jpg",
@@ -340,7 +340,7 @@ const tabContent = {
     ],
     images: [
       "/assets/Stock1.jpg",
-      "/assets/Kid1.jpg",
+      "/assets/Kid1.png",
       "/assets/Kid2.jpg",
       // "/assets/Stock2.jpg",
       "/assets/Stock3.jpg",

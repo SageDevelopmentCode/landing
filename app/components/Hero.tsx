@@ -64,7 +64,7 @@ const slides = [
     buttonHref: "/educational-philosophy",
   },
   {
-    image: "/assets/Kid1.jpg",
+    image: "/assets/Kid1.png",
     title: "Our Vision",
     description:
       "We've secured our LLC and our property. Come see what we're building for the children of Round Rock.",

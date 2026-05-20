@@ -64,7 +64,7 @@ const DROP_OFF_SLOTS = [
 ] as const;
 
 const BANNER_IMAGES = [
-  "/assets/Kid1.jpg",
+  "/assets/Kid1.png",
   "/assets/Kid2.jpg",
   "/assets/Stock1.jpg",
   // "/assets/Stock2.jpg",
@@ -500,7 +500,7 @@ export default function HomePageClient({
                 {/* Banner image */}
                 <div className="relative h-36 w-full overflow-hidden mt-3">
                   <img
-                    src="/assets/Kid1.jpg"
+                    src="/assets/Kid1.png"
                     alt=""
                     className="absolute inset-0 w-full h-full object-cover"
                   />
@@ -588,7 +588,7 @@ export default function HomePageClient({
                 {/* Banner image */}
                 <div className="relative h-40 w-full overflow-hidden">
                   <img
-                    src="/assets/Kid1.jpg"
+                    src="/assets/Kid1.png"
                     alt=""
                     className="absolute inset-0 w-full h-full object-cover"
                   />

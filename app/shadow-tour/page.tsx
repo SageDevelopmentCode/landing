@@ -97,7 +97,7 @@ const MAX_YEAR = 2026;
 
 const SHADOW_TOUR_IMAGES = [
   "/assets/Stock1.jpg",
-  "/assets/Kid1.jpg",
+  "/assets/Kid1.png",
   "/assets/Kid2.jpg",
   // "/assets/Stock2.jpg",
   "/assets/Stock3.jpg",
@@ -1086,7 +1086,7 @@ export default function ShadowTourPage() {
             transition={{ duration: 0.55, delay: 0.2 }}
           >
             <Image
-              src="/assets/Kid1.jpg"
+              src="/assets/Kid1.png"
               alt="Child at Sage Field School"
               fill
               className="object-cover"

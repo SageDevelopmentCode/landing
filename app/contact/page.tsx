@@ -19,7 +19,7 @@ import { formatPhone } from "@/app/utils/formatPhone";
 
 const galleryImages = [
   "/assets/Stock1.jpg",
-  "/assets/Kid1.jpg",
+  "/assets/Kid1.png",
   "/assets/Kid2.jpg",
   "/assets/Stock3.jpg",
   "/assets/Stock4.jpg",
