@@ -464,7 +464,7 @@ function RevenueExpensesLineChart({
         return s + net / 100;
       }, 0);
     const expenseTotal = expenses
-      .filter((e) => e.expense_date.startsWith(m))
+      .filter((e) => e.expense_date.startsWith(m) && e.category !== "Savings")
       .reduce((s, e) => s + Number(e.amount), 0);
     return { month: m, revenue, expenses: expenseTotal };
   });
@@ -1202,7 +1202,11 @@ function OverviewTab({
     0,
   );
 
-  const monthExpenses = expenses.filter((e) =>
+  const monthExpenses = expenses.filter(
+    (e) =>
+      e.expense_date.startsWith(selectedMonth) && e.category !== "Savings",
+  );
+  const monthExpensesAll = expenses.filter((e) =>
     e.expense_date.startsWith(selectedMonth),
   );
   const totalExpenses = monthExpenses.reduce((s, e) => s + Number(e.amount), 0);
@@ -1230,7 +1234,9 @@ function OverviewTab({
         : tx.amount_cents;
       return s + net / 100;
     }, 0);
-  const allTimeExpenses = expenses.reduce((s, e) => s + Number(e.amount), 0);
+  const allTimeExpenses = expenses
+    .filter((e) => e.category !== "Savings")
+    .reduce((s, e) => s + Number(e.amount), 0);
   const allTimeNet = allTimeRevenue - allTimeExpenses;
   const allTimeNetColor = allTimeNet >= 0 ? colors.success : colors.error;
 
@@ -1290,7 +1296,7 @@ function OverviewTab({
       {/* Category ring charts */}
       <CategoryBudgetRings
         lineItems={lineItems}
-        monthExpenses={monthExpenses}
+        monthExpenses={monthExpensesAll}
       />
 
       {/* Budget allocation donut + Revenue trend */}
@@ -2408,7 +2414,9 @@ function ExpensesTab({
     if (filterCat && e.category !== filterCat) return false;
     return true;
   });
-  const total = filtered.reduce((s, e) => s + Number(e.amount), 0);
+  const total = filtered
+    .filter((e) => e.category !== "Savings")
+    .reduce((s, e) => s + Number(e.amount), 0);
 
   // Group by month for monthly view
   const byMonth = filtered.reduce<Record<string, BudgetExpense[]>>((acc, e) => {
@@ -3072,10 +3080,9 @@ function ExpensesTab({
           ) : (
             months.map((monthKey) => {
               const monthExps = byMonth[monthKey];
-              const monthTotal = monthExps.reduce(
-                (s, e) => s + Number(e.amount),
-                0,
-              );
+              const monthTotal = monthExps
+                .filter((e) => e.category !== "Savings")
+                .reduce((s, e) => s + Number(e.amount), 0);
               const isCollapsed = collapsedMonths.has(monthKey);
               return (
                 <React.Fragment key={monthKey}>
@@ -4086,10 +4093,9 @@ function ExpensesTab({
           ) : (
             months.map((monthKey) => {
               const monthExps = byMonth[monthKey];
-              const monthTotal = monthExps.reduce(
-                (s, e) => s + Number(e.amount),
-                0,
-              );
+              const monthTotal = monthExps
+                .filter((e) => e.category !== "Savings")
+                .reduce((s, e) => s + Number(e.amount), 0);
               const isCatCollapsed = collapsedCatMonths.has(monthKey);
 
               const byCatMonth = monthExps.reduce<Record<string, number>>(
