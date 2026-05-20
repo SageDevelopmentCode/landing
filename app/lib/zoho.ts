@@ -2634,7 +2634,7 @@ export async function buildSummerTuitionDueDateReminderEmail(opts: {
 
   <p style="margin-bottom: 12px;">If you've already paid — thank you so much, you're all set! 🎉 Feel free to skip ahead to the packing list and Q&amp;A info below.</p>
 
-  <p style="margin-bottom: 16px;">If you haven't yet, just a quick heads-up: tuition for <strong>${opts.childLegalName}</strong>'s first week is due this <strong>Friday, May 22</strong>. Your child's spot is held and we can't wait to welcome them on May 26th — we just need to receive payment to confirm it.</p>
+  <p style="margin-bottom: 16px;">If you haven't yet — and if <strong>${opts.childLegalName}</strong> is planning to attend the first week of summer (May 26) — tuition is due this <strong>Friday, May 22</strong>. Your child's spot is held and we can't wait to welcome them — we just need to receive payment to confirm it.</p>
 
   <div style="text-align: center; margin: 28px 0;">
     <a href="https://www.sagefield.co/parent/billing" style="background: #2C5F2E; color: #fff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-family: Georgia, serif; font-size: 15px; display: inline-block;">Pay Tuition</a>
