@@ -16,6 +16,7 @@ const WaitlistDialog = dynamic(() => import("../components/WaitlistDialog"), {
 });
 import FloatingSMSButton from "../components/FloatingSMSButton";
 import MeetTheTeamSection from "../components/MeetTheTeamSection";
+import WeeklySchedule from "../components/WeeklySchedule";
 import FAQAccordion from "../components/FAQAccordion";
 import { submitWaitlist } from "@/app/actions/waitlist";
 import { formatPhone } from "@/app/utils/formatPhone";
@@ -837,8 +838,8 @@ export default function ApplyPage() {
                   </div>
                 )}
 
-                {/* Educational Philosophy — Summer 2026 only */}
-                {activeTab === "summer" && (
+                {/* Educational Philosophy — Summer & School Year */}
+                {(activeTab === "summer" || activeTab === "school-year") && (
                   <motion.div
                     className="border-t border-gray-100 pt-10 mb-10"
                     initial={{ opacity: 0, y: 20 }}
@@ -1137,6 +1138,50 @@ export default function ApplyPage() {
                     <div className="-mx-8 sm:-mx-12 lg:-mx-16">
                       <MeetTheTeamSection featured={false} />
                     </div>
+                  </motion.div>
+                )}
+
+                {/* What We Offer — School Year only */}
+                {activeTab === "school-year" && (
+                  <motion.div
+                    className="border-t border-gray-100 pt-10 mb-10"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6, ease: "easeOut" as const }}
+                  >
+                    <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6">
+                      What We Offer
+                    </span>
+                    <h2 className="text-2xl md:text-3xl font-bold text-black font-heading mb-3">
+                      What We Offer
+                    </h2>
+                    <p className="text-lg font-semibold text-primary font-heading mb-6">
+                      Education Through Connection and Exploration
+                    </p>
+                    <p className="text-base text-text-gray mb-4 leading-relaxed font-body">
+                      Sage Field operates as a private microschool, not a child-care or
+                      daycare center. We focus on{" "}
+                      <span className="text-primary font-semibold">whole-child growth</span>
+                      ,{" "}
+                      <span className="text-primary font-semibold">emotional regulation</span>
+                      ,{" "}
+                      <span className="text-primary font-semibold">social development</span>
+                      , and{" "}
+                      <span className="text-primary font-semibold">hands-on experiences</span>{" "}
+                      that promote creativity and curiosity.
+                    </p>
+                    <p className="text-base text-text-gray mb-8 leading-relaxed font-body">
+                      Our days are designed around{" "}
+                      <span className="text-primary font-semibold">movement</span>,{" "}
+                      <span className="text-primary font-semibold">outdoor exploration</span>
+                      , and{" "}
+                      <span className="text-primary font-semibold">project-based learning</span>
+                      , with minimal worksheets and a focus on real-world engagement.
+                      This structure supports emotional stability and helps children
+                      feel confident and connected each day.
+                    </p>
+                    <WeeklySchedule />
                   </motion.div>
                 )}
 
