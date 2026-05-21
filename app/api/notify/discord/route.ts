@@ -11,6 +11,7 @@ import {
   createAppErrorEmbed,
   createPaystubSubmittedEmbed,
   createSpecialRequestEmbed,
+  createParentFeedbackEmbed,
 } from "@/app/lib/discord";
 
 export async function POST(request: NextRequest) {
@@ -524,6 +525,27 @@ export async function POST(request: NextRequest) {
         );
       }
       const embed = createSpecialRequestEmbed({ studentName, category, noteText });
+      await sendDiscordNotification(embed, process.env.DISCORD_WEBHOOK_URL);
+      return NextResponse.json({ success: true });
+    }
+
+    if (type === "parent_feedback") {
+      const { parentName, parentEmail, rating, categories, message, allowFollowUp, feedbackId } = data;
+      if (!parentName || !parentEmail || !rating || !feedbackId) {
+        return NextResponse.json(
+          { error: "parent_feedback requires parentName, parentEmail, rating, and feedbackId" },
+          { status: 400 },
+        );
+      }
+      const embed = createParentFeedbackEmbed({
+        parentName,
+        parentEmail,
+        rating,
+        categories: Array.isArray(categories) ? categories : [],
+        message: message ?? null,
+        allowFollowUp: allowFollowUp === true,
+        feedbackId,
+      });
       await sendDiscordNotification(embed, process.env.DISCORD_WEBHOOK_URL);
       return NextResponse.json({ success: true });
     }
