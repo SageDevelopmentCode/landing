@@ -19,6 +19,28 @@ export async function POST(request: NextRequest) {
     const authHeader = request.headers.get("Authorization");
     const token = authHeader?.replace("Bearer ", "");
 
+    const notifyKey = request.headers.get("x-notify-key");
+    if (notifyKey && notifyKey === process.env.DISCORD_NOTIFY_KEY) {
+      const ANON_ALLOWED = ["login_otp_sent"];
+      const { type, data } = await request.json();
+      if (!ANON_ALLOWED.includes(type)) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+      if (type === "login_otp_sent") {
+        const { email } = data ?? {};
+        await sendDiscordNotification(
+          {
+            title: "🔐 Login OTP Sent",
+            color: 0x5865f2,
+            fields: [{ name: "Email", value: email ?? "unknown", inline: true }],
+            timestamp: new Date().toISOString(),
+          },
+          process.env.DISCORD_SIGNINS_WEBHOOK_URL,
+        );
+        return NextResponse.json({ success: true });
+      }
+    }
+
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
