@@ -28,7 +28,9 @@ import { sendPaySummerTuitionEmail2 } from '../../actions/sendPaySummerTuitionEm
 import { sendSummerWelcomeEmail } from '../../actions/sendSummerWelcomeEmail'
 import { sendSummerTuitionDueDateReminderEmail } from '../../actions/sendSummerTuitionDueDateReminderEmail'
 import { sendRegistrationFeeConfirmationEmail } from '../../actions/sendRegistrationFeeConfirmationEmail'
+import { sendHomeschoolDropInConfirmationEmail } from '../../actions/sendHomeschoolDropInConfirmationEmail'
 import { enrollApplication } from '../../actions/enrollApplication'
+import { PaymentHistory } from './PaymentHistory'
 import { updateApplicationProgram } from '../../actions/updateApplicationProgram'
 import { updateApplicationTags } from '../../actions/updateApplicationTags'
 import { PRESET_TAGS } from '../constants/applicationTags'
@@ -197,6 +199,9 @@ export function ApplicationDetailSidebar({
   const [regFeeSending, setRegFeeSending] = useState(false)
   const [regFeeSent, setRegFeeSent] = useState(false)
   const [regFeeError, setRegFeeError] = useState<string | null>(null)
+  const [dropInConfirmSending, setDropInConfirmSending] = useState(false)
+  const [dropInConfirmSent, setDropInConfirmSent] = useState(false)
+  const [dropInConfirmError, setDropInConfirmError] = useState<string | null>(null)
   const [tagInput, setTagInput] = useState('')
   const [tagSaving, setTagSaving] = useState(false)
   const [tagError, setTagError] = useState<string | null>(null)
@@ -490,6 +495,26 @@ export function ApplicationDetailSidebar({
       setTimeout(() => setRegFeeSent(false), 3000)
     } else {
       setRegFeeError(result.error ?? 'Failed to send')
+    }
+  }
+
+  const handleSendDropInConfirmation = async () => {
+    if (dropInConfirmSending || !application.g1_email) return
+    setDropInConfirmSending(true)
+    setDropInConfirmError(null)
+    const result = await sendHomeschoolDropInConfirmationEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+      applicationId: application.id,
+    })
+    setDropInConfirmSending(false)
+    if (result.success) {
+      setDropInConfirmSent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setDropInConfirmSent(false), 3000)
+    } else {
+      setDropInConfirmError(result.error ?? 'Failed to send')
     }
   }
 
@@ -1221,6 +1246,19 @@ export function ApplicationDetailSidebar({
                 </button>
                 {tuitionDueError && <span className="text-xs text-red-600">{tuitionDueError}</span>}
               </div>
+              {application.program === 'homeschool_drop_in' && (
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendDropInConfirmation}
+                    disabled={dropInConfirmSending || dropInConfirmSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {dropInConfirmSending ? 'Sending…' : dropInConfirmSent ? '✓ Sent!' : 'Send Drop-In Payment Confirmation'}
+                  </button>
+                  {dropInConfirmError && <span className="text-xs text-red-600">{dropInConfirmError}</span>}
+                </div>
+              )}
             </div>
           </SidebarSection>
         )}
@@ -1257,6 +1295,10 @@ export function ApplicationDetailSidebar({
               {isAddingNote ? 'Adding...' : 'Add Note'}
             </button>
           </div>
+        </SidebarSection>
+
+        <SidebarSection title="Payment History">
+          <PaymentHistory parentId={application.user_id} />
         </SidebarSection>
 
         {application.g1_email && (
