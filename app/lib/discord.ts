@@ -1393,6 +1393,50 @@ export function createDropOffTimeEmbed(data: {
   };
 }
 
+/**
+ * Creates a Discord embed for parent portal feedback submissions
+ */
+export function createParentFeedbackEmbed(data: {
+  parentName: string;
+  parentEmail: string;
+  rating: number;
+  categories: string[];
+  message?: string | null;
+  allowFollowUp: boolean;
+  feedbackId: string;
+}): DiscordEmbed {
+  const LABELS = ["", "Poor", "Fair", "Good", "Great", "Excellent"];
+  const stars = "⭐".repeat(data.rating);
+  const fields: DiscordEmbedField[] = [
+    { name: "Parent", value: data.parentName, inline: true },
+    { name: "Email", value: data.parentEmail, inline: true },
+    { name: "Rating", value: `${stars} — ${LABELS[data.rating]}`, inline: true },
+    {
+      name: "Areas",
+      value: data.categories.length ? data.categories.join(" · ") : "None selected",
+      inline: false,
+    },
+    { name: "Follow-up OK", value: data.allowFollowUp ? "Yes" : "No", inline: true },
+  ];
+  if (data.message) {
+    fields.push({
+      name: "Message",
+      value:
+        data.message.length > 1024
+          ? data.message.substring(0, 1021) + "..."
+          : data.message,
+      inline: false,
+    });
+  }
+  fields.push({ name: "Feedback ID", value: data.feedbackId, inline: false });
+  return {
+    title: "✨ New Parent Feedback",
+    color: 0x4a7c59,
+    fields,
+    timestamp: new Date().toISOString(),
+  };
+}
+
 export function createCustomTuitionEmbed(data: {
   parentName: string;
   parentEmail: string;

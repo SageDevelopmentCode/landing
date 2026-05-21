@@ -1,6 +1,7 @@
 import { getConversations } from "@/app/parent/messages/actions";
 import { getChannels } from "@/app/messages/channel-actions";
 import OnboardingChecklistButton from "./OnboardingChecklistButton";
+import FeedbackButton from "./FeedbackButton";
 import NotificationBell, { type NotificationItem } from "./NotificationBell";
 import ProfileDropdown from "@/app/apply/dashboard/ProfileDropdown";
 
@@ -51,6 +52,7 @@ export default async function ParentHeaderRight({
   return (
     <div className="flex items-center justify-end gap-2">
       <OnboardingChecklistButton />
+      <FeedbackButton />
       <NotificationBell items={notificationItems} totalUnread={totalUnread} />
       {email && (
         <div className="ml-2">
