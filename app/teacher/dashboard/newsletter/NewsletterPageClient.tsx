@@ -57,12 +57,18 @@ interface SectionData {
   teacherUpdates?: TeacherUpdate[];
 }
 
+interface PendingChange {
+  type: "body" | "title_rename" | "image_add" | "image_remove" | "section_add" | "visibility" | "newsletter_title" | "teacher_update";
+  sectionLabel?: string;
+  detail?: string;
+}
+
 interface ChangeEntry {
   id: string;
-  timestamp: Date;
+  savedAt: Date;
   teacherName: string;
   teacherAvatar: string | null;
-  action: string;
+  summary: string[];
 }
 
 // ── Static data ───────────────────────────────────────────────────────────────
@@ -132,7 +138,7 @@ interface EditorTabProps {
   setNewsletterTitle: (v: string) => void;
   viewMode: "traditional" | "slideshow";
   setViewMode: (v: "traditional" | "slideshow") => void;
-  logChange: (action: string) => void;
+  recordChange: (change: PendingChange) => void;
   restoredAt: string | null;
   dismissRestore: () => void;
 }
@@ -147,14 +153,13 @@ function EditorTab({
   setNewsletterTitle,
   viewMode,
   setViewMode,
-  logChange,
+  recordChange,
   restoredAt,
   dismissRestore,
 }: EditorTabProps) {
   const [activeSectionId, setActiveSectionId] = useState(sections[0]?.id ?? "");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const bodyDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const activeSection = sections.find((s) => s.id === activeSectionId) ?? sections[0];
 
@@ -199,10 +204,7 @@ function EditorTab({
 
   function handleBodyChange(value: string) {
     patchSection(activeSectionId, { body: value });
-    if (bodyDebounceRef.current) clearTimeout(bodyDebounceRef.current);
-    bodyDebounceRef.current = setTimeout(() => {
-      logChange(`Edited body in '${activeSection?.label || "section"}'`);
-    }, 1200);
+    recordChange({ type: "body", sectionLabel: activeSection?.label || "section" });
   }
 
   function handleImageFiles(files: FileList | null) {
@@ -215,7 +217,7 @@ function EditorTab({
     patchSection(activeSectionId, {
       images: [...(activeSection?.images ?? []), ...newImages],
     });
-    logChange(`Added ${newImages.length} image${newImages.length > 1 ? "s" : ""} to '${activeSection?.label || "section"}'`);
+    recordChange({ type: "image_add", sectionLabel: activeSection?.label || "section", detail: String(newImages.length) });
   }
 
   function removeImage(imgId: string) {
@@ -224,14 +226,14 @@ function EditorTab({
     patchSection(activeSectionId, {
       images: (activeSection?.images ?? []).filter((i) => i.id !== imgId),
     });
-    logChange(`Removed an image from '${activeSection?.label || "section"}'`);
+    recordChange({ type: "image_remove", sectionLabel: activeSection?.label || "section" });
   }
 
   function toggleVisibility(s: SectionData, e: React.MouseEvent) {
     e.stopPropagation();
     const next = !s.visible;
     patchSection(s.id, { visible: next });
-    logChange(next ? `Showed '${s.label}'` : `Hid '${s.label}'`);
+    recordChange({ type: "visibility", sectionLabel: s.label, detail: next ? "shown" : "hidden" });
   }
 
   function patchTeacherUpdate(teacherId: string, body: string) {
@@ -240,11 +242,7 @@ function EditorTab({
       tu.teacherId === teacherId ? { ...tu, body } : tu
     );
     patchSection(activeSectionId, { teacherUpdates: updated });
-    if (bodyDebounceRef.current) clearTimeout(bodyDebounceRef.current);
-    bodyDebounceRef.current = setTimeout(() => {
-      const t = teachers.find((t) => t.id === teacherId);
-      logChange(`Edited class update for ${t?.full_name ?? "teacher"}`);
-    }, 1200);
+    recordChange({ type: "teacher_update", sectionLabel: activeSection?.label || "Class Updates" });
   }
 
   return (
@@ -314,7 +312,7 @@ function EditorTab({
           <button
             onClick={() => {
               addSection();
-              logChange("Added a new section");
+              recordChange({ type: "section_add" });
             }}
             className="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-[#4a7c59] text-white text-sm font-body font-semibold rounded-xl hover:bg-[#3d6b4a] transition-colors"
           >
@@ -429,7 +427,7 @@ function EditorTab({
                     value={activeSection.label}
                     onChange={(e) => {
                       patchSection(activeSectionId, { label: e.target.value });
-                      logChange(`Renamed section to '${e.target.value}'`);
+                      recordChange({ type: "title_rename", sectionLabel: activeSection?.label, detail: e.target.value });
                     }}
                     className="text-2xl font-semibold font-heading text-gray-900 bg-transparent border-none outline-none flex-1 placeholder:text-gray-300"
                     placeholder="Section title…"
@@ -499,7 +497,7 @@ function EditorTab({
             value={newsletterTitle}
             onChange={(e) => {
               setNewsletterTitle(e.target.value);
-              logChange(`Updated newsletter title to '${e.target.value}'`);
+              recordChange({ type: "newsletter_title", detail: e.target.value });
             }}
             className="w-full text-sm font-body text-gray-800 border border-gray-200 bg-gray-50 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#4a7c59]/30 focus:border-[#4a7c59]"
           />
@@ -571,7 +569,7 @@ function ChangeLogTab({ changeLog }: { changeLog: ChangeEntry[] }) {
     <div className="flex-1 overflow-y-auto px-8 py-6">
       <div className="mb-5">
         <h2 className="text-lg font-semibold font-heading text-gray-900">Change Log</h2>
-        <p className="text-sm text-gray-500 font-body mt-0.5">A record of every edit made this session.</p>
+        <p className="text-sm text-gray-500 font-body mt-0.5">Changes are recorded each time you save a draft.</p>
       </div>
 
       {changeLog.length === 0 ? (
@@ -579,29 +577,37 @@ function ChangeLogTab({ changeLog }: { changeLog: ChangeEntry[] }) {
           <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center mb-3">
             <ClipboardList className="w-6 h-6 text-gray-400" />
           </div>
-          <p className="text-sm font-semibold font-body text-gray-500 mb-1">No changes yet</p>
-          <p className="text-xs text-gray-400 font-body">Start editing to track activity</p>
+          <p className="text-sm font-semibold font-body text-gray-500 mb-1">No saves yet</p>
+          <p className="text-xs text-gray-400 font-body">Click Save Draft to record your changes</p>
         </div>
       ) : (
-        <div className="space-y-1">
+        <div className="space-y-3">
           {[...changeLog].reverse().map((entry) => (
-            <div key={entry.id} className="flex items-start gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors">
-              {entry.teacherAvatar ? (
-                <img src={entry.teacherAvatar} alt={entry.teacherName} className="w-7 h-7 rounded-full object-cover flex-shrink-0 mt-0.5" />
-              ) : (
-                <div className="w-7 h-7 rounded-full bg-[#7FA888] flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 mt-0.5">
-                  {getInitials(entry.teacherName)}
+            <div key={entry.id} className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center gap-2.5 mb-3">
+                {entry.teacherAvatar ? (
+                  <img src={entry.teacherAvatar} alt={entry.teacherName} className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
+                ) : (
+                  <div className="w-7 h-7 rounded-full bg-[#7FA888] flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
+                    {getInitials(entry.teacherName)}
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-semibold font-body text-gray-800">{entry.teacherName}</span>
+                  <span className="text-xs text-gray-400 font-body ml-2" suppressHydrationWarning>
+                    Saved {relativeTime(entry.savedAt)}
+                  </span>
                 </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-body text-gray-800">
-                  <span className="font-semibold">{entry.teacherName}</span>{" "}
-                  <span className="text-gray-600">{entry.action}</span>
-                </p>
-                <p className="text-xs text-gray-400 font-body mt-0.5" suppressHydrationWarning>
-                  {relativeTime(entry.timestamp)}
-                </p>
+                <Save className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
               </div>
+              <ul className="space-y-1 pl-1">
+                {entry.summary.map((line, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm font-body text-gray-600">
+                    <span className="text-[#4a7c59] mt-0.5 flex-shrink-0">•</span>
+                    {line}
+                  </li>
+                ))}
+              </ul>
             </div>
           ))}
         </div>
@@ -877,6 +883,7 @@ export default function NewsletterPageClient({ teachers, currentUserId }: Newsle
   const [changeLog, setChangeLog] = useState<ChangeEntry[]>([]);
 
   const currentTeacher = teachers.find((t) => t.id === currentUserId) ?? teachers[0];
+  const pendingChanges = useRef<PendingChange[]>([]);
 
   function buildInitialSections(teacherList: Teacher[]): SectionData[] {
     return [
@@ -915,18 +922,9 @@ export default function NewsletterPageClient({ teachers, currentUserId }: Newsle
     }
   }, []);
 
-  const logChange = useCallback((action: string) => {
-    setChangeLog((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        timestamp: new Date(),
-        teacherName: currentTeacher?.full_name ?? "You",
-        teacherAvatar: currentTeacher?.profile_image_url ?? null,
-        action,
-      },
-    ]);
-  }, [currentTeacher]);
+  const recordChange = useCallback((change: PendingChange) => {
+    pendingChanges.current.push(change);
+  }, []);
 
   const patchSection = useCallback((id: string, patch: Partial<SectionData>) => {
     setSections((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)));
@@ -948,9 +946,51 @@ export default function NewsletterPageClient({ teachers, currentUserId }: Newsle
       savedAt: new Date().toISOString(),
     };
     localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
-    logChange("Saved draft");
+
+    // Flush pending changes into the change log
+    const pending = pendingChanges.current;
+    if (pending.length > 0) {
+      const summary = buildSummary(pending);
+      if (summary.length > 0) {
+        const entry: ChangeEntry = {
+          id: crypto.randomUUID(),
+          savedAt: new Date(),
+          teacherName: currentTeacher?.full_name ?? "You",
+          teacherAvatar: currentTeacher?.profile_image_url ?? null,
+          summary,
+        };
+        setChangeLog((prev) => [...prev, entry]);
+      }
+      pendingChanges.current = [];
+    }
+
     setSavedStatus("saved");
     setTimeout(() => setSavedStatus("idle"), 1800);
+  }
+
+  function buildSummary(changes: PendingChange[]): string[] {
+    const lines: string[] = [];
+    const editedSections = new Set<string>();
+    const renamedSections = new Map<string, string>(); // sectionLabel → final name
+    let titleChanged = false;
+    let titleFinal = "";
+
+    for (const c of changes) {
+      if (c.type === "body" && c.sectionLabel) editedSections.add(c.sectionLabel);
+      if (c.type === "teacher_update" && c.sectionLabel) editedSections.add(c.sectionLabel);
+      if (c.type === "title_rename" && c.sectionLabel && c.detail) renamedSections.set(c.sectionLabel, c.detail);
+      if (c.type === "newsletter_title" && c.detail) { titleChanged = true; titleFinal = c.detail; }
+      if (c.type === "section_add") lines.push("Added a new section");
+      if (c.type === "visibility" && c.sectionLabel) lines.push(`Section "${c.sectionLabel}" ${c.detail ?? "toggled"}`);
+      if (c.type === "image_add" && c.sectionLabel && c.detail) lines.push(`Added ${c.detail} image${Number(c.detail) !== 1 ? "s" : ""} to "${c.sectionLabel}"`);
+      if (c.type === "image_remove" && c.sectionLabel) lines.push(`Removed an image from "${c.sectionLabel}"`);
+    }
+
+    for (const section of editedSections) lines.push(`Edited body in "${section}"`);
+    for (const [, name] of renamedSections) lines.push(`Renamed section to "${name}"`);
+    if (titleChanged) lines.push(`Updated newsletter title to "${titleFinal}"`);
+
+    return lines;
   }
 
   // Cleanup object URLs on unmount
@@ -1037,7 +1077,7 @@ export default function NewsletterPageClient({ teachers, currentUserId }: Newsle
               setNewsletterTitle={setNewsletterTitle}
               viewMode={viewMode}
               setViewMode={setViewMode}
-              logChange={logChange}
+              recordChange={recordChange}
               restoredAt={restoredAt}
               dismissRestore={() => setRestoredAt(null)}
             />
