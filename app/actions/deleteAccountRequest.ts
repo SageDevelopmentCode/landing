@@ -57,22 +57,18 @@ export async function submitDeleteAccountRequest(
 
     try {
       await sendDiscordNotification({
-        embeds: [
+        title: "Account Deletion Request",
+        color: 0xe74c3c,
+        fields: [
+          { name: "Name", value: validated.full_name, inline: true },
+          { name: "Email", value: validated.email, inline: true },
           {
-            title: "Account Deletion Request",
-            color: 0xe74c3c,
-            fields: [
-              { name: "Name", value: validated.full_name, inline: true },
-              { name: "Email", value: validated.email, inline: true },
-              {
-                name: "Reason",
-                value: validated.reason || "Not provided",
-                inline: false,
-              },
-            ],
-            timestamp: new Date().toISOString(),
+            name: "Reason",
+            value: validated.reason || "Not provided",
+            inline: false,
           },
         ],
+        timestamp: new Date().toISOString(),
       });
     } catch (discordError) {
       console.error("Failed to send Discord notification:", discordError);
