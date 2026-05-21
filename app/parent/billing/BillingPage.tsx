@@ -4699,6 +4699,146 @@ function TuitionCodePaymentModal({
   );
 }
 
+function PayByCheckModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <motion.div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        onClick={onClose}
+      />
+      <motion.div
+        className="relative w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden"
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 40 }}
+        transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+      >
+        {/* Handle bar (mobile) */}
+        <div className="flex justify-center pt-3 pb-1 sm:hidden">
+          <div className="w-10 h-1 rounded-full bg-gray-200" />
+        </div>
+
+        {/* Header */}
+        <div className="px-6 pt-4 pb-3 flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-2xl font-bold font-heading text-gray-900">Pay by Check</h2>
+            <p className="text-sm font-semibold font-body mt-0.5" style={{ color: "#0d9488" }}>
+              No processing fee
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="mt-1 p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Scrollable body */}
+        <div className="px-6 pb-6 overflow-y-auto space-y-5">
+
+          {/* Check illustration */}
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex flex-col gap-1">
+                <div className="w-8 h-0.5 bg-gray-300 rounded-full" />
+                <div className="w-5 h-0.5 bg-gray-300 rounded-full" />
+              </div>
+              <span className="text-xs text-gray-400 font-body flex items-center gap-1">
+                Date <span className="inline-block w-14 h-px bg-gray-300 align-middle" />
+              </span>
+            </div>
+            <p className="text-xs text-gray-400 font-body mb-1">Pay to the Order of</p>
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <span className="px-3 py-1 rounded-lg bg-white border border-gray-200 text-sm font-semibold font-heading text-gray-800 shadow-sm">
+                Sage Field LLC
+              </span>
+              <span className="px-3 py-1 rounded-lg bg-white border border-gray-200 text-sm font-body text-gray-400 shadow-sm min-w-[80px] text-center">
+                $<span className="inline-block w-10 h-px bg-gray-300 align-middle ml-1" />
+              </span>
+            </div>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xs text-gray-400 font-body">Memo</span>
+              <span className="px-2.5 py-1 rounded-lg bg-white border border-gray-200 text-xs font-semibold font-heading text-gray-700 shadow-sm">
+                Sage Field 2026 – Wks 1, 2, 3
+              </span>
+            </div>
+            <div className="border-t border-gray-200 pt-2.5">
+              <p className="text-center text-xs text-gray-400 font-mono tracking-widest">
+                ⋮ 0000 ⋮ 0000 0000 ⋮
+              </p>
+            </div>
+          </div>
+          <p className="text-xs text-center text-gray-400 font-body -mt-2">
+            Example — your check should look like this
+          </p>
+
+          {/* Steps */}
+          <div className="space-y-4">
+            {[
+              {
+                n: 1,
+                title: "Make the check out to",
+                body: "Sage Field LLC",
+              },
+              {
+                n: 2,
+                title: "On the memo line, write",
+                body: 'Include your child\'s name, weeks, and the program name — e.g. "Sage Field 2026 – Weeks 1, 2, 3"',
+              },
+              {
+                n: 3,
+                title: "Drop it off",
+                body: "Bring it on the first day you come in.",
+              },
+              {
+                n: 4,
+                title: "Questions?",
+                body: null,
+                link: "sabrina@sagefield.co",
+              },
+            ].map(({ n, title, body, link }) => (
+              <div key={n} className="flex gap-3">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                  <span className="text-sm font-semibold font-heading text-gray-500">{n}</span>
+                </div>
+                <div className="pt-1">
+                  <p className="text-sm font-bold font-heading text-gray-900">{title}</p>
+                  {body && (
+                    <p className="text-sm text-gray-500 font-body mt-0.5">{body}</p>
+                  )}
+                  {link && (
+                    <a
+                      href={`mailto:${link}`}
+                      className="text-sm font-body underline mt-0.5 block"
+                      style={{ color: "#0d9488" }}
+                    >
+                      {link}
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Got it button */}
+          <button
+            onClick={onClose}
+            className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all mt-2"
+            style={{ backgroundColor: "#0d9488" }}
+          >
+            Got it
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 export default function BillingPage({
   transactions,
   studentMap,
@@ -4731,6 +4871,7 @@ export default function BillingPage({
   const [selectedHomeschoolHistoryApp, setSelectedHomeschoolHistoryApp] =
     useState<HomeschoolDropInApp | null>(null);
   const [tuitionCodeModalOpen, setTuitionCodeModalOpen] = useState(false);
+  const [payByCheckModalOpen, setPayByCheckModalOpen] = useState(false);
   const [validatedTuitionResult, setValidatedTuitionResult] = useState<{
     label: string;
     amount_cents: number;
@@ -4964,10 +5105,10 @@ export default function BillingPage({
                   Pending Payments
                 </h2>
                 <button
-                  onClick={() => setTuitionCodeModalOpen(true)}
+                  onClick={() => setPayByCheckModalOpen(true)}
                   className="text-sm font-body text-gray-400 hover:text-gray-500 transition-colors cursor-pointer"
                 >
-                  Have a tuition code?
+                  Want to pay by check?
                 </button>
               </div>
               <PendingPaymentsSection
@@ -5432,6 +5573,9 @@ export default function BillingPage({
               }}
             />
           )}
+        {payByCheckModalOpen && (
+          <PayByCheckModal onClose={() => setPayByCheckModalOpen(false)} />
+        )}
         {tuitionCodeModalOpen && !validatedTuitionResult && (
           <TuitionCodeEntryModal
             parentId={parentId}
