@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { ChevronLeft, ChevronRight, Newspaper, X } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -79,6 +79,33 @@ function TraditionalImageGrid({ images }: { images: LocalImage[] }) {
 }
 
 function SlideshowImageGrid({ images, sectionLabel }: { images: LocalImage[]; sectionLabel: string }) {
+  const [activeIdx, setActiveIdx] = useState(0);
+  const imageRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    setActiveIdx(0);
+  }, [images]);
+
+  useEffect(() => {
+    if (images.length <= 1) return;
+    const container = containerRef.current;
+    if (!container) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const idx = imageRefs.current.indexOf(entry.target as HTMLDivElement);
+            if (idx !== -1) setActiveIdx(idx);
+          }
+        }
+      },
+      { root: container, threshold: 0.5 }
+    );
+    imageRefs.current.forEach((el) => el && obs.observe(el));
+    return () => obs.disconnect();
+  }, [images]);
+
   if (images.length === 0) {
     return (
       <div className="w-full h-full bg-gradient-to-br from-[#4a7c59] to-[#3d6b4a] flex items-center justify-center">
@@ -89,53 +116,35 @@ function SlideshowImageGrid({ images, sectionLabel }: { images: LocalImage[]; se
     );
   }
 
-  if (images.length === 1) {
-    return (
-      <img
-        src={images[0].url}
-        alt={images[0].name}
-        className="w-full h-full object-cover"
-      />
-    );
-  }
-
-  if (images.length === 2) {
-    return (
-      <div className="grid grid-cols-2 w-full h-full gap-0.5">
-        {images.map((img) => (
-          <img key={img.id} src={img.url} alt={img.name} className="w-full h-full object-cover" />
+  return (
+    <div className="w-full h-full flex">
+      {/* Main scrollable image column */}
+      <div ref={containerRef} className="flex-1 overflow-y-auto bg-black flex flex-col gap-1 p-2">
+        {images.map((img, i) => (
+          <div key={img.id} ref={(el) => { imageRefs.current[i] = el; }}>
+            <img src={img.url} alt={img.name} className="w-full object-contain rounded-lg" />
+          </div>
         ))}
       </div>
-    );
-  }
 
-  if (images.length === 3) {
-    return (
-      <div className="grid w-full h-full gap-0.5" style={{ gridTemplateColumns: "2fr 1fr" }}>
-        <img src={images[0].url} alt={images[0].name} className="w-full h-full object-cover" />
-        <div className="grid grid-rows-2 gap-0.5 h-full">
-          <img src={images[1].url} alt={images[1].name} className="w-full h-full object-cover" />
-          <img src={images[2].url} alt={images[2].name} className="w-full h-full object-cover" />
+      {/* Vertical thumbnail strip — only when 2+ images */}
+      {images.length > 1 && (
+        <div className="w-16 flex-shrink-0 overflow-y-auto flex flex-col gap-1.5 py-2 px-1 bg-black/80">
+          {images.map((img, i) => (
+            <button
+              key={img.id}
+              onClick={() => imageRefs.current[i]?.scrollIntoView({ behavior: "smooth", block: "start" })}
+              className={`w-full aspect-square rounded-lg overflow-hidden border-2 flex-shrink-0 transition-all ${
+                activeIdx === i
+                  ? "border-white/80 opacity-100"
+                  : "border-white/20 opacity-50 hover:opacity-75"
+              }`}
+            >
+              <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
+            </button>
+          ))}
         </div>
-      </div>
-    );
-  }
-
-  // 4+ images: 2x2 grid, last cell may have overflow badge
-  const displayed = images.slice(0, 4);
-  const overflow = images.length - 4;
-  return (
-    <div className="grid grid-cols-2 grid-rows-2 w-full h-full gap-0.5">
-      {displayed.map((img, idx) => (
-        <div key={img.id} className="relative overflow-hidden">
-          <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
-          {idx === 3 && overflow > 0 && (
-            <div className="absolute inset-0 bg-black/55 flex items-center justify-center">
-              <span className="text-white text-2xl font-bold font-heading">+{overflow}</span>
-            </div>
-          )}
-        </div>
-      ))}
+      )}
     </div>
   );
 }
@@ -228,20 +237,15 @@ function SlideshowNewsletter({ data }: { data: NewsletterData }) {
   if (!slide) return null;
 
   return (
-    <div className="h-screen flex flex-col bg-black overflow-hidden select-none">
-      {/* Photo grid — top 55% */}
-      <div className="relative" style={{ height: "55%" }}>
+    <div className="h-screen flex flex-row bg-black overflow-hidden select-none relative">
+      {/* Left panel — photo grid (55%) */}
+      <div className="relative overflow-hidden" style={{ width: "55%" }}>
         <SlideshowImageGrid images={slide.images} sectionLabel={slide.label} />
-
-        {/* Slide counter */}
-        <div className="absolute top-4 right-4 bg-black/40 text-white text-xs font-semibold font-body px-3 py-1.5 rounded-full backdrop-blur-sm">
-          {slideIdx + 1} / {total}
-        </div>
       </div>
 
-      {/* Text area — bottom 45% */}
-      <div className="bg-white flex-1 flex flex-col px-10 py-7 overflow-y-auto">
-        <h2 className="text-2xl font-bold font-heading text-gray-900 mb-3">
+      {/* Right panel — text content (45%) */}
+      <div className="bg-white flex flex-col px-10 py-8 overflow-y-auto" style={{ width: "45%" }}>
+        <h2 className="text-2xl font-bold font-heading text-gray-900 mb-4">
           {slide.label || "Untitled Section"}
         </h2>
         {slide.body ? (
@@ -253,33 +257,37 @@ function SlideshowNewsletter({ data }: { data: NewsletterData }) {
         )}
       </div>
 
-      {/* Navigation arrows */}
-      <button
-        onClick={prev}
-        className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 bg-black/40 hover:bg-black/60 backdrop-blur-sm text-white rounded-full flex items-center justify-center transition-colors"
-        style={{ top: "27.5%" }}
-      >
-        <ChevronLeft className="w-5 h-5" />
-      </button>
-      <button
-        onClick={next}
-        className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 bg-black/40 hover:bg-black/60 backdrop-blur-sm text-white rounded-full flex items-center justify-center transition-colors"
-        style={{ top: "27.5%" }}
-      >
-        <ChevronRight className="w-5 h-5" />
-      </button>
+      {/* Floating nav footer — bottom-right of the whole slide */}
+      <div className="absolute bottom-6 right-6 z-10 flex items-center gap-3 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-2xl shadow-lg px-4 py-2.5">
+        <button
+          onClick={prev}
+          className="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-[#4a7c59] transition-colors rounded-lg hover:bg-gray-100"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
 
-      {/* Dot indicators */}
-      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
-        {data.sections.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setSlideIdx(i)}
-            className={`h-2 rounded-full transition-all ${
-              i === slideIdx ? "w-6 bg-[#4a7c59]" : "w-2 bg-white/50 hover:bg-white/80"
-            }`}
-          />
-        ))}
+        <div className="flex items-center gap-1.5">
+          {data.sections.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setSlideIdx(i)}
+              className={`h-2 rounded-full transition-all ${
+                i === slideIdx ? "w-5 bg-[#4a7c59]" : "w-2 bg-gray-300 hover:bg-gray-400"
+              }`}
+            />
+          ))}
+        </div>
+
+        <span className="text-xs font-semibold font-body text-gray-400 min-w-[32px] text-center">
+          {slideIdx + 1} / {total}
+        </span>
+
+        <button
+          onClick={next}
+          className="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-[#4a7c59] transition-colors rounded-lg hover:bg-gray-100"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
       </div>
     </div>
   );
