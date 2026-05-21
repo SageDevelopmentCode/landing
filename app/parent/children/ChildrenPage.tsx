@@ -39,6 +39,7 @@ import {
   type UserMap,
   type AttendanceProgram,
 } from "@/app/actions/getParentStudentAttendance";
+import { updateStudentProfile } from "@/app/actions/updateStudentProfile";
 import { DetailSidebar } from "@/app/admin/components/DetailSidebar";
 import {
   SidebarField,
@@ -147,16 +148,21 @@ function Field({ label, value }: { label: string; value: string | null }) {
 
 function SectionCard({
   title,
+  headerAction,
   children,
 }: {
   title: string;
+  headerAction?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-5">
-      <h3 className="text-sm font-semibold font-heading text-[#4a7c59] mb-3">
-        {title}
-      </h3>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold font-heading text-[#4a7c59]">
+          {title}
+        </h3>
+        {headerAction}
+      </div>
       {children}
     </div>
   );
@@ -1259,6 +1265,510 @@ function PickupTab({
   );
 }
 
+type SectionKey = "medical" | "learning" | "regulation" | "support";
+
+const SECTION_FIELDS: Record<SectionKey, string[]> = {
+  medical: [
+    "has_medical_conditions",
+    "medical_conditions_description",
+    "has_allergies",
+    "allergies_description",
+    "has_emergency_medications",
+    "emergency_medications_description",
+  ],
+  learning: ["learning_style", "strengths_interests", "current_challenges"],
+  regulation: [
+    "dysregulation_response",
+    "regulation_strategies",
+    "activities_to_avoid",
+  ],
+  support: [
+    "needs_aide",
+    "needs_aide_description",
+    "history_flags",
+    "history_explanation",
+  ],
+};
+
+function ProfileTab({
+  child,
+  onSave,
+}: {
+  child: Student;
+  onSave: (updated: Partial<Student>) => void;
+}) {
+  const [editingSection, setEditingSection] = useState<SectionKey | null>(null);
+  const [draft, setDraft] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+  const [sectionError, setSectionError] = useState<string | null>(null);
+
+  const inputCls =
+    "w-full text-sm font-body text-gray-800 border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#4a7c59] focus:ring-1 focus:ring-[#4a7c59]";
+  const labelCls =
+    "block text-xs font-body text-gray-400 uppercase tracking-wide mb-1";
+
+  function enterEdit(section: SectionKey) {
+    const snapshot = Object.fromEntries(
+      SECTION_FIELDS[section].map((f) => [
+        f,
+        (child[f as keyof Student] as string | null) ?? "",
+      ])
+    );
+    setDraft(snapshot);
+    setSectionError(null);
+    setEditingSection(section);
+  }
+
+  function cancelEdit() {
+    setEditingSection(null);
+    setDraft({});
+    setSectionError(null);
+  }
+
+  async function handleSave(section: SectionKey) {
+    setSaving(true);
+    setSectionError(null);
+    const payload: Partial<Student> = {};
+    for (const key of SECTION_FIELDS[section]) {
+      (payload as Record<string, string | null>)[key] =
+        draft[key]?.trim() || null;
+    }
+    const result = await updateStudentProfile(child.id, payload);
+    setSaving(false);
+    if (result.error) {
+      setSectionError(result.error);
+      return;
+    }
+    onSave(payload);
+    setEditingSection(null);
+    setDraft({});
+  }
+
+  function EditBtn({ section }: { section: SectionKey }) {
+    return (
+      <button
+        onClick={() => enterEdit(section)}
+        disabled={editingSection !== null}
+        className="p-1 text-gray-300 hover:text-[#4a7c59] rounded-lg hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-40"
+        aria-label={`Edit ${section}`}
+      >
+        <Pencil className="w-3.5 h-3.5" />
+      </button>
+    );
+  }
+
+  function ActionRow({ section }: { section: SectionKey }) {
+    return (
+      <>
+        {sectionError && editingSection === section && (
+          <p className="text-xs text-red-500 mt-2">{sectionError}</p>
+        )}
+        <div className="flex gap-2 mt-3">
+          <button
+            onClick={() => handleSave(section)}
+            disabled={saving}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#4a7c59] text-white hover:bg-[#3d6b4a] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {saving ? (
+              <Loader2 className="w-3 h-3 animate-spin" />
+            ) : (
+              <Check className="w-3 h-3" />
+            )}
+            Save
+          </button>
+          <button
+            onClick={cancelEdit}
+            disabled={saving}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer"
+          >
+            <X className="w-3 h-3" />
+            Cancel
+          </button>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      {/* Medical Info */}
+      <SectionCard
+        title="Medical Info"
+        headerAction={
+          editingSection !== "medical" ? (
+            <EditBtn section="medical" />
+          ) : undefined
+        }
+      >
+        {editingSection === "medical" ? (
+          <>
+            <div className="py-2.5 border-b border-gray-50">
+              <label className={labelCls}>Has Medical Conditions</label>
+              <select
+                className={inputCls}
+                value={draft.has_medical_conditions}
+                onChange={(e) =>
+                  setDraft((p) => ({
+                    ...p,
+                    has_medical_conditions: e.target.value,
+                  }))
+                }
+              >
+                <option value="">— Select —</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+            {draft.has_medical_conditions === "yes" && (
+              <div className="py-2.5 border-b border-gray-50">
+                <label className={labelCls}>Medical Conditions Description</label>
+                <textarea
+                  className={`${inputCls} resize-none`}
+                  rows={3}
+                  value={draft.medical_conditions_description}
+                  onChange={(e) =>
+                    setDraft((p) => ({
+                      ...p,
+                      medical_conditions_description: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+            )}
+            <div className="py-2.5 border-b border-gray-50">
+              <label className={labelCls}>Has Allergies</label>
+              <select
+                className={inputCls}
+                value={draft.has_allergies}
+                onChange={(e) =>
+                  setDraft((p) => ({ ...p, has_allergies: e.target.value }))
+                }
+              >
+                <option value="">— Select —</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+            {draft.has_allergies === "yes" && (
+              <div className="py-2.5 border-b border-gray-50">
+                <label className={labelCls}>Allergies Description</label>
+                <textarea
+                  className={`${inputCls} resize-none`}
+                  rows={3}
+                  value={draft.allergies_description}
+                  onChange={(e) =>
+                    setDraft((p) => ({
+                      ...p,
+                      allergies_description: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+            )}
+            <div className="py-2.5 border-b border-gray-50">
+              <label className={labelCls}>Has Emergency Medications</label>
+              <select
+                className={inputCls}
+                value={draft.has_emergency_medications}
+                onChange={(e) =>
+                  setDraft((p) => ({
+                    ...p,
+                    has_emergency_medications: e.target.value,
+                  }))
+                }
+              >
+                <option value="">— Select —</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+            {draft.has_emergency_medications === "yes" && (
+              <div className="py-2.5">
+                <label className={labelCls}>Emergency Medications Description</label>
+                <textarea
+                  className={`${inputCls} resize-none`}
+                  rows={3}
+                  value={draft.emergency_medications_description}
+                  onChange={(e) =>
+                    setDraft((p) => ({
+                      ...p,
+                      emergency_medications_description: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+            )}
+            <ActionRow section="medical" />
+          </>
+        ) : (
+          <>
+            <Field
+              label="Has Medical Conditions"
+              value={child.has_medical_conditions}
+            />
+            {child.has_medical_conditions?.toLowerCase() === "yes" && (
+              <Field
+                label="Medical Conditions"
+                value={child.medical_conditions_description}
+              />
+            )}
+            <Field label="Has Allergies" value={child.has_allergies} />
+            {child.has_allergies?.toLowerCase() === "yes" && (
+              <Field
+                label="Allergies"
+                value={child.allergies_description}
+              />
+            )}
+            <Field
+              label="Has Emergency Medications"
+              value={child.has_emergency_medications}
+            />
+            {child.has_emergency_medications?.toLowerCase() === "yes" && (
+              <Field
+                label="Emergency Medications"
+                value={child.emergency_medications_description}
+              />
+            )}
+          </>
+        )}
+      </SectionCard>
+
+      {/* Learning Profile */}
+      <SectionCard
+        title="Learning Profile"
+        headerAction={
+          editingSection !== "learning" ? (
+            <EditBtn section="learning" />
+          ) : undefined
+        }
+      >
+        {editingSection === "learning" ? (
+          <>
+            <div className="py-2.5 border-b border-gray-50">
+              <label className={labelCls}>Learning Style</label>
+              <textarea
+                className={`${inputCls} resize-none`}
+                rows={3}
+                value={draft.learning_style}
+                onChange={(e) =>
+                  setDraft((p) => ({ ...p, learning_style: e.target.value }))
+                }
+              />
+            </div>
+            <div className="py-2.5 border-b border-gray-50">
+              <label className={labelCls}>Strengths & Interests</label>
+              <textarea
+                className={`${inputCls} resize-none`}
+                rows={3}
+                value={draft.strengths_interests}
+                onChange={(e) =>
+                  setDraft((p) => ({
+                    ...p,
+                    strengths_interests: e.target.value,
+                  }))
+                }
+              />
+            </div>
+            <div className="py-2.5">
+              <label className={labelCls}>Current Challenges</label>
+              <textarea
+                className={`${inputCls} resize-none`}
+                rows={3}
+                value={draft.current_challenges}
+                onChange={(e) =>
+                  setDraft((p) => ({
+                    ...p,
+                    current_challenges: e.target.value,
+                  }))
+                }
+              />
+            </div>
+            <ActionRow section="learning" />
+          </>
+        ) : (
+          <>
+            <Field label="Learning Style" value={child.learning_style} />
+            <Field
+              label="Strengths & Interests"
+              value={child.strengths_interests}
+            />
+            <Field
+              label="Current Challenges"
+              value={child.current_challenges}
+            />
+          </>
+        )}
+      </SectionCard>
+
+      {/* Regulation & Support */}
+      <SectionCard
+        title="Regulation & Support"
+        headerAction={
+          editingSection !== "regulation" ? (
+            <EditBtn section="regulation" />
+          ) : undefined
+        }
+      >
+        {editingSection === "regulation" ? (
+          <>
+            <div className="py-2.5 border-b border-gray-50">
+              <label className={labelCls}>Dysregulation Response</label>
+              <textarea
+                className={`${inputCls} resize-none`}
+                rows={3}
+                value={draft.dysregulation_response}
+                onChange={(e) =>
+                  setDraft((p) => ({
+                    ...p,
+                    dysregulation_response: e.target.value,
+                  }))
+                }
+              />
+            </div>
+            <div className="py-2.5 border-b border-gray-50">
+              <label className={labelCls}>Regulation Strategies</label>
+              <textarea
+                className={`${inputCls} resize-none`}
+                rows={3}
+                value={draft.regulation_strategies}
+                onChange={(e) =>
+                  setDraft((p) => ({
+                    ...p,
+                    regulation_strategies: e.target.value,
+                  }))
+                }
+              />
+            </div>
+            <div className="py-2.5">
+              <label className={labelCls}>Activities to Avoid</label>
+              <textarea
+                className={`${inputCls} resize-none`}
+                rows={3}
+                value={draft.activities_to_avoid}
+                onChange={(e) =>
+                  setDraft((p) => ({
+                    ...p,
+                    activities_to_avoid: e.target.value,
+                  }))
+                }
+              />
+            </div>
+            <ActionRow section="regulation" />
+          </>
+        ) : (
+          <>
+            <Field
+              label="Dysregulation Response"
+              value={child.dysregulation_response}
+            />
+            <Field
+              label="Regulation Strategies"
+              value={child.regulation_strategies}
+            />
+            <Field
+              label="Activities to Avoid"
+              value={child.activities_to_avoid}
+            />
+          </>
+        )}
+      </SectionCard>
+
+      {/* Additional Support */}
+      <SectionCard
+        title="Additional Support"
+        headerAction={
+          editingSection !== "support" ? (
+            <EditBtn section="support" />
+          ) : undefined
+        }
+      >
+        {editingSection === "support" ? (
+          <>
+            <div className="py-2.5 border-b border-gray-50">
+              <label className={labelCls}>Needs Aide</label>
+              <select
+                className={inputCls}
+                value={draft.needs_aide}
+                onChange={(e) =>
+                  setDraft((p) => ({ ...p, needs_aide: e.target.value }))
+                }
+              >
+                <option value="">— Select —</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+            {draft.needs_aide === "yes" && (
+              <div className="py-2.5 border-b border-gray-50">
+                <label className={labelCls}>Aide Description</label>
+                <textarea
+                  className={`${inputCls} resize-none`}
+                  rows={3}
+                  value={draft.needs_aide_description}
+                  onChange={(e) =>
+                    setDraft((p) => ({
+                      ...p,
+                      needs_aide_description: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+            )}
+            <div className="py-2.5 border-b border-gray-50">
+              <label className={labelCls}>History Flags</label>
+              <select
+                className={inputCls}
+                value={draft.history_flags}
+                onChange={(e) =>
+                  setDraft((p) => ({ ...p, history_flags: e.target.value }))
+                }
+              >
+                <option value="">— Select —</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+            {draft.history_flags === "yes" && (
+              <div className="py-2.5">
+                <label className={labelCls}>History Explanation</label>
+                <textarea
+                  className={`${inputCls} resize-none`}
+                  rows={3}
+                  value={draft.history_explanation}
+                  onChange={(e) =>
+                    setDraft((p) => ({
+                      ...p,
+                      history_explanation: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+            )}
+            <ActionRow section="support" />
+          </>
+        ) : (
+          <>
+            <Field label="Needs Aide" value={child.needs_aide} />
+            {child.needs_aide?.toLowerCase() === "yes" && (
+              <Field
+                label="Aide Description"
+                value={child.needs_aide_description}
+              />
+            )}
+            <Field label="History Flags" value={child.history_flags} />
+            {child.history_flags?.toLowerCase() === "yes" && (
+              <Field
+                label="History Explanation"
+                value={child.history_explanation}
+              />
+            )}
+          </>
+        )}
+      </SectionCard>
+    </div>
+  );
+}
+
 function ChildProfile({
   child,
   teachers,
@@ -1281,6 +1791,7 @@ function ChildProfile({
   const initialTab =
     (searchParams.get("tab") as ContentTab | null) ?? "teacher";
   const [activeTab, setActiveTab] = useState<ContentTab>(initialTab);
+  const [childData, setChildData] = useState<Student>(child);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(
     initialProfileImageUrl,
   );
@@ -1483,81 +1994,12 @@ function ChildProfile({
           )}
 
           {activeTab === "profile" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <SectionCard title="Medical Info">
-                <Field
-                  label="Has Medical Conditions"
-                  value={child.has_medical_conditions}
-                />
-                {child.has_medical_conditions?.toLowerCase() === "yes" && (
-                  <Field
-                    label="Medical Conditions"
-                    value={child.medical_conditions_description}
-                  />
-                )}
-                <Field label="Has Allergies" value={child.has_allergies} />
-                {child.has_allergies?.toLowerCase() === "yes" && (
-                  <Field
-                    label="Allergies"
-                    value={child.allergies_description}
-                  />
-                )}
-                <Field
-                  label="Has Emergency Medications"
-                  value={child.has_emergency_medications}
-                />
-                {child.has_emergency_medications?.toLowerCase() === "yes" && (
-                  <Field
-                    label="Emergency Medications"
-                    value={child.emergency_medications_description}
-                  />
-                )}
-              </SectionCard>
-
-              <SectionCard title="Learning Profile">
-                <Field label="Learning Style" value={child.learning_style} />
-                <Field
-                  label="Strengths & Interests"
-                  value={child.strengths_interests}
-                />
-                <Field
-                  label="Current Challenges"
-                  value={child.current_challenges}
-                />
-              </SectionCard>
-
-              <SectionCard title="Regulation & Support">
-                <Field
-                  label="Dysregulation Response"
-                  value={child.dysregulation_response}
-                />
-                <Field
-                  label="Regulation Strategies"
-                  value={child.regulation_strategies}
-                />
-                <Field
-                  label="Activities to Avoid"
-                  value={child.activities_to_avoid}
-                />
-              </SectionCard>
-
-              <SectionCard title="Additional Support">
-                <Field label="Needs Aide" value={child.needs_aide} />
-                {child.needs_aide?.toLowerCase() === "yes" && (
-                  <Field
-                    label="Aide Description"
-                    value={child.needs_aide_description}
-                  />
-                )}
-                <Field label="History Flags" value={child.history_flags} />
-                {child.history_flags?.toLowerCase() === "yes" && (
-                  <Field
-                    label="History Explanation"
-                    value={child.history_explanation}
-                  />
-                )}
-              </SectionCard>
-            </div>
+            <ProfileTab
+              child={childData}
+              onSave={(updated) =>
+                setChildData((prev) => ({ ...prev, ...updated }))
+              }
+            />
           )}
         </>
       )}
