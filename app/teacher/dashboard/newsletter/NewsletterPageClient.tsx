@@ -13,17 +13,15 @@ import {
   CheckCircle2,
   Eye,
   EyeOff,
-  Copy,
   ChevronRight,
   Newspaper,
   X,
   Upload,
   ExternalLink,
-  History,
   ClipboardList,
   Save,
+  Lock,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -71,17 +69,101 @@ interface ChangeEntry {
   summary: string[];
 }
 
-// ── Static data ───────────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
-const HISTORY_ROWS = [
-  { week: "May 12–16, 2026", title: "May 12–16 Weekly Update",   by: "Ms. Rivera", at: "May 16, 2026", views: 42 },
-  { week: "May 5–9, 2026",   title: "May 5–9 Weekly Update",     by: "Ms. Rivera", at: "May 9, 2026",  views: 37 },
-  { week: "Apr 28–May 2",    title: "Spring Wrap-Up Newsletter",  by: "Mr. Okafor", at: "May 2, 2026",  views: 61 },
-  { week: "Apr 21–25, 2026", title: "Apr 21–25 Weekly Update",   by: "Ms. Chen",   at: "Apr 25, 2026", views: 29 },
-];
+type NewsletterStatus = "published" | "draft" | "ongoing";
+
+interface Newsletter {
+  id: string;
+  title: string;
+  weekRange: string;
+  status: NewsletterStatus;
+  publishedAt?: string;
+  author: string;
+  sections: SectionData[];
+  newsletterTitle: string;
+  viewMode: "traditional" | "slideshow";
+}
+
+// ── Static data ───────────────────────────────────────────────────────────────
 
 const WEEK_KEY = "may-19-2026";
 const DRAFT_STORAGE_KEY = `newsletter-draft-${WEEK_KEY}`;
+
+function buildPlaceholderSections(titlePrefix: string): SectionData[] {
+  return [
+    { id: `${titlePrefix}-welcome`,   label: "Welcome Message",  body: "Welcome to this week's newsletter! We're so glad to keep you informed about everything happening in our classroom.", images: [], visible: true },
+    { id: `${titlePrefix}-events`,    label: "Upcoming Events",  body: "- Monday: Field trip permission slips due\n- Wednesday: Picture day\n- Friday: Early dismissal at 1pm", images: [], visible: true },
+    { id: `${titlePrefix}-reminders`, label: "Parent Reminders", body: "Please remember to send a healthy snack daily. Water bottles are encouraged!", images: [], visible: true },
+  ];
+}
+
+const STATIC_NEWSLETTERS: Newsletter[] = [
+  {
+    id: "ongoing-may-19",
+    title: "May 19–23 Weekly Update",
+    weekRange: "May 19 – May 23, 2026",
+    status: "ongoing",
+    author: "Ms. Rivera",
+    sections: [], // populated from localStorage / buildInitialSections at runtime
+    newsletterTitle: "May 19–23 Weekly Update",
+    viewMode: "traditional",
+  },
+  {
+    id: "draft-may-26",
+    title: "May 26–30 Weekly Update",
+    weekRange: "May 26 – May 30, 2026",
+    status: "draft",
+    author: "Ms. Rivera",
+    sections: buildPlaceholderSections("may26"),
+    newsletterTitle: "May 26–30 Weekly Update",
+    viewMode: "traditional",
+  },
+  {
+    id: "pub-may-12",
+    title: "May 12–16 Weekly Update",
+    weekRange: "May 12 – May 16, 2026",
+    status: "published",
+    publishedAt: "May 16, 2026",
+    author: "Ms. Rivera",
+    sections: buildPlaceholderSections("may12"),
+    newsletterTitle: "May 12–16 Weekly Update",
+    viewMode: "traditional",
+  },
+  {
+    id: "pub-may-5",
+    title: "May 5–9 Weekly Update",
+    weekRange: "May 5 – May 9, 2026",
+    status: "published",
+    publishedAt: "May 9, 2026",
+    author: "Ms. Rivera",
+    sections: buildPlaceholderSections("may5"),
+    newsletterTitle: "May 5–9 Weekly Update",
+    viewMode: "traditional",
+  },
+  {
+    id: "pub-apr-28",
+    title: "Spring Wrap-Up Newsletter",
+    weekRange: "Apr 28 – May 2, 2026",
+    status: "published",
+    publishedAt: "May 2, 2026",
+    author: "Mr. Okafor",
+    sections: buildPlaceholderSections("apr28"),
+    newsletterTitle: "Spring Wrap-Up Newsletter",
+    viewMode: "slideshow",
+  },
+  {
+    id: "pub-apr-21",
+    title: "Apr 21–25 Weekly Update",
+    weekRange: "Apr 21 – Apr 25, 2026",
+    status: "published",
+    publishedAt: "Apr 25, 2026",
+    author: "Ms. Chen",
+    sections: buildPlaceholderSections("apr21"),
+    newsletterTitle: "Apr 21–25 Weekly Update",
+    viewMode: "traditional",
+  },
+];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -141,6 +223,8 @@ interface EditorTabProps {
   recordChange: (change: PendingChange) => void;
   restoredAt: string | null;
   dismissRestore: () => void;
+  isReadOnly: boolean;
+  selectedWeekRange: string;
 }
 
 function EditorTab({
@@ -156,6 +240,8 @@ function EditorTab({
   recordChange,
   restoredAt,
   dismissRestore,
+  isReadOnly,
+  selectedWeekRange,
 }: EditorTabProps) {
   const [activeSectionId, setActiveSectionId] = useState(sections[0]?.id ?? "");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -250,12 +336,14 @@ function EditorTab({
       {/* Left sidebar */}
       <aside className="w-60 border-r border-gray-100 bg-gray-50 flex flex-col">
         <div className="px-4 pt-5 pb-3">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Current Draft</p>
-          <p className="text-sm font-semibold text-gray-800 font-body">Week of May 19, 2026</p>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">
+            {isReadOnly ? "Published" : "Current Draft"}
+          </p>
+          <p className="text-sm font-semibold text-gray-800 font-body">{selectedWeekRange}</p>
         </div>
 
         {/* Restore banner */}
-        {restoredAt && (
+        {restoredAt && !isReadOnly && (
           <div className="mx-3 mb-2 px-3 py-2 bg-[#4a7c59]/8 border border-[#4a7c59]/20 rounded-lg flex items-center gap-2">
             <p className="text-xs text-[#4a7c59] font-body flex-1">Draft restored from {restoredAt}</p>
             <button onClick={dismissRestore} className="text-[#4a7c59] hover:text-[#3d6b4a]">
@@ -287,43 +375,55 @@ function EditorTab({
                   <span className={`truncate flex-1 ${!s.visible && activeSectionId !== s.id ? "line-through opacity-60" : ""}`}>
                     {s.label || "Untitled"}
                   </span>
-                  {/* Eye toggle */}
-                  <span
-                    onClick={(e) => toggleVisibility(s, e)}
-                    className={`flex-shrink-0 p-0.5 rounded transition-colors ${
-                      activeSectionId === s.id
-                        ? "text-white/70 hover:text-white"
-                        : "text-gray-400 hover:text-gray-600"
-                    }`}
-                    title={s.visible ? "Hide from newsletter" : "Show in newsletter"}
-                  >
-                    {s.visible
-                      ? <Eye className="w-3.5 h-3.5" />
-                      : <EyeOff className="w-3.5 h-3.5" />
-                    }
-                  </span>
+                  {/* Eye toggle — hidden in read-only mode */}
+                  {!isReadOnly && (
+                    <span
+                      onClick={(e) => toggleVisibility(s, e)}
+                      className={`flex-shrink-0 p-0.5 rounded transition-colors ${
+                        activeSectionId === s.id
+                          ? "text-white/70 hover:text-white"
+                          : "text-gray-400 hover:text-gray-600"
+                      }`}
+                      title={s.visible ? "Hide from newsletter" : "Show in newsletter"}
+                    >
+                      {s.visible
+                        ? <Eye className="w-3.5 h-3.5" />
+                        : <EyeOff className="w-3.5 h-3.5" />
+                      }
+                    </span>
+                  )}
                 </button>
               </li>
             ))}
           </ul>
         </div>
 
-        <div className="px-3 pb-4 pt-2">
-          <button
-            onClick={() => {
-              addSection();
-              recordChange({ type: "section_add" });
-            }}
-            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-[#4a7c59] text-white text-sm font-body font-semibold rounded-xl hover:bg-[#3d6b4a] transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Add Section
-          </button>
-        </div>
+        {!isReadOnly && (
+          <div className="px-3 pb-4 pt-2">
+            <button
+              onClick={() => {
+                addSection();
+                recordChange({ type: "section_add" });
+              }}
+              className="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-[#4a7c59] text-white text-sm font-body font-semibold rounded-xl hover:bg-[#3d6b4a] transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Add Section
+            </button>
+          </div>
+        )}
       </aside>
 
       {/* Center editor */}
       <div className="flex-1 flex flex-col overflow-y-auto px-8 py-6">
+        {/* Read-only banner */}
+        {isReadOnly && (
+          <div className="mb-5 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl flex items-center gap-2.5 text-sm font-body text-gray-500">
+            <Lock className="w-4 h-4 flex-shrink-0 text-gray-400" />
+            This newsletter has been published and is read-only.
+          </div>
+        )}
+
         {activeSection?.isClassUpdates ? (
           /* ── Class Updates: per-teacher cards ── */
           <div className="space-y-4">
@@ -350,9 +450,14 @@ function EditorTab({
                   </div>
                   <textarea
                     value={update?.body ?? ""}
-                    onChange={(e) => patchTeacherUpdate(teacher.id, e.target.value)}
+                    onChange={(e) => !isReadOnly && patchTeacherUpdate(teacher.id, e.target.value)}
+                    readOnly={isReadOnly}
                     placeholder={`${teacher.full_name?.split(" ")[0] ?? "Teacher"}'s update for this week…`}
-                    className="w-full min-h-[100px] bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm text-gray-700 font-body resize-none outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59] placeholder:text-gray-400 leading-relaxed"
+                    className={`w-full min-h-[100px] border border-gray-100 rounded-xl p-3 text-sm text-gray-700 font-body resize-none outline-none leading-relaxed ${
+                      isReadOnly
+                        ? "bg-gray-50 cursor-default"
+                        : "bg-gray-50 focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59] placeholder:text-gray-400"
+                    }`}
                     rows={4}
                   />
                 </div>
@@ -360,63 +465,67 @@ function EditorTab({
             })}
 
             {/* Shared image upload for class updates */}
-            <div className="mt-2">
-              <div className="flex items-center gap-3 mb-3">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Section Images</p>
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold font-body text-[#4a7c59] border border-[#4a7c59]/30 bg-[#4a7c59]/5 rounded-lg hover:bg-[#4a7c59]/10 transition-colors"
-                >
-                  <Upload className="w-3.5 h-3.5" />
-                  Add Images
-                </button>
-              </div>
-              <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleImageFiles(e.target.files)} />
-              {activeSection.images.length === 0 ? (
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full border-2 border-dashed border-gray-200 rounded-2xl p-5 flex flex-col items-center gap-2 text-gray-400 hover:border-[#4a7c59]/40 hover:text-[#4a7c59] transition-colors"
-                >
-                  <ImageIcon className="w-5 h-5" />
-                  <p className="text-sm font-body">Click to upload images for this section</p>
-                </button>
-              ) : (
-                <div className="flex flex-wrap gap-3">
-                  {activeSection.images.map((img) => (
-                    <div key={img.id} className="relative group">
-                      <img src={img.url} alt={img.name} className="w-20 h-20 object-cover rounded-xl border border-gray-100" />
-                      <button onClick={() => removeImage(img.id)} className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-gray-800 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500">
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ))}
-                  <button onClick={() => fileInputRef.current?.click()} className="w-20 h-20 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center gap-1 text-gray-400 hover:border-[#4a7c59]/40 hover:text-[#4a7c59] transition-colors">
-                    <Plus className="w-4 h-4" />
-                    <span className="text-xs">Add</span>
+            {!isReadOnly && (
+              <div className="mt-2">
+                <div className="flex items-center gap-3 mb-3">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Section Images</p>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold font-body text-[#4a7c59] border border-[#4a7c59]/30 bg-[#4a7c59]/5 rounded-lg hover:bg-[#4a7c59]/10 transition-colors"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    Add Images
                   </button>
                 </div>
-              )}
-            </div>
+                <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleImageFiles(e.target.files)} />
+                {activeSection.images.length === 0 ? (
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full border-2 border-dashed border-gray-200 rounded-2xl p-5 flex flex-col items-center gap-2 text-gray-400 hover:border-[#4a7c59]/40 hover:text-[#4a7c59] transition-colors"
+                  >
+                    <ImageIcon className="w-5 h-5" />
+                    <p className="text-sm font-body">Click to upload images for this section</p>
+                  </button>
+                ) : (
+                  <div className="flex flex-wrap gap-3">
+                    {activeSection.images.map((img) => (
+                      <div key={img.id} className="relative group">
+                        <img src={img.url} alt={img.name} className="w-20 h-20 object-cover rounded-xl border border-gray-100" />
+                        <button onClick={() => removeImage(img.id)} className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-gray-800 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                    <button onClick={() => fileInputRef.current?.click()} className="w-20 h-20 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center gap-1 text-gray-400 hover:border-[#4a7c59]/40 hover:text-[#4a7c59] transition-colors">
+                      <Plus className="w-4 h-4" />
+                      <span className="text-xs">Add</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           /* ── Regular section editor ── */
           <>
-            {/* Toolbar */}
-            <div className="flex items-center gap-1 mb-5 p-1.5 bg-gray-50 border border-gray-100 rounded-xl w-fit">
-              <button title="Bold" onClick={() => wrapSelection("**")} className="p-2 text-gray-500 hover:text-[#4a7c59] hover:bg-white rounded-lg transition-colors">
-                <Bold className="w-4 h-4" />
-              </button>
-              <button title="Italic" onClick={() => wrapSelection("_")} className="p-2 text-gray-500 hover:text-[#4a7c59] hover:bg-white rounded-lg transition-colors">
-                <Italic className="w-4 h-4" />
-              </button>
-              <button title="Bullet list" onClick={insertBullet} className="p-2 text-gray-500 hover:text-[#4a7c59] hover:bg-white rounded-lg transition-colors">
-                <List className="w-4 h-4" />
-              </button>
-              <div className="w-px h-4 bg-gray-200 mx-1" />
-              <button title="Add images" onClick={() => fileInputRef.current?.click()} className="p-2 text-gray-500 hover:text-[#4a7c59] hover:bg-white rounded-lg transition-colors">
-                <ImageIcon className="w-4 h-4" />
-              </button>
-            </div>
+            {/* Toolbar — hidden in read-only mode */}
+            {!isReadOnly && (
+              <div className="flex items-center gap-1 mb-5 p-1.5 bg-gray-50 border border-gray-100 rounded-xl w-fit">
+                <button title="Bold" onClick={() => wrapSelection("**")} className="p-2 text-gray-500 hover:text-[#4a7c59] hover:bg-white rounded-lg transition-colors">
+                  <Bold className="w-4 h-4" />
+                </button>
+                <button title="Italic" onClick={() => wrapSelection("_")} className="p-2 text-gray-500 hover:text-[#4a7c59] hover:bg-white rounded-lg transition-colors">
+                  <Italic className="w-4 h-4" />
+                </button>
+                <button title="Bullet list" onClick={insertBullet} className="p-2 text-gray-500 hover:text-[#4a7c59] hover:bg-white rounded-lg transition-colors">
+                  <List className="w-4 h-4" />
+                </button>
+                <div className="w-px h-4 bg-gray-200 mx-1" />
+                <button title="Add images" onClick={() => fileInputRef.current?.click()} className="p-2 text-gray-500 hover:text-[#4a7c59] hover:bg-white rounded-lg transition-colors">
+                  <ImageIcon className="w-4 h-4" />
+                </button>
+              </div>
+            )}
 
             {activeSection && (
               <>
@@ -425,11 +534,13 @@ function EditorTab({
                     key={activeSectionId + "-title"}
                     type="text"
                     value={activeSection.label}
+                    readOnly={isReadOnly}
                     onChange={(e) => {
+                      if (isReadOnly) return;
                       patchSection(activeSectionId, { label: e.target.value });
                       recordChange({ type: "title_rename", sectionLabel: activeSection?.label, detail: e.target.value });
                     }}
-                    className="text-2xl font-semibold font-heading text-gray-900 bg-transparent border-none outline-none flex-1 placeholder:text-gray-300"
+                    className={`text-2xl font-semibold font-heading text-gray-900 bg-transparent border-none outline-none flex-1 placeholder:text-gray-300 ${isReadOnly ? "cursor-default" : ""}`}
                     placeholder="Section title…"
                   />
                   {!activeSection.visible && (
@@ -441,9 +552,14 @@ function EditorTab({
                   key={activeSectionId + "-body"}
                   ref={textareaRef}
                   value={activeSection.body}
-                  onChange={(e) => handleBodyChange(e.target.value)}
+                  readOnly={isReadOnly}
+                  onChange={(e) => { if (!isReadOnly) handleBodyChange(e.target.value); }}
                   placeholder="Start writing this section…"
-                  className="w-full min-h-[200px] bg-gray-50 border border-gray-100 rounded-2xl p-5 text-sm text-gray-700 font-body resize-none outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59] placeholder:text-gray-400 leading-relaxed mb-5"
+                  className={`w-full min-h-[200px] border border-gray-100 rounded-2xl p-5 text-sm text-gray-700 font-body resize-none outline-none placeholder:text-gray-400 leading-relaxed mb-5 ${
+                    isReadOnly
+                      ? "bg-gray-50 cursor-default"
+                      : "bg-gray-50 focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59]"
+                  }`}
                   rows={8}
                 />
               </>
@@ -451,7 +567,7 @@ function EditorTab({
 
             <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleImageFiles(e.target.files)} />
 
-            {activeSection && (
+            {activeSection && !isReadOnly && (
               <div>
                 <div className="flex items-center gap-3 mb-3">
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Section Images</p>
@@ -495,18 +611,22 @@ function EditorTab({
           <input
             type="text"
             value={newsletterTitle}
+            readOnly={isReadOnly}
             onChange={(e) => {
+              if (isReadOnly) return;
               setNewsletterTitle(e.target.value);
               recordChange({ type: "newsletter_title", detail: e.target.value });
             }}
-            className="w-full text-sm font-body text-gray-800 border border-gray-200 bg-gray-50 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#4a7c59]/30 focus:border-[#4a7c59]"
+            className={`w-full text-sm font-body text-gray-800 border border-gray-200 bg-gray-50 rounded-lg px-3 py-2 outline-none ${
+              isReadOnly ? "cursor-default" : "focus:ring-2 focus:ring-[#4a7c59]/30 focus:border-[#4a7c59]"
+            }`}
           />
         </div>
 
         <div>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Week</p>
           <div className="text-sm font-body text-gray-700 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2">
-            May 19 – May 23, 2026
+            {selectedWeekRange}
           </div>
         </div>
 
@@ -528,22 +648,24 @@ function EditorTab({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-body text-gray-400">
-          <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-          Auto-saved just now
-        </div>
+        {!isReadOnly && (
+          <div className="flex items-center gap-2 text-xs font-body text-gray-400">
+            <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+            Auto-saved just now
+          </div>
+        )}
 
         <div>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Parent View</p>
-          <div className="flex rounded-xl overflow-hidden border border-gray-200 text-sm font-body">
+          <div className={`flex rounded-xl overflow-hidden border border-gray-200 text-sm font-body ${isReadOnly ? "opacity-60 pointer-events-none" : ""}`}>
             <button
-              onClick={() => setViewMode("traditional")}
+              onClick={() => !isReadOnly && setViewMode("traditional")}
               className={`flex-1 py-2 transition-colors ${viewMode === "traditional" ? "bg-[#4a7c59] text-white font-semibold" : "bg-white text-gray-500 hover:bg-gray-50"}`}
             >
               Traditional
             </button>
             <button
-              onClick={() => setViewMode("slideshow")}
+              onClick={() => !isReadOnly && setViewMode("slideshow")}
               className={`flex-1 py-2 transition-colors ${viewMode === "slideshow" ? "bg-[#4a7c59] text-white font-semibold" : "bg-white text-gray-500 hover:bg-gray-50"}`}
             >
               Slideshow
@@ -620,254 +742,181 @@ function ChangeLogTab({ changeLog }: { changeLog: ChangeEntry[] }) {
 
 interface PublishTabProps {
   sections: SectionData[];
-  newsletterTitle: string;
-  viewMode: "traditional" | "slideshow";
-  setViewMode: (v: "traditional" | "slideshow") => void;
 }
 
-function PublishTab({ sections, newsletterTitle, viewMode, setViewMode }: PublishTabProps) {
+function PublishTab({ sections }: PublishTabProps) {
   const [recipients, setRecipients] = useState<"all" | "program">("all");
   const [schedule, setSchedule] = useState<"now" | "later">("now");
 
   const visibleSections = sections.filter((s) => s.visible);
 
-  function openPreview() {
-    const payload = {
-      title: newsletterTitle,
-      weekLabel: "May 19 – May 23, 2026",
-      viewMode,
-      sections: visibleSections,
-    };
-    sessionStorage.setItem("newsletter-preview", JSON.stringify(payload));
-    window.open("/teacher/dashboard/newsletter/preview", "_blank");
-  }
-
   return (
-    <div className="flex-1 overflow-y-auto px-8 py-6">
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold font-heading text-gray-900">Publish Newsletter</h2>
-        <p className="text-sm text-gray-500 font-body mt-0.5">Review the parent-facing view and send it out.</p>
-      </div>
+    <div className="flex-1 overflow-y-auto px-8 py-8">
+      <div className="max-w-lg mx-auto flex flex-col gap-5">
+        {visibleSections.length < sections.length && (
+          <div className="px-4 py-3 bg-amber-50 border border-amber-100 rounded-xl text-sm font-body text-amber-700">
+            {sections.length - visibleSections.length} section{sections.length - visibleSections.length > 1 ? "s are" : " is"} hidden and won&apos;t appear in the published newsletter.
+          </div>
+        )}
 
-      {visibleSections.length < sections.length && (
-        <div className="mb-5 px-4 py-3 bg-amber-50 border border-amber-100 rounded-xl text-sm font-body text-amber-700">
-          {sections.length - visibleSections.length} section{sections.length - visibleSections.length > 1 ? "s are" : " is"} hidden and won&apos;t appear in the published newsletter.
-        </div>
-      )}
-
-      <div className="flex gap-6">
-        <div className="flex-1">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Parent View</p>
-
-          <div className="flex gap-2 mb-4">
-            {(["traditional", "slideshow"] as const).map((m) => (
-              <button
-                key={m}
-                onClick={() => setViewMode(m)}
-                className={`px-4 py-2 rounded-xl text-sm font-body font-semibold border transition-colors ${
-                  viewMode === m
-                    ? "bg-[#4a7c59] text-white border-[#4a7c59]"
-                    : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
-                }`}
-              >
-                {m === "traditional" ? "Traditional View" : "Slideshow View"}
-              </button>
+        <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Recipients</p>
+          <div className="space-y-2">
+            {[
+              { value: "all",     label: "All Parents" },
+              { value: "program", label: "By Program"  },
+            ].map((opt) => (
+              <label key={opt.value} className="flex items-center gap-2.5 cursor-pointer group">
+                <div
+                  onClick={() => setRecipients(opt.value as "all" | "program")}
+                  className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0 ${
+                    recipients === opt.value ? "border-[#4a7c59]" : "border-gray-300"
+                  }`}
+                >
+                  {recipients === opt.value && <div className="w-2 h-2 rounded-full bg-[#4a7c59]" />}
+                </div>
+                <span className="text-sm font-body text-gray-700 group-hover:text-gray-900">{opt.label}</span>
+              </label>
             ))}
           </div>
-
-          <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5 mb-4">
-            {viewMode === "traditional" ? (
-              <div className="flex gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#4a7c59]/10 flex items-center justify-center flex-shrink-0">
-                  <Newspaper className="w-5 h-5 text-[#4a7c59]" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold font-body text-gray-800 mb-1">Traditional Newsletter</p>
-                  <p className="text-xs text-gray-500 font-body leading-relaxed">
-                    A classic school newsletter layout. Sections scroll vertically with headings, body text, and photo grids.
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="flex gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#4a7c59]/10 flex items-center justify-center flex-shrink-0">
-                  <ImageIcon className="w-5 h-5 text-[#4a7c59]" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold font-body text-gray-800 mb-1">Slideshow Newsletter</p>
-                  <p className="text-xs text-gray-500 font-body leading-relaxed">
-                    Each section becomes a full-screen slide with a photo grid at the top.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <button
-            onClick={openPreview}
-            className="w-full flex items-center justify-center gap-2 px-5 py-3.5 border-2 border-[#4a7c59] text-[#4a7c59] text-sm font-semibold font-body rounded-xl hover:bg-[#4a7c59]/5 transition-colors"
-          >
-            <ExternalLink className="w-4 h-4" />
-            Open Preview in New Tab
-          </button>
-          <p className="text-xs text-gray-400 font-body text-center mt-2">
-            See exactly what parents will see when this is published
-          </p>
         </div>
 
-        <div className="w-80 flex flex-col gap-5">
-          <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Recipients</p>
-            <div className="space-y-2">
-              {[
-                { value: "all",     label: "All Parents" },
-                { value: "program", label: "By Program"  },
-              ].map((opt) => (
-                <label key={opt.value} className="flex items-center gap-2.5 cursor-pointer group">
-                  <div
-                    onClick={() => setRecipients(opt.value as "all" | "program")}
-                    className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0 ${
-                      recipients === opt.value ? "border-[#4a7c59]" : "border-gray-300"
-                    }`}
-                  >
-                    {recipients === opt.value && <div className="w-2 h-2 rounded-full bg-[#4a7c59]" />}
-                  </div>
-                  <span className="text-sm font-body text-gray-700 group-hover:text-gray-900">{opt.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Send</p>
-            <div className="flex rounded-xl overflow-hidden border border-gray-200 text-sm font-body">
-              <button
-                onClick={() => setSchedule("now")}
-                className={`flex-1 py-2 transition-colors ${schedule === "now" ? "bg-[#4a7c59] text-white font-semibold" : "bg-white text-gray-500 hover:bg-gray-50"}`}
-              >
-                Now
-              </button>
-              <button
-                onClick={() => setSchedule("later")}
-                className={`flex-1 py-2 transition-colors ${schedule === "later" ? "bg-[#4a7c59] text-white font-semibold" : "bg-white text-gray-500 hover:bg-gray-50"}`}
-              >
-                Schedule
-              </button>
-            </div>
-            {schedule === "later" && (
-              <div className="mt-3 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-sm text-gray-400 font-body">
-                Date &amp; time picker — coming soon
-              </div>
-            )}
-          </div>
-
-          <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Notifications</p>
-            <label className="flex items-center gap-2.5 cursor-pointer">
-              <input type="checkbox" defaultChecked className="w-4 h-4 rounded accent-[#4a7c59]" />
-              <span className="text-sm font-body text-gray-700">Notify parents via email</span>
-            </label>
-          </div>
-
-          <div className="space-y-2">
+        <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Send</p>
+          <div className="flex rounded-xl overflow-hidden border border-gray-200 text-sm font-body">
             <button
-              disabled
-              className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-[#4a7c59] text-white text-sm font-semibold font-body rounded-xl opacity-50 cursor-not-allowed"
+              onClick={() => setSchedule("now")}
+              className={`flex-1 py-2 transition-colors ${schedule === "now" ? "bg-[#4a7c59] text-white font-semibold" : "bg-white text-gray-500 hover:bg-gray-50"}`}
             >
-              <Send className="w-4 h-4" />
-              Publish Newsletter
+              Now
             </button>
-            <button className="w-full text-center text-sm font-body text-gray-400 hover:text-gray-600 transition-colors py-1">
-              Save as Draft
+            <button
+              onClick={() => setSchedule("later")}
+              className={`flex-1 py-2 transition-colors ${schedule === "later" ? "bg-[#4a7c59] text-white font-semibold" : "bg-white text-gray-500 hover:bg-gray-50"}`}
+            >
+              Schedule
             </button>
           </div>
+          {schedule === "later" && (
+            <div className="mt-3 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-sm text-gray-400 font-body">
+              Date &amp; time picker — coming soon
+            </div>
+          )}
         </div>
+
+        <button
+          disabled
+          className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-[#4a7c59] text-white text-sm font-semibold font-body rounded-xl opacity-50 cursor-not-allowed"
+        >
+          <Send className="w-4 h-4" />
+          Publish Newsletter
+        </button>
       </div>
     </div>
   );
 }
 
-// ── History Drawer ────────────────────────────────────────────────────────────
+// ── Newsletter Sidebar ────────────────────────────────────────────────────────
 
-function HistoryDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+interface NewsletterSidebarProps {
+  selectedId: string;
+  onSelect: (id: string) => void;
+}
+
+function StatusBadge({ status }: { status: NewsletterStatus }) {
+  if (status === "ongoing") {
+    return (
+      <span className="flex items-center gap-1 text-xs font-semibold font-body text-amber-600">
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
+        Ongoing
+      </span>
+    );
+  }
+  if (status === "draft") {
+    return (
+      <span className="flex items-center gap-1 text-xs font-semibold font-body text-gray-400">
+        <span className="w-1.5 h-1.5 rounded-full bg-gray-300 flex-shrink-0" />
+        Draft
+      </span>
+    );
+  }
   return (
-    <AnimatePresence>
-      {open && (
-        <>
-          <motion.div
-            className="fixed inset-0 bg-black/20 z-40"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-          />
-          <motion.div
-            className="fixed right-0 top-0 bottom-0 w-[560px] bg-white shadow-xl z-50 flex flex-col"
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 30, stiffness: 300 }}
-          >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <div>
-                <h2 className="text-base font-semibold font-heading text-gray-900">Published Newsletters</h2>
-                <p className="text-xs text-gray-400 font-body mt-0.5">History of sent newsletters</p>
-              </div>
-              <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+    <span className="flex items-center gap-1 text-xs font-semibold font-body text-green-600">
+      <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
+      Published
+    </span>
+  );
+}
 
-            <div className="flex-1 overflow-y-auto">
-              <table className="w-full text-sm font-body">
-                <thead>
-                  <tr className="border-b border-gray-100 bg-gray-50">
-                    {["Week", "Title", "By", "Published", "Views", ""].map((col) => (
-                      <th key={col} className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide whitespace-nowrap">
-                        {col}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {HISTORY_ROWS.map((row, i) => (
-                    <tr key={i} className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
-                      <td className="px-5 py-3.5 text-gray-500 whitespace-nowrap text-xs">{row.week}</td>
-                      <td className="px-5 py-3.5 text-gray-800 font-medium">{row.title}</td>
-                      <td className="px-5 py-3.5 text-gray-600 text-xs">{row.by}</td>
-                      <td className="px-5 py-3.5 text-gray-500 whitespace-nowrap text-xs">{row.at}</td>
-                      <td className="px-5 py-3.5">
-                        <div className="flex items-center gap-1 text-gray-600">
-                          <Eye className="w-3.5 h-3.5" />
-                          {row.views}
-                        </div>
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <div className="flex items-center gap-2">
-                          <span className="px-2.5 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">Published</span>
-                          <button className="p-1.5 text-gray-400 hover:text-[#4a7c59] hover:bg-gray-100 rounded-lg transition-colors" title="Duplicate">
-                            <Copy className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+function NewsletterSidebar({ selectedId, onSelect }: NewsletterSidebarProps) {
+  const ongoing = STATIC_NEWSLETTERS.filter((n) => n.status === "ongoing");
+  const drafts = STATIC_NEWSLETTERS.filter((n) => n.status === "draft");
+  const published = STATIC_NEWSLETTERS.filter((n) => n.status === "published");
+
+  function SidebarItem({ newsletter }: { newsletter: Newsletter }) {
+    const isSelected = newsletter.id === selectedId;
+    return (
+      <button
+        onClick={() => onSelect(newsletter.id)}
+        className={`w-full text-left px-3 py-2.5 rounded-xl transition-colors border ${
+          isSelected
+            ? "bg-[#4a7c59]/8 border-[#4a7c59]/20 text-gray-900"
+            : "border-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+        }`}
+      >
+        <p className={`text-sm font-body truncate mb-0.5 ${isSelected ? "font-semibold" : "font-medium"}`}>
+          {newsletter.title}
+        </p>
+        <p className="text-xs text-gray-400 font-body truncate mb-1">{newsletter.weekRange}</p>
+        <StatusBadge status={newsletter.status} />
+      </button>
+    );
+  }
+
+  function SidebarGroup({ label, items }: { label: string; items: Newsletter[] }) {
+    if (items.length === 0) return null;
+    return (
+      <div className="mb-3">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-3 mb-1">{label}</p>
+        <div className="space-y-0.5">
+          {items.map((n) => <SidebarItem key={n.id} newsletter={n} />)}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <aside className="w-64 border-r border-gray-100 bg-gray-50 flex flex-col flex-shrink-0">
+      <div className="flex items-center justify-between px-4 pt-5 pb-3">
+        <h2 className="text-sm font-semibold font-heading text-gray-800">Newsletters</h2>
+        <button
+          className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold font-body text-[#4a7c59] border border-[#4a7c59]/30 bg-[#4a7c59]/5 rounded-lg hover:bg-[#4a7c59]/10 transition-colors"
+          title="New newsletter (coming soon)"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          New
+        </button>
+      </div>
+      <div className="flex-1 overflow-y-auto px-2 pb-4">
+        <SidebarGroup label="Ongoing" items={ongoing} />
+        <SidebarGroup label="Drafts" items={drafts} />
+        <SidebarGroup label="Published" items={published} />
+      </div>
+    </aside>
   );
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
+const EDITABLE_TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: "editor",    label: "Editor",     icon: FileEdit     },
   { id: "changelog", label: "Change Log", icon: ClipboardList },
   { id: "publish",   label: "Publish",    icon: Send         },
+];
+
+const READONLY_TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
+  { id: "editor",    label: "Editor",     icon: FileEdit     },
+  { id: "changelog", label: "Change Log", icon: ClipboardList },
 ];
 
 interface NewsletterPageClientProps {
@@ -877,10 +926,11 @@ interface NewsletterPageClientProps {
 
 export default function NewsletterPageClient({ teachers, currentUserId }: NewsletterPageClientProps) {
   const [activeTab, setActiveTab] = useState<Tab>("editor");
-  const [historyOpen, setHistoryOpen] = useState(false);
   const [savedStatus, setSavedStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [restoredAt, setRestoredAt] = useState<string | null>(null);
   const [changeLog, setChangeLog] = useState<ChangeEntry[]>([]);
+  const [selectedNewsletterId, setSelectedNewsletterId] = useState("ongoing-may-19");
+  const [isReadOnly, setIsReadOnly] = useState(false);
 
   const currentTeacher = teachers.find((t) => t.id === currentUserId) ?? teachers[0];
   const pendingChanges = useRef<PendingChange[]>([]);
@@ -903,15 +953,29 @@ export default function NewsletterPageClient({ teachers, currentUserId }: Newsle
   const [newsletterTitle, setNewsletterTitle] = useState("May 19–23 Weekly Update");
   const [viewMode, setViewMode] = useState<"traditional" | "slideshow">("traditional");
 
+  const ongoingNewsletter = STATIC_NEWSLETTERS.find((n) => n.id === "ongoing-may-19")!;
+  const ongoingSectionsRef = useRef<SectionData[]>([]);
+  const ongoingTitleRef = useRef("May 19–23 Weekly Update");
+  const ongoingViewModeRef = useRef<"traditional" | "slideshow">("traditional");
+
   // Load draft from localStorage on mount
   useEffect(() => {
     try {
       const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
       if (raw) {
         const draft = JSON.parse(raw);
-        if (draft.sections) setSections(draft.sections);
-        if (draft.newsletterTitle) setNewsletterTitle(draft.newsletterTitle);
-        if (draft.viewMode) setViewMode(draft.viewMode);
+        if (draft.sections) {
+          setSections(draft.sections);
+          ongoingSectionsRef.current = draft.sections;
+        }
+        if (draft.newsletterTitle) {
+          setNewsletterTitle(draft.newsletterTitle);
+          ongoingTitleRef.current = draft.newsletterTitle;
+        }
+        if (draft.viewMode) {
+          setViewMode(draft.viewMode);
+          ongoingViewModeRef.current = draft.viewMode;
+        }
         if (draft.savedAt) {
           const d = new Date(draft.savedAt);
           setRestoredAt(d.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }));
@@ -921,6 +985,40 @@ export default function NewsletterPageClient({ teachers, currentUserId }: Newsle
       // ignore malformed draft
     }
   }, []);
+
+  function selectNewsletter(id: string) {
+    const newsletter = STATIC_NEWSLETTERS.find((n) => n.id === id);
+    if (!newsletter) return;
+
+    // Stash current ongoing state before switching away
+    if (selectedNewsletterId === "ongoing-may-19") {
+      ongoingSectionsRef.current = sections;
+      ongoingTitleRef.current = newsletterTitle;
+      ongoingViewModeRef.current = viewMode;
+    }
+
+    setSelectedNewsletterId(id);
+
+    if (newsletter.status === "published") {
+      setSections(newsletter.sections);
+      setNewsletterTitle(newsletter.newsletterTitle);
+      setViewMode(newsletter.viewMode);
+      setIsReadOnly(true);
+      setActiveTab("editor");
+    } else if (id === "ongoing-may-19") {
+      setSections(ongoingSectionsRef.current.length > 0 ? ongoingSectionsRef.current : buildInitialSections(teachers));
+      setNewsletterTitle(ongoingTitleRef.current);
+      setViewMode(ongoingViewModeRef.current);
+      setIsReadOnly(false);
+    } else {
+      setSections(newsletter.sections.length > 0 ? newsletter.sections : buildInitialSections(teachers));
+      setNewsletterTitle(newsletter.newsletterTitle);
+      setViewMode(newsletter.viewMode);
+      setIsReadOnly(false);
+    }
+  }
+
+  const selectedNewsletter = STATIC_NEWSLETTERS.find((n) => n.id === selectedNewsletterId) ?? ongoingNewsletter;
 
   const recordChange = useCallback((change: PendingChange) => {
     pendingChanges.current.push(change);
@@ -938,6 +1036,7 @@ export default function NewsletterPageClient({ teachers, currentUserId }: Newsle
   }, []);
 
   function saveDraft() {
+    if (isReadOnly) return;
     setSavedStatus("saving");
     const draft = {
       sections,
@@ -968,10 +1067,25 @@ export default function NewsletterPageClient({ teachers, currentUserId }: Newsle
     setTimeout(() => setSavedStatus("idle"), 1800);
   }
 
+  // TODO (real data): replace sessionStorage + hardcoded path with
+  // window.open(`/teacher/dashboard/newsletter/${selectedNewsletterId}/preview`, "_blank")
+  // and move preview/page.tsx → [id]/preview/page.tsx to fetch server-side by ID.
+  function openPreview() {
+    const visibleSections = sections.filter((s) => s.visible);
+    const payload = {
+      title: newsletterTitle,
+      weekLabel: selectedNewsletter.weekRange,
+      viewMode,
+      sections: visibleSections,
+    };
+    sessionStorage.setItem("newsletter-preview", JSON.stringify(payload));
+    window.open("/teacher/dashboard/newsletter/preview", "_blank");
+  }
+
   function buildSummary(changes: PendingChange[]): string[] {
     const lines: string[] = [];
     const editedSections = new Set<string>();
-    const renamedSections = new Map<string, string>(); // sectionLabel → final name
+    const renamedSections = new Map<string, string>();
     let titleChanged = false;
     let titleFinal = "";
 
@@ -1001,44 +1115,54 @@ export default function NewsletterPageClient({ teachers, currentUserId }: Newsle
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const TABS = isReadOnly ? READONLY_TABS : EDITABLE_TABS;
+
   return (
-    <>
+    <div className="flex flex-1 overflow-hidden">
+      {/* Full-height sidebar */}
+      <NewsletterSidebar selectedId={selectedNewsletterId} onSelect={selectNewsletter} />
+
+      {/* Right column: header + tab content */}
       <div className="flex flex-col flex-1 overflow-hidden">
-        {/* Page header */}
+        {/* Right header */}
         <div className="px-8 pt-6 pb-0 border-b border-gray-100 bg-white">
           <div className="flex items-center gap-2.5 mb-4">
             <div className="w-8 h-8 rounded-xl bg-[#4a7c59]/10 flex items-center justify-center">
               <Newspaper className="w-4 h-4 text-[#4a7c59]" />
             </div>
-            <div className="flex-1">
-              <h1 className="text-xl font-semibold font-heading text-gray-900 leading-tight">Weekly Newsletter</h1>
-              <p className="text-xs text-gray-400 font-body">Collaborate, design, and publish your class newsletter</p>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl font-semibold font-heading text-gray-900 leading-tight truncate">{selectedNewsletter.title}</h1>
+              <p className="text-xs text-gray-400 font-body">{selectedNewsletter.weekRange}</p>
             </div>
 
             {/* Header actions */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={saveDraft}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-body font-semibold rounded-lg border transition-colors ${
-                  savedStatus === "saved"
-                    ? "bg-green-50 border-green-200 text-green-700"
-                    : "bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:text-gray-800"
-                }`}
-              >
-                {savedStatus === "saved" ? (
-                  <><CheckCircle2 className="w-4 h-4" /> Saved</>
-                ) : (
-                  <><Save className="w-4 h-4" /> Save Draft</>
+            {!isReadOnly && (
+              <div className="flex items-center gap-2">
+                {activeTab === "publish" && (
+                  <button
+                    onClick={openPreview}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-body font-semibold rounded-lg border border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800 transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Preview
+                  </button>
                 )}
-              </button>
-              <button
-                onClick={() => setHistoryOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-body text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors"
-              >
-                <History className="w-4 h-4" />
-                View History
-              </button>
-            </div>
+                <button
+                  onClick={saveDraft}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-body font-semibold rounded-lg border transition-colors ${
+                    savedStatus === "saved"
+                      ? "bg-green-50 border-green-200 text-green-700"
+                      : "bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:text-gray-800"
+                  }`}
+                >
+                  {savedStatus === "saved" ? (
+                    <><CheckCircle2 className="w-4 h-4" /> Saved</>
+                  ) : (
+                    <><Save className="w-4 h-4" /> Save Draft</>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
 
           <nav className="flex gap-0.5">
@@ -1080,21 +1204,17 @@ export default function NewsletterPageClient({ teachers, currentUserId }: Newsle
               recordChange={recordChange}
               restoredAt={restoredAt}
               dismissRestore={() => setRestoredAt(null)}
+              isReadOnly={isReadOnly}
+              selectedWeekRange={selectedNewsletter.weekRange}
             />
           )}
           {activeTab === "changelog" && <ChangeLogTab changeLog={changeLog} />}
-          {activeTab === "publish" && (
-            <PublishTab
-              sections={sections}
-              newsletterTitle={newsletterTitle}
-              viewMode={viewMode}
-              setViewMode={setViewMode}
-            />
+          {activeTab === "publish" && !isReadOnly && (
+            <PublishTab sections={sections} />
           )}
         </div>
       </div>
-
-      <HistoryDrawer open={historyOpen} onClose={() => setHistoryOpen(false)} />
-    </>
+    </div>
   );
 }
+
