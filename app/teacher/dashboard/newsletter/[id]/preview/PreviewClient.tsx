@@ -58,65 +58,113 @@ function TraditionalImageGrid({ images }: { images: DBSectionImage[] }) {
   );
 }
 
-function SlideshowImageGrid({ images, sectionLabel }: { images: DBSectionImage[]; sectionLabel: string }) {
-  const [activeIdx, setActiveIdx] = useState(0);
-  const imageRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const containerRef = useRef<HTMLDivElement | null>(null);
+function ImageCarousel({
+  images,
+  sectionLabel,
+  externalImgIdx,
+  onImgIdxChange,
+}: {
+  images: DBSectionImage[];
+  sectionLabel: string;
+  externalImgIdx: number;
+  onImgIdxChange: (idx: number) => void;
+}) {
+  const touchStartX = useRef<number | null>(null);
 
-  useEffect(() => {
-    setActiveIdx(0);
-  }, [images]);
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX;
+  }
 
-  useEffect(() => {
-    if (images.length <= 1) return;
-    const container = containerRef.current;
-    if (!container) return;
-    const obs = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            const idx = imageRefs.current.indexOf(entry.target as HTMLDivElement);
-            if (idx !== -1) setActiveIdx(idx);
-          }
-        }
-      },
-      { root: container, threshold: 0.5 }
-    );
-    imageRefs.current.forEach((el) => el && obs.observe(el));
-    return () => obs.disconnect();
-  }, [images]);
+  function handleTouchEnd(e: React.TouchEvent) {
+    if (touchStartX.current === null) return;
+    const delta = e.changedTouches[0].clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(delta) < 40) return;
+    if (delta < 0) onImgIdxChange(Math.min(externalImgIdx + 1, images.length - 1));
+    else onImgIdxChange(Math.max(externalImgIdx - 1, 0));
+  }
 
   if (images.length === 0) {
     return (
-      <div className="w-full h-full bg-gradient-to-br from-[#4a7c59] to-[#3d6b4a] flex items-center justify-center">
-        <h2 className="text-4xl font-heading font-bold text-white text-center px-8 leading-tight drop-shadow-sm">
-          {sectionLabel}
-        </h2>
+      <div className="w-full h-full bg-gradient-to-br from-[#4a7c59] to-[#2e5240] flex items-center justify-center">
+        <div className="text-center px-8">
+          <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-4">
+            <Newspaper className="w-6 h-6 text-white/60" />
+          </div>
+          <h2 className="text-3xl font-heading font-bold text-white leading-tight drop-shadow-sm">
+            {sectionLabel}
+          </h2>
+        </div>
       </div>
     );
   }
 
+  const current = images[externalImgIdx];
+
   return (
-    <div className="w-full h-full flex">
-      <div ref={containerRef} className="flex-1 overflow-y-auto bg-black flex flex-col gap-1 p-2">
-        {images.map((img, i) => (
-          <div key={img.id} ref={(el) => { imageRefs.current[i] = el; }}>
-            <img src={img.signed_url ?? ""} alt="" className="w-full object-contain rounded-lg" />
-          </div>
-        ))}
+    <div className="relative w-full h-full overflow-hidden select-none" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+      {/* blurred ambient background */}
+      <div
+        className="absolute inset-0 scale-110"
+        style={{
+          backgroundImage: `url(${current.signed_url ?? ""})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          filter: "blur(24px) brightness(0.35) saturate(1.4)",
+        }}
+      />
+
+      {/* main image */}
+      <div className="relative w-full h-full flex items-center justify-center">
+        <img
+          key={current.id}
+          src={current.signed_url ?? ""}
+          alt=""
+          className="max-w-full max-h-full object-contain"
+          style={{ transition: "opacity 0.25s ease" }}
+        />
       </div>
+
+      {/* prev / next arrows */}
       {images.length > 1 && (
-        <div className="w-16 flex-shrink-0 overflow-y-auto flex flex-col gap-1.5 py-2 px-1 bg-black/80">
-          {images.map((img, i) => (
+        <>
+          <button
+            onClick={() => onImgIdxChange(Math.max(externalImgIdx - 1, 0))}
+            disabled={externalImgIdx === 0}
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/80 hover:bg-black/60 hover:text-white disabled:opacity-0 transition-all"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => onImgIdxChange(Math.min(externalImgIdx + 1, images.length - 1))}
+            disabled={externalImgIdx === images.length - 1}
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/80 hover:bg-black/60 hover:text-white disabled:opacity-0 transition-all"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </>
+      )}
+
+      {/* image counter badge */}
+      {images.length > 1 && (
+        <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm text-white/80 text-xs font-body font-semibold px-2.5 py-1 rounded-full">
+          {externalImgIdx + 1} / {images.length}
+        </div>
+      )}
+
+      {/* dot indicators */}
+      {images.length > 1 && (
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+          {images.map((_, i) => (
             <button
-              key={img.id}
-              onClick={() => imageRefs.current[i]?.scrollIntoView({ behavior: "smooth", block: "start" })}
-              className={`w-full aspect-square rounded-lg overflow-hidden border-2 flex-shrink-0 transition-all ${
-                activeIdx === i ? "border-white/80 opacity-100" : "border-white/20 opacity-50 hover:opacity-75"
+              key={i}
+              onClick={() => onImgIdxChange(i)}
+              className={`rounded-full transition-all duration-300 ${
+                i === externalImgIdx
+                  ? "w-5 h-1.5 bg-white"
+                  : "w-1.5 h-1.5 bg-white/35 hover:bg-white/60"
               }`}
-            >
-              <img src={img.signed_url ?? ""} alt="" className="w-full h-full object-cover" />
-            </button>
+            />
           ))}
         </div>
       )}
@@ -191,59 +239,211 @@ function TraditionalNewsletter({ newsletter, sections }: { newsletter: DBNewslet
 
 function SlideshowNewsletter({ sections }: { sections: RenderSection[] }) {
   const [slideIdx, setSlideIdx] = useState(0);
+  const [imgIdx, setImgIdx] = useState(0);
+  const [visible, setVisible] = useState(true);
+  const slideRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef<number | null>(null);
   const total = sections.length;
   const slide = sections[slideIdx];
 
-  const prev = useCallback(() => setSlideIdx((i) => (i - 1 + total) % total), [total]);
-  const next = useCallback(() => setSlideIdx((i) => (i + 1) % total), [total]);
+  const prev = useCallback(() => {
+    setVisible(false);
+    setTimeout(() => {
+      setSlideIdx((i) => Math.max(i - 1, 0));
+      setImgIdx(0);
+      setVisible(true);
+    }, 180);
+  }, []);
+
+  const next = useCallback(() => {
+    setVisible(false);
+    setTimeout(() => {
+      setSlideIdx((i) => Math.min(i + 1, total - 1));
+      setImgIdx(0);
+      setVisible(true);
+    }, 180);
+  }, [total]);
+
+  const goTo = useCallback((i: number) => {
+    if (i === slideIdx) return;
+    setVisible(false);
+    setTimeout(() => {
+      setSlideIdx(i);
+      setImgIdx(0);
+      setVisible(true);
+    }, 180);
+  }, [slideIdx]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "ArrowLeft") prev();
-      if (e.key === "ArrowRight") next();
+      else if (e.key === "ArrowRight") next();
+      else if (e.key === "ArrowUp") setImgIdx((i) => Math.max(i - 1, 0));
+      else if (e.key === "ArrowDown") setImgIdx((i) => Math.min(i + 1, (slide?.images.length ?? 1) - 1));
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [prev, next]);
+  }, [prev, next, slide]);
+
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX;
+  }
+
+  function handleTouchEnd(e: React.TouchEvent) {
+    if (touchStartX.current === null) return;
+    const delta = e.changedTouches[0].clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(delta) < 50) return;
+    if (delta < 0) next();
+    else prev();
+  }
 
   if (!slide) return null;
 
+  const progressPct = total > 1 ? (slideIdx / (total - 1)) * 100 : 100;
+
   return (
-    <div className="h-screen flex flex-row bg-black overflow-hidden select-none relative">
-      <div className="relative overflow-hidden" style={{ width: "55%" }}>
-        <SlideshowImageGrid images={slide.images} sectionLabel={slide.label} />
+    <div
+      className="h-full flex flex-col md:flex-row overflow-hidden select-none relative"
+      style={{ background: "linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%)" }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* ── Progress bar ── */}
+      <div className="absolute top-0 left-0 right-0 h-[3px] z-20 bg-white/5">
+        <div
+          className="h-full bg-[#4a7c59] transition-all duration-500 ease-out"
+          style={{ width: `${progressPct}%` }}
+        />
       </div>
 
-      <div className="bg-white flex flex-col px-10 py-8 overflow-y-auto" style={{ width: "45%" }}>
-        <h2 className="text-2xl font-bold font-heading text-gray-900 mb-4">
-          {slide.label || "Untitled Section"}
-        </h2>
-        {slide.body ? (
-          <p className="text-base font-body text-gray-600 leading-relaxed">{slide.body}</p>
-        ) : (
-          <p className="text-base font-body text-gray-400 italic">No content for this section.</p>
-        )}
-      </div>
-
-      <div className="absolute bottom-6 right-6 z-10 flex items-center gap-3 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-2xl shadow-lg px-4 py-2.5">
-        <button onClick={prev} className="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-[#4a7c59] transition-colors rounded-lg hover:bg-gray-100">
-          <ChevronLeft className="w-5 h-5" />
+      {/* ── Top nav strip (mobile) ── */}
+      <div className="md:hidden flex items-center gap-2 px-4 pt-5 pb-3 z-10">
+        <button
+          onClick={prev}
+          disabled={slideIdx === 0}
+          className="w-8 h-8 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-white/70 hover:bg-white/20 disabled:opacity-20 transition-all flex-shrink-0"
+        >
+          <ChevronLeft className="w-4 h-4" />
         </button>
-        <div className="flex items-center gap-1.5">
+        <div className="flex-1 flex items-center justify-center gap-1.5">
           {sections.map((_, i) => (
             <button
               key={i}
-              onClick={() => setSlideIdx(i)}
-              className={`h-2 rounded-full transition-all ${i === slideIdx ? "w-5 bg-[#4a7c59]" : "w-2 bg-gray-300 hover:bg-gray-400"}`}
+              onClick={() => goTo(i)}
+              className={`rounded-full transition-all duration-300 ${
+                i === slideIdx ? "w-5 h-1.5 bg-[#4a7c59]" : "w-1.5 h-1.5 bg-white/25 hover:bg-white/50"
+              }`}
             />
           ))}
         </div>
-        <span className="text-xs font-semibold font-body text-gray-400 min-w-[32px] text-center">
+        <span className="text-xs font-body font-semibold text-white/30 flex-shrink-0 min-w-[32px] text-right">
           {slideIdx + 1} / {total}
         </span>
-        <button onClick={next} className="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-[#4a7c59] transition-colors rounded-lg hover:bg-gray-100">
-          <ChevronRight className="w-5 h-5" />
+        <button
+          onClick={next}
+          disabled={slideIdx === total - 1}
+          className="w-8 h-8 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-white/70 hover:bg-white/20 disabled:opacity-20 transition-all flex-shrink-0"
+        >
+          <ChevronRight className="w-4 h-4" />
         </button>
+      </div>
+
+      {/* ── Image area ── */}
+      <div
+        ref={slideRef}
+        className="w-full md:w-[60%] flex-shrink-0 md:h-full h-[55vw] min-h-[240px] max-h-[60vh] md:max-h-none relative"
+        style={{
+          opacity: visible ? 1 : 0,
+          transform: visible ? "translateX(0)" : "translateX(-12px)",
+          transition: "opacity 0.2s ease, transform 0.2s ease",
+        }}
+      >
+        <ImageCarousel
+          images={slide.images}
+          sectionLabel={slide.label}
+          externalImgIdx={imgIdx}
+          onImgIdxChange={setImgIdx}
+        />
+      </div>
+
+      {/* ── Text panel ── */}
+      <div
+        className="flex-1 flex flex-col md:h-full overflow-y-auto"
+        style={{
+          opacity: visible ? 1 : 0,
+          transform: visible ? "translateX(0)" : "translateX(12px)",
+          transition: "opacity 0.2s ease 0.04s, transform 0.2s ease 0.04s",
+        }}
+      >
+        {/* Desktop nav strip */}
+        <div className="hidden md:flex items-center gap-3 px-8 pt-6 pb-4 flex-shrink-0">
+          <button
+            onClick={prev}
+            disabled={slideIdx === 0}
+            className="w-9 h-9 rounded-full bg-white/8 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/15 hover:text-white disabled:opacity-20 transition-all"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <div className="flex items-center gap-1.5">
+            {sections.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => goTo(i)}
+                className={`rounded-full transition-all duration-300 ${
+                  i === slideIdx ? "w-5 h-1.5 bg-[#4a7c59]" : "w-1.5 h-1.5 bg-white/20 hover:bg-white/45"
+                }`}
+              />
+            ))}
+          </div>
+          <span className="text-xs font-body font-semibold text-white/25 ml-1">
+            {slideIdx + 1} / {total}
+          </span>
+          <button
+            onClick={next}
+            disabled={slideIdx === total - 1}
+            className="w-9 h-9 rounded-full bg-white/8 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/15 hover:text-white disabled:opacity-20 transition-all ml-auto"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Section content */}
+        <div className="flex-1 px-6 md:px-8 pb-6 md:pb-10 pt-4 md:pt-2 flex flex-col">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-1 h-7 rounded-full bg-[#4a7c59] flex-shrink-0" />
+            <h2 className="text-xl md:text-2xl font-bold font-heading text-white leading-tight">
+              {slide.label || "Untitled Section"}
+            </h2>
+          </div>
+          {slide.body ? (
+            <p className="text-sm md:text-base font-body text-white/65 leading-relaxed whitespace-pre-wrap flex-1">
+              {slide.body}
+            </p>
+          ) : (
+            <p className="text-base font-body text-white/30 italic flex-1">No content for this section.</p>
+          )}
+        </div>
+
+        {/* Mobile bottom nav */}
+        <div className="md:hidden flex items-center gap-3 px-6 pb-6 pt-2 flex-shrink-0">
+          <button
+            onClick={prev}
+            disabled={slideIdx === 0}
+            className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl bg-white/8 border border-white/10 text-white/60 hover:bg-white/15 hover:text-white disabled:opacity-20 transition-all text-sm font-body font-semibold"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Prev
+          </button>
+          <button
+            onClick={next}
+            disabled={slideIdx === total - 1}
+            className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl bg-[#4a7c59]/80 border border-[#4a7c59]/40 text-white hover:bg-[#4a7c59] disabled:opacity-20 transition-all text-sm font-body font-semibold"
+          >
+            Next
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </div>
   );
