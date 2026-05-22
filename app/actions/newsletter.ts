@@ -59,32 +59,7 @@ export interface DBNewsletter {
 
 // ─── Read ──────────────────────────────────────────────────────────────────────
 
-export async function getNewsletters(): Promise<DBNewsletter[]> {
-  const adminClient = createAdminClient()
-
-  const { data: rows, error } = await adminClient
-    .schema('newsletters')
-    .from('newsletters')
-    .select(`
-      id, title, week_range, status, view_mode, created_by, published_at, created_at, updated_at,
-      sections:sections(
-        id, newsletter_id, label, body, visible, sort_order, is_class_updates, created_at, updated_at,
-        teacher_updates:teacher_updates(id, section_id, teacher_id, body, updated_at),
-        section_images:section_images(id, storage_path, sort_order)
-      ),
-      change_log:change_log(id, newsletter_id, teacher_id, summary, created_at)
-    `)
-    .eq('is_deleted', false)
-    .order('created_at', { ascending: false })
-
-  if (error) {
-    console.error('getNewsletters error:', error)
-    return []
-  }
-
-  if (!rows || rows.length === 0) return []
-
-  // Collect teacher IDs from change_log rows to resolve names/avatars
+async function resolveNewsletterRows(rows: any[], adminClient: ReturnType<typeof createAdminClient>): Promise<DBNewsletter[]> {
   const teacherIds = new Set<string>()
   for (const row of rows) {
     for (const entry of (row.change_log as any[]) ?? []) {
@@ -102,7 +77,6 @@ export async function getNewsletters(): Promise<DBNewsletter[]> {
     nameMap = new Map((users ?? []).map((u) => [u.id, { full_name: u.full_name, profile_image_url: u.profile_image_url }]))
   }
 
-  // Collect all image storage paths and generate signed URLs in one batch
   const allImagePaths: string[] = []
   for (const row of rows) {
     for (const s of (row.sections as any[]) ?? []) {
@@ -152,6 +126,56 @@ export async function getNewsletters(): Promise<DBNewsletter[]> {
         }
       }),
   })) as DBNewsletter[]
+}
+
+const NEWSLETTER_SELECT = `
+  id, title, week_range, status, view_mode, created_by, published_at, created_at, updated_at,
+  sections:sections(
+    id, newsletter_id, label, body, visible, sort_order, is_class_updates, created_at, updated_at,
+    teacher_updates:teacher_updates(id, section_id, teacher_id, body, updated_at),
+    section_images:section_images(id, storage_path, sort_order, is_deleted)
+  ),
+  change_log:change_log(id, newsletter_id, teacher_id, summary, created_at)
+`
+
+export async function getNewsletters(): Promise<DBNewsletter[]> {
+  const adminClient = createAdminClient()
+
+  const { data: rows, error } = await adminClient
+    .schema('newsletters')
+    .from('newsletters')
+    .select(NEWSLETTER_SELECT)
+    .eq('is_deleted', false)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('getNewsletters error:', error)
+    return []
+  }
+
+  if (!rows || rows.length === 0) return []
+
+  return resolveNewsletterRows(rows, adminClient)
+}
+
+export async function getNewsletterById(id: string): Promise<DBNewsletter | null> {
+  const adminClient = createAdminClient()
+
+  const { data: row, error } = await adminClient
+    .schema('newsletters')
+    .from('newsletters')
+    .select(NEWSLETTER_SELECT)
+    .eq('id', id)
+    .eq('is_deleted', false)
+    .single()
+
+  if (error || !row) {
+    console.error('getNewsletterById error:', error)
+    return null
+  }
+
+  const results = await resolveNewsletterRows([row], adminClient)
+  return results[0] ?? null
 }
 
 // ─── Create ────────────────────────────────────────────────────────────────────

@@ -1181,15 +1181,7 @@ export default function NewsletterPageClient({ teachers, currentUserId, initialN
   }
 
   function openPreview() {
-    const visibleSections = sections.filter((s) => s.visible);
-    const payload = {
-      title: newsletterTitle,
-      weekLabel: selectedNewsletter?.weekRange ?? "",
-      viewMode,
-      sections: visibleSections,
-    };
-    sessionStorage.setItem("newsletter-preview", JSON.stringify(payload));
-    window.open("/teacher/dashboard/newsletter/preview", "_blank");
+    window.open(`/teacher/dashboard/newsletter/${selectedNewsletterId}/preview`, "_blank");
   }
 
   async function handleNew() {
