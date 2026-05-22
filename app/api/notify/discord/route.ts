@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
 
     const notifyKey = request.headers.get("x-notify-key");
     if (notifyKey && notifyKey === process.env.DISCORD_NOTIFY_KEY) {
-      const ANON_ALLOWED = ["login_otp_sent"];
+      const ANON_ALLOWED = ["login_otp_sent", "android_download_request"];
       const { type, data } = await request.json();
       if (!ANON_ALLOWED.includes(type)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -36,6 +36,20 @@ export async function POST(request: NextRequest) {
             timestamp: new Date().toISOString(),
           },
           process.env.DISCORD_SIGNINS_WEBHOOK_URL,
+        );
+        return NextResponse.json({ success: true });
+      }
+
+      if (type === "android_download_request") {
+        const { email } = data ?? {};
+        await sendDiscordNotification(
+          {
+            title: "📱 Android Download Request",
+            color: 0x3ddc84,
+            fields: [{ name: "Email", value: email ?? "unknown", inline: true }],
+            timestamp: new Date().toISOString(),
+          },
+          process.env.DISCORD_MOBILE_WEBHOOK_URL,
         );
         return NextResponse.json({ success: true });
       }
