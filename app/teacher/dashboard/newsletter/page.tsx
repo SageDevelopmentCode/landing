@@ -6,6 +6,7 @@ import ProfileDropdown from '@/app/apply/dashboard/ProfileDropdown'
 import TeacherNav from '../TeacherNav'
 import TeacherNotificationBell from '../../components/TeacherNotificationBell'
 import NewsletterPageClient from './NewsletterPageClient'
+import { getNewsletters } from '@/app/actions/newsletter'
 
 export default async function NewsletterPage() {
   const supabase = await createServerSupabaseClient()
@@ -17,7 +18,7 @@ export default async function NewsletterPage() {
 
   const adminClient = createAdminClient()
 
-  const [{ data: adminUser }, { data: teachersRaw }] = await Promise.all([
+  const [{ data: adminUser }, { data: teachersRaw }, newsletters] = await Promise.all([
     adminClient
       .schema('admin')
       .from('users')
@@ -32,6 +33,7 @@ export default async function NewsletterPage() {
       .eq('is_deleted', false)
       .neq('full_name', 'Test Teacher')
       .order('full_name'),
+    getNewsletters(),
   ])
 
   const fullName = adminUser?.full_name ?? null
@@ -69,7 +71,7 @@ export default async function NewsletterPage() {
       </header>
 
       <main className="flex-1 flex overflow-hidden">
-        <NewsletterPageClient teachers={teachers} currentUserId={user.id} />
+        <NewsletterPageClient teachers={teachers} currentUserId={user.id} initialNewsletters={newsletters} />
       </main>
     </div>
   )

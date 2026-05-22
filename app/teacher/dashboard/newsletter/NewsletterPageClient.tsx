@@ -21,7 +21,14 @@ import {
   ClipboardList,
   Save,
   Lock,
+  Loader2,
 } from "lucide-react";
+import {
+  createNewsletter,
+  saveDraft,
+  publishNewsletter,
+  type DBNewsletter,
+} from "@/app/actions/newsletter";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -69,103 +76,44 @@ interface ChangeEntry {
   summary: string[];
 }
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-type NewsletterStatus = "published" | "draft" | "ongoing";
+type NewsletterStatus = "published" | "draft";
 
 interface Newsletter {
   id: string;
   title: string;
   weekRange: string;
   status: NewsletterStatus;
-  publishedAt?: string;
-  author: string;
+  publishedAt?: string | null;
   sections: SectionData[];
   newsletterTitle: string;
   viewMode: "traditional" | "slideshow";
 }
 
-// ── Static data ───────────────────────────────────────────────────────────────
-
-const WEEK_KEY = "may-19-2026";
-const DRAFT_STORAGE_KEY = `newsletter-draft-${WEEK_KEY}`;
-
-function buildPlaceholderSections(titlePrefix: string): SectionData[] {
-  return [
-    { id: `${titlePrefix}-welcome`,   label: "Welcome Message",  body: "Welcome to this week's newsletter! We're so glad to keep you informed about everything happening in our classroom.", images: [], visible: true },
-    { id: `${titlePrefix}-events`,    label: "Upcoming Events",  body: "- Monday: Field trip permission slips due\n- Wednesday: Picture day\n- Friday: Early dismissal at 1pm", images: [], visible: true },
-    { id: `${titlePrefix}-reminders`, label: "Parent Reminders", body: "Please remember to send a healthy snack daily. Water bottles are encouraged!", images: [], visible: true },
-  ];
-}
-
-const STATIC_NEWSLETTERS: Newsletter[] = [
-  {
-    id: "ongoing-may-19",
-    title: "May 19–23 Weekly Update",
-    weekRange: "May 19 – May 23, 2026",
-    status: "ongoing",
-    author: "Ms. Rivera",
-    sections: [], // populated from localStorage / buildInitialSections at runtime
-    newsletterTitle: "May 19–23 Weekly Update",
-    viewMode: "traditional",
-  },
-  {
-    id: "draft-may-26",
-    title: "May 26–30 Weekly Update",
-    weekRange: "May 26 – May 30, 2026",
-    status: "draft",
-    author: "Ms. Rivera",
-    sections: buildPlaceholderSections("may26"),
-    newsletterTitle: "May 26–30 Weekly Update",
-    viewMode: "traditional",
-  },
-  {
-    id: "pub-may-12",
-    title: "May 12–16 Weekly Update",
-    weekRange: "May 12 – May 16, 2026",
-    status: "published",
-    publishedAt: "May 16, 2026",
-    author: "Ms. Rivera",
-    sections: buildPlaceholderSections("may12"),
-    newsletterTitle: "May 12–16 Weekly Update",
-    viewMode: "traditional",
-  },
-  {
-    id: "pub-may-5",
-    title: "May 5–9 Weekly Update",
-    weekRange: "May 5 – May 9, 2026",
-    status: "published",
-    publishedAt: "May 9, 2026",
-    author: "Ms. Rivera",
-    sections: buildPlaceholderSections("may5"),
-    newsletterTitle: "May 5–9 Weekly Update",
-    viewMode: "traditional",
-  },
-  {
-    id: "pub-apr-28",
-    title: "Spring Wrap-Up Newsletter",
-    weekRange: "Apr 28 – May 2, 2026",
-    status: "published",
-    publishedAt: "May 2, 2026",
-    author: "Mr. Okafor",
-    sections: buildPlaceholderSections("apr28"),
-    newsletterTitle: "Spring Wrap-Up Newsletter",
-    viewMode: "slideshow",
-  },
-  {
-    id: "pub-apr-21",
-    title: "Apr 21–25 Weekly Update",
-    weekRange: "Apr 21 – Apr 25, 2026",
-    status: "published",
-    publishedAt: "Apr 25, 2026",
-    author: "Ms. Chen",
-    sections: buildPlaceholderSections("apr21"),
-    newsletterTitle: "Apr 21–25 Weekly Update",
-    viewMode: "traditional",
-  },
-];
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+function dbToNewsletter(db: DBNewsletter): Newsletter {
+  return {
+    id: db.id,
+    title: db.title,
+    weekRange: db.week_range,
+    status: db.status,
+    publishedAt: db.published_at,
+    newsletterTitle: db.title,
+    viewMode: db.view_mode,
+    sections: db.sections.map((s) => ({
+      id: s.id,
+      label: s.label,
+      body: s.body,
+      images: [],
+      visible: s.visible,
+      isClassUpdates: s.is_class_updates,
+      teacherUpdates: s.teacher_updates.map((tu) => ({
+        teacherId: tu.teacher_id,
+        body: tu.body,
+      })),
+    })),
+  };
+}
 
 function getInitials(name: string | null): string {
   if (!name) return "?";
@@ -221,8 +169,6 @@ interface EditorTabProps {
   viewMode: "traditional" | "slideshow";
   setViewMode: (v: "traditional" | "slideshow") => void;
   recordChange: (change: PendingChange) => void;
-  restoredAt: string | null;
-  dismissRestore: () => void;
   isReadOnly: boolean;
   selectedWeekRange: string;
 }
@@ -238,8 +184,6 @@ function EditorTab({
   viewMode,
   setViewMode,
   recordChange,
-  restoredAt,
-  dismissRestore,
   isReadOnly,
   selectedWeekRange,
 }: EditorTabProps) {
@@ -342,16 +286,6 @@ function EditorTab({
           <p className="text-sm font-semibold text-gray-800 font-body">{selectedWeekRange}</p>
         </div>
 
-        {/* Restore banner */}
-        {restoredAt && !isReadOnly && (
-          <div className="mx-3 mb-2 px-3 py-2 bg-[#4a7c59]/8 border border-[#4a7c59]/20 rounded-lg flex items-center gap-2">
-            <p className="text-xs text-[#4a7c59] font-body flex-1">Draft restored from {restoredAt}</p>
-            <button onClick={dismissRestore} className="text-[#4a7c59] hover:text-[#3d6b4a]">
-              <X className="w-3 h-3" />
-            </button>
-          </div>
-        )}
-
         <div className="px-3 pb-2 flex-1 overflow-y-auto">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-1 mb-1.5">Sections</p>
           <ul className="space-y-0.5">
@@ -375,7 +309,6 @@ function EditorTab({
                   <span className={`truncate flex-1 ${!s.visible && activeSectionId !== s.id ? "line-through opacity-60" : ""}`}>
                     {s.label || "Untitled"}
                   </span>
-                  {/* Eye toggle — hidden in read-only mode */}
                   {!isReadOnly && (
                     <span
                       onClick={(e) => toggleVisibility(s, e)}
@@ -416,7 +349,6 @@ function EditorTab({
 
       {/* Center editor */}
       <div className="flex-1 flex flex-col overflow-y-auto px-8 py-6">
-        {/* Read-only banner */}
         {isReadOnly && (
           <div className="mb-5 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl flex items-center gap-2.5 text-sm font-body text-gray-500">
             <Lock className="w-4 h-4 flex-shrink-0 text-gray-400" />
@@ -425,7 +357,6 @@ function EditorTab({
         )}
 
         {activeSection?.isClassUpdates ? (
-          /* ── Class Updates: per-teacher cards ── */
           <div className="space-y-4">
             <div className="flex items-center gap-3 mb-2">
               <h2 className="text-2xl font-semibold font-heading text-gray-900">Class Updates</h2>
@@ -464,7 +395,6 @@ function EditorTab({
               );
             })}
 
-            {/* Shared image upload for class updates */}
             {!isReadOnly && (
               <div className="mt-2">
                 <div className="flex items-center gap-3 mb-3">
@@ -506,9 +436,7 @@ function EditorTab({
             )}
           </div>
         ) : (
-          /* ── Regular section editor ── */
           <>
-            {/* Toolbar — hidden in read-only mode */}
             {!isReadOnly && (
               <div className="flex items-center gap-1 mb-5 p-1.5 bg-gray-50 border border-gray-100 rounded-xl w-fit">
                 <button title="Bold" onClick={() => wrapSelection("**")} className="p-2 text-gray-500 hover:text-[#4a7c59] hover:bg-white rounded-lg transition-colors">
@@ -648,13 +576,6 @@ function EditorTab({
           </div>
         </div>
 
-        {!isReadOnly && (
-          <div className="flex items-center gap-2 text-xs font-body text-gray-400">
-            <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-            Auto-saved just now
-          </div>
-        )}
-
         <div>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Parent View</p>
           <div className={`flex rounded-xl overflow-hidden border border-gray-200 text-sm font-body ${isReadOnly ? "opacity-60 pointer-events-none" : ""}`}>
@@ -685,7 +606,7 @@ function ChangeLogTab({ changeLog }: { changeLog: ChangeEntry[] }) {
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 15000);
     return () => clearInterval(id);
-  }, []);
+  }, [tick]);
 
   return (
     <div className="flex-1 overflow-y-auto px-8 py-6">
@@ -742,13 +663,29 @@ function ChangeLogTab({ changeLog }: { changeLog: ChangeEntry[] }) {
 
 interface PublishTabProps {
   sections: SectionData[];
+  newsletterId: string;
+  onPublished: () => void;
+  openPreview: () => void;
 }
 
-function PublishTab({ sections }: PublishTabProps) {
+function PublishTab({ sections, newsletterId, onPublished, openPreview }: PublishTabProps) {
   const [recipients, setRecipients] = useState<"all" | "program">("all");
-  const [schedule, setSchedule] = useState<"now" | "later">("now");
+  const [publishing, setPublishing] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
 
   const visibleSections = sections.filter((s) => s.visible);
+
+  async function handlePublish() {
+    setPublishing(true);
+    setPublishError(null);
+    const result = await publishNewsletter(newsletterId);
+    setPublishing(false);
+    if (result.error) {
+      setPublishError(result.error);
+    } else {
+      onPublished();
+    }
+  }
 
   return (
     <div className="flex-1 overflow-y-auto px-8 py-8">
@@ -756,6 +693,12 @@ function PublishTab({ sections }: PublishTabProps) {
         {visibleSections.length < sections.length && (
           <div className="px-4 py-3 bg-amber-50 border border-amber-100 rounded-xl text-sm font-body text-amber-700">
             {sections.length - visibleSections.length} section{sections.length - visibleSections.length > 1 ? "s are" : " is"} hidden and won&apos;t appear in the published newsletter.
+          </div>
+        )}
+
+        {publishError && (
+          <div className="px-4 py-3 bg-red-50 border border-red-100 rounded-xl text-sm font-body text-red-700">
+            {publishError}
           </div>
         )}
 
@@ -781,36 +724,27 @@ function PublishTab({ sections }: PublishTabProps) {
           </div>
         </div>
 
-        <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Send</p>
-          <div className="flex rounded-xl overflow-hidden border border-gray-200 text-sm font-body">
-            <button
-              onClick={() => setSchedule("now")}
-              className={`flex-1 py-2 transition-colors ${schedule === "now" ? "bg-[#4a7c59] text-white font-semibold" : "bg-white text-gray-500 hover:bg-gray-50"}`}
-            >
-              Now
-            </button>
-            <button
-              onClick={() => setSchedule("later")}
-              className={`flex-1 py-2 transition-colors ${schedule === "later" ? "bg-[#4a7c59] text-white font-semibold" : "bg-white text-gray-500 hover:bg-gray-50"}`}
-            >
-              Schedule
-            </button>
-          </div>
-          {schedule === "later" && (
-            <div className="mt-3 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-sm text-gray-400 font-body">
-              Date &amp; time picker — coming soon
-            </div>
-          )}
-        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={openPreview}
+            className="flex items-center gap-1.5 px-4 py-3 text-sm font-body font-semibold rounded-xl border border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800 transition-colors"
+          >
+            <ExternalLink className="w-4 h-4" />
+            Preview
+          </button>
 
-        <button
-          disabled
-          className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-[#4a7c59] text-white text-sm font-semibold font-body rounded-xl opacity-50 cursor-not-allowed"
-        >
-          <Send className="w-4 h-4" />
-          Publish Newsletter
-        </button>
+          <button
+            onClick={handlePublish}
+            disabled={publishing}
+            className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-[#4a7c59] text-white text-sm font-semibold font-body rounded-xl hover:bg-[#3d6b4a] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {publishing ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> Publishing…</>
+            ) : (
+              <><Send className="w-4 h-4" /> Publish Newsletter</>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -819,19 +753,14 @@ function PublishTab({ sections }: PublishTabProps) {
 // ── Newsletter Sidebar ────────────────────────────────────────────────────────
 
 interface NewsletterSidebarProps {
+  newsletters: Newsletter[];
   selectedId: string;
   onSelect: (id: string) => void;
+  onNew: () => Promise<void>;
+  isCreating: boolean;
 }
 
 function StatusBadge({ status }: { status: NewsletterStatus }) {
-  if (status === "ongoing") {
-    return (
-      <span className="flex items-center gap-1 text-xs font-semibold font-body text-amber-600">
-        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
-        Ongoing
-      </span>
-    );
-  }
   if (status === "draft") {
     return (
       <span className="flex items-center gap-1 text-xs font-semibold font-body text-gray-400">
@@ -848,10 +777,9 @@ function StatusBadge({ status }: { status: NewsletterStatus }) {
   );
 }
 
-function NewsletterSidebar({ selectedId, onSelect }: NewsletterSidebarProps) {
-  const ongoing = STATIC_NEWSLETTERS.filter((n) => n.status === "ongoing");
-  const drafts = STATIC_NEWSLETTERS.filter((n) => n.status === "draft");
-  const published = STATIC_NEWSLETTERS.filter((n) => n.status === "published");
+function NewsletterSidebar({ newsletters, selectedId, onSelect, onNew, isCreating }: NewsletterSidebarProps) {
+  const drafts = newsletters.filter((n) => n.status === "draft");
+  const published = newsletters.filter((n) => n.status === "published");
 
   function SidebarItem({ newsletter }: { newsletter: Newsletter }) {
     const isSelected = newsletter.id === selectedId;
@@ -890,19 +818,98 @@ function NewsletterSidebar({ selectedId, onSelect }: NewsletterSidebarProps) {
       <div className="flex items-center justify-between px-4 pt-5 pb-3">
         <h2 className="text-sm font-semibold font-heading text-gray-800">Newsletters</h2>
         <button
-          className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold font-body text-[#4a7c59] border border-[#4a7c59]/30 bg-[#4a7c59]/5 rounded-lg hover:bg-[#4a7c59]/10 transition-colors"
-          title="New newsletter (coming soon)"
+          onClick={onNew}
+          disabled={isCreating}
+          className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold font-body text-[#4a7c59] border border-[#4a7c59]/30 bg-[#4a7c59]/5 rounded-lg hover:bg-[#4a7c59]/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Plus className="w-3.5 h-3.5" />
+          {isCreating ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <Plus className="w-3.5 h-3.5" />
+          )}
           New
         </button>
       </div>
+
       <div className="flex-1 overflow-y-auto px-2 pb-4">
-        <SidebarGroup label="Ongoing" items={ongoing} />
-        <SidebarGroup label="Drafts" items={drafts} />
-        <SidebarGroup label="Published" items={published} />
+        {newsletters.length === 0 ? (
+          <div className="px-3 py-8 text-center">
+            <p className="text-xs text-gray-400 font-body">No newsletters yet. Click New to create one.</p>
+          </div>
+        ) : (
+          <>
+            <SidebarGroup label="Drafts" items={drafts} />
+            <SidebarGroup label="Published" items={published} />
+          </>
+        )}
       </div>
     </aside>
+  );
+}
+
+// ── New Newsletter Modal ───────────────────────────────────────────────────────
+
+interface NewNewsletterModalProps {
+  onConfirm: (title: string, weekRange: string) => Promise<void>;
+  onCancel: () => void;
+  isCreating: boolean;
+}
+
+function NewNewsletterModal({ onConfirm, onCancel, isCreating }: NewNewsletterModalProps) {
+  const [title, setTitle] = useState("");
+  const [weekRange, setWeekRange] = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!title.trim() || !weekRange.trim()) return;
+    await onConfirm(title.trim(), weekRange.trim());
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
+        <h2 className="text-lg font-semibold font-heading text-gray-900 mb-4">New Newsletter</h2>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div>
+            <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-1">Title</label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. May 26–30 Weekly Update"
+              className="w-full text-sm font-body text-gray-900 placeholder:text-gray-400 border border-gray-200 bg-gray-50 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#4a7c59]/30 focus:border-[#4a7c59]"
+              autoFocus
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-1">Week Range</label>
+            <input
+              type="text"
+              value={weekRange}
+              onChange={(e) => setWeekRange(e.target.value)}
+              placeholder="e.g. May 26 – May 30, 2026"
+              className="w-full text-sm font-body text-gray-900 placeholder:text-gray-400 border border-gray-200 bg-gray-50 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#4a7c59]/30 focus:border-[#4a7c59]"
+            />
+          </div>
+          <div className="flex gap-3 pt-1">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="flex-1 px-4 py-2.5 text-sm font-body font-semibold text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={!title.trim() || !weekRange.trim() || isCreating}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#4a7c59] text-white text-sm font-body font-semibold rounded-xl hover:bg-[#3d6b4a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isCreating ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating…</> : "Create"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }
 
@@ -922,103 +929,92 @@ const READONLY_TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
 interface NewsletterPageClientProps {
   teachers: Teacher[];
   currentUserId: string;
+  initialNewsletters: DBNewsletter[];
 }
 
-export default function NewsletterPageClient({ teachers, currentUserId }: NewsletterPageClientProps) {
+export default function NewsletterPageClient({ teachers, currentUserId, initialNewsletters }: NewsletterPageClientProps) {
+  const [newsletters, setNewsletters] = useState<Newsletter[]>(() =>
+    initialNewsletters.map(dbToNewsletter)
+  );
   const [activeTab, setActiveTab] = useState<Tab>("editor");
   const [savedStatus, setSavedStatus] = useState<"idle" | "saving" | "saved">("idle");
-  const [restoredAt, setRestoredAt] = useState<string | null>(null);
   const [changeLog, setChangeLog] = useState<ChangeEntry[]>([]);
-  const [selectedNewsletterId, setSelectedNewsletterId] = useState("ongoing-may-19");
   const [isReadOnly, setIsReadOnly] = useState(false);
+  const [showNewModal, setShowNewModal] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+
+  const firstDraft = newsletters.find((n) => n.status === "draft");
+  const defaultSelected = firstDraft ?? newsletters[0];
+
+  const [selectedNewsletterId, setSelectedNewsletterId] = useState<string>(defaultSelected?.id ?? "");
 
   const currentTeacher = teachers.find((t) => t.id === currentUserId) ?? teachers[0];
   const pendingChanges = useRef<PendingChange[]>([]);
 
-  function buildInitialSections(teacherList: Teacher[]): SectionData[] {
-    return [
-      { id: "welcome",   label: "Welcome Message",  body: "", images: [], visible: true },
-      {
-        id: "class", label: "Class Updates", body: "", images: [], visible: true,
-        isClassUpdates: true,
-        teacherUpdates: teacherList.map((t) => ({ teacherId: t.id, body: "" })),
-      },
-      { id: "events",    label: "Upcoming Events",  body: "", images: [], visible: true },
-      { id: "reminders", label: "Parent Reminders", body: "", images: [], visible: true },
-      { id: "gallery",   label: "Photo Gallery",    body: "", images: [], visible: true },
-    ];
-  }
+  // Derive sections/title/viewMode from the selected newsletter
+  const selectedNewsletter = newsletters.find((n) => n.id === selectedNewsletterId);
 
-  const [sections, setSections] = useState<SectionData[]>(() => buildInitialSections(teachers));
-  const [newsletterTitle, setNewsletterTitle] = useState("May 19–23 Weekly Update");
-  const [viewMode, setViewMode] = useState<"traditional" | "slideshow">("traditional");
+  const [sections, setSections] = useState<SectionData[]>(selectedNewsletter?.sections ?? []);
+  const [newsletterTitle, setNewsletterTitle] = useState(selectedNewsletter?.newsletterTitle ?? "");
+  const [viewMode, setViewMode] = useState<"traditional" | "slideshow">(selectedNewsletter?.viewMode ?? "traditional");
 
-  const ongoingNewsletter = STATIC_NEWSLETTERS.find((n) => n.id === "ongoing-may-19")!;
-  const ongoingSectionsRef = useRef<SectionData[]>([]);
-  const ongoingTitleRef = useRef("May 19–23 Weekly Update");
-  const ongoingViewModeRef = useRef<"traditional" | "slideshow">("traditional");
+  // Sync sections/title/viewMode into the newsletters list when they change
+  const syncToList = useCallback(() => {
+    setNewsletters((prev) =>
+      prev.map((n) =>
+        n.id === selectedNewsletterId
+          ? { ...n, title: newsletterTitle, newsletterTitle, viewMode, sections }
+          : n
+      )
+    );
+  }, [selectedNewsletterId, newsletterTitle, viewMode, sections]);
 
-  // Load draft from localStorage on mount
+  // Load initial change log from DB data
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
-      if (raw) {
-        const draft = JSON.parse(raw);
-        if (draft.sections) {
-          setSections(draft.sections);
-          ongoingSectionsRef.current = draft.sections;
-        }
-        if (draft.newsletterTitle) {
-          setNewsletterTitle(draft.newsletterTitle);
-          ongoingTitleRef.current = draft.newsletterTitle;
-        }
-        if (draft.viewMode) {
-          setViewMode(draft.viewMode);
-          ongoingViewModeRef.current = draft.viewMode;
-        }
-        if (draft.savedAt) {
-          const d = new Date(draft.savedAt);
-          setRestoredAt(d.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }));
-        }
-      }
-    } catch {
-      // ignore malformed draft
+    const nl = initialNewsletters.find((n) => n.id === selectedNewsletterId);
+    if (nl) {
+      setChangeLog(
+        nl.change_log.map((entry) => ({
+          id: entry.id,
+          savedAt: new Date(entry.created_at),
+          teacherName: entry.teacher_name ?? "Unknown",
+          teacherAvatar: entry.teacher_avatar,
+          summary: entry.summary,
+        }))
+      );
     }
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedNewsletterId]);
 
   function selectNewsletter(id: string) {
-    const newsletter = STATIC_NEWSLETTERS.find((n) => n.id === id);
-    if (!newsletter) return;
-
-    // Stash current ongoing state before switching away
-    if (selectedNewsletterId === "ongoing-may-19") {
-      ongoingSectionsRef.current = sections;
-      ongoingTitleRef.current = newsletterTitle;
-      ongoingViewModeRef.current = viewMode;
-    }
+    syncToList();
+    const nl = newsletters.find((n) => n.id === id);
+    if (!nl) return;
 
     setSelectedNewsletterId(id);
+    setSections(nl.sections);
+    setNewsletterTitle(nl.newsletterTitle);
+    setViewMode(nl.viewMode);
+    setIsReadOnly(nl.status === "published");
+    setActiveTab("editor");
+    pendingChanges.current = [];
 
-    if (newsletter.status === "published") {
-      setSections(newsletter.sections);
-      setNewsletterTitle(newsletter.newsletterTitle);
-      setViewMode(newsletter.viewMode);
-      setIsReadOnly(true);
-      setActiveTab("editor");
-    } else if (id === "ongoing-may-19") {
-      setSections(ongoingSectionsRef.current.length > 0 ? ongoingSectionsRef.current : buildInitialSections(teachers));
-      setNewsletterTitle(ongoingTitleRef.current);
-      setViewMode(ongoingViewModeRef.current);
-      setIsReadOnly(false);
+    // Load change log for the newly selected newsletter
+    const dbNl = initialNewsletters.find((n) => n.id === id);
+    if (dbNl) {
+      setChangeLog(
+        dbNl.change_log.map((entry) => ({
+          id: entry.id,
+          savedAt: new Date(entry.created_at),
+          teacherName: entry.teacher_name ?? "Unknown",
+          teacherAvatar: entry.teacher_avatar,
+          summary: entry.summary,
+        }))
+      );
     } else {
-      setSections(newsletter.sections.length > 0 ? newsletter.sections : buildInitialSections(teachers));
-      setNewsletterTitle(newsletter.newsletterTitle);
-      setViewMode(newsletter.viewMode);
-      setIsReadOnly(false);
+      setChangeLog([]);
     }
   }
-
-  const selectedNewsletter = STATIC_NEWSLETTERS.find((n) => n.id === selectedNewsletterId) ?? ongoingNewsletter;
 
   const recordChange = useCallback((change: PendingChange) => {
     pendingChanges.current.push(change);
@@ -1035,51 +1031,54 @@ export default function NewsletterPageClient({ teachers, currentUserId }: Newsle
     ]);
   }, []);
 
-  function saveDraft() {
-    if (isReadOnly) return;
+  async function handleSaveDraft() {
+    if (isReadOnly || !selectedNewsletterId) return;
     setSavedStatus("saving");
-    const draft = {
-      sections,
-      newsletterTitle,
-      viewMode,
-      savedAt: new Date().toISOString(),
-    };
-    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
 
-    // Flush pending changes into the change log
     const pending = pendingChanges.current;
-    if (pending.length > 0) {
-      const summary = buildSummary(pending);
-      if (summary.length > 0) {
-        const entry: ChangeEntry = {
-          id: crypto.randomUUID(),
-          savedAt: new Date(),
-          teacherName: currentTeacher?.full_name ?? "You",
-          teacherAvatar: currentTeacher?.profile_image_url ?? null,
-          summary,
-        };
-        setChangeLog((prev) => [...prev, entry]);
-      }
-      pendingChanges.current = [];
+    const summary = pending.length > 0 ? buildSummary(pending) : [];
+
+    const payload = {
+      newsletterId: selectedNewsletterId,
+      title: newsletterTitle,
+      viewMode,
+      sections: sections.map((s, i) => ({
+        id: s.id,
+        label: s.label,
+        body: s.body,
+        visible: s.visible,
+        sort_order: i,
+        is_class_updates: s.isClassUpdates ?? false,
+        teacher_updates: (s.teacherUpdates ?? []).map((tu) => ({
+          teacher_id: tu.teacherId,
+          body: tu.body,
+        })),
+      })),
+      summary,
+    };
+
+    const result = await saveDraft(payload);
+
+    if (result.error) {
+      console.error("saveDraft error:", result.error);
+      setSavedStatus("idle");
+      return;
     }
 
+    if (summary.length > 0) {
+      const entry: ChangeEntry = {
+        id: crypto.randomUUID(),
+        savedAt: new Date(),
+        teacherName: currentTeacher?.full_name ?? "You",
+        teacherAvatar: currentTeacher?.profile_image_url ?? null,
+        summary,
+      };
+      setChangeLog((prev) => [...prev, entry]);
+    }
+
+    pendingChanges.current = [];
     setSavedStatus("saved");
     setTimeout(() => setSavedStatus("idle"), 1800);
-  }
-
-  // TODO (real data): replace sessionStorage + hardcoded path with
-  // window.open(`/teacher/dashboard/newsletter/${selectedNewsletterId}/preview`, "_blank")
-  // and move preview/page.tsx → [id]/preview/page.tsx to fetch server-side by ID.
-  function openPreview() {
-    const visibleSections = sections.filter((s) => s.visible);
-    const payload = {
-      title: newsletterTitle,
-      weekLabel: selectedNewsletter.weekRange,
-      viewMode,
-      sections: visibleSections,
-    };
-    sessionStorage.setItem("newsletter-preview", JSON.stringify(payload));
-    window.open("/teacher/dashboard/newsletter/preview", "_blank");
   }
 
   function buildSummary(changes: PendingChange[]): string[] {
@@ -1107,6 +1106,63 @@ export default function NewsletterPageClient({ teachers, currentUserId }: Newsle
     return lines;
   }
 
+  function openPreview() {
+    const visibleSections = sections.filter((s) => s.visible);
+    const payload = {
+      title: newsletterTitle,
+      weekLabel: selectedNewsletter?.weekRange ?? "",
+      viewMode,
+      sections: visibleSections,
+    };
+    sessionStorage.setItem("newsletter-preview", JSON.stringify(payload));
+    window.open("/teacher/dashboard/newsletter/preview", "_blank");
+  }
+
+  async function handleNew() {
+    setShowNewModal(true);
+  }
+
+  async function handleCreateNewsletter(title: string, weekRange: string) {
+    setIsCreating(true);
+    const result = await createNewsletter({
+      title,
+      weekRange,
+      teacherIds: teachers.map((t) => t.id),
+    });
+    setIsCreating(false);
+
+    if (result.error || !result.data) {
+      console.error("createNewsletter error:", result.error);
+      return;
+    }
+
+    const newNl = dbToNewsletter(result.data);
+    setNewsletters((prev) => [newNl, ...prev]);
+    setShowNewModal(false);
+
+    // Select the new newsletter
+    setSelectedNewsletterId(newNl.id);
+    setSections(newNl.sections);
+    setNewsletterTitle(newNl.newsletterTitle);
+    setViewMode(newNl.viewMode);
+    setIsReadOnly(false);
+    setActiveTab("editor");
+    setChangeLog([]);
+    pendingChanges.current = [];
+  }
+
+  function handlePublished() {
+    setIsReadOnly(true);
+    setActiveTab("editor");
+    setNewsletters((prev) =>
+      prev.map((n) =>
+        n.id === selectedNewsletterId
+          ? { ...n, status: "published" as NewsletterStatus, publishedAt: new Date().toISOString() }
+          : n
+      )
+    );
+  }
+
   // Cleanup object URLs on unmount
   useEffect(() => {
     return () => {
@@ -1117,10 +1173,53 @@ export default function NewsletterPageClient({ teachers, currentUserId }: Newsle
 
   const TABS = isReadOnly ? READONLY_TABS : EDITABLE_TABS;
 
+  if (!selectedNewsletter && newsletters.length === 0) {
+    return (
+      <div className="flex flex-1 overflow-hidden">
+        <NewsletterSidebar
+          newsletters={newsletters}
+          selectedId=""
+          onSelect={() => {}}
+          onNew={handleNew}
+          isCreating={isCreating}
+        />
+        <div className="flex-1 flex items-center justify-center text-center px-8">
+          <div>
+            <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
+              <Newspaper className="w-7 h-7 text-gray-400" />
+            </div>
+            <p className="text-base font-semibold font-heading text-gray-700 mb-1">No newsletters yet</p>
+            <p className="text-sm text-gray-400 font-body mb-4">Click New to create your first newsletter.</p>
+            <button
+              onClick={handleNew}
+              disabled={isCreating}
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#4a7c59] text-white text-sm font-semibold font-body rounded-xl hover:bg-[#3d6b4a] transition-colors mx-auto disabled:opacity-50"
+            >
+              <Plus className="w-4 h-4" />
+              New Newsletter
+            </button>
+          </div>
+        </div>
+        {showNewModal && (
+          <NewNewsletterModal
+            onConfirm={handleCreateNewsletter}
+            onCancel={() => setShowNewModal(false)}
+            isCreating={isCreating}
+          />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-1 overflow-hidden">
-      {/* Full-height sidebar */}
-      <NewsletterSidebar selectedId={selectedNewsletterId} onSelect={selectNewsletter} />
+      <NewsletterSidebar
+        newsletters={newsletters}
+        selectedId={selectedNewsletterId}
+        onSelect={selectNewsletter}
+        onNew={handleNew}
+        isCreating={isCreating}
+      />
 
       {/* Right column: header + tab content */}
       <div className="flex flex-col flex-1 overflow-hidden">
@@ -1131,32 +1230,27 @@ export default function NewsletterPageClient({ teachers, currentUserId }: Newsle
               <Newspaper className="w-4 h-4 text-[#4a7c59]" />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-semibold font-heading text-gray-900 leading-tight truncate">{selectedNewsletter.title}</h1>
-              <p className="text-xs text-gray-400 font-body">{selectedNewsletter.weekRange}</p>
+              <h1 className="text-xl font-semibold font-heading text-gray-900 leading-tight truncate">{selectedNewsletter?.title}</h1>
+              <p className="text-xs text-gray-400 font-body">{selectedNewsletter?.weekRange}</p>
             </div>
 
-            {/* Header actions */}
             {!isReadOnly && (
               <div className="flex items-center gap-2">
-                {activeTab === "publish" && (
-                  <button
-                    onClick={openPreview}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-body font-semibold rounded-lg border border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800 transition-colors"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    Preview
-                  </button>
-                )}
                 <button
-                  onClick={saveDraft}
+                  onClick={handleSaveDraft}
                   className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-body font-semibold rounded-lg border transition-colors ${
                     savedStatus === "saved"
                       ? "bg-green-50 border-green-200 text-green-700"
+                      : savedStatus === "saving"
+                      ? "bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed"
                       : "bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:text-gray-800"
                   }`}
+                  disabled={savedStatus === "saving"}
                 >
                   {savedStatus === "saved" ? (
                     <><CheckCircle2 className="w-4 h-4" /> Saved</>
+                  ) : savedStatus === "saving" ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
                   ) : (
                     <><Save className="w-4 h-4" /> Save Draft</>
                   )}
@@ -1202,19 +1296,29 @@ export default function NewsletterPageClient({ teachers, currentUserId }: Newsle
               viewMode={viewMode}
               setViewMode={setViewMode}
               recordChange={recordChange}
-              restoredAt={restoredAt}
-              dismissRestore={() => setRestoredAt(null)}
               isReadOnly={isReadOnly}
-              selectedWeekRange={selectedNewsletter.weekRange}
+              selectedWeekRange={selectedNewsletter?.weekRange ?? ""}
             />
           )}
           {activeTab === "changelog" && <ChangeLogTab changeLog={changeLog} />}
-          {activeTab === "publish" && !isReadOnly && (
-            <PublishTab sections={sections} />
+          {activeTab === "publish" && !isReadOnly && selectedNewsletterId && (
+            <PublishTab
+              sections={sections}
+              newsletterId={selectedNewsletterId}
+              onPublished={handlePublished}
+              openPreview={openPreview}
+            />
           )}
         </div>
       </div>
+
+      {showNewModal && (
+        <NewNewsletterModal
+          onConfirm={handleCreateNewsletter}
+          onCancel={() => setShowNewModal(false)}
+          isCreating={isCreating}
+        />
+      )}
     </div>
   );
 }
-
