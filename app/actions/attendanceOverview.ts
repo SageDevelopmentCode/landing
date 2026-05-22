@@ -184,7 +184,8 @@ export async function getWeekHeadcounts(weekMonday: string): Promise<DayHeadcoun
   }
 
   return dates.map((date) => {
-    const dow = new Date(date).getDay() // 1=Mon … 5=Fri
+    const [dy, dm, dd] = date.split('-').map(Number)
+    const dow = new Date(dy, dm - 1, dd).getDay() // 1=Mon … 5=Fri
 
     // Aftercare: Mon–Thu
     let aftercareStudents: EnrolledStudentPreview[] = []
