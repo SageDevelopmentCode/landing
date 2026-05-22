@@ -12,6 +12,13 @@ export interface DBTeacherUpdate {
   updated_at: string
 }
 
+export interface DBSectionImage {
+  id: string
+  storage_path: string
+  signed_url: string | null
+  sort_order: number
+}
+
 export interface DBSection {
   id: string
   newsletter_id: string
@@ -23,6 +30,7 @@ export interface DBSection {
   created_at: string
   updated_at: string
   teacher_updates: DBTeacherUpdate[]
+  images: DBSectionImage[]
 }
 
 export interface DBChangeEntry {
@@ -61,7 +69,8 @@ export async function getNewsletters(): Promise<DBNewsletter[]> {
       id, title, week_range, status, view_mode, created_by, published_at, created_at, updated_at,
       sections:sections(
         id, newsletter_id, label, body, visible, sort_order, is_class_updates, created_at, updated_at,
-        teacher_updates:teacher_updates(id, section_id, teacher_id, body, updated_at)
+        teacher_updates:teacher_updates(id, section_id, teacher_id, body, updated_at),
+        section_images:section_images(id, storage_path, sort_order)
       ),
       change_log:change_log(id, newsletter_id, teacher_id, summary, created_at)
     `)
@@ -93,6 +102,26 @@ export async function getNewsletters(): Promise<DBNewsletter[]> {
     nameMap = new Map((users ?? []).map((u) => [u.id, { full_name: u.full_name, profile_image_url: u.profile_image_url }]))
   }
 
+  // Collect all image storage paths and generate signed URLs in one batch
+  const allImagePaths: string[] = []
+  for (const row of rows) {
+    for (const s of (row.sections as any[]) ?? []) {
+      for (const img of (s.section_images as any[]) ?? []) {
+        if (!img.is_deleted) allImagePaths.push(img.storage_path)
+      }
+    }
+  }
+
+  const signedUrlMap = new Map<string, string>()
+  if (allImagePaths.length > 0) {
+    const { data: signedUrls } = await adminClient.storage
+      .from('newsletter-images')
+      .createSignedUrls(allImagePaths, 3600)
+    for (const entry of signedUrls ?? []) {
+      if (entry.signedUrl && entry.path) signedUrlMap.set(entry.path, entry.signedUrl)
+    }
+  }
+
   return rows.map((row) => ({
     ...row,
     status: row.status as 'draft' | 'published',
@@ -102,6 +131,15 @@ export async function getNewsletters(): Promise<DBNewsletter[]> {
       .map((s) => ({
         ...s,
         teacher_updates: (s.teacher_updates as DBTeacherUpdate[]) ?? [],
+        images: ((s.section_images as any[]) ?? [])
+          .filter((img: any) => !img.is_deleted)
+          .sort((a: any, b: any) => a.sort_order - b.sort_order)
+          .map((img: any) => ({
+            id: img.id,
+            storage_path: img.storage_path,
+            signed_url: signedUrlMap.get(img.storage_path) ?? null,
+            sort_order: img.sort_order,
+          })) as DBSectionImage[],
       })),
     change_log: ((row.change_log as any[]) ?? [])
       .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
@@ -146,11 +184,11 @@ export async function createNewsletter(
   }
 
   const defaultSections = [
-    { label: 'Welcome Message',  is_class_updates: false, sort_order: 0 },
-    { label: 'Class Updates',    is_class_updates: true,  sort_order: 1 },
-    { label: 'Upcoming Events',  is_class_updates: false, sort_order: 2 },
-    { label: 'Parent Reminders', is_class_updates: false, sort_order: 3 },
-    { label: 'Photo Gallery',    is_class_updates: false, sort_order: 4 },
+    { label: 'Welcome Message',  body: '', is_class_updates: false, sort_order: 0 },
+    { label: 'Class Updates',    body: '', is_class_updates: true,  sort_order: 1 },
+    { label: 'Upcoming Events',  body: '', is_class_updates: false, sort_order: 2 },
+    { label: 'Parent Reminders', body: '', is_class_updates: false, sort_order: 3 },
+    { label: 'Photo Gallery',    body: '', is_class_updates: false, sort_order: 4 },
   ]
 
   const { data: sections, error: secError } = await adminClient
@@ -160,7 +198,7 @@ export async function createNewsletter(
       defaultSections.map((s) => ({
         newsletter_id: newsletter.id,
         label: s.label,
-        body: '',
+        body: s.body,
         visible: true,
         sort_order: s.sort_order,
         is_class_updates: s.is_class_updates,
@@ -317,6 +355,89 @@ export async function publishNewsletter(
     console.error('publishNewsletter error:', error)
     return { error: error.message }
   }
+
+  return { success: true }
+}
+
+// ─── Section Images ────────────────────────────────────────────────────────────
+
+export async function uploadSectionImage(
+  formData: FormData
+): Promise<{ error?: string; data?: { id: string; storage_path: string; signed_url: string } }> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const sectionId = formData.get('sectionId') as string
+  const file = formData.get('file') as File
+  if (!sectionId || !file) return { error: 'Missing sectionId or file' }
+
+  const adminClient = createAdminClient()
+
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+  const storagePath = `${sectionId}/${Date.now()}-${safeName}`
+
+  const { error: uploadError } = await adminClient.storage
+    .from('newsletter-images')
+    .upload(storagePath, file, { contentType: file.type, upsert: false })
+
+  if (uploadError) {
+    console.error('uploadSectionImage storage error:', uploadError)
+    return { error: uploadError.message }
+  }
+
+  const { data: row, error: insertError } = await adminClient
+    .schema('newsletters')
+    .from('section_images')
+    .insert({ section_id: sectionId, storage_path: storagePath, uploaded_by: user.id })
+    .select('id, storage_path')
+    .single()
+
+  if (insertError || !row) {
+    console.error('uploadSectionImage insert error:', insertError)
+    return { error: insertError?.message ?? 'Failed to save image record' }
+  }
+
+  const { data: signed } = await adminClient.storage
+    .from('newsletter-images')
+    .createSignedUrl(storagePath, 3600)
+
+  return { data: { id: row.id, storage_path: row.storage_path, signed_url: signed?.signedUrl ?? '' } }
+}
+
+export async function deleteSectionImage(
+  imageId: string
+): Promise<{ error?: string; success?: boolean }> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const adminClient = createAdminClient()
+
+  const { data: row, error: fetchError } = await adminClient
+    .schema('newsletters')
+    .from('section_images')
+    .select('storage_path')
+    .eq('id', imageId)
+    .single()
+
+  if (fetchError || !row) {
+    console.error('deleteSectionImage fetch error:', fetchError)
+    return { error: fetchError?.message ?? 'Image not found' }
+  }
+
+  const { error: updateError } = await adminClient
+    .schema('newsletters')
+    .from('section_images')
+    .update({ is_deleted: true })
+    .eq('id', imageId)
+
+  if (updateError) {
+    console.error('deleteSectionImage soft-delete error:', updateError)
+    return { error: updateError.message }
+  }
+
+  await adminClient.storage.from('newsletter-images').remove([row.storage_path])
 
   return { success: true }
 }

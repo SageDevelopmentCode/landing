@@ -27,6 +27,8 @@ import {
   createNewsletter,
   saveDraft,
   publishNewsletter,
+  uploadSectionImage,
+  deleteSectionImage,
   type DBNewsletter,
 } from "@/app/actions/newsletter";
 
@@ -42,9 +44,12 @@ export interface Teacher {
 }
 
 interface LocalImage {
-  id: string;
-  url: string;
+  id: string;        // local React key (crypto.randomUUID or dbId)
+  dbId?: string;     // newsletters.section_images.id — set after upload completes
+  storagePath?: string;
+  url: string;       // signed URL (from DB) or blob URL (during upload)
   name: string;
+  uploading?: boolean;
 }
 
 interface TeacherUpdate {
@@ -104,7 +109,13 @@ function dbToNewsletter(db: DBNewsletter): Newsletter {
       id: s.id,
       label: s.label,
       body: s.body,
-      images: [],
+      images: s.images.map((img) => ({
+        id: img.id,
+        dbId: img.id,
+        storagePath: img.storage_path,
+        url: img.signed_url ?? '',
+        name: img.storage_path.split('/').pop() ?? '',
+      })),
       visible: s.visible,
       isClassUpdates: s.is_class_updates,
       teacherUpdates: s.teacher_updates.map((tu) => ({
@@ -163,6 +174,7 @@ interface EditorTabProps {
   teachers: Teacher[];
   currentUserId: string;
   patchSection: (id: string, patch: Partial<SectionData>) => void;
+  replaceSectionImage: (sectionId: string, placeholderId: string, replacement: LocalImage | null) => void;
   addSection: () => void;
   newsletterTitle: string;
   setNewsletterTitle: (v: string) => void;
@@ -178,6 +190,7 @@ function EditorTab({
   teachers,
   currentUserId,
   patchSection,
+  replaceSectionImage,
   addSection,
   newsletterTitle,
   setNewsletterTitle,
@@ -237,25 +250,64 @@ function EditorTab({
     recordChange({ type: "body", sectionLabel: activeSection?.label || "section" });
   }
 
-  function handleImageFiles(files: FileList | null) {
+  async function handleImageFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
-    const newImages: LocalImage[] = Array.from(files).map((f) => ({
+    const { compressImage } = await import("@/app/utils/compressImage");
+    const compressed = await Promise.all(Array.from(files).map((f) => compressImage(f)));
+
+    // Add optimistic placeholders immediately so the user sees something
+    const placeholders: LocalImage[] = compressed.map((f) => ({
       id: crypto.randomUUID(),
       url: URL.createObjectURL(f),
       name: f.name,
+      uploading: true,
     }));
     patchSection(activeSectionId, {
-      images: [...(activeSection?.images ?? []), ...newImages],
+      images: [...(activeSection?.images ?? []), ...placeholders],
     });
-    recordChange({ type: "image_add", sectionLabel: activeSection?.label || "section", detail: String(newImages.length) });
+
+    // Upload each file and replace placeholder with persisted record
+    const sectionId = activeSectionId;
+    await Promise.all(
+      compressed.map(async (file, i) => {
+        const placeholder = placeholders[i];
+        const fd = new FormData();
+        fd.append("sectionId", sectionId);
+        fd.append("file", file);
+        const result = await uploadSectionImage(fd);
+        if (result.data) {
+          replaceSectionImage(sectionId, placeholder.id, {
+            id: result.data.id,
+            dbId: result.data.id,
+            storagePath: result.data.storage_path,
+            url: result.data.signed_url,
+            name: file.name,
+            uploading: false,
+          });
+          URL.revokeObjectURL(placeholder.url);
+        } else {
+          replaceSectionImage(sectionId, placeholder.id, null);
+          URL.revokeObjectURL(placeholder.url);
+          console.error("Image upload failed:", result.error);
+        }
+      })
+    );
+
+    recordChange({ type: "image_add", sectionLabel: activeSection?.label || "section", detail: String(compressed.length) });
   }
 
   function removeImage(imgId: string) {
     const img = activeSection?.images.find((i) => i.id === imgId);
-    if (img) URL.revokeObjectURL(img.url);
+    if (!img) return;
+    // Revoke blob URL if it's a local one (uploading state)
+    if (img.uploading) URL.revokeObjectURL(img.url);
     patchSection(activeSectionId, {
       images: (activeSection?.images ?? []).filter((i) => i.id !== imgId),
     });
+    // Delete from storage if already persisted
+    if (img.dbId) {
+      deleteSectionImage(img.dbId).catch((err) => console.error("deleteSectionImage error:", err));
+    }
     recordChange({ type: "image_remove", sectionLabel: activeSection?.label || "section" });
   }
 
@@ -420,10 +472,17 @@ function EditorTab({
                   <div className="flex flex-wrap gap-3">
                     {activeSection.images.map((img) => (
                       <div key={img.id} className="relative group">
-                        <img src={img.url} alt={img.name} className="w-20 h-20 object-cover rounded-xl border border-gray-100" />
-                        <button onClick={() => removeImage(img.id)} className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-gray-800 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500">
-                          <X className="w-3 h-3" />
-                        </button>
+                        <img src={img.url} alt={img.name} className={`w-20 h-20 object-cover rounded-xl border border-gray-100 ${img.uploading ? "opacity-50" : ""}`} />
+                        {img.uploading && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <Loader2 className="w-5 h-5 text-white animate-spin drop-shadow" />
+                          </div>
+                        )}
+                        {!img.uploading && (
+                          <button onClick={() => removeImage(img.id)} className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-gray-800 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500">
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
                       </div>
                     ))}
                     <button onClick={() => fileInputRef.current?.click()} className="w-20 h-20 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center gap-1 text-gray-400 hover:border-[#4a7c59]/40 hover:text-[#4a7c59] transition-colors">
@@ -514,10 +573,17 @@ function EditorTab({
                   <div className="flex flex-wrap gap-3">
                     {activeSection.images.map((img) => (
                       <div key={img.id} className="relative group">
-                        <img src={img.url} alt={img.name} className="w-20 h-20 object-cover rounded-xl border border-gray-100" />
-                        <button onClick={() => removeImage(img.id)} className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-gray-800 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500">
-                          <X className="w-3 h-3" />
-                        </button>
+                        <img src={img.url} alt={img.name} className={`w-20 h-20 object-cover rounded-xl border border-gray-100 ${img.uploading ? "opacity-50" : ""}`} />
+                        {img.uploading && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <Loader2 className="w-5 h-5 text-white animate-spin drop-shadow" />
+                          </div>
+                        )}
+                        {!img.uploading && (
+                          <button onClick={() => removeImage(img.id)} className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-gray-800 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500">
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
                       </div>
                     ))}
                     <button onClick={() => fileInputRef.current?.click()} className="w-20 h-20 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center gap-1 text-gray-400 hover:border-[#4a7c59]/40 hover:text-[#4a7c59] transition-colors">
@@ -1024,6 +1090,14 @@ export default function NewsletterPageClient({ teachers, currentUserId, initialN
     setSections((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)));
   }, []);
 
+  const replaceSectionImage = useCallback((sectionId: string, placeholderId: string, replacement: LocalImage | null) => {
+    setSections((prev) => prev.map((s) => {
+      if (s.id !== sectionId) return s;
+      const filtered = s.images.filter((img) => img.id !== placeholderId);
+      return { ...s, images: replacement ? [...filtered, replacement] : filtered };
+    }));
+  }, []);
+
   const addSection = useCallback(() => {
     setSections((prev) => [
       ...prev,
@@ -1290,6 +1364,7 @@ export default function NewsletterPageClient({ teachers, currentUserId, initialN
               teachers={teachers}
               currentUserId={currentUserId}
               patchSection={patchSection}
+              replaceSectionImage={replaceSectionImage}
               addSection={addSection}
               newsletterTitle={newsletterTitle}
               setNewsletterTitle={setNewsletterTitle}
