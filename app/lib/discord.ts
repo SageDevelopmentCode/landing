@@ -1460,3 +1460,31 @@ export function createCustomTuitionEmbed(data: {
     timestamp: new Date().toISOString(),
   };
 }
+
+/**
+ * Creates a Discord embed for care log entries (sunscreen / bug spray)
+ */
+export function createCareLogEmbed(data: {
+  teacherName: string
+  studentNames: string[]
+  activity: 'sunscreen' | 'bug_spray'
+  date: string
+}): DiscordEmbed {
+  const activityLabel = data.activity === 'sunscreen' ? '🧴 Sunscreen' : '🦟 Bug Spray'
+  const studentList = data.studentNames.join(', ')
+  return {
+    title: `${activityLabel} Applied`,
+    color: 0x4a7c59,
+    fields: [
+      { name: 'Teacher', value: data.teacherName, inline: true },
+      { name: 'Activity', value: activityLabel, inline: true },
+      { name: 'Date', value: data.date, inline: true },
+      {
+        name: `Students (${data.studentNames.length})`,
+        value: studentList.length > 1024 ? studentList.substring(0, 1021) + '...' : studentList,
+        inline: false,
+      },
+    ],
+    timestamp: new Date().toISOString(),
+  }
+}

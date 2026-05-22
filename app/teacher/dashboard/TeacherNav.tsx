@@ -16,6 +16,7 @@ import {
   ClipboardList,
   Package,
   Newspaper,
+  Droplets,
 } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 
@@ -30,6 +31,7 @@ const primaryNavItems: { label: string; icon: LucideIcon; href: string }[] = [
 ];
 
 const moreItems: { label: string; icon: LucideIcon; href: string }[] = [
+  { label: "Care Log",            icon: Droplets,   href: "/teacher/dashboard/care-log" },
   { label: "Newsletter",          icon: Newspaper,  href: "/teacher/dashboard/newsletter" },
   { label: "Payroll",             icon: CreditCard, href: "/teacher/dashboard/payroll" },
   { label: "Inventory",           icon: Package,    href: "/teacher/dashboard/inventory" },
