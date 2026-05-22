@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { DetailSidebar } from "@/app/admin/components/DetailSidebar";
+import ImageLightbox from "@/app/components/ImageLightbox";
 import {
   addComment,
   deleteComment,
@@ -609,6 +610,7 @@ function PostSidebarContent({
   const [commentText, setCommentText] = useState("");
   const [isPending, startTransition] = useTransition();
   const [replyingTo, setReplyingTo] = useState<{ id: string; authorName: string } | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -678,7 +680,10 @@ function PostSidebarContent({
       {media.length > 0 && (
         <div>
           {media.length === 1 ? (
-            <div className="rounded-xl overflow-hidden relative flex items-center justify-center bg-gray-100 h-80">
+            <div
+              className={`rounded-xl overflow-hidden relative flex items-center justify-center bg-gray-100 h-80 ${media[0].type === "image" ? "group cursor-pointer" : ""}`}
+              onClick={() => { if (media[0].type === "image") setLightboxIndex(0); }}
+            >
               {media[0].type === "video" ? (
                 <>
                   <div className="absolute inset-0 bg-black/20" />
@@ -694,16 +699,20 @@ function PostSidebarContent({
                   </div>
                 </>
               ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={media[0].storage_url} alt={media[0].label} className="w-full h-full object-cover" />
+                <>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors duration-200 z-10" />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={media[0].storage_url} alt={media[0].label} className="w-full h-full object-cover" />
+                </>
               )}
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-2 mt-1">
-              {media.map((item) => (
+              {media.map((item, i) => (
                 <div
                   key={item.label}
-                  className="h-32 rounded-xl relative overflow-hidden flex items-center justify-center bg-gray-100"
+                  className={`h-32 rounded-xl relative overflow-hidden flex items-center justify-center bg-gray-100 ${item.type === "image" ? "group cursor-pointer" : ""}`}
+                  onClick={() => { if (item.type === "image") setLightboxIndex(i); }}
                 >
                   {item.type === "video" ? (
                     <>
@@ -720,12 +729,15 @@ function PostSidebarContent({
                       </div>
                     </>
                   ) : (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={item.storage_url}
-                      alt={item.label}
-                      className="w-full h-full object-cover"
-                    />
+                    <>
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors duration-200 z-10" />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={item.storage_url}
+                        alt={item.label}
+                        className="w-full h-full object-cover"
+                      />
+                    </>
                   )}
                 </div>
               ))}
@@ -733,6 +745,18 @@ function PostSidebarContent({
           )}
         </div>
       )}
+
+      {lightboxIndex !== null && (() => {
+        const imageItems = media.filter((m) => m.type === "image");
+        const imageOnlyIndex = media.slice(0, lightboxIndex + 1).filter((m) => m.type === "image").length - 1;
+        return (
+          <ImageLightbox
+            images={imageItems.map((m) => ({ src: m.storage_url, alt: m.label }))}
+            initialIndex={Math.max(0, imageOnlyIndex)}
+            onClose={() => setLightboxIndex(null)}
+          />
+        );
+      })()}
 
       {/* Attachments */}
       {attachments.length > 0 && (
