@@ -35,6 +35,12 @@ const DASHBOARD_ANNOUNCEMENTS = [
     buttonLabel: "Join Community",
     href: "/parent/messages?tab=community",
   },
+  {
+    short: "📱 Download our app!",
+    full: "📱 The Sage Field app is now available — download it today!",
+    buttonLabel: "Download",
+    href: "/download",
+  },
 ];
 
 interface DashboardHeaderProps {
