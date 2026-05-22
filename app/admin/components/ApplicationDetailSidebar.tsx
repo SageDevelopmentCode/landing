@@ -30,6 +30,7 @@ import { sendSummerTuitionDueDateReminderEmail } from '../../actions/sendSummerT
 import { sendSummerTuitionDueDateTodayReminderEmail } from '../../actions/sendSummerTuitionDueDateTodayReminderEmail'
 import { sendRegistrationFeeConfirmationEmail } from '../../actions/sendRegistrationFeeConfirmationEmail'
 import { sendHomeschoolDropInConfirmationEmail } from '../../actions/sendHomeschoolDropInConfirmationEmail'
+import { sendSummerStartingEmail } from '../../actions/sendSummerStartingEmail'
 import { enrollApplication } from '../../actions/enrollApplication'
 import { PaymentHistory } from './PaymentHistory'
 import { updateApplicationProgram } from '../../actions/updateApplicationProgram'
@@ -206,6 +207,9 @@ export function ApplicationDetailSidebar({
   const [dropInConfirmSending, setDropInConfirmSending] = useState(false)
   const [dropInConfirmSent, setDropInConfirmSent] = useState(false)
   const [dropInConfirmError, setDropInConfirmError] = useState<string | null>(null)
+  const [summerStartingSending, setSummerStartingSending] = useState(false)
+  const [summerStartingSent, setSummerStartingSent] = useState(false)
+  const [summerStartingError, setSummerStartingError] = useState<string | null>(null)
   const [tagInput, setTagInput] = useState('')
   const [tagSaving, setTagSaving] = useState(false)
   const [tagError, setTagError] = useState<string | null>(null)
@@ -712,6 +716,26 @@ export function ApplicationDetailSidebar({
       setTimeout(() => setTuitionDueTodaySent(false), 3000)
     } else {
       setTuitionDueTodayError(result.error ?? 'Failed to send')
+    }
+  }
+
+  const handleSendSummerStarting = async () => {
+    if (summerStartingSending || !application.g1_email) return
+    setSummerStartingSending(true)
+    setSummerStartingError(null)
+    const result = await sendSummerStartingEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+      program: application.program,
+    })
+    setSummerStartingSending(false)
+    if (result.success) {
+      setSummerStartingSent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setSummerStartingSent(false), 3000)
+    } else {
+      setSummerStartingError(result.error ?? 'Failed to send')
     }
   }
 
@@ -1279,6 +1303,17 @@ export function ApplicationDetailSidebar({
                   {tuitionDueTodaySending ? 'Sending…' : tuitionDueTodaySent ? '✓ Sent!' : 'Send Tuition Due Today Reminder'}
                 </button>
                 {tuitionDueTodayError && <span className="text-xs text-red-600">{tuitionDueTodayError}</span>}
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleSendSummerStarting}
+                  disabled={summerStartingSending || summerStartingSent}
+                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                >
+                  {summerStartingSending ? 'Sending…' : summerStartingSent ? '✓ Sent!' : 'Send Summer Starting Soon'}
+                </button>
+                {summerStartingError && <span className="text-xs text-red-600">{summerStartingError}</span>}
               </div>
               {application.program === 'homeschool_drop_in' && (
                 <div className="flex items-center gap-3">

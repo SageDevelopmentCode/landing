@@ -16,6 +16,7 @@ import {
   Phone,
   Rss,
   HelpCircle,
+  Download,
   Menu,
   X,
 } from "lucide-react";
@@ -37,6 +38,7 @@ const moreItems: {
   icon: LucideIcon;
   href?: string;
   action?: string;
+  badge?: string;
 }[] = [
   { label: "Enrollment", icon: ClipboardCheck, href: "/parent/dashboard" },
   { label: "Forms & Documents", icon: FileText, href: "/parent/forms" },
@@ -46,6 +48,7 @@ const moreItems: {
     icon: Phone,
     href: "/parent/emergency-contacts",
   },
+  { label: "Download the App", icon: Download, href: "/download", badge: "New!" },
   { label: "Need Help", icon: HelpCircle, action: "help" },
   { label: "Manage Access", icon: Users, action: "manage-access" },
 ];
@@ -135,7 +138,7 @@ export default function DashboardNav({
 
           {moreOpen && (
             <div className="absolute left-1/2 -translate-x-1/2 mt-1.5 w-52 bg-white border border-gray-100 rounded-xl shadow-sm z-50 py-1.5">
-              {moreItems.map(({ label, icon: Icon, href, action }) => {
+              {moreItems.map(({ label, icon: Icon, href, action, badge }) => {
                 if (action === "manage-access") return null;
                 const resolvedHref = href ? navHref(href) : undefined;
                 const isActive = !!resolvedHref && pathname === resolvedHref;
@@ -183,6 +186,11 @@ export default function DashboardNav({
                   >
                     <Icon className="w-4 h-4" />
                     {label}
+                    {badge && (
+                      <span className="ml-1 text-[10px] font-semibold uppercase rounded-full px-2 py-0.5 shrink-0 bg-green-100 text-green-700">
+                        {badge}
+                      </span>
+                    )}
                   </Link>
                 ) : (
                   <button
@@ -223,7 +231,7 @@ export default function DashboardNav({
                 </Link>
               );
             })}
-            {moreItems.map(({ label, icon: Icon, href, action }) => {
+            {moreItems.map(({ label, icon: Icon, href, action, badge }) => {
               if (action === "manage-access") return null;
               const resolvedHref = href ? navHref(href) : undefined;
               const isActive = !!resolvedHref && pathname === resolvedHref;
@@ -256,6 +264,11 @@ export default function DashboardNav({
                 >
                   <Icon className="w-4 h-4" />
                   {label}
+                  {badge && (
+                    <span className="ml-1 text-[10px] font-semibold uppercase rounded-full px-2 py-0.5 shrink-0 bg-green-100 text-green-700">
+                      {badge}
+                    </span>
+                  )}
                 </Link>
               ) : (
                 <button

@@ -767,7 +767,10 @@ export async function buildSummerTuitionConfirmationEmail(opts: {
 }): Promise<{ subject: string; content: string }> {
   const subject = "Summer 2026 Tuition Received — See You This Summer!";
 
-  function makePlanLabel(planType: "weekly" | "full", weeks?: number[]): string {
+  function makePlanLabel(
+    planType: "weekly" | "full",
+    weeks?: number[],
+  ): string {
     return planType === "full"
       ? "Full Summer — all 12 weeks (May 26 – Aug 13, 2026)"
       : `${weeks?.length ?? 0} week${(weeks?.length ?? 0) !== 1 ? "s" : ""}${weeks && weeks.length > 0 ? ` (Weeks ${weeks.join(", ")})` : ""}`;
@@ -2491,10 +2494,10 @@ export async function buildCustomTuitionConfirmationEmail(opts: {
 }
 
 export async function buildSummerWelcomeEmail(opts: {
-  g1FullName: string
-  childLegalName: string
+  g1FullName: string;
+  childLegalName: string;
 }): Promise<{ subject: string; content: string }> {
-  const subject = "Welcome to Sage Field Summer — What to Expect ☀️"
+  const subject = "Welcome to Sage Field Summer — What to Expect ☀️";
   const content = `
 <!DOCTYPE html>
 <html>
@@ -2614,16 +2617,16 @@ export async function buildSummerWelcomeEmail(opts: {
 
 </body>
 </html>
-  `.trim()
+  `.trim();
 
-  return { subject, content }
+  return { subject, content };
 }
 
 export async function buildSummerTuitionDueDateReminderEmail(opts: {
-  g1FullName: string
-  childLegalName: string
+  g1FullName: string;
+  childLegalName: string;
 }): Promise<{ subject: string; content: string }> {
-  const subject = "Tuition Due This Friday — A Quick Note Before Summer Begins"
+  const subject = "Tuition Due This Friday — A Quick Note Before Summer Begins";
   const content = `
 <!DOCTYPE html>
 <html>
@@ -2674,16 +2677,17 @@ export async function buildSummerTuitionDueDateReminderEmail(opts: {
 
 </body>
 </html>
-  `.trim()
+  `.trim();
 
-  return { subject, content }
+  return { subject, content };
 }
 
 export async function buildSummerTuitionDueDateTodayReminderEmail(opts: {
-  g1FullName: string
-  childLegalName: string
+  g1FullName: string;
+  childLegalName: string;
 }): Promise<{ subject: string; content: string }> {
-  const subject = "Tuition Is Due Today — And the Sage Field App Is Now Live 🎉"
+  const subject =
+    "Tuition Is Due Today — And the Sage Field App Is Now Live 🎉";
   const content = `
 <!DOCTYPE html>
 <html>
@@ -2757,7 +2761,48 @@ export async function buildSummerTuitionDueDateTodayReminderEmail(opts: {
 
 </body>
 </html>
-  `.trim()
+  `.trim();
 
-  return { subject, content }
+  return { subject, content };
+}
+
+export async function buildSummerStartingEmail(opts: {
+  g1FullName: string;
+  childLegalName: string;
+  program?: string | null;
+}): Promise<{ subject: string; content: string }> {
+  const subject = `Summer Starts This Tuesday — A Quick Note for ${opts.childLegalName}`;
+  const isSummer = opts.program === "summer_26" || opts.program === "both";
+  const tuitionNote = isSummer
+    ? `<p style="margin-bottom: 24px; font-size: 14px; color: #555;">A quick note: tuition for each week of the summer program is due by the <strong>Friday before</strong> that week begins.</p>`
+    : "";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+
+  <p style="margin-bottom: 24px;">Dear ${opts.g1FullName},</p>
+
+  <p style="margin-bottom: 16px;">We're so excited — Sage Field Summer kicks off this <strong>Tuesday, May 26</strong>! We wanted to send a quick note to let you know that <strong>${opts.childLegalName}</strong> is very much on our radar, and we'd love to see them there.</p>
+
+  <p style="margin-bottom: 16px;">If you haven't finished your enrollment checklist yet, you can complete it anytime through the parent portal!</p>
+
+  <div style="text-align: center; margin: 28px 0;">
+    <a href="https://www.sagefield.co/parent/dashboard" style="background: #2C5F2E; color: #fff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-family: Georgia, serif; font-size: 15px; display: inline-block;">Complete Your Enrollment →</a>
+  </div>
+
+  ${tuitionNote}
+
+  <p style="margin-bottom: 24px; font-size: 14px; color: #555; text-align: center;">Questions? Just reply to this email — we're happy to help.</p>
+
+  <p style="margin-top: 32px; margin-bottom: 4px;">See you soon! ☀️</p>
+  <p style="margin-top: 4px;">With warmth,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina &amp; the Sage Field Team</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
 }
