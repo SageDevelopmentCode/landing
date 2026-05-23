@@ -4883,7 +4883,7 @@ export default function BillingPage({
   } | null>(null);
   const [feedbackPopupOpen, setFeedbackPopupOpen] = useState(false);
 
-  const hasPaidAny = transactions.some((tx) => tx.status === "completed");
+  const hasPaidAny = transactions.some((tx) => tx.status === "completed" && tx.payment_type !== "registration_fee");
 
   useEffect(() => {
     if (!hasPaidAny || hasSubmittedTuitionFeedback) return;
