@@ -877,8 +877,9 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
                 <Link
                   href="/apply"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block w-full border-2 border-white bg-primary hover:bg-primary-hover text-white font-semibold px-6 py-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-250 text-center"
+                  className="flex items-center justify-center gap-2 w-full border-2 border-white bg-primary hover:bg-primary-hover text-white font-semibold px-6 py-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-250"
                 >
+                  <ClipboardList className="w-4 h-4 shrink-0" />
                   Open for Enrollment!
                 </Link>
               </motion.div>
@@ -893,25 +894,28 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
                 <Link
                   href="/tour"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block w-full border-2 border-white bg-indigo-500 hover:bg-indigo-600 text-white font-semibold px-6 py-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-250 text-center"
+                  className="flex items-center justify-center gap-2 w-full border-2 border-white bg-indigo-500 hover:bg-indigo-600 text-white font-semibold px-6 py-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-250"
                 >
+                  <MapPin className="w-4 h-4 shrink-0" />
                   Schedule a Tour
                 </Link>
               </motion.div>
 
-              <motion.button
-                onClick={() => {
-                  setContactDialogOpen(true);
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full border-2 border-white text-white hover:bg-white/10 bg-transparent font-semibold px-6 py-3 rounded-lg transition-all duration-250 cursor-pointer"
+              <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
                 transition={{ duration: 0.3, delay: 0.15 }}
               >
-                Contact Us
-              </motion.button>
+                <Link
+                  href="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 w-full border-2 border-white text-white hover:bg-white/10 bg-transparent font-semibold px-6 py-3 rounded-lg transition-all duration-250"
+                >
+                  <User className="w-4 h-4 shrink-0" />
+                  Parent Login
+                </Link>
+              </motion.div>
             </motion.div>
           </motion.div>
         )}
