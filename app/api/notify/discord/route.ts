@@ -12,6 +12,7 @@ import {
   createPaystubSubmittedEmbed,
   createSpecialRequestEmbed,
   createParentFeedbackEmbed,
+  createCareLogEmbed,
 } from "@/app/lib/discord";
 
 export async function POST(request: NextRequest) {
@@ -583,6 +584,19 @@ export async function POST(request: NextRequest) {
         feedbackId,
       });
       await sendDiscordNotification(embed, process.env.DISCORD_WEBHOOK_URL);
+      return NextResponse.json({ success: true });
+    }
+
+    if (type === "care_log_activity") {
+      const { teacherName, studentNames, activity, date } = data;
+      if (!teacherName || !Array.isArray(studentNames) || !activity || !date) {
+        return NextResponse.json(
+          { error: "care_log_activity requires teacherName, studentNames, activity, and date" },
+          { status: 400 },
+        );
+      }
+      const embed = createCareLogEmbed({ teacherName, studentNames, activity, date });
+      await sendDiscordNotification(embed, process.env.DISCORD_STUDENT_WEBHOOK_URL);
       return NextResponse.json({ success: true });
     }
 
