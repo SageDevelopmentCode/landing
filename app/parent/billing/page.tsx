@@ -120,7 +120,7 @@ export default async function BillingRoute() {
 
   const adminClient = createAdminClient();
 
-  const [{ data: txData }, { data: adminUser }, { data: pendingData }, { data: summerData }, { data: enrolledCheck }, { data: notesData }, { data: homeschoolNotesData }] = await Promise.all([
+  const [{ data: txData }, { data: adminUser }, { data: pendingData }, { data: summerData }, { data: enrolledCheck }, { data: notesData }, { data: homeschoolNotesData }, { data: tuitionFeedbackCheck }] = await Promise.all([
     adminClient
       .schema("billing")
       .from("stripe_transactions")
@@ -165,12 +165,19 @@ export default async function BillingRoute() {
       .from("homeschool_day_commitments")
       .select("student_id, note")
       .eq("parent_id", user.id),
+    adminClient
+      .schema("admin")
+      .from("tuition_feedback")
+      .select("id")
+      .eq("parent_id", user.id)
+      .limit(1),
   ]);
 
   const transactions = (txData ?? []) as StripeTransaction[];
   const pendingRequests = (pendingData ?? []) as PendingPaymentRequest[];
   const fullName = adminUser?.full_name ?? null;
   const profileImageUrl = adminUser?.profile_image_url ?? null;
+  const hasSubmittedTuitionFeedback = (tuitionFeedbackCheck ?? []).length > 0;
 
   if ((enrolledCheck ?? []).length === 0) redirect("/parent/dashboard");
 
@@ -359,7 +366,7 @@ export default async function BillingRoute() {
         </DashboardHeader>
 
         <main className="flex-1 flex overflow-hidden">
-          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} unpaidSummerEnrollments={unpaidSummerEnrollments} paidWeeksByStudent={paidWeeksByStudent} parentId={user.id} parentEmail={user.email ?? ""} nonEnrolledApps={nonEnrolledApps} homeschoolDropInApps={homeschoolDropInApps} paidHomeschoolByStudent={paidHomeschoolByStudent} paidAftercareByStudent={paidAftercareByStudent} paidFunFridayByStudent={paidFunFridayByStudent} summerNotesByStudent={summerNotesByStudent} homeschoolNotesByStudent={homeschoolNotesByStudent} schoolYearOnlyApps={schoolYearOnlyApps} />
+          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} unpaidSummerEnrollments={unpaidSummerEnrollments} paidWeeksByStudent={paidWeeksByStudent} parentId={user.id} parentEmail={user.email ?? ""} nonEnrolledApps={nonEnrolledApps} homeschoolDropInApps={homeschoolDropInApps} paidHomeschoolByStudent={paidHomeschoolByStudent} paidAftercareByStudent={paidAftercareByStudent} paidFunFridayByStudent={paidFunFridayByStudent} summerNotesByStudent={summerNotesByStudent} homeschoolNotesByStudent={homeschoolNotesByStudent} schoolYearOnlyApps={schoolYearOnlyApps} hasSubmittedTuitionFeedback={hasSubmittedTuitionFeedback} />
         </main>
       </div>
       <Footer />

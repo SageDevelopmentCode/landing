@@ -1462,6 +1462,39 @@ export function createCustomTuitionEmbed(data: {
 }
 
 /**
+ * Creates a Discord embed for tuition flow feedback submissions
+ */
+export function createTuitionFeedbackEmbed(data: {
+  parentName: string;
+  parentEmail: string;
+  rating: number;
+  message?: string | null;
+  feedbackId: string;
+}): DiscordEmbed {
+  const LABELS = ["", "Poor", "Fair", "Good", "Great", "Excellent"];
+  const stars = "⭐".repeat(data.rating);
+  const fields: DiscordEmbedField[] = [
+    { name: "Parent", value: data.parentName, inline: true },
+    { name: "Email", value: data.parentEmail, inline: true },
+    { name: "Rating", value: `${stars} — ${LABELS[data.rating]}`, inline: true },
+  ];
+  if (data.message) {
+    fields.push({
+      name: "Feedback",
+      value: data.message.length > 1024 ? data.message.substring(0, 1021) + "..." : data.message,
+      inline: false,
+    });
+  }
+  fields.push({ name: "Feedback ID", value: data.feedbackId, inline: false });
+  return {
+    title: "💳 Tuition Flow Feedback",
+    color: 0x4a7c59,
+    fields,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
  * Creates a Discord embed for care log entries (sunscreen / bug spray)
  */
 export function createCareLogEmbed(data: {

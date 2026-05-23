@@ -323,6 +323,7 @@ export default async function ImpersonateBillingPage({
           summerNotesByStudent={summerNotesByStudent}
           homeschoolNotesByStudent={homeschoolNotesByStudent}
           schoolYearOnlyApps={schoolYearOnlyApps}
+          hasSubmittedTuitionFeedback={false}
         />
       </main>
     </div>

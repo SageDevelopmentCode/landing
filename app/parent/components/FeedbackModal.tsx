@@ -68,7 +68,12 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
     if (rating === 0 || isPending) return;
     setIsPending(true);
     setSubmitError(null);
-    const result = await submitParentFeedback({ rating, categories, message, allowFollowUp });
+    const result = await submitParentFeedback({
+      rating,
+      categories,
+      message,
+      allowFollowUp,
+    });
     setIsPending(false);
     if ("error" in result) {
       setSubmitError(result.error);
@@ -119,9 +124,12 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                   <CheckCircle2 className="w-8 h-8 text-[#4a7c59]" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="text-lg font-semibold text-gray-800 font-body">Thank you!</h3>
+                  <h3 className="text-lg font-semibold text-gray-800 font-body">
+                    Thank you!
+                  </h3>
                   <p className="text-sm text-gray-500 font-body leading-relaxed max-w-xs">
-                    Your feedback means a lot to us. We&apos;ll use it to keep making the portal better for every Sagefield family.
+                    Your feedback means a lot to us. We&apos;ll use it to keep
+                    making the portal better for every Sage Field family.
                   </p>
                 </div>
                 <button
@@ -174,7 +182,11 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                     })}
                     {rating > 0 && (
                       <span className="ml-2 text-xs text-gray-400 font-body">
-                        {["", "Poor", "Fair", "Good", "Great", "Excellent"][rating]}
+                        {
+                          ["", "Poor", "Fair", "Good", "Great", "Excellent"][
+                            rating
+                          ]
+                        }
                       </span>
                     )}
                   </div>
@@ -209,7 +221,9 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                 <div>
                   <p className="text-sm font-medium text-gray-700 font-body mb-2">
                     Tell us more{" "}
-                    <span className="text-gray-400 font-normal">(optional)</span>
+                    <span className="text-gray-400 font-normal">
+                      (optional)
+                    </span>
                   </p>
                   <textarea
                     value={message}
@@ -256,7 +270,9 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
             {!submitted && (
               <div className="sticky bottom-0 border-t border-gray-100 bg-white px-6 py-4 space-y-2">
                 {submitError && (
-                  <p className="text-xs text-red-500 font-body text-right">{submitError}</p>
+                  <p className="text-xs text-red-500 font-body text-right">
+                    {submitError}
+                  </p>
                 )}
                 <div className="flex items-center justify-between gap-3">
                   <button
@@ -270,7 +286,9 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                     disabled={rating === 0 || isPending}
                     className="px-5 py-2 bg-[#4a7c59] text-white text-sm font-body rounded-lg hover:bg-[#3d6b4d] disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                   >
-                    {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    {isPending && (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    )}
                     Submit Feedback
                   </button>
                 </div>

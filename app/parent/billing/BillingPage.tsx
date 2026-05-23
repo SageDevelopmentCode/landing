@@ -61,6 +61,8 @@ import {
   SidebarField,
   SidebarSection,
 } from "@/app/components/SidebarPrimitives";
+import TuitionFeedbackPopup from "./TuitionFeedbackPopup";
+import { submitTuitionFeedback } from "@/app/actions/submitTuitionFeedback";
 import type {
   StripeTransaction,
   PendingPaymentRequest,
@@ -95,6 +97,7 @@ interface Props {
   summerNotesByStudent: SummerNotesByStudent;
   homeschoolNotesByStudent: HomeschoolNotesByStudent;
   schoolYearOnlyApps: SchoolYearOnlyApp[];
+  hasSubmittedTuitionFeedback: boolean;
 }
 
 // --- Summer pricing ---
@@ -4856,6 +4859,7 @@ export default function BillingPage({
   summerNotesByStudent,
   homeschoolNotesByStudent,
   schoolYearOnlyApps,
+  hasSubmittedTuitionFeedback,
 }: Props) {
   const [selectedTx, setSelectedTx] = useState<StripeTransaction | null>(null);
   const [selectedPending, setSelectedPending] =
@@ -4877,6 +4881,15 @@ export default function BillingPage({
     amount_cents: number;
     code: string;
   } | null>(null);
+  const [feedbackPopupOpen, setFeedbackPopupOpen] = useState(false);
+
+  const hasPaidAny = transactions.some((tx) => tx.status === "completed");
+
+  useEffect(() => {
+    if (!hasPaidAny || hasSubmittedTuitionFeedback) return;
+    const t = setTimeout(() => setFeedbackPopupOpen(true), 1500);
+    return () => clearTimeout(t);
+  }, [hasPaidAny, hasSubmittedTuitionFeedback]);
 
   const nonEnrolledMap = new Map(nonEnrolledApps.map((a) => [a.student_id, a]));
 
@@ -5595,6 +5608,11 @@ export default function BillingPage({
           />
         )}
       </AnimatePresence>
+      <TuitionFeedbackPopup
+        isOpen={feedbackPopupOpen}
+        onClose={() => setFeedbackPopupOpen(false)}
+        onSubmit={submitTuitionFeedback}
+      />
     </div>
   );
 }
