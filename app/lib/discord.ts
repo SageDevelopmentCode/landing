@@ -925,6 +925,27 @@ export function createBudgetSummaryEmbed(data: {
 }
 
 /**
+ * Creates a Discord embed reminding how many days until rent is due (last day of current month)
+ */
+export function createRentReminderEmbed(): DiscordEmbed {
+  const now = new Date();
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const daysLeft = Math.ceil((lastDay.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  const dueDateStr = lastDay.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+
+  const color = daysLeft <= 3 ? 0xe74c3c : daysLeft <= 7 ? 0xe07a3a : 0x27ae60;
+  const urgency = daysLeft <= 3 ? "🔴 Due very soon!" : daysLeft <= 7 ? "🟠 Coming up soon." : "🟢 Plenty of time.";
+
+  return {
+    title: "🏠 Rent Reminder",
+    description: `Rent is due on **${dueDateStr}** — that's **${daysLeft} day${daysLeft !== 1 ? "s" : ""} away**.\n${urgency}`,
+    color,
+    fields: [],
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
  * Creates a Discord embed for volunteer interest submissions
  */
 export function createVolunteerInterestEmbed(data: {
