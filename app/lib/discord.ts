@@ -838,10 +838,24 @@ export function createBudgetSummaryEmbed(data: {
     ? `You're over budget by **${fmt(data.totals.totalActual - data.totals.totalPlanned)}** this month. Spent **${fmt(data.totals.totalActual)}** of **${fmt(data.totals.totalPlanned)}** budgeted.`
     : `You have **${fmt(data.totals.totalRemaining)}** left this month — **${fmt(data.totals.totalActual)}** spent of **${fmt(data.totals.totalPlanned)}** budgeted (${overallPct}% used).`;
 
-  const overBudget = data.categories.filter((r) => r.pct !== null && r.pct > 100);
-  const runningLow = data.categories.filter((r) => r.pct !== null && r.pct >= 80 && r.pct <= 100);
-  const onTrack = data.categories.filter((r) => r.pct === null || r.pct < 80);
+  const savingsEntry = data.categories.find((r) => r.category === "Savings");
+  const nonSavings = data.categories.filter((r) => r.category !== "Savings");
 
+  const overBudget = nonSavings.filter((r) => r.pct !== null && r.pct > 100);
+  const runningLow = nonSavings.filter((r) => r.pct !== null && r.pct >= 80 && r.pct <= 100);
+  const onTrack = nonSavings.filter((r) => r.pct === null || r.pct < 80);
+
+  // Savings goes into runningLow/onTrack buckets normally, or gets a win line if over-planned
+  const savingsIsWin = savingsEntry && savingsEntry.pct !== null && savingsEntry.pct > 100;
+  if (savingsEntry && !savingsIsWin) {
+    if (savingsEntry.pct !== null && savingsEntry.pct >= 80) {
+      runningLow.push(savingsEntry);
+    } else {
+      onTrack.push(savingsEntry);
+    }
+  }
+
+  const spacer: DiscordEmbedField = { name: "​", value: "​", inline: false };
   const fields: DiscordEmbedField[] = [];
 
   if (overBudget.length > 0) {
@@ -854,6 +868,7 @@ export function createBudgetSummaryEmbed(data: {
       }).join("\n"),
       inline: false,
     });
+    fields.push(spacer);
   }
 
   if (runningLow.length > 0) {
@@ -865,19 +880,26 @@ export function createBudgetSummaryEmbed(data: {
       }).join("\n"),
       inline: false,
     });
+    fields.push(spacer);
   }
 
-  if (onTrack.length > 0) {
+  const onTrackLines = onTrack.map((r) => {
+    const emoji = CATEGORY_EMOJI[r.category] ?? "•";
+    return r.pct === null
+      ? `${emoji} **${r.category}** — ${fmt(r.actual)} spent (no budget set)`
+      : `${emoji} **${r.category}** — ${fmt(r.remaining)} left`;
+  });
+  if (savingsIsWin && savingsEntry) {
+    const overage = savingsEntry.actual - savingsEntry.planned;
+    onTrackLines.push(`🏦 **Savings** — you saved ${fmt(savingsEntry.actual)}, ${fmt(overage)} more than planned! 🎉`);
+  }
+  if (onTrackLines.length > 0) {
     fields.push({
       name: "✅ On Track",
-      value: onTrack.map((r) => {
-        const emoji = CATEGORY_EMOJI[r.category] ?? "•";
-        return r.pct === null
-          ? `${emoji} **${r.category}** — ${fmt(r.actual)} spent (no budget set)`
-          : `${emoji} **${r.category}** — ${fmt(r.remaining)} left`;
-      }).join("\n"),
+      value: onTrackLines.join("\n"),
       inline: false,
     });
+    fields.push(spacer);
   }
 
   const breakdownLines = data.categories.map((r) => {
