@@ -1074,7 +1074,7 @@ export async function buildEnrollmentConfirmationEmail(opts: {
       <strong>Parent Home</strong> — Your parent home is live at <a href="https://www.sagefield.co/parent/home" style="color: #5a7a5a; font-weight: bold;">sagefield.co/parent/home</a>. Bookmark it — it's your central hub for updates, documents, and important information throughout the year.
     </li>
     <li style="margin-bottom: 12px;">
-      <strong>Sage Field Mobile App</strong> — We have a mobile app in the works that will make staying connected even easier. We will let you know as soon as it is available.
+      <strong>Sage Field Mobile App</strong> — Our app is now available to download! Stay connected with everything at Sage Field — pay tuition, view the school feed, manage your children's profiles, message staff, and join the community channel. <a href="https://www.sagefield.co/download" style="color: #5a7a5a; font-weight: bold;">Download the app here →</a>
     </li>
     <li style="margin-bottom: 12px;">
       <strong>Preparing for the Program</strong> — Closer to the start date, we will send a detailed guide on what to expect, what to bring, and how to prepare ${opts.childLegalName} for their first day.
