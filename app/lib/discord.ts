@@ -18,6 +18,7 @@ interface DiscordEmbed {
 }
 
 interface DiscordWebhookPayload {
+  content?: string;
   embeds: DiscordEmbed[];
 }
 
@@ -29,6 +30,7 @@ interface DiscordWebhookPayload {
 export async function sendDiscordNotification(
   embed: DiscordEmbed,
   webhookUrl?: string,
+  content?: string,
 ): Promise<boolean> {
   const resolvedUrl = webhookUrl ?? process.env.DISCORD_WEBHOOK_URL;
 
@@ -42,6 +44,7 @@ export async function sendDiscordNotification(
 
   try {
     const payload: DiscordWebhookPayload = {
+      ...(content ? { content } : {}),
       embeds: [embed],
     };
 
@@ -927,21 +930,28 @@ export function createBudgetSummaryEmbed(data: {
 /**
  * Creates a Discord embed reminding how many days until rent is due (last day of current month)
  */
-export function createRentReminderEmbed(): DiscordEmbed {
+export function createRentReminderEmbed(): { embed: DiscordEmbed; content?: string } {
   const now = new Date();
   const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
   const daysLeft = Math.ceil((lastDay.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
   const dueDateStr = lastDay.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 
-  const color = daysLeft <= 3 ? 0xe74c3c : daysLeft <= 7 ? 0xe07a3a : 0x27ae60;
-  const urgency = daysLeft <= 3 ? "🔴 Due very soon!" : daysLeft <= 7 ? "🟠 Coming up soon." : "🟢 Plenty of time.";
+  const isDueToday = daysLeft === 0;
+  const color = isDueToday || daysLeft <= 3 ? 0xe74c3c : daysLeft <= 7 ? 0xe07a3a : 0x27ae60;
+  const urgency = isDueToday ? "🚨 Rent is due TODAY!" : daysLeft <= 3 ? "🔴 Due very soon!" : daysLeft <= 7 ? "🟠 Coming up soon." : "🟢 Plenty of time.";
+  const description = isDueToday
+    ? `Rent is due **today** (${dueDateStr}).\n${urgency}`
+    : `Rent is due on **${dueDateStr}** — that's **${daysLeft} day${daysLeft !== 1 ? "s" : ""} away**.\n${urgency}`;
 
   return {
-    title: "🏠 Rent Reminder",
-    description: `Rent is due on **${dueDateStr}** — that's **${daysLeft} day${daysLeft !== 1 ? "s" : ""} away**.\n${urgency}`,
-    color,
-    fields: [],
-    timestamp: new Date().toISOString(),
+    embed: {
+      title: "🏠 Rent Reminder",
+      description,
+      color,
+      fields: [],
+      timestamp: new Date().toISOString(),
+    },
+    content: isDueToday ? "@everyone" : undefined,
   };
 }
 

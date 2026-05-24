@@ -110,10 +110,10 @@ export async function GET(request: NextRequest) {
     const notify = request.nextUrl.searchParams.get("notify") === "true";
     if (notify) {
       const embed = createBudgetSummaryEmbed(summary);
-      const rentEmbed = createRentReminderEmbed();
+      const { embed: rentEmbed, content: rentContent } = createRentReminderEmbed();
       await Promise.all([
         sendDiscordNotification(embed, process.env.DISCORD_BUDGET_WEBHOOK_URL),
-        sendDiscordNotification(rentEmbed, process.env.DISCORD_BUDGET_WEBHOOK_URL),
+        sendDiscordNotification(rentEmbed, process.env.DISCORD_BUDGET_WEBHOOK_URL, rentContent),
       ]);
     }
 
