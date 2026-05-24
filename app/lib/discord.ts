@@ -905,17 +905,6 @@ export function createBudgetSummaryEmbed(data: {
     fields.push(spacer);
   }
 
-  const breakdownLines = data.categories.map((r) => {
-    const emoji = CATEGORY_EMOJI[r.category] ?? "•";
-    const pctStr = r.pct !== null ? ` (${r.pct}%)` : "";
-    return `${emoji} ${r.category}: ${fmt(r.actual)} / ${fmt(r.planned)}${pctStr}`;
-  });
-  fields.push({
-    name: "📋 Full Breakdown",
-    value: breakdownLines.join("\n"),
-    inline: false,
-  });
-
   const color = isOverall ? 0xe74c3c : overBudget.length > 0 ? 0xe07a3a : 0x27ae60;
 
   return {
@@ -923,6 +912,68 @@ export function createBudgetSummaryEmbed(data: {
     description,
     color,
     fields,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+const REVENUE_SOURCE_LABELS: Record<string, string> = {
+  tuition: "Tuition",
+  aftercare: "After Care",
+  aftercare_tuition: "After Care",
+  fun_friday: "Field Day Friday",
+  fun_friday_tuition: "Field Day Friday",
+  summer: "Summer Tuition",
+  summer_tuition: "Summer Tuition",
+  registration_fee: "Registration Fee",
+  homeschool_dropin: "Homeschool Drop-In",
+  supply_fee: "Supply Fee",
+  late_fee: "Late Fee",
+  donation: "Donation",
+  fundraiser: "Fundraiser",
+  grant: "Grant / Sponsorship",
+  field_trip_fee: "Field Trip Fee",
+  uniform_fee: "Uniform / Spirit Wear",
+  extended_care: "Extended Care (Drop-in)",
+  event: "Event / Workshop",
+  custom_tuition: "Custom Tuition",
+  shadow_day_fee: "Shadow Day Fee",
+  other: "Other",
+};
+
+/**
+ * Creates a Discord embed for the monthly revenue report
+ */
+export function createRevenueReportEmbed(data: {
+  month: string;
+  year: number;
+  totalRevenue: number;
+  netProfit: number;
+  byType: Array<{ type: string; amount: number; pct: number }>;
+}): DiscordEmbed {
+  const fmt = (n: number) =>
+    n.toLocaleString("en-US", { style: "currency", currency: "USD" });
+
+  const isProfit = data.netProfit >= 0;
+  const profitLine = isProfit
+    ? `Net Profit: **+${fmt(data.netProfit)}** 🟢`
+    : `Net Loss: **${fmt(data.netProfit)}** 🔴`;
+
+  const byTypeValue = data.byType.length > 0
+    ? data.byType
+        .map((r) => {
+          const label = REVENUE_SOURCE_LABELS[r.type] ?? r.type;
+          return `• **${label}** — ${fmt(r.amount)} (${r.pct}%)`;
+        })
+        .join("\n")
+    : "No revenue recorded this month.";
+
+  return {
+    title: `💰 Revenue Report — ${data.month} ${data.year}`,
+    description: `Total Revenue: **${fmt(data.totalRevenue)}**\n${profitLine}`,
+    color: isProfit ? 0x27ae60 : 0xe74c3c,
+    fields: [
+      { name: "📊 By Type", value: byTypeValue, inline: false },
+    ],
     timestamp: new Date().toISOString(),
   };
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/app/lib/supabase-server";
-import { sendDiscordNotification, createBudgetSummaryEmbed, createRentReminderEmbed } from "@/app/lib/discord";
+import { sendDiscordNotification, createBudgetSummaryEmbed, createRentReminderEmbed, createRevenueReportEmbed } from "@/app/lib/discord";
 
 const CATEGORIES = [
   "Tuition",
@@ -57,7 +57,10 @@ export async function GET(request: NextRequest) {
     const firstOfMonth = new Date(year, month, 1).toISOString().split("T")[0];
     const firstOfNextMonth = new Date(year, month + 1, 1).toISOString().split("T")[0];
 
-    const [liRes, expRes] = await Promise.all([
+    const firstOfMonthTs = new Date(year, month, 1).toISOString();
+    const firstOfNextMonthTs = new Date(year, month + 1, 1).toISOString();
+
+    const [liRes, expRes, txRes] = await Promise.all([
       db.schema("budget").from("line_items").select("category, planned_amount"),
       db
         .schema("budget")
@@ -66,10 +69,18 @@ export async function GET(request: NextRequest) {
         .eq("is_deleted", false)
         .gte("expense_date", firstOfMonth)
         .lt("expense_date", firstOfNextMonth),
+      db
+        .schema("billing")
+        .from("stripe_transactions")
+        .select("payment_type, amount_cents, intended_amount_cents, cover_fees, exclude_from_revenue, metadata")
+        .eq("is_deleted", false)
+        .gte("created_at", firstOfMonthTs)
+        .lt("created_at", firstOfNextMonthTs),
     ]);
 
     if (liRes.error) throw new Error(liRes.error.message);
     if (expRes.error) throw new Error(expRes.error.message);
+    if (txRes.error) throw new Error(txRes.error.message);
 
     const plannedByCategory = (liRes.data ?? []).reduce<Record<string, number>>(
       (acc, i) => {
@@ -107,13 +118,46 @@ export async function GET(request: NextRequest) {
       totals: { totalPlanned, totalActual, totalRemaining },
     };
 
+    const stripeTransactions = txRes.data ?? [];
+    const visibleTx = stripeTransactions.filter(
+      (tx) => !tx.exclude_from_revenue &&
+        (tx.metadata as Record<string, string> | null)?.is_sibling_split !== "true",
+    );
+    const txNet = (tx: typeof visibleTx[number]) =>
+      ((tx.cover_fees ? (tx.intended_amount_cents ?? tx.amount_cents) : tx.amount_cents)) / 100;
+    const totalRevenue = visibleTx.reduce((s, tx) => s + txNet(tx), 0);
+    const totalExpensesForProfit = (expRes.data ?? [])
+      .filter((e) => e.category !== "Savings")
+      .reduce((s, e) => s + Number(e.amount), 0);
+    const netProfit = totalRevenue - totalExpensesForProfit;
+    const byTypeMap = visibleTx.reduce<Record<string, number>>((acc, tx) => {
+      const t = tx.payment_type ?? "other";
+      acc[t] = (acc[t] ?? 0) + txNet(tx);
+      return acc;
+    }, {});
+    const byType = Object.entries(byTypeMap)
+      .map(([type, amount]) => ({
+        type,
+        amount,
+        pct: totalRevenue > 0 ? Math.round((amount / totalRevenue) * 100) : 0,
+      }))
+      .sort((a, b) => b.amount - a.amount);
+
     const notify = request.nextUrl.searchParams.get("notify") === "true";
     if (notify) {
       const embed = createBudgetSummaryEmbed(summary);
       const { embed: rentEmbed, content: rentContent } = createRentReminderEmbed();
+      const revenueEmbed = createRevenueReportEmbed({
+        month: now.toLocaleString("en-US", { month: "long" }),
+        year,
+        totalRevenue,
+        netProfit,
+        byType,
+      });
       await Promise.all([
         sendDiscordNotification(embed, process.env.DISCORD_BUDGET_WEBHOOK_URL),
         sendDiscordNotification(rentEmbed, process.env.DISCORD_BUDGET_WEBHOOK_URL, rentContent),
+        sendDiscordNotification(revenueEmbed, process.env.DISCORD_BUDGET_WEBHOOK_URL),
       ]);
     }
 
