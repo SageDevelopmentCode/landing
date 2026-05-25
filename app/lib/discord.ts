@@ -1599,6 +1599,48 @@ export function createTuitionFeedbackEmbed(data: {
 }
 
 /**
+ * Creates a Discord embed for activity preference saves
+ */
+export function createActivityPreferencesSavedEmbed(data: {
+  parentName: string;
+  parentEmail: string;
+  childName: string;
+  preferences: Array<{ title: string; level: string; notes: string }>;
+}): DiscordEmbed {
+  const LEVEL_LABELS: Record<string, string> = {
+    watch: "👀 Watch only",
+    cook_no_eat: "🧑‍🍳 Cook, don't eat",
+    full: "✅ Full participation",
+  };
+
+  const prefLines = data.preferences.map((p) => {
+    const label = LEVEL_LABELS[p.level] ?? p.level;
+    return p.notes.trim()
+      ? `• **${p.title}** — ${label}\n  > ${p.notes.substring(0, 120)}`
+      : `• **${p.title}** — ${label}`;
+  });
+
+  return {
+    title: "📋 Activity Preferences Saved",
+    color: 0x4a7c59,
+    fields: [
+      { name: "Parent", value: data.parentName || "N/A", inline: true },
+      { name: "Email", value: data.parentEmail || "N/A", inline: true },
+      { name: "Child", value: data.childName || "N/A", inline: true },
+      {
+        name: `Preferences (${data.preferences.length} set)`,
+        value:
+          prefLines.length > 0
+            ? prefLines.join("\n").substring(0, 1024)
+            : "All preferences cleared",
+        inline: false,
+      },
+    ],
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
  * Creates a Discord embed for care log entries (sunscreen / bug spray)
  */
 export function createCareLogEmbed(data: {

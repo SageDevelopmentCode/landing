@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SlidersHorizontal, Users, ChevronDown } from "lucide-react";
 import Image from "next/image";
 import type { Activity } from "@/app/actions/activities";
-import type { PreferenceChild } from "./page";
+import type { PreferenceChild, SavedPreference } from "./page";
+import { saveActivityPreferences, type PreferenceEntry } from "@/app/actions/preferences";
 
 type ParticipationLevel = "watch" | "cook_no_eat" | "full";
 
@@ -38,21 +39,32 @@ function getInitials(name: string): string {
 interface Props {
   children: PreferenceChild[];
   activities: Activity[];
+  paidDatesByStudent: Record<string, string[]>;
+  savedPreferences: SavedPreference[];
 }
 
-export default function PreferencesPageClient({ children, activities }: Props) {
+export default function PreferencesPageClient({ children, activities, paidDatesByStudent, savedPreferences }: Props) {
   const [selectedChildId, setSelectedChildId] = useState(children[0]?.id ?? "");
   const [expandedFoods, setExpandedFoods] = useState<Set<string>>(new Set());
+  const [saving, setSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
   const [preferences, setPreferences] = useState<AllPreferences>(() => {
     const init: AllPreferences = {};
     for (const child of children) {
       init[child.id] = {};
       for (const activity of activities) {
-        init[child.id][activity.id] = { level: null, notes: "" };
+        const saved = savedPreferences.find(
+          (s) => s.student_id === child.id && s.activity_id === activity.id
+        );
+        init[child.id][activity.id] = saved
+          ? { level: saved.participation_level, notes: saved.notes }
+          : { level: null, notes: "" };
       }
     }
     return init;
   });
+
+  useEffect(() => { setSaveStatus("idle"); }, [selectedChildId]);
 
   function updatePreference(
     childId: string,
@@ -69,6 +81,20 @@ export default function PreferencesPageClient({ children, activities }: Props) {
         },
       },
     }));
+  }
+
+  async function handleSave(visibleActivities: Activity[]) {
+    setSaving(true);
+    setSaveStatus("idle");
+    const childPrefs = preferences[selectedChildId] ?? {};
+    const entries: PreferenceEntry[] = visibleActivities.map((a) => ({
+      activityId: a.id,
+      level: childPrefs[a.id]?.level ?? null,
+      notes: childPrefs[a.id]?.notes ?? "",
+    }));
+    const result = await saveActivityPreferences(selectedChildId, entries);
+    setSaving(false);
+    setSaveStatus(result.error ? "error" : "success");
   }
 
   if (children.length === 0) {
@@ -192,9 +218,27 @@ export default function PreferencesPageClient({ children, activities }: Props) {
             )}
 
             {/* Activity cards */}
-            {activities.length > 0 && (
+            {activities.length > 0 && (() => {
+              const paidDates = paidDatesByStudent[selectedChildId] ?? [];
+              const visibleActivities = activities.filter((a) =>
+                !a.activity_date || paidDates.includes(a.activity_date)
+              );
+              return (
               <div className="flex flex-col gap-4">
-                {activities.map((activity) => {
+                {visibleActivities.length === 0 && (
+                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 flex flex-col items-center text-center">
+                    <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mb-5">
+                      <SlidersHorizontal className="w-8 h-8 text-[#4a7c59]" />
+                    </div>
+                    <h2 className="text-xl font-semibold font-heading text-gray-800 mb-3">
+                      No activities for your scheduled days
+                    </h2>
+                    <p className="text-gray-500 font-body text-sm max-w-sm leading-relaxed">
+                      Activities will appear here once they are scheduled on a day your child is enrolled for.
+                    </p>
+                  </div>
+                )}
+                {visibleActivities.map((activity) => {
                   const pref = preferences[selectedChildId]?.[activity.id] ?? {
                     level: null,
                     notes: "",
@@ -346,24 +390,35 @@ export default function PreferencesPageClient({ children, activities }: Props) {
                 })}
 
                 {/* Save button */}
+                {visibleActivities.length > 0 && (
                 <div className="mt-4 pt-6 border-t border-gray-100 flex items-center justify-between">
-                  <p className="text-xs text-gray-400 font-body">
-                    Preferences are not yet saved to your account.
-                  </p>
-                  <div className="relative group">
-                    <button
-                      disabled
-                      className="px-6 py-2.5 rounded-xl text-sm font-semibold font-body bg-gray-100 text-gray-400 cursor-not-allowed"
-                    >
-                      Save Preferences
-                    </button>
-                    <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded-lg px-3 py-1.5 whitespace-nowrap pointer-events-none">
-                      Coming soon
-                    </div>
+                  <div>
+                    {saveStatus === "success" && (
+                      <p className="text-xs text-[#4a7c59] font-body font-semibold">Preferences saved!</p>
+                    )}
+                    {saveStatus === "error" && (
+                      <p className="text-xs text-red-500 font-body">Something went wrong. Please try again.</p>
+                    )}
+                    {saveStatus === "idle" && (
+                      <p className="text-xs text-gray-400 font-body">Changes are not saved until you click Save.</p>
+                    )}
                   </div>
+                  <button
+                    onClick={() => handleSave(visibleActivities)}
+                    disabled={saving}
+                    className={`px-6 py-2.5 rounded-xl text-sm font-semibold font-body transition-colors ${
+                      saving
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                        : "bg-[#4a7c59] text-white hover:bg-[#3d6b4a] cursor-pointer"
+                    }`}
+                  >
+                    {saving ? "Saving…" : "Save Preferences"}
+                  </button>
                 </div>
+                )}
               </div>
-            )}
+              );
+            })()}
           </div>
         </div>
       </div>
