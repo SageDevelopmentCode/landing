@@ -2806,3 +2806,88 @@ export async function buildSummerStartingEmail(opts: {
 
   return { subject, content };
 }
+
+export async function buildSummerFirstDayEmail(opts: {
+  g1FullName: string;
+  childLegalName: string;
+}): Promise<{ subject: string; content: string }> {
+  const subject = "Summer Starts Tomorrow — Happy Memorial Day! 🌿☀️";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+
+  <p style="margin-bottom: 24px;">Dear ${opts.g1FullName},</p>
+
+  <p style="margin-bottom: 16px;">Happy Memorial Day! 🇺🇸 We hope you're having a wonderful holiday with your family.</p>
+
+  <p style="margin-bottom: 24px;">Tomorrow is the <strong>first day of Sage Field Summer</strong> and we couldn't be more excited to welcome <strong>${opts.childLegalName}</strong>! The space is ready, the activities are planned, and the team is thrilled. ☀️🌿</p>
+
+  <h2 style="font-size: 18px; margin-top: 32px; margin-bottom: 12px; color: #2c2c2c;">🚗 Drop-off &amp; Pick-up</h2>
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 14px 18px; margin: 20px 0; border-radius: 4px; font-size: 14px;">
+    <p style="margin: 0 0 6px 0;">🕗 <strong>Drop-off:</strong> As early as <strong>8:15 AM</strong> · Day begins at <strong>9:00 AM</strong></p>
+    <p style="margin: 0 0 6px 0;">🕒 <strong>Pick-up:</strong> School ends at <strong>3:00 PM</strong> · Latest pick-up is <strong>3:30 PM</strong></p>
+    <p style="margin: 0; font-size: 13px; color: #555;">Need more time? You can sign up for <strong><a href="https://www.sagefield.co/parent/billing" style="color: #5a7a5a;">aftercare</a></strong> through your billing page.</p>
+  </div>
+  <p style="margin-bottom: 24px; font-size: 14px; color: #555;">🅿️ Please <strong>park in the back</strong> — drive past the open gates and you'll find parking back there.</p>
+
+  <div style="background: #fff8f0; border-left: 3px solid #f59e0b; padding: 16px 20px; margin: 28px 0; border-radius: 4px;">
+    <p style="margin: 0 0 8px 0; font-size: 15px; font-weight: bold; color: #92400e;">⚠️ Action Needed Before Tomorrow Morning</p>
+    <p style="margin: 0 0 10px 0; font-size: 14px; color: #555;">We have some exciting <strong>cooking activities</strong> planned this week! To make sure we fully respect each child's comfort and any dietary needs, we ask that you set your participation preferences before the first day begins.</p>
+    <p style="margin: 0; font-size: 14px; color: #555;">This only takes a minute — just visit your preferences page and let us know how <strong>${opts.childLegalName}</strong> would like to participate.</p>
+  </div>
+
+  <div style="text-align: center; margin: 24px 0;">
+    <a href="https://www.sagefield.co/parent/preferences" style="background: #b45309; color: #fff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-family: Georgia, serif; font-size: 15px; display: inline-block;">Set Cooking Preferences →</a>
+  </div>
+
+  <h2 style="font-size: 18px; margin-top: 36px; margin-bottom: 12px; color: #2c2c2c;">🎒 What to Pack for the First Day of Summer</h2>
+  <div style="line-height: 2.2; margin-bottom: 8px;">
+    <span style="display: inline-block; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 500; color: #374151; margin: 4px 4px 4px 0;">🍱 Snack + lunch</span><span style="display: inline-block; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 500; color: #374151; margin: 4px 4px 4px 0;">💧 Water bottle</span><span style="display: inline-block; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 500; color: #374151; margin: 4px 4px 4px 0;">👕 Change of clothes</span><span style="display: inline-block; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 500; color: #374151; margin: 4px 4px 4px 0;">👟 Closed-toe shoes</span><span style="display: inline-block; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 500; color: #374151; margin: 4px 4px 4px 0;">🩴 Open-toe shoes</span><span style="display: inline-block; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 500; color: #374151; margin: 4px 4px 4px 0;">☀️ Sunscreen</span><span style="display: inline-block; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 500; color: #374151; margin: 4px 4px 4px 0;">🥾 Boots</span>
+  </div>
+  <p style="margin-bottom: 24px; font-size: 13px; color: #888; font-style: italic;">Extra shoes may be left at Sage Field — pick them up on your last day.</p>
+
+  <h2 style="font-size: 18px; margin-top: 32px; margin-bottom: 12px; color: #2c2c2c;">📱 The Sage Field App Is Now Available!</h2>
+  <p style="margin-bottom: 12px;">If you haven't downloaded it yet, the <strong>Sage Field app is live</strong> — everything you need right in your pocket.</p>
+
+  <div style="text-align: center; margin: 24px 0;">
+    <a href="https://www.sagefield.co/download" style="background: #2C5F2E; color: #fff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-family: Georgia, serif; font-size: 15px; display: inline-block;">Download the App</a>
+  </div>
+
+  <p style="margin-bottom: 8px; font-size: 14px; color: #555;">With the app you can:</p>
+  <ul style="margin: 0 0 16px 0; padding-left: 20px; font-size: 14px; color: #555; line-height: 2;">
+    <li>💳 Pay tuition directly</li>
+    <li>📸 View the school feed</li>
+    <li>💬 Message staff</li>
+    <li>🌿 Join the community channel</li>
+    <li>👧 Check your children's profiles</li>
+    <li>📋 Go over all your enrollment forms</li>
+  </ul>
+
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 14px 18px; margin: 20px 0; border-radius: 4px; font-size: 14px;">
+    <p style="margin: 0 0 6px 0;"><strong>Android users:</strong> When you tap the Google Play button on the download page, it will prompt you with an email address — we'll use that to send you a direct install link right away.</p>
+  </div>
+
+  <h2 style="font-size: 18px; margin-top: 32px; margin-bottom: 12px; color: #2c2c2c;">💳 A Note on Tuition for Future Weeks</h2>
+  <p style="margin-bottom: 12px; font-size: 14px; color: #555;">To hold your child's spot each week, tuition must be received by the <strong>Friday before that week begins</strong>. Here's the schedule starting from Week 2:</p>
+
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 14px 18px; margin: 20px 0; border-radius: 4px; font-size: 14px;">
+    <p style="margin: 0 0 4px 0;">Week 2 begins June 1 → Tuition due by <strong>May 29</strong></p>
+    <p style="margin: 0 0 4px 0;">Week 3 begins June 8 → Tuition due by <strong>June 5</strong></p>
+    <p style="margin: 0 0 4px 0;">Week 4 begins June 15 → Tuition due by <strong>June 12</strong></p>
+    <p style="margin: 0 0 4px 0;">Week 5 begins June 22 → Tuition due by <strong>June 19</strong></p>
+    <p style="margin: 0 0 12px 0;">Week 6 begins June 29 → Tuition due by <strong>June 26</strong></p>
+    <p style="margin: 0; color: #c0392b; font-size: 13px;">⚠️ A <strong>$30 late fee</strong> applies if tuition is not received by Friday at 11:59 PM.</p>
+  </div>
+
+  <p style="margin-top: 32px; margin-bottom: 4px;">See you tomorrow! ☀️</p>
+  <p style="margin-top: 4px;">With warmth,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina &amp; the Sage Field Team</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
