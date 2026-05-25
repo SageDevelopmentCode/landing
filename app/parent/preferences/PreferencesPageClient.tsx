@@ -48,6 +48,7 @@ export default function PreferencesPageClient({ children, activities, paidDatesB
   const [expandedFoods, setExpandedFoods] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
+  const [acknowledged, setAcknowledged] = useState(false);
   const [preferences, setPreferences] = useState<AllPreferences>(() => {
     const init: AllPreferences = {};
     for (const child of children) {
@@ -64,7 +65,7 @@ export default function PreferencesPageClient({ children, activities, paidDatesB
     return init;
   });
 
-  useEffect(() => { setSaveStatus("idle"); }, [selectedChildId]);
+  useEffect(() => { setSaveStatus("idle"); setAcknowledged(false); }, [selectedChildId]);
 
   function updatePreference(
     childId: string,
@@ -305,7 +306,7 @@ export default function PreferencesPageClient({ children, activities, paidDatesB
                                       {food.name}
                                     </span>
                                     {food.allergens && (
-                                      <span className="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-body">
+                                      <span className="text-xs px-2 py-0.5 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 font-body">
                                         ⚠ {food.allergens}
                                       </span>
                                     )}
@@ -391,8 +392,20 @@ export default function PreferencesPageClient({ children, activities, paidDatesB
 
                 {/* Save button */}
                 {visibleActivities.length > 0 && (
-                <div className="mt-4 pt-6 border-t border-gray-100 flex items-center justify-between">
-                  <div>
+                <>
+                <label className="flex items-start gap-3 cursor-pointer mt-4 pt-6 border-t border-gray-100">
+                  <input
+                    type="checkbox"
+                    checked={acknowledged}
+                    onChange={(e) => setAcknowledged(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 accent-[#4a7c59] cursor-pointer"
+                  />
+                  <span className="text-xs text-gray-500 font-body leading-relaxed">
+                    I have reviewed the ingredients and allergens listed above. I understand and acknowledge that Sage Field is not responsible for any allergic reactions, dietary sensitivities, or adverse responses related to food items consumed during activities.
+                  </span>
+                </label>
+                <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div className="text-center md:text-left">
                     {saveStatus === "success" && (
                       <p className="text-xs text-[#4a7c59] font-body font-semibold">Preferences saved!</p>
                     )}
@@ -405,9 +418,9 @@ export default function PreferencesPageClient({ children, activities, paidDatesB
                   </div>
                   <button
                     onClick={() => handleSave(visibleActivities)}
-                    disabled={saving}
-                    className={`px-6 py-2.5 rounded-xl text-sm font-semibold font-body transition-colors ${
-                      saving
+                    disabled={saving || !acknowledged}
+                    className={`w-full md:w-auto px-6 py-2.5 rounded-xl text-sm font-semibold font-body transition-colors ${
+                      saving || !acknowledged
                         ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                         : "bg-[#4a7c59] text-white hover:bg-[#3d6b4a] cursor-pointer"
                     }`}
@@ -415,6 +428,7 @@ export default function PreferencesPageClient({ children, activities, paidDatesB
                     {saving ? "Saving…" : "Save Preferences"}
                   </button>
                 </div>
+                </>
                 )}
               </div>
               );
