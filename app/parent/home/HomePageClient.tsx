@@ -356,11 +356,7 @@ interface Props {
   initialCompletedIds?: string[];
   checklistInteractive?: boolean;
   suppressReferralPopup?: boolean;
-  generalChannelMessages: {
-    body: string;
-    senderName: string;
-    senderImageUrl: string | null;
-  }[];
+  hasActivityForPaidDay: boolean;
 }
 
 export default function HomePageClient({
@@ -383,11 +379,10 @@ export default function HomePageClient({
   initialCompletedIds,
   checklistInteractive,
   suppressReferralPopup,
-  generalChannelMessages,
+  hasActivityForPaidDay,
 }: Props) {
   const [checklistOpen, setChecklistOpen] = useState(false);
   const [bannerIdx, setBannerIdx] = useState(0);
-  const [communityMsgIdx, setCommunityMsgIdx] = useState(0);
   const [greeting, setGreeting] = useState("");
   const [attendanceStudent, setAttendanceStudent] =
     useState<HomeStudent | null>(null);
@@ -452,14 +447,6 @@ export default function HomePageClient({
     }, 4000);
     return () => clearInterval(id);
   }, []);
-
-  useEffect(() => {
-    if (generalChannelMessages.length <= 1) return;
-    const id = setInterval(() => {
-      setCommunityMsgIdx((i) => (i + 1) % generalChannelMessages.length);
-    }, 4000);
-    return () => clearInterval(id);
-  }, [generalChannelMessages.length]);
 
   const firstName = fullName?.split(" ")[0] ?? "there";
 
@@ -693,64 +680,28 @@ export default function HomePageClient({
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8 items-start lg:items-stretch">
         {/* Left column: Students + Drop-Off + Referral */}
         <div className="flex flex-col gap-8">
-          {/* Community Banner */}
-          <div className="rounded-2xl border border-[#c2ddc8] bg-gradient-to-br from-[#eef5ef] to-[#ddeede] p-4 flex flex-col gap-3 shadow-sm">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold bg-[#4a7c59] text-white px-2 py-0.5 rounded-full">New!</span>
-              <span className="text-sm font-semibold text-[#2d5a3d]">Community</span>
-            </div>
-
-            {generalChannelMessages.length > 0 ? (
-              <div className="relative h-14 overflow-hidden">
-                <AnimatePresence initial={false} mode="wait">
-                  {(() => {
-                    const msg = generalChannelMessages[communityMsgIdx];
-                    return (
-                      <motion.div
-                        key={communityMsgIdx}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -8 }}
-                        transition={{ duration: 0.4 }}
-                        className="absolute inset-0 flex items-start gap-2.5"
-                      >
-                        {msg.senderImageUrl ? (
-                          <img
-                            src={msg.senderImageUrl}
-                            alt=""
-                            className="w-7 h-7 rounded-full object-cover shrink-0"
-                          />
-                        ) : (
-                          <div
-                            className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold shrink-0 ${avatarColor(msg.senderName)}`}
-                          >
-                            {getInitials(msg.senderName)}
-                          </div>
-                        )}
-                        <div className="min-w-0">
-                          <p className="text-[11px] font-semibold text-[#2d5a3d] leading-none mb-0.5">
-                            {msg.senderName.split(" ")[0]}
-                          </p>
-                          <p className="text-xs text-gray-600 line-clamp-2 leading-snug">
-                            {msg.body}
-                          </p>
-                        </div>
-                      </motion.div>
-                    );
-                  })()}
-                </AnimatePresence>
-              </div>
-            ) : (
-              <p className="text-xs text-gray-500">Be the first to post in the General channel!</p>
-            )}
-
+          {/* Activity Preferences Banner */}
+          {hasActivityForPaidDay && (
             <Link
-              href="/parent/messages?tab=community"
-              className="self-start inline-flex items-center gap-1.5 bg-[#4a7c59] hover:bg-[#3d6a4a] text-white text-xs font-semibold px-3 py-1.5 rounded-full transition-colors"
+              href="/parent/preferences"
+              className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-4 flex flex-col gap-3 shadow-sm hover:shadow-md transition-shadow"
             >
-              Join Now <ChevronRight size={13} />
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold bg-amber-500 text-white px-2 py-0.5 rounded-full font-body">
+                  Action Needed
+                </span>
+                <span className="text-sm font-semibold text-amber-900 font-heading">
+                  Activity Preferences
+                </span>
+              </div>
+              <p className="text-xs text-amber-800 font-body leading-relaxed">
+                Your child has upcoming activities at Sage Field. Let us know how they&apos;d like to participate — cooking, watching, or full involvement.
+              </p>
+              <div className="self-start inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-3 py-1.5 rounded-full transition-colors font-body">
+                Set Preferences <ChevronRight size={13} />
+              </div>
             </Link>
-          </div>
+          )}
 
           {/* Summer info banner */}
           <SummerInfoSheet />

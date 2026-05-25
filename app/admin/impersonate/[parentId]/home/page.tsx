@@ -1,5 +1,7 @@
 import { createAdminClient } from "@/app/lib/supabase-server";
 import { notFound } from "next/navigation";
+import { getPublishedActivities } from "@/app/actions/activities";
+import { computePaidDates } from "@/app/lib/compute-paid-dates";
 import AdminPreviewBanner from "../../AdminPreviewBanner";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import ImpersonateNotificationBell from "../../ImpersonateNotificationBell";
@@ -62,6 +64,7 @@ export default async function ImpersonateHomePage({
     { data: dropOffData },
     { data: txData },
     { data: summerData },
+    publishedActivities,
   ] = await Promise.all([
     studentIds.length > 0
       ? adminClient
@@ -116,6 +119,7 @@ export default async function ImpersonateHomePage({
       .eq("user_id", parentId)
       .eq("approved", true)
       .in("program", ["summer_26", "both", "homeschool_drop_in"]),
+    getPublishedActivities(),
   ]);
 
   const studentMap: StudentMap = {};
@@ -135,6 +139,13 @@ export default async function ImpersonateHomePage({
     (dropOffData as { slot: string } | null)?.slot ?? null;
 
   const transactions = (txData ?? []) as StripeTransaction[];
+
+  const paidSets = computePaidDates(transactions);
+  const hasActivityForPaidDay = publishedActivities.some(
+    (a) =>
+      !!a.activity_date &&
+      students.some((s) => paidSets[s.id]?.has(a.activity_date!))
+  );
 
   const allSummerApps = ((summerData ?? []) as {
     id: string;
@@ -273,7 +284,7 @@ export default async function ImpersonateHomePage({
           initialCompletedIds={onboardingCompletedIds}
           checklistInteractive
           suppressReferralPopup
-          generalChannelMessages={[]}
+          hasActivityForPaidDay={hasActivityForPaidDay}
         />
       </main>
     </div>
