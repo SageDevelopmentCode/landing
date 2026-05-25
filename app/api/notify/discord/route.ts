@@ -13,6 +13,7 @@ import {
   createSpecialRequestEmbed,
   createParentFeedbackEmbed,
   createCareLogEmbed,
+  createActivityPreferencesSavedEmbed,
 } from "@/app/lib/discord";
 
 export async function POST(request: NextRequest) {
@@ -597,6 +598,19 @@ export async function POST(request: NextRequest) {
       }
       const embed = createCareLogEmbed({ teacherName, studentNames, activity, date });
       await sendDiscordNotification(embed, process.env.DISCORD_STUDENT_WEBHOOK_URL);
+      return NextResponse.json({ success: true });
+    }
+
+    if (type === "activity_preferences_saved") {
+      const { parentName, parentEmail, childName, preferences } = data;
+      if (!parentName || !parentEmail || !childName || !Array.isArray(preferences)) {
+        return NextResponse.json(
+          { error: "activity_preferences_saved requires parentName, parentEmail, childName, and preferences array" },
+          { status: 400 },
+        );
+      }
+      const embed = createActivityPreferencesSavedEmbed({ parentName, parentEmail, childName, preferences });
+      await sendDiscordNotification(embed, process.env.DISCORD_WEBHOOK_URL);
       return NextResponse.json({ success: true });
     }
 

@@ -114,7 +114,7 @@ export default async function ParentHomePage() {
   if ((enrolledCheck ?? []).length === 0) redirect("/parent/dashboard");
   const studentIds = students.map((s) => s.id);
 
-  const [{ data: checkInsData }, { data: eventsData }, { data: paymentsData }, { data: referralsData }, { data: dropOffData }, { data: txData }, { data: summerData }, onboardingCompletedIds, publishedActivities] =
+  const [{ data: checkInsData }, { data: eventsData }, { data: paymentsData }, { data: referralsData }, { data: dropOffData }, { data: txData }, { data: summerData }, { data: prefsData }, onboardingCompletedIds, publishedActivities] =
     await Promise.all([
       studentIds.length > 0
         ? adminClient
@@ -167,6 +167,11 @@ export default async function ParentHomePage() {
         .eq("user_id", user.id)
         .eq("approved", true)
         .in("program", ["summer_26", "both", "homeschool_drop_in"]),
+      adminClient
+        .schema("parent_app")
+        .from("activity_preferences")
+        .select("student_id, activity_id")
+        .eq("parent_id", user.id),
       getOnboardingProgress(),
       getPublishedActivities(),
     ]);
@@ -291,10 +296,17 @@ export default async function ParentHomePage() {
   const checklistComplete = onboardingCompletedIds.length >= 8;
 
   const paidSets = computePaidDates(transactions);
+  const prefSet = new Set(
+    (prefsData ?? []).map((p) => `${p.student_id}:${p.activity_id}`)
+  );
   const hasActivityForPaidDay = publishedActivities.some(
     (a) =>
       !!a.activity_date &&
-      students.some((s) => paidSets[s.id]?.has(a.activity_date!))
+      students.some(
+        (s) =>
+          paidSets[s.id]?.has(a.activity_date!) &&
+          !prefSet.has(`${s.id}:${a.id}`)
+      )
   );
 
   const unpaidSummerEnrollments = summerEnrollments.filter(
