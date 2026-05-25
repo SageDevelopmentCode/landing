@@ -22,6 +22,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { createActivity, deleteActivity, updateActivity } from "@/app/actions/activities";
+import ActivityDatePicker from "./ActivityDatePicker";
 import type { Activity, ActivityChangeLogEntry } from "@/app/actions/activities";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -38,6 +39,7 @@ type Food = { id: string; name: string; allergens: string; images: LocalImage[];
 type ActivityDraft = {
   name: string;
   description: string;
+  date: string;
   includesFood: boolean;
   status: "draft" | "published";
   visibility: "public" | "private";
@@ -81,6 +83,7 @@ function relativeTime(date: Date): string {
 const EMPTY_DRAFT: ActivityDraft = {
   name: "",
   description: "",
+  date: "",
   includesFood: false,
   status: "draft",
   visibility: "private",
@@ -115,6 +118,7 @@ function activityToDraft(activity: Activity): ActivityDraft {
   return {
     name: activity.title,
     description: activity.description ?? "",
+    date: activity.activity_date ?? "",
     includesFood: activity.includes_food,
     status: activity.status,
     visibility: activity.visibility,
@@ -150,6 +154,7 @@ function buildEditSummary(draft: ActivityDraft, original: Activity): string[] {
   const s: string[] = [];
   if (draft.name.trim() !== original.title) s.push(`Updated title to "${draft.name.trim()}"`);
   if (draft.description.trim() !== (original.description ?? "")) s.push("Updated description");
+  if (draft.date !== (original.activity_date ?? "")) s.push(`Activity date set to ${draft.date || "none"}`);
   if (draft.status !== original.status) s.push(`Status changed to ${draft.status}`);
   if (draft.visibility !== original.visibility) s.push(`Visibility changed to ${draft.visibility}`);
   if (draft.includesFood !== original.includes_food) s.push(`Includes food set to ${draft.includesFood}`);
@@ -610,6 +615,7 @@ function ActivityDrawer({
     const fd = new FormData();
     fd.append("title", draft.name.trim());
     fd.append("description", draft.description.trim());
+    fd.append("activityDate", draft.date);
     fd.append("includesFood", String(draft.includesFood));
     fd.append("status", draft.status);
     fd.append("visibility", draft.visibility);
@@ -737,6 +743,11 @@ function ActivityDrawer({
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold font-body text-gray-600 uppercase tracking-wide">Activity Images</label>
             <ImageUploadStrip images={draft.images} onAdd={addActivityImages} onRemove={removeActivityImage} />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold font-body text-gray-600 uppercase tracking-wide">Activity Date</label>
+            <ActivityDatePicker value={draft.date} onChange={(v) => set("date", v)} />
           </div>
 
           {/* Status + Visibility */}
@@ -1076,6 +1087,11 @@ function ActivityCard({
           {activity.includes_food && (
             <span className="flex items-center gap-1 text-[10px] font-semibold font-body text-amber-700 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full">
               <UtensilsCrossed className="w-3 h-3" />Food
+            </span>
+          )}
+          {activity.activity_date && (
+            <span className="text-[10px] font-body text-gray-500 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-full">
+              {new Date(activity.activity_date + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
             </span>
           )}
           <span className="text-[10px] font-body text-gray-400 ml-auto">{formatDate(activity.created_at)}</span>

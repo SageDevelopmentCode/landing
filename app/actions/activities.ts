@@ -57,6 +57,7 @@ export type Activity = {
   visibility: 'public' | 'private'
   created_by: string
   created_at: string
+  activity_date: string | null
   images: ActivityImage[]
   foods: ActivityFood[]
   change_log: ActivityChangeLogEntry[]
@@ -73,6 +74,7 @@ type RawActivityRow = {
   visibility: string
   created_by: string
   created_at: string
+  activity_date: string | null
   images: { id: string; storage_path: string }[]
   foods: {
     id: string
@@ -149,6 +151,7 @@ async function resolveAndAttach(
     visibility: (a.visibility === 'public' ? 'public' : 'private') as 'public' | 'private',
     created_by: a.created_by,
     created_at: a.created_at,
+    activity_date: a.activity_date ?? null,
     images: a.images.map((img) => ({
       id: img.id,
       storage_path: img.storage_path,
@@ -193,7 +196,7 @@ async function resolveAndAttach(
 }
 
 const FULL_SELECT = `
-  id, title, description, includes_food, status, visibility, created_by, created_at,
+  id, title, description, includes_food, status, visibility, created_by, created_at, activity_date,
   images:activity_images(id, storage_path),
   foods:activity_foods(
     id, name, sort_order, allergens,
@@ -386,13 +389,14 @@ export async function createActivity(
   }[] = foodsJson ? JSON.parse(foodsJson) : []
   const status = formData.get('status') === 'published' ? 'published' : 'draft'
   const visibility = formData.get('visibility') === 'public' ? 'public' : 'private'
+  const activityDate = (formData.get('activityDate') as string)?.trim() || null
 
   if (!title) return { error: 'Title is required' }
 
   const { data: activity, error: actErr } = await adminClient
     .schema('teachers')
     .from('activities')
-    .insert({ title, description, includes_food: includesFood, status, visibility, created_by: user.id })
+    .insert({ title, description, includes_food: includesFood, status, visibility, created_by: user.id, activity_date: activityDate })
     .select('id')
     .single()
 
@@ -476,6 +480,7 @@ export async function updateActivity(
   }[] = foodsJson ? JSON.parse(foodsJson) : []
   const status = formData.get('status') === 'published' ? 'published' : 'draft'
   const visibility = formData.get('visibility') === 'public' ? 'public' : 'private'
+  const activityDate = (formData.get('activityDate') as string)?.trim() || null
   const summaryJson = formData.get('summary') as string
   const summary: string[] = summaryJson ? JSON.parse(summaryJson) : ['Saved activity']
 
@@ -485,7 +490,7 @@ export async function updateActivity(
   const { error: updateErr } = await adminClient
     .schema('teachers')
     .from('activities')
-    .update({ title, description, includes_food: includesFood, status, visibility })
+    .update({ title, description, includes_food: includesFood, status, visibility, activity_date: activityDate })
     .eq('id', activityId)
     .eq('created_by', user.id)
 
