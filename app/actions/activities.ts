@@ -341,6 +341,26 @@ export async function getActivities(): Promise<Activity[]> {
   return resolveAndAttach(adminClient, rows as any)
 }
 
+export async function getPublishedActivities(): Promise<Activity[]> {
+  const adminClient = createAdminClient()
+
+  const { data: rows, error } = await adminClient
+    .schema('teachers')
+    .from('activities')
+    .select(FULL_SELECT)
+    .eq('is_deleted', false)
+    .eq('status', 'published')
+    .eq('visibility', 'public')
+    .order('created_at', { ascending: false })
+
+  if (error || !rows) {
+    console.error('getPublishedActivities error:', error)
+    return []
+  }
+
+  return resolveAndAttach(adminClient, rows as any)
+}
+
 // ─── Create Activity ──────────────────────────────────────────────────────────
 
 export async function createActivity(

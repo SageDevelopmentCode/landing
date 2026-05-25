@@ -19,6 +19,7 @@ import {
   Download,
   Menu,
   X,
+  SlidersHorizontal,
 } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 import HelpWidget from "../components/HelpWidget";
@@ -41,6 +42,7 @@ const moreItems: {
   badge?: string;
 }[] = [
   { label: "Enrollment", icon: ClipboardCheck, href: "/parent/dashboard" },
+  { label: "Preferences", icon: SlidersHorizontal, href: "/parent/preferences" },
   { label: "Forms & Documents", icon: FileText, href: "/parent/forms" },
   { label: "Volunteer Opportunities", icon: Heart, href: "/parent/volunteer" },
   {

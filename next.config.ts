@@ -18,6 +18,11 @@ const nextConfig: NextConfig = {
         hostname: 'vonuwpzepwrbdlectspd.supabase.co',
         pathname: '/storage/v1/object/public/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'vonuwpzepwrbdlectspd.supabase.co',
+        pathname: '/storage/v1/object/sign/**',
+      },
     ],
   },
 };
