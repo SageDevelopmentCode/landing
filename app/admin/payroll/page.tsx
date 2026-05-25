@@ -3,6 +3,7 @@ import { cssColors as colors } from '../design-system'
 import { Poppins } from 'next/font/google'
 import { PayrollClient } from './PayrollClient'
 import { getAllPaystubs } from '@/app/actions/paystubs'
+import { getClockSessionsForDate } from '@/app/actions/timeclock'
 
 const poppins = Poppins({ weight: ['300', '400', '700', '900'], subsets: ['latin'] })
 
@@ -25,9 +26,11 @@ async function getTeachersWithRates() {
 }
 
 export default async function AdminPayrollPage() {
-  const [paystubs, teachers] = await Promise.all([
+  const today = new Date().toISOString().slice(0, 10)
+  const [paystubs, teachers, clockSessions] = await Promise.all([
     getAllPaystubs(),
     getTeachersWithRates(),
+    getClockSessionsForDate(today),
   ])
 
   const pending  = paystubs.filter((p) => p.status === 'pending').length
@@ -66,6 +69,8 @@ export default async function AdminPayrollPage() {
       <PayrollClient
         paystubs={paystubs}
         teachers={teachers}
+        clockSessions={clockSessions}
+        clockSessionsDate={today}
       />
     </div>
   )

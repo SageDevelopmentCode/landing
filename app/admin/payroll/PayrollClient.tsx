@@ -16,6 +16,8 @@ import { TeacherOverviewTab } from './TeacherOverviewTab'
 import { PayPeriodHoursTab } from './PayPeriodHoursTab'
 import { EmployeeCodesTab } from './EmployeeCodesTab'
 import type { TeacherWithCode } from './EmployeeCodesTab'
+import { ClockSessionsTab } from './ClockSessionsTab'
+import type { ClockSessionWithTeacher } from '@/app/actions/timeclock'
 
 export type TeacherRate = {
   id: string
@@ -28,6 +30,8 @@ export type TeacherRate = {
 interface Props {
   paystubs: PaystubWithTeacher[]
   teachers: TeacherRate[]
+  clockSessions: ClockSessionWithTeacher[]
+  clockSessionsDate: string
 }
 
 export const STATUS_CFG = {
@@ -317,9 +321,9 @@ function TeacherRatesTab({ teachers: initial }: { teachers: TeacherRate[] }) {
 
 // ─── Main PayrollClient ───────────────────────────────────────────────────────
 
-export function PayrollClient({ paystubs: initial, teachers }: Props) {
+export function PayrollClient({ paystubs: initial, teachers, clockSessions, clockSessionsDate }: Props) {
   const [paystubs, setPaystubs] = useState<PaystubWithTeacher[]>(initial)
-  const [tab, setTab] = useState<'paystubs' | 'overview' | 'periods' | 'rates' | 'codes'>('paystubs')
+  const [tab, setTab] = useState<'paystubs' | 'overview' | 'periods' | 'rates' | 'codes' | 'clock-sessions'>('paystubs')
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [selectedStub, setSelectedStub] = useState<PaystubWithTeacher | null>(null)
@@ -379,7 +383,8 @@ export function PayrollClient({ paystubs: initial, teachers }: Props) {
         <button style={tabStyle(tab === 'overview')}  onClick={() => setTab('overview')}>Teacher Overview</button>
         <button style={tabStyle(tab === 'periods')}   onClick={() => setTab('periods')}>Pay Period Hours</button>
         <button style={tabStyle(tab === 'rates')}     onClick={() => setTab('rates')}>Teacher Rates</button>
-        <button style={tabStyle(tab === 'codes')}     onClick={() => setTab('codes')}>Employee Codes</button>
+        <button style={tabStyle(tab === 'codes')}          onClick={() => setTab('codes')}>Employee Codes</button>
+        <button style={tabStyle(tab === 'clock-sessions')} onClick={() => setTab('clock-sessions')}>Clock Sessions</button>
       </div>
 
       {tab === 'paystubs' && (
@@ -483,7 +488,8 @@ export function PayrollClient({ paystubs: initial, teachers }: Props) {
       {tab === 'overview' && <TeacherOverviewTab paystubs={paystubs} teachers={teachers} />}
       {tab === 'periods'  && <PayPeriodHoursTab paystubs={paystubs} />}
       {tab === 'rates'    && <TeacherRatesTab teachers={teachers} />}
-      {tab === 'codes'    && <EmployeeCodesTab teachers={teachers as TeacherWithCode[]} />}
+      {tab === 'codes'          && <EmployeeCodesTab teachers={teachers as TeacherWithCode[]} />}
+      {tab === 'clock-sessions' && <ClockSessionsTab initialSessions={clockSessions} initialDate={clockSessionsDate} />}
     </div>
   )
 }
