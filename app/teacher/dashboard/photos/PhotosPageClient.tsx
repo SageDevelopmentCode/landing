@@ -15,6 +15,8 @@ import {
   Newspaper,
   Share2,
   Globe,
+  Download,
+  Maximize2,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import PhotoUploadModal from "./PhotoUploadModal";
@@ -174,6 +176,42 @@ function StudentTagSidebar({
   );
 }
 
+// ─── Photo Lightbox ──────────────────────────────────────────────────────────
+
+function PhotoLightbox({ photo, onClose }: { photo: TeacherPhoto; onClose: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[70] bg-black/90 flex items-center justify-center p-4"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 p-2 text-white/70 hover:text-white cursor-pointer transition-colors"
+      >
+        <X className="w-5 h-5" />
+      </button>
+      <motion.img
+        initial={{ scale: 0.92, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.92, opacity: 0 }}
+        transition={{ type: "spring", damping: 24, stiffness: 300 }}
+        src={photo.signed_url ?? ""}
+        alt={photo.caption ?? ""}
+        className="max-h-[90vh] max-w-[90vw] object-contain rounded-xl"
+      />
+      {(photo.caption || photo.taken_on) && (
+        <div className="absolute bottom-6 left-0 right-0 text-center px-4 space-y-0.5 pointer-events-none">
+          {photo.caption && <p className="text-sm text-white/80 font-body">{photo.caption}</p>}
+          {photo.taken_on && <p className="text-xs text-white/50 font-body">{formatDate(photo.taken_on)}</p>}
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
 // ─── Photo Card ───────────────────────────────────────────────────────────────
 
 function PhotoCard({
@@ -196,7 +234,8 @@ function PhotoCard({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="relative group break-inside-avoid mb-3 rounded-xl overflow-hidden bg-gray-100 shadow-sm"
+      className="relative group break-inside-avoid mb-3 rounded-xl overflow-hidden bg-gray-100 shadow-sm cursor-pointer"
+      onClick={() => onEdit(photo)}
     >
       {photo.signed_url ? (
         <img src={photo.signed_url} alt={photo.caption ?? ""} className="w-full h-auto block" loading="lazy" />
@@ -207,7 +246,7 @@ function PhotoCard({
       )}
 
       <button
-        onClick={() => onEdit(photo)}
+        onClick={(e) => { e.stopPropagation(); onEdit(photo); }}
         className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 rounded-lg opacity-0 group-hover:opacity-100 transition-all cursor-pointer z-10"
       >
         <Pencil className="w-3.5 h-3.5 text-white" />
@@ -244,11 +283,13 @@ function PhotoCard({
                 className={`flex items-center gap-1 text-xs font-body px-2 py-0.5 rounded-full ${
                   t.consent_level === "NO"
                     ? "bg-red-50 text-red-600"
+                    : t.consent_level === "LIMITED"
+                    ? "bg-amber-50 text-amber-600"
                     : "bg-[#4a7c59]/10 text-[#4a7c59]"
                 }`}
               >
-                {t.consent_level === "NO" && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />
+                {(t.consent_level === "NO" || t.consent_level === "LIMITED") && (
+                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${t.consent_level === "NO" ? "bg-red-400" : "bg-amber-400"}`} />
                 )}
                 {t.name ?? "Unknown"}
               </span>
@@ -301,6 +342,7 @@ function EditPhotoModal({
   );
   const [selectedLabels, setSelectedLabels] = useState<string[]>(photo.publication_labels ?? []);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [isDeleting, startDeleteTransition] = useTransition();
@@ -340,6 +382,18 @@ function EditPhotoModal({
     });
   }
 
+  async function handleDownload() {
+    if (!photo.signed_url) return;
+    const res = await fetch(photo.signed_url);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `photo-${photo.id}.webp`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -365,7 +419,15 @@ function EditPhotoModal({
 
         <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
           {photo.signed_url && (
-            <img src={photo.signed_url} alt="" className="w-full rounded-xl object-cover max-h-48" />
+            <div className="relative">
+              <img src={photo.signed_url} alt="" className="w-full rounded-xl object-cover max-h-48" />
+              <button
+                onClick={() => setLightboxOpen(true)}
+                className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 rounded-lg text-white cursor-pointer transition-colors"
+              >
+                <Maximize2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
           )}
 
           <div>
@@ -454,6 +516,16 @@ function EditPhotoModal({
 
           {error && <p className="text-sm text-red-500 font-body">{error}</p>}
 
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleDownload}
+              className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 font-body transition-colors cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Download
+            </button>
+          </div>
+
           {confirmDelete ? (
             <div className="bg-red-50 rounded-xl p-3 space-y-2">
               <p className="text-sm text-red-700 font-body font-medium">Delete this photo?</p>
@@ -506,6 +578,12 @@ function EditPhotoModal({
             onChange={setSelectedStudentIds}
             onClose={() => setSidebarOpen(false)}
           />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {lightboxOpen && (
+          <PhotoLightbox photo={photo} onClose={() => setLightboxOpen(false)} />
         )}
       </AnimatePresence>
     </motion.div>
