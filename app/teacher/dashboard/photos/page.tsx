@@ -61,6 +61,8 @@ export default async function PhotosPage() {
         <PhotosPageClient
           initialPhotos={initialPhotos}
           enrolledStudents={enrolledStudents}
+          teacherName={fullName}
+          teacherProfileImageUrl={profileImageUrl}
         />
       </main>
     </div>

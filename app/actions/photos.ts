@@ -4,6 +4,8 @@ import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabas
 
 export type ConsentLevel = 'FULL' | 'LIMITED' | 'NO'
 
+export type PublicationLabel = 'newsletter' | 'social_media' | 'website'
+
 export type PhotoStudentTag = {
   student_id: string
   name: string | null
@@ -27,6 +29,7 @@ export type TeacherPhoto = {
   taken_on: string | null
   created_at: string
   tags: PhotoStudentTag[]
+  publication_labels: string[]
 }
 
 export async function getPhotos(): Promise<TeacherPhoto[]> {
@@ -39,7 +42,7 @@ export async function getPhotos(): Promise<TeacherPhoto[]> {
   const { data: photos } = await adminClient
     .schema('teachers')
     .from('photos')
-    .select('id, teacher_id, storage_path, caption, taken_on, created_at')
+    .select('id, teacher_id, storage_path, caption, taken_on, created_at, publication_labels')
     .eq('teacher_id', user.id)
     .eq('is_deleted', false)
     .order('created_at', { ascending: false })
@@ -111,6 +114,7 @@ export async function getPhotos(): Promise<TeacherPhoto[]> {
     taken_on: p.taken_on ?? null,
     created_at: p.created_at,
     tags: tagsMap.get(p.id) ?? [],
+    publication_labels: (p as any).publication_labels ?? [],
   }))
 }
 
@@ -181,7 +185,7 @@ export async function uploadPhoto(
   const { data: row, error: insertError } = await adminClient
     .schema('teachers')
     .from('photos')
-    .insert({ id: photoId, teacher_id: user.id, storage_path: storagePath, caption, taken_on: takenOn })
+    .insert({ id: photoId, teacher_id: user.id, storage_path: storagePath, caption, taken_on: takenOn, publication_labels: [] })
     .select('id, teacher_id, storage_path, caption, taken_on, created_at')
     .single()
 
@@ -203,6 +207,7 @@ export async function uploadPhoto(
       taken_on: row.taken_on ?? null,
       created_at: row.created_at,
       tags: [],
+      publication_labels: [],
     },
   }
 }
@@ -211,10 +216,12 @@ export async function updatePhotoMeta({
   photoId,
   caption,
   takenOn,
+  publicationLabels,
 }: {
   photoId: string
   caption: string | null
   takenOn: string | null
+  publicationLabels: string[]
 }): Promise<{ error?: string }> {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -224,7 +231,7 @@ export async function updatePhotoMeta({
   const { error } = await adminClient
     .schema('teachers')
     .from('photos')
-    .update({ caption, taken_on: takenOn, updated_at: new Date().toISOString() })
+    .update({ caption, taken_on: takenOn, publication_labels: publicationLabels, updated_at: new Date().toISOString() })
     .eq('id', photoId)
     .eq('teacher_id', user.id)
 

@@ -12,10 +12,22 @@ import {
   Tag,
   Upload,
   Check,
+  Newspaper,
+  Share2,
+  Globe,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import PhotoUploadModal from "./PhotoUploadModal";
 import { setPhotoTags, deletePhoto, updatePhotoMeta } from "@/app/actions/photos";
 import type { TeacherPhoto, StudentWithConsent, ConsentLevel } from "@/app/actions/photos";
+
+// ─── Publication Labels ───────────────────────────────────────────────────────
+
+const PUBLICATION_LABELS: { id: string; label: string; icon: LucideIcon }[] = [
+  { id: "newsletter",   label: "Newsletter",   icon: Newspaper },
+  { id: "social_media", label: "Social Media", icon: Share2 },
+  { id: "website",      label: "Website",      icon: Globe },
+]
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -164,7 +176,17 @@ function StudentTagSidebar({
 
 // ─── Photo Card ───────────────────────────────────────────────────────────────
 
-function PhotoCard({ photo, onEdit }: { photo: TeacherPhoto; onEdit: (p: TeacherPhoto) => void }) {
+function PhotoCard({
+  photo,
+  onEdit,
+  teacherName,
+  teacherProfileImageUrl,
+}: {
+  photo: TeacherPhoto;
+  onEdit: (p: TeacherPhoto) => void;
+  teacherName: string | null;
+  teacherProfileImageUrl: string | null;
+}) {
   const visibleTags = photo.tags.slice(0, 2);
   const extraCount = photo.tags.length - 2;
   const dateStr = formatDate(photo.taken_on);
@@ -186,10 +208,20 @@ function PhotoCard({ photo, onEdit }: { photo: TeacherPhoto; onEdit: (p: Teacher
 
       <button
         onClick={() => onEdit(photo)}
-        className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 rounded-lg opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+        className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 rounded-lg opacity-0 group-hover:opacity-100 transition-all cursor-pointer z-10"
       >
         <Pencil className="w-3.5 h-3.5 text-white" />
       </button>
+
+      <div className="absolute top-2 left-2 z-10">
+        {teacherProfileImageUrl ? (
+          <img src={teacherProfileImageUrl} alt="" className="w-8 h-8 rounded-full object-cover ring-2 ring-white" />
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-[#4a7c59]/80 flex items-center justify-center text-xs font-bold text-white ring-2 ring-white">
+            {getInitials(teacherName)}
+          </div>
+        )}
+      </div>
 
       <div className="px-3 py-2 bg-white">
         {photo.caption && (
@@ -226,6 +258,22 @@ function PhotoCard({ photo, onEdit }: { photo: TeacherPhoto; onEdit: (p: Teacher
             )}
           </div>
         )}
+
+        {photo.publication_labels.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-1.5">
+            {photo.publication_labels.map((id) => {
+              const meta = PUBLICATION_LABELS.find((l) => l.id === id);
+              if (!meta) return null;
+              const Icon = meta.icon;
+              return (
+                <span key={id} className="flex items-center gap-1 text-xs font-body px-2 py-0.5 rounded-full bg-blue-50 text-blue-600">
+                  <Icon className="w-3 h-3" />
+                  {meta.label}
+                </span>
+              );
+            })}
+          </div>
+        )}
       </div>
     </motion.div>
   );
@@ -251,6 +299,7 @@ function EditPhotoModal({
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>(
     photo.tags.map((t) => t.student_id)
   );
+  const [selectedLabels, setSelectedLabels] = useState<string[]>(photo.publication_labels ?? []);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -261,7 +310,7 @@ function EditPhotoModal({
     setError(null);
     startTransition(async () => {
       const [metaResult, tagsResult] = await Promise.all([
-        updatePhotoMeta({ photoId: photo.id, caption: caption.trim() || null, takenOn: takenOn || null }),
+        updatePhotoMeta({ photoId: photo.id, caption: caption.trim() || null, takenOn: takenOn || null, publicationLabels: selectedLabels }),
         setPhotoTags({ photoId: photo.id, studentIds: selectedStudentIds }),
       ]);
 
@@ -279,7 +328,7 @@ function EditPhotoModal({
           consent_level: s.consent_level,
         }));
 
-      onSaved({ id: photo.id, caption: caption.trim() || null, taken_on: takenOn || null, tags: updatedTags });
+      onSaved({ id: photo.id, caption: caption.trim() || null, taken_on: takenOn || null, tags: updatedTags, publication_labels: selectedLabels });
     });
   }
 
@@ -375,6 +424,34 @@ function EditPhotoModal({
             </div>
           </div>
 
+          <div>
+            <label className="block text-xs font-medium text-gray-500 font-body mb-1.5">Publication</label>
+            <div className="flex flex-wrap gap-2">
+              {PUBLICATION_LABELS.map(({ id, label, icon: Icon }) => {
+                const active = selectedLabels.includes(id);
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() =>
+                      setSelectedLabels((prev) =>
+                        active ? prev.filter((l) => l !== id) : [...prev, id]
+                      )
+                    }
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium font-body transition-colors cursor-pointer ${
+                      active
+                        ? "bg-[#4a7c59] text-white"
+                        : "border border-gray-200 text-gray-600 hover:border-[#4a7c59] hover:text-[#4a7c59]"
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {error && <p className="text-sm text-red-500 font-body">{error}</p>}
 
           {confirmDelete ? (
@@ -440,9 +517,11 @@ function EditPhotoModal({
 interface Props {
   initialPhotos: TeacherPhoto[];
   enrolledStudents: StudentWithConsent[];
+  teacherName: string | null;
+  teacherProfileImageUrl: string | null;
 }
 
-export default function PhotosPageClient({ initialPhotos, enrolledStudents }: Props) {
+export default function PhotosPageClient({ initialPhotos, enrolledStudents, teacherName, teacherProfileImageUrl }: Props) {
   const [photos, setPhotos] = useState<TeacherPhoto[]>(initialPhotos);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [editingPhoto, setEditingPhoto] = useState<TeacherPhoto | null>(null);
@@ -505,7 +584,7 @@ export default function PhotosPageClient({ initialPhotos, enrolledStudents }: Pr
         <AnimatePresence>
           <div className="columns-2 sm:columns-3 lg:columns-4 gap-3 px-6 pb-6">
             {photos.map((photo) => (
-              <PhotoCard key={photo.id} photo={photo} onEdit={setEditingPhoto} />
+              <PhotoCard key={photo.id} photo={photo} onEdit={setEditingPhoto} teacherName={teacherName} teacherProfileImageUrl={teacherProfileImageUrl} />
             ))}
           </div>
         </AnimatePresence>
