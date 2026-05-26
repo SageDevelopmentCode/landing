@@ -38,84 +38,37 @@ export async function getPhotos(): Promise<TeacherPhoto[]> {
   if (!user) return []
 
   const adminClient = createAdminClient()
+  const { data, error } = await adminClient.rpc('get_teacher_photos', { p_teacher_id: user.id })
 
-  const { data: photos } = await adminClient
-    .schema('teachers')
-    .from('photos')
-    .select('id, teacher_id, storage_path, caption, taken_on, created_at, publication_labels')
-    .eq('teacher_id', user.id)
-    .eq('is_deleted', false)
-    .order('created_at', { ascending: false })
-
-  if (!photos || photos.length === 0) return []
-
-  const photoIds = photos.map((p) => p.id)
-  const storagePaths = photos.map((p) => p.storage_path)
-
-  const [{ data: tagRows }, { data: signedUrls }] = await Promise.all([
-    adminClient
-      .schema('teachers')
-      .from('photo_student_tags')
-      .select('photo_id, student_id')
-      .in('photo_id', photoIds),
-    adminClient.storage.from('teacher-photos').createSignedUrls(storagePaths, 3600),
-  ])
-
-  const signedMap = new Map<string, string>()
-  for (const entry of signedUrls ?? []) {
-    if (entry.signedUrl && entry.path) signedMap.set(entry.path, entry.signedUrl)
+  if (error) {
+    console.error('[getPhotos] RPC error:', error)
+    return []
   }
 
-  const studentIds = [...new Set((tagRows ?? []).map((t) => t.student_id))]
-  const studentMap = new Map<string, { name: string | null; profile_image_url: string | null; consent_level: ConsentLevel | null }>()
+  if (!data) return []
 
-  if (studentIds.length > 0) {
-    const [{ data: students }, { data: consentRows }] = await Promise.all([
-      adminClient
-        .schema('admin')
-        .from('students')
-        .select('id, child_legal_name, profile_image_url')
-        .in('id', studentIds),
-      adminClient
-        .schema('parent_app')
-        .from('student_photo_release_consent')
-        .select('student_id, consent_level')
-        .in('student_id', studentIds),
-    ])
-    const consentMap = new Map((consentRows ?? []).map((c) => [c.student_id, c.consent_level as ConsentLevel]))
-    for (const s of students ?? []) {
-      studentMap.set(s.id, {
-        name: s.child_legal_name ?? null,
-        profile_image_url: s.profile_image_url ?? null,
-        consent_level: consentMap.get(s.id) ?? null,
-      })
-    }
-  }
-
-  const tagsMap = new Map<string, PhotoStudentTag[]>()
-  for (const tag of tagRows ?? []) {
-    const list = tagsMap.get(tag.photo_id) ?? []
-    const student = studentMap.get(tag.student_id)
-    list.push({
-      student_id: tag.student_id,
-      name: student?.name ?? null,
-      profile_image_url: student?.profile_image_url ?? null,
-      consent_level: student?.consent_level ?? null,
-    })
-    tagsMap.set(tag.photo_id, list)
-  }
-
-  return photos.map((p) => ({
+  return (data as any[]).map((p: any) => ({
     id: p.id,
     teacher_id: p.teacher_id,
     storage_path: p.storage_path,
-    signed_url: signedMap.get(p.storage_path) ?? null,
+    signed_url: null,
     caption: p.caption ?? null,
     taken_on: p.taken_on ?? null,
     created_at: p.created_at,
-    tags: tagsMap.get(p.id) ?? [],
-    publication_labels: (p as any).publication_labels ?? [],
+    tags: (p.tags ?? []) as PhotoStudentTag[],
+    publication_labels: (p.publication_labels ?? []) as string[],
   }))
+}
+
+export async function getSignedUrls(storagePaths: string[]): Promise<Record<string, string>> {
+  if (storagePaths.length === 0) return {}
+  const adminClient = createAdminClient()
+  const { data } = await adminClient.storage.from('teacher-photos').createSignedUrls(storagePaths, 3600)
+  const result: Record<string, string> = {}
+  for (const entry of data ?? []) {
+    if (entry.signedUrl && entry.path) result[entry.path] = entry.signedUrl
+  }
+  return result
 }
 
 export async function getEnrolledStudentsWithConsent(): Promise<StudentWithConsent[]> {

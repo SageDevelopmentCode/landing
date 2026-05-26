@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import PhotoUploadModal from "./PhotoUploadModal";
-import { setPhotoTags, deletePhoto, updatePhotoMeta } from "@/app/actions/photos";
+import { setPhotoTags, deletePhoto, updatePhotoMeta, getSignedUrls } from "@/app/actions/photos";
 import type { TeacherPhoto, StudentWithConsent, ConsentLevel } from "@/app/actions/photos";
 
 // ─── Date Grouping ────────────────────────────────────────────────────────────
@@ -266,11 +266,13 @@ function PhotoCard({
   onEdit,
   teacherName,
   teacherProfileImageUrl,
+  containerRef,
 }: {
   photo: TeacherPhoto;
   onEdit: (p: TeacherPhoto) => void;
   teacherName: string | null;
   teacherProfileImageUrl: string | null;
+  containerRef?: (el: HTMLDivElement | null) => void;
 }) {
   const visibleTags = photo.tags.slice(0, 2);
   const extraCount = photo.tags.length - 2;
@@ -282,6 +284,8 @@ function PhotoCard({
 
   return (
     <motion.div
+      ref={containerRef}
+      data-storage-path={photo.storage_path}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -663,6 +667,50 @@ export default function PhotosPageClient({ initialPhotos, enrolledStudents, teac
     initialPhotos.length > 0 ? (initialPhotos[0].taken_on ?? "no-date") : null
   );
 
+  // ─── Lazy signed-URL loading ──────────────────────────────────────────────
+  const urlObserverRef = useRef<IntersectionObserver | null>(null);
+  const observedPhotoIds = useRef<Set<string>>(new Set());
+  const pendingPathsRef = useRef<Set<string>>(new Set());
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function getUrlObserver() {
+    if (!urlObserverRef.current) {
+      urlObserverRef.current = new IntersectionObserver(
+        (entries) => {
+          let added = false;
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            const storagePath = (entry.target as HTMLElement).dataset.storagePath;
+            if (storagePath) {
+              pendingPathsRef.current.add(storagePath);
+              added = true;
+            }
+            urlObserverRef.current?.unobserve(entry.target);
+          }
+          if (!added) return;
+          if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+          debounceTimerRef.current = setTimeout(async () => {
+            const paths = [...pendingPathsRef.current];
+            pendingPathsRef.current.clear();
+            const urlMap = await getSignedUrls(paths);
+            setPhotos((prev) =>
+              prev.map((p) => (urlMap[p.storage_path] ? { ...p, signed_url: urlMap[p.storage_path] } : p))
+            );
+          }, 50);
+        },
+        { rootMargin: "200px" }
+      );
+    }
+    return urlObserverRef.current;
+  }
+
+  useEffect(() => {
+    return () => {
+      urlObserverRef.current?.disconnect();
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
+  }, []);
+
   function scrollToSection(date: string) {
     const el = sectionRefs.current.get(date);
     const container = scrollContainerRef.current;
@@ -794,6 +842,12 @@ export default function PhotosPageClient({ initialPhotos, enrolledStudents, teac
                       onEdit={setEditingPhoto}
                       teacherName={teacherName}
                       teacherProfileImageUrl={teacherProfileImageUrl}
+                      containerRef={(el) => {
+                        if (!el || photo.signed_url) return;
+                        if (observedPhotoIds.current.has(photo.id)) return;
+                        observedPhotoIds.current.add(photo.id);
+                        getUrlObserver().observe(el);
+                      }}
                     />
                   ))}
                 </div>
