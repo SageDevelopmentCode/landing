@@ -29,6 +29,7 @@ import {
   PenLine,
   ArrowLeftRight,
   Shield,
+  Camera,
 } from "lucide-react";
 import { cssColors as colors, radius, cssShadows as shadows } from "../design-system";
 import { useTheme } from "./ThemeProvider";
@@ -63,6 +64,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { name: "Payroll",   href: "/admin/payroll",   icon: <CreditCard className="w-4 h-4" /> },
       { name: "Messages",  href: "/admin/messages",  icon: <MessageSquare className="w-4 h-4" /> },
       { name: "DM Monitor", href: "/admin/moderation", icon: <Shield className="w-4 h-4" /> },
+      { name: "Photo Permissions", href: "/admin/photo-permissions", icon: <Camera className="w-4 h-4" /> },
       { name: "Calendar",  href: "/admin/calendar",  icon: <CalendarDays className="w-4 h-4" /> },
 { name: "Marketing", href: "/admin/marketing", icon: <Megaphone className="w-4 h-4" /> },
       { name: "Impersonate", href: "/admin/impersonate", icon: <Eye className="w-4 h-4" /> },

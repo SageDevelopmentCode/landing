@@ -18,6 +18,7 @@ import {
   Newspaper,
   Droplets,
   ActivitySquare,
+  Camera,
 } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 
@@ -37,6 +38,7 @@ const moreItems: { label: string; icon: LucideIcon; href: string }[] = [
   { label: "Newsletter",          icon: Newspaper,  href: "/teacher/dashboard/newsletter" },
   { label: "Payroll",             icon: CreditCard, href: "/teacher/dashboard/payroll" },
   { label: "Inventory",           icon: Package,    href: "/teacher/dashboard/inventory" },
+  { label: "Photos",              icon: Camera,     href: "/teacher/dashboard/photos" },
   { label: "Forms and Documents", icon: FileText,   href: "#" },
 ];
 
