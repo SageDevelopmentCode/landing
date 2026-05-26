@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useMemo, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Camera,
@@ -23,6 +23,46 @@ import PhotoUploadModal from "./PhotoUploadModal";
 import { setPhotoTags, deletePhoto, updatePhotoMeta } from "@/app/actions/photos";
 import type { TeacherPhoto, StudentWithConsent, ConsentLevel } from "@/app/actions/photos";
 
+// ─── Date Grouping ────────────────────────────────────────────────────────────
+
+type DateGroup = { date: string; label: string; shortLabel: string; photos: TeacherPhoto[] }
+
+function groupPhotosByDate(photos: TeacherPhoto[]): DateGroup[] {
+  const map = new Map<string, TeacherPhoto[]>()
+  for (const p of photos) {
+    const key = p.taken_on ?? "no-date"
+    if (!map.has(key)) map.set(key, [])
+    map.get(key)!.push(p)
+  }
+  return Array.from(map.entries())
+    .sort(([a], [b]) => {
+      if (a === "no-date") return 1
+      if (b === "no-date") return -1
+      return b.localeCompare(a)
+    })
+    .map(([date, photos]) => ({
+      date,
+      label:
+        date === "no-date"
+          ? "No date"
+          : new Date(date + "T00:00:00").toLocaleDateString("en-US", {
+              weekday: "long",
+              month: "long",
+              day: "numeric",
+              year: "numeric",
+            }),
+      shortLabel:
+        date === "no-date"
+          ? "No date"
+          : new Date(date + "T00:00:00").toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            }),
+      photos,
+    }))
+}
+
 // ─── Publication Labels ───────────────────────────────────────────────────────
 
 const PUBLICATION_LABELS: { id: string; label: string; icon: LucideIcon }[] = [
@@ -42,6 +82,13 @@ function formatDate(iso: string | null): string | null {
 function getInitials(name: string | null): string {
   if (!name) return "?";
   return name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+}
+
+function shortName(fullName: string | null): string {
+  if (!fullName) return "Unknown";
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0];
+  return `${parts[0]} ${parts[parts.length - 1][0]}.`;
 }
 
 function ConsentBadge({ level }: { level: ConsentLevel | null }) {
@@ -228,6 +275,10 @@ function PhotoCard({
   const visibleTags = photo.tags.slice(0, 2);
   const extraCount = photo.tags.length - 2;
   const dateStr = formatDate(photo.taken_on);
+  const visibleLabels = PUBLICATION_LABELS.filter((l) =>
+    photo.publication_labels.includes(l.id)
+  ).slice(0, 2);
+  const extraLabelCount = Math.max(0, photo.publication_labels.length - 2);
 
   return (
     <motion.div
@@ -238,7 +289,7 @@ function PhotoCard({
       onClick={() => onEdit(photo)}
     >
       {photo.signed_url ? (
-        <img src={photo.signed_url} alt={photo.caption ?? ""} className="w-full h-auto block" loading="lazy" />
+        <img src={photo.signed_url} alt={photo.caption ?? ""} className="w-full max-h-52 object-cover block" loading="lazy" />
       ) : (
         <div className="w-full h-40 bg-gray-200 flex items-center justify-center">
           <Camera className="w-8 h-8 text-gray-400" />
@@ -262,59 +313,59 @@ function PhotoCard({
         )}
       </div>
 
-      <div className="px-3 py-2 bg-white">
-        {photo.caption && (
-          <p className="text-sm font-body text-gray-700 line-clamp-2 mb-1">{photo.caption}</p>
-        )}
-        {dateStr && <p className="text-xs font-body text-gray-400 mb-1.5">{dateStr}</p>}
+      <div className="px-3 pt-2 pb-2.5 bg-white">
+        {/* Row 1: date — always rendered, empty string keeps the line height */}
+        <p className="text-xs font-body text-gray-400 mb-1.5 h-4 leading-4">
+          {dateStr ?? ""}
+        </p>
 
-        {photo.tags.length === 0 ? (
-          <button
-            onClick={() => onEdit(photo)}
-            className="text-xs font-body text-gray-400 hover:text-[#4a7c59] transition-colors cursor-pointer"
-          >
-            + Add tags
-          </button>
-        ) : (
-          <div className="flex flex-wrap gap-1">
-            {visibleTags.map((t) => (
-              <span
-                key={t.student_id}
-                className={`flex items-center gap-1 text-xs font-body px-2 py-0.5 rounded-full ${
-                  t.consent_level === "NO"
-                    ? "bg-red-50 text-red-600"
-                    : t.consent_level === "LIMITED"
-                    ? "bg-amber-50 text-amber-600"
-                    : "bg-[#4a7c59]/10 text-[#4a7c59]"
-                }`}
-              >
-                {(t.consent_level === "NO" || t.consent_level === "LIMITED") && (
-                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${t.consent_level === "NO" ? "bg-red-400" : "bg-amber-400"}`} />
-                )}
-                {t.name ?? "Unknown"}
-              </span>
-            ))}
-            {extraCount > 0 && (
-              <span className="text-xs font-body text-gray-400">+{extraCount} more</span>
-            )}
-          </div>
-        )}
-
-        {photo.publication_labels.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-1.5">
-            {photo.publication_labels.map((id) => {
-              const meta = PUBLICATION_LABELS.find((l) => l.id === id);
-              if (!meta) return null;
-              const Icon = meta.icon;
-              return (
-                <span key={id} className="flex items-center gap-1 text-xs font-body px-2 py-0.5 rounded-full bg-blue-50 text-blue-600">
-                  <Icon className="w-3 h-3" />
-                  {meta.label}
+        {/* Row 2: student tags — single non-wrapping row */}
+        <div className="flex items-center gap-1 mb-1.5 overflow-hidden flex-nowrap">
+          {photo.tags.length === 0 ? (
+            <button
+              onClick={() => onEdit(photo)}
+              className="text-xs font-body text-gray-400 hover:text-[#4a7c59] transition-colors cursor-pointer flex-shrink-0"
+            >
+              + Add tags
+            </button>
+          ) : (
+            <>
+              {visibleTags.map((t) => (
+                <span
+                  key={t.student_id}
+                  className={`flex items-center gap-1 text-xs font-body px-2 py-0.5 rounded-full flex-shrink-0 ${
+                    t.consent_level === "NO"
+                      ? "bg-red-50 text-red-600"
+                      : t.consent_level === "LIMITED"
+                      ? "bg-amber-50 text-amber-600"
+                      : "bg-[#4a7c59]/10 text-[#4a7c59]"
+                  }`}
+                >
+                  {(t.consent_level === "NO" || t.consent_level === "LIMITED") && (
+                    <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${t.consent_level === "NO" ? "bg-red-400" : "bg-amber-400"}`} />
+                  )}
+                  {shortName(t.name)}
                 </span>
-              );
-            })}
-          </div>
-        )}
+              ))}
+              {extraCount > 0 && (
+                <span className="text-xs font-body text-gray-400 flex-shrink-0">+{extraCount}</span>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Row 3: publication labels — always rendered so all cards share the same height */}
+        <div className="flex items-center gap-1 min-h-[20px] overflow-hidden flex-nowrap">
+          {visibleLabels.map(({ id, label, icon: Icon }) => (
+            <span key={id} className="flex items-center gap-1 text-xs font-body px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 flex-shrink-0">
+              <Icon className="w-3 h-3" />
+              {label}
+            </span>
+          ))}
+          {extraLabelCount > 0 && (
+            <span className="text-xs font-body text-blue-400 flex-shrink-0">+{extraLabelCount}</span>
+          )}
+        </div>
       </div>
     </motion.div>
   );
@@ -604,6 +655,41 @@ export default function PhotosPageClient({ initialPhotos, enrolledStudents, teac
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [editingPhoto, setEditingPhoto] = useState<TeacherPhoto | null>(null);
 
+  const dateGroups = useMemo(() => groupPhotosByDate(photos), [photos]);
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
+  const [activeDate, setActiveDate] = useState<string | null>(() =>
+    initialPhotos.length > 0 ? (initialPhotos[0].taken_on ?? "no-date") : null
+  );
+
+  function scrollToSection(date: string) {
+    const el = sectionRefs.current.get(date);
+    const container = scrollContainerRef.current;
+    if (!el || !container) return;
+    container.scrollTo({ top: el.offsetTop - 72, behavior: "smooth" });
+    setActiveDate(date);
+  }
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || dateGroups.length === 0) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((e) => e.isIntersecting);
+        if (visible.length > 0) {
+          const topmost = visible.reduce((a, b) =>
+            a.boundingClientRect.top <= b.boundingClientRect.top ? a : b
+          );
+          setActiveDate((topmost.target as HTMLElement).dataset.date ?? null);
+        }
+      },
+      { root: container, threshold: 0, rootMargin: "-60px 0px -60% 0px" }
+    );
+    sectionRefs.current.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [dateGroups]);
+
   function handleUploaded(uploaded: TeacherPhoto[]) {
     setPhotos((prev) => [...uploaded, ...prev]);
     setIsUploadOpen(false);
@@ -620,76 +706,125 @@ export default function PhotosPageClient({ initialPhotos, enrolledStudents, teac
   }
 
   return (
-    <div className="flex-1 overflow-y-auto">
-      {/* Page header */}
-      <div className="px-6 pt-6 pb-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold font-body text-gray-900">Photos</h1>
-          <p className="text-sm text-gray-400 font-body mt-0.5">
-            {photos.length > 0
-              ? `${photos.length} photo${photos.length !== 1 ? "s" : ""}`
-              : "Upload photos of your class"}
-          </p>
-        </div>
-        <button
-          onClick={() => setIsUploadOpen(true)}
-          className="flex items-center gap-1.5 px-4 py-2 bg-[#4a7c59] text-white text-sm font-semibold font-body rounded-xl hover:bg-[#3d6b4a] transition-colors cursor-pointer"
-        >
-          <Upload className="w-4 h-4" />
-          Upload
-        </button>
-      </div>
-
-      {/* Grid or empty state */}
-      {photos.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-[#4a7c59]/10 flex items-center justify-center mb-4">
-            <Camera className="w-8 h-8 text-[#4a7c59]" />
-          </div>
-          <h2 className="text-base font-semibold font-body text-gray-800 mb-1">No photos yet</h2>
-          <p className="text-sm text-gray-400 font-body mb-5">
-            Upload photos from your class days and tag your students.
-          </p>
-          <button
-            onClick={() => setIsUploadOpen(true)}
-            className="flex items-center gap-1.5 px-4 py-2.5 bg-[#4a7c59] text-white text-sm font-semibold font-body rounded-xl hover:bg-[#3d6b4a] transition-colors cursor-pointer"
-          >
-            <Upload className="w-4 h-4" />
-            Upload your first photo
-          </button>
-        </div>
-      ) : (
-        <AnimatePresence>
-          <div className="columns-2 sm:columns-3 lg:columns-4 gap-3 px-6 pb-6">
-            {photos.map((photo) => (
-              <PhotoCard key={photo.id} photo={photo} onEdit={setEditingPhoto} teacherName={teacherName} teacherProfileImageUrl={teacherProfileImageUrl} />
-            ))}
-          </div>
-        </AnimatePresence>
+    <div className="flex-1 flex overflow-hidden">
+      {/* TOC sidebar */}
+      {photos.length > 0 && (
+        <aside className="w-44 flex-shrink-0 border-r border-gray-100 overflow-y-auto py-4 hidden md:flex flex-col">
+          <p className="px-4 mb-2 text-xs font-medium text-gray-400 font-body uppercase tracking-wide">Dates</p>
+          {dateGroups.map(({ date, shortLabel, photos: groupPhotos }) => (
+            <button
+              key={date}
+              onClick={() => scrollToSection(date)}
+              className={`w-full text-left px-4 py-2 transition-colors cursor-pointer ${
+                activeDate === date
+                  ? "text-[#4a7c59] font-semibold bg-[#4a7c59]/5"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+              }`}
+            >
+              <span className="text-xs font-body block leading-tight">{shortLabel}</span>
+              <span className="text-xs text-gray-400 font-body">
+                {groupPhotos.length} photo{groupPhotos.length !== 1 ? "s" : ""}
+              </span>
+            </button>
+          ))}
+        </aside>
       )}
 
-      <AnimatePresence>
-        {isUploadOpen && (
-          <PhotoUploadModal
-            key="upload-modal"
-            onClose={() => setIsUploadOpen(false)}
-            onUploaded={handleUploaded}
-          />
-        )}
-      </AnimatePresence>
+      {/* Main content */}
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
+        {/* Page header */}
+        <div className="px-6 pt-6 pb-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-semibold font-body text-gray-900">Photos</h1>
+            <p className="text-sm text-gray-400 font-body mt-0.5">
+              {photos.length > 0
+                ? `${photos.length} photo${photos.length !== 1 ? "s" : ""}`
+                : "Upload photos of your class"}
+            </p>
+          </div>
+          <button
+            onClick={() => setIsUploadOpen(true)}
+            className="flex items-center gap-1.5 px-4 py-2 bg-[#4a7c59] text-white text-sm font-semibold font-body rounded-xl hover:bg-[#3d6b4a] transition-colors cursor-pointer"
+          >
+            <Upload className="w-4 h-4" />
+            Upload
+          </button>
+        </div>
 
-      <AnimatePresence>
-        {editingPhoto && (
-          <EditPhotoModal
-            key={editingPhoto.id}
-            photo={editingPhoto}
-            students={enrolledStudents}
-            onClose={() => setEditingPhoto(null)}
-            onSaved={handleSaved}
-            onDeleted={handleDeleted}
-          />
+        {/* Date sections or empty state */}
+        {photos.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-[#4a7c59]/10 flex items-center justify-center mb-4">
+              <Camera className="w-8 h-8 text-[#4a7c59]" />
+            </div>
+            <h2 className="text-base font-semibold font-body text-gray-800 mb-1">No photos yet</h2>
+            <p className="text-sm text-gray-400 font-body mb-5">
+              Upload photos from your class days and tag your students.
+            </p>
+            <button
+              onClick={() => setIsUploadOpen(true)}
+              className="flex items-center gap-1.5 px-4 py-2.5 bg-[#4a7c59] text-white text-sm font-semibold font-body rounded-xl hover:bg-[#3d6b4a] transition-colors cursor-pointer"
+            >
+              <Upload className="w-4 h-4" />
+              Upload your first photo
+            </button>
+          </div>
+        ) : (
+          <div className="pb-8">
+            {dateGroups.map((group) => (
+              <section
+                key={group.date}
+                data-date={group.date}
+                ref={(el) => {
+                  if (el) sectionRefs.current.set(group.date, el);
+                  else sectionRefs.current.delete(group.date);
+                }}
+              >
+                <div className="px-6 pt-5 pb-3 flex items-baseline gap-2">
+                  <h2 className="text-sm font-semibold font-body text-gray-500">{group.label}</h2>
+                  <span className="text-xs text-gray-400 font-body">
+                    {group.photos.length} photo{group.photos.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
+                <div className="columns-2 sm:columns-3 lg:columns-4 gap-3 px-6">
+                  {group.photos.map((photo) => (
+                    <PhotoCard
+                      key={photo.id}
+                      photo={photo}
+                      onEdit={setEditingPhoto}
+                      teacherName={teacherName}
+                      teacherProfileImageUrl={teacherProfileImageUrl}
+                    />
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
         )}
-      </AnimatePresence>
+
+        <AnimatePresence>
+          {isUploadOpen && (
+            <PhotoUploadModal
+              key="upload-modal"
+              onClose={() => setIsUploadOpen(false)}
+              onUploaded={handleUploaded}
+            />
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {editingPhoto && (
+            <EditPhotoModal
+              key={editingPhoto.id}
+              photo={editingPhoto}
+              students={enrolledStudents}
+              onClose={() => setEditingPhoto(null)}
+              onSaved={handleSaved}
+              onDeleted={handleDeleted}
+            />
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
