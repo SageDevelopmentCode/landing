@@ -23,11 +23,13 @@ export type ParentEmergencyContactsRecord = {
   out_of_state_contact_phone: string | null
 }
 
-export async function getParentEmergencyContacts(): Promise<ParentEmergencyContactsRecord[]> {
+export async function getParentEmergencyContacts(parentId?: string): Promise<ParentEmergencyContactsRecord[]> {
   const supabase = await createServerSupabaseClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   console.log('[getParentEmergencyContacts] user:', user?.id ?? null, 'authError:', authError)
   if (!user) return []
+
+  const effectiveParentId = parentId ?? user.id
 
   const adminClient = createAdminClient()
 
@@ -35,7 +37,7 @@ export async function getParentEmergencyContacts(): Promise<ParentEmergencyConta
     .schema('admin')
     .from('students')
     .select('id, child_legal_name')
-    .eq('parent_id', user.id)
+    .eq('parent_id', effectiveParentId)
     .eq('is_deleted', false)
 
   console.log('[getParentEmergencyContacts] students:', students, 'studentsError:', studentsError)

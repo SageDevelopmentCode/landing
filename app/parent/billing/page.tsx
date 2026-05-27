@@ -8,6 +8,7 @@ import Image from "next/image";
 import Footer from "@/app/components/Footer";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import DashboardHeader from "@/app/parent/dashboard/DashboardHeader";
+import SharedAccessBanner from "@/app/parent/dashboard/SharedAccessBanner";
 import BillingPage from "./BillingPage";
 import ParentHeaderRight from "@/app/parent/components/ParentHeaderRight";
 
@@ -120,12 +121,22 @@ export default async function BillingRoute() {
 
   const adminClient = createAdminClient();
 
+  const { data: grant } = await adminClient
+    .schema("parent_app")
+    .from("dashboard_access_grants")
+    .select("owner_id")
+    .eq("grantee_id", user.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  const effectiveParentId = grant?.owner_id ?? user.id;
+
   const [{ data: txData }, { data: adminUser }, { data: pendingData }, { data: summerData }, { data: enrolledCheck }, { data: notesData }, { data: homeschoolNotesData }, { data: tuitionFeedbackCheck }] = await Promise.all([
     adminClient
       .schema("billing")
       .from("stripe_transactions")
       .select("*")
-      .eq("parent_id", user.id)
+      .eq("parent_id", effectiveParentId)
       .eq("is_deleted", false)
       .order("created_at", { ascending: false }),
     adminClient
@@ -138,38 +149,38 @@ export default async function BillingRoute() {
       .schema("billing")
       .from("pending_payment_requests")
       .select("id, student_id, program, payment_type, week, month, label, amount_cents, created_at")
-      .eq("parent_id", user.id)
+      .eq("parent_id", effectiveParentId)
       .eq("status", "pending")
       .order("created_at", { ascending: false }),
     adminClient
       .schema("parent_app")
       .from("applications")
       .select("id, student_id, child_grade, status, child_legal_name, program, drop_in_program")
-      .eq("user_id", user.id)
+      .eq("user_id", effectiveParentId)
       .eq("approved", true)
       .in("program", ["summer_26", "both", "homeschool_drop_in", "school_year_26_27"]),
     adminClient
       .schema("parent_app")
       .from("applications")
       .select("id")
-      .eq("user_id", user.id)
+      .eq("user_id", effectiveParentId)
       .eq("status", "enrolled")
       .limit(1),
     adminClient
       .schema("billing")
       .from("summer_week_commitments")
       .select("student_id, note")
-      .eq("parent_id", user.id),
+      .eq("parent_id", effectiveParentId),
     adminClient
       .schema("billing")
       .from("homeschool_day_commitments")
       .select("student_id, note")
-      .eq("parent_id", user.id),
+      .eq("parent_id", effectiveParentId),
     adminClient
       .schema("admin")
       .from("tuition_feedback")
       .select("id")
-      .eq("parent_id", user.id)
+      .eq("parent_id", effectiveParentId)
       .limit(1),
   ]);
 
@@ -178,6 +189,13 @@ export default async function BillingRoute() {
   const fullName = adminUser?.full_name ?? null;
   const profileImageUrl = adminUser?.profile_image_url ?? null;
   const hasSubmittedTuitionFeedback = (tuitionFeedbackCheck ?? []).length > 0;
+  const isSharedAccess = !!grant;
+
+  let primaryOwnerName: string | null = null;
+  if (isSharedAccess) {
+    const { data: ownerUser } = await adminClient.schema("admin").from("users").select("full_name").eq("id", effectiveParentId).single();
+    primaryOwnerName = ownerUser?.full_name ?? null;
+  }
 
   if ((enrolledCheck ?? []).length === 0) redirect("/parent/dashboard");
 
@@ -364,6 +382,8 @@ export default async function BillingRoute() {
           </div>
           <ParentHeaderRight userId={user.id} email={user.email ?? ""} fullName={fullName} profileImageUrl={profileImageUrl} />
         </DashboardHeader>
+
+        <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={primaryOwnerName} />
 
         <main className="flex-1 flex overflow-hidden">
           <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} unpaidSummerEnrollments={unpaidSummerEnrollments} paidWeeksByStudent={paidWeeksByStudent} parentId={user.id} parentEmail={user.email ?? ""} nonEnrolledApps={nonEnrolledApps} homeschoolDropInApps={homeschoolDropInApps} paidHomeschoolByStudent={paidHomeschoolByStudent} paidAftercareByStudent={paidAftercareByStudent} paidFunFridayByStudent={paidFunFridayByStudent} summerNotesByStudent={summerNotesByStudent} homeschoolNotesByStudent={homeschoolNotesByStudent} schoolYearOnlyApps={schoolYearOnlyApps} hasSubmittedTuitionFeedback={hasSubmittedTuitionFeedback} />

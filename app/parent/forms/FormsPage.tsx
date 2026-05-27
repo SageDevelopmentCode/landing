@@ -51,6 +51,7 @@ interface Props {
   religiousExemptionCountByStudent: Record<string, number>;
   parentId: string;
   parentName: string;
+  isSharedAccess?: boolean;
 }
 
 type DocId =

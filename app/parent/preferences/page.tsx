@@ -8,6 +8,7 @@ import Image from "next/image";
 import Footer from "@/app/components/Footer";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import DashboardHeader from "@/app/parent/dashboard/DashboardHeader";
+import SharedAccessBanner from "@/app/parent/dashboard/SharedAccessBanner";
 import ParentHeaderRight from "@/app/parent/components/ParentHeaderRight";
 import PreferencesPageClient from "./PreferencesPageClient";
 import { getPublishedActivities } from "@/app/actions/activities";
@@ -38,6 +39,16 @@ export default async function PreferencesPage() {
 
   const adminClient = createAdminClient();
 
+  const { data: grant } = await adminClient
+    .schema("parent_app")
+    .from("dashboard_access_grants")
+    .select("owner_id")
+    .eq("grantee_id", user.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  const effectiveParentId = grant?.owner_id ?? user.id;
+
   const [
     { data: adminUser },
     { data: enrolledCheck },
@@ -56,26 +67,26 @@ export default async function PreferencesPage() {
       .schema("parent_app")
       .from("applications")
       .select("id")
-      .eq("user_id", user.id)
+      .eq("user_id", effectiveParentId)
       .eq("status", "enrolled")
       .limit(1),
     adminClient
       .schema("admin")
       .from("students")
       .select("id, child_legal_name, profile_image_url")
-      .eq("parent_id", user.id)
+      .eq("parent_id", effectiveParentId)
       .eq("is_deleted", false),
     adminClient
       .schema("billing")
       .from("stripe_transactions")
       .select("payment_type, status, student_id, metadata")
-      .eq("parent_id", user.id)
+      .eq("parent_id", effectiveParentId)
       .eq("is_deleted", false),
     adminClient
       .schema("parent_app")
       .from("activity_preferences")
       .select("student_id, activity_id, participation_level, notes")
-      .eq("parent_id", user.id),
+      .eq("parent_id", effectiveParentId),
     getPublishedActivities(),
   ]);
 
@@ -83,6 +94,13 @@ export default async function PreferencesPage() {
 
   const fullName = adminUser?.full_name ?? null;
   const profileImageUrl = adminUser?.profile_image_url ?? null;
+  const isSharedAccess = !!grant;
+
+  let primaryOwnerName: string | null = null;
+  if (isSharedAccess) {
+    const { data: ownerUser } = await adminClient.schema("admin").from("users").select("full_name").eq("id", effectiveParentId).single();
+    primaryOwnerName = ownerUser?.full_name ?? null;
+  }
   const children: PreferenceChild[] = (studentsData ?? []) as PreferenceChild[];
 
   const paidSets = computePaidDates(txData ?? []);
@@ -119,12 +137,15 @@ export default async function PreferencesPage() {
           />
         </DashboardHeader>
 
+        <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={primaryOwnerName} />
+
         <main className="flex-1 flex overflow-hidden">
           <PreferencesPageClient
             children={children}
             activities={activities}
             paidDatesByStudent={paidDatesByStudent}
             savedPreferences={savedPreferences}
+            isSharedAccess={isSharedAccess}
           />
         </main>
       </div>

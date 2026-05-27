@@ -79,6 +79,7 @@ interface Props {
     { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] }
   >;
   notesByStudent: Record<string, LearningNote[]>;
+  isSharedAccess?: boolean;
 }
 
 function formatProgramLabel(program: string | undefined | null): string | null {
@@ -586,12 +587,14 @@ function LearningTab({
   learningStyle,
   strengthsInterests,
   currentChallenges,
+  isSharedAccess,
 }: {
   studentId: string;
   initialNotes: LearningNote[];
   learningStyle: string | null;
   strengthsInterests: string | null;
   currentChallenges: string | null;
+  isSharedAccess?: boolean;
 }) {
   const [notes, setNotes] = useState<LearningNote[]>(initialNotes);
   const [showForm, setShowForm] = useState(false);
@@ -767,7 +770,7 @@ function LearningTab({
                           {note.note_text}
                         </p>
                       </div>
-                      <div className="flex gap-1.5 flex-shrink-0 mt-0.5">
+                      {!isSharedAccess && <div className="flex gap-1.5 flex-shrink-0 mt-0.5">
                         <button
                           onClick={() => startEdit(note)}
                           className="text-gray-300 hover:text-[#4a7c59] transition-colors cursor-pointer"
@@ -787,7 +790,7 @@ function LearningTab({
                             <Trash2 className="w-4 h-4" />
                           )}
                         </button>
-                      </div>
+                      </div>}
                     </div>
                   )}
                 </li>
@@ -857,7 +860,7 @@ function LearningTab({
               </button>
             </div>
           </div>
-        ) : (
+        ) : !isSharedAccess ? (
           <button
             onClick={() => setShowForm(true)}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-[#4a7c59]/10 text-[#4a7c59] hover:bg-[#4a7c59]/20 transition-colors cursor-pointer mt-1"
@@ -865,7 +868,7 @@ function LearningTab({
             <Plus className="w-3.5 h-3.5" />
             Add Note
           </button>
-        )}
+        ) : null}
       </SectionCard>
     </div>
   );
@@ -1022,12 +1025,14 @@ function PickupPersonForm({
 function PickupTab({
   pickup,
   studentId,
+  isSharedAccess,
 }: {
   pickup: {
     plan: AuthorizedPickupPlan | null;
     persons: AuthorizedPickupPerson[];
   };
   studentId: string;
+  isSharedAccess?: boolean;
 }) {
   const [persons, setPersons] = useState<EditablePerson[]>(() =>
     pickup.persons.map(personToEditable),
@@ -1191,7 +1196,7 @@ function PickupTab({
                     />
                   )}
                 </div>
-                <div className="flex items-center gap-1 flex-shrink-0 pt-0.5">
+                {!isSharedAccess && <div className="flex items-center gap-1 flex-shrink-0 pt-0.5">
                   <button
                     onClick={() => startEdit(person)}
                     disabled={saving}
@@ -1212,7 +1217,7 @@ function PickupTab({
                       <Trash2 className="w-3.5 h-3.5" />
                     )}
                   </button>
-                </div>
+                </div>}
               </div>
             )}
           </div>
@@ -1243,7 +1248,7 @@ function PickupTab({
           </div>
         )}
 
-        {!addingNew && editingKey === null && (
+        {!isSharedAccess && !addingNew && editingKey === null && (
           <button
             onClick={startAdd}
             className="mt-3 flex items-center gap-1.5 text-sm text-[#4a7c59] font-semibold hover:underline cursor-pointer"
@@ -1293,9 +1298,11 @@ const SECTION_FIELDS: Record<SectionKey, string[]> = {
 function ProfileTab({
   child,
   onSave,
+  isSharedAccess,
 }: {
   child: Student;
   onSave: (updated: Partial<Student>) => void;
+  isSharedAccess?: boolean;
 }) {
   const [editingSection, setEditingSection] = useState<SectionKey | null>(null);
   const [draft, setDraft] = useState<Record<string, string>>({});
@@ -1345,6 +1352,7 @@ function ProfileTab({
   }
 
   function EditBtn({ section }: { section: SectionKey }) {
+    if (isSharedAccess) return null;
     return (
       <button
         onClick={() => enterEdit(section)}
@@ -1776,6 +1784,7 @@ function ChildProfile({
   initialProfileImageUrl,
   pickup,
   initialNotes,
+  isSharedAccess,
 }: {
   child: Student;
   teachers: TeacherAssignment[];
@@ -1786,6 +1795,7 @@ function ChildProfile({
     persons: AuthorizedPickupPerson[];
   };
   initialNotes: LearningNote[];
+  isSharedAccess?: boolean;
 }) {
   const searchParams = useSearchParams();
   const initialTab =
@@ -1849,10 +1859,10 @@ function ChildProfile({
       {/* Profile Hero */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6 flex items-center gap-6">
         <div
-          className="relative flex-shrink-0 w-20 h-20 rounded-full overflow-hidden cursor-pointer"
-          onMouseEnter={() => setAvatarHovered(true)}
+          className={`relative flex-shrink-0 w-20 h-20 rounded-full overflow-hidden ${isSharedAccess ? "" : "cursor-pointer"}`}
+          onMouseEnter={() => !isSharedAccess && setAvatarHovered(true)}
           onMouseLeave={() => setAvatarHovered(false)}
-          onClick={() => !uploading && fileInputRef.current?.click()}
+          onClick={() => !uploading && !isSharedAccess && fileInputRef.current?.click()}
         >
           {currentImageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -1869,7 +1879,7 @@ function ChildProfile({
               {initials}
             </div>
           )}
-          {(avatarHovered || uploading) && (
+          {!isSharedAccess && (avatarHovered || uploading) && (
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
               {uploading ? (
                 <Loader2 className="w-6 h-6 text-white animate-spin" />
@@ -1879,13 +1889,15 @@ function ChildProfile({
             </div>
           )}
         </div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleFileChange}
-        />
+        {!isSharedAccess && (
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+        )}
         <div className="min-w-0">
           <h2 className="text-2xl font-bold font-heading text-gray-800 mb-1">
             {child.child_legal_name ?? "Unknown"}
@@ -1978,6 +1990,7 @@ function ChildProfile({
               learningStyle={child.learning_style}
               strengthsInterests={child.strengths_interests}
               currentChallenges={child.current_challenges}
+              isSharedAccess={isSharedAccess}
             />
           )}
 
@@ -1990,7 +2003,7 @@ function ChildProfile({
           )}
 
           {activeTab === "pickup" && (
-            <PickupTab pickup={pickup} studentId={child.id} />
+            <PickupTab pickup={pickup} studentId={child.id} isSharedAccess={isSharedAccess} />
           )}
 
           {activeTab === "profile" && (
@@ -1999,6 +2012,7 @@ function ChildProfile({
               onSave={(updated) =>
                 setChildData((prev) => ({ ...prev, ...updated }))
               }
+              isSharedAccess={isSharedAccess}
             />
           )}
         </>
@@ -2014,6 +2028,7 @@ export default function ChildrenPage({
   studentProgramMap,
   pickupByStudent,
   notesByStudent,
+  isSharedAccess,
 }: Props) {
   // Sort: enrolled children first, non-enrolled last
   const sortedChildren = [...children].sort((a, b) => {
@@ -2156,6 +2171,7 @@ export default function ChildrenPage({
               pickupByStudent[activeChild.id] ?? { plan: null, persons: [] }
             }
             initialNotes={notesByStudent[activeChild.id] ?? []}
+            isSharedAccess={isSharedAccess}
           />
         </div>
       </div>

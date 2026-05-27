@@ -8,6 +8,7 @@ import Image from "next/image";
 import Footer from "@/app/components/Footer";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import DashboardHeader from "@/app/parent/dashboard/DashboardHeader";
+import SharedAccessBanner from "@/app/parent/dashboard/SharedAccessBanner";
 import FormsPage from "./FormsPage";
 import ParentHeaderRight from "@/app/parent/components/ParentHeaderRight";
 import type { StudentSignatureMap } from "@/app/types/enrollment-signatures";
@@ -36,12 +37,22 @@ export default async function FormsRoute() {
 
   const adminClient = createAdminClient();
 
+  const { data: grant } = await adminClient
+    .schema("parent_app")
+    .from("dashboard_access_grants")
+    .select("owner_id")
+    .eq("grantee_id", user.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  const effectiveParentId = grant?.owner_id ?? user.id;
+
   const [{ data: apps }, { data: adminUser }] = await Promise.all([
     adminClient
       .schema("parent_app")
       .from("applications")
       .select("*")
-      .eq("user_id", user.id)
+      .eq("user_id", effectiveParentId)
       .eq("approved", true),
     adminClient
       .schema("admin")
@@ -54,6 +65,13 @@ export default async function FormsRoute() {
   const fullName = adminUser?.full_name ?? null;
   const profileImageUrl = adminUser?.profile_image_url ?? null;
   const approvedApps = apps ?? [];
+  const isSharedAccess = !!grant;
+
+  let primaryOwnerName: string | null = null;
+  if (isSharedAccess) {
+    const { data: ownerUser } = await adminClient.schema("admin").from("users").select("full_name").eq("id", effectiveParentId).single();
+    primaryOwnerName = ownerUser?.full_name ?? null;
+  }
 
   if (approvedApps.length === 0) redirect("/parent/dashboard");
 
@@ -94,49 +112,49 @@ export default async function FormsRoute() {
         .schema("parent_app")
         .from("enrollment_signatures")
         .select("*")
-        .eq("parent_id", user.id)
+        .eq("parent_id", effectiveParentId)
         .in("student_id", studentIds),
       adminClient
         .schema("parent_app")
         .from("student_health_info")
         .select("*")
-        .eq("parent_id", user.id)
+        .eq("parent_id", effectiveParentId)
         .in("student_id", studentIds),
       adminClient
         .schema("parent_app")
         .from("student_medication_plan")
         .select("*")
-        .eq("parent_id", user.id)
+        .eq("parent_id", effectiveParentId)
         .in("student_id", studentIds),
       adminClient
         .schema("parent_app")
         .from("student_medications")
         .select("*")
-        .eq("parent_id", user.id)
+        .eq("parent_id", effectiveParentId)
         .in("student_id", studentIds),
       adminClient
         .schema("parent_app")
         .from("student_photo_release_consent")
         .select("*")
-        .eq("parent_id", user.id)
+        .eq("parent_id", effectiveParentId)
         .in("student_id", studentIds),
       adminClient
         .schema("parent_app")
         .from("student_authorized_pickup_plan")
         .select("*")
-        .eq("parent_id", user.id)
+        .eq("parent_id", effectiveParentId)
         .in("student_id", studentIds),
       adminClient
         .schema("parent_app")
         .from("student_authorized_pickup_persons")
         .select("*")
-        .eq("parent_id", user.id)
+        .eq("parent_id", effectiveParentId)
         .in("student_id", studentIds),
       adminClient
         .schema("parent_app")
         .from("student_health_statement")
         .select("*")
-        .eq("parent_id", user.id)
+        .eq("parent_id", effectiveParentId)
         .in("student_id", studentIds),
     ]);
 
@@ -145,7 +163,7 @@ export default async function FormsRoute() {
         studentIds.map(async (sid) => {
           const { data } = await adminClient.storage
             .from("immunization-records")
-            .list(`${user.id}/${sid}`);
+            .list(`${effectiveParentId}/${sid}`);
           const count = (data ?? []).filter(
             (f) => f.name !== ".emptyFolderPlaceholder",
           ).length;
@@ -156,7 +174,7 @@ export default async function FormsRoute() {
         studentIds.map(async (sid) => {
           const { data } = await adminClient.storage
             .from("religious-exemption-affidavits")
-            .list(`${user.id}/${sid}`);
+            .list(`${effectiveParentId}/${sid}`);
           const count = (data ?? []).filter(
             (f) => f.name !== ".emptyFolderPlaceholder",
           ).length;
@@ -235,6 +253,8 @@ export default async function FormsRoute() {
           <ParentHeaderRight userId={user.id} email={user.email ?? ""} fullName={fullName} profileImageUrl={profileImageUrl} />
         </DashboardHeader>
 
+        <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={primaryOwnerName} />
+
         <main className="flex-1 max-w-4xl mx-auto px-6 py-12 w-full">
           <div className="mb-10">
             <h1 className="text-3xl font-bold font-heading text-gray-800 mb-2">
@@ -251,8 +271,9 @@ export default async function FormsRoute() {
             authorizedPickupByStudent={authorizedPickupByStudent}
             healthStatementByStudent={healthStatementByStudent}
             religiousExemptionCountByStudent={religiousExemptionCountByStudent}
-            parentId={user.id}
+            parentId={effectiveParentId}
             parentName={fullName ?? ""}
+            isSharedAccess={isSharedAccess}
           />
         </main>
       </div>

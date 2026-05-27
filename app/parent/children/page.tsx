@@ -9,6 +9,7 @@ import { Suspense } from "react";
 import Footer from "@/app/components/Footer";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import DashboardHeader from "@/app/parent/dashboard/DashboardHeader";
+import SharedAccessBanner from "@/app/parent/dashboard/SharedAccessBanner";
 import ChildrenPage from "./ChildrenPage";
 import ParentHeaderRight from "@/app/parent/components/ParentHeaderRight";
 import type { Database } from "@/app/types/database.types";
@@ -32,12 +33,22 @@ export default async function ChildrenRoute() {
 
   const adminClient = createAdminClient();
 
+  const { data: grant } = await adminClient
+    .schema("parent_app")
+    .from("dashboard_access_grants")
+    .select("owner_id")
+    .eq("grantee_id", user.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  const effectiveParentId = grant?.owner_id ?? user.id;
+
   const [{ data: studentsData }, { data: adminUser }, { data: enrolledCheck }] = await Promise.all([
     adminClient
       .schema("admin")
       .from("students")
       .select("*")
-      .eq("parent_id", user.id)
+      .eq("parent_id", effectiveParentId)
       .eq("is_deleted", false),
     adminClient
       .schema("admin")
@@ -49,7 +60,7 @@ export default async function ChildrenRoute() {
       .schema("parent_app")
       .from("applications")
       .select("id")
-      .eq("user_id", user.id)
+      .eq("user_id", effectiveParentId)
       .eq("status", "enrolled")
       .limit(1),
   ]);
@@ -57,6 +68,13 @@ export default async function ChildrenRoute() {
   const children: Student[] = studentsData ?? [];
   const fullName = adminUser?.full_name ?? null;
   const profileImageUrl = adminUser?.profile_image_url ?? null;
+  const isSharedAccess = !!grant;
+
+  let primaryOwnerName: string | null = null;
+  if (isSharedAccess) {
+    const { data: ownerUser } = await adminClient.schema("admin").from("users").select("full_name").eq("id", effectiveParentId).single();
+    primaryOwnerName = ownerUser?.full_name ?? null;
+  }
 
   if ((enrolledCheck ?? []).length === 0) redirect("/parent/dashboard");
 
@@ -79,14 +97,14 @@ export default async function ChildrenRoute() {
         .schema("parent_app")
         .from("applications")
         .select("id, student_id, status, program, drop_in_program")
-        .eq("user_id", user.id)
+        .eq("user_id", effectiveParentId)
         .eq("approved", true)
         .in("student_id", studentIds),
       adminClient
         .schema("parent_app")
         .from("student_authorized_pickup_plan")
         .select("*")
-        .eq("parent_id", user.id)
+        .eq("parent_id", effectiveParentId)
         .in("student_id", studentIds),
       adminClient
         .schema("parent_app")
@@ -98,7 +116,7 @@ export default async function ChildrenRoute() {
         .schema("parent_app")
         .from("student_learning_notes")
         .select("*")
-        .eq("parent_id", user.id)
+        .eq("parent_id", effectiveParentId)
         .eq("is_deleted", false)
         .in("student_id", studentIds)
         .order("created_at", { ascending: false }),
@@ -146,9 +164,11 @@ export default async function ChildrenRoute() {
           <ParentHeaderRight userId={user.id} email={user.email ?? ""} fullName={fullName} profileImageUrl={profileImageUrl} />
         </DashboardHeader>
 
+        <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={primaryOwnerName} />
+
         <main className="flex-1 flex overflow-hidden">
           <Suspense>
-            <ChildrenPage children={children} teachersByStudent={teachersByStudent} nonEnrolledAppByStudent={nonEnrolledAppByStudent} studentProgramMap={studentProgramMap} pickupByStudent={pickupByStudent} notesByStudent={notesByStudent} />
+            <ChildrenPage children={children} teachersByStudent={teachersByStudent} nonEnrolledAppByStudent={nonEnrolledAppByStudent} studentProgramMap={studentProgramMap} pickupByStudent={pickupByStudent} notesByStudent={notesByStudent} isSharedAccess={isSharedAccess} />
           </Suspense>
         </main>
       </div>

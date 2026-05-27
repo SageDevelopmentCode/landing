@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import DashboardHeader from "@/app/parent/dashboard/DashboardHeader";
+import SharedAccessBanner from "@/app/parent/dashboard/SharedAccessBanner";
 import MessagesPage from "./MessagesPage";
 import ParentHeaderRight from "@/app/parent/components/ParentHeaderRight";
 
@@ -22,6 +23,17 @@ export default async function MessagesRoute({
   }
 
   const adminClient = createAdminClient();
+
+  const { data: grant } = await adminClient
+    .schema("parent_app")
+    .from("dashboard_access_grants")
+    .select("owner_id")
+    .eq("grantee_id", user.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  const effectiveParentId = grant?.owner_id ?? user.id;
+
   const [{ data: adminUser }, { data: enrolledCheck }] = await Promise.all([
     adminClient
       .schema("admin")
@@ -33,13 +45,20 @@ export default async function MessagesRoute({
       .schema("parent_app")
       .from("applications")
       .select("id")
-      .eq("user_id", user.id)
+      .eq("user_id", effectiveParentId)
       .eq("status", "enrolled")
       .limit(1),
   ]);
 
   const fullName = adminUser?.full_name ?? null;
   const profileImageUrl = adminUser?.profile_image_url ?? null;
+  const isSharedAccess = !!grant;
+
+  let primaryOwnerName: string | null = null;
+  if (isSharedAccess) {
+    const { data: ownerUser } = await adminClient.schema("admin").from("users").select("full_name").eq("id", effectiveParentId).single();
+    primaryOwnerName = ownerUser?.full_name ?? null;
+  }
 
   if ((enrolledCheck ?? []).length === 0) redirect("/parent/dashboard");
 
@@ -68,6 +87,8 @@ export default async function MessagesRoute({
           </div>
           <ParentHeaderRight userId={user.id} email={user.email ?? ""} fullName={fullName} profileImageUrl={profileImageUrl} />
         </DashboardHeader>
+
+        <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={primaryOwnerName} />
 
         <main className="flex-1 min-h-0 flex flex-col">
           <MessagesPage

@@ -41,9 +41,10 @@ interface Props {
   activities: Activity[];
   paidDatesByStudent: Record<string, string[]>;
   savedPreferences: SavedPreference[];
+  isSharedAccess?: boolean;
 }
 
-export default function PreferencesPageClient({ children, activities, paidDatesByStudent, savedPreferences }: Props) {
+export default function PreferencesPageClient({ children, activities, paidDatesByStudent, savedPreferences, isSharedAccess }: Props) {
   const [selectedChildId, setSelectedChildId] = useState(children[0]?.id ?? "");
   const [expandedFoods, setExpandedFoods] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
@@ -391,7 +392,7 @@ export default function PreferencesPageClient({ children, activities, paidDatesB
                 })}
 
                 {/* Save button */}
-                {visibleActivities.length > 0 && (
+                {visibleActivities.length > 0 && !isSharedAccess && (
                 <>
                 <label className="flex items-start gap-3 cursor-pointer mt-4 pt-6 border-t border-gray-100">
                   <input

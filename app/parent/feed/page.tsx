@@ -7,6 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import DashboardNav from "../dashboard/DashboardNav";
 import DashboardHeader from "../dashboard/DashboardHeader";
+import SharedAccessBanner from "@/app/parent/dashboard/SharedAccessBanner";
 import ParentFeedClient from "./ParentFeedClient";
 import ParentHeaderRight from "@/app/parent/components/ParentHeaderRight";
 import { getFeedPosts } from "@/app/teacher/feed/actions";
@@ -22,6 +23,16 @@ export default async function ParentFeedPage() {
   }
 
   const adminClient = createAdminClient();
+
+  const { data: grant } = await adminClient
+    .schema("parent_app")
+    .from("dashboard_access_grants")
+    .select("owner_id")
+    .eq("grantee_id", user.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  const effectiveParentId = grant?.owner_id ?? user.id;
 
   let currentUser: { full_name: string; role: string; id: string } | null = null;
 
@@ -44,7 +55,7 @@ export default async function ParentFeedPage() {
       .schema("parent_app")
       .from("applications")
       .select("id")
-      .eq("user_id", user.id)
+      .eq("user_id", effectiveParentId)
       .eq("status", "enrolled")
       .limit(1),
   ]);
@@ -55,6 +66,14 @@ export default async function ParentFeedPage() {
       role: adminUser.role,
       id: user.id,
     };
+  }
+
+  const isSharedAccess = !!grant;
+
+  let primaryOwnerName: string | null = null;
+  if (isSharedAccess) {
+    const { data: ownerUser } = await adminClient.schema("admin").from("users").select("full_name").eq("id", effectiveParentId).single();
+    primaryOwnerName = ownerUser?.full_name ?? null;
   }
 
   if ((enrolledCheck ?? []).length === 0) redirect("/parent/dashboard");
@@ -78,6 +97,8 @@ export default async function ParentFeedPage() {
         </div>
         <ParentHeaderRight userId={user.id} email={user.email ?? ""} fullName={currentUser?.full_name ?? null} profileImageUrl={adminUser?.profile_image_url ?? null} />
       </DashboardHeader>
+
+      <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={primaryOwnerName} />
 
       <main className="flex-1 flex flex-col overflow-hidden">
         <ParentFeedClient

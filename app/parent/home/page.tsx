@@ -12,6 +12,7 @@ import Image from "next/image";
 import Footer from "@/app/components/Footer";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import DashboardHeader from "@/app/parent/dashboard/DashboardHeader";
+import SharedAccessBanner from "@/app/parent/dashboard/SharedAccessBanner";
 import HomePageClient from "./HomePageClient";
 import type {
   PaidWeeksByStudent,
@@ -87,6 +88,16 @@ export default async function ParentHomePage() {
   const adminClient = createAdminClient();
   const todayISO = new Date().toISOString().slice(0, 10);
 
+  const { data: grant } = await adminClient
+    .schema("parent_app")
+    .from("dashboard_access_grants")
+    .select("owner_id")
+    .eq("grantee_id", user.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  const effectiveParentId = grant?.owner_id ?? user.id;
+
   const [{ data: adminUser }, { data: studentsData }, { data: enrolledCheck }] = await Promise.all([
     adminClient
       .schema("admin")
@@ -98,18 +109,30 @@ export default async function ParentHomePage() {
       .schema("admin")
       .from("students")
       .select("id, child_legal_name, child_grade, profile_image_url")
-      .eq("parent_id", user.id)
+      .eq("parent_id", effectiveParentId)
       .eq("is_deleted", false),
     adminClient
       .schema("parent_app")
       .from("applications")
       .select("id")
-      .eq("user_id", user.id)
+      .eq("user_id", effectiveParentId)
       .eq("status", "enrolled")
       .limit(1),
   ]);
 
   const students: HomeStudent[] = (studentsData ?? []) as HomeStudent[];
+  const isSharedAccess = !!grant;
+
+  let primaryOwnerName: string | null = null;
+  if (isSharedAccess) {
+    const { data: ownerUser } = await adminClient
+      .schema("admin")
+      .from("users")
+      .select("full_name")
+      .eq("id", effectiveParentId)
+      .single();
+    primaryOwnerName = ownerUser?.full_name ?? null;
+  }
 
   if ((enrolledCheck ?? []).length === 0) redirect("/parent/dashboard");
   const studentIds = students.map((s) => s.id);
@@ -139,39 +162,39 @@ export default async function ParentHomePage() {
         .schema("billing")
         .from("pending_payment_requests")
         .select("id, student_id, program, label, amount_cents, created_at")
-        .eq("parent_id", user.id)
+        .eq("parent_id", effectiveParentId)
         .eq("status", "pending")
         .order("created_at", { ascending: false }),
       adminClient
         .schema("parent_app")
         .from("referrals")
         .select("id, referred_email, status, created_at")
-        .eq("referrer_id", user.id)
+        .eq("referrer_id", effectiveParentId)
         .order("created_at", { ascending: false }),
       adminClient
         .schema("parent_app")
         .from("dropoff_times")
         .select("slot")
-        .eq("parent_id", user.id)
+        .eq("parent_id", effectiveParentId)
         .maybeSingle(),
       adminClient
         .schema("billing")
         .from("stripe_transactions")
         .select("payment_type, status, student_id, metadata, amount_cents, created_at")
-        .eq("parent_id", user.id)
+        .eq("parent_id", effectiveParentId)
         .eq("is_deleted", false),
       adminClient
         .schema("parent_app")
         .from("applications")
         .select("id, student_id, child_grade, status, child_legal_name, program, drop_in_program")
-        .eq("user_id", user.id)
+        .eq("user_id", effectiveParentId)
         .eq("approved", true)
         .in("program", ["summer_26", "both", "homeschool_drop_in"]),
       adminClient
         .schema("parent_app")
         .from("activity_preferences")
         .select("student_id, activity_id")
-        .eq("parent_id", user.id),
+        .eq("parent_id", effectiveParentId),
       getOnboardingProgress(),
       getPublishedActivities(),
     ]);
@@ -332,6 +355,8 @@ export default async function ParentHomePage() {
         </div>
         <ParentHeaderRight userId={user.id} email={user.email ?? ""} fullName={fullName} profileImageUrl={profileImageUrl} />
       </DashboardHeader>
+
+      <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={primaryOwnerName} />
 
       <main className="flex-1 overflow-y-auto">
         <HomePageClient
