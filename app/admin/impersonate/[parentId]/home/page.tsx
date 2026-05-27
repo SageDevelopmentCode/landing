@@ -1,5 +1,7 @@
 import { createAdminClient } from "@/app/lib/supabase-server";
 import { notFound } from "next/navigation";
+import { resolveEffectiveParentId } from "../../resolveEffectiveParentId";
+import SharedAccessBanner from "@/app/parent/dashboard/SharedAccessBanner";
 import { getPublishedActivities } from "@/app/actions/activities";
 import { computePaidDates } from "@/app/lib/compute-paid-dates";
 import AdminPreviewBanner from "../../AdminPreviewBanner";
@@ -30,6 +32,7 @@ export default async function ImpersonateHomePage({
 }) {
   const { parentId } = await params;
   const adminClient = createAdminClient();
+  const { effectiveParentId, isSharedAccess, ownerName } = await resolveEffectiveParentId(parentId);
   const todayISO = new Date().toISOString().slice(0, 10);
 
   const [{ data: adminUser }, { data: studentsData }, onboardingCompletedIds] =
@@ -44,9 +47,9 @@ export default async function ImpersonateHomePage({
       .schema("admin")
       .from("students")
       .select("id, child_legal_name, child_grade, profile_image_url")
-      .eq("parent_id", parentId)
+      .eq("parent_id", effectiveParentId)
       .eq("is_deleted", false),
-    getOnboardingProgressForParent(parentId),
+    getOnboardingProgressForParent(effectiveParentId),
   ]);
 
   if (!adminUser) notFound();
@@ -91,32 +94,32 @@ export default async function ImpersonateHomePage({
       .schema("billing")
       .from("pending_payment_requests")
       .select("id, student_id, program, label, amount_cents, created_at")
-      .eq("parent_id", parentId)
+      .eq("parent_id", effectiveParentId)
       .eq("status", "pending")
       .order("created_at", { ascending: false }),
     adminClient
       .schema("parent_app")
       .from("referrals")
       .select("id, referred_email, status, created_at")
-      .eq("referrer_id", parentId)
+      .eq("referrer_id", effectiveParentId)
       .order("created_at", { ascending: false }),
     adminClient
       .schema("parent_app")
       .from("dropoff_times")
       .select("slot")
-      .eq("parent_id", parentId)
+      .eq("parent_id", effectiveParentId)
       .maybeSingle(),
     adminClient
       .schema("billing")
       .from("stripe_transactions")
       .select("payment_type, status, student_id, metadata, amount_cents, created_at")
-      .eq("parent_id", parentId)
+      .eq("parent_id", effectiveParentId)
       .eq("is_deleted", false),
     adminClient
       .schema("parent_app")
       .from("applications")
       .select("id, student_id, child_grade, status, child_legal_name, program, drop_in_program")
-      .eq("user_id", parentId)
+      .eq("user_id", effectiveParentId)
       .eq("approved", true)
       .in("program", ["summer_26", "both", "homeschool_drop_in"]),
     getPublishedActivities(),
@@ -255,6 +258,7 @@ export default async function ImpersonateHomePage({
   return (
     <div className="bg-welcome-bg min-h-screen flex flex-col">
       <AdminPreviewBanner parentName={fullName} parentEmail={email} />
+      <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={ownerName} />
       <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-[1fr_auto] items-center">
         <div className="flex items-center justify-center">
           <DashboardNav parentId={parentId} />

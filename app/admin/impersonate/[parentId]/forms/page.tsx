@@ -1,5 +1,7 @@
 import { createAdminClient } from "@/app/lib/supabase-server";
 import { notFound } from "next/navigation";
+import { resolveEffectiveParentId } from "../../resolveEffectiveParentId";
+import SharedAccessBanner from "@/app/parent/dashboard/SharedAccessBanner";
 import AdminPreviewBanner from "../../AdminPreviewBanner";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import ImpersonateNotificationBell from "../../ImpersonateNotificationBell";
@@ -25,13 +27,14 @@ export default async function ImpersonateFormsPage({
 }) {
   const { parentId } = await params;
   const adminClient = createAdminClient();
+  const { effectiveParentId, isSharedAccess, ownerName } = await resolveEffectiveParentId(parentId);
 
   const [{ data: apps }, { data: adminUser }] = await Promise.all([
     adminClient
       .schema("parent_app")
       .from("applications")
       .select("*")
-      .eq("user_id", parentId)
+      .eq("user_id", effectiveParentId)
       .eq("approved", true),
     adminClient
       .schema("admin")
@@ -84,49 +87,49 @@ export default async function ImpersonateFormsPage({
         .schema("parent_app")
         .from("enrollment_signatures")
         .select("*")
-        .eq("parent_id", parentId)
+        .eq("parent_id", effectiveParentId)
         .in("student_id", studentIds),
       adminClient
         .schema("parent_app")
         .from("student_health_info")
         .select("*")
-        .eq("parent_id", parentId)
+        .eq("parent_id", effectiveParentId)
         .in("student_id", studentIds),
       adminClient
         .schema("parent_app")
         .from("student_medication_plan")
         .select("*")
-        .eq("parent_id", parentId)
+        .eq("parent_id", effectiveParentId)
         .in("student_id", studentIds),
       adminClient
         .schema("parent_app")
         .from("student_medications")
         .select("*")
-        .eq("parent_id", parentId)
+        .eq("parent_id", effectiveParentId)
         .in("student_id", studentIds),
       adminClient
         .schema("parent_app")
         .from("student_photo_release_consent")
         .select("*")
-        .eq("parent_id", parentId)
+        .eq("parent_id", effectiveParentId)
         .in("student_id", studentIds),
       adminClient
         .schema("parent_app")
         .from("student_authorized_pickup_plan")
         .select("*")
-        .eq("parent_id", parentId)
+        .eq("parent_id", effectiveParentId)
         .in("student_id", studentIds),
       adminClient
         .schema("parent_app")
         .from("student_authorized_pickup_persons")
         .select("*")
-        .eq("parent_id", parentId)
+        .eq("parent_id", effectiveParentId)
         .in("student_id", studentIds),
       adminClient
         .schema("parent_app")
         .from("student_health_statement")
         .select("*")
-        .eq("parent_id", parentId)
+        .eq("parent_id", effectiveParentId)
         .in("student_id", studentIds),
     ]);
 
@@ -135,7 +138,7 @@ export default async function ImpersonateFormsPage({
         studentIds.map(async (sid) => {
           const { data } = await adminClient.storage
             .from("immunization-records")
-            .list(`${parentId}/${sid}`);
+            .list(`${effectiveParentId}/${sid}`);
           const count = (data ?? []).filter(
             (f) => f.name !== ".emptyFolderPlaceholder"
           ).length;
@@ -146,7 +149,7 @@ export default async function ImpersonateFormsPage({
         studentIds.map(async (sid) => {
           const { data } = await adminClient.storage
             .from("religious-exemption-affidavits")
-            .list(`${parentId}/${sid}`);
+            .list(`${effectiveParentId}/${sid}`);
           const count = (data ?? []).filter(
             (f) => f.name !== ".emptyFolderPlaceholder"
           ).length;
@@ -203,6 +206,7 @@ export default async function ImpersonateFormsPage({
   return (
     <div className="bg-welcome-bg min-h-screen flex flex-col">
       <AdminPreviewBanner parentName={fullName} parentEmail={email} />
+      <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={ownerName} />
       <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-[1fr_auto] items-center">
         <div className="flex items-center justify-center">
           <DashboardNav parentId={parentId} />

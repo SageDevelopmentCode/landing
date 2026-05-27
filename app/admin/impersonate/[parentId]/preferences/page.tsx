@@ -1,5 +1,7 @@
 import { createAdminClient } from "@/app/lib/supabase-server";
 import { notFound } from "next/navigation";
+import { resolveEffectiveParentId } from "../../resolveEffectiveParentId";
+import SharedAccessBanner from "@/app/parent/dashboard/SharedAccessBanner";
 import AdminPreviewBanner from "../../AdminPreviewBanner";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import ImpersonateNotificationBell from "../../ImpersonateNotificationBell";
@@ -15,6 +17,7 @@ export default async function ImpersonatePreferencesPage({
 }) {
   const { parentId } = await params;
   const adminClient = createAdminClient();
+  const { effectiveParentId, isSharedAccess, ownerName } = await resolveEffectiveParentId(parentId);
 
   const [
     { data: adminUser },
@@ -33,19 +36,19 @@ export default async function ImpersonatePreferencesPage({
       .schema("admin")
       .from("students")
       .select("id, child_legal_name, profile_image_url")
-      .eq("parent_id", parentId)
+      .eq("parent_id", effectiveParentId)
       .eq("is_deleted", false),
     adminClient
       .schema("billing")
       .from("stripe_transactions")
       .select("payment_type, status, student_id, metadata")
-      .eq("parent_id", parentId)
+      .eq("parent_id", effectiveParentId)
       .eq("is_deleted", false),
     adminClient
       .schema("parent_app")
       .from("activity_preferences")
       .select("student_id, activity_id, participation_level, notes")
-      .eq("parent_id", parentId),
+      .eq("parent_id", effectiveParentId),
     getPublishedActivities(),
   ]);
 
@@ -67,6 +70,7 @@ export default async function ImpersonatePreferencesPage({
   return (
     <div className="bg-welcome-bg min-h-screen flex flex-col">
       <AdminPreviewBanner parentName={fullName} parentEmail={email} />
+      <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={ownerName} />
       <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-[1fr_auto] items-center">
         <div className="flex items-center justify-center">
           <DashboardNav parentId={parentId} />

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { DollarSign } from "lucide-react";
+import { DollarSign, Users } from "lucide-react";
 import { cssColors as colors } from "../design-system";
 
 type StudentEntry = { id: string; name: string; profileImageUrl: string | null };
@@ -15,6 +15,8 @@ type ParentRow = {
   lastSignIn: string | null;
   hasPaid: boolean;
   children: StudentEntry[];
+  isSharedAccess: boolean;
+  ownerName: string | null;
 };
 
 const AVATAR_COLORS = [
@@ -151,6 +153,12 @@ export default function ImpersonateShell({
                       style={{ color: "#34D399" }}
                     />
                   )}
+                  {parent.isSharedAccess && (
+                    <Users
+                      className="flex-shrink-0 w-3 h-3"
+                      style={{ color: "#60A5FA" }}
+                    />
+                  )}
                   <span
                     className="text-sm font-medium truncate"
                     style={{ color: isActive ? colors.accent : colors.textPrimary }}
@@ -202,6 +210,11 @@ export default function ImpersonateShell({
                     {formatRelative(parent.lastSignIn)}
                   </span>
                 </div>
+                {parent.isSharedAccess && parent.ownerName && (
+                  <p style={{ color: colors.textQuaternary, fontSize: "10px", marginTop: "2px" }}>
+                    Shared · {parent.ownerName}
+                  </p>
+                )}
               </button>
             );
           })}

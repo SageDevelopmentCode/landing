@@ -1,5 +1,7 @@
 import { createAdminClient } from "@/app/lib/supabase-server";
 import { notFound } from "next/navigation";
+import { resolveEffectiveParentId } from "../../resolveEffectiveParentId";
+import SharedAccessBanner from "@/app/parent/dashboard/SharedAccessBanner";
 import AdminPreviewBanner from "../../AdminPreviewBanner";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import ImpersonateNotificationBell from "../../ImpersonateNotificationBell";
@@ -13,6 +15,7 @@ export default async function ImpersonateEmergencyContactsPage({
 }) {
   const { parentId } = await params;
   const adminClient = createAdminClient();
+  const { effectiveParentId, isSharedAccess, ownerName } = await resolveEffectiveParentId(parentId);
 
   const [{ data: adminUser }, { data: students }] = await Promise.all([
     adminClient
@@ -25,7 +28,7 @@ export default async function ImpersonateEmergencyContactsPage({
       .schema("admin")
       .from("students")
       .select("id, child_legal_name")
-      .eq("parent_id", parentId)
+      .eq("parent_id", effectiveParentId)
       .eq("is_deleted", false),
   ]);
 
@@ -84,6 +87,7 @@ export default async function ImpersonateEmergencyContactsPage({
   return (
     <div className="bg-welcome-bg min-h-screen flex flex-col">
       <AdminPreviewBanner parentName={fullName} parentEmail={email} />
+      <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={ownerName} />
       <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-[1fr_auto] items-center">
         <div className="flex items-center justify-center">
           <DashboardNav parentId={parentId} />

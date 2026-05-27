@@ -1,5 +1,7 @@
 import { createAdminClient } from "@/app/lib/supabase-server";
 import { notFound } from "next/navigation";
+import { resolveEffectiveParentId } from "../../resolveEffectiveParentId";
+import SharedAccessBanner from "@/app/parent/dashboard/SharedAccessBanner";
 import { Suspense } from "react";
 import AdminPreviewBanner from "../../AdminPreviewBanner";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
@@ -23,13 +25,14 @@ export default async function ImpersonateChildrenPage({
 }) {
   const { parentId } = await params;
   const adminClient = createAdminClient();
+  const { effectiveParentId, isSharedAccess, ownerName } = await resolveEffectiveParentId(parentId);
 
   const [{ data: studentsData }, { data: adminUser }] = await Promise.all([
     adminClient
       .schema("admin")
       .from("students")
       .select("*")
-      .eq("parent_id", parentId)
+      .eq("parent_id", effectiveParentId)
       .eq("is_deleted", false),
     adminClient
       .schema("admin")
@@ -73,14 +76,14 @@ export default async function ImpersonateChildrenPage({
         .schema("parent_app")
         .from("applications")
         .select("id, student_id, status, program, drop_in_program")
-        .eq("user_id", parentId)
+        .eq("user_id", effectiveParentId)
         .eq("approved", true)
         .in("student_id", studentIds),
       adminClient
         .schema("parent_app")
         .from("student_authorized_pickup_plan")
         .select("*")
-        .eq("parent_id", parentId)
+        .eq("parent_id", effectiveParentId)
         .in("student_id", studentIds),
       adminClient
         .schema("parent_app")
@@ -92,7 +95,7 @@ export default async function ImpersonateChildrenPage({
         .schema("parent_app")
         .from("student_learning_notes")
         .select("*")
-        .eq("parent_id", parentId)
+        .eq("parent_id", effectiveParentId)
         .eq("is_deleted", false)
         .in("student_id", studentIds)
         .order("created_at", { ascending: false }),
@@ -124,6 +127,7 @@ export default async function ImpersonateChildrenPage({
   return (
     <div className="bg-welcome-bg min-h-screen flex flex-col">
       <AdminPreviewBanner parentName={fullName} parentEmail={email} />
+      <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={ownerName} />
       <header className="bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-[1fr_auto] items-center">
         <div className="flex items-center justify-center">
           <DashboardNav parentId={parentId} />

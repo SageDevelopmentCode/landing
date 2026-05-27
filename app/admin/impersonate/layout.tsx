@@ -8,7 +8,7 @@ export default async function ImpersonateLayout({
 }) {
   const adminClient = createAdminClient();
 
-  const [{ data: parents }, { data: appRows }, { data: authData }, { data: txData }] =
+  const [{ data: parents }, { data: appRows }, { data: authData }, { data: txData }, { data: grantRows }] =
     await Promise.all([
       adminClient
         .schema("admin")
@@ -35,6 +35,11 @@ export default async function ImpersonateLayout({
           "aftercare_tuition",
           "fun_friday_tuition",
         ]),
+      adminClient
+        .schema("parent_app")
+        .from("dashboard_access_grants")
+        .select("grantee_id, owner_id")
+        .eq("status", "active"),
     ]);
 
   // Derive a single display status per parent from their applications
@@ -73,6 +78,11 @@ export default async function ImpersonateLayout({
       .filter(Boolean) as string[]
   );
 
+  const grantByGrantee: Record<string, string> = {};
+  for (const g of grantRows ?? []) {
+    if (g.grantee_id && g.owner_id) grantByGrantee[g.grantee_id] = g.owner_id;
+  }
+
   type StudentEntry = { id: string; name: string; profileImageUrl: string | null };
 
   const parentIds = (parents ?? []).map((p) => p.id);
@@ -103,6 +113,10 @@ export default async function ImpersonateLayout({
     lastSignIn: lastSignInMap[p.id] ?? null,
     hasPaid: paidParentIds.has(p.id),
     children: childrenByParent[p.id] ?? [],
+    isSharedAccess: p.id in grantByGrantee,
+    ownerName: p.id in grantByGrantee
+      ? ((parents ?? []).find((o) => o.id === grantByGrantee[p.id])?.full_name ?? null)
+      : null,
   }));
 
   return (
