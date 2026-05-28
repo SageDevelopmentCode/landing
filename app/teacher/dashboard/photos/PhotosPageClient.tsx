@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useMemo, useRef, useEffect } from "react";
+import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Camera,
@@ -20,7 +21,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import PhotoUploadModal from "./PhotoUploadModal";
-import { setPhotoTags, deletePhoto, updatePhotoMeta, getSignedUrls } from "@/app/actions/photos";
+import { setPhotoTags, deletePhoto, updatePhotoMeta, getSignedUrls, getFullResSignedUrl } from "@/app/actions/photos";
 import type { TeacherPhoto, StudentWithConsent, ConsentLevel } from "@/app/actions/photos";
 
 // ─── Date Grouping ────────────────────────────────────────────────────────────
@@ -226,6 +227,16 @@ function StudentTagSidebar({
 // ─── Photo Lightbox ──────────────────────────────────────────────────────────
 
 function PhotoLightbox({ photo, onClose }: { photo: TeacherPhoto; onClose: () => void }) {
+  const [fullResUrl, setFullResUrl] = useState<string | null>(photo.signed_url);
+
+  useEffect(() => {
+    let cancelled = false;
+    getFullResSignedUrl(photo.storage_path).then((url) => {
+      if (!cancelled && url) setFullResUrl(url);
+    });
+    return () => { cancelled = true; };
+  }, [photo.storage_path]);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -245,7 +256,7 @@ function PhotoLightbox({ photo, onClose }: { photo: TeacherPhoto; onClose: () =>
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.92, opacity: 0 }}
         transition={{ type: "spring", damping: 24, stiffness: 300 }}
-        src={photo.signed_url ?? ""}
+        src={fullResUrl ?? ""}
         alt={photo.caption ?? ""}
         className="max-h-[90vh] max-w-[90vw] object-contain rounded-xl"
       />
@@ -293,7 +304,14 @@ function PhotoCard({
       onClick={() => onEdit(photo)}
     >
       {photo.signed_url ? (
-        <img src={photo.signed_url} alt={photo.caption ?? ""} className="w-full max-h-52 object-cover block" loading="lazy" />
+        <Image
+          src={photo.signed_url}
+          alt={photo.caption ?? ""}
+          width={400}
+          height={300}
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          style={{ width: '100%', height: 'auto', maxHeight: '208px', objectFit: 'cover', display: 'block' }}
+        />
       ) : (
         <div className="w-full h-40 bg-gray-200 flex items-center justify-center">
           <Camera className="w-8 h-8 text-gray-400" />
@@ -475,7 +493,14 @@ function EditPhotoModal({
         <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
           {photo.signed_url && (
             <div className="relative">
-              <img src={photo.signed_url} alt="" className="w-full rounded-xl object-cover max-h-48" />
+              <Image
+                src={photo.signed_url}
+                alt=""
+                width={400}
+                height={300}
+                sizes="440px"
+                style={{ width: '100%', height: 'auto', maxHeight: '192px', objectFit: 'cover', borderRadius: '0.75rem' }}
+              />
               <button
                 onClick={() => setLightboxOpen(true)}
                 className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 rounded-lg text-white cursor-pointer transition-colors"

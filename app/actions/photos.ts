@@ -63,12 +63,39 @@ export async function getPhotos(): Promise<TeacherPhoto[]> {
 export async function getSignedUrls(storagePaths: string[]): Promise<Record<string, string>> {
   if (storagePaths.length === 0) return {}
   const adminClient = createAdminClient()
-  const { data } = await adminClient.storage.from('teacher-photos').createSignedUrls(storagePaths, 3600)
-  const result: Record<string, string> = {}
-  for (const entry of data ?? []) {
-    if (entry.signedUrl && entry.path) result[entry.path] = entry.signedUrl
-  }
-  return result
+  const bucket = adminClient.storage.from('teacher-photos')
+  const entries = await Promise.all(
+    storagePaths.map(async (path) => {
+      const { data } = await bucket.createSignedUrl(path, 3600, {
+        transform: { width: 400, quality: 75 },
+      })
+      return [path, data?.signedUrl ?? null] as const
+    })
+  )
+  return Object.fromEntries(entries.filter(([, url]) => url !== null)) as Record<string, string>
+}
+
+export async function getFullResSignedUrl(storagePath: string): Promise<string | null> {
+  const adminClient = createAdminClient()
+  const { data } = await adminClient.storage.from('teacher-photos').createSignedUrl(storagePath, 3600)
+  return data?.signedUrl ?? null
+}
+
+export async function getAllSchoolPhotos(): Promise<TeacherPhoto[]> {
+  const adminClient = createAdminClient()
+  const { data, error } = await adminClient.rpc('get_all_school_photos')
+  if (error || !data) return []
+  return (data as any[]).map((p: any) => ({
+    id: p.id,
+    teacher_id: p.teacher_id,
+    storage_path: p.storage_path,
+    signed_url: null,
+    caption: p.caption ?? null,
+    taken_on: p.taken_on ?? null,
+    created_at: p.created_at,
+    tags: (p.tags ?? []) as PhotoStudentTag[],
+    publication_labels: (p.publication_labels ?? []) as string[],
+  }))
 }
 
 export async function getEnrolledStudentsWithConsent(): Promise<StudentWithConsent[]> {

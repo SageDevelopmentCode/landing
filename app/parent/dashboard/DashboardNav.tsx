@@ -20,6 +20,7 @@ import {
   Menu,
   X,
   SlidersHorizontal,
+  Camera,
 } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 import HelpWidget from "../components/HelpWidget";
@@ -31,7 +32,7 @@ const primaryNavItems: { label: string; icon: LucideIcon; href: string }[] = [
   { label: "Tuition", icon: CreditCard, href: "/parent/billing" },
   { label: "Messages", icon: MessageCircle, href: "/parent/messages" },
   { label: "Calendar", icon: Calendar, href: "/parent/calendar" },
-  { label: "Feed", icon: Rss, href: "/parent/feed" },
+  { label: "Photos", icon: Camera, href: "/parent/photos" },
 ];
 
 const moreItems: {
@@ -41,6 +42,7 @@ const moreItems: {
   action?: string;
   badge?: string;
 }[] = [
+  { label: "Feed", icon: Rss, href: "/parent/feed" },
   { label: "Enrollment", icon: ClipboardCheck, href: "/parent/dashboard" },
   { label: "Preferences", icon: SlidersHorizontal, href: "/parent/preferences" },
   { label: "Forms & Documents", icon: FileText, href: "/parent/forms" },
