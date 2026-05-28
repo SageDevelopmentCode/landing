@@ -22,6 +22,7 @@ import {
   Save,
   Lock,
   Loader2,
+  Library,
 } from "lucide-react";
 import {
   createNewsletter,
@@ -31,6 +32,7 @@ import {
   deleteSectionImage,
   type DBNewsletter,
 } from "@/app/actions/newsletter";
+import PhotoLibraryPickerModal from "./PhotoLibraryPickerModal";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -50,6 +52,7 @@ interface LocalImage {
   url: string;       // signed URL (from DB) or blob URL (during upload)
   name: string;
   uploading?: boolean;
+  sourceBucket?: string;
 }
 
 interface TeacherUpdate {
@@ -115,6 +118,7 @@ function dbToNewsletter(db: DBNewsletter): Newsletter {
         storagePath: img.storage_path,
         url: img.signed_url ?? '',
         name: img.storage_path.split('/').pop() ?? '',
+        sourceBucket: img.source_bucket,
       })),
       visible: s.visible,
       isClassUpdates: s.is_class_updates,
@@ -201,6 +205,7 @@ function EditorTab({
   selectedWeekRange,
 }: EditorTabProps) {
   const [activeSectionId, setActiveSectionId] = useState(sections[0]?.id ?? "");
+  const [libraryPickerForSection, setLibraryPickerForSection] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -309,6 +314,17 @@ function EditorTab({
       deleteSectionImage(img.dbId).catch((err) => console.error("deleteSectionImage error:", err));
     }
     recordChange({ type: "image_remove", sectionLabel: activeSection?.label || "section" });
+  }
+
+  function handleLibraryConfirm(newImages: LocalImage[]) {
+    if (!libraryPickerForSection) return;
+    const targetId = libraryPickerForSection;
+    const targetSection = sections.find((s) => s.id === targetId);
+    patchSection(targetId, {
+      images: [...(targetSection?.images ?? []), ...newImages],
+    });
+    recordChange({ type: "image_add", sectionLabel: targetSection?.label || "section", detail: String(newImages.length) });
+    setLibraryPickerForSection(null);
   }
 
   function toggleVisibility(s: SectionData, e: React.MouseEvent) {
@@ -458,6 +474,13 @@ function EditorTab({
                     <Upload className="w-3.5 h-3.5" />
                     Add Images
                   </button>
+                  <button
+                    onClick={() => setLibraryPickerForSection(activeSection?.id ?? "")}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold font-body text-[#4a7c59] border border-[#4a7c59]/30 bg-[#4a7c59]/5 rounded-lg hover:bg-[#4a7c59]/10 transition-colors"
+                  >
+                    <Library className="w-3.5 h-3.5" />
+                    From Library
+                  </button>
                 </div>
                 <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleImageFiles(e.target.files)} />
                 {activeSection.images.length === 0 ? (
@@ -562,6 +585,10 @@ function EditorTab({
                     <Upload className="w-3.5 h-3.5" />
                     Add Images
                   </button>
+                  <button onClick={() => setLibraryPickerForSection(activeSection.id)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold font-body text-[#4a7c59] border border-[#4a7c59]/30 bg-[#4a7c59]/5 rounded-lg hover:bg-[#4a7c59]/10 transition-colors">
+                    <Library className="w-3.5 h-3.5" />
+                    From Library
+                  </button>
                 </div>
                 {activeSection.images.length === 0 ? (
                   <button onClick={() => fileInputRef.current?.click()} className="w-full border-2 border-dashed border-gray-200 rounded-2xl p-6 flex flex-col items-center gap-2 text-gray-400 hover:border-[#4a7c59]/40 hover:text-[#4a7c59] transition-colors">
@@ -661,6 +688,14 @@ function EditorTab({
           <p className="text-xs text-gray-400 font-body mt-1.5">Choose how parents see this newsletter.</p>
         </div>
       </aside>
+
+      {libraryPickerForSection && (
+        <PhotoLibraryPickerModal
+          sectionId={libraryPickerForSection}
+          onConfirm={handleLibraryConfirm}
+          onClose={() => setLibraryPickerForSection(null)}
+        />
+      )}
     </div>
   );
 }

@@ -81,6 +81,19 @@ export async function getFullResSignedUrl(storagePath: string): Promise<string |
   return data?.signedUrl ?? null
 }
 
+export async function getPhotoSignedUrlsBatch(
+  storagePaths: string[]
+): Promise<Record<string, string>> {
+  if (storagePaths.length === 0) return {}
+  const adminClient = createAdminClient()
+  const { data } = await adminClient.storage
+    .from('teacher-photos')
+    .createSignedUrls(storagePaths, 3600)
+  return Object.fromEntries(
+    (data ?? []).filter((e) => e.signedUrl).map((e) => [e.path, e.signedUrl])
+  ) as Record<string, string>
+}
+
 export async function getAllSchoolPhotos(): Promise<TeacherPhoto[]> {
   const adminClient = createAdminClient()
   const { data, error } = await adminClient.rpc('get_all_school_photos')

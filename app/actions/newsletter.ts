@@ -17,6 +17,7 @@ export interface DBSectionImage {
   storage_path: string
   signed_url: string | null
   sort_order: number
+  source_bucket: string
 }
 
 export interface DBSection {
@@ -77,24 +78,28 @@ async function resolveNewsletterRows(rows: any[], adminClient: ReturnType<typeof
     nameMap = new Map((users ?? []).map((u) => [u.id, { full_name: u.full_name, profile_image_url: u.profile_image_url }]))
   }
 
-  const allImagePaths: string[] = []
+  const pathsByBucket = new Map<string, string[]>()
   for (const row of rows) {
     for (const s of (row.sections as any[]) ?? []) {
       for (const img of (s.section_images as any[]) ?? []) {
-        if (!img.is_deleted) allImagePaths.push(img.storage_path)
+        if (img.is_deleted) continue
+        const bucket: string = img.source_bucket ?? 'newsletter-images'
+        if (!pathsByBucket.has(bucket)) pathsByBucket.set(bucket, [])
+        pathsByBucket.get(bucket)!.push(img.storage_path)
       }
     }
   }
 
   const signedUrlMap = new Map<string, string>()
-  if (allImagePaths.length > 0) {
-    const { data: signedUrls } = await adminClient.storage
-      .from('newsletter-images')
-      .createSignedUrls(allImagePaths, 3600)
-    for (const entry of signedUrls ?? []) {
-      if (entry.signedUrl && entry.path) signedUrlMap.set(entry.path, entry.signedUrl)
-    }
-  }
+  await Promise.all(
+    Array.from(pathsByBucket.entries()).map(async ([bucket, paths]) => {
+      if (!paths.length) return
+      const { data: signedUrls } = await adminClient.storage.from(bucket).createSignedUrls(paths, 3600)
+      for (const entry of signedUrls ?? []) {
+        if (entry.signedUrl && entry.path) signedUrlMap.set(entry.path, entry.signedUrl)
+      }
+    })
+  )
 
   return rows.map((row) => ({
     ...row,
@@ -113,6 +118,7 @@ async function resolveNewsletterRows(rows: any[], adminClient: ReturnType<typeof
             storage_path: img.storage_path,
             signed_url: signedUrlMap.get(img.storage_path) ?? null,
             sort_order: img.sort_order,
+            source_bucket: img.source_bucket ?? 'newsletter-images',
           })) as DBSectionImage[],
       })),
     change_log: ((row.change_log as any[]) ?? [])
@@ -133,7 +139,7 @@ const NEWSLETTER_SELECT = `
   sections:sections(
     id, newsletter_id, label, body, visible, sort_order, is_class_updates, created_at, updated_at,
     teacher_updates:teacher_updates(id, section_id, teacher_id, body, updated_at),
-    section_images:section_images(id, storage_path, sort_order, is_deleted)
+    section_images:section_images(id, storage_path, sort_order, is_deleted, source_bucket)
   ),
   change_log:change_log(id, newsletter_id, teacher_id, summary, created_at)
 `
@@ -429,6 +435,75 @@ export async function uploadSectionImage(
   return { data: { id: row.id, storage_path: row.storage_path, signed_url: signed?.signedUrl ?? '' } }
 }
 
+export async function addLibraryPhotoToSection(
+  sectionId: string,
+  photoId: string
+): Promise<{ error?: string; data?: DBSectionImage }> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const adminClient = createAdminClient()
+
+  const { data: photo, error: photoError } = await adminClient
+    .schema('teachers')
+    .from('photos')
+    .select('id, storage_path')
+    .eq('id', photoId)
+    .eq('teacher_id', user.id)
+    .eq('is_deleted', false)
+    .single()
+
+  if (photoError || !photo) {
+    return { error: 'Photo not found or does not belong to you' }
+  }
+
+  const { data: existing } = await adminClient
+    .schema('newsletters')
+    .from('section_images')
+    .select('id')
+    .eq('section_id', sectionId)
+    .eq('storage_path', photo.storage_path)
+    .eq('source_bucket', 'teacher-photos')
+    .eq('is_deleted', false)
+    .maybeSingle()
+
+  if (existing) {
+    return { error: 'This photo is already in the section' }
+  }
+
+  const { data: row, error: insertError } = await adminClient
+    .schema('newsletters')
+    .from('section_images')
+    .insert({
+      section_id: sectionId,
+      storage_path: photo.storage_path,
+      uploaded_by: user.id,
+      source_bucket: 'teacher-photos',
+    })
+    .select('id, storage_path, sort_order, source_bucket')
+    .single()
+
+  if (insertError || !row) {
+    console.error('addLibraryPhotoToSection insert error:', insertError)
+    return { error: insertError?.message ?? 'Failed to save image record' }
+  }
+
+  const { data: signed } = await adminClient.storage
+    .from('teacher-photos')
+    .createSignedUrl(photo.storage_path, 3600)
+
+  return {
+    data: {
+      id: row.id,
+      storage_path: row.storage_path,
+      signed_url: signed?.signedUrl ?? null,
+      sort_order: row.sort_order,
+      source_bucket: row.source_bucket,
+    },
+  }
+}
+
 export async function deleteSectionImage(
   imageId: string
 ): Promise<{ error?: string; success?: boolean }> {
@@ -441,7 +516,7 @@ export async function deleteSectionImage(
   const { data: row, error: fetchError } = await adminClient
     .schema('newsletters')
     .from('section_images')
-    .select('storage_path')
+    .select('storage_path, source_bucket')
     .eq('id', imageId)
     .single()
 
@@ -461,7 +536,11 @@ export async function deleteSectionImage(
     return { error: updateError.message }
   }
 
-  await adminClient.storage.from('newsletter-images').remove([row.storage_path])
+  // Only remove the file from storage for newsletter-owned uploads.
+  // Library photos (source_bucket = 'teacher-photos') stay intact in the teacher's library.
+  if ((row.source_bucket ?? 'newsletter-images') === 'newsletter-images') {
+    await adminClient.storage.from('newsletter-images').remove([row.storage_path])
+  }
 
   return { success: true }
 }

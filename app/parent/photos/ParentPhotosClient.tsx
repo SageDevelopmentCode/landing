@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Camera, X, ChevronLeft, ChevronRight } from "lucide-react";
-import { getSignedUrls, getFullResSignedUrl } from "@/app/actions/photos";
+import { getPhotoSignedUrlsBatch, getFullResSignedUrl } from "@/app/actions/photos";
 import type { TeacherPhoto } from "@/app/actions/photos";
 
 // ─── Date Grouping ────────────────────────────────────────────────────────────
@@ -221,7 +221,7 @@ export default function ParentPhotosClient({ initialPhotos }: Props) {
           debounceTimerRef.current = setTimeout(async () => {
             const paths = [...pendingPathsRef.current];
             pendingPathsRef.current.clear();
-            const urlMap = await getSignedUrls(paths);
+            const urlMap = await getPhotoSignedUrlsBatch(paths);
             setPhotos((prev) =>
               prev.map((p) => (urlMap[p.storage_path] ? { ...p, signed_url: urlMap[p.storage_path] } : p))
             );
