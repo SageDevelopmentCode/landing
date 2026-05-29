@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import React, { useState, useTransition, useEffect, useMemo } from 'react'
+import { ChevronDown, ChevronRight } from 'lucide-react'
 import { Table, TableRow, TableCell } from '../components/Table'
 import { cssColors as colors } from '../design-system'
-import { getClockSessionsForDate } from '@/app/actions/timeclock'
+import { getClockSessionsForDate, getClockSessionsForRange } from '@/app/actions/timeclock'
 import type { ClockSessionWithTeacher } from '@/app/actions/timeclock'
 
 function fmtTime(iso: string) {
@@ -21,16 +22,60 @@ function fmtDuration(clockIn: string, clockOut: string | null) {
   return `${hrs}h ${mins}m`
 }
 
-function fmtTotalTime(sessions: ClockSessionWithTeacher[]) {
-  const totalMins = sessions.reduce((sum, s) => {
-    if (!s.clock_out_at) return sum
-    return sum + Math.round((new Date(s.clock_out_at).getTime() - new Date(s.clock_in_at).getTime()) / 60000)
-  }, 0)
+function fmtMins(totalMins: number) {
   const hrs = Math.floor(totalMins / 60)
   const mins = totalMins % 60
   if (hrs === 0) return `${mins}m`
   if (mins === 0) return `${hrs}h`
   return `${hrs}h ${mins}m`
+}
+
+function fmtTotalTime(sessions: ClockSessionWithTeacher[]) {
+  const totalMins = sessions.reduce((sum, s) => {
+    if (!s.clock_out_at) return sum
+    return sum + Math.round((new Date(s.clock_out_at).getTime() - new Date(s.clock_in_at).getTime()) / 60000)
+  }, 0)
+  return fmtMins(totalMins)
+}
+
+function toLocalDateKey(iso: string): string {
+  const d = new Date(iso)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function fmtDayLabel(dateStr: string): string {
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
+    weekday: 'short', month: 'short', day: 'numeric',
+  })
+}
+
+function getTodayStr() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function getMondayOfCurrentWeek() {
+  const today = new Date()
+  const day = today.getDay()
+  const diff = day === 0 ? -6 : 1 - day
+  const monday = new Date(today)
+  monday.setDate(today.getDate() + diff)
+  return `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`
+}
+
+function getLastWeekRange() {
+  const today = new Date()
+  const day = today.getDay()
+  const diffToMonday = day === 0 ? -6 : 1 - day
+  const thisMonday = new Date(today)
+  thisMonday.setDate(today.getDate() + diffToMonday)
+  const lastMonday = new Date(thisMonday)
+  lastMonday.setDate(thisMonday.getDate() - 7)
+  const lastSunday = new Date(lastMonday)
+  lastSunday.setDate(lastMonday.getDate() + 6)
+  const fmt = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  return { start: fmt(lastMonday), end: fmt(lastSunday) }
 }
 
 interface Props {
@@ -39,92 +84,409 @@ interface Props {
 }
 
 export function ClockSessionsTab({ initialSessions, initialDate }: Props) {
+  const [mode, setMode] = useState<'day' | 'summary'>('day')
+
+  // Day mode
   const [sessions, setSessions] = useState(initialSessions)
   const [selectedDate, setSelectedDate] = useState(initialDate)
-  const [isPending, startTransition] = useTransition()
+  const [isDayPending, startDayTransition] = useTransition()
+
+  // Summary mode
+  const [rangeStart, setRangeStart] = useState(getMondayOfCurrentWeek)
+  const [rangeEnd, setRangeEnd] = useState(getTodayStr)
+  const [rangeSessions, setRangeSessions] = useState<ClockSessionWithTeacher[]>([])
+  const [isRangePending, startRangeTransition] = useTransition()
+  const [rangeLoaded, setRangeLoaded] = useState(false)
+  const [expandedEmployees, setExpandedEmployees] = useState<Set<string>>(new Set())
 
   function handleDateChange(date: string) {
     setSelectedDate(date)
-    startTransition(async () => {
+    startDayTransition(async () => {
       const result = await getClockSessionsForDate(date)
       setSessions(result)
     })
   }
 
+  function fetchRange(start: string, end: string) {
+    startRangeTransition(async () => {
+      const result = await getClockSessionsForRange(start, end)
+      setRangeSessions(result)
+      setExpandedEmployees(new Set())
+      setRangeLoaded(true)
+    })
+  }
+
+  useEffect(() => {
+    if (mode === 'summary' && !rangeLoaded) {
+      fetchRange(rangeStart, rangeEnd)
+    }
+  }, [mode])
+
+  function handleRangeStartChange(date: string) {
+    setRangeStart(date)
+    fetchRange(date, rangeEnd)
+  }
+
+  function handleRangeEndChange(date: string) {
+    setRangeEnd(date)
+    fetchRange(rangeStart, date)
+  }
+
+  function applyThisWeek() {
+    const start = getMondayOfCurrentWeek()
+    const end = getTodayStr()
+    setRangeStart(start)
+    setRangeEnd(end)
+    fetchRange(start, end)
+  }
+
+  function applyLastWeek() {
+    const { start, end } = getLastWeekRange()
+    setRangeStart(start)
+    setRangeEnd(end)
+    fetchRange(start, end)
+  }
+
+  function toggleExpand(teacherId: string) {
+    setExpandedEmployees((prev) => {
+      const next = new Set(prev)
+      next.has(teacherId) ? next.delete(teacherId) : next.add(teacherId)
+      return next
+    })
+  }
+
+  // Per-employee aggregation for summary mode — includes byDay breakdown
+  const employeeSummary = useMemo(() => {
+    const map = new Map<string, {
+      teacher_id: string
+      full_name: string | null
+      profile_image_url: string | null
+      totalMins: number
+      sessionCount: number
+      activeCount: number
+      byDay: Map<string, { mins: number; sessionCount: number; activeCount: number }>
+    }>()
+
+    for (const s of rangeSessions) {
+      if (!map.has(s.teacher_id)) {
+        map.set(s.teacher_id, {
+          teacher_id: s.teacher_id,
+          full_name: s.full_name,
+          profile_image_url: s.profile_image_url,
+          totalMins: 0,
+          sessionCount: 0,
+          activeCount: 0,
+          byDay: new Map(),
+        })
+      }
+      const entry = map.get(s.teacher_id)!
+      entry.sessionCount += 1
+
+      const dateKey = toLocalDateKey(s.clock_in_at)
+      if (!entry.byDay.has(dateKey)) {
+        entry.byDay.set(dateKey, { mins: 0, sessionCount: 0, activeCount: 0 })
+      }
+      const dayEntry = entry.byDay.get(dateKey)!
+      dayEntry.sessionCount += 1
+
+      if (s.clock_out_at) {
+        const mins = Math.round(
+          (new Date(s.clock_out_at).getTime() - new Date(s.clock_in_at).getTime()) / 60000
+        )
+        entry.totalMins += mins
+        dayEntry.mins += mins
+      } else {
+        entry.activeCount += 1
+        dayEntry.activeCount += 1
+      }
+    }
+
+    return [...map.values()].sort((a, b) => b.totalMins - a.totalMins)
+  }, [rangeSessions])
+
+  const rangeTotalMins = employeeSummary.reduce((s, e) => s + e.totalMins, 0)
+  const rangeTotalSessions = rangeSessions.length
+  const rangeUniqueTeachers = employeeSummary.length
+  const isMultiDay = rangeStart !== rangeEnd
+
   const uniqueTeachers = new Set(sessions.map((s) => s.teacher_id)).size
   const totalStr = fmtTotalTime(sessions)
 
+  const inputStyle = {
+    background: colors.surface,
+    border: `1px solid ${colors.border}`,
+    color: colors.textPrimary,
+    colorScheme: 'dark' as const,
+  }
+
+  const modeBtn = (active: boolean) => ({
+    padding: '4px 10px',
+    borderRadius: '6px',
+    fontSize: '11px',
+    fontWeight: active ? 600 : 400,
+    cursor: 'pointer',
+    border: 'none',
+    background: active ? colors.accentLight : 'transparent',
+    color: active ? colors.accent : colors.textSecondary,
+    transition: 'all 0.15s',
+  })
+
+  const quickBtn = (active: boolean) => ({
+    padding: '3px 10px',
+    borderRadius: '6px',
+    fontSize: '11px',
+    fontWeight: 500,
+    cursor: 'pointer',
+    border: `1px solid ${active ? colors.accent : colors.border}`,
+    background: active ? colors.accentLight : 'transparent',
+    color: active ? colors.accent : colors.textSecondary,
+    transition: 'all 0.15s',
+  })
+
+  const thisWeekStart = getMondayOfCurrentWeek()
+  const todayStr = getTodayStr()
+  const lastWeek = getLastWeekRange()
+  const isThisWeek = rangeStart === thisWeekStart && rangeEnd === todayStr
+  const isLastWeek = rangeStart === lastWeek.start && rangeEnd === lastWeek.end
+
+  const cellBase: React.CSSProperties = {
+    padding: '6px 12px',
+    fontSize: '11px',
+    borderBottom: `1px solid ${colors.border}`,
+    whiteSpace: 'nowrap' as const,
+  }
+
   return (
     <div className="space-y-4">
+      {/* Header row with mode toggle */}
       <div className="flex items-center justify-between gap-4">
-        <p className="text-xs" style={{ color: colors.textSecondary }}>
-          {sessions.length} session{sessions.length !== 1 ? 's' : ''} &middot; {uniqueTeachers} teacher{uniqueTeachers !== 1 ? 's' : ''} &middot; {totalStr} total
-        </p>
-        <input
-          type="date"
-          value={selectedDate}
-          onChange={(e) => handleDateChange(e.target.value)}
-          className="px-2.5 py-1 rounded-lg text-xs focus:outline-none focus:ring-1"
-          style={{
-            background: colors.surface,
-            border: `1px solid ${colors.border}`,
-            color: colors.textPrimary,
-            colorScheme: 'dark',
-          }}
-        />
+        {mode === 'day' ? (
+          <p className="text-xs" style={{ color: colors.textSecondary }}>
+            {sessions.length} session{sessions.length !== 1 ? 's' : ''} &middot; {uniqueTeachers} teacher{uniqueTeachers !== 1 ? 's' : ''} &middot; {totalStr} total
+          </p>
+        ) : (
+          <p className="text-xs" style={{ color: colors.textSecondary }}>
+            {rangeTotalSessions} session{rangeTotalSessions !== 1 ? 's' : ''} &middot; {rangeUniqueTeachers} teacher{rangeUniqueTeachers !== 1 ? 's' : ''} &middot; {fmtMins(rangeTotalMins)} total
+          </p>
+        )}
+        <div className="flex items-center gap-3">
+          {mode === 'day' && (
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => handleDateChange(e.target.value)}
+              className="px-2.5 py-1 rounded-lg text-xs focus:outline-none focus:ring-1"
+              style={inputStyle}
+            />
+          )}
+          <div className="flex gap-0.5 p-0.5 rounded-lg" style={{ background: colors.elevated, border: `1px solid ${colors.border}` }}>
+            <button style={modeBtn(mode === 'day')} onClick={() => setMode('day')}>Day</button>
+            <button style={modeBtn(mode === 'summary')} onClick={() => setMode('summary')}>Summary</button>
+          </div>
+        </div>
       </div>
 
-      {sessions.length === 0 ? (
-        <p className="text-sm text-center py-12" style={{ color: colors.textTertiary }}>
-          {isPending ? 'Loading…' : 'No sessions found for this date.'}
-        </p>
-      ) : (
-        <div style={{ opacity: isPending ? 0.5 : 1, transition: 'opacity 0.15s' }}>
-          <Table headers={['Teacher', 'Clock In', 'Clock Out', 'Duration', 'Note']}>
-            {sessions.map((s, i) => (
-              <TableRow key={s.id} index={i}>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    {s.profile_image_url ? (
-                      <img
-                        src={s.profile_image_url}
-                        alt={s.full_name ?? ''}
-                        className="rounded-full object-cover shrink-0"
-                        style={{ width: 28, height: 28 }}
-                      />
+      {/* Day mode */}
+      {mode === 'day' && (
+        sessions.length === 0 ? (
+          <p className="text-sm text-center py-12" style={{ color: colors.textTertiary }}>
+            {isDayPending ? 'Loading…' : 'No sessions found for this date.'}
+          </p>
+        ) : (
+          <div style={{ opacity: isDayPending ? 0.5 : 1, transition: 'opacity 0.15s' }}>
+            <Table headers={['Teacher', 'Clock In', 'Clock Out', 'Duration', 'Note']}>
+              {sessions.map((s, i) => (
+                <TableRow key={s.id} index={i}>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {s.profile_image_url ? (
+                        <img
+                          src={s.profile_image_url}
+                          alt={s.full_name ?? ''}
+                          className="rounded-full object-cover shrink-0"
+                          style={{ width: 28, height: 28 }}
+                        />
+                      ) : (
+                        <div
+                          className="rounded-full flex items-center justify-center shrink-0 text-[10px] font-semibold"
+                          style={{ width: 28, height: 28, background: colors.accentLight, color: colors.accent }}
+                        >
+                          {(s.full_name ?? '?').charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <span style={{ color: colors.textPrimary, fontWeight: 500 }}>
+                        {s.full_name ?? '—'}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell>{fmtTime(s.clock_in_at)}</TableCell>
+                  <TableCell>
+                    {s.clock_out_at ? (
+                      fmtTime(s.clock_out_at)
                     ) : (
-                      <div
-                        className="rounded-full flex items-center justify-center shrink-0 text-[10px] font-semibold"
-                        style={{ width: 28, height: 28, background: colors.accentLight, color: colors.accent }}
+                      <span
+                        className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border"
+                        style={{ color: colors.success, backgroundColor: colors.successBg, borderColor: colors.successBorder }}
                       >
-                        {(s.full_name ?? '?').charAt(0).toUpperCase()}
-                      </div>
+                        Active
+                      </span>
                     )}
-                    <span style={{ color: colors.textPrimary, fontWeight: 500 }}>
-                      {s.full_name ?? '—'}
+                  </TableCell>
+                  <TableCell>{fmtDuration(s.clock_in_at, s.clock_out_at)}</TableCell>
+                  <TableCell style={{ color: s.note ? colors.textPrimary : colors.textTertiary }}>
+                    {s.note || '—'}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </Table>
+          </div>
+        )
+      )}
+
+      {/* Summary mode */}
+      {mode === 'summary' && (
+        <div className="space-y-3">
+          {/* Date range controls */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex gap-1.5">
+              <button style={quickBtn(isThisWeek)} onClick={applyThisWeek}>This Week</button>
+              <button style={quickBtn(isLastWeek)} onClick={applyLastWeek}>Last Week</button>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                value={rangeStart}
+                onChange={(e) => handleRangeStartChange(e.target.value)}
+                className="px-2.5 py-1 rounded-lg text-xs focus:outline-none focus:ring-1"
+                style={inputStyle}
+              />
+              <span className="text-xs" style={{ color: colors.textTertiary }}>to</span>
+              <input
+                type="date"
+                value={rangeEnd}
+                min={rangeStart}
+                onChange={(e) => handleRangeEndChange(e.target.value)}
+                className="px-2.5 py-1 rounded-lg text-xs focus:outline-none focus:ring-1"
+                style={inputStyle}
+              />
+            </div>
+          </div>
+
+          {/* Summary table */}
+          {isRangePending ? (
+            <p className="text-sm text-center py-12" style={{ color: colors.textTertiary }}>Loading…</p>
+          ) : employeeSummary.length === 0 ? (
+            <p className="text-sm text-center py-12" style={{ color: colors.textTertiary }}>
+              No sessions found for this date range.
+            </p>
+          ) : (
+            <div style={{ opacity: isRangePending ? 0.5 : 1, transition: 'opacity 0.15s' }}>
+              <Table headers={['Employee', 'Total Hours', 'Sessions']}>
+                {employeeSummary.map((e, i) => {
+                  const isExpanded = expandedEmployees.has(e.teacher_id)
+                  const sortedDays = [...e.byDay.entries()].sort(([a], [b]) => a.localeCompare(b))
+                  return (
+                    <React.Fragment key={e.teacher_id}>
+                      <TableRow
+                        key={e.teacher_id}
+                        index={i}
+                        onClick={isMultiDay ? () => toggleExpand(e.teacher_id) : undefined}
+                      >
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {isMultiDay && (
+                              <span style={{ color: colors.textTertiary, flexShrink: 0 }}>
+                                {isExpanded
+                                  ? <ChevronDown className="w-3.5 h-3.5" />
+                                  : <ChevronRight className="w-3.5 h-3.5" />
+                                }
+                              </span>
+                            )}
+                            {e.profile_image_url ? (
+                              <img
+                                src={e.profile_image_url}
+                                alt={e.full_name ?? ''}
+                                className="rounded-full object-cover shrink-0"
+                                style={{ width: 28, height: 28 }}
+                              />
+                            ) : (
+                              <div
+                                className="rounded-full flex items-center justify-center shrink-0 text-[10px] font-semibold"
+                                style={{ width: 28, height: 28, background: colors.accentLight, color: colors.accent }}
+                              >
+                                {(e.full_name ?? '?').charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            <span style={{ color: colors.textPrimary, fontWeight: 500 }}>
+                              {e.full_name ?? '—'}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span style={{ color: colors.textPrimary, fontWeight: 500 }}>
+                            {fmtMins(e.totalMins)}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span style={{ color: colors.textSecondary }}>
+                            {e.sessionCount}
+                            {e.activeCount > 0 && (
+                              <span
+                                className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border"
+                                style={{ color: colors.success, backgroundColor: colors.successBg, borderColor: colors.successBorder }}
+                              >
+                                {e.activeCount} active
+                              </span>
+                            )}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+
+                      {/* Day breakdown sub-rows */}
+                      {isExpanded && sortedDays.map(([date, day]) => (
+                        <tr key={`${e.teacher_id}-${date}`} style={{ background: colors.elevated }}>
+                          <td style={{ ...cellBase, paddingLeft: 52, color: colors.textSecondary }}>
+                            {fmtDayLabel(date)}
+                          </td>
+                          <td style={{ ...cellBase, color: day.mins > 0 ? colors.textPrimary : colors.textTertiary, fontWeight: day.mins > 0 ? 500 : 400 }}>
+                            {day.mins > 0 ? fmtMins(day.mins) : '—'}
+                          </td>
+                          <td style={{ ...cellBase, color: colors.textTertiary }}>
+                            {day.sessionCount}
+                            {day.activeCount > 0 && (
+                              <span
+                                className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border"
+                                style={{ color: colors.success, backgroundColor: colors.successBg, borderColor: colors.successBorder }}
+                              >
+                                {day.activeCount} active
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </React.Fragment>
+                  )
+                })}
+
+                {/* Totals footer row */}
+                <TableRow key="__total__" index={employeeSummary.length}>
+                  <TableCell>
+                    <span className="text-xs font-semibold" style={{ color: colors.textTertiary }}>Total</span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-xs font-semibold" style={{ color: colors.textPrimary }}>
+                      {fmtMins(rangeTotalMins)}
                     </span>
-                  </div>
-                </TableCell>
-                <TableCell>{fmtTime(s.clock_in_at)}</TableCell>
-                <TableCell>
-                  {s.clock_out_at ? (
-                    fmtTime(s.clock_out_at)
-                  ) : (
-                    <span
-                      className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border"
-                      style={{ color: colors.success, backgroundColor: colors.successBg, borderColor: colors.successBorder }}
-                    >
-                      Active
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-xs font-semibold" style={{ color: colors.textPrimary }}>
+                      {rangeTotalSessions}
                     </span>
-                  )}
-                </TableCell>
-                <TableCell>{fmtDuration(s.clock_in_at, s.clock_out_at)}</TableCell>
-                <TableCell style={{ color: s.note ? colors.textPrimary : colors.textTertiary }}>
-                  {s.note || '—'}
-                </TableCell>
-              </TableRow>
-            ))}
-          </Table>
+                  </TableCell>
+                </TableRow>
+              </Table>
+            </div>
+          )}
         </div>
       )}
     </div>

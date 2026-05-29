@@ -26,13 +26,13 @@ import { LucideIcon } from "lucide-react";
 import HelpWidget from "../components/HelpWidget";
 import ManageAccessModal from "./ManageAccessModal";
 
-const primaryNavItems: { label: string; icon: LucideIcon; href: string }[] = [
+const primaryNavItems: { label: string; icon: LucideIcon; href: string; badge?: string }[] = [
   { label: "Home", icon: Home, href: "/parent/home" },
   { label: "My Children", icon: Users, href: "/parent/children" },
   { label: "Tuition", icon: CreditCard, href: "/parent/billing" },
   { label: "Messages", icon: MessageCircle, href: "/parent/messages" },
   { label: "Calendar", icon: Calendar, href: "/parent/calendar" },
-  { label: "Photos", icon: Camera, href: "/parent/photos" },
+  { label: "Photos", icon: Camera, href: "/parent/photos", badge: "New!" },
 ];
 
 const moreItems: {
@@ -108,7 +108,7 @@ export default function DashboardNav({
 
       {/* Desktop nav — unchanged */}
       <nav className="hidden md:flex items-center gap-2">
-        {primaryNavItems.map(({ label, icon: Icon, href }) => {
+        {primaryNavItems.map(({ label, icon: Icon, href, badge }) => {
           const resolvedHref = navHref(href);
           const isActive = href !== "#" && pathname === resolvedHref;
           return (
@@ -123,6 +123,11 @@ export default function DashboardNav({
             >
               <Icon className="w-4 h-4" />
               {label}
+              {badge && (
+                <span className="ml-1 text-[10px] font-semibold uppercase rounded-full px-2 py-0.5 shrink-0 bg-green-100 text-green-700">
+                  {badge}
+                </span>
+              )}
             </Link>
           );
         })}
@@ -216,7 +221,7 @@ export default function DashboardNav({
       {mobileMenuOpen && (
         <div className="md:hidden absolute inset-x-0 top-full z-40 bg-white border-b border-gray-100 shadow-sm">
           <div className="px-4 pt-2 pb-3 grid grid-cols-2 gap-1">
-            {primaryNavItems.map(({ label, icon: Icon, href }) => {
+            {primaryNavItems.map(({ label, icon: Icon, href, badge }) => {
               const resolvedHref = navHref(href);
               const isActive = href !== "#" && pathname === resolvedHref;
               return (
@@ -232,6 +237,11 @@ export default function DashboardNav({
                 >
                   <Icon className="w-4 h-4" />
                   {label}
+                  {badge && (
+                    <span className="ml-1 text-[10px] font-semibold uppercase rounded-full px-2 py-0.5 shrink-0 bg-green-100 text-green-700">
+                      {badge}
+                    </span>
+                  )}
                 </Link>
               );
             })}

@@ -201,6 +201,45 @@ export async function getClockSessionsForDate(date: string): Promise<ClockSessio
   }))
 }
 
+export async function getClockSessionsForRange(startDate: string, endDate: string): Promise<ClockSessionWithTeacher[]> {
+  const adminClient = createAdminClient()
+
+  const nextUtcDay = new Date(endDate + 'T00:00:00.000Z')
+  nextUtcDay.setUTCDate(nextUtcDay.getUTCDate() + 1)
+  const nextDayStr = nextUtcDay.toISOString().slice(0, 10)
+
+  const { data: sessions } = await adminClient
+    .schema('teachers')
+    .from('clock_sessions')
+    .select('id, teacher_id, clock_in_at, clock_out_at, note, created_at')
+    .gte('clock_in_at', `${startDate}T00:00:00+00`)
+    .lt('clock_in_at', `${nextDayStr}T00:00:00+00`)
+    .order('clock_in_at', { ascending: false })
+
+  if (!sessions || sessions.length === 0) return []
+
+  const teacherIds = [...new Set((sessions as Array<{ teacher_id: string }>).map((s) => s.teacher_id))]
+  const { data: users } = await adminClient
+    .schema('admin')
+    .from('users')
+    .select('id, full_name, profile_image_url')
+    .in('id', teacherIds)
+
+  const userMap: Record<string, { full_name: string | null; profile_image_url: string | null }> = {}
+  for (const u of (users ?? []) as Array<{ id: string; full_name: string | null; profile_image_url: string | null }>) {
+    userMap[u.id] = { full_name: u.full_name, profile_image_url: u.profile_image_url }
+  }
+
+  return (sessions as Array<{
+    id: string; teacher_id: string; clock_in_at: string
+    clock_out_at: string | null; note: string | null; created_at: string
+  }>).map((s) => ({
+    ...s,
+    full_name: userMap[s.teacher_id]?.full_name ?? null,
+    profile_image_url: userMap[s.teacher_id]?.profile_image_url ?? null,
+  }))
+}
+
 export async function setEmployeeCode(teacherId: string, code: string): Promise<{ error?: string }> {
   // Validate caller is super_admin
   const supabase = await createServerSupabaseClient()
