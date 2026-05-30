@@ -8,6 +8,7 @@ import {
   Bold,
   Italic,
   List,
+  Link,
   Image as ImageIcon,
   Users,
   CheckCircle2,
@@ -206,7 +207,7 @@ function EditorTab({
 }: EditorTabProps) {
   const [activeSectionId, setActiveSectionId] = useState(sections[0]?.id ?? "");
   const [libraryPickerForSection, setLibraryPickerForSection] = useState<string | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const activeSection = sections.find((s) => s.id === activeSectionId) ?? sections[0];
@@ -247,6 +248,23 @@ function EditorTab({
     requestAnimationFrame(() => {
       ta.focus();
       ta.setSelectionRange(start + 3, start + 3);
+    });
+  }
+
+  function insertLink() {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const selected = ta.value.slice(start, end) || "link text";
+    const url = window.prompt("Enter URL:", "https://");
+    if (!url) return;
+    const insertion = `[${selected}](${url})`;
+    const newVal = ta.value.slice(0, start) + insertion + ta.value.slice(end);
+    patchSection(activeSectionId, { body: newVal });
+    requestAnimationFrame(() => {
+      ta.focus();
+      ta.setSelectionRange(start + insertion.length, start + insertion.length);
     });
   }
 
@@ -448,16 +466,26 @@ function EditorTab({
                     )}
                   </div>
                   <textarea
+                    ref={(el) => {
+                      if (el) {
+                        el.style.height = "auto";
+                        el.style.height = el.scrollHeight + "px";
+                      }
+                    }}
                     value={update?.body ?? ""}
                     onChange={(e) => !isReadOnly && patchTeacherUpdate(teacher.id, e.target.value)}
+                    onInput={(e) => {
+                      const el = e.currentTarget;
+                      el.style.height = "auto";
+                      el.style.height = el.scrollHeight + "px";
+                    }}
                     readOnly={isReadOnly}
                     placeholder={`${teacher.full_name?.split(" ")[0] ?? "Teacher"}'s update for this week…`}
-                    className={`w-full min-h-[100px] border border-gray-100 rounded-xl p-3 text-sm text-gray-700 font-body resize-none outline-none leading-relaxed ${
+                    className={`w-full border border-gray-100 rounded-xl p-3 text-sm text-gray-700 font-body resize-none outline-none leading-relaxed overflow-hidden ${
                       isReadOnly
                         ? "bg-gray-50 cursor-default"
                         : "bg-gray-50 focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59] placeholder:text-gray-400"
                     }`}
-                    rows={4}
                   />
                 </div>
               );
@@ -529,6 +557,9 @@ function EditorTab({
                 </button>
                 <button title="Bullet list" onClick={insertBullet} className="p-2 text-gray-500 hover:text-[#4a7c59] hover:bg-white rounded-lg transition-colors">
                   <List className="w-4 h-4" />
+                </button>
+                <button title="Insert link" onClick={insertLink} className="p-2 text-gray-500 hover:text-[#4a7c59] hover:bg-white rounded-lg transition-colors">
+                  <Link className="w-4 h-4" />
                 </button>
                 <div className="w-px h-4 bg-gray-200 mx-1" />
                 <button title="Add images" onClick={() => fileInputRef.current?.click()} className="p-2 text-gray-500 hover:text-[#4a7c59] hover:bg-white rounded-lg transition-colors">

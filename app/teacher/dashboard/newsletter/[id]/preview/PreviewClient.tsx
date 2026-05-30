@@ -3,7 +3,56 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Newspaper, X, ChevronDown } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import type { DBNewsletter, DBSectionImage } from "@/app/actions/newsletter";
+
+const markdownComponents = {
+  p: ({ children }: { children?: React.ReactNode }) => (
+    <p className="text-base font-body text-gray-700 leading-relaxed mb-2 last:mb-0">{children}</p>
+  ),
+  strong: ({ children }: { children?: React.ReactNode }) => (
+    <strong className="font-semibold text-gray-900">{children}</strong>
+  ),
+  em: ({ children }: { children?: React.ReactNode }) => (
+    <em className="italic">{children}</em>
+  ),
+  ul: ({ children }: { children?: React.ReactNode }) => (
+    <ul className="list-disc pl-5 my-2 space-y-1 text-base font-body text-gray-700">{children}</ul>
+  ),
+  ol: ({ children }: { children?: React.ReactNode }) => (
+    <ol className="list-decimal pl-5 my-2 space-y-1 text-base font-body text-gray-700">{children}</ol>
+  ),
+  li: ({ children }: { children?: React.ReactNode }) => (
+    <li className="leading-relaxed">{children}</li>
+  ),
+  a: ({ href, children }: { href?: string; children?: React.ReactNode }) => (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="text-[#4a7c59] underline hover:text-[#3d6b4a]">{children}</a>
+  ),
+};
+
+const markdownComponentsDark = {
+  p: ({ children }: { children?: React.ReactNode }) => (
+    <p className="text-sm md:text-base font-body text-white/65 leading-relaxed mb-2 last:mb-0">{children}</p>
+  ),
+  strong: ({ children }: { children?: React.ReactNode }) => (
+    <strong className="font-semibold text-white/90">{children}</strong>
+  ),
+  em: ({ children }: { children?: React.ReactNode }) => (
+    <em className="italic">{children}</em>
+  ),
+  ul: ({ children }: { children?: React.ReactNode }) => (
+    <ul className="list-disc pl-5 my-2 space-y-1 text-sm md:text-base font-body text-white/65">{children}</ul>
+  ),
+  ol: ({ children }: { children?: React.ReactNode }) => (
+    <ol className="list-decimal pl-5 my-2 space-y-1 text-sm md:text-base font-body text-white/65">{children}</ol>
+  ),
+  li: ({ children }: { children?: React.ReactNode }) => (
+    <li className="leading-relaxed">{children}</li>
+  ),
+  a: ({ href, children }: { href?: string; children?: React.ReactNode }) => (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="text-[#7ec89a] underline hover:text-[#a8dbb8]">{children}</a>
+  ),
+};
 
 // ── Image grid helpers ────────────────────────────────────────────────────────
 
@@ -212,9 +261,7 @@ function TraditionalNewsletter({ newsletter, sections }: { newsletter: DBNewslet
                 </h2>
               </div>
               {section.body ? (
-                <p className="text-base font-body text-gray-700 leading-relaxed whitespace-pre-wrap">
-                  {section.body}
-                </p>
+                <ReactMarkdown components={markdownComponents}>{section.body}</ReactMarkdown>
               ) : (
                 <p className="text-base font-body text-gray-400 italic">No content yet.</p>
               )}
@@ -417,9 +464,9 @@ function SlideshowNewsletter({ sections }: { sections: RenderSection[] }) {
             </h2>
           </div>
           {slide.body ? (
-            <p className="text-sm md:text-base font-body text-white/65 leading-relaxed whitespace-pre-wrap flex-1">
-              {slide.body}
-            </p>
+            <div className="flex-1">
+              <ReactMarkdown components={markdownComponentsDark}>{slide.body}</ReactMarkdown>
+            </div>
           ) : (
             <p className="text-base font-body text-white/30 italic flex-1">No content for this section.</p>
           )}
