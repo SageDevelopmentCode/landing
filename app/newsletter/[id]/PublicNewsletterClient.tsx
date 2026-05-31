@@ -102,7 +102,7 @@ function TraditionalImageGrid({ images }: { images: DBSectionImage[] }) {
   if (images.length === 1) {
     return (
       <div className="mt-4">
-        <img src={images[0].signed_url ?? ""} alt="" className="w-full h-60 object-cover cursor-pointer hover:opacity-90 transition-opacity" onClick={() => setLightboxIdx(0)} />
+        <img src={images[0].signed_url ?? ""} alt="" loading="lazy" className="w-full h-60 object-cover cursor-pointer hover:opacity-90 transition-opacity" onClick={() => setLightboxIdx(0)} />
         <p className="text-xs text-gray-400 font-body mt-1.5">1 photo</p>
         {lightboxIdx !== null && <NewsletterImageLightbox images={images} initialIndex={lightboxIdx} onClose={() => setLightboxIdx(null)} />}
       </div>
@@ -114,7 +114,7 @@ function TraditionalImageGrid({ images }: { images: DBSectionImage[] }) {
       <div className="mt-4">
         <div className="grid grid-cols-2 gap-0.5">
           {images.map((img, i) => (
-            <img key={img.id} src={img.signed_url ?? ""} alt="" className="w-full h-52 object-cover cursor-pointer hover:opacity-90 transition-opacity" onClick={() => setLightboxIdx(i)} />
+            <img key={img.id} src={img.signed_url ?? ""} alt="" loading="lazy" className="w-full h-52 object-cover cursor-pointer hover:opacity-90 transition-opacity" onClick={() => setLightboxIdx(i)} />
           ))}
         </div>
         <p className="text-xs text-gray-400 font-body mt-1.5">2 photos</p>
@@ -127,7 +127,7 @@ function TraditionalImageGrid({ images }: { images: DBSectionImage[] }) {
     <div className="mt-4">
       <div className="grid grid-cols-3 gap-0.5">
         {images.map((img, i) => (
-          <img key={img.id} src={img.signed_url ?? ""} alt="" className="w-full h-40 object-cover cursor-pointer hover:opacity-90 transition-opacity" onClick={() => setLightboxIdx(i)} />
+          <img key={img.id} src={img.signed_url ?? ""} alt="" loading="lazy" className="w-full h-40 object-cover cursor-pointer hover:opacity-90 transition-opacity" onClick={() => setLightboxIdx(i)} />
         ))}
       </div>
       <p className="text-xs text-gray-400 font-body mt-1.5">{images.length} photos</p>
