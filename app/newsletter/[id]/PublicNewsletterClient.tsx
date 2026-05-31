@@ -95,6 +95,22 @@ function NewsletterImageLightbox({
   );
 }
 
+function SkeletonImage({ src, className, onClick }: { src: string; className: string; onClick: () => void }) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <div className={`relative overflow-hidden cursor-pointer hover:opacity-90 transition-opacity ${className}`} onClick={onClick}>
+      {!loaded && <div className="absolute inset-0 bg-[#e8ede9] animate-pulse" />}
+      <img
+        src={src}
+        alt=""
+        loading="lazy"
+        onLoad={() => setLoaded(true)}
+        className={`w-full h-full object-cover transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
+      />
+    </div>
+  );
+}
+
 function TraditionalImageGrid({ images }: { images: DBSectionImage[] }) {
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   if (images.length === 0) return null;
@@ -102,7 +118,7 @@ function TraditionalImageGrid({ images }: { images: DBSectionImage[] }) {
   if (images.length === 1) {
     return (
       <div className="mt-4">
-        <img src={images[0].signed_url ?? ""} alt="" loading="lazy" className="w-full h-60 object-cover cursor-pointer hover:opacity-90 transition-opacity" onClick={() => setLightboxIdx(0)} />
+        <SkeletonImage src={images[0].signed_url ?? ""} className="w-full h-60" onClick={() => setLightboxIdx(0)} />
         <p className="text-xs text-gray-400 font-body mt-1.5">1 photo</p>
         {lightboxIdx !== null && <NewsletterImageLightbox images={images} initialIndex={lightboxIdx} onClose={() => setLightboxIdx(null)} />}
       </div>
@@ -114,7 +130,7 @@ function TraditionalImageGrid({ images }: { images: DBSectionImage[] }) {
       <div className="mt-4">
         <div className="grid grid-cols-2 gap-0.5">
           {images.map((img, i) => (
-            <img key={img.id} src={img.signed_url ?? ""} alt="" loading="lazy" className="w-full h-52 object-cover cursor-pointer hover:opacity-90 transition-opacity" onClick={() => setLightboxIdx(i)} />
+            <SkeletonImage key={img.id} src={img.signed_url ?? ""} className="w-full h-52" onClick={() => setLightboxIdx(i)} />
           ))}
         </div>
         <p className="text-xs text-gray-400 font-body mt-1.5">2 photos</p>
@@ -127,7 +143,7 @@ function TraditionalImageGrid({ images }: { images: DBSectionImage[] }) {
     <div className="mt-4">
       <div className="grid grid-cols-3 gap-0.5">
         {images.map((img, i) => (
-          <img key={img.id} src={img.signed_url ?? ""} alt="" loading="lazy" className="w-full h-40 object-cover cursor-pointer hover:opacity-90 transition-opacity" onClick={() => setLightboxIdx(i)} />
+          <SkeletonImage key={img.id} src={img.signed_url ?? ""} className="w-full h-40" onClick={() => setLightboxIdx(i)} />
         ))}
       </div>
       <p className="text-xs text-gray-400 font-body mt-1.5">{images.length} photos</p>
