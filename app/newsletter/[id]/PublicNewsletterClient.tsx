@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, X, Smile, Users, CalendarDays, Bell, Images, FileText, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Smile, Users, CalendarDays, Bell, Images, FileText, Lock, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkBreaks from "remark-breaks";
 import { verifyNewsletterPassword } from "@/app/actions/newsletter";
@@ -329,7 +329,6 @@ function NewsletterView({ newsletter }: { newsletter: DBNewsletter }) {
 
 function PasswordGate({ id, title, weekRange, onUnlocked }: { id: string; title: string; weekRange: string; onUnlocked: (nl: DBNewsletter) => void }) {
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [heroLoaded, setHeroLoaded] = useState(false);
@@ -384,22 +383,14 @@ function PasswordGate({ id, title, weekRange, onUnlocked }: { id: string; title:
             <form onSubmit={handleSubmit} className="flex flex-col gap-3">
               <div className="relative">
                 <input
-                  type={showPassword ? "text" : "password"}
+                  type="text"
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); setError(null); }}
                   placeholder="Family password"
-                  className="w-full px-4 py-3 pr-10 rounded-xl border border-gray-200 text-sm font-body text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#4a7c59] focus:ring-1 focus:ring-[#4a7c59]/30 transition-colors"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-body text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#4a7c59] focus:ring-1 focus:ring-[#4a7c59]/30 transition-colors"
                   autoFocus
                   autoComplete="off"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
               </div>
 
               {error && (

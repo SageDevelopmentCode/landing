@@ -32,6 +32,7 @@ import { sendRegistrationFeeConfirmationEmail } from '../../actions/sendRegistra
 import { sendHomeschoolDropInConfirmationEmail } from '../../actions/sendHomeschoolDropInConfirmationEmail'
 import { sendSummerStartingEmail } from '../../actions/sendSummerStartingEmail'
 import { sendSummerFirstDayEmail } from '../../actions/sendSummerFirstDayEmail'
+import { sendSummerWeekOneNewsletterEmail } from '../../actions/sendSummerWeekOneNewsletterEmail'
 import { enrollApplication } from '../../actions/enrollApplication'
 import { PaymentHistory } from './PaymentHistory'
 import { updateApplicationProgram } from '../../actions/updateApplicationProgram'
@@ -214,6 +215,9 @@ export function ApplicationDetailSidebar({
   const [summerFirstDaySending, setSummerFirstDaySending] = useState(false)
   const [summerFirstDaySent, setSummerFirstDaySent] = useState(false)
   const [summerFirstDayError, setSummerFirstDayError] = useState<string | null>(null)
+  const [weekOneNewsletterSending, setWeekOneNewsletterSending] = useState(false)
+  const [weekOneNewsletterSent, setWeekOneNewsletterSent] = useState(false)
+  const [weekOneNewsletterError, setWeekOneNewsletterError] = useState<string | null>(null)
   const [tagInput, setTagInput] = useState('')
   const [tagSaving, setTagSaving] = useState(false)
   const [tagError, setTagError] = useState<string | null>(null)
@@ -759,6 +763,25 @@ export function ApplicationDetailSidebar({
       setTimeout(() => setSummerFirstDaySent(false), 3000)
     } else {
       setSummerFirstDayError(result.error ?? 'Failed to send')
+    }
+  }
+
+  const handleSendWeekOneNewsletter = async () => {
+    if (weekOneNewsletterSending || !application.g1_email) return
+    setWeekOneNewsletterSending(true)
+    setWeekOneNewsletterError(null)
+    const result = await sendSummerWeekOneNewsletterEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+    })
+    setWeekOneNewsletterSending(false)
+    if (result.success) {
+      setWeekOneNewsletterSent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setWeekOneNewsletterSent(false), 3000)
+    } else {
+      setWeekOneNewsletterError(result.error ?? 'Failed to send')
     }
   }
 
@@ -1348,6 +1371,17 @@ export function ApplicationDetailSidebar({
                   {summerFirstDaySending ? 'Sending…' : summerFirstDaySent ? '✓ Sent!' : 'Send Summer First Day'}
                 </button>
                 {summerFirstDayError && <span className="text-xs text-red-600">{summerFirstDayError}</span>}
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleSendWeekOneNewsletter}
+                  disabled={weekOneNewsletterSending || weekOneNewsletterSent}
+                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                >
+                  {weekOneNewsletterSending ? 'Sending…' : weekOneNewsletterSent ? '✓ Sent!' : 'Send Week One Newsletter'}
+                </button>
+                {weekOneNewsletterError && <span className="text-xs text-red-600">{weekOneNewsletterError}</span>}
               </div>
               {application.program === 'homeschool_drop_in' && (
                 <div className="flex items-center gap-3">
