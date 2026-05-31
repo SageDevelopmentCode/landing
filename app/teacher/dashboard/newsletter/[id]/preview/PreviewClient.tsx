@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, Newspaper, X, ChevronDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, Newspaper, X, ChevronDown, Smile, Users, CalendarDays, Bell, Images, FileText } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkBreaks from "remark-breaks";
 import type { DBNewsletter, DBSectionImage, DBTeacherUpdate } from "@/app/actions/newsletter";
@@ -142,7 +142,7 @@ function TraditionalImageGrid({ images }: { images: DBSectionImage[] }) {
         <img
           src={images[0].signed_url ?? ""}
           alt=""
-          className="w-full h-56 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+          className="w-full h-60 object-cover cursor-pointer hover:opacity-90 transition-opacity"
           onClick={() => setLightboxIdx(0)}
         />
         <p className="text-xs text-gray-400 font-body mt-1.5">1 photo</p>
@@ -162,7 +162,7 @@ function TraditionalImageGrid({ images }: { images: DBSectionImage[] }) {
               key={img.id}
               src={img.signed_url ?? ""}
               alt=""
-              className="w-full h-56 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+              className="w-full h-52 object-cover cursor-pointer hover:opacity-90 transition-opacity"
               onClick={() => setLightboxIdx(i)}
             />
           ))}
@@ -183,7 +183,7 @@ function TraditionalImageGrid({ images }: { images: DBSectionImage[] }) {
             key={img.id}
             src={img.signed_url ?? ""}
             alt=""
-            className="w-full h-56 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+            className="w-full h-40 object-cover cursor-pointer hover:opacity-90 transition-opacity"
             onClick={() => setLightboxIdx(i)}
           />
         ))}
@@ -321,213 +321,119 @@ interface RenderSection {
   teacherUpdates: DBTeacherUpdate[];
 }
 
-// ── Week parsing + calendar helpers ──────────────────────────────────────────
+// ── Section icon helper ───────────────────────────────────────────────────────
 
-const MONTH_MAP: Record<string, number> = {
-  january: 0, february: 1, march: 2, april: 3, may: 4, june: 5,
-  july: 6, august: 7, september: 8, october: 9, november: 10, december: 11,
-  jan: 0, feb: 1, mar: 2, apr: 3, jun: 5, jul: 6, aug: 7,
-  sep: 8, oct: 9, nov: 10, dec: 11,
-};
-
-const DAY_ABBRS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-
-function parseWeekDays(week_range: string): Array<{ abbr: string; day: number; date: Date }> {
-  // e.g. "May 26 – May 30" or "May 26 - May 30"
-  const parts = week_range.split(/[–—-]/).map((s) => s.trim());
-  if (parts.length < 2) return [];
-
-  function parseDatePart(s: string): Date | null {
-    const tokens = s.split(/\s+/);
-    if (tokens.length < 2) return null;
-    const monthStr = tokens[0].toLowerCase().replace(/[.,]/, "");
-    const dayNum = parseInt(tokens[1], 10);
-    const monthIdx = MONTH_MAP[monthStr];
-    if (monthIdx === undefined || isNaN(dayNum)) return null;
-    const year = new Date().getFullYear();
-    return new Date(year, monthIdx, dayNum);
-  }
-
-  const startDate = parseDatePart(parts[0]);
-  const endDate = parseDatePart(parts[1]);
-  if (!startDate || !endDate) return [];
-
-  const days: Array<{ abbr: string; day: number; date: Date }> = [];
-  const cur = new Date(startDate);
-  while (cur <= endDate && days.length < 7) {
-    days.push({
-      abbr: DAY_ABBRS[cur.getDay()],
-      day: cur.getDate(),
-      date: new Date(cur),
-    });
-    cur.setDate(cur.getDate() + 1);
-  }
-  return days;
-}
-
-const PLACEHOLDER_EVENTS: string[][] = [
-  ["Morning Circle", "Reading Groups"],
-  ["Art & Craft", "Outdoor Exploration"],
-  ["Field Trip", "Story Time"],
-  ["Science Lab", "Music & Movement"],
-  ["Show & Tell", "Garden Club"],
-  ["Nature Walk", "Free Play"],
-  ["Journaling", "Drama Club"],
-];
-
-const EVENT_COLORS = [
-  { bg: "bg-[#4a7c59]/80", text: "text-white" },
-  { bg: "bg-[#d4882a]/80", text: "text-white" },
-  { bg: "bg-[#5b7fa6]/80", text: "text-white" },
-  { bg: "bg-[#7a5c9e]/80", text: "text-white" },
-  { bg: "bg-[#c04a3e]/80", text: "text-white" },
-];
-
-function WeekCalendarStrip({ days }: { days: ReturnType<typeof parseWeekDays> }) {
-  if (days.length === 0) return null;
-
-  const today = new Date();
-  const todayStr = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
-
-  return (
-    <div className="mt-5 rounded-2xl overflow-hidden" style={{ background: "rgba(0,0,0,0.22)" }}>
-      <div className="flex divide-x divide-white/10">
-        {days.map((d, i) => {
-          const isToday =
-            `${d.date.getFullYear()}-${d.date.getMonth()}-${d.date.getDate()}` === todayStr;
-          const events = PLACEHOLDER_EVENTS[i % PLACEHOLDER_EVENTS.length];
-          return (
-            <div
-              key={i}
-              className={`flex-1 flex flex-col items-center px-1 py-3 min-w-0 ${isToday ? "bg-white/10" : ""}`}
-            >
-              <span className="text-[9px] font-body font-bold uppercase tracking-widest text-white/45 mb-1">
-                {d.abbr}
-              </span>
-              <div
-                className={`w-7 h-7 flex items-center justify-center rounded-full text-sm font-heading font-bold mb-2 ${
-                  isToday
-                    ? "bg-white text-[#2d5a3d] ring-2 ring-white/60 ring-offset-1 ring-offset-transparent"
-                    : "text-white"
-                }`}
-              >
-                {d.day}
-              </div>
-              <div className="flex flex-col gap-1 w-full px-1">
-                {events.map((ev, j) => {
-                  const color = EVENT_COLORS[(i + j) % EVENT_COLORS.length];
-                  return (
-                    <span
-                      key={j}
-                      className={`text-[9px] font-body font-semibold leading-tight rounded-md px-1.5 py-0.5 truncate text-center ${color.bg} ${color.text}`}
-                    >
-                      {ev}
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
+function SectionIcon({ label }: { label: string }) {
+  const l = label.toLowerCase();
+  if (l.includes("welcome")) return <Smile className="w-4 h-4 text-[#4a7c59]" />;
+  if (l.includes("class") || l.includes("update")) return <Users className="w-4 h-4 text-[#4a7c59]" />;
+  if (l.includes("event") || l.includes("upcoming")) return <CalendarDays className="w-4 h-4 text-[#4a7c59]" />;
+  if (l.includes("remind")) return <Bell className="w-4 h-4 text-[#4a7c59]" />;
+  if (l.includes("photo") || l.includes("gallery")) return <Images className="w-4 h-4 text-[#4a7c59]" />;
+  return <FileText className="w-4 h-4 text-[#4a7c59]" />;
 }
 
 // ── Traditional layout ────────────────────────────────────────────────────────
 
 function TraditionalNewsletter({ newsletter, sections }: { newsletter: DBNewsletter; sections: RenderSection[] }) {
-  const weekDays = parseWeekDays(newsletter.week_range);
-
   return (
-    <div className="min-h-screen bg-[#f0f4f1] py-10 px-4">
-      <div className="max-w-2xl mx-auto bg-white rounded-3xl shadow-lg overflow-hidden">
+    <div className="min-h-screen bg-[#f0f4f1] py-12 px-4">
+      <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-xl overflow-hidden">
 
         {/* ── Hero Banner ── */}
-        <div
-          className="relative px-8 pt-8 pb-7 overflow-hidden"
-          style={{
-            background: "linear-gradient(140deg, #1e4a2e 0%, #2d5a3d 45%, #3d7a52 100%)",
-          }}
-        >
-          {/* Subtle radial glow */}
+        <div className="relative h-64 md:h-80 overflow-hidden">
+          {/* Full-bleed background image */}
+          <Image
+            src="/assets/NewsletterWeek1.jpg"
+            alt="Newsletter banner"
+            fill
+            className="object-cover object-center"
+            priority
+          />
+
+          {/* Top scrim — keeps logo readable */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
-              background: "radial-gradient(ellipse 80% 60% at 30% 40%, rgba(100,180,120,0.13) 0%, transparent 70%)",
+              background: "linear-gradient(to bottom, rgba(0,0,0,0.38) 0%, transparent 42%)",
             }}
           />
 
-          {/* Decorative leaf SVG — top right */}
-          <svg
-            className="absolute top-0 right-0 opacity-[0.07] pointer-events-none"
-            width="200"
-            height="180"
-            viewBox="0 0 200 180"
-            fill="none"
-          >
-            <ellipse cx="140" cy="40" rx="80" ry="50" fill="white" transform="rotate(-30 140 40)" />
-            <ellipse cx="160" cy="120" rx="70" ry="45" fill="white" transform="rotate(20 160 120)" />
-            <ellipse cx="60" cy="130" rx="90" ry="40" fill="white" transform="rotate(-15 60 130)" />
-          </svg>
+          {/* Bottom scrim — keeps title readable */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: "linear-gradient(to top, rgba(10,30,18,0.82) 0%, rgba(10,30,18,0.32) 50%, transparent 100%)",
+            }}
+          />
 
-          {/* Top row: logo + school name + week badge */}
-          <div className="relative flex items-center justify-between mb-5">
+          {/* Top row: logo + school name + status badge */}
+          <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-6 pt-5">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 relative flex-shrink-0" style={{ filter: "brightness(0) invert(1) opacity(0.9)" }}>
+              <div className="w-8 h-8 relative flex-shrink-0">
                 <Image
                   src="/assets/Logo.png"
-                  alt="Sage Field School"
-                  width={36}
-                  height={36}
+                  alt="Sage Field Private Microschool"
+                  width={32}
+                  height={32}
                   className="object-contain"
                 />
               </div>
-              <p className="text-white/70 text-[11px] font-semibold uppercase tracking-[0.18em] font-body">
-                Sage Field School
+              <p className="text-white/80 text-[11px] font-semibold uppercase tracking-[0.18em] font-body drop-shadow-sm">
+                Sage Field Private Microschool
               </p>
             </div>
-            <div className="flex-shrink-0">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-body font-semibold bg-white/15 text-white/80 border border-white/20 backdrop-blur-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#7ec89a] inline-block" />
-                {newsletter.status === "published" ? "Published" : "Draft"}
-              </span>
-            </div>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-body font-semibold bg-white/20 text-white/90 border border-white/30 backdrop-blur-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#7ec89a] inline-block" />
+              {newsletter.status === "published" ? "Published" : "Draft"}
+            </span>
           </div>
 
-          {/* Title + date */}
-          <div className="relative mb-5">
+          {/* Bottom: week badge + title */}
+          <div className="absolute bottom-0 left-0 right-0 px-6 pb-5">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-body font-semibold bg-[#4a7c59]/80 text-white backdrop-blur-sm mb-2.5">
+              <svg width="11" height="11" viewBox="0 0 13 13" fill="none" className="opacity-80 flex-shrink-0">
+                <rect x="1" y="2" width="11" height="10" rx="2" stroke="currentColor" strokeWidth="1.3" />
+                <path d="M4 1v2M9 1v2M1 5h11" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+              </svg>
+              Week of {newsletter.week_range}
+            </span>
             <h1
-              className="text-[2rem] font-bold font-heading text-white leading-tight"
-              style={{ textShadow: "0 2px 12px rgba(0,0,0,0.25)" }}
+              className="text-3xl md:text-4xl font-bold font-heading text-white leading-tight drop-shadow-lg"
+              style={{ textShadow: "0 2px 16px rgba(0,0,0,0.45)" }}
             >
               {newsletter.title || "Weekly Newsletter"}
             </h1>
-            <p className="text-[#a8d4b4] text-sm font-body mt-1.5 flex items-center gap-2">
-              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" className="flex-shrink-0 opacity-70">
-                <rect x="1" y="2" width="11" height="10" rx="2" stroke="currentColor" strokeWidth="1.2" />
-                <path d="M4 1v2M9 1v2M1 5h11" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-              </svg>
-              {newsletter.week_range}
+            <p className="text-white/65 text-sm font-body mt-1 drop-shadow-sm">
+              Sage Field School · Family Newsletter
             </p>
           </div>
 
-          {/* Weekly calendar strip */}
-          <div className="relative">
-            <WeekCalendarStrip days={weekDays} />
-          </div>
+          {/* Sage green accent bar at very bottom */}
+          <div
+            className="absolute bottom-0 left-0 right-0 h-1"
+            style={{ background: "linear-gradient(to right, #4a7c59, #7ec89a, #4a7c59)" }}
+          />
         </div>
 
         {/* ── Sections ── */}
-        <div className="px-8 py-6 space-y-8">
+        <div className="px-6 py-5">
           {sections.map((section, idx) => (
-            <div key={section.id}>
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-1 h-6 rounded-full bg-[#4a7c59] flex-shrink-0" />
-                <h2 className="text-lg font-bold font-heading text-gray-900">
+            <div
+              key={section.id}
+              className={idx < sections.length - 1 ? "pb-6 mb-6 border-b border-gray-100" : "pb-5"}
+            >
+              {/* Section header */}
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="w-7 h-7 rounded-lg bg-[#4a7c59]/10 flex items-center justify-center flex-shrink-0">
+                  <SectionIcon label={section.label} />
+                </div>
+                <h2 className="text-base font-bold font-heading text-gray-900">
                   {section.label || "Untitled Section"}
                 </h2>
               </div>
+
+              {/* Section body */}
               {section.isClassUpdates ? (
                 section.teacherUpdates.some((tu) => tu.body?.trim()) ? (
                   <div className="space-y-4">
@@ -557,18 +463,23 @@ function TraditionalNewsletter({ newsletter, sections }: { newsletter: DBNewslet
               ) : (
                 <p className="text-base font-body text-gray-400 italic">No content yet.</p>
               )}
+
               <TraditionalImageGrid images={section.images} />
-              {idx < sections.length - 1 && <div className="mt-8 border-b border-gray-100" />}
             </div>
           ))}
         </div>
 
         {/* ── Footer ── */}
-        <div className="bg-gray-50 border-t border-gray-100 px-8 py-5 flex items-center justify-between">
-          <p className="text-xs text-gray-500 font-body">
-            Sage Field School &middot; {newsletter.week_range}
+        <div className="bg-[#f8faf8] border-t-2 border-[#4a7c59]/15 px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-5 h-5 relative opacity-60">
+              <Image src="/assets/Logo.png" alt="" width={20} height={20} className="object-contain" />
+            </div>
+            <p className="text-sm font-semibold text-[#4a7c59] font-heading">Sage Field Private Microschool</p>
+          </div>
+          <p className="text-xs text-gray-400 font-body text-center sm:text-right">
+            sabrina@sagefield.co &middot; {newsletter.week_range}
           </p>
-          <p className="text-xs text-gray-400 font-body">school@sagefield.com</p>
         </div>
       </div>
     </div>
