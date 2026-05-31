@@ -63,7 +63,7 @@ function NewsletterImageLightbox({
 
   return (
     <div
-      className="fixed inset-0 z-[70] bg-black/90 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[70] bg-black/90 flex items-center justify-center md:p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <button onClick={onClose} className="absolute top-4 right-4 p-2 text-white/70 hover:text-white transition-colors">
@@ -87,7 +87,7 @@ function NewsletterImageLightbox({
       </button>
 
       {image.signed_url && (
-        <img key={image.id} src={image.signed_url} alt="" className="max-h-[90vh] max-w-[80vw] object-contain" />
+        <img key={image.id} src={image.signed_url} alt="" className="max-h-[80vh] max-w-[96vw] md:max-w-[80vw] object-contain" />
       )}
 
       {/* Counter + mobile bottom nav */}
