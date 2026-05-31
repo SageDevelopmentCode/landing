@@ -504,7 +504,7 @@ export async function verifyNewsletterPassword(
     .single()
 
   if (error || !row) return { error: 'Newsletter not found' }
-  if (!row.access_password || row.access_password !== password) return { error: 'Incorrect password' }
+  if (!row.access_password || row.access_password.toLowerCase() !== password.toLowerCase()) return { error: 'Incorrect password' }
 
   const results = await resolveNewsletterRows([row], adminClient)
 
