@@ -308,6 +308,7 @@ function PasswordGate({ id, title, weekRange, onUnlocked }: { id: string; title:
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [heroLoaded, setHeroLoaded] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -330,7 +331,8 @@ function PasswordGate({ id, title, weekRange, onUnlocked }: { id: string; title:
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           {/* Hero strip */}
           <div className="relative h-36 overflow-hidden">
-            <Image src="/assets/NewsletterWeek1.jpg" alt="" fill className="object-cover object-center" />
+            {!heroLoaded && <div className="absolute inset-0 bg-[#e8ede9] animate-pulse z-10" />}
+            <Image src="/assets/NewsletterWeek1.jpg" alt="" fill className="object-cover object-center" onLoad={() => setHeroLoaded(true)} />
             <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(10,30,18,0.85) 0%, rgba(10,30,18,0.3) 100%)" }} />
             <div className="absolute bottom-0 left-0 right-0 px-5 pb-4">
               <div className="flex items-center gap-2 mb-1.5">
