@@ -69,26 +69,50 @@ function NewsletterImageLightbox({
       <button onClick={onClose} className="absolute top-4 right-4 p-2 text-white/70 hover:text-white transition-colors">
         <X className="w-5 h-5" />
       </button>
+
+      {/* Desktop side arrows */}
       <button
         onClick={() => setIdx((i) => Math.max(0, i - 1))}
         disabled={idx === 0}
-        className="absolute left-4 top-1/2 -translate-y-1/2 p-2 text-white/70 hover:text-white disabled:opacity-20 disabled:cursor-default transition-colors"
+        className="hidden md:block absolute left-4 top-1/2 -translate-y-1/2 p-2 text-white/70 hover:text-white disabled:opacity-20 disabled:cursor-default transition-colors"
       >
         <ChevronLeft className="w-6 h-6" />
       </button>
       <button
         onClick={() => setIdx((i) => Math.min(images.length - 1, i + 1))}
         disabled={idx === images.length - 1}
-        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-white/70 hover:text-white disabled:opacity-20 disabled:cursor-default transition-colors"
+        className="hidden md:block absolute right-4 top-1/2 -translate-y-1/2 p-2 text-white/70 hover:text-white disabled:opacity-20 disabled:cursor-default transition-colors"
       >
         <ChevronRight className="w-6 h-6" />
       </button>
+
       {image.signed_url && (
         <img key={image.id} src={image.signed_url} alt="" className="max-h-[90vh] max-w-[80vw] object-contain" />
       )}
+
+      {/* Counter + mobile bottom nav */}
       {images.length > 1 && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm text-white/80 text-xs font-body font-semibold px-2.5 py-1 rounded-full pointer-events-none">
-          {idx + 1} / {images.length}
+        <div className="absolute bottom-6 left-0 right-0 flex items-center justify-center gap-4">
+          {/* Mobile prev/next buttons */}
+          <button
+            onClick={() => setIdx((i) => Math.max(0, i - 1))}
+            disabled={idx === 0}
+            className="md:hidden w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white/80 hover:text-white disabled:opacity-20 disabled:cursor-default transition-colors"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+
+          <div className="bg-black/50 backdrop-blur-sm text-white/80 text-xs font-body font-semibold px-2.5 py-1 rounded-full pointer-events-none">
+            {idx + 1} / {images.length}
+          </div>
+
+          <button
+            onClick={() => setIdx((i) => Math.min(images.length - 1, i + 1))}
+            disabled={idx === images.length - 1}
+            className="md:hidden w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white/80 hover:text-white disabled:opacity-20 disabled:cursor-default transition-colors"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
         </div>
       )}
     </div>
