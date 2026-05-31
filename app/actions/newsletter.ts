@@ -1,6 +1,7 @@
 'use server'
 
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
+import { sendDiscordNotification, createNewsletterViewedEmbed } from '@/app/lib/discord'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -506,6 +507,15 @@ export async function verifyNewsletterPassword(
   if (!row.access_password || row.access_password !== password) return { error: 'Incorrect password' }
 
   const results = await resolveNewsletterRows([row], adminClient)
+
+  void sendDiscordNotification(
+    createNewsletterViewedEmbed({
+      newsletterId: row.id,
+      title: row.title,
+      weekRange: row.week_range,
+    }),
+  ).catch(() => {})
+
   return { data: results[0] }
 }
 

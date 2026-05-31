@@ -1667,3 +1667,23 @@ export function createCareLogEmbed(data: {
     timestamp: new Date().toISOString(),
   }
 }
+
+/**
+ * Creates a Discord embed for newsletter password-unlock views
+ */
+export function createNewsletterViewedEmbed(data: {
+  newsletterId: string;
+  title: string;
+  weekRange: string;
+}): DiscordEmbed {
+  return {
+    title: "📰 Newsletter Viewed",
+    color: 0x5865f2,
+    fields: [
+      { name: "Title", value: data.title, inline: true },
+      { name: "Week", value: data.weekRange, inline: true },
+      { name: "Newsletter ID", value: data.newsletterId, inline: false },
+    ],
+    timestamp: new Date().toISOString(),
+  };
+}
