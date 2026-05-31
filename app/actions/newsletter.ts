@@ -403,6 +403,31 @@ export async function publishNewsletter(
   return { success: true }
 }
 
+// ─── Unpublish ─────────────────────────────────────────────────────────────────
+
+export async function unpublishNewsletter(
+  newsletterId: string
+): Promise<{ error?: string; success?: boolean }> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const adminClient = createAdminClient()
+
+  const { error } = await adminClient
+    .schema('newsletters')
+    .from('newsletters')
+    .update({ status: 'draft', published_at: null })
+    .eq('id', newsletterId)
+
+  if (error) {
+    console.error('unpublishNewsletter error:', error)
+    return { error: error.message }
+  }
+
+  return { success: true }
+}
+
 // ─── Section Images ────────────────────────────────────────────────────────────
 
 export async function uploadSectionImage(

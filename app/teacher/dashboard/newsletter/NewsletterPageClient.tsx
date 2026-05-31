@@ -25,11 +25,13 @@ import {
   Lock,
   Loader2,
   Library,
+  RotateCcw,
 } from "lucide-react";
 import {
   createNewsletter,
   saveDraft,
   publishNewsletter,
+  unpublishNewsletter,
   uploadSectionImage,
   deleteSectionImage,
   type DBNewsletter,
@@ -902,6 +904,48 @@ function PublishTab({ sections, newsletterId, onPublished, openPreview }: Publis
   );
 }
 
+// ── Unpublish Button ──────────────────────────────────────────────────────────
+
+function UnpublishButton({
+  newsletterId,
+  onUnpublished,
+}: {
+  newsletterId: string;
+  onUnpublished: () => void;
+}) {
+  const [unpublishing, setUnpublishing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleUnpublish() {
+    setUnpublishing(true);
+    setError(null);
+    const result = await unpublishNewsletter(newsletterId);
+    setUnpublishing(false);
+    if (result.error) {
+      setError(result.error);
+    } else {
+      onUnpublished();
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      {error && <span className="text-xs text-red-600 font-body">{error}</span>}
+      <button
+        onClick={handleUnpublish}
+        disabled={unpublishing}
+        className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-body font-semibold rounded-lg border border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+      >
+        {unpublishing ? (
+          <><Loader2 className="w-4 h-4 animate-spin" /> Unpublishing…</>
+        ) : (
+          <><RotateCcw className="w-4 h-4" /> Unpublish</>
+        )}
+      </button>
+    </div>
+  );
+}
+
 // ── Newsletter Sidebar ────────────────────────────────────────────────────────
 
 interface NewsletterSidebarProps {
@@ -1340,6 +1384,18 @@ export default function NewsletterPageClient({ teachers, currentUserId, initialN
     );
   }
 
+  function handleUnpublished() {
+    setIsReadOnly(false);
+    setActiveTab("editor");
+    setNewsletters((prev) =>
+      prev.map((n) =>
+        n.id === selectedNewsletterId
+          ? { ...n, status: "draft" as NewsletterStatus, publishedAt: undefined }
+          : n
+      )
+    );
+  }
+
   // Cleanup object URLs on unmount
   useEffect(() => {
     return () => {
@@ -1411,7 +1467,7 @@ export default function NewsletterPageClient({ teachers, currentUserId, initialN
               <p className="text-xs text-gray-400 font-body">{selectedNewsletter?.weekRange}</p>
             </div>
 
-            {!isReadOnly && (
+            {!isReadOnly ? (
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleSaveDraft}
@@ -1433,6 +1489,11 @@ export default function NewsletterPageClient({ teachers, currentUserId, initialN
                   )}
                 </button>
               </div>
+            ) : (
+              <UnpublishButton
+                newsletterId={selectedNewsletterId}
+                onUnpublished={handleUnpublished}
+              />
             )}
           </div>
 
