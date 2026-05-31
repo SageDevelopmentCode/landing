@@ -189,6 +189,7 @@ interface EditorTabProps {
   recordChange: (change: PendingChange) => void;
   isReadOnly: boolean;
   selectedWeekRange: string;
+  onToggleVisibility: (s: SectionData) => void;
 }
 
 function EditorTab({
@@ -205,6 +206,7 @@ function EditorTab({
   recordChange,
   isReadOnly,
   selectedWeekRange,
+  onToggleVisibility,
 }: EditorTabProps) {
   const [activeSectionId, setActiveSectionId] = useState(sections[0]?.id ?? "");
   const [libraryPickerForSection, setLibraryPickerForSection] = useState<string | null>(null);
@@ -364,6 +366,7 @@ const textareaRef = useRef<HTMLTextAreaElement>(null);
     const next = !s.visible;
     patchSection(s.id, { visible: next });
     recordChange({ type: "visibility", sectionLabel: s.label, detail: next ? "shown" : "hidden" });
+    onToggleVisibility({ ...s, visible: next });
   }
 
   function patchTeacherUpdate(teacherId: string, body: string) {
@@ -1188,6 +1191,31 @@ export default function NewsletterPageClient({ teachers, currentUserId, initialN
     ]);
   }, []);
 
+  async function handleToggleVisibility(updatedSection: SectionData) {
+    if (isReadOnly || !selectedNewsletterId) return;
+    const updatedSections = sections.map((s) =>
+      s.id === updatedSection.id ? updatedSection : s
+    );
+    await saveDraft({
+      newsletterId: selectedNewsletterId,
+      title: newsletterTitle,
+      viewMode,
+      sections: updatedSections.map((s, i) => ({
+        id: s.id,
+        label: s.label,
+        body: s.body,
+        visible: s.visible,
+        sort_order: i,
+        is_class_updates: s.isClassUpdates ?? false,
+        teacher_updates: (s.teacherUpdates ?? []).map((tu) => ({
+          teacher_id: tu.teacherId,
+          body: tu.body,
+        })),
+      })),
+      summary: [],
+    });
+  }
+
   async function handleSaveDraft() {
     if (isReadOnly || !selectedNewsletterId) return;
     setSavedStatus("saving");
@@ -1448,6 +1476,7 @@ export default function NewsletterPageClient({ teachers, currentUserId, initialN
               recordChange={recordChange}
               isReadOnly={isReadOnly}
               selectedWeekRange={selectedNewsletter?.weekRange ?? ""}
+              onToggleVisibility={handleToggleVisibility}
             />
           )}
           {activeTab === "changelog" && <ChangeLogTab changeLog={changeLog} />}
