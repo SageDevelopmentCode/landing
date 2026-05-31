@@ -54,6 +54,7 @@ export interface DBNewsletter {
   view_mode: 'traditional' | 'slideshow'
   created_by: string
   published_at: string | null
+  access_password: string | null
   created_at: string
   updated_at: string
   sections: DBSection[]
@@ -112,6 +113,7 @@ async function resolveNewsletterRows(rows: any[], adminClient: ReturnType<typeof
     ...row,
     status: row.status as 'draft' | 'published',
     view_mode: row.view_mode as 'traditional' | 'slideshow',
+    access_password: row.access_password ?? null,
     sections: ((row.sections as any[]) ?? [])
       .sort((a, b) => a.sort_order - b.sort_order)
       .map((s) => ({
@@ -149,7 +151,7 @@ async function resolveNewsletterRows(rows: any[], adminClient: ReturnType<typeof
 }
 
 const NEWSLETTER_SELECT = `
-  id, title, week_range, status, view_mode, created_by, published_at, created_at, updated_at,
+  id, title, week_range, status, view_mode, created_by, published_at, access_password, created_at, updated_at,
   sections:sections(
     id, newsletter_id, label, body, visible, sort_order, is_class_updates, created_at, updated_at,
     teacher_updates:teacher_updates(id, section_id, teacher_id, body, updated_at),
@@ -381,7 +383,8 @@ export async function saveDraft(
 // ─── Publish ───────────────────────────────────────────────────────────────────
 
 export async function publishNewsletter(
-  newsletterId: string
+  newsletterId: string,
+  password: string,
 ): Promise<{ error?: string; success?: boolean }> {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -392,11 +395,35 @@ export async function publishNewsletter(
   const { error } = await adminClient
     .schema('newsletters')
     .from('newsletters')
-    .update({ status: 'published', published_at: new Date().toISOString() })
+    .update({ status: 'published', published_at: new Date().toISOString(), access_password: password })
     .eq('id', newsletterId)
 
   if (error) {
     console.error('publishNewsletter error:', error)
+    return { error: error.message }
+  }
+
+  return { success: true }
+}
+
+export async function setNewsletterPassword(
+  newsletterId: string,
+  password: string,
+): Promise<{ error?: string; success?: boolean }> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const adminClient = createAdminClient()
+
+  const { error } = await adminClient
+    .schema('newsletters')
+    .from('newsletters')
+    .update({ access_password: password })
+    .eq('id', newsletterId)
+
+  if (error) {
+    console.error('setNewsletterPassword error:', error)
     return { error: error.message }
   }
 
@@ -426,6 +453,48 @@ export async function unpublishNewsletter(
   }
 
   return { success: true }
+}
+
+// ─── Public (unauthenticated) access ──────────────────────────────────────────
+
+export async function getNewsletterMetaPublic(
+  id: string
+): Promise<{ id: string; title: string; week_range: string } | null> {
+  const adminClient = createAdminClient()
+
+  const { data, error } = await adminClient
+    .schema('newsletters')
+    .from('newsletters')
+    .select('id, title, week_range, status')
+    .eq('id', id)
+    .eq('is_deleted', false)
+    .eq('status', 'published')
+    .single()
+
+  if (error || !data) return null
+  return { id: data.id, title: data.title, week_range: data.week_range }
+}
+
+export async function verifyNewsletterPassword(
+  id: string,
+  password: string,
+): Promise<{ data?: DBNewsletter; error?: string }> {
+  const adminClient = createAdminClient()
+
+  const { data: row, error } = await adminClient
+    .schema('newsletters')
+    .from('newsletters')
+    .select(NEWSLETTER_SELECT)
+    .eq('id', id)
+    .eq('is_deleted', false)
+    .eq('status', 'published')
+    .single()
+
+  if (error || !row) return { error: 'Newsletter not found' }
+  if (!row.access_password || row.access_password !== password) return { error: 'Incorrect password' }
+
+  const results = await resolveNewsletterRows([row], adminClient)
+  return { data: results[0] }
 }
 
 // ─── Section Images ────────────────────────────────────────────────────────────

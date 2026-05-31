@@ -23,6 +23,7 @@ import {
   ClipboardList,
   Save,
   Lock,
+  Copy,
   Loader2,
   Library,
   RotateCcw,
@@ -32,6 +33,7 @@ import {
   saveDraft,
   publishNewsletter,
   unpublishNewsletter,
+  setNewsletterPassword,
   uploadSectionImage,
   deleteSectionImage,
   type DBNewsletter,
@@ -96,6 +98,7 @@ interface Newsletter {
   weekRange: string;
   status: NewsletterStatus;
   publishedAt?: string | null;
+  accessPassword?: string | null;
   sections: SectionData[];
   newsletterTitle: string;
   viewMode: "traditional" | "slideshow";
@@ -110,6 +113,7 @@ function dbToNewsletter(db: DBNewsletter): Newsletter {
     weekRange: db.week_range,
     status: db.status,
     publishedAt: db.published_at,
+    accessPassword: db.access_password,
     newsletterTitle: db.title,
     viewMode: db.view_mode,
     sections: db.sections.map((s) => ({
@@ -906,26 +910,32 @@ function ChangeLogTab({ changeLog }: { changeLog: ChangeEntry[] }) {
 interface PublishTabProps {
   sections: SectionData[];
   newsletterId: string;
-  onPublished: () => void;
+  currentPassword?: string | null;
+  onPublished: (password: string) => void;
   openPreview: () => void;
 }
 
-function PublishTab({ sections, newsletterId, onPublished, openPreview }: PublishTabProps) {
+function PublishTab({ sections, newsletterId, currentPassword, onPublished, openPreview }: PublishTabProps) {
   const [recipients, setRecipients] = useState<"all" | "program">("all");
+  const [password, setPassword] = useState(currentPassword ?? "");
   const [publishing, setPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
 
   const visibleSections = sections.filter((s) => s.visible);
 
   async function handlePublish() {
+    if (!password.trim()) {
+      setPublishError("Please set an access password before publishing.");
+      return;
+    }
     setPublishing(true);
     setPublishError(null);
-    const result = await publishNewsletter(newsletterId);
+    const result = await publishNewsletter(newsletterId, password.trim());
     setPublishing(false);
     if (result.error) {
       setPublishError(result.error);
     } else {
-      onPublished();
+      onPublished(password.trim());
     }
   }
 
@@ -945,7 +955,7 @@ function PublishTab({ sections, newsletterId, onPublished, openPreview }: Publis
         )}
 
         <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Recipients</p>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Recipients</p>
           <div className="space-y-2">
             {[
               { value: "all",     label: "All Parents" },
@@ -964,6 +974,18 @@ function PublishTab({ sections, newsletterId, onPublished, openPreview }: Publis
               </label>
             ))}
           </div>
+        </div>
+
+        <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Family Access Password</p>
+          <p className="text-xs text-gray-400 font-body mb-3">Parents enter this password to view the newsletter at the public link.</p>
+          <input
+            type="text"
+            value={password}
+            onChange={(e) => { setPassword(e.target.value); setPublishError(null); }}
+            placeholder="e.g. sagefield2025"
+            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm font-body text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#4a7c59] focus:ring-1 focus:ring-[#4a7c59]/30 transition-colors"
+          />
         </div>
 
         <div className="flex gap-3">
@@ -996,13 +1018,19 @@ function PublishTab({ sections, newsletterId, onPublished, openPreview }: Publis
 
 function UnpublishButton({
   newsletterId,
+  accessPassword,
   onUnpublished,
 }: {
   newsletterId: string;
+  accessPassword?: string | null;
   onUnpublished: () => void;
 }) {
   const [unpublishing, setUnpublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [editingPassword, setEditingPassword] = useState(false);
+  const [passwordDraft, setPasswordDraft] = useState(accessPassword ?? "");
+  const [savingPassword, setSavingPassword] = useState(false);
 
   async function handleUnpublish() {
     setUnpublishing(true);
@@ -1016,8 +1044,64 @@ function UnpublishButton({
     }
   }
 
+  function handleCopy() {
+    if (!accessPassword) return;
+    navigator.clipboard.writeText(accessPassword);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+
+  async function handleSavePassword() {
+    if (!passwordDraft.trim()) return;
+    setSavingPassword(true);
+    await setNewsletterPassword(newsletterId, passwordDraft.trim());
+    setSavingPassword(false);
+    setEditingPassword(false);
+  }
+
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 flex-wrap justify-end">
+      {accessPassword && !editingPassword && (
+        <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-lg">
+          <Lock className="w-3 h-3 text-gray-400 flex-shrink-0" />
+          <span className="text-xs font-body font-semibold text-gray-700 max-w-[120px] truncate">{accessPassword}</span>
+          <button
+            onClick={handleCopy}
+            title="Copy password"
+            className="text-gray-400 hover:text-[#4a7c59] transition-colors flex-shrink-0"
+          >
+            {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+          </button>
+          <button
+            onClick={() => { setPasswordDraft(accessPassword); setEditingPassword(true); }}
+            title="Edit password"
+            className="text-[10px] font-body text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+          >
+            Edit
+          </button>
+        </div>
+      )}
+      {editingPassword && (
+        <div className="flex items-center gap-1.5">
+          <input
+            type="text"
+            value={passwordDraft}
+            onChange={(e) => setPasswordDraft(e.target.value)}
+            className="px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs font-body text-gray-800 w-32 focus:outline-none focus:border-[#4a7c59] transition-colors"
+            autoFocus
+          />
+          <button
+            onClick={handleSavePassword}
+            disabled={savingPassword || !passwordDraft.trim()}
+            className="px-2.5 py-1.5 text-xs font-body font-semibold rounded-lg bg-[#4a7c59] text-white hover:bg-[#3d6b4a] transition-colors disabled:opacity-50"
+          >
+            {savingPassword ? "Saving…" : "Save"}
+          </button>
+          <button onClick={() => setEditingPassword(false)} className="text-xs font-body text-gray-400 hover:text-gray-600 transition-colors">
+            Cancel
+          </button>
+        </div>
+      )}
       {error && <span className="text-xs text-red-600 font-body">{error}</span>}
       <button
         onClick={handleUnpublish}
@@ -1081,6 +1165,18 @@ function NewsletterSidebar({ newsletters, selectedId, onSelect, onNew, isCreatin
         </p>
         <p className="text-xs text-gray-400 font-body truncate mb-1">{newsletter.weekRange}</p>
         <StatusBadge status={newsletter.status} />
+        {newsletter.status === "published" && (
+          <a
+            href={`/newsletter/${newsletter.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="mt-1.5 flex items-center gap-1 text-xs font-body text-[#4a7c59] hover:underline"
+          >
+            <ExternalLink className="w-3 h-3" />
+            View public link
+          </a>
+        )}
       </button>
     );
   }
@@ -1460,13 +1556,13 @@ export default function NewsletterPageClient({ teachers, currentUserId, initialN
     pendingChanges.current = [];
   }
 
-  function handlePublished() {
+  function handlePublished(password: string) {
     setIsReadOnly(true);
     setActiveTab("editor");
     setNewsletters((prev) =>
       prev.map((n) =>
         n.id === selectedNewsletterId
-          ? { ...n, status: "published" as NewsletterStatus, publishedAt: new Date().toISOString() }
+          ? { ...n, status: "published" as NewsletterStatus, publishedAt: new Date().toISOString(), accessPassword: password }
           : n
       )
     );
@@ -1580,6 +1676,7 @@ export default function NewsletterPageClient({ teachers, currentUserId, initialN
             ) : (
               <UnpublishButton
                 newsletterId={selectedNewsletterId}
+                accessPassword={selectedNewsletter?.accessPassword}
                 onUnpublished={handleUnpublished}
               />
             )}
@@ -1633,6 +1730,7 @@ export default function NewsletterPageClient({ teachers, currentUserId, initialN
             <PublishTab
               sections={sections}
               newsletterId={selectedNewsletterId}
+              currentPassword={selectedNewsletter?.accessPassword}
               onPublished={handlePublished}
               openPreview={openPreview}
             />
