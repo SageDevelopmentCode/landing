@@ -10,6 +10,8 @@ export interface DBTeacherUpdate {
   teacher_id: string
   body: string
   updated_at: string
+  teacher_name?: string | null
+  teacher_avatar?: string | null
 }
 
 export interface DBSectionImage {
@@ -66,6 +68,11 @@ async function resolveNewsletterRows(rows: any[], adminClient: ReturnType<typeof
     for (const entry of (row.change_log as any[]) ?? []) {
       teacherIds.add(entry.teacher_id)
     }
+    for (const s of (row.sections as any[]) ?? []) {
+      for (const tu of (s.teacher_updates as any[]) ?? []) {
+        teacherIds.add(tu.teacher_id)
+      }
+    }
   }
 
   let nameMap = new Map<string, { full_name: string | null; profile_image_url: string | null }>()
@@ -109,7 +116,14 @@ async function resolveNewsletterRows(rows: any[], adminClient: ReturnType<typeof
       .sort((a, b) => a.sort_order - b.sort_order)
       .map((s) => ({
         ...s,
-        teacher_updates: (s.teacher_updates as DBTeacherUpdate[]) ?? [],
+        teacher_updates: ((s.teacher_updates as any[]) ?? []).map((tu) => {
+          const user = nameMap.get(tu.teacher_id)
+          return {
+            ...tu,
+            teacher_name: user?.full_name ?? null,
+            teacher_avatar: user?.profile_image_url ?? null,
+          } as DBTeacherUpdate
+        }),
         images: ((s.section_images as any[]) ?? [])
           .filter((img: any) => !img.is_deleted)
           .sort((a: any, b: any) => a.sort_order - b.sort_order)

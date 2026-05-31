@@ -9,6 +9,7 @@ import {
   Italic,
   List,
   Link,
+  Minus,
   Image as ImageIcon,
   Users,
   CheckCircle2,
@@ -261,6 +262,19 @@ const textareaRef = useRef<HTMLTextAreaElement>(null);
     if (!url) return;
     const insertion = `[${selected}](${url})`;
     const newVal = ta.value.slice(0, start) + insertion + ta.value.slice(end);
+    patchSection(activeSectionId, { body: newVal });
+    requestAnimationFrame(() => {
+      ta.focus();
+      ta.setSelectionRange(start + insertion.length, start + insertion.length);
+    });
+  }
+
+  function insertDivider() {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    const start = ta.selectionStart;
+    const insertion = "\n---\n";
+    const newVal = ta.value.slice(0, start) + insertion + ta.value.slice(start);
     patchSection(activeSectionId, { body: newVal });
     requestAnimationFrame(() => {
       ta.focus();
@@ -560,6 +574,9 @@ const textareaRef = useRef<HTMLTextAreaElement>(null);
                 </button>
                 <button title="Insert link" onClick={insertLink} className="p-2 text-gray-500 hover:text-[#4a7c59] hover:bg-white rounded-lg transition-colors">
                   <Link className="w-4 h-4" />
+                </button>
+                <button title="Divider" onClick={insertDivider} className="p-2 text-gray-500 hover:text-[#4a7c59] hover:bg-white rounded-lg transition-colors">
+                  <Minus className="w-4 h-4" />
                 </button>
                 <div className="w-px h-4 bg-gray-200 mx-1" />
                 <button title="Add images" onClick={() => fileInputRef.current?.click()} className="p-2 text-gray-500 hover:text-[#4a7c59] hover:bg-white rounded-lg transition-colors">
