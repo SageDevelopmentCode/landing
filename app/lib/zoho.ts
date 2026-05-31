@@ -2920,8 +2920,7 @@ export async function buildSummerWeekOneNewsletterEmail(opts: {
     </ul>
   </div>
 
-  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 28px; margin-bottom: 12px;">📚 Elementary Highlights</h2>
-  <p style="margin-bottom: 20px; font-size: 14px; color: #444;">Our elementary group dove into <strong>place value</strong>, <strong>storytelling</strong>, and <strong>writing</strong> — including creating their own recipe cards. Across all ages, we're seeing collaboration, confidence, and a growing sense of community take shape.</p>
+  <p style="margin-bottom: 20px; font-size: 14px; color: #444;">We've also put together our first newsletter — a closer look at the week through photos and classroom moments.</p>
 
   <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 8px; padding: 20px 24px; margin: 28px 0; text-align: center;">
     <p style="margin: 0 0 6px 0; font-size: 15px; font-weight: bold; color: #2C5F2E;">📰 Our First Newsletter is Live!</p>
