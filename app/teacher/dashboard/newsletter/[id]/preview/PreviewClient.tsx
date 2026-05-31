@@ -428,7 +428,7 @@ function TraditionalNewsletter({ newsletter, sections }: { newsletter: DBNewslet
                 <div className="w-7 h-7 rounded-lg bg-[#4a7c59]/10 flex items-center justify-center flex-shrink-0">
                   <SectionIcon label={section.label} />
                 </div>
-                <h2 className="text-base font-bold font-heading text-gray-900">
+                <h2 className="text-lg font-bold font-heading text-gray-900">
                   {section.label || "Untitled Section"}
                 </h2>
               </div>
@@ -663,7 +663,7 @@ function SlideshowNewsletter({ sections }: { sections: RenderSection[] }) {
         <div className="flex-1 px-6 md:px-8 pb-6 md:pb-10 pt-4 md:pt-2 flex flex-col">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-1 h-7 rounded-full bg-[#4a7c59] flex-shrink-0" />
-            <h2 className="text-xl md:text-2xl font-bold font-heading text-white leading-tight">
+            <h2 className="text-2xl md:text-3xl font-bold font-heading text-white leading-tight">
               {slide.label || "Untitled Section"}
             </h2>
           </div>

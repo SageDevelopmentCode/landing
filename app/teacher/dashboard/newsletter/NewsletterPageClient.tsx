@@ -212,7 +212,8 @@ function EditorTab({
 }: EditorTabProps) {
   const [activeSectionId, setActiveSectionId] = useState(sections[0]?.id ?? "");
   const [libraryPickerForSection, setLibraryPickerForSection] = useState<string | null>(null);
-const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const teacherTextareaRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const activeSection = sections.find((s) => s.id === activeSectionId) ?? sections[0];
@@ -380,6 +381,69 @@ const textareaRef = useRef<HTMLTextAreaElement>(null);
     recordChange({ type: "teacher_update", sectionLabel: activeSection?.label || "Class Updates" });
   }
 
+  function makeTeacherActions(teacherId: string) {
+    const getTA = () => teacherTextareaRefs.current[teacherId] ?? null;
+    const getBody = () => activeSection?.teacherUpdates?.find((tu) => tu.teacherId === teacherId)?.body ?? "";
+
+    function wrapTeacher(before: string, after: string = before) {
+      const ta = getTA();
+      if (!ta) return;
+      const start = ta.selectionStart;
+      const end = ta.selectionEnd;
+      const selected = ta.value.slice(start, end);
+      const newVal = ta.value.slice(0, start) + before + selected + after + ta.value.slice(end);
+      patchTeacherUpdate(teacherId, newVal);
+      requestAnimationFrame(() => {
+        ta.focus();
+        ta.setSelectionRange(start + before.length, end + before.length);
+      });
+    }
+
+    function insertBulletTeacher() {
+      const ta = getTA();
+      if (!ta) return;
+      const start = ta.selectionStart;
+      const newVal = ta.value.slice(0, start) + "\n- " + ta.value.slice(start);
+      patchTeacherUpdate(teacherId, newVal);
+      requestAnimationFrame(() => {
+        ta.focus();
+        ta.setSelectionRange(start + 3, start + 3);
+      });
+    }
+
+    function insertLinkTeacher() {
+      const ta = getTA();
+      if (!ta) return;
+      const start = ta.selectionStart;
+      const end = ta.selectionEnd;
+      const selected = ta.value.slice(start, end) || "link text";
+      const url = window.prompt("Enter URL:", "https://");
+      if (!url) return;
+      const insertion = `[${selected}](${url})`;
+      const newVal = ta.value.slice(0, start) + insertion + ta.value.slice(end);
+      patchTeacherUpdate(teacherId, newVal);
+      requestAnimationFrame(() => {
+        ta.focus();
+        ta.setSelectionRange(start + insertion.length, start + insertion.length);
+      });
+    }
+
+    function insertDividerTeacher() {
+      const ta = getTA();
+      if (!ta) return;
+      const start = ta.selectionStart;
+      const insertion = "\n---\n";
+      const newVal = ta.value.slice(0, start) + insertion + ta.value.slice(start);
+      patchTeacherUpdate(teacherId, newVal);
+      requestAnimationFrame(() => {
+        ta.focus();
+        ta.setSelectionRange(start + insertion.length, start + insertion.length);
+      });
+    }
+
+    return { wrapTeacher, insertBulletTeacher, insertLinkTeacher, insertDividerTeacher };
+  }
+
   return (
     <div className="flex flex-1 overflow-hidden h-full">
       {/* Left sidebar */}
@@ -471,10 +535,13 @@ const textareaRef = useRef<HTMLTextAreaElement>(null);
             </div>
             <p className="text-xs text-gray-400 font-body mb-4">Each teacher can add their own update for the week.</p>
 
-            {teachers.map((teacher) => {
+            {teachers.map((teacher, idx) => {
               const update = activeSection.teacherUpdates?.find((tu) => tu.teacherId === teacher.id);
+              const { wrapTeacher, insertBulletTeacher, insertLinkTeacher, insertDividerTeacher } = makeTeacherActions(teacher.id);
               return (
-                <div key={teacher.id} className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
+                <div key={teacher.id}>
+                {idx > 0 && <hr className="border-t border-gray-100 my-2" />}
+                <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
                   <div className="flex items-center gap-2.5 mb-3">
                     <TeacherAvatar teacher={teacher} size="md" />
                     <span className="text-sm font-semibold font-body text-gray-800">
@@ -484,8 +551,28 @@ const textareaRef = useRef<HTMLTextAreaElement>(null);
                       <span className="px-2 py-0.5 bg-[#4a7c59]/10 text-[#4a7c59] text-xs font-semibold font-body rounded-full">You</span>
                     )}
                   </div>
+                  {!isReadOnly && (
+                    <div className="flex items-center gap-1 mb-2 p-1.5 bg-gray-50 border border-gray-100 rounded-xl w-fit">
+                      <button title="Bold" onClick={() => wrapTeacher("**")} className="p-2 text-gray-500 hover:text-[#4a7c59] hover:bg-white rounded-lg transition-colors">
+                        <Bold className="w-4 h-4" />
+                      </button>
+                      <button title="Italic" onClick={() => wrapTeacher("_")} className="p-2 text-gray-500 hover:text-[#4a7c59] hover:bg-white rounded-lg transition-colors">
+                        <Italic className="w-4 h-4" />
+                      </button>
+                      <button title="Bullet list" onClick={insertBulletTeacher} className="p-2 text-gray-500 hover:text-[#4a7c59] hover:bg-white rounded-lg transition-colors">
+                        <List className="w-4 h-4" />
+                      </button>
+                      <button title="Insert link" onClick={insertLinkTeacher} className="p-2 text-gray-500 hover:text-[#4a7c59] hover:bg-white rounded-lg transition-colors">
+                        <Link className="w-4 h-4" />
+                      </button>
+                      <button title="Divider" onClick={insertDividerTeacher} className="p-2 text-gray-500 hover:text-[#4a7c59] hover:bg-white rounded-lg transition-colors">
+                        <Minus className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
                   <textarea
                     ref={(el) => {
+                      teacherTextareaRefs.current[teacher.id] = el;
                       if (el) {
                         el.style.height = "auto";
                         el.style.height = el.scrollHeight + "px";
@@ -506,6 +593,7 @@ const textareaRef = useRef<HTMLTextAreaElement>(null);
                         : "bg-gray-50 focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59] placeholder:text-gray-400"
                     }`}
                   />
+                </div>
                 </div>
               );
             })}
