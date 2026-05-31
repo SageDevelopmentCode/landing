@@ -2904,7 +2904,7 @@ export async function buildSummerWeekOneNewsletterEmail(opts: {
 <head><meta charset="utf-8" /></head>
 <body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
 
-  <p style="margin-bottom: 24px;">Hi ${firstName}! 👋</p>
+  <p style="margin-bottom: 24px;">Hi ${firstName}!</p>
 
   <p style="margin-bottom: 16px;">We've wrapped up our very first week of summer, and what a start it's been. The energy, curiosity, and joy <strong>${opts.childLegalName}</strong> and the children have brought each day have made it incredibly special already.</p>
 

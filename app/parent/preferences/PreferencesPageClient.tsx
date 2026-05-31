@@ -221,9 +221,11 @@ export default function PreferencesPageClient({ children, activities, paidDatesB
 
             {/* Activity cards */}
             {activities.length > 0 && (() => {
+              const today = new Date().toISOString().slice(0, 10);
               const paidDates = paidDatesByStudent[selectedChildId] ?? [];
               const visibleActivities = activities.filter((a) =>
-                !a.activity_date || paidDates.includes(a.activity_date)
+                (!a.activity_date || paidDates.includes(a.activity_date)) &&
+                (!a.activity_date || a.activity_date >= today)
               );
               return (
               <div className="flex flex-col gap-4">
