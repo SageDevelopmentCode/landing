@@ -155,6 +155,35 @@ interface RenderSection {
   teacherUpdates: DBTeacherUpdate[];
 }
 
+// ── Collapsible teacher update (mobile) ──────────────────────────────────────
+
+function CollapsibleTeacherUpdate({ tu }: { tu: DBTeacherUpdate }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div className="flex gap-3">
+      {tu.teacher_avatar ? (
+        <img src={tu.teacher_avatar} className="w-8 h-8 rounded-full object-cover flex-shrink-0" alt="" />
+      ) : (
+        <div className="w-8 h-8 rounded-full bg-[#4a7c59]/20 flex-shrink-0 flex items-center justify-center text-[#4a7c59] text-xs font-bold">
+          {tu.teacher_name?.[0] ?? "?"}
+        </div>
+      )}
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-gray-700 font-heading mb-1">{tu.teacher_name ?? "Teacher"}</p>
+        <div className={!expanded ? "line-clamp-3 md:line-clamp-none" : ""}>
+          <ReactMarkdown components={markdownComponents} remarkPlugins={[remarkBreaks]}>{tu.body}</ReactMarkdown>
+        </div>
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          className="md:hidden mt-1.5 text-xs font-semibold text-[#4a7c59] font-body"
+        >
+          {expanded ? "Collapse" : "Read more"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── Newsletter view ───────────────────────────────────────────────────────────
 
 function NewsletterView({ newsletter }: { newsletter: DBNewsletter }) {
@@ -222,19 +251,7 @@ function NewsletterView({ newsletter }: { newsletter: DBNewsletter }) {
                 section.teacherUpdates.some((tu) => tu.body?.trim()) ? (
                   <div className="space-y-4">
                     {section.teacherUpdates.filter((tu) => tu.body?.trim()).map((tu) => (
-                      <div key={tu.teacher_id} className="flex gap-3">
-                        {tu.teacher_avatar ? (
-                          <img src={tu.teacher_avatar} className="w-8 h-8 rounded-full object-cover flex-shrink-0" alt="" />
-                        ) : (
-                          <div className="w-8 h-8 rounded-full bg-[#4a7c59]/20 flex-shrink-0 flex items-center justify-center text-[#4a7c59] text-xs font-bold">
-                            {tu.teacher_name?.[0] ?? "?"}
-                          </div>
-                        )}
-                        <div>
-                          <p className="text-sm font-semibold text-gray-700 font-heading mb-1">{tu.teacher_name ?? "Teacher"}</p>
-                          <ReactMarkdown components={markdownComponents} remarkPlugins={[remarkBreaks]}>{tu.body}</ReactMarkdown>
-                        </div>
-                      </div>
+                      <CollapsibleTeacherUpdate key={tu.teacher_id} tu={tu} />
                     ))}
                   </div>
                 ) : (
