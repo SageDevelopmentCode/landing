@@ -170,8 +170,8 @@ function NewsletterView({ newsletter }: { newsletter: DBNewsletter }) {
     }));
 
   return (
-    <div className="min-h-screen bg-[#f0f4f1] py-12 px-4">
-      <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-xl overflow-hidden">
+    <div className="min-h-screen bg-white md:bg-[#f0f4f1] md:py-12 md:px-4">
+      <div className="md:max-w-2xl md:mx-auto md:bg-white md:rounded-xl md:shadow-xl overflow-hidden">
 
         {/* Hero Banner */}
         <div className="relative h-64 md:h-80 overflow-hidden">
@@ -208,7 +208,7 @@ function NewsletterView({ newsletter }: { newsletter: DBNewsletter }) {
         </div>
 
         {/* Sections */}
-        <div className="px-6 py-5">
+        <div className="px-4 py-5 md:px-6">
           {visibleSections.map((section, idx) => (
             <div key={section.id} className={idx < visibleSections.length - 1 ? "pb-6 mb-6 border-b border-gray-100" : "pb-5"}>
               <div className="flex items-center gap-2.5 mb-4">
@@ -252,7 +252,7 @@ function NewsletterView({ newsletter }: { newsletter: DBNewsletter }) {
         </div>
 
         {/* Footer */}
-        <div className="bg-[#f8faf8] border-t-2 border-[#4a7c59]/15 px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="bg-[#f8faf8] border-t-2 border-[#4a7c59]/15 px-4 md:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <div className="w-5 h-5 relative opacity-60">
               <Image src="/assets/Logo.png" alt="" width={20} height={20} className="object-contain" />
