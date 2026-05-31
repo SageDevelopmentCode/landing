@@ -2906,7 +2906,7 @@ export async function buildSummerWeekOneNewsletterEmail(opts: {
 
   <p style="margin-bottom: 24px;">Hi ${firstName}!</p>
 
-  <p style="margin-bottom: 16px;">We've wrapped up our very first week of summer, and what a start it's been. The energy, curiosity, and joy <strong>${opts.childLegalName}</strong> and the children have brought each day have made it incredibly special already.</p>
+  <p style="margin-bottom: 16px;">We've wrapped up our very first week of summer, and what a start it's been. The energy, curiosity, and joy the children have brought each day have made it incredibly special already.</p>
 
   <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">🌿 What We've Been Up To</h2>
   <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px;">
