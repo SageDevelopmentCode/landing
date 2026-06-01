@@ -1,10 +1,10 @@
 'use client'
 
 import React, { useState, useTransition, useEffect, useMemo } from 'react'
-import { ChevronDown, ChevronRight } from 'lucide-react'
+import { ChevronDown, ChevronRight, Pencil, Check, X } from 'lucide-react'
 import { Table, TableRow, TableCell } from '../components/Table'
 import { cssColors as colors } from '../design-system'
-import { getClockSessionsForDate, getClockSessionsForRange } from '@/app/actions/timeclock'
+import { getClockSessionsForDate, getClockSessionsForRange, updateClockSession } from '@/app/actions/timeclock'
 import type { ClockSessionWithTeacher } from '@/app/actions/timeclock'
 
 function fmtTime(iso: string) {
@@ -49,6 +49,18 @@ function fmtDayLabel(dateStr: string): string {
   })
 }
 
+function isoToTimeInput(iso: string): string {
+  const d = new Date(iso)
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
+
+function buildISO(originalIso: string, timeInput: string): string {
+  const d = new Date(originalIso)
+  const [h, m] = timeInput.split(':').map(Number)
+  d.setHours(h, m, 0, 0)
+  return d.toISOString()
+}
+
 function getTodayStr() {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -90,6 +102,13 @@ export function ClockSessionsTab({ initialSessions, initialDate }: Props) {
   const [sessions, setSessions] = useState(initialSessions)
   const [selectedDate, setSelectedDate] = useState(initialDate)
   const [isDayPending, startDayTransition] = useTransition()
+
+  // Edit state
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editClockIn, setEditClockIn] = useState('')
+  const [editClockOut, setEditClockOut] = useState('')
+  const [editPending, startEditTransition] = useTransition()
+  const [editError, setEditError] = useState<string | null>(null)
 
   // Summary mode
   const [rangeStart, setRangeStart] = useState(getMondayOfCurrentWeek)
@@ -212,6 +231,34 @@ export function ClockSessionsTab({ initialSessions, initialDate }: Props) {
   const uniqueTeachers = new Set(sessions.map((s) => s.teacher_id)).size
   const totalStr = fmtTotalTime(sessions)
 
+  function startEdit(s: ClockSessionWithTeacher) {
+    setEditingId(s.id)
+    setEditClockIn(isoToTimeInput(s.clock_in_at))
+    setEditClockOut(s.clock_out_at ? isoToTimeInput(s.clock_out_at) : '')
+    setEditError(null)
+  }
+
+  function cancelEdit() {
+    setEditingId(null)
+    setEditError(null)
+  }
+
+  function saveEdit(s: ClockSessionWithTeacher) {
+    const newClockIn = buildISO(s.clock_in_at, editClockIn)
+    const newClockOut = editClockOut ? buildISO(s.clock_in_at, editClockOut) : null
+    startEditTransition(async () => {
+      const result = await updateClockSession(s.id, newClockIn, newClockOut)
+      if (result.error) {
+        setEditError(result.error)
+        return
+      }
+      setEditingId(null)
+      setEditError(null)
+      const refreshed = await getClockSessionsForDate(selectedDate)
+      setSessions(refreshed)
+    })
+  }
+
   const inputStyle = {
     background: colors.surface,
     border: `1px solid ${colors.border}`,
@@ -294,50 +341,122 @@ export function ClockSessionsTab({ initialSessions, initialDate }: Props) {
           </p>
         ) : (
           <div style={{ opacity: isDayPending ? 0.5 : 1, transition: 'opacity 0.15s' }}>
-            <Table headers={['Teacher', 'Clock In', 'Clock Out', 'Duration', 'Note']}>
-              {sessions.map((s, i) => (
-                <TableRow key={s.id} index={i}>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {s.profile_image_url ? (
-                        <img
-                          src={s.profile_image_url}
-                          alt={s.full_name ?? ''}
-                          className="rounded-full object-cover shrink-0"
-                          style={{ width: 28, height: 28 }}
+            {editError && (
+              <p className="text-xs mb-2 px-1" style={{ color: colors.error }}>{editError}</p>
+            )}
+            <Table headers={['Teacher', 'Clock In', 'Clock Out', 'Duration', 'Note', '']}>
+              {sessions.map((s, i) => {
+                const isEditing = editingId === s.id
+                return (
+                  <TableRow key={s.id} index={i}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {s.profile_image_url ? (
+                          <img
+                            src={s.profile_image_url}
+                            alt={s.full_name ?? ''}
+                            className="rounded-full object-cover shrink-0"
+                            style={{ width: 28, height: 28 }}
+                          />
+                        ) : (
+                          <div
+                            className="rounded-full flex items-center justify-center shrink-0 text-[10px] font-semibold"
+                            style={{ width: 28, height: 28, background: colors.accentLight, color: colors.accent }}
+                          >
+                            {(s.full_name ?? '?').charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <span style={{ color: colors.textPrimary, fontWeight: 500 }}>
+                          {s.full_name ?? '—'}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {isEditing ? (
+                        <input
+                          type="time"
+                          value={editClockIn}
+                          onChange={(e) => setEditClockIn(e.target.value)}
+                          className="px-2 py-0.5 rounded text-xs focus:outline-none focus:ring-1"
+                          style={inputStyle}
                         />
                       ) : (
-                        <div
-                          className="rounded-full flex items-center justify-center shrink-0 text-[10px] font-semibold"
-                          style={{ width: 28, height: 28, background: colors.accentLight, color: colors.accent }}
-                        >
-                          {(s.full_name ?? '?').charAt(0).toUpperCase()}
-                        </div>
+                        fmtTime(s.clock_in_at)
                       )}
-                      <span style={{ color: colors.textPrimary, fontWeight: 500 }}>
-                        {s.full_name ?? '—'}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>{fmtTime(s.clock_in_at)}</TableCell>
-                  <TableCell>
-                    {s.clock_out_at ? (
-                      fmtTime(s.clock_out_at)
-                    ) : (
-                      <span
-                        className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border"
-                        style={{ color: colors.success, backgroundColor: colors.successBg, borderColor: colors.successBorder }}
-                      >
-                        Active
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>{fmtDuration(s.clock_in_at, s.clock_out_at)}</TableCell>
-                  <TableCell style={{ color: s.note ? colors.textPrimary : colors.textTertiary }}>
-                    {s.note || '—'}
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell>
+                      {isEditing ? (
+                        <input
+                          type="time"
+                          value={editClockOut}
+                          onChange={(e) => setEditClockOut(e.target.value)}
+                          className="px-2 py-0.5 rounded text-xs focus:outline-none focus:ring-1"
+                          style={inputStyle}
+                        />
+                      ) : s.clock_out_at ? (
+                        fmtTime(s.clock_out_at)
+                      ) : (
+                        <span
+                          className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border"
+                          style={{ color: colors.success, backgroundColor: colors.successBg, borderColor: colors.successBorder }}
+                        >
+                          Active
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {isEditing ? '—' : fmtDuration(s.clock_in_at, s.clock_out_at)}
+                    </TableCell>
+                    <TableCell style={{ color: s.note ? colors.textPrimary : colors.textTertiary }}>
+                      {s.note || '—'}
+                    </TableCell>
+                    <TableCell>
+                      {isEditing ? (
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => saveEdit(s)}
+                            disabled={editPending}
+                            className="flex items-center justify-center rounded p-1 transition-colors"
+                            style={{ color: colors.success, background: colors.successBg, border: `1px solid ${colors.successBorder}` }}
+                            title="Save"
+                          >
+                            <Check className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={cancelEdit}
+                            disabled={editPending}
+                            className="flex items-center justify-center rounded p-1 transition-colors"
+                            style={{ color: colors.textSecondary, background: colors.elevated, border: `1px solid ${colors.border}` }}
+                            title="Cancel"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => startEdit(s)}
+                          disabled={editingId !== null}
+                          className="flex items-center justify-center rounded p-1 transition-colors"
+                          style={{ color: colors.textTertiary, background: 'transparent', border: `1px solid transparent` }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.color = colors.textSecondary
+                            e.currentTarget.style.borderColor = colors.border
+                            e.currentTarget.style.background = colors.elevated
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.color = colors.textTertiary
+                            e.currentTarget.style.borderColor = 'transparent'
+                            e.currentTarget.style.background = 'transparent'
+                          }}
+                          title="Edit times"
+                        >
+                          <Pencil className="w-3 h-3" />
+                        </button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
             </Table>
           </div>
         )

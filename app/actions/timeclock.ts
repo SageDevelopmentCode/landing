@@ -240,6 +240,39 @@ export async function getClockSessionsForRange(startDate: string, endDate: strin
   }))
 }
 
+export async function updateClockSession(
+  sessionId: string,
+  clockInAt: string,
+  clockOutAt: string | null,
+): Promise<{ error?: string }> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Unauthorized' }
+
+  const adminClient = createAdminClient()
+  const { data: caller } = await adminClient
+    .schema('admin')
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (caller?.role !== 'super_admin') return { error: 'Unauthorized' }
+
+  if (clockOutAt && new Date(clockOutAt) <= new Date(clockInAt)) {
+    return { error: 'Clock out must be after clock in' }
+  }
+
+  const { error } = await adminClient
+    .schema('teachers')
+    .from('clock_sessions')
+    .update({ clock_in_at: clockInAt, clock_out_at: clockOutAt })
+    .eq('id', sessionId)
+
+  if (error) return { error: 'Failed to update session' }
+  return {}
+}
+
 export async function setEmployeeCode(teacherId: string, code: string): Promise<{ error?: string }> {
   // Validate caller is super_admin
   const supabase = await createServerSupabaseClient()
