@@ -66,9 +66,7 @@ export async function getSignedUrls(storagePaths: string[]): Promise<Record<stri
   const bucket = adminClient.storage.from('teacher-photos')
   const entries = await Promise.all(
     storagePaths.map(async (path) => {
-      const { data } = await bucket.createSignedUrl(path, 3600, {
-        transform: { width: 400, quality: 75 },
-      })
+      const { data } = await bucket.createSignedUrl(path, 3600)
       return [path, data?.signedUrl ?? null] as const
     })
   )

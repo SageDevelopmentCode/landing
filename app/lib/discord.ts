@@ -1049,6 +1049,55 @@ export function createRentReminderEmbed(): { embed: DiscordEmbed; content?: stri
   };
 }
 
+export function createPayrollReminderEmbed(): { embed: DiscordEmbed; content?: string } | null {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const today = now.getDate();
+
+  // The 30th payroll date uses the last day of the month for short months
+  const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
+  const payrollDays = [15, Math.min(30, lastDayOfMonth)];
+
+  // Find the nearest upcoming payroll day (including today) within 3 days
+  let closestDays: number | null = null;
+  let closestPayrollDay: number | null = null;
+  for (const pd of payrollDays) {
+    const daysUntil = pd - today;
+    if (daysUntil >= 0 && daysUntil <= 3) {
+      if (closestDays === null || daysUntil < closestDays) {
+        closestDays = daysUntil;
+        closestPayrollDay = pd;
+      }
+    }
+  }
+
+  if (closestDays === null || closestPayrollDay === null) return null;
+
+  const payrollDate = new Date(year, month, closestPayrollDay);
+  const payrollDateStr = payrollDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  const isToday = closestDays === 0;
+  const color = isToday ? 0xe74c3c : 0xe07a3a;
+  const urgency = isToday ? "🚨 Payroll is due TODAY!" : "🔴 Due very soon!";
+  const description = isToday
+    ? `Payroll is due **today** (${payrollDateStr}).\n${urgency}`
+    : `Payroll is due on **${payrollDateStr}** — that's **${closestDays} day${closestDays !== 1 ? "s" : ""} away**.\n${urgency}`;
+
+  return {
+    embed: {
+      title: "💸 Payroll Reminder",
+      description,
+      color,
+      fields: [
+        { name: "Payroll Date", value: payrollDateStr, inline: true },
+        { name: "Days Away", value: isToday ? "Today" : `${closestDays} day${closestDays !== 1 ? "s" : ""}`, inline: true },
+      ],
+      timestamp: now.toISOString(),
+    },
+    content: isToday ? "@everyone" : undefined,
+  };
+}
+
 /**
  * Creates a Discord embed for volunteer interest submissions
  */

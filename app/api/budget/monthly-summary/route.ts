@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/app/lib/supabase-server";
-import { sendDiscordNotification, createBudgetSummaryEmbed, createRentReminderEmbed, createRevenueReportEmbed, createDailyToursEmbed, createDailyHoursSummaryEmbed } from "@/app/lib/discord";
+import { sendDiscordNotification, createBudgetSummaryEmbed, createRentReminderEmbed, createRevenueReportEmbed, createDailyToursEmbed, createDailyHoursSummaryEmbed, createPayrollReminderEmbed } from "@/app/lib/discord";
 
 const CATEGORIES = [
   "Tuition",
@@ -231,12 +231,16 @@ export async function GET(request: NextRequest) {
         date: todayLabel,
         employees: employeeHours,
       });
+      const payrollReminder = createPayrollReminderEmbed();
       await Promise.all([
         sendDiscordNotification(embed, process.env.DISCORD_BUDGET_WEBHOOK_URL),
         sendDiscordNotification(rentEmbed, process.env.DISCORD_BUDGET_WEBHOOK_URL, rentContent),
         sendDiscordNotification(revenueEmbed, process.env.DISCORD_BUDGET_WEBHOOK_URL),
         sendDiscordNotification(tourEmbed, process.env.DISCORD_WEBHOOK_URL),
         sendDiscordNotification(hoursSummaryEmbed, process.env.DISCORD_EMPLOYEE_WEBHOOK_URL),
+        ...(payrollReminder
+          ? [sendDiscordNotification(payrollReminder.embed, process.env.DISCORD_BUDGET_WEBHOOK_URL, payrollReminder.content)]
+          : []),
       ]);
     }
 

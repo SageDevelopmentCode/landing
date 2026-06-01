@@ -64,17 +64,6 @@ export interface DBNewsletter {
 
 // ─── Read ──────────────────────────────────────────────────────────────────────
 
-function transformSupabaseImageUrl(signedUrl: string, width = 800): string {
-  try {
-    const url = new URL(signedUrl)
-    url.pathname = url.pathname.replace('/object/sign/', '/render/image/sign/')
-    url.searchParams.set('width', String(width))
-    url.searchParams.set('quality', '75')
-    return url.toString()
-  } catch {
-    return signedUrl
-  }
-}
 
 async function resolveNewsletterRows(rows: any[], adminClient: ReturnType<typeof createAdminClient>): Promise<DBNewsletter[]> {
   const teacherIds = new Set<string>()
@@ -145,7 +134,7 @@ async function resolveNewsletterRows(rows: any[], adminClient: ReturnType<typeof
           .map((img: any) => ({
             id: img.id,
             storage_path: img.storage_path,
-            signed_url: transformSupabaseImageUrl(signedUrlMap.get(img.storage_path) ?? '') || null,
+            signed_url: signedUrlMap.get(img.storage_path) ?? null,
             sort_order: img.sort_order,
             source_bucket: img.source_bucket ?? 'newsletter-images',
           })) as DBSectionImage[],
