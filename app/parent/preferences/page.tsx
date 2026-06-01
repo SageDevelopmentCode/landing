@@ -145,7 +145,6 @@ export default async function PreferencesPage() {
             activities={activities}
             paidDatesByStudent={paidDatesByStudent}
             savedPreferences={savedPreferences}
-            isSharedAccess={isSharedAccess}
           />
         </main>
       </div>

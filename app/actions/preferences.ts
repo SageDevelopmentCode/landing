@@ -29,10 +29,20 @@ export async function saveActivityPreferences(
 
   const adminClient = createAdminClient();
 
+  const { data: grant } = await adminClient
+    .schema("parent_app")
+    .from("dashboard_access_grants")
+    .select("owner_id")
+    .eq("grantee_id", user.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  const effectiveParentId = grant?.owner_id ?? user.id;
+
   const toUpsert = entries
     .filter((e) => e.level !== null)
     .map((e) => ({
-      parent_id: user.id,
+      parent_id: effectiveParentId,
       student_id: studentId,
       activity_id: e.activityId,
       participation_level: e.level!,
@@ -59,7 +69,7 @@ export async function saveActivityPreferences(
       .schema("parent_app")
       .from("activity_preferences")
       .delete()
-      .eq("parent_id", user.id)
+      .eq("parent_id", effectiveParentId)
       .eq("student_id", studentId)
       .in("activity_id", toDeleteIds);
     if (error) {
