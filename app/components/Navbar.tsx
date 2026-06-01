@@ -260,6 +260,12 @@ const NAV_TABS: NavTab[] = [
 
 const ANNOUNCEMENTS = [
   {
+    short: "🌟 Week 1 Highlights are live!",
+    full: "🌟 Week 1 of our Summer Program is complete — see the highlights!",
+    buttonLabel: "View Recap",
+    href: "/highlights/summer/week-1",
+  },
+  {
     short: "🗺️ Book a Private Tour!",
     full: "🗺️ Schedule a tour of our campus!",
     buttonLabel: "Book a Tour",

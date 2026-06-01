@@ -24,6 +24,14 @@ const slides = [
     buttonHref: "/summer-2026",
   },
   {
+    image: "/assets/highlights/summer_week_one/C8EAD2FA-0FB2-4D59-A079-493C09298ABF.JPG",
+    title: "Week 1 Highlights Are Live!",
+    description:
+      "Our Summer Program kicked off with an incredible first week — letters, math, cooking, chicks, and so much more. See what our students experienced.",
+    buttonLabel: "View Week 1 Recap →",
+    buttonHref: "/highlights/summer/week-1",
+  },
+  {
     image: "/assets/Stock4.jpg",
     title: "School Year 2026–2027",
     description:
