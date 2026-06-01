@@ -107,8 +107,9 @@ export async function GET(request: NextRequest) {
       return { category: cat, planned, actual, remaining, pct };
     }).filter((r) => r.planned > 0 || r.actual > 0);
 
-    const totalPlanned = categories.reduce((s, r) => s + r.planned, 0);
-    const totalActual = categories.reduce((s, r) => s + r.actual, 0);
+    const nonSavingsCategories = categories.filter((r) => r.category !== "Savings");
+    const totalPlanned = nonSavingsCategories.reduce((s, r) => s + r.planned, 0);
+    const totalActual = nonSavingsCategories.reduce((s, r) => s + r.actual, 0);
     const totalRemaining = totalPlanned - totalActual;
 
     const summary = {
