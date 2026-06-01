@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/app/lib/supabase-server";
-import { sendDiscordNotification, createBudgetSummaryEmbed, createRentReminderEmbed, createRevenueReportEmbed, createDailyToursEmbed } from "@/app/lib/discord";
+import { sendDiscordNotification, createBudgetSummaryEmbed, createRentReminderEmbed, createRevenueReportEmbed, createDailyToursEmbed, createDailyHoursSummaryEmbed } from "@/app/lib/discord";
 
 const CATEGORIES = [
   "Tuition",
@@ -163,6 +163,54 @@ export async function GET(request: NextRequest) {
       const todaysTours = tourRows.filter((t) => t.tour_date === todayStr);
       const upcomingTours = tourRows.filter((t) => t.tour_date > todayStr);
 
+      const nextDayUtcStr = new Date(todayStr + "T00:00:00.000Z");
+      nextDayUtcStr.setUTCDate(nextDayUtcStr.getUTCDate() + 1);
+      const nextDayStr = nextDayUtcStr.toISOString().slice(0, 10);
+
+      const clockRes = await db
+        .schema("teachers")
+        .from("clock_sessions")
+        .select("teacher_id, clock_in_at, clock_out_at")
+        .gte("clock_in_at", `${todayStr}T00:00:00+00`)
+        .lt("clock_in_at", `${nextDayStr}T00:00:00+00`);
+
+      const clockRows = (clockRes.data ?? []) as Array<{
+        teacher_id: string;
+        clock_in_at: string;
+        clock_out_at: string | null;
+      }>;
+
+      const employeeHoursMap: Record<string, { totalMinutes: number; sessions: number; hasActiveSession: boolean }> = {};
+      for (const s of clockRows) {
+        if (!employeeHoursMap[s.teacher_id]) {
+          employeeHoursMap[s.teacher_id] = { totalMinutes: 0, sessions: 0, hasActiveSession: false };
+        }
+        if (s.clock_out_at) {
+          const mins = Math.round((new Date(s.clock_out_at).getTime() - new Date(s.clock_in_at).getTime()) / 60000);
+          employeeHoursMap[s.teacher_id].totalMinutes += mins;
+          employeeHoursMap[s.teacher_id].sessions += 1;
+        } else {
+          employeeHoursMap[s.teacher_id].hasActiveSession = true;
+        }
+      }
+
+      const teacherIds = Object.keys(employeeHoursMap);
+      let nameMap: Record<string, string> = {};
+      if (teacherIds.length > 0) {
+        const { data: users } = await db
+          .schema("admin")
+          .from("users")
+          .select("id, full_name")
+          .in("id", teacherIds);
+        for (const u of (users ?? []) as Array<{ id: string; full_name: string | null }>) {
+          nameMap[u.id] = u.full_name ?? "Unknown";
+        }
+      }
+
+      const employeeHours = Object.entries(employeeHoursMap)
+        .map(([id, stats]) => ({ full_name: nameMap[id] ?? "Unknown", ...stats }))
+        .sort((a, b) => b.totalMinutes - a.totalMinutes);
+
       const embed = createBudgetSummaryEmbed(summary);
       const { embed: rentEmbed, content: rentContent } = createRentReminderEmbed();
       const revenueEmbed = createRevenueReportEmbed({
@@ -172,16 +220,22 @@ export async function GET(request: NextRequest) {
         netProfit,
         byType,
       });
+      const todayLabel = now.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
       const tourEmbed = createDailyToursEmbed({
-        today: now.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+        today: todayLabel,
         todays: todaysTours,
         upcoming: upcomingTours,
+      });
+      const hoursSummaryEmbed = createDailyHoursSummaryEmbed({
+        date: todayLabel,
+        employees: employeeHours,
       });
       await Promise.all([
         sendDiscordNotification(embed, process.env.DISCORD_BUDGET_WEBHOOK_URL),
         sendDiscordNotification(rentEmbed, process.env.DISCORD_BUDGET_WEBHOOK_URL, rentContent),
         sendDiscordNotification(revenueEmbed, process.env.DISCORD_BUDGET_WEBHOOK_URL),
         sendDiscordNotification(tourEmbed, process.env.DISCORD_WEBHOOK_URL),
+        sendDiscordNotification(hoursSummaryEmbed, process.env.DISCORD_EMPLOYEE_WEBHOOK_URL),
       ]);
     }
 

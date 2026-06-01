@@ -610,6 +610,49 @@ export function createTeacherClockOutEmbed(data: {
   }
 }
 
+export function createDailyHoursSummaryEmbed(data: {
+  date: string;
+  employees: Array<{
+    full_name: string;
+    totalMinutes: number;
+    sessions: number;
+    hasActiveSession: boolean;
+  }>;
+}): DiscordEmbed {
+  const fmtDuration = (mins: number) => {
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return h > 0 ? `${h}h ${m}m` : `${m}m`;
+  };
+
+  const totalEmployees = data.employees.length;
+  const grandTotalMins = data.employees.reduce((s, e) => s + e.totalMinutes, 0);
+
+  const description = totalEmployees > 0
+    ? `**${totalEmployees} employee${totalEmployees !== 1 ? "s" : ""}** worked today · **${fmtDuration(grandTotalMins)}** total`
+    : "No sessions recorded today.";
+
+  const employeeValue = data.employees.length > 0
+    ? data.employees
+        .map((e) => {
+          const dur = fmtDuration(e.totalMinutes);
+          const active = e.hasActiveSession ? " 🟢 active" : "";
+          return `**${e.full_name}** — ${dur} (${e.sessions} session${e.sessions !== 1 ? "s" : ""})${active}`;
+        })
+        .join("\n")
+    : "No sessions recorded today.";
+
+  return {
+    title: `⏱️ Daily Hours Summary — ${data.date}`,
+    description,
+    color: 0x5865f2,
+    fields: totalEmployees > 0
+      ? [{ name: "👥 Employee Hours", value: employeeValue, inline: false }]
+      : [],
+    timestamp: new Date().toISOString(),
+  };
+}
+
 /**
  * Creates a Discord embed for parent help requests
  */
