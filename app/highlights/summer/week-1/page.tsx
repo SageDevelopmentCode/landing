@@ -581,10 +581,10 @@ export default function SummerWeekOnePage() {
               Join Us
             </span>
             <h2 className="text-2xl font-bold font-heading text-gray-800 mb-2">
-              Ready to be part of Week 2?
+              Want to join us this summer or next fall?
             </h2>
             <p className="text-gray-500 font-body text-sm mb-7 max-w-md mx-auto">
-              Spots are still available for Summer 2026. Enroll now or come see the campus for yourself — we&apos;d love to meet your family.
+              Spots are still available for Summer 2026 and enrollment is open for School Year 2026–2027. Come see the campus for yourself — we&apos;d love to meet your family.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
