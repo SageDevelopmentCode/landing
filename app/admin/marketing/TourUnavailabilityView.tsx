@@ -13,6 +13,8 @@ import {
   deleteTourUnavailability,
   type TourUnavailability,
 } from '@/app/actions/tourUnavailability'
+import { addAdminTour } from '@/app/actions/addAdminTour'
+import { updateTourBooking } from '@/app/actions/updateTourBooking'
 import type { TourBooking } from './page'
 import { sendTourReminderEmail } from '@/app/actions/sendTourReminderEmail'
 import { sendTourThankYouEmail } from '@/app/actions/sendTourThankYouEmail'
@@ -24,6 +26,18 @@ const TIME_SLOTS = [
   '9:00 AM', '9:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM',
   '12:00 PM', '12:30 PM', '1:00 PM', '1:30 PM', '2:00 PM', '2:30 PM',
   '3:00 PM', '3:30 PM', '4:00 PM', '4:30 PM', '5:00 PM',
+]
+
+const TIME_SLOTS_15MIN = [
+  '9:00 AM', '9:15 AM', '9:30 AM', '9:45 AM',
+  '10:00 AM', '10:15 AM', '10:30 AM', '10:45 AM',
+  '11:00 AM', '11:15 AM', '11:30 AM', '11:45 AM',
+  '12:00 PM', '12:15 PM', '12:30 PM', '12:45 PM',
+  '1:00 PM', '1:15 PM', '1:30 PM', '1:45 PM',
+  '2:00 PM', '2:15 PM', '2:30 PM', '2:45 PM',
+  '3:00 PM', '3:15 PM', '3:30 PM', '3:45 PM',
+  '4:00 PM', '4:15 PM', '4:30 PM', '4:45 PM',
+  '5:00 PM',
 ]
 
 const MONTHS = [
@@ -235,6 +249,232 @@ function AddBlockSidebar({ isOpen, onClose, onAdded, prefillDate, prefillTime }:
             }}
           >
             {isPending ? 'Saving...' : 'Save Block'}
+          </button>
+        </div>
+      </form>
+    </DetailSidebar>
+  )
+}
+
+// ─── AddTourSidebar ───────────────────────────────────────────────────────────
+
+const GRADES = [
+  'Pre-K', 'Kindergarten',
+  '1st Grade', '2nd Grade', '3rd Grade', '4th Grade',
+  '5th Grade', '6th Grade', '7th Grade', '8th Grade',
+]
+
+const HOW_OPTIONS: { value: string; label: string }[] = [
+  { value: 'google', label: 'Google' },
+  { value: 'social_media', label: 'Social Media' },
+  { value: 'friend_family', label: 'Friend / Family' },
+  { value: 'flyer', label: 'Flyer / Poster' },
+  { value: 'other', label: 'Other' },
+]
+
+const defaultTourForm = {
+  first_name: '',
+  last_name: '',
+  email: '',
+  phone: '',
+  child_name: '',
+  child_grade: '',
+  num_children: '1',
+  tour_date: '',
+  tour_time: '',
+  how_did_you_hear: '',
+  accommodations: '',
+}
+
+interface AddTourSidebarProps {
+  isOpen: boolean
+  onClose: () => void
+  onAdded: (booking: TourBooking) => void
+}
+
+function AddTourSidebar({ isOpen, onClose, onAdded }: AddTourSidebarProps) {
+  const [form, setForm] = useState(defaultTourForm)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [serverError, setServerError] = useState('')
+  const [isPending, startTransition] = useTransition()
+
+  useEffect(() => {
+    if (!isOpen) {
+      setForm(defaultTourForm)
+      setErrors({})
+      setServerError('')
+    }
+  }, [isOpen])
+
+  const validate = () => {
+    const newErrors: Record<string, string> = {}
+    if (!form.first_name.trim()) newErrors.first_name = 'First name is required'
+    if (!form.last_name.trim()) newErrors.last_name = 'Last name is required'
+    if (!form.email.trim()) newErrors.email = 'Email is required'
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) newErrors.email = 'Please enter a valid email'
+    if (!form.child_name.trim()) newErrors.child_name = 'Child name is required'
+    if (!form.child_grade) newErrors.child_grade = 'Please select a grade'
+    if (!form.tour_date) newErrors.tour_date = 'Tour date is required'
+    if (!form.tour_time) newErrors.tour_time = 'Tour time is required'
+    if (!form.how_did_you_hear) newErrors.how_did_you_hear = 'Please select an option'
+    const nc = Number(form.num_children)
+    if (isNaN(nc) || nc < 1 || nc > 5) newErrors.num_children = 'Must be between 1 and 5'
+    return newErrors
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const validationErrors = validate()
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors)
+      return
+    }
+    setErrors({})
+    setServerError('')
+
+    startTransition(async () => {
+      const result = await addAdminTour({
+        first_name: form.first_name,
+        last_name: form.last_name,
+        email: form.email,
+        phone: form.phone || undefined,
+        child_name: form.child_name,
+        child_grade: form.child_grade as Parameters<typeof addAdminTour>[0]['child_grade'],
+        num_children: Number(form.num_children),
+        tour_date: form.tour_date,
+        tour_time: form.tour_time,
+        how_did_you_hear: form.how_did_you_hear as Parameters<typeof addAdminTour>[0]['how_did_you_hear'],
+        accommodations: form.accommodations || undefined,
+      })
+
+      if (!result.success || !result.booking) {
+        setServerError(result.message)
+        return
+      }
+
+      onAdded(result.booking)
+      onClose()
+    })
+  }
+
+  const field = (id: string, label: string, element: React.ReactNode) => (
+    <div>
+      <label htmlFor={id} style={labelStyle}>{label}</label>
+      {element}
+      {errors[id] && (
+        <p style={{ color: colors.errorText, fontSize: '12px', marginTop: '4px' }}>{errors[id]}</p>
+      )}
+    </div>
+  )
+
+  return (
+    <DetailSidebar isOpen={isOpen} onClose={onClose} title="Add Tour Booking">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          {field('first_name', 'First Name *', (
+            <input id="first_name" type="text" value={form.first_name}
+              onChange={e => setForm(f => ({ ...f, first_name: e.target.value }))}
+              style={inputStyle} placeholder="Jane" />
+          ))}
+          {field('last_name', 'Last Name *', (
+            <input id="last_name" type="text" value={form.last_name}
+              onChange={e => setForm(f => ({ ...f, last_name: e.target.value }))}
+              style={inputStyle} placeholder="Smith" />
+          ))}
+        </div>
+
+        {field('email', 'Email *', (
+          <input id="email" type="email" value={form.email}
+            onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+            style={inputStyle} placeholder="jane@example.com" />
+        ))}
+
+        {field('phone', 'Phone', (
+          <input id="phone" type="tel" value={form.phone}
+            onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+            style={inputStyle} placeholder="(555) 000-0000" />
+        ))}
+
+        {field('child_name', 'Child Name *', (
+          <input id="child_name" type="text" value={form.child_name}
+            onChange={e => setForm(f => ({ ...f, child_name: e.target.value }))}
+            style={inputStyle} placeholder="Alex Smith" />
+        ))}
+
+        {field('child_grade', 'Child Grade *', (
+          <select id="child_grade" value={form.child_grade}
+            onChange={e => setForm(f => ({ ...f, child_grade: e.target.value }))}
+            style={inputStyle}>
+            <option value="">— Select grade —</option>
+            {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
+          </select>
+        ))}
+
+        {field('num_children', 'Number of Children *', (
+          <input id="num_children" type="number" min={1} max={5} value={form.num_children}
+            onChange={e => setForm(f => ({ ...f, num_children: e.target.value }))}
+            style={inputStyle} />
+        ))}
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          {field('tour_date', 'Tour Date *', (
+            <input id="tour_date" type="date" value={form.tour_date}
+              onChange={e => setForm(f => ({ ...f, tour_date: e.target.value }))}
+              style={inputStyle} />
+          ))}
+          {field('tour_time', 'Tour Time *', (
+            <select id="tour_time" value={form.tour_time}
+              onChange={e => setForm(f => ({ ...f, tour_time: e.target.value }))}
+              style={inputStyle}>
+              <option value="">— Select time —</option>
+              {TIME_SLOTS.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          ))}
+        </div>
+
+        {field('how_did_you_hear', 'How Did They Hear? *', (
+          <select id="how_did_you_hear" value={form.how_did_you_hear}
+            onChange={e => setForm(f => ({ ...f, how_did_you_hear: e.target.value }))}
+            style={inputStyle}>
+            <option value="">— Select option —</option>
+            {HOW_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        ))}
+
+        {field('accommodations', 'Accommodations / Notes', (
+          <textarea id="accommodations" value={form.accommodations}
+            onChange={e => setForm(f => ({ ...f, accommodations: e.target.value }))}
+            style={{ ...inputStyle, resize: 'vertical', minHeight: '72px' }}
+            placeholder="Any accessibility needs or notes..." />
+        ))}
+
+        {serverError && (
+          <p style={{ color: colors.errorText, fontSize: '13px' }}>{serverError}</p>
+        )}
+
+        <div className="flex gap-3 pt-2">
+          <button type="button" onClick={onClose} disabled={isPending}
+            className="flex-1 py-3 text-sm font-medium"
+            style={{
+              backgroundColor: colors.softCloud,
+              border: `1px solid ${colors.border}`,
+              borderRadius: radius.md,
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}>
+            Cancel
+          </button>
+          <button type="submit" disabled={isPending}
+            className="flex-1 py-3 text-sm font-medium text-white hover:opacity-90 active:scale-95 transition-all"
+            style={{
+              backgroundColor: colors.mistyForest,
+              borderRadius: radius.md,
+              boxShadow: shadows.soft,
+              border: 'none',
+              cursor: isPending ? 'not-allowed' : 'pointer',
+              opacity: isPending ? 0.7 : 1,
+            }}>
+            {isPending ? 'Adding...' : 'Add Tour'}
           </button>
         </div>
       </form>
@@ -821,12 +1061,17 @@ function formatCreatedAt(iso: string): string {
   })
 }
 
-function TourBookingsTable({ bookings }: { bookings: TourBooking[] }) {
+function TourBookingsTable({ bookings, onBookingUpdated }: { bookings: TourBooking[]; onBookingUpdated: (b: TourBooking) => void }) {
   const [selected, setSelected] = useState<TourBooking | null>(null)
   const [sending, setSending] = useState(false)
   const [reminderSent, setReminderSent] = useState(false)
   const [thankYouSending, setThankYouSending] = useState(false)
   const [thankYouSent, setThankYouSent] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editDate, setEditDate] = useState('')
+  const [editTime, setEditTime] = useState('')
+  const [editError, setEditError] = useState('')
+  const [isSaving, startSaveTransition] = useTransition()
   const today = new Date().toISOString().split('T')[0]
 
   async function handleSendReminder() {
@@ -857,6 +1102,36 @@ function TourBookingsTable({ bookings }: { bookings: TourBooking[] }) {
     setSelected(null)
     setReminderSent(false)
     setThankYouSent(false)
+    setIsEditing(false)
+    setEditError('')
+  }
+
+  function startEditing() {
+    if (!selected) return
+    setEditDate(selected.tour_date)
+    setEditTime(selected.tour_time)
+    setEditError('')
+    setIsEditing(true)
+  }
+
+  function cancelEditing() {
+    setIsEditing(false)
+    setEditError('')
+  }
+
+  function handleSaveEdit() {
+    if (!selected) return
+    setEditError('')
+    startSaveTransition(async () => {
+      const result = await updateTourBooking({ id: selected.id, tour_date: editDate, tour_time: editTime })
+      if (!result.success || !result.booking) {
+        setEditError(result.message)
+        return
+      }
+      setSelected(result.booking)
+      onBookingUpdated(result.booking)
+      setIsEditing(false)
+    })
   }
 
   const upcoming = bookings.filter(b => b.tour_date >= today && b.status !== 'cancelled')
@@ -1006,9 +1281,55 @@ function TourBookingsTable({ bookings }: { bookings: TourBooking[] }) {
                 </button>
               </div>
 
+              {/* Tour Date — inline editable */}
+              <div style={{ borderBottom: `1px solid ${colors.divider}`, paddingBottom: '14px', marginBottom: '14px' }}>
+                <p style={{ fontSize: '11px', color: colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>Tour Date</p>
+                {isEditing ? (
+                  <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)}
+                    style={{ ...inputStyle, fontSize: '14px', padding: '6px 10px' }} />
+                ) : (
+                  <p style={{ fontSize: '14px', color: colors.textPrimary }}>{formatBookingDate(selected.tour_date)}</p>
+                )}
+              </div>
+
+              {/* Tour Time — inline editable */}
+              <div style={{ borderBottom: `1px solid ${colors.divider}`, paddingBottom: '14px', marginBottom: '14px' }}>
+                <p style={{ fontSize: '11px', color: colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>Tour Time</p>
+                {isEditing ? (
+                  <select value={editTime} onChange={e => setEditTime(e.target.value)}
+                    style={{ ...inputStyle, fontSize: '14px', padding: '6px 10px' }}>
+                    {TIME_SLOTS_15MIN.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                ) : (
+                  <p style={{ fontSize: '14px', color: colors.textPrimary }}>{selected.tour_time}</p>
+                )}
+              </div>
+
+              {/* Edit / Save / Cancel controls */}
+              {isEditing ? (
+                <div style={{ marginBottom: '14px' }}>
+                  {editError && <p style={{ color: colors.errorText, fontSize: '12px', marginBottom: '8px' }}>{editError}</p>}
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={cancelEditing} disabled={isSaving}
+                      style={{ flex: 1, padding: '8px', borderRadius: radius.md, border: `1px solid ${colors.border}`, backgroundColor: colors.softCloud, color: colors.textSecondary, fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
+                      Cancel
+                    </button>
+                    <button onClick={handleSaveEdit} disabled={isSaving}
+                      style={{ flex: 1, padding: '8px', borderRadius: radius.md, border: 'none', backgroundColor: colors.mistyForest, color: 'white', fontSize: '13px', fontWeight: 600, cursor: isSaving ? 'not-allowed' : 'pointer', opacity: isSaving ? 0.7 : 1 }}>
+                      {isSaving ? 'Saving…' : 'Save'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ marginBottom: '14px' }}>
+                  <button onClick={startEditing}
+                    style={{ padding: '7px 14px', borderRadius: radius.md, border: `1px solid ${colors.border}`, backgroundColor: colors.softCloud, color: colors.textSecondary, fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+                    Edit Date &amp; Time
+                  </button>
+                </div>
+              )}
+
               {[
-                { label: 'Tour Date', value: formatBookingDate(selected.tour_date) },
-                { label: 'Tour Time', value: selected.tour_time },
                 { label: 'Status', value: STATUS_STYLES[selected.status].label },
                 { label: 'Email', value: selected.email },
                 { label: 'Phone', value: selected.phone ?? '—' },
@@ -1088,7 +1409,9 @@ function TourBookingsTable({ bookings }: { bookings: TourBooking[] }) {
 export function TourUnavailabilityView({ initial, tourBookings }: { initial: TourUnavailability[]; tourBookings: TourBooking[] }) {
   const now = new Date()
   const [records, setRecords] = useState(initial)
+  const [bookings, setBookings] = useState(tourBookings)
   const [showAdd, setShowAdd] = useState(false)
+  const [showAddTour, setShowAddTour] = useState(false)
   const [selectedBlock, setSelectedBlock] = useState<TourUnavailability | null>(null)
 
   const [calendarMonth, setCalendarMonth] = useState(now.getMonth())
@@ -1187,22 +1510,38 @@ export function TourUnavailabilityView({ initial, tourBookings }: { initial: Tou
             Click a day to manage time slots. Blocked times are hidden from the /tour calendar.
           </p>
         </div>
-        <button
-          onClick={() => { setPrefillDate(''); setPrefillTime(''); setShowAdd(true) }}
-          style={{
-            fontSize: '13px',
-            color: 'white',
-            backgroundColor: colors.mistyForest,
-            border: 'none',
-            borderRadius: radius.md,
-            padding: '8px 14px',
-            cursor: 'pointer',
-            fontWeight: 600,
-            flexShrink: 0,
-          }}
-        >
-          + Block Date
-        </button>
+        <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+          <button
+            onClick={() => setShowAddTour(true)}
+            style={{
+              fontSize: '13px',
+              color: colors.mistyForest,
+              backgroundColor: colors.pastelSage,
+              border: `1px solid ${colors.mistyForest}40`,
+              borderRadius: radius.md,
+              padding: '8px 14px',
+              cursor: 'pointer',
+              fontWeight: 600,
+            }}
+          >
+            + Add Tour
+          </button>
+          <button
+            onClick={() => { setPrefillDate(''); setPrefillTime(''); setShowAdd(true) }}
+            style={{
+              fontSize: '13px',
+              color: 'white',
+              backgroundColor: colors.mistyForest,
+              border: 'none',
+              borderRadius: radius.md,
+              padding: '8px 14px',
+              cursor: 'pointer',
+              fontWeight: 600,
+            }}
+          >
+            + Block Date
+          </button>
+        </div>
       </div>
 
       {/* Two-panel calendar layout */}
@@ -1241,13 +1580,22 @@ export function TourUnavailabilityView({ initial, tourBookings }: { initial: Tou
       <BlockDetailSidebar
         record={selectedBlock}
         booking={selectedBlock?.booking_id
-          ? (tourBookings.find(b => b.id === selectedBlock.booking_id) ?? null)
+          ? (bookings.find(b => b.id === selectedBlock.booking_id) ?? null)
           : null}
         onClose={() => setSelectedBlock(null)}
         onDeleted={id => setRecords(prev => prev.filter(r => r.id !== id))}
       />
 
-      <TourBookingsTable bookings={tourBookings} />
+      <AddTourSidebar
+        isOpen={showAddTour}
+        onClose={() => setShowAddTour(false)}
+        onAdded={b => setBookings(prev => [b, ...prev])}
+      />
+
+      <TourBookingsTable
+        bookings={bookings}
+        onBookingUpdated={b => setBookings(prev => prev.map(x => x.id === b.id ? b : x))}
+      />
     </div>
   )
 }
