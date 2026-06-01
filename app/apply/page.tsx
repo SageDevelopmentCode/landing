@@ -1507,6 +1507,12 @@ export default function ApplyPage() {
                   >
                     Start Application →
                   </button>
+                  <button
+                    onClick={() => router.push("/tour")}
+                    className="w-full mt-3 px-8 py-3 border-2 border-gray-200 text-gray-600 font-semibold text-sm rounded-lg hover:border-primary hover:text-primary transition-colors duration-200 font-body cursor-pointer"
+                  >
+                    🏡 Tour the campus first
+                  </button>
                 </div>
               </div>
 
@@ -1526,6 +1532,12 @@ export default function ApplyPage() {
                     className="hidden lg:block w-full px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
                   >
                     Start Application
+                  </button>
+                  <button
+                    onClick={() => router.push("/tour")}
+                    className="hidden lg:block w-full mt-3 px-8 py-3 border-2 border-gray-200 text-gray-600 font-semibold text-sm rounded-lg hover:border-primary hover:text-primary transition-colors duration-200 font-body cursor-pointer"
+                  >
+                    🏡 Tour the campus first
                   </button>
                   <button
                     onClick={() => setWaitlistOpen(true)}
