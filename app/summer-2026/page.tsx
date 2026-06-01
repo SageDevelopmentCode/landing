@@ -372,26 +372,33 @@ export default function Summer2026Page() {
         </div>
 
         {/* Auto-scroll photo strip — full bleed */}
-        <div
-          ref={previewGalleryRef}
-          className="overflow-x-auto flex gap-3 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] mb-8"
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
         >
-          {[...WEEK1_PREVIEW_IMAGES, ...WEEK1_PREVIEW_IMAGES].map((src, i) => (
-            <div
-              key={i}
-              className="relative w-64 flex-shrink-0 aspect-[4/3] rounded-xl overflow-hidden shadow-md"
-            >
-              <Image
-                src={src}
-                alt="Week 1 highlight"
-                fill
-                className="object-cover"
-                sizes="256px"
-                priority={i === 0}
-              />
-            </div>
-          ))}
-        </div>
+          <div
+            ref={previewGalleryRef}
+            className="overflow-x-auto flex gap-3 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] mb-8"
+          >
+            {[...WEEK1_PREVIEW_IMAGES, ...WEEK1_PREVIEW_IMAGES].map((src, i) => (
+              <div
+                key={i}
+                className="relative w-64 flex-shrink-0 aspect-[4/3] rounded-xl overflow-hidden shadow-md"
+              >
+                <Image
+                  src={src}
+                  alt="Week 1 highlight"
+                  fill
+                  className="object-cover"
+                  sizes="256px"
+                  loading="lazy"
+                />
+              </div>
+            ))}
+          </div>
+        </motion.div>
 
         <div className="max-w-4xl mx-auto">
           <motion.div

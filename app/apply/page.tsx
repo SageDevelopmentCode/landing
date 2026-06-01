@@ -207,6 +207,36 @@ const weeks = [
   },
 ];
 
+const WEEK1_PREVIEW_IMAGES = [
+  "/assets/highlights/summer_week_one/C8EAD2FA-0FB2-4D59-A079-493C09298ABF.JPG",
+  "/assets/highlights/summer_week_one/79C28EF4-D1A6-4874-AA73-CCA66F04BDEF.JPG",
+  "/assets/highlights/summer_week_one/2B9964FA-0047-4590-880C-095C315B7DE8.JPG",
+  "/assets/highlights/summer_week_one/AB176A40-3DE2-4856-8E87-2D169FB3F41A.JPG",
+  "/assets/highlights/summer_week_one/341400BF-486B-43A0-912E-84623B6299D6.JPG",
+  "/assets/highlights/summer_week_one/DDDA3AA2-CDF9-42CF-B8FF-AD61CED60065 2.JPG",
+  "/assets/highlights/summer_week_one/1D2BF4A6-5081-4D51-B1E8-F6E0E3D820B3.JPG",
+  "/assets/highlights/summer_week_one/B10368B0-5344-4D70-8C0C-C091A086D6B2.JPG",
+];
+
+const WEEK1_EARLY_LEARNER_HIGHLIGHTS = [
+  { emoji: "📖", label: "Letter Sounds & CVC Reading", desc: "Building phonics foundations through hands-on practice" },
+  { emoji: "✏️", label: "Handwriting & Number Sense", desc: "Fine motor skills and early numeracy side by side" },
+  { emoji: "➕", label: "Early Addition", desc: "Introducing addition concepts through play and manipulatives" },
+  { emoji: "💧", label: "Water Cycle & Filtration", desc: "Science exploration that sparked curiosity all week" },
+  { emoji: "🎨", label: "Art Creation", desc: "Self-expression through color, texture, and imagination" },
+  { emoji: "🐥", label: "Caring for Our Chicks", desc: "Responsibility and empathy through animal care" },
+  { emoji: "🎵", label: "Rhythm & Note Recognition", desc: "Music foundations woven into every morning" },
+];
+
+const WEEK1_ELEMENTARY_HIGHLIGHTS = [
+  { emoji: "🔢", label: "Place Value Mastery", desc: "Expanded, word, and model forms — plus comparing numbers" },
+  { emoji: "🎲", label: "Collaborative Math Game", desc: "Wrapped up the week by applying what we learned together" },
+  { emoji: "📚", label: "SWBST Comprehension", desc: "Somebody, Wanted, But, So, Then — a framework for deep reading" },
+  { emoji: "✍️", label: "Vocabulary & Sentence Structure", desc: "Building strong writing skills from the ground up" },
+  { emoji: "🔄", label: "Synonyms & Antonyms", desc: "Expanding word knowledge through exploration" },
+  { emoji: "📝", label: "Recipe Card Writing", desc: "Real experiences turned into structured, creative writing" },
+];
+
 const scheduleTiers = [
   {
     days: "1x/week",
@@ -576,6 +606,32 @@ export default function ApplyPage() {
     };
   }, [activeTab]);
 
+  const week1GalleryRef = useRef<HTMLDivElement>(null);
+  const week1RafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (activeTab !== "summer") return;
+    const el = week1GalleryRef.current;
+    if (!el) return;
+    el.scrollLeft = 0;
+    let pos = 0;
+    const tick = () => {
+      if (el) {
+        pos += 0.6;
+        el.scrollLeft = Math.round(pos);
+        if (el.scrollLeft >= el.scrollWidth / 2) {
+          pos = 0;
+          el.scrollLeft = 0;
+        }
+      }
+      week1RafRef.current = requestAnimationFrame(tick);
+    };
+    week1RafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (week1RafRef.current) cancelAnimationFrame(week1RafRef.current);
+    };
+  }, [activeTab]);
+
   const handleGalleryInteractionStart = () => {
     isPausedRef.current = true;
     if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
@@ -757,6 +813,106 @@ export default function ApplyPage() {
                     ))}
                   </div>
                 </div>
+
+                {/* Week 1 Highlights Preview — Summer only */}
+                <motion.div
+                  className="mb-10"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <div className="mb-5">
+                    <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4 font-body">
+                      Week 1 Recap
+                    </span>
+                    <h3 className="text-2xl font-bold font-heading text-gray-800 mb-1">
+                      See Week 1 of Our Summer Program
+                    </h3>
+                    <p className="text-sm text-gray-500 font-body">
+                      Week 1 is complete — and it was an incredible start. Here&apos;s a glimpse at what our students experienced.
+                    </p>
+                  </div>
+
+                  {/* Auto-scroll photo strip */}
+                  <div
+                    ref={week1GalleryRef}
+                    className="overflow-x-auto flex gap-3 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] mb-6"
+                  >
+                    {[...WEEK1_PREVIEW_IMAGES, ...WEEK1_PREVIEW_IMAGES].map((src, i) => (
+                      <div
+                        key={i}
+                        className="relative w-56 flex-shrink-0 aspect-[4/3] rounded-xl overflow-hidden shadow-md"
+                      >
+                        <Image
+                          src={src}
+                          alt="Week 1 highlight"
+                          fill
+                          className="object-cover"
+                          sizes="224px"
+                          loading="lazy"
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Recap paragraph */}
+                  <p className="text-base text-gray-600 font-body leading-relaxed mb-5">
+                    Students spent the week learning by doing — building foundations in literacy and math, exploring science, expressing themselves through art, and growing into a real community together. They cooked pizzas, made strawberry ice cream, and were already using Spanish in daily conversations by Friday.
+                  </p>
+
+                  {/* Track cards side by side */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-sm">🌱</span>
+                        </div>
+                        <h4 className="text-sm font-bold font-heading text-gray-800">Early Learners</h4>
+                      </div>
+                      <ul className="space-y-1.5">
+                        {WEEK1_EARLY_LEARNER_HIGHLIGHTS.map((item) => (
+                          <li key={item.label} className="flex items-start gap-2">
+                            <span className="text-base leading-none mt-0.5 flex-shrink-0">{item.emoji}</span>
+                            <div>
+                              <p className="text-xs font-bold text-gray-800 font-body leading-tight">{item.label}</p>
+                              <p className="text-[11px] text-gray-400 font-body">{item.desc}</p>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-8 h-8 bg-sage-100 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-sm">📐</span>
+                        </div>
+                        <h4 className="text-sm font-bold font-heading text-gray-800">Elementary</h4>
+                      </div>
+                      <ul className="space-y-1.5">
+                        {WEEK1_ELEMENTARY_HIGHLIGHTS.map((item) => (
+                          <li key={item.label} className="flex items-start gap-2">
+                            <span className="text-base leading-none mt-0.5 flex-shrink-0">{item.emoji}</span>
+                            <div>
+                              <p className="text-xs font-bold text-gray-800 font-body leading-tight">{item.label}</p>
+                              <p className="text-[11px] text-gray-400 font-body">{item.desc}</p>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* CTA */}
+                  <div className="flex justify-center">
+                    <button
+                      onClick={() => router.push("/highlights/summer/week-1")}
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body text-sm cursor-pointer"
+                    >
+                      View Full Week 1 Recap →
+                    </button>
+                  </div>
+                </motion.div>
 
                 {/* Daily Schedule — Summer only */}
                 {activeTab === "summer" && (
