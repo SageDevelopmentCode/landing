@@ -1322,6 +1322,57 @@ export function createTourBookingEmbed(data: {
   };
 }
 
+type TourBookingRow = {
+  first_name: string;
+  last_name: string;
+  tour_date: string;
+  tour_time: string;
+  child_name: string;
+  child_grade: string;
+  num_children: number;
+  status: string;
+};
+
+export function createDailyToursEmbed(data: {
+  today: string;
+  todays: TourBookingRow[];
+  upcoming: TourBookingRow[];
+}): DiscordEmbed {
+  const statusLabel: Record<string, string> = {
+    pending: "pending",
+    confirmed: "confirmed",
+    cancelled: "cancelled",
+    completed: "completed",
+    no_show: "no-show",
+  };
+
+  const todayValue = data.todays.length > 0
+    ? data.todays
+        .map((t) => `**${t.tour_time}** — ${t.first_name} ${t.last_name} (child: ${t.child_name}, ${t.child_grade}) [${statusLabel[t.status] ?? t.status}]`)
+        .join("\n")
+    : "No tours scheduled today.";
+
+  const upcomingValue = data.upcoming.length > 0
+    ? data.upcoming
+        .map((t) => {
+          const d = new Date(t.tour_date + "T00:00:00");
+          const label = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+          return `**${label} @ ${t.tour_time}** — ${t.first_name} ${t.last_name} (child: ${t.child_name}, ${t.child_grade}) [${statusLabel[t.status] ?? t.status}]`;
+        })
+        .join("\n")
+    : "No upcoming tours this week.";
+
+  return {
+    title: `🗓️ Daily Tour Schedule — ${data.today}`,
+    color: 0xa8c5a0,
+    fields: [
+      { name: "📅 Today's Tours", value: todayValue, inline: false },
+      { name: "🔜 Upcoming (next 7 days)", value: upcomingValue, inline: false },
+    ],
+    timestamp: new Date().toISOString(),
+  };
+}
+
 /**
  * Creates a Discord embed for paystub submissions
  */

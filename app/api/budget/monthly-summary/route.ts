@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/app/lib/supabase-server";
-import { sendDiscordNotification, createBudgetSummaryEmbed, createRentReminderEmbed, createRevenueReportEmbed } from "@/app/lib/discord";
+import { sendDiscordNotification, createBudgetSummaryEmbed, createRentReminderEmbed, createRevenueReportEmbed, createDailyToursEmbed } from "@/app/lib/discord";
 
 const CATEGORIES = [
   "Tuition",
@@ -145,6 +145,24 @@ export async function GET(request: NextRequest) {
 
     const notify = request.nextUrl.searchParams.get("notify") === "true";
     if (notify) {
+      const todayStr = now.toISOString().split("T")[0];
+      const sevenDaysStr = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
+      const tourRes = await db
+        .schema("marketing")
+        .from("tour_bookings")
+        .select("first_name, last_name, tour_date, tour_time, child_name, child_grade, num_children, status")
+        .eq("is_deleted", false)
+        .neq("status", "cancelled")
+        .gte("tour_date", todayStr)
+        .lte("tour_date", sevenDaysStr)
+        .order("tour_date", { ascending: true })
+        .order("tour_time", { ascending: true });
+
+      const tourRows = tourRes.data ?? [];
+      const todaysTours = tourRows.filter((t) => t.tour_date === todayStr);
+      const upcomingTours = tourRows.filter((t) => t.tour_date > todayStr);
+
       const embed = createBudgetSummaryEmbed(summary);
       const { embed: rentEmbed, content: rentContent } = createRentReminderEmbed();
       const revenueEmbed = createRevenueReportEmbed({
@@ -154,10 +172,16 @@ export async function GET(request: NextRequest) {
         netProfit,
         byType,
       });
+      const tourEmbed = createDailyToursEmbed({
+        today: now.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+        todays: todaysTours,
+        upcoming: upcomingTours,
+      });
       await Promise.all([
         sendDiscordNotification(embed, process.env.DISCORD_BUDGET_WEBHOOK_URL),
         sendDiscordNotification(rentEmbed, process.env.DISCORD_BUDGET_WEBHOOK_URL, rentContent),
         sendDiscordNotification(revenueEmbed, process.env.DISCORD_BUDGET_WEBHOOK_URL),
+        sendDiscordNotification(tourEmbed, process.env.DISCORD_WEBHOOK_URL),
       ]);
     }
 
