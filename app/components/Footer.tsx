@@ -56,6 +56,7 @@ const FOOTER_COLUMNS: NavColumn[] = [
         action: { kind: "link", href: "/homeschool" },
       },
       { label: "Tuition", action: { kind: "link", href: "/tuition" } },
+      { label: "Highlights", action: { kind: "link", href: "/highlights" } },
     ],
   },
   {

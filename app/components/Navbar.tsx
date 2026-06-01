@@ -141,6 +141,12 @@ const NAV_TABS: NavTab[] = [
         icon: DollarSign,
         iconClass: "text-emerald-500",
       },
+      {
+        label: "Highlights",
+        action: { kind: "link", href: "/highlights" },
+        icon: Sparkles,
+        iconClass: "text-primary",
+      },
     ],
   },
   {
