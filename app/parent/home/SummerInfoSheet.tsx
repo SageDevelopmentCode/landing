@@ -13,6 +13,8 @@ const packChips = [
   { emoji: "🩴", label: "Open-toe shoes" },
   { emoji: "☀️", label: "Sunscreen" },
   { emoji: "🥾", label: "Boots" },
+  { emoji: "🩱", label: "Swimsuit" },
+  { emoji: "🏖️", label: "Towel" },
 ];
 
 const deadlines = [
