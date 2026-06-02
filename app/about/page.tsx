@@ -8,6 +8,7 @@ import EducationalPhilosophySection from "../components/EducationalPhilosophySec
 import DonationsSection from "../components/DonationsSection";
 import MeetTheTeamSection from "../components/MeetTheTeamSection";
 import ContactUsSection from "../components/ContactUsSection";
+import SocialMediaSection from "../components/SocialMediaSection";
 import Footer from "../components/Footer";
 import FloatingSMSButton from "../components/FloatingSMSButton";
 
@@ -68,6 +69,7 @@ export default function AboutPage() {
       <DonationsSection />
       <MeetTheTeamSection />
       <ContactUsSection />
+      <SocialMediaSection />
       <Footer />
       <FloatingSMSButton />
     </div>

@@ -1,17 +1,13 @@
 "use client";
 
+import React from "react";
 import { motion } from "framer-motion";
 import { Instagram, Facebook } from "lucide-react";
+import Script from "next/script";
+
+const BEHOLD_FEED_ID = "g1vEDJecOPczj84RYrJF";
 
 export default function SocialMediaSection() {
-  // const placeholders = [
-  //   { id: 1, platform: "instagram" },
-  //   { id: 2, platform: "facebook" },
-  //   { id: 3, platform: "instagram" },
-  //   { id: 4, platform: "facebook" },
-  //   { id: 5, platform: "instagram" },
-  //   { id: 6, platform: "facebook" },
-  // ];
 
   return (
     <section className="bg-welcome-bg py-16 px-8 sm:px-12 lg:px-16 min-h-[80vh] flex items-center justify-center">
@@ -52,13 +48,32 @@ export default function SocialMediaSection() {
           educational insights, and the joyful learning experiences at Sage Field.
         </motion.p>
 
-        {/* Social Media Buttons */}
+        {/* Instagram Feed */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="flex items-center justify-center gap-4"
+          className="mt-10"
+        >
+          <Script
+            src="https://w.behold.so/widget.js"
+            type="module"
+            strategy="lazyOnload"
+          />
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          {(React as any).createElement("behold-widget", {
+            "feed-id": BEHOLD_FEED_ID,
+          })}
+        </motion.div>
+
+        {/* Social Media Buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="flex items-center justify-center gap-4 mt-8"
         >
           <a
             href="https://www.instagram.com/sagefield.co"
@@ -85,33 +100,6 @@ export default function SocialMediaSection() {
             <span>Facebook</span>
           </a>
         </motion.div>
-
-        {/* Placeholder Grid - Uncomment when ready to add posts */}
-        {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {placeholders.map((placeholder, index) => (
-            <motion.div
-              key={placeholder.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.4 + index * 0.1 }}
-              whileHover={{ scale: 1.02 }}
-              className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-200 h-[300px] flex items-center justify-center"
-            >
-              <div className="text-center p-6">
-                {placeholder.platform === "instagram" ? (
-                  <Instagram className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                ) : (
-                  <Facebook className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                )}
-                <p className="text-gray-400 font-body text-sm">Coming Soon</p>
-                <p className="text-gray-300 font-body text-xs mt-2">
-                  {placeholder.platform === "instagram" ? "Instagram" : "Facebook"} Post
-                </p>
-              </div>
-            </motion.div>
-          ))}
-        </div> */}
       </div>
     </section>
   );
