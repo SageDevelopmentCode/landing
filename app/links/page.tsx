@@ -18,6 +18,18 @@ type LinkItem = {
 
 const LINK_GROUPS: { label: string; links: LinkItem[] }[] = [
   {
+    label: "What's New",
+    links: [
+      {
+        emoji: "📸",
+        title: "Week 1 Highlights Are Live!",
+        subtitle: "Summer 2026 · May 26–29 · See the recap",
+        href: "/highlights/summer/week-1",
+        featured: true,
+      },
+    ],
+  },
+  {
     label: "Enrollment",
     links: [
       {
