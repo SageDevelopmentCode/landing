@@ -360,11 +360,11 @@ const tabContent = {
     badge: "Homeschool Drop-In",
     title: "Homeschool Drop-In Program",
     description: [
-      "Sage Field's Homeschool Drop-In Program is built for families who want flexible, enriching academic support without a long-term commitment. Choose 1 to 5 days per week — and adjust as your family's schedule evolves.",
+      "Sage Field's Homeschool Drop-In Program is built for families who want flexible, enriching academic support without a long-term commitment. Choose 1 to 3 days per week — and adjust as your family's schedule evolves.",
       "Unlike traditional schools that group children by grade, Sage Field uses ability-based and interest-led grouping. Every child gets individualized academic support in literacy and numeracy — exactly where they are, not where their birthday says they should be.",
     ],
     details: [
-      { label: "Schedule", value: "1–5 Days/Week" },
+      { label: "Schedule", value: "1–3 Days/Week" },
       { label: "Ages", value: "4–11 Years" },
       { label: "Fridays", value: "Field Days" },
       { label: "Class Size", value: "~10 Kids" },
@@ -1368,10 +1368,10 @@ export default function ApplyPage() {
                       Choose Your Schedule
                     </h2>
                     <p className="text-lg font-semibold text-primary font-heading mb-8">
-                      From one day a week to five — you decide
+                      From one day a week to three — you decide
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-14">
-                      {scheduleTiers.map((tier, index) => (
+                      {scheduleTiers.slice(0, 3).map((tier, index) => (
                         <motion.div
                           key={index}
                           className="bg-white p-5 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02] cursor-pointer group"

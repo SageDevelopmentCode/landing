@@ -771,10 +771,10 @@ export default function HomeschoolDropInPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
-                onClick={() => setWaitlistOpen(true)}
+                onClick={() => router.push('/apply?tab=homeschool')}
                 className="px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
               >
-                Interest Form
+                Apply Now
               </button>
               <button
                 onClick={() => setContactOpen(true)}
