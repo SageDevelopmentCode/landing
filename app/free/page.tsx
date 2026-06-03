@@ -360,9 +360,8 @@ export default function FreeFridayPage() {
             </h1>
 
             <p className="text-lg text-gray-500 font-body leading-relaxed mb-6 max-w-lg mx-auto lg:mx-0">
-              Your child&apos;s friend gets a full day at Sage Field — no cost,
-              no commitment. Just a real, joyful Friday of learning, play, and
-              community.
+              Get a full day at Sage Field — no cost, no commitment. Just a
+              real, joyful Friday of learning, play, and community.
             </p>
 
             {/* Quick-detail pills */}

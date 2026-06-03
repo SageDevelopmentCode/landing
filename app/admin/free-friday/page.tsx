@@ -1,17 +1,26 @@
 import { createAdminClient } from "@/app/lib/supabase-server";
 import { cssColors as colors } from "../design-system";
 import { FreeFridayClient } from "./FreeFridayClient";
+import { FreeFridayAnnouncement } from "./FreeFridayAnnouncement";
 import type { FreeFridayRow } from "./FreeFridayDetailPanel";
 
 export default async function FreeFridayPage() {
   const supabase = createAdminClient();
 
-  const { data } = await supabase
-    .schema("marketing")
-    .from("free_friday_registrations")
-    .select("*")
-    .eq("is_deleted", false)
-    .order("created_at", { ascending: false });
+  const [{ data }, { count: enrolledCount }] = await Promise.all([
+    supabase
+      .schema("marketing")
+      .from("free_friday_registrations")
+      .select("*")
+      .eq("is_deleted", false)
+      .order("created_at", { ascending: false }),
+    supabase
+      .schema("parent_app")
+      .from("applications")
+      .select("*", { count: "exact", head: true })
+      .eq("approved", true)
+      .eq("is_active", true),
+  ]);
 
   const rows = (data ?? []) as FreeFridayRow[];
 
@@ -19,17 +28,20 @@ export default async function FreeFridayPage() {
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-xl font-bold" style={{ color: colors.textPrimary }}>
-          Free Friday Registrations
+          Free Friday
         </h1>
         <p className="text-sm mt-1" style={{ color: colors.textTertiary }}>
-          June 5, 2026 · Shadow Day registrations
+          June 5, 2026 · Bring a Friend for Free
         </p>
       </div>
+
+      {/* Announcement email blast */}
+      <FreeFridayAnnouncement recipientCount={enrolledCount ?? 0} />
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "Total", value: rows.length },
+          { label: "Registrations", value: rows.length },
           { label: "New Families", value: rows.filter((r) => r.track === "new").length },
           { label: "Enrolled Families", value: rows.filter((r) => r.track === "enrolled").length },
           { label: "Confirmed", value: rows.filter((r) => r.status === "confirmed").length },

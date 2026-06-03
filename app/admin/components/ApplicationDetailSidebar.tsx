@@ -33,6 +33,7 @@ import { sendHomeschoolDropInConfirmationEmail } from '../../actions/sendHomesch
 import { sendSummerStartingEmail } from '../../actions/sendSummerStartingEmail'
 import { sendSummerFirstDayEmail } from '../../actions/sendSummerFirstDayEmail'
 import { sendSummerWeekOneNewsletterEmail } from '../../actions/sendSummerWeekOneNewsletterEmail'
+import { sendFreeFridayAnnouncementEmail } from '../../actions/sendFreeFridayAnnouncementEmail'
 import { enrollApplication } from '../../actions/enrollApplication'
 import { PaymentHistory } from './PaymentHistory'
 import { updateApplicationProgram } from '../../actions/updateApplicationProgram'
@@ -218,6 +219,9 @@ export function ApplicationDetailSidebar({
   const [weekOneNewsletterSending, setWeekOneNewsletterSending] = useState(false)
   const [weekOneNewsletterSent, setWeekOneNewsletterSent] = useState(false)
   const [weekOneNewsletterError, setWeekOneNewsletterError] = useState<string | null>(null)
+  const [freeFridaySending, setFreeFridaySending] = useState(false)
+  const [freeFridaySent, setFreeFridaySent] = useState(false)
+  const [freeFridayError, setFreeFridayError] = useState<string | null>(null)
   const [tagInput, setTagInput] = useState('')
   const [tagSaving, setTagSaving] = useState(false)
   const [tagError, setTagError] = useState<string | null>(null)
@@ -763,6 +767,25 @@ export function ApplicationDetailSidebar({
       setTimeout(() => setSummerFirstDaySent(false), 3000)
     } else {
       setSummerFirstDayError(result.error ?? 'Failed to send')
+    }
+  }
+
+  const handleSendFreeFriday = async () => {
+    if (freeFridaySending || !application.g1_email) return
+    setFreeFridaySending(true)
+    setFreeFridayError(null)
+    const result = await sendFreeFridayAnnouncementEmail({
+      parentName: application.g1_full_name ?? '',
+      childName: application.child_legal_name ?? '',
+      email: application.g1_email,
+    })
+    setFreeFridaySending(false)
+    if (result.success) {
+      setFreeFridaySent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setFreeFridaySent(false), 3000)
+    } else {
+      setFreeFridayError(result.error ?? 'Failed to send')
     }
   }
 
@@ -1382,6 +1405,17 @@ export function ApplicationDetailSidebar({
                   {weekOneNewsletterSending ? 'Sending…' : weekOneNewsletterSent ? '✓ Sent!' : 'Send Week One Newsletter'}
                 </button>
                 {weekOneNewsletterError && <span className="text-xs text-red-600">{weekOneNewsletterError}</span>}
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleSendFreeFriday}
+                  disabled={freeFridaySending || freeFridaySent}
+                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                >
+                  {freeFridaySending ? 'Sending…' : freeFridaySent ? '✓ Sent!' : 'Send Free Friday Announcement'}
+                </button>
+                {freeFridayError && <span className="text-xs text-red-600">{freeFridayError}</span>}
               </div>
               {application.program === 'homeschool_drop_in' && (
                 <div className="flex items-center gap-3">
