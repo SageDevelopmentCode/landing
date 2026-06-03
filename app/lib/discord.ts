@@ -1830,3 +1830,112 @@ export function createNewsletterViewedEmbed(data: {
     timestamp: new Date().toISOString(),
   };
 }
+
+/**
+ * Creates a Discord embed for Free Friday registrations
+ */
+export function createFreeFridayRegistrationEmbed(data: {
+  track: "enrolled" | "new";
+  // Track A
+  enrolledParentName?: string;
+  enrolledChildName?: string;
+  friendChildName?: string;
+  friendChildAge?: string | number;
+  friendParentName?: string;
+  friendParentEmail?: string;
+  friendParentPhone?: string;
+  trackAEmergencyName?: string;
+  trackAEmergencyPhone?: string;
+  trackANotes?: string;
+  trackAPhotoConsent?: boolean;
+  // Track B
+  parentName?: string;
+  email?: string;
+  phone?: string;
+  childName?: string;
+  childAge?: string | number;
+  referralSource?: string;
+  notes?: string;
+  emergencyName?: string;
+  emergencyPhone?: string;
+  consentOutdoor?: boolean;
+  consentPhoto?: boolean;
+  interestedInEnrollment?: boolean;
+  // Signature
+  signatureName?: string;
+}): DiscordEmbed {
+  const fields: DiscordEmbedField[] = [];
+
+  if (data.track === "enrolled") {
+    fields.push(
+      { name: "Track", value: "🤝 Enrolled Family", inline: true },
+      { name: "Enrolled Parent", value: data.enrolledParentName || "—", inline: true },
+      { name: "Enrolled Child", value: data.enrolledChildName || "—", inline: true },
+      { name: "Friend's Child", value: data.friendChildName || "—", inline: true },
+      { name: "Friend's Age", value: data.friendChildAge ? String(data.friendChildAge) : "—", inline: true },
+      { name: "Friend's Parent", value: data.friendParentName || "—", inline: true },
+      { name: "Friend's Email", value: data.friendParentEmail || "—", inline: true },
+      { name: "Friend's Phone", value: data.friendParentPhone || "Not provided", inline: true },
+      { name: "Photo Consent", value: data.trackAPhotoConsent ? "✅ Yes" : "❌ No", inline: true },
+    );
+    if (data.trackAEmergencyName) {
+      fields.push({
+        name: "Emergency Contact",
+        value: `${data.trackAEmergencyName}${data.trackAEmergencyPhone ? ` · ${data.trackAEmergencyPhone}` : ""}`,
+        inline: false,
+      });
+    }
+    if (data.trackANotes) {
+      fields.push({
+        name: "Notes",
+        value: data.trackANotes.length > 1024 ? data.trackANotes.substring(0, 1021) + "..." : data.trackANotes,
+        inline: false,
+      });
+    }
+  } else {
+    const referralLabels: Record<string, string> = {
+      friend: "Friend / Word of Mouth",
+      instagram: "Instagram",
+      facebook: "Facebook",
+      google: "Google",
+      nextdoor: "Nextdoor",
+      other: "Other",
+    };
+    fields.push(
+      { name: "Track", value: "🌱 New Family", inline: true },
+      { name: "Parent", value: data.parentName || "—", inline: true },
+      { name: "Email", value: data.email || "—", inline: true },
+      { name: "Phone", value: data.phone || "Not provided", inline: true },
+      { name: "Child", value: data.childName || "—", inline: true },
+      { name: "Age", value: data.childAge ? String(data.childAge) : "—", inline: true },
+      { name: "How They Heard", value: data.referralSource ? (referralLabels[data.referralSource] ?? data.referralSource) : "Not provided", inline: true },
+      { name: "Photo Consent", value: data.consentPhoto ? "✅ Yes" : "❌ No", inline: true },
+      { name: "Interested in Enrollment", value: data.interestedInEnrollment ? "✅ Yes" : "No", inline: true },
+    );
+    if (data.emergencyName) {
+      fields.push({
+        name: "Emergency Contact",
+        value: `${data.emergencyName}${data.emergencyPhone ? ` · ${data.emergencyPhone}` : ""}`,
+        inline: false,
+      });
+    }
+    if (data.notes) {
+      fields.push({
+        name: "Notes",
+        value: data.notes.length > 1024 ? data.notes.substring(0, 1021) + "..." : data.notes,
+        inline: false,
+      });
+    }
+  }
+
+  if (data.signatureName) {
+    fields.push({ name: "Signed By", value: data.signatureName, inline: true });
+  }
+
+  return {
+    title: "🌿 Free Friday Registration",
+    color: 0x4a7c59,
+    fields,
+    timestamp: new Date().toISOString(),
+  };
+}

@@ -30,29 +30,85 @@ const WEEK1_PREVIEW_IMAGES = [
 ];
 
 const WEEK1_EARLY_HIGHLIGHTS = [
-  { emoji: "📖", label: "Letter Sounds & CVC Reading", desc: "Building phonics foundations through hands-on practice" },
-  { emoji: "✏️", label: "Handwriting & Number Sense", desc: "Fine motor skills and early numeracy side by side" },
-  { emoji: "➕", label: "Early Addition", desc: "Introducing addition concepts through play and manipulatives" },
-  { emoji: "💧", label: "Water Cycle & Filtration", desc: "Science exploration that sparked curiosity all week" },
-  { emoji: "🎨", label: "Art Creation", desc: "Self-expression through color, texture, and imagination" },
-  { emoji: "🐥", label: "Caring for Our Chicks", desc: "Responsibility and empathy through animal care" },
-  { emoji: "🎵", label: "Rhythm & Note Recognition", desc: "Music foundations woven into every morning" },
+  {
+    emoji: "📖",
+    label: "Letter Sounds & CVC Reading",
+    desc: "Building phonics foundations through hands-on practice",
+  },
+  {
+    emoji: "✏️",
+    label: "Handwriting & Number Sense",
+    desc: "Fine motor skills and early numeracy side by side",
+  },
+  {
+    emoji: "➕",
+    label: "Early Addition",
+    desc: "Introducing addition concepts through play and manipulatives",
+  },
+  {
+    emoji: "💧",
+    label: "Water Cycle & Filtration",
+    desc: "Science exploration that sparked curiosity all week",
+  },
+  {
+    emoji: "🎨",
+    label: "Art Creation",
+    desc: "Self-expression through color, texture, and imagination",
+  },
+  {
+    emoji: "🐥",
+    label: "Caring for Our Chicks",
+    desc: "Responsibility and empathy through animal care",
+  },
+  {
+    emoji: "🎵",
+    label: "Rhythm & Note Recognition",
+    desc: "Music foundations woven into every morning",
+  },
 ];
 
 const WEEK1_ELEM_HIGHLIGHTS = [
-  { emoji: "🔢", label: "Place Value Mastery", desc: "Expanded, word, and model forms — plus comparing numbers" },
-  { emoji: "🎲", label: "Collaborative Math Game", desc: "Wrapped up the week by applying what we learned together" },
-  { emoji: "📚", label: "SWBST Comprehension", desc: "Somebody, Wanted, But, So, Then — a framework for deep reading" },
-  { emoji: "✍️", label: "Vocabulary & Sentence Structure", desc: "Building strong writing skills from the ground up" },
-  { emoji: "🔄", label: "Synonyms & Antonyms", desc: "Expanding word knowledge through exploration" },
-  { emoji: "📝", label: "Recipe Card Writing", desc: "Real experiences turned into structured, creative writing" },
+  {
+    emoji: "🔢",
+    label: "Place Value Mastery",
+    desc: "Expanded, word, and model forms — plus comparing numbers",
+  },
+  {
+    emoji: "🎲",
+    label: "Collaborative Math Game",
+    desc: "Wrapped up the week by applying what we learned together",
+  },
+  {
+    emoji: "📚",
+    label: "SWBST Comprehension",
+    desc: "Somebody, Wanted, But, So, Then — a framework for deep reading",
+  },
+  {
+    emoji: "✍️",
+    label: "Vocabulary & Sentence Structure",
+    desc: "Building strong writing skills from the ground up",
+  },
+  {
+    emoji: "🔄",
+    label: "Synonyms & Antonyms",
+    desc: "Expanding word knowledge through exploration",
+  },
+  {
+    emoji: "📝",
+    label: "Recipe Card Writing",
+    desc: "Real experiences turned into structured, creative writing",
+  },
 ];
 
 const FRIDAY_DETAILS = [
   { icon: "📅", label: "Date", value: "Friday, June 5, 2026" },
   { icon: "🕗", label: "Drop-off", value: "8:15 – 9:00 AM" },
   { icon: "🕒", label: "Pick-up", value: "1:00 PM" },
-  { icon: "📍", label: "Location", value: "2760 Gattis School Rd, Round Rock TX" },
+  {
+    icon: "📍",
+    label: "Location",
+    value: "2760 Gattis School Rd, Round Rock TX",
+  },
   { icon: "👧", label: "Ages", value: "4–11 years" },
   { icon: "💰", label: "Cost", value: "Completely Free" },
 ];
@@ -115,6 +171,8 @@ function AgreementSectionHeader({ title }: { title: string }) {
 export default function FreeFridayPage() {
   const [track, setTrack] = useState<Track>("new");
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [agreementOpen, setAgreementOpen] = useState(false);
   const [agreementSigned, setAgreementSigned] = useState(false);
   const [sigPrintedName, setSigPrintedName] = useState("");
@@ -186,14 +244,45 @@ export default function FreeFridayPage() {
     return () => {
       document.body.style.overflow = "";
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [agreementOpen]);
 
   const scrollToForm = () =>
     formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 
+  const handleSubmit = async () => {
+    if (!isFormValid || !agreementSigned || submitting) return;
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const res = await fetch("/api/free-friday", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          track,
+          formData,
+          signatureName: sigPrintedName,
+        }),
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        setSubmitError(json.error ?? "Something went wrong. Please try again.");
+        return;
+      }
+      setSubmitted(true);
+    } catch {
+      setSubmitError(
+        "Network error. Please check your connection and try again.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
@@ -203,8 +292,8 @@ export default function FreeFridayPage() {
         type === "checkbox"
           ? checked
           : name.toLowerCase().includes("phone")
-          ? formatPhone(value)
-          : value,
+            ? formatPhone(value)
+            : value,
     }));
   };
 
@@ -240,9 +329,13 @@ export default function FreeFridayPage() {
   const photoConsent =
     track === "enrolled" ? formData.trackAPhotoConsent : formData.consentPhoto;
   const emergencyName =
-    track === "enrolled" ? formData.trackAEmergencyName : formData.emergencyName;
+    track === "enrolled"
+      ? formData.trackAEmergencyName
+      : formData.emergencyName;
   const emergencyPhone =
-    track === "enrolled" ? formData.trackAEmergencyPhone : formData.emergencyPhone;
+    track === "enrolled"
+      ? formData.trackAEmergencyPhone
+      : formData.emergencyPhone;
 
   return (
     <div className="min-h-screen bg-white">
@@ -251,7 +344,6 @@ export default function FreeFridayPage() {
       {/* Hero — two-column split on sage-50 */}
       <section className="bg-sage-50 pt-20">
         <div className="max-w-6xl mx-auto px-8 sm:px-12 lg:px-16 py-14 lg:py-20 flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
-
           {/* Left — content */}
           <motion.div
             className="flex-1 text-center lg:text-left"
@@ -264,20 +356,20 @@ export default function FreeFridayPage() {
             </span>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-heading text-gray-800 leading-tight mb-4">
-              Bring a Friend for{" "}
-              <span className="text-primary">Free.</span>
+              Bring a Friend for <span className="text-primary">Free!</span>
             </h1>
 
             <p className="text-lg text-gray-500 font-body leading-relaxed mb-6 max-w-lg mx-auto lg:mx-0">
-              Your child&apos;s friend gets a full day at Sage Field — no cost, no commitment.
-              Just a real, joyful Friday of learning, play, and community.
+              Your child&apos;s friend gets a full day at Sage Field — no cost,
+              no commitment. Just a real, joyful Friday of learning, play, and
+              community.
             </p>
 
             {/* Quick-detail pills */}
             <div className="flex flex-wrap gap-2 justify-center lg:justify-start mb-8">
               {[
                 { icon: "📅", text: "Jun 5, 2026" },
-                { icon: "🕗", text: "Drop-off 8:15 AM" },
+                { icon: "🕗", text: "Drop-off 8:45 AM" },
                 { icon: "🕒", text: "Pick-up 1:00 PM" },
                 { icon: "👧", text: "Ages 4–11" },
                 { icon: "💰", text: "Completely Free" },
@@ -377,7 +469,10 @@ export default function FreeFridayPage() {
       </div>
 
       {/* Week 1 Highlights */}
-      <section id="what-we-do" className="py-16 px-8 sm:px-12 lg:px-16 bg-white">
+      <section
+        id="what-we-do"
+        className="py-16 px-8 sm:px-12 lg:px-16 bg-white"
+      >
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -393,10 +488,11 @@ export default function FreeFridayPage() {
               A Peek at What Kids Do Here
             </h2>
             <p className="text-base text-gray-500 font-body leading-relaxed">
-              Students spent the week learning by doing — building foundations in literacy and math,
-              exploring science, expressing themselves through art, and growing into a real community
-              together. They cooked pizzas, made strawberry ice cream, and were already using Spanish
-              in daily conversations by Friday.
+              Students spent the week learning by doing — building foundations
+              in literacy and math, exploring science, expressing themselves
+              through art, and growing into a real community together. They
+              cooked pizzas, made strawberry ice cream, and were already using
+              Spanish in daily conversations by Friday.
             </p>
           </motion.div>
 
@@ -412,15 +508,23 @@ export default function FreeFridayPage() {
                 <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
                   <span className="text-sm">🌱</span>
                 </div>
-                <h4 className="text-sm font-bold font-heading text-gray-800">Early Learners</h4>
+                <h4 className="text-sm font-bold font-heading text-gray-800">
+                  Early Learners
+                </h4>
               </div>
               <ul className="space-y-1.5">
                 {WEEK1_EARLY_HIGHLIGHTS.map((item) => (
                   <li key={item.label} className="flex items-start gap-2">
-                    <span className="text-base leading-none mt-0.5 flex-shrink-0">{item.emoji}</span>
+                    <span className="text-base leading-none mt-0.5 flex-shrink-0">
+                      {item.emoji}
+                    </span>
                     <div>
-                      <p className="text-xs font-bold text-gray-800 font-body leading-tight">{item.label}</p>
-                      <p className="text-[11px] text-gray-400 font-body">{item.desc}</p>
+                      <p className="text-xs font-bold text-gray-800 font-body leading-tight">
+                        {item.label}
+                      </p>
+                      <p className="text-[11px] text-gray-400 font-body">
+                        {item.desc}
+                      </p>
                     </div>
                   </li>
                 ))}
@@ -431,15 +535,23 @@ export default function FreeFridayPage() {
                 <div className="w-8 h-8 bg-sage-100 rounded-full flex items-center justify-center flex-shrink-0">
                   <span className="text-sm">📐</span>
                 </div>
-                <h4 className="text-sm font-bold font-heading text-gray-800">Elementary</h4>
+                <h4 className="text-sm font-bold font-heading text-gray-800">
+                  Elementary
+                </h4>
               </div>
               <ul className="space-y-1.5">
                 {WEEK1_ELEM_HIGHLIGHTS.map((item) => (
                   <li key={item.label} className="flex items-start gap-2">
-                    <span className="text-base leading-none mt-0.5 flex-shrink-0">{item.emoji}</span>
+                    <span className="text-base leading-none mt-0.5 flex-shrink-0">
+                      {item.emoji}
+                    </span>
                     <div>
-                      <p className="text-xs font-bold text-gray-800 font-body leading-tight">{item.label}</p>
-                      <p className="text-[11px] text-gray-400 font-body">{item.desc}</p>
+                      <p className="text-xs font-bold text-gray-800 font-body leading-tight">
+                        {item.label}
+                      </p>
+                      <p className="text-[11px] text-gray-400 font-body">
+                        {item.desc}
+                      </p>
                     </div>
                   </li>
                 ))}
@@ -494,7 +606,8 @@ export default function FreeFridayPage() {
                   You&apos;re on the list!
                 </h3>
                 <p className="text-gray-500 font-body mb-2">
-                  We&apos;ll see you Friday, June 5th. Check your email for details.
+                  We&apos;ll see you Friday, June 5th. Check your email for
+                  details.
                 </p>
                 <p className="text-sm text-primary font-semibold font-body mt-4">
                   Bring a water bottle and wear comfortable clothes.
@@ -553,7 +666,8 @@ export default function FreeFridayPage() {
                       We&apos;re already enrolled
                     </h3>
                     <p className="text-xs text-gray-500 font-body leading-snug">
-                      I&apos;m bringing a friend&apos;s child to try Sage Field for free.
+                      I&apos;m bringing a friend&apos;s child to try Sage Field
+                      for free.
                     </p>
                     {track === "enrolled" && (
                       <div className="mt-3 flex items-center gap-1.5 text-primary text-xs font-semibold font-body">
@@ -590,7 +704,8 @@ export default function FreeFridayPage() {
                         </div>
                         <div>
                           <label className="block text-sm font-semibold text-gray-700 mb-1.5 font-body">
-                            Your child&apos;s name at Sage Field <span className="text-red-400">*</span>
+                            Your child&apos;s name at Sage Field{" "}
+                            <span className="text-red-400">*</span>
                           </label>
                           <input
                             type="text"
@@ -607,7 +722,8 @@ export default function FreeFridayPage() {
                       <div className="space-y-4">
                         <div>
                           <label className="block text-sm font-semibold text-gray-700 mb-1.5 font-body">
-                            Friend&apos;s child name <span className="text-red-400">*</span>
+                            Friend&apos;s child name{" "}
+                            <span className="text-red-400">*</span>
                           </label>
                           <input
                             type="text"
@@ -620,7 +736,8 @@ export default function FreeFridayPage() {
                         </div>
                         <div>
                           <label className="block text-sm font-semibold text-gray-700 mb-1.5 font-body">
-                            Child&apos;s age <span className="text-red-400">*</span>
+                            Child&apos;s age{" "}
+                            <span className="text-red-400">*</span>
                           </label>
                           <select
                             name="friendChildAge"
@@ -630,7 +747,9 @@ export default function FreeFridayPage() {
                           >
                             <option value="">Select age</option>
                             {[4, 5, 6, 7, 8, 9, 10, 11].map((age) => (
-                              <option key={age} value={age}>{age} years old</option>
+                              <option key={age} value={age}>
+                                {age} years old
+                              </option>
                             ))}
                           </select>
                         </div>
@@ -640,7 +759,8 @@ export default function FreeFridayPage() {
                       <div className="space-y-4">
                         <div>
                           <label className="block text-sm font-semibold text-gray-700 mb-1.5 font-body">
-                            Friend&apos;s parent name <span className="text-red-400">*</span>
+                            Friend&apos;s parent name{" "}
+                            <span className="text-red-400">*</span>
                           </label>
                           <input
                             type="text"
@@ -653,7 +773,8 @@ export default function FreeFridayPage() {
                         </div>
                         <div>
                           <label className="block text-sm font-semibold text-gray-700 mb-1.5 font-body">
-                            Friend&apos;s parent email <span className="text-red-400">*</span>
+                            Friend&apos;s parent email{" "}
+                            <span className="text-red-400">*</span>
                           </label>
                           <input
                             type="email"
@@ -744,8 +865,9 @@ export default function FreeFridayPage() {
                             className="sr-only"
                           />
                           <span className="text-sm text-gray-600 font-body leading-snug">
-                            The friend&apos;s family is okay with photos of their child being taken and
-                            shared on Sage Field&apos;s social media
+                            The friend&apos;s family is okay with photos of
+                            their child being taken and shared on Sage
+                            Field&apos;s social media
                           </span>
                         </label>
                       </div>
@@ -764,7 +886,8 @@ export default function FreeFridayPage() {
                       <div className="space-y-4">
                         <div>
                           <label className="block text-sm font-semibold text-gray-700 mb-1.5 font-body">
-                            Parent / guardian name <span className="text-red-400">*</span>
+                            Parent / guardian name{" "}
+                            <span className="text-red-400">*</span>
                           </label>
                           <input
                             type="text"
@@ -807,7 +930,8 @@ export default function FreeFridayPage() {
                       <div className="space-y-4">
                         <div>
                           <label className="block text-sm font-semibold text-gray-700 mb-1.5 font-body">
-                            Child&apos;s name <span className="text-red-400">*</span>
+                            Child&apos;s name{" "}
+                            <span className="text-red-400">*</span>
                           </label>
                           <input
                             type="text"
@@ -820,7 +944,8 @@ export default function FreeFridayPage() {
                         </div>
                         <div>
                           <label className="block text-sm font-semibold text-gray-700 mb-1.5 font-body">
-                            Child&apos;s age <span className="text-red-400">*</span>
+                            Child&apos;s age{" "}
+                            <span className="text-red-400">*</span>
                           </label>
                           <select
                             name="childAge"
@@ -830,7 +955,9 @@ export default function FreeFridayPage() {
                           >
                             <option value="">Select age</option>
                             {[4, 5, 6, 7, 8, 9, 10, 11].map((age) => (
-                              <option key={age} value={age}>{age} years old</option>
+                              <option key={age} value={age}>
+                                {age} years old
+                              </option>
                             ))}
                           </select>
                         </div>
@@ -849,7 +976,9 @@ export default function FreeFridayPage() {
                             className={`${inputClass} cursor-pointer`}
                           >
                             <option value="">Select one</option>
-                            <option value="friend">Friend / Word of Mouth</option>
+                            <option value="friend">
+                              Friend / Word of Mouth
+                            </option>
                             <option value="instagram">Instagram</option>
                             <option value="facebook">Facebook</option>
                             <option value="google">Google</option>
@@ -905,20 +1034,59 @@ export default function FreeFridayPage() {
                       <SectionLabel>Before we confirm your spot</SectionLabel>
                       <div className="space-y-3">
                         {[
-                          { name: "consentOutdoor" as const, checked: formData.consentOutdoor, label: <>I give permission for my child to participate in outdoor activities and to have sunscreen applied if needed <span className="text-red-400">*</span></> },
-                          { name: "consentPhoto" as const, checked: formData.consentPhoto, label: "I'm okay with photos of my child being taken and shared on Sage Field's social media" },
-                          { name: "interestedInEnrollment" as const, checked: formData.interestedInEnrollment, label: "I'd love to learn more about joining Sage Field regularly" },
+                          {
+                            name: "consentOutdoor" as const,
+                            checked: formData.consentOutdoor,
+                            label: (
+                              <>
+                                I give permission for my child to participate in
+                                outdoor activities and to have sunscreen applied
+                                if needed{" "}
+                                <span className="text-red-400">*</span>
+                              </>
+                            ),
+                          },
+                          {
+                            name: "consentPhoto" as const,
+                            checked: formData.consentPhoto,
+                            label:
+                              "I'm okay with photos of my child being taken and shared on Sage Field's social media",
+                          },
+                          {
+                            name: "interestedInEnrollment" as const,
+                            checked: formData.interestedInEnrollment,
+                            label:
+                              "I'd love to learn more about joining Sage Field regularly",
+                          },
                         ].map(({ name, checked, label }) => (
-                          <label key={name} className="flex items-start gap-3 cursor-pointer">
+                          <label
+                            key={name}
+                            className="flex items-start gap-3 cursor-pointer"
+                          >
                             <div
                               className={`w-5 h-5 flex-shrink-0 rounded border-2 mt-0.5 flex items-center justify-center transition-colors ${
-                                checked ? "bg-primary border-primary" : "border-gray-300 bg-white"
+                                checked
+                                  ? "bg-primary border-primary"
+                                  : "border-gray-300 bg-white"
                               }`}
                             >
-                              {checked && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                              {checked && (
+                                <Check
+                                  className="w-3 h-3 text-white"
+                                  strokeWidth={3}
+                                />
+                              )}
                             </div>
-                            <input type="checkbox" name={name} checked={checked} onChange={handleChange} className="sr-only" />
-                            <span className="text-sm text-gray-600 font-body leading-snug">{label}</span>
+                            <input
+                              type="checkbox"
+                              name={name}
+                              checked={checked}
+                              onChange={handleChange}
+                              className="sr-only"
+                            />
+                            <span className="text-sm text-gray-600 font-body leading-snug">
+                              {label}
+                            </span>
                           </label>
                         ))}
                       </div>
@@ -927,7 +1095,7 @@ export default function FreeFridayPage() {
                 </AnimatePresence>
 
                 {/* Agreement + Submit */}
-                {(
+                {
                   <motion.div
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -974,16 +1142,23 @@ export default function FreeFridayPage() {
                       </p>
                     )}
 
+                    {submitError && (
+                      <p className="text-sm text-red-500 font-body text-center">
+                        {submitError}
+                      </p>
+                    )}
                     <button
                       type="button"
-                      onClick={() => setSubmitted(true)}
-                      disabled={!isFormValid || !agreementSigned}
+                      onClick={handleSubmit}
+                      disabled={!isFormValid || !agreementSigned || submitting}
                       className="w-full px-6 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-all duration-200 font-body cursor-pointer shadow-md hover:shadow-lg text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
                     >
-                      Reserve My Free Spot for June 5 →
+                      {submitting
+                        ? "Submitting…"
+                        : "Reserve My Free Spot for June 5 →"}
                     </button>
                   </motion.div>
-                )}
+                }
               </motion.div>
             )}
           </AnimatePresence>
@@ -1019,7 +1194,9 @@ export default function FreeFridayPage() {
                 transition={{ duration: 0.35, delay: i * 0.06 }}
               >
                 <span className="text-xl flex-shrink-0">{item.emoji}</span>
-                <span className="text-sm font-body text-gray-700 font-semibold">{item.item}</span>
+                <span className="text-sm font-body text-gray-700 font-semibold">
+                  {item.item}
+                </span>
               </motion.div>
             ))}
           </div>
@@ -1047,8 +1224,8 @@ export default function FreeFridayPage() {
               Don&apos;t miss this Friday.
             </h2>
             <p className="text-gray-500 font-body mb-8 leading-relaxed">
-              June 5 is one day. Spots are limited. Reserve your child&apos;s free visit now and
-              see what all the excitement is about.
+              June 5 is one day. Spots are limited. Reserve your child&apos;s
+              free visit now and see what all the excitement is about.
             </p>
             <button
               onClick={scrollToForm}
@@ -1077,7 +1254,9 @@ export default function FreeFridayPage() {
             <p className="text-white font-heading font-bold text-sm leading-tight">
               Free Friday · June 5
             </p>
-            <p className="text-white/80 font-body text-xs">Limited spots — reserve yours</p>
+            <p className="text-white/80 font-body text-xs">
+              Limited spots — reserve yours
+            </p>
           </div>
           <button
             onClick={scrollToForm}
@@ -1142,7 +1321,8 @@ export default function FreeFridayPage() {
                       Sage Field Private Microschool
                     </p>
                     <p className="text-xs text-gray-500 font-body">
-                      Location: Round Rock, Texas · Shadow Day Date: Friday, June 5, 2026
+                      Location: Round Rock, Texas · Shadow Day Date: Friday,
+                      June 5, 2026
                     </p>
                   </div>
 
@@ -1151,26 +1331,41 @@ export default function FreeFridayPage() {
                     <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                       {[
                         { label: "Student Name", value: studentName || "—" },
-                        { label: "Parent / Guardian", value: guardianName || "—" },
+                        {
+                          label: "Parent / Guardian",
+                          value: guardianName || "—",
+                        },
                         {
                           label: "Emergency Contact",
-                          value: emergencyName ? `${emergencyName}${emergencyPhone ? ` · ${emergencyPhone}` : ""}` : "—",
+                          value: emergencyName
+                            ? `${emergencyName}${emergencyPhone ? ` · ${emergencyPhone}` : ""}`
+                            : "—",
                         },
                         {
                           label: "Photo Consent",
-                          value: photoConsent ? "✓ Authorized" : "✗ Not authorized",
+                          value: photoConsent
+                            ? "✓ Authorized"
+                            : "✗ Not authorized",
                         },
                       ].map((row) => (
                         <div key={row.label}>
-                          <p className="text-xs font-semibold text-gray-400 font-body">{row.label}</p>
-                          <p className="text-sm text-gray-800 font-body">{row.value}</p>
+                          <p className="text-xs font-semibold text-gray-400 font-body">
+                            {row.label}
+                          </p>
+                          <p className="text-sm text-gray-800 font-body">
+                            {row.value}
+                          </p>
                         </div>
                       ))}
                     </div>
                     {notesForAgreement && (
                       <div className="border-t border-gray-200 pt-3 mt-1">
-                        <p className="text-xs font-semibold text-gray-400 font-body mb-1">Medical / Notes</p>
-                        <p className="text-sm text-gray-700 font-body leading-relaxed">{notesForAgreement}</p>
+                        <p className="text-xs font-semibold text-gray-400 font-body mb-1">
+                          Medical / Notes
+                        </p>
+                        <p className="text-sm text-gray-700 font-body leading-relaxed">
+                          {notesForAgreement}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -1179,23 +1374,29 @@ export default function FreeFridayPage() {
                   <div className="flex flex-col gap-3">
                     <AgreementSectionHeader title="1. Acknowledgment of Program Activities" />
                     <p className="text-sm text-gray-600 font-body leading-relaxed">
-                      I understand that my child is participating in a Shadow Day at an outdoor
-                      education program where children learn through active exploration, hands-on
-                      experiences, and supervised outdoor activities. Activities may include, but
+                      I understand that my child is participating in a Shadow
+                      Day at an outdoor education program where children learn
+                      through active exploration, hands-on experiences, and
+                      supervised outdoor activities. Activities may include, but
                       are not limited to:
                     </p>
                     <ul className="flex flex-col gap-1.5">
                       {ACTIVITIES.map((a) => (
-                        <li key={a} className="flex gap-2 text-sm text-gray-600 font-body">
-                          <span className="text-primary mt-0.5 flex-shrink-0">•</span>
+                        <li
+                          key={a}
+                          className="flex gap-2 text-sm text-gray-600 font-body"
+                        >
+                          <span className="text-primary mt-0.5 flex-shrink-0">
+                            •
+                          </span>
                           <span>{a}</span>
                         </li>
                       ))}
                     </ul>
                     <p className="text-sm text-gray-600 font-body leading-relaxed">
-                      I understand that these activities involve inherent risks that cannot be
-                      completely eliminated while preserving the educational and developmental
-                      benefits of participation.
+                      I understand that these activities involve inherent risks
+                      that cannot be completely eliminated while preserving the
+                      educational and developmental benefits of participation.
                     </p>
                   </div>
 
@@ -1203,20 +1404,26 @@ export default function FreeFridayPage() {
                   <div className="flex flex-col gap-3">
                     <AgreementSectionHeader title="2. Assumption of Risk" />
                     <p className="text-sm text-gray-600 font-body leading-relaxed">
-                      I knowingly and voluntarily assume all risks associated with my child&apos;s
-                      participation in the Shadow Day, including but not limited to:
+                      I knowingly and voluntarily assume all risks associated
+                      with my child&apos;s participation in the Shadow Day,
+                      including but not limited to:
                     </p>
                     <ul className="flex flex-col gap-1.5">
                       {RISKS.map((r) => (
-                        <li key={r} className="flex gap-2 text-sm text-gray-600 font-body">
-                          <span className="text-primary mt-0.5 flex-shrink-0">•</span>
+                        <li
+                          key={r}
+                          className="flex gap-2 text-sm text-gray-600 font-body"
+                        >
+                          <span className="text-primary mt-0.5 flex-shrink-0">
+                            •
+                          </span>
                           <span>{r}</span>
                         </li>
                       ))}
                     </ul>
                     <p className="text-sm text-gray-600 font-body leading-relaxed">
-                      I understand that injury may occur despite reasonable supervision and safety
-                      precautions.
+                      I understand that injury may occur despite reasonable
+                      supervision and safety precautions.
                     </p>
                   </div>
 
@@ -1224,16 +1431,18 @@ export default function FreeFridayPage() {
                   <div className="flex flex-col gap-3">
                     <AgreementSectionHeader title="3. Release of Liability" />
                     <p className="text-sm text-gray-600 font-body leading-relaxed">
-                      In consideration of my child&apos;s participation in the Shadow Day, I release
-                      and hold harmless the School, its owners, directors, employees, contractors,
-                      volunteers, agents, and representatives from any claims, demands, causes of
-                      action, damages, losses, costs, or expenses arising out of or related to my
-                      child&apos;s participation.
+                      In consideration of my child&apos;s participation in the
+                      Shadow Day, I release and hold harmless the School, its
+                      owners, directors, employees, contractors, volunteers,
+                      agents, and representatives from any claims, demands,
+                      causes of action, damages, losses, costs, or expenses
+                      arising out of or related to my child&apos;s
+                      participation.
                     </p>
                     <p className="text-sm text-gray-600 font-body leading-relaxed">
-                      This release applies to all claims based upon ordinary negligence but does not
-                      apply to claims arising from gross negligence, reckless conduct, or intentional
-                      misconduct.
+                      This release applies to all claims based upon ordinary
+                      negligence but does not apply to claims arising from gross
+                      negligence, reckless conduct, or intentional misconduct.
                     </p>
                   </div>
 
@@ -1241,8 +1450,9 @@ export default function FreeFridayPage() {
                   <div className="flex flex-col gap-3">
                     <AgreementSectionHeader title="4. Medical Authorization" />
                     <p className="text-sm text-gray-600 font-body leading-relaxed">
-                      I authorize school personnel to obtain emergency medical treatment for my child
-                      if I cannot be reached promptly. I understand that:
+                      I authorize school personnel to obtain emergency medical
+                      treatment for my child if I cannot be reached promptly. I
+                      understand that:
                     </p>
                     <ul className="flex flex-col gap-1.5">
                       {[
@@ -1250,8 +1460,13 @@ export default function FreeFridayPage() {
                         "I am responsible for all medical expenses incurred on behalf of my child.",
                         "School personnel may administer basic first aid as appropriate.",
                       ].map((item) => (
-                        <li key={item} className="flex gap-2 text-sm text-gray-600 font-body">
-                          <span className="text-primary mt-0.5 flex-shrink-0">•</span>
+                        <li
+                          key={item}
+                          className="flex gap-2 text-sm text-gray-600 font-body"
+                        >
+                          <span className="text-primary mt-0.5 flex-shrink-0">
+                            •
+                          </span>
                           <span>{item}</span>
                         </li>
                       ))}
@@ -1261,7 +1476,9 @@ export default function FreeFridayPage() {
                         <p className="text-xs font-semibold text-amber-700 font-body mb-1">
                           Allergies, Medical Conditions, or Special Notes
                         </p>
-                        <p className="text-sm text-amber-800 font-body">{notesForAgreement}</p>
+                        <p className="text-sm text-amber-800 font-body">
+                          {notesForAgreement}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -1276,7 +1493,9 @@ export default function FreeFridayPage() {
                           : "bg-gray-50 border-gray-200"
                       }`}
                     >
-                      <span className="text-lg">{photoConsent ? "✅" : "🚫"}</span>
+                      <span className="text-lg">
+                        {photoConsent ? "✅" : "🚫"}
+                      </span>
                       <p className="text-sm font-body text-gray-700">
                         {photoConsent
                           ? "I authorize the School to photograph and/or record my child and use such images or recordings for educational, promotional, website, social media, and marketing purposes."
@@ -1289,18 +1508,27 @@ export default function FreeFridayPage() {
                   <div className="flex flex-col gap-3">
                     <AgreementSectionHeader title="6. Emergency Contact Authorization" />
                     <p className="text-sm text-gray-600 font-body leading-relaxed">
-                      If the parent or guardian cannot be reached, the following individual is
-                      authorized to make emergency decisions regarding the child:
+                      If the parent or guardian cannot be reached, the following
+                      individual is authorized to make emergency decisions
+                      regarding the child:
                     </p>
                     <div className="bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <p className="text-xs font-semibold text-gray-400 font-body">Name</p>
-                          <p className="text-sm text-gray-800 font-body">{emergencyName || "—"}</p>
+                          <p className="text-xs font-semibold text-gray-400 font-body">
+                            Name
+                          </p>
+                          <p className="text-sm text-gray-800 font-body">
+                            {emergencyName || "—"}
+                          </p>
                         </div>
                         <div>
-                          <p className="text-xs font-semibold text-gray-400 font-body">Phone</p>
-                          <p className="text-sm text-gray-800 font-body">{emergencyPhone || "—"}</p>
+                          <p className="text-xs font-semibold text-gray-400 font-body">
+                            Phone
+                          </p>
+                          <p className="text-sm text-gray-800 font-body">
+                            {emergencyPhone || "—"}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -1310,11 +1538,13 @@ export default function FreeFridayPage() {
                   <div className="flex flex-col gap-4">
                     <AgreementSectionHeader title="7. Parent Acknowledgment & Signature" />
                     <p className="text-sm text-gray-600 font-body leading-relaxed">
-                      By signing below, I confirm that I have read this Agreement in its entirety and
-                      understand its contents. I understand that participation in outdoor educational
-                      activities involves inherent risks and that I am voluntarily permitting my child
-                      to participate. I certify that I am the parent or legal guardian of the child
-                      named above and have authority to execute this Agreement.
+                      By signing below, I confirm that I have read this
+                      Agreement in its entirety and understand its contents. I
+                      understand that participation in outdoor educational
+                      activities involves inherent risks and that I am
+                      voluntarily permitting my child to participate. I certify
+                      that I am the parent or legal guardian of the child named
+                      above and have authority to execute this Agreement.
                     </p>
 
                     {agreementSigned ? (
@@ -1346,7 +1576,10 @@ export default function FreeFridayPage() {
                         </p>
                         <div>
                           <label className="block text-xs font-semibold text-gray-600 font-body mb-1">
-                            Full name <span className="font-normal text-gray-400">(print)</span>
+                            Full name{" "}
+                            <span className="font-normal text-gray-400">
+                              (print)
+                            </span>
                           </label>
                           <input
                             type="text"
@@ -1364,7 +1597,9 @@ export default function FreeFridayPage() {
                             <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-dashed border-gray-200 bg-white">
                               <p
                                 className="text-2xl text-gray-700 flex-1"
-                                style={{ fontFamily: "var(--font-dancing-script)" }}
+                                style={{
+                                  fontFamily: "var(--font-dancing-script)",
+                                }}
                               >
                                 {sigValue}
                               </p>
