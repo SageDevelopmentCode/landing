@@ -56,6 +56,8 @@ export interface DBNewsletter {
   created_by: string
   published_at: string | null
   access_password: string | null
+  cover_image_path: string | null
+  cover_image_signed_url: string | null
   created_at: string
   updated_at: string
   sections: DBSection[]
@@ -90,6 +92,12 @@ async function resolveNewsletterRows(rows: any[], adminClient: ReturnType<typeof
 
   const pathsByBucket = new Map<string, string[]>()
   for (const row of rows) {
+    // Cover image
+    if (row.cover_image_path) {
+      const coverBucket = (row.cover_image_path as string).startsWith('covers/') ? 'newsletter-images' : 'teacher-photos'
+      if (!pathsByBucket.has(coverBucket)) pathsByBucket.set(coverBucket, [])
+      pathsByBucket.get(coverBucket)!.push(row.cover_image_path)
+    }
     for (const s of (row.sections as any[]) ?? []) {
       for (const img of (s.section_images as any[]) ?? []) {
         if (img.is_deleted) continue
@@ -116,6 +124,10 @@ async function resolveNewsletterRows(rows: any[], adminClient: ReturnType<typeof
     status: row.status as 'draft' | 'published',
     view_mode: row.view_mode as 'traditional' | 'slideshow',
     access_password: row.access_password ?? null,
+    cover_image_path: row.cover_image_path ?? null,
+    cover_image_signed_url: row.cover_image_path
+      ? (signedUrlMap.get(row.cover_image_path) ?? null)
+      : null,
     sections: ((row.sections as any[]) ?? [])
       .sort((a, b) => a.sort_order - b.sort_order)
       .map((s) => ({
@@ -153,7 +165,7 @@ async function resolveNewsletterRows(rows: any[], adminClient: ReturnType<typeof
 }
 
 const NEWSLETTER_SELECT = `
-  id, title, week_range, status, view_mode, created_by, published_at, access_password, created_at, updated_at,
+  id, title, week_range, status, view_mode, created_by, published_at, access_password, cover_image_path, created_at, updated_at,
   sections:sections(
     id, newsletter_id, label, body, visible, sort_order, is_class_updates, created_at, updated_at,
     teacher_updates:teacher_updates(id, section_id, teacher_id, body, updated_at),
@@ -659,6 +671,127 @@ export async function deleteSectionImage(
   // Library photos (source_bucket = 'teacher-photos') stay intact in the teacher's library.
   if ((row.source_bucket ?? 'newsletter-images') === 'newsletter-images') {
     await adminClient.storage.from('newsletter-images').remove([row.storage_path])
+  }
+
+  return { success: true }
+}
+
+// ─── Cover Image ───────────────────────────────────────────────────────────────
+
+export async function uploadNewsletterCoverImage(
+  formData: FormData
+): Promise<{ error?: string; data?: { storage_path: string; signed_url: string } }> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const newsletterId = formData.get('newsletterId') as string
+  const file = formData.get('file') as File
+  if (!newsletterId || !file) return { error: 'Missing newsletterId or file' }
+
+  const adminClient = createAdminClient()
+
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+  const storagePath = `covers/${newsletterId}/${Date.now()}-${safeName}`
+
+  const { error: uploadError } = await adminClient.storage
+    .from('newsletter-images')
+    .upload(storagePath, file, { contentType: file.type, upsert: false })
+
+  if (uploadError) {
+    console.error('uploadNewsletterCoverImage storage error:', uploadError)
+    return { error: uploadError.message }
+  }
+
+  const { error: updateError } = await adminClient
+    .schema('newsletters')
+    .from('newsletters')
+    .update({ cover_image_path: storagePath })
+    .eq('id', newsletterId)
+
+  if (updateError) {
+    console.error('uploadNewsletterCoverImage update error:', updateError)
+    return { error: updateError.message }
+  }
+
+  const { data: signed } = await adminClient.storage
+    .from('newsletter-images')
+    .createSignedUrl(storagePath, 3600)
+
+  return { data: { storage_path: storagePath, signed_url: signed?.signedUrl ?? '' } }
+}
+
+export async function addLibraryCoverPhoto(
+  newsletterId: string,
+  photoId: string
+): Promise<{ error?: string; data?: { storage_path: string; signed_url: string } }> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const adminClient = createAdminClient()
+
+  const { data: photo, error: photoError } = await adminClient
+    .schema('teachers')
+    .from('photos')
+    .select('id, storage_path')
+    .eq('id', photoId)
+    .eq('teacher_id', user.id)
+    .eq('is_deleted', false)
+    .single()
+
+  if (photoError || !photo) return { error: 'Photo not found or does not belong to you' }
+
+  const { error: updateError } = await adminClient
+    .schema('newsletters')
+    .from('newsletters')
+    .update({ cover_image_path: photo.storage_path })
+    .eq('id', newsletterId)
+
+  if (updateError) {
+    console.error('addLibraryCoverPhoto update error:', updateError)
+    return { error: updateError.message }
+  }
+
+  const { data: signed } = await adminClient.storage
+    .from('teacher-photos')
+    .createSignedUrl(photo.storage_path, 3600)
+
+  return { data: { storage_path: photo.storage_path, signed_url: signed?.signedUrl ?? '' } }
+}
+
+export async function deleteNewsletterCoverImage(
+  newsletterId: string
+): Promise<{ error?: string; success?: boolean }> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const adminClient = createAdminClient()
+
+  const { data: row, error: fetchError } = await adminClient
+    .schema('newsletters')
+    .from('newsletters')
+    .select('cover_image_path')
+    .eq('id', newsletterId)
+    .single()
+
+  if (fetchError || !row) return { error: 'Newsletter not found' }
+
+  const { error: updateError } = await adminClient
+    .schema('newsletters')
+    .from('newsletters')
+    .update({ cover_image_path: null })
+    .eq('id', newsletterId)
+
+  if (updateError) {
+    console.error('deleteNewsletterCoverImage update error:', updateError)
+    return { error: updateError.message }
+  }
+
+  // Only delete storage file for newsletter-owned uploads (paths starting with "covers/")
+  if (row.cover_image_path && (row.cover_image_path as string).startsWith('covers/')) {
+    await adminClient.storage.from('newsletter-images').remove([row.cover_image_path])
   }
 
   return { success: true }

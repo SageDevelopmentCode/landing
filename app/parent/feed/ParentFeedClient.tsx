@@ -1239,7 +1239,14 @@ export default function ParentFeedClient({
                     : "text-gray-400 hover:text-gray-600"
                 }`}
               >
-                {m === "feed" ? "Feed" : "Reels"}
+                {m === "feed" ? "Feed" : (
+                  <span className="flex items-center gap-1.5">
+                    Reels
+                    <span className="text-[10px] font-bold bg-[#4a7c59] text-white px-1.5 py-0.5 rounded-full leading-none">
+                      New!
+                    </span>
+                  </span>
+                )}
               </button>
             ))}
           </div>

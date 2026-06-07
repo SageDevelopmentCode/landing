@@ -50,9 +50,11 @@ interface Props {
   usedStoragePaths?: Set<string>;
   onConfirm: (images: LocalImage[]) => void;
   onClose: () => void;
+  /** If provided, skip the addLibraryPhotoToSection call and return raw photo data instead */
+  onSelectRaw?: (photos: TeacherPhoto[]) => void;
 }
 
-export default function PhotoLibraryPickerModal({ sectionId, usedStoragePaths, onConfirm, onClose }: Props) {
+export default function PhotoLibraryPickerModal({ sectionId, usedStoragePaths, onConfirm, onClose, onSelectRaw }: Props) {
   const [photos, setPhotos] = useState<TeacherPhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -128,6 +130,13 @@ export default function PhotoLibraryPickerModal({ sectionId, usedStoragePaths, o
     setError(null);
 
     const selected = photos.filter((p) => selectedIds.has(p.id));
+
+    if (onSelectRaw) {
+      setSubmitting(false);
+      onSelectRaw(selected);
+      return;
+    }
+
     const results = await Promise.all(
       selected.map((p) => addLibraryPhotoToSection(sectionId, p.id))
     );

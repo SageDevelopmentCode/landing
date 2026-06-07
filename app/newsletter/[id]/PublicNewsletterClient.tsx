@@ -244,7 +244,7 @@ function NewsletterView({ newsletter }: { newsletter: DBNewsletter }) {
 
         {/* Hero Banner */}
         <div className="relative h-64 md:h-80 overflow-hidden">
-          <Image src="/assets/NewsletterWeek1.jpg" alt="Newsletter banner" fill className="object-cover object-center" priority />
+          <Image src={newsletter.cover_image_signed_url ?? "/assets/NewsletterWeek1.jpg"} alt="Newsletter banner" fill className="object-cover object-center" priority />
           <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.38) 0%, transparent 42%)" }} />
           <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(to top, rgba(10,30,18,0.82) 0%, rgba(10,30,18,0.32) 50%, transparent 100%)" }} />
 

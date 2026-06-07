@@ -344,7 +344,7 @@ function TraditionalNewsletter({ newsletter, sections }: { newsletter: DBNewslet
         <div className="relative h-64 md:h-80 overflow-hidden">
           {/* Full-bleed background image */}
           <Image
-            src="/assets/NewsletterWeek1.jpg"
+            src={newsletter.cover_image_signed_url ?? "/assets/NewsletterWeek1.jpg"}
             alt="Newsletter banner"
             fill
             className="object-cover object-center"

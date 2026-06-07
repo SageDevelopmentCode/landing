@@ -36,6 +36,9 @@ import {
   setNewsletterPassword,
   uploadSectionImage,
   deleteSectionImage,
+  uploadNewsletterCoverImage,
+  deleteNewsletterCoverImage,
+  addLibraryCoverPhoto,
   type DBNewsletter,
 } from "@/app/actions/newsletter";
 import PhotoLibraryPickerModal from "./PhotoLibraryPickerModal";
@@ -196,6 +199,9 @@ interface EditorTabProps {
   isReadOnly: boolean;
   selectedWeekRange: string;
   onToggleVisibility: (s: SectionData) => void;
+  newsletterId: string;
+  coverImageUrl: string | null;
+  setCoverImageUrl: (url: string | null) => void;
 }
 
 function EditorTab({
@@ -213,12 +219,18 @@ function EditorTab({
   isReadOnly,
   selectedWeekRange,
   onToggleVisibility,
+  newsletterId,
+  coverImageUrl,
+  setCoverImageUrl,
 }: EditorTabProps) {
   const [activeSectionId, setActiveSectionId] = useState(sections[0]?.id ?? "");
   const [libraryPickerForSection, setLibraryPickerForSection] = useState<string | null>(null);
+  const [showCoverLibraryPicker, setShowCoverLibraryPicker] = useState(false);
+  const [coverUploading, setCoverUploading] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const teacherTextareaRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const coverFileInputRef = useRef<HTMLInputElement>(null);
 
   const activeSection = sections.find((s) => s.id === activeSectionId) ?? sections[0];
 
@@ -374,6 +386,46 @@ function EditorTab({
     patchSection(s.id, { visible: next });
     recordChange({ type: "visibility", sectionLabel: s.label, detail: next ? "shown" : "hidden" });
     onToggleVisibility({ ...s, visible: next });
+  }
+
+  async function handleCoverImageFile(file: File | null) {
+    if (!file || isReadOnly) return;
+    const { compressImage } = await import("@/app/utils/compressImage");
+    const compressed = await compressImage(file);
+    const blobUrl = URL.createObjectURL(compressed);
+    setCoverImageUrl(blobUrl);
+    setCoverUploading(true);
+    const fd = new FormData();
+    fd.append("newsletterId", newsletterId);
+    fd.append("file", compressed);
+    const result = await uploadNewsletterCoverImage(fd);
+    setCoverUploading(false);
+    URL.revokeObjectURL(blobUrl);
+    if (result.data) {
+      setCoverImageUrl(result.data.signed_url);
+    } else {
+      setCoverImageUrl(null);
+      console.error("Cover image upload failed:", result.error);
+    }
+  }
+
+  async function handleRemoveCoverImage() {
+    if (isReadOnly) return;
+    setCoverImageUrl(null);
+    await deleteNewsletterCoverImage(newsletterId);
+  }
+
+  async function handleCoverLibraryRaw(rawPhotos: import("@/app/actions/photos").TeacherPhoto[]) {
+    const photo = rawPhotos[0];
+    if (!photo || isReadOnly) return;
+    setShowCoverLibraryPicker(false);
+    setCoverImageUrl(photo.signed_url ?? null);
+    const result = await addLibraryCoverPhoto(newsletterId, photo.id);
+    if (result.data) {
+      setCoverImageUrl(result.data.signed_url);
+    } else {
+      console.error("Cover library photo failed:", result.error);
+    }
   }
 
   function patchTeacherUpdate(teacherId: string, body: string) {
@@ -832,6 +884,66 @@ function EditorTab({
           </div>
           <p className="text-xs text-gray-400 font-body mt-1.5">Choose how parents see this newsletter.</p>
         </div>
+
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+            <ImageIcon className="w-3.5 h-3.5" /> Cover Image
+          </p>
+          {coverImageUrl ? (
+            <div className="relative group rounded-xl overflow-hidden border border-gray-100">
+              <img
+                src={coverImageUrl}
+                alt="Cover"
+                className={`w-full h-28 object-cover ${coverUploading ? "opacity-60" : ""}`}
+              />
+              {coverUploading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                  <Loader2 className="w-5 h-5 text-white animate-spin" />
+                </div>
+              )}
+              {!isReadOnly && !coverUploading && (
+                <button
+                  onClick={handleRemoveCoverImage}
+                  className="absolute top-1.5 right-1.5 w-6 h-6 bg-gray-900/70 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
+                  title="Remove cover image"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="w-full h-20 border-2 border-dashed border-gray-200 rounded-xl flex items-center justify-center text-gray-300">
+              <ImageIcon className="w-6 h-6" />
+            </div>
+          )}
+          {!isReadOnly && (
+            <div className="flex gap-2 mt-2">
+              <button
+                onClick={() => coverFileInputRef.current?.click()}
+                disabled={coverUploading}
+                className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs font-semibold font-body text-[#4a7c59] border border-[#4a7c59]/30 bg-[#4a7c59]/5 rounded-lg hover:bg-[#4a7c59]/10 transition-colors disabled:opacity-50"
+              >
+                <Upload className="w-3 h-3" />
+                Upload
+              </button>
+              <button
+                onClick={() => setShowCoverLibraryPicker(true)}
+                disabled={coverUploading}
+                className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs font-semibold font-body text-[#4a7c59] border border-[#4a7c59]/30 bg-[#4a7c59]/5 rounded-lg hover:bg-[#4a7c59]/10 transition-colors disabled:opacity-50"
+              >
+                <Library className="w-3 h-3" />
+                Library
+              </button>
+            </div>
+          )}
+          <input
+            ref={coverFileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => handleCoverImageFile(e.target.files?.[0] ?? null)}
+          />
+        </div>
       </aside>
 
       {libraryPickerForSection && (
@@ -842,6 +954,16 @@ function EditorTab({
           )}
           onConfirm={handleLibraryConfirm}
           onClose={() => setLibraryPickerForSection(null)}
+        />
+      )}
+
+      {showCoverLibraryPicker && (
+        <PhotoLibraryPickerModal
+          sectionId="__cover__"
+          usedStoragePaths={new Set()}
+          onConfirm={() => {}}
+          onSelectRaw={handleCoverLibraryRaw}
+          onClose={() => setShowCoverLibraryPicker(false)}
         />
       )}
     </div>
@@ -1340,6 +1462,9 @@ export default function NewsletterPageClient({ teachers, currentUserId, initialN
   const [sections, setSections] = useState<SectionData[]>(selectedNewsletter?.sections ?? []);
   const [newsletterTitle, setNewsletterTitle] = useState(selectedNewsletter?.newsletterTitle ?? "");
   const [viewMode, setViewMode] = useState<"traditional" | "slideshow">(selectedNewsletter?.viewMode ?? "traditional");
+  const [coverImageUrl, setCoverImageUrl] = useState<string | null>(
+    initialNewsletters.find((n) => n.id === selectedNewsletterId)?.cover_image_signed_url ?? null
+  );
 
   // Sync sections/title/viewMode into the newsletters list when they change
   const syncToList = useCallback(() => {
@@ -1381,6 +1506,8 @@ export default function NewsletterPageClient({ teachers, currentUserId, initialN
     setIsReadOnly(nl.status === "published");
     setActiveTab("editor");
     pendingChanges.current = [];
+    const dbNlForCover = initialNewsletters.find((n) => n.id === id);
+    setCoverImageUrl(dbNlForCover?.cover_image_signed_url ?? null);
 
     // Load change log for the newly selected newsletter
     const dbNl = initialNewsletters.find((n) => n.id === id);
@@ -1556,6 +1683,7 @@ export default function NewsletterPageClient({ teachers, currentUserId, initialN
     setIsReadOnly(false);
     setActiveTab("editor");
     setChangeLog([]);
+    setCoverImageUrl(null);
     pendingChanges.current = [];
   }
 
@@ -1726,6 +1854,9 @@ export default function NewsletterPageClient({ teachers, currentUserId, initialN
               isReadOnly={isReadOnly}
               selectedWeekRange={selectedNewsletter?.weekRange ?? ""}
               onToggleVisibility={handleToggleVisibility}
+              newsletterId={selectedNewsletterId}
+              coverImageUrl={coverImageUrl}
+              setCoverImageUrl={setCoverImageUrl}
             />
           )}
           {activeTab === "changelog" && <ChangeLogTab changeLog={changeLog} />}
