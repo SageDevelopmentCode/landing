@@ -5,6 +5,7 @@ import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import ImpersonateNotificationBell from "../../ImpersonateNotificationBell";
 import ParentFeedClient from "@/app/parent/feed/ParentFeedClient";
 import { getFeedPosts } from "@/app/teacher/feed/actions";
+import { getReels } from "@/app/teacher/feed/reelActions";
 
 export default async function ImpersonateFeedPage({
   params,
@@ -14,7 +15,7 @@ export default async function ImpersonateFeedPage({
   const { parentId } = await params;
   const adminClient = createAdminClient();
 
-  const [{ data: adminUser }, initialPosts, { data: teachers }] =
+  const [{ data: adminUser }, initialPosts, initialReelPosts, { data: teachers }] =
     await Promise.all([
       adminClient
         .schema("admin")
@@ -23,6 +24,7 @@ export default async function ImpersonateFeedPage({
         .eq("id", parentId)
         .single(),
       getFeedPosts(),
+      getReels(),
       adminClient
         .schema("admin")
         .from("users")
@@ -56,6 +58,7 @@ export default async function ImpersonateFeedPage({
         <ParentFeedClient
           currentUser={currentUser}
           initialPosts={initialPosts}
+          initialReelPosts={initialReelPosts}
           profileImageUrl={adminUser.profile_image_url ?? null}
           teachers={teachers ?? []}
         />

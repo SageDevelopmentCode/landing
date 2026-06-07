@@ -11,6 +11,7 @@ import SharedAccessBanner from "@/app/parent/dashboard/SharedAccessBanner";
 import ParentFeedClient from "./ParentFeedClient";
 import ParentHeaderRight from "@/app/parent/components/ParentHeaderRight";
 import { getFeedPosts } from "@/app/teacher/feed/actions";
+import { getReels, type ReelPost } from "@/app/teacher/feed/reelActions";
 
 export default async function ParentFeedPage() {
   const supabase = await createServerSupabaseClient();
@@ -36,7 +37,7 @@ export default async function ParentFeedPage() {
 
   let currentUser: { full_name: string; role: string; id: string } | null = null;
 
-  const [{ data: adminUser }, initialPosts, { data: teachers }, { data: enrolledCheck }] = await Promise.all([
+  const [{ data: adminUser }, initialPosts, initialReelPosts, { data: teachers }, { data: enrolledCheck }] = await Promise.all([
     adminClient
       .schema("admin")
       .from("users")
@@ -44,6 +45,7 @@ export default async function ParentFeedPage() {
       .eq("id", user.id)
       .single(),
     getFeedPosts(),
+    getReels(),
     adminClient
       .schema("admin")
       .from("users")
@@ -104,6 +106,7 @@ export default async function ParentFeedPage() {
         <ParentFeedClient
           currentUser={currentUser}
           initialPosts={initialPosts}
+          initialReelPosts={initialReelPosts}
           profileImageUrl={adminUser?.profile_image_url ?? null}
           teachers={teachers ?? []}
         />
