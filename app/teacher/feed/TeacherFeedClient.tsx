@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -20,6 +21,7 @@ import {
 import { DetailSidebar } from "@/app/admin/components/DetailSidebar";
 import ImageLightbox from "@/app/components/ImageLightbox";
 import {
+  getFeedPosts,
   createPost,
   updatePost,
   uploadFeedMedia,
@@ -34,9 +36,20 @@ import {
   type FeedReactionSummary,
   type FeedMediaRow,
 } from "./actions";
+import {
+  getReels,
+  createReel,
+  uploadReelVideo,
+  deleteReel,
+  toggleReelReaction,
+  addReelComment,
+  deleteReelComment,
+  type ReelPost,
+} from "./reelActions";
 import { DEFAULT_REACTIONS } from "./constants";
 import { POST_TYPES, getPostType } from "./postTypes";
 import { compressImage } from "@/app/utils/compressImage";
+import { compressVideo } from "@/app/utils/compressVideo";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -562,6 +575,130 @@ function PostCard({
   );
 }
 
+function ReelCard({
+  post,
+  currentUserId,
+  onReactionToggle,
+  onDelete,
+  onClick,
+}: {
+  post: ReelPost;
+  currentUserId: string | undefined;
+  onReactionToggle: (postId: string, emoji: string) => void;
+  onDelete: (postId: string) => void;
+  onClick: () => void;
+}) {
+  const isOwner = currentUserId === post.teacher_id;
+  const [menuOpen, setMenuOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <motion.div
+      ref={containerRef}
+      onClick={onClick}
+      className="bg-white rounded-2xl border border-gray-100 overflow-hidden cursor-pointer hover:border-gray-200 transition-colors duration-200 group"
+    >
+      {/* Header */}
+      <div className="flex items-start justify-between pt-5 px-5 pb-3">
+        <div className="flex items-center gap-2.5">
+          <AuthorAvatar
+            initials={getInitials(post.teacher_name)}
+            color={avatarColor(post.teacher_id)}
+            imageUrl={post.teacher_profile_image_url}
+          />
+          <div>
+            <p className="text-sm font-semibold font-body text-gray-800 leading-tight">{post.teacher_name}</p>
+            <p className="text-xs text-gray-400 font-body">
+              {formatRole(post.teacher_role)} · {formatTimestamp(post.created_at)}
+            </p>
+          </div>
+        </div>
+        {isOwner && (
+          <div className="relative">
+            <button
+              onClick={(e) => { e.stopPropagation(); setMenuOpen((v) => !v); }}
+              className="p-1.5 rounded-full text-gray-300 hover:text-gray-500 hover:bg-gray-50 transition-colors opacity-0 group-hover:opacity-100"
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+            {menuOpen && (
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="absolute right-0 top-8 bg-white border border-gray-100 rounded-xl shadow-lg py-1 z-10 min-w-[130px]"
+              >
+                <button
+                  onClick={() => { setMenuOpen(false); onDelete(post.id); }}
+                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-rose-500 hover:bg-rose-50 transition-colors font-body"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Delete reel
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Caption */}
+      {post.caption && (
+        <p className="px-5 pb-3 text-sm font-body text-gray-700 leading-relaxed">{post.caption}</p>
+      )}
+
+      {/* Inline video player — lazy loaded once visible */}
+      {post.storage_url ? (
+        <div
+          className="w-full bg-black aspect-video"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <video
+            src={isVisible ? post.storage_url : undefined}
+            controls
+            preload="metadata"
+            className="w-full h-full object-contain"
+          />
+        </div>
+      ) : (
+        <div className="w-full aspect-video bg-gray-100 flex items-center justify-center">
+          <Video className="w-8 h-8 text-gray-300" />
+        </div>
+      )}
+
+      {/* Reactions + Comments */}
+      <div className="mt-4 pt-3.5 pb-4 px-5 border-t border-gray-50 flex items-center justify-between">
+        <ReactionPills
+          reactions={post.reactions}
+          onToggle={(emoji) => onReactionToggle(post.id, emoji)}
+          currentUserId={currentUserId}
+        />
+        <button
+          onClick={(e) => { e.stopPropagation(); onClick(); }}
+          className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-[#4a7c59] transition-colors font-body ml-3 flex-shrink-0"
+        >
+          <MessageCircle className="w-3.5 h-3.5" />
+          {post.comments.length} comments
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
 function CommentItem({
   comment,
   currentUserId,
@@ -624,6 +761,7 @@ function PostSidebarContent({
   onCommentAdded,
   onCommentDeleted,
   onClose,
+  addCommentFn = addComment,
 }: {
   post: FeedPost;
   currentUserId: string | undefined;
@@ -633,6 +771,7 @@ function PostSidebarContent({
   onCommentAdded: (postId: string, comment: FeedCommentRow & { profile_image_url?: string | null }) => void;
   onCommentDeleted: (postId: string, commentId: string) => void;
   onClose: () => void;
+  addCommentFn?: (postId: string, body: string, parentId?: string | null) => Promise<FeedCommentRow>;
 }) {
   const [commentText, setCommentText] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -665,7 +804,7 @@ function PostSidebarContent({
     setCommentText("");
     setReplyingTo(null);
     startTransition(async () => {
-      const newComment = await addComment(post.id, text, parentId);
+      const newComment = await addCommentFn(post.id, text, parentId);
       onCommentAdded(post.id, { ...newComment, profile_image_url: currentUserProfileImageUrl ?? null });
     });
   }
@@ -904,15 +1043,20 @@ const MAX_ATTACHMENT_SIZE = 25 * 1024 * 1024; // 25 MB
 
 type QueuedFile = { file: File; previewUrl: string | null };
 
+const REEL_VIDEO_ACCEPTED = ["video/mp4", "video/quicktime", "video/webm"];
+
 function ComposeBar({
   initials,
   onPost,
   profileImageUrl,
+  mode = "feed",
 }: {
   initials: string;
   onPost: () => void;
   profileImageUrl?: string | null;
+  mode?: "feed" | "reel";
 }) {
+  const isReelMode = mode === "reel";
   const [expanded, setExpanded] = useState(false);
   const [body, setBody] = useState("");
   const [postType, setPostType] = useState("announcement");
@@ -925,6 +1069,8 @@ function ComposeBar({
   const [isDraggingMedia, setIsDraggingMedia] = useState(false);
   const [isDraggingAttachment, setIsDraggingAttachment] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [compressing, setCompressing] = useState(false);
+  const [compressionProgress, setCompressionProgress] = useState(0);
 
   const mediaInputRef = useRef<HTMLInputElement>(null);
   const attachmentInputRef = useRef<HTMLInputElement>(null);
@@ -963,34 +1109,55 @@ function ComposeBar({
     setUploadError(null);
     const arr = Array.from(files);
     const valid: QueuedFile[] = [];
+    const acceptedTypes = isReelMode ? REEL_VIDEO_ACCEPTED : MEDIA_ACCEPTED;
+    const maxFiles = isReelMode ? 1 : MAX_MEDIA;
     for (const f of arr) {
       const isHeicByExtension =
         f.name.toLowerCase().endsWith(".heic") || f.name.toLowerCase().endsWith(".heif");
-      if (!MEDIA_ACCEPTED.includes(f.type) && !isHeicByExtension) {
-        setUploadError(`"${f.name}" is not a supported media type.`);
+      if (!acceptedTypes.includes(f.type) && !(isHeicByExtension && !isReelMode)) {
+        setUploadError(isReelMode ? `"${f.name}" is not a supported video type. Use MP4, MOV, or WebM.` : `"${f.name}" is not a supported media type.`);
         continue;
       }
-      if (f.size > MAX_MEDIA_SIZE) {
+      // In reel mode we compress the video, so no size check needed before compression.
+      // In feed mode, keep the 50 MB limit for raw uploads.
+      if (!isReelMode && f.size > MAX_MEDIA_SIZE) {
         setUploadError(`"${f.name}" exceeds the 50 MB limit.`);
         continue;
       }
-      if (mediaQueue.length + valid.length >= MAX_MEDIA) {
-        setUploadError(`Maximum ${MAX_MEDIA} media files allowed.`);
+      if (mediaQueue.length + valid.length >= maxFiles) {
+        setUploadError(isReelMode ? "Only 1 video per reel." : `Maximum ${MAX_MEDIA} media files allowed.`);
         break;
       }
 
-      let processedFile: File;
-      try {
-        processedFile = await compressImage(f);
-      } catch (err) {
-        console.error("[addMediaFiles] compression failed for", f.name, err);
-        processedFile = f;
+      if (isReelMode) {
+        // Compress video before queuing
+        setCompressing(true);
+        setCompressionProgress(0);
+        let compressed: File;
+        try {
+          compressed = await compressVideo(f, (pct) => setCompressionProgress(pct));
+        } catch (err) {
+          console.error("[addMediaFiles] video compression failed for", f.name, err);
+          setUploadError("Video compression failed. Try a smaller file.");
+          setCompressing(false);
+          continue;
+        }
+        setCompressing(false);
+        setCompressionProgress(0);
+        valid.push({ file: compressed, previewUrl: null });
+      } else {
+        let processedFile: File;
+        try {
+          processedFile = await compressImage(f);
+        } catch (err) {
+          console.error("[addMediaFiles] compression failed for", f.name, err);
+          processedFile = f;
+        }
+        const previewUrl = processedFile.type.startsWith("image/")
+          ? URL.createObjectURL(processedFile)
+          : null;
+        valid.push({ file: processedFile, previewUrl });
       }
-
-      const previewUrl = processedFile.type.startsWith("image/")
-        ? URL.createObjectURL(processedFile)
-        : null;
-      valid.push({ file: processedFile, previewUrl });
     }
     setMediaQueue((q) => [...q, ...valid]);
   }
@@ -1042,50 +1209,79 @@ function ComposeBar({
     setPostType("announcement");
     setExpanded(false);
     setUploadError(null);
-    setExpandedInput(false)
-    setPreview(false)
+    setExpandedInput(false);
+    setPreview(false);
+    setCompressing(false);
+    setCompressionProgress(0);
   }
 
   function handlePost() {
     const text = body.trim();
-    if (!text || isPending) return;
+    const hasVideo = isReelMode && mediaQueue.length > 0;
+    if ((!text && !hasVideo) || isBlocked) return;
     startTransition(async () => {
       setUploadError(null);
-      // 1. Create the post
-      const fd = new FormData();
-      fd.append("body", text);
-      fd.append("post_type", postType);
-      let postId: string;
-      try {
-        postId = await createPost(fd);
-      } catch (e) {
-        setUploadError(e instanceof Error ? e.message : "Failed to create post");
-        return;
-      }
 
-      // 2. Upload media in order
-      for (let i = 0; i < mediaQueue.length; i++) {
-        const mfd = new FormData();
-        mfd.append("postId", postId);
-        mfd.append("file", mediaQueue[i].file);
-        mfd.append("displayOrder", String(i));
-        const result = await uploadFeedMedia(mfd);
-        if (result.error) {
-          setUploadError(`Media upload failed: ${result.error}`);
+      if (isReelMode) {
+        // ── Reel path ──────────────────────────────────────────────────────────
+        const fd = new FormData();
+        fd.append("caption", text);
+        let reelId: string;
+        try {
+          reelId = await createReel(fd);
+        } catch (e) {
+          setUploadError(e instanceof Error ? e.message : "Failed to create reel");
           return;
         }
-      }
-
-      // 3. Upload attachments
-      for (const { file } of attachmentQueue) {
-        const afd = new FormData();
-        afd.append("postId", postId);
-        afd.append("file", file);
-        const result = await uploadFeedAttachment(afd);
-        if (result.error) {
-          setUploadError(`Attachment upload failed: ${result.error}`);
+        if (mediaQueue.length > 0) {
+          const mfd = new FormData();
+          mfd.append("reelId", reelId);
+          mfd.append("file", mediaQueue[0].file);
+          const result = await uploadReelVideo(mfd);
+          if (result.error) {
+            setUploadError(`Video upload failed: ${result.error}`);
+            return;
+          }
+        }
+        const freshReels = await getReels();
+        setReelPosts(freshReels);
+      } else {
+        // ── Feed post path ─────────────────────────────────────────────────────
+        const fd = new FormData();
+        fd.append("body", text);
+        fd.append("post_type", postType);
+        let postId: string;
+        try {
+          postId = await createPost(fd);
+        } catch (e) {
+          setUploadError(e instanceof Error ? e.message : "Failed to create post");
           return;
         }
+
+        for (let i = 0; i < mediaQueue.length; i++) {
+          const mfd = new FormData();
+          mfd.append("postId", postId);
+          mfd.append("file", mediaQueue[i].file);
+          mfd.append("displayOrder", String(i));
+          const result = await uploadFeedMedia(mfd);
+          if (result.error) {
+            setUploadError(`Media upload failed: ${result.error}`);
+            return;
+          }
+        }
+
+        for (const { file } of attachmentQueue) {
+          const afd = new FormData();
+          afd.append("postId", postId);
+          afd.append("file", file);
+          const result = await uploadFeedAttachment(afd);
+          if (result.error) {
+            setUploadError(`Attachment upload failed: ${result.error}`);
+            return;
+          }
+        }
+        const freshPosts = await getFeedPosts();
+        setPosts(freshPosts);
       }
 
       reset();
@@ -1094,6 +1290,7 @@ function ComposeBar({
   }
 
   const hasContent = body.trim() || mediaQueue.length > 0 || attachmentQueue.length > 0;
+  const isBlocked = isPending || compressing;
 
   return (
     <motion.div
@@ -1118,7 +1315,7 @@ function ComposeBar({
                 onClick={() => setExpanded(true)}
                 className="w-full text-left bg-gray-50 rounded-full px-4 py-2.5 border border-gray-100 text-sm font-body text-gray-400 hover:bg-gray-100 transition-colors"
               >
-                Share something with parents...
+                {isReelMode ? "Add a caption for your reel..." : "Share something with parents..."}
               </motion.button>
             ) : (
               <div key="textarea" className="flex flex-col gap-1">
@@ -1186,7 +1383,7 @@ function ComposeBar({
                     autoFocus
                     value={body}
                     onChange={(e) => setBody(e.target.value)}
-                    placeholder="What's happening in the classroom today?"
+                    placeholder={isReelMode ? "Add a caption for your reel..." : "What's happening in the classroom today?"}
                     rows={expandedInput ? 14 : 4}
                     className="w-full bg-gray-50 rounded-2xl px-4 py-3 border border-gray-200 text-sm font-body text-gray-700 placeholder-gray-400 outline-none resize-none focus:border-[#4a7c59]/40 transition-colors"
                   />
@@ -1207,8 +1404,8 @@ function ComposeBar({
             transition={{ duration: 0.25, ease: "easeOut" as const }}
             style={{ overflow: "hidden" }}
           >
-            {/* Post type pill selector */}
-            <div className="mt-3 flex flex-wrap gap-2">
+            {/* Post type pill selector — hidden for reels */}
+            {!isReelMode && <div className="mt-3 flex flex-wrap gap-2">
               {POST_TYPES.map((pt) => {
                 const selected = postType === pt.value;
                 return (
@@ -1231,7 +1428,7 @@ function ComposeBar({
                   </button>
                 );
               })}
-            </div>
+            </div>}
 
             {/* Media queue preview */}
             <AnimatePresence>
@@ -1272,9 +1469,9 @@ function ComposeBar({
               )}
             </AnimatePresence>
 
-            {/* Attachment queue */}
+            {/* Attachment queue — hidden for reels */}
             <AnimatePresence>
-              {attachmentQueue.length > 0 && (
+              {!isReelMode && attachmentQueue.length > 0 && (
                 <motion.div
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -1306,7 +1503,7 @@ function ComposeBar({
             </AnimatePresence>
 
             {/* Media drop zone */}
-            {mediaQueue.length < MAX_MEDIA && (
+            {mediaQueue.length < (isReelMode ? 1 : MAX_MEDIA) && (
               <div
                 onDragOver={(e) => { e.preventDefault(); setIsDraggingMedia(true); }}
                 onDragLeave={() => setIsDraggingMedia(false)}
@@ -1320,16 +1517,25 @@ function ComposeBar({
                   isDraggingMedia
                     ? "border-[#4a7c59] bg-[#4a7c59]/5 scale-[1.01]"
                     : "border-gray-200 bg-gray-50 hover:border-[#4a7c59]/40"
-                } ${isPending ? "opacity-60 cursor-not-allowed pointer-events-none" : ""}`}
+                } ${isBlocked ? "opacity-60 cursor-not-allowed pointer-events-none" : ""}`}
               >
                 <Upload className="w-4 h-4 text-gray-400 mx-auto mb-1.5" />
-                <p className="text-xs font-body text-gray-400">Drop photos or videos, or click to select</p>
-                <p className="text-xs text-gray-300 font-body mt-0.5">JPEG, PNG, WEBP, GIF, HEIC, MP4, MOV · max 50 MB</p>
+                {isReelMode ? (
+                  <>
+                    <p className="text-xs font-body text-gray-400">Drop a video, or click to select</p>
+                    <p className="text-xs text-gray-300 font-body mt-0.5">MP4, MOV, WebM · max 50 MB</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-xs font-body text-gray-400">Drop photos or videos, or click to select</p>
+                    <p className="text-xs text-gray-300 font-body mt-0.5">JPEG, PNG, WEBP, GIF, HEIC, MP4, MOV · max 50 MB</p>
+                  </>
+                )}
               </div>
             )}
 
-            {/* Attachment drop zone */}
-            {attachmentQueue.length < MAX_ATTACHMENTS && (
+            {/* Attachment drop zone — hidden for reels */}
+            {!isReelMode && attachmentQueue.length < MAX_ATTACHMENTS && (
               <div
                 onDragOver={(e) => { e.preventDefault(); setIsDraggingAttachment(true); }}
                 onDragLeave={() => setIsDraggingAttachment(false)}
@@ -1343,13 +1549,36 @@ function ComposeBar({
                   isDraggingAttachment
                     ? "border-amber-400 bg-amber-50 scale-[1.01]"
                     : "border-gray-200 bg-gray-50 hover:border-amber-300"
-                } ${isPending ? "opacity-60 cursor-not-allowed pointer-events-none" : ""}`}
+                } ${isBlocked ? "opacity-60 cursor-not-allowed pointer-events-none" : ""}`}
               >
                 <Paperclip className="w-4 h-4 text-amber-400 mx-auto mb-1.5" />
                 <p className="text-xs font-body text-gray-400">Drop a document, or click to select</p>
                 <p className="text-xs text-gray-300 font-body mt-0.5">PDF, Word, Excel · max 25 MB</p>
               </div>
             )}
+
+            {/* Compression progress bar (reel mode only) */}
+            <AnimatePresence>
+              {compressing && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.15 }}
+                  className="mt-3 rounded-xl bg-gray-50 border border-gray-200 px-4 py-4"
+                >
+                  <p className="text-xs font-body text-gray-500 mb-2">
+                    Compressing video… {compressionProgress}%
+                  </p>
+                  <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[#4a7c59] transition-all duration-300 rounded-full"
+                      style={{ width: `${compressionProgress}%` }}
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <AnimatePresence>
               {uploadError && (
@@ -1368,7 +1597,7 @@ function ComposeBar({
             <div className="flex items-center justify-end gap-2 border-t border-gray-50 pt-3 mt-3">
               <button
                 onClick={reset}
-                disabled={isPending}
+                disabled={isBlocked}
                 className="px-3 py-1.5 text-sm font-body text-gray-400 hover:text-gray-600 transition-colors"
               >
                 Cancel
@@ -1377,10 +1606,10 @@ function ComposeBar({
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={handlePost}
-                disabled={!hasContent || isPending}
+                disabled={!hasContent || isBlocked}
                 className="px-4 py-1.5 bg-[#4a7c59] text-white text-sm font-semibold font-body rounded-full hover:bg-[#3d6b4a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isPending ? "Posting..." : "Post"}
+                {isPending ? "Posting..." : compressing ? "Compressing..." : "Post"}
               </motion.button>
             </div>
 
@@ -1388,8 +1617,8 @@ function ComposeBar({
             <input
               ref={mediaInputRef}
               type="file"
-              accept="image/jpeg,image/jpg,image/png,image/webp,image/gif,image/heic,video/mp4,video/quicktime,video/webm"
-              multiple
+              accept={isReelMode ? "video/mp4,video/quicktime,video/webm" : "image/jpeg,image/jpg,image/png,image/webp,image/gif,image/heic,video/mp4,video/quicktime,video/webm"}
+              multiple={!isReelMode}
               className="hidden"
               onChange={(e) => {
                 if (e.target.files) addMediaFiles(e.target.files);
@@ -1662,24 +1891,70 @@ function EditPostCard({
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
+function reelToFeedPost(reel: ReelPost): FeedPost {
+  return {
+    id: reel.id,
+    teacher_id: reel.teacher_id,
+    teacher_name: reel.teacher_name,
+    teacher_role: reel.teacher_role,
+    teacher_profile_image_url: reel.teacher_profile_image_url,
+    body: reel.caption,
+    school_year: reel.school_year,
+    classroom: null,
+    post_type: null,
+    created_at: reel.created_at,
+    media: reel.storage_url
+      ? [{ id: reel.id, kind: "video" as const, storage_url: reel.storage_url, display_order: 0, duration_secs: reel.duration_secs }]
+      : [],
+    attachments: [],
+    reactions: reel.reactions,
+    comments: reel.comments,
+  };
+}
+
 export default function TeacherFeedClient({
   currentUser,
   initialPosts,
+  initialReelPosts,
   profileImageUrl,
   teachers,
 }: {
   currentUser: { full_name: string; role: string; id: string } | null;
   initialPosts: FeedPost[];
+  initialReelPosts: ReelPost[];
   profileImageUrl?: string | null;
   teachers: Teacher[];
 }) {
+  const router = useRouter();
   const [posts, setPosts] = useState<FeedPost[]>(initialPosts);
+  const [reelPosts, setReelPosts] = useState<ReelPost[]>(initialReelPosts);
+  const [feedMode, setFeedMode] = useState<"feed" | "reel">("feed");
+
+  useEffect(() => {
+    console.log("[FeedClient] mount —", {
+      initialPostsCount: initialPosts.length,
+      initialReelPostsCount: initialReelPosts.length,
+    });
+  }, []);
+  useEffect(() => {
+    console.log("[FeedClient] render —", {
+      feedMode,
+      postsCount: posts.length,
+      reelPostsCount: reelPosts.length,
+      displayedCount: displayedPosts.length,
+    });
+  });
+  useEffect(() => {
+    const saved = sessionStorage.getItem("teacherFeedMode");
+    if (saved === "feed" || saved === "reel") setFeedMode(saved);
+  }, []);
+  useEffect(() => { sessionStorage.setItem("teacherFeedMode", feedMode); }, [feedMode]);
   const [selectedPost, setSelectedPost] = useState<FeedPost | null>(null);
   const [selectedTeacherId, setSelectedTeacherId] = useState<string | null>(null);
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
-  const displayedPosts = selectedTeacherId
-    ? posts.filter((p) => p.teacher_id === selectedTeacherId)
-    : posts;
+  const displayedPosts = feedMode === "feed"
+    ? (selectedTeacherId ? posts.filter(p => p.teacher_id === selectedTeacherId) : posts)
+    : (selectedTeacherId ? reelPosts.filter(p => p.teacher_id === selectedTeacherId) : reelPosts);
 
   const initials = currentUser?.full_name
     ? currentUser.full_name
@@ -1690,39 +1965,56 @@ export default function TeacherFeedClient({
         .toUpperCase()
     : "T";
 
+  function isReelId(id: string) {
+    return reelPosts.some((r) => r.id === id);
+  }
+
   function handleReactionToggle(postId: string, emoji: string) {
-    // Optimistic update
-    setPosts((prev) =>
-      prev.map((p) => {
+    const updateReactions = <T extends { reactions: FeedReactionSummary[] }>(p: T): T => {
+      const existing = p.reactions.find((r) => r.emoji === emoji);
+      let newReactions: FeedReactionSummary[];
+      if (existing) {
+        newReactions = p.reactions
+          .map((r) =>
+            r.emoji === emoji
+              ? { ...r, count: r.reacted_by_me ? r.count - 1 : r.count + 1, reacted_by_me: !r.reacted_by_me }
+              : r
+          )
+          .filter((r) => r.count > 0 || DEFAULT_REACTIONS.includes(r.emoji));
+      } else {
+        newReactions = [...p.reactions, { emoji, count: 1, reacted_by_me: true }];
+      }
+      return { ...p, reactions: newReactions };
+    };
+
+    if (isReelId(postId)) {
+      setReelPosts((prev) => prev.map((r) => {
+        if (r.id !== postId) return r;
+        const updated = updateReactions(r);
+        if (selectedPost?.id === postId) setSelectedPost(reelToFeedPost(updated));
+        return updated;
+      }));
+      toggleReelReaction(postId, emoji).catch(() => window.location.reload());
+    } else {
+      setPosts((prev) => prev.map((p) => {
         if (p.id !== postId) return p;
-        const existing = p.reactions.find((r) => r.emoji === emoji);
-        let newReactions: FeedReactionSummary[];
-        if (existing) {
-          newReactions = p.reactions
-            .map((r) =>
-              r.emoji === emoji
-                ? { ...r, count: r.reacted_by_me ? r.count - 1 : r.count + 1, reacted_by_me: !r.reacted_by_me }
-                : r
-            )
-            .filter((r) => r.count > 0 || DEFAULT_REACTIONS.includes(r.emoji));
-        } else {
-          newReactions = [...p.reactions, { emoji, count: 1, reacted_by_me: true }];
-        }
-        const updated = { ...p, reactions: newReactions };
+        const updated = updateReactions(p);
         if (selectedPost?.id === postId) setSelectedPost(updated);
         return updated;
-      })
-    );
-    toggleReaction(postId, emoji).catch(() => {
-      // Revert on error — simplest approach is to refresh
-      window.location.reload();
-    });
+      }));
+      toggleReaction(postId, emoji).catch(() => window.location.reload());
+    }
   }
 
   function handleDeletePost(postId: string) {
-    setPosts((prev) => prev.filter((p) => p.id !== postId));
+    if (isReelId(postId)) {
+      setReelPosts((prev) => prev.filter((r) => r.id !== postId));
+      deleteReel(postId).catch(() => window.location.reload());
+    } else {
+      setPosts((prev) => prev.filter((p) => p.id !== postId));
+      deletePost(postId).catch(() => window.location.reload());
+    }
     if (selectedPost?.id === postId) setSelectedPost(null);
-    deletePost(postId).catch(() => window.location.reload());
   }
 
   function handleEditSave(updated: FeedPost) {
@@ -1732,32 +2024,55 @@ export default function TeacherFeedClient({
   }
 
   function handleCommentAdded(postId: string, comment: FeedCommentRow & { profile_image_url?: string | null }) {
-    setPosts((prev) =>
-      prev.map((p) => {
+    if (isReelId(postId)) {
+      setReelPosts((prev) => prev.map((r) => {
+        if (r.id !== postId) return r;
+        const updated = { ...r, comments: [...r.comments, comment] };
+        if (selectedPost?.id === postId) setSelectedPost(reelToFeedPost(updated));
+        return updated;
+      }));
+    } else {
+      setPosts((prev) => prev.map((p) => {
         if (p.id !== postId) return p;
         const updated = { ...p, comments: [...p.comments, comment] };
         if (selectedPost?.id === postId) setSelectedPost(updated);
         return updated;
-      })
-    );
+      }));
+    }
   }
 
   function handleCommentDeleted(postId: string, commentId: string) {
-    setPosts((prev) =>
-      prev.map((p) => {
+    if (isReelId(postId)) {
+      setReelPosts((prev) => prev.map((r) => {
+        if (r.id !== postId) return r;
+        const updated = { ...r, comments: r.comments.filter((c) => c.id !== commentId) };
+        if (selectedPost?.id === postId) setSelectedPost(reelToFeedPost(updated));
+        return updated;
+      }));
+      deleteReelComment(commentId).catch(() => window.location.reload());
+    } else {
+      setPosts((prev) => prev.map((p) => {
         if (p.id !== postId) return p;
         const updated = { ...p, comments: p.comments.filter((c) => c.id !== commentId) };
         if (selectedPost?.id === postId) setSelectedPost(updated);
         return updated;
-      })
-    );
-    deleteComment(commentId).catch(() => window.location.reload());
+      }));
+      deleteComment(commentId).catch(() => window.location.reload());
+    }
   }
 
-  // Keep selectedPost in sync with posts state
+  // Keep selectedPost in sync with live state
   const liveSelectedPost = selectedPost
-    ? (posts.find((p) => p.id === selectedPost.id) ?? selectedPost)
+    ? (() => {
+        const feedPost = posts.find((p) => p.id === selectedPost.id);
+        if (feedPost) return feedPost;
+        const reel = reelPosts.find((r) => r.id === selectedPost.id);
+        if (reel) return reelToFeedPost(reel);
+        return selectedPost;
+      })()
     : null;
+
+  const isSelectedReel = selectedPost ? isReelId(selectedPost.id) : false;
 
   return (
     <div className="flex-1 flex overflow-hidden">
@@ -1838,12 +2153,31 @@ export default function TeacherFeedClient({
             </p>
           </motion.div>
 
+          {/* Feed / Reels tab switcher */}
+          <div className="flex gap-1 mb-5 bg-gray-100 p-1 rounded-xl w-fit">
+            {(["feed", "reel"] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => setFeedMode(m)}
+                className={`px-4 py-1.5 rounded-lg text-sm font-semibold font-body transition-colors ${
+                  feedMode === m
+                    ? "bg-white text-gray-800 shadow-sm"
+                    : "text-gray-400 hover:text-gray-600"
+                }`}
+              >
+                {m === "feed" ? "Feed" : "Reels"}
+              </button>
+            ))}
+          </div>
+
           {/* Compose bar */}
           <ComposeBar
             initials={initials}
             profileImageUrl={profileImageUrl}
+            mode={feedMode}
             onPost={() => {
-              window.location.reload();
+              console.log("[FeedClient] onPost → router.refresh()");
+              router.refresh();
             }}
           />
 
@@ -1851,7 +2185,7 @@ export default function TeacherFeedClient({
           <AnimatePresence mode="wait">
             {displayedPosts.length === 0 ? (
               <motion.div
-                key="empty"
+                key={feedMode + "-empty"}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 8 }}
@@ -1859,12 +2193,14 @@ export default function TeacherFeedClient({
                 className="text-center py-16 text-gray-400 font-body text-sm"
               >
                 {selectedTeacherId
-                  ? `No posts from ${teachers.find((t) => t.id === selectedTeacherId)?.full_name ?? "this teacher"} yet.`
+                  ? `No ${feedMode === "reel" ? "reels" : "posts"} from ${teachers.find((t) => t.id === selectedTeacherId)?.full_name ?? "this teacher"} yet.`
+                  : feedMode === "reel"
+                  ? "No reels yet. Upload your first video above!"
                   : "No posts yet. Share your first update above!"}
               </motion.div>
             ) : (
               <motion.div
-                key="posts"
+                key={feedMode}
                 initial="hidden"
                 animate="visible"
                 variants={{
@@ -1884,20 +2220,28 @@ export default function TeacherFeedClient({
                       exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.2 } }}
                       layout
                     >
-                      {editingPostId === post.id ? (
+                      {feedMode === "reel" ? (
+                        <ReelCard
+                          post={post as ReelPost}
+                          currentUserId={currentUser?.id}
+                          onReactionToggle={handleReactionToggle}
+                          onDelete={handleDeletePost}
+                          onClick={() => setSelectedPost(reelToFeedPost(post as ReelPost))}
+                        />
+                      ) : editingPostId === post.id ? (
                         <EditPostCard
-                          post={post}
+                          post={post as FeedPost}
                           onSave={handleEditSave}
                           onCancel={() => setEditingPostId(null)}
                         />
                       ) : (
                         <PostCard
-                          post={post}
+                          post={post as FeedPost}
                           currentUserId={currentUser?.id}
                           onReactionToggle={handleReactionToggle}
                           onDelete={handleDeletePost}
                           onEdit={() => setEditingPostId(post.id)}
-                          onClick={() => setSelectedPost(post)}
+                          onClick={() => setSelectedPost(post as FeedPost)}
                           profileHref={`/teacher/profile/${post.teacher_id}`}
                         />
                       )}
@@ -1927,6 +2271,7 @@ export default function TeacherFeedClient({
             onCommentAdded={handleCommentAdded}
             onCommentDeleted={handleCommentDeleted}
             onClose={() => setSelectedPost(null)}
+            addCommentFn={isSelectedReel ? addReelComment : addComment}
           />
         )}
       </DetailSidebar>

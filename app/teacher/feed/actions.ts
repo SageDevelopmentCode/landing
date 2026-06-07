@@ -84,7 +84,10 @@ export async function getFeedPosts(): Promise<FeedPost[]> {
     .eq("is_deleted", false)
     .order("created_at", { ascending: false });
 
-  if (error || !posts) return [];
+  if (error || !posts) {
+    console.error("[getFeedPosts] DB error:", error?.message, error?.details ?? "");
+    return [];
+  }
 
   // Collect all unique user IDs (teachers + comment authors)
   const userIds = new Set<string>();
@@ -133,6 +136,7 @@ export async function getFeedPosts(): Promise<FeedPost[]> {
     (attachmentSignedResult.data ?? []).map((r) => [r.path, r.signedUrl])
   );
 
+  console.log("[getFeedPosts] returning", posts.length, "posts");
   return posts.map((p) => {
     const teacher = userMap.get(p.teacher_id);
 
@@ -216,7 +220,10 @@ export async function createPost(formData: FormData) {
     .select("id")
     .single();
 
-  if (error || !post) throw new Error(error?.message ?? "Failed to create post");
+  if (error || !post) {
+    console.error("[createPost] DB insert error:", error?.message, error?.details ?? "");
+    throw new Error(error?.message ?? "Failed to create post");
+  }
 
   revalidatePath("/teacher/feed");
   return post.id;
@@ -253,7 +260,10 @@ export async function uploadFeedMedia(formData: FormData): Promise<{ error?: str
     .from("feed-media")
     .upload(storagePath, file, { contentType: file.type, upsert: false });
 
-  if (uploadError) return { error: uploadError.message };
+  if (uploadError) {
+    console.error("[uploadFeedMedia] storage upload error:", uploadError.message);
+    return { error: uploadError.message };
+  }
 
   const { error: dbError } = await adminClient
     .schema("feed")
@@ -266,7 +276,10 @@ export async function uploadFeedMedia(formData: FormData): Promise<{ error?: str
       duration_secs: durationSecs,
     });
 
-  if (dbError) return { error: dbError.message };
+  if (dbError) {
+    console.error("[uploadFeedMedia] DB insert error:", dbError.message);
+    return { error: dbError.message };
+  }
 
   revalidatePath("/teacher/feed");
   return {};

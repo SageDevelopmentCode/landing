@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, CheckCircle } from "lucide-react";
 import { cssColors as colors, radius, cssShadows as shadows } from "../design-system";
 import { updateFreeFridayStatus, updateFreeFridayNotes, deleteFreeFridayRegistration } from "./actions";
+import { sendFreeFridayAttendanceConfirmationEmail } from "../../actions/sendFreeFridayAttendanceConfirmationEmail";
 
 export type FreeFridayRow = {
   id: string;
@@ -81,6 +82,9 @@ export function FreeFridayDetailPanel({
   const [notesSaved, setNotesSaved] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [confirmSending, setConfirmSending] = useState(false);
+  const [confirmSent, setConfirmSent] = useState(false);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
 
   // Sync local notes when row changes
   const currentNotes = row?.admin_notes ?? "";
@@ -110,6 +114,24 @@ export function FreeFridayDetailPanel({
     setSavingNotes(false);
     setNotesSaved(true);
     setTimeout(() => setNotesSaved(false), 2000);
+  };
+
+  const handleSendConfirmation = async () => {
+    if (confirmSending || !contactEmail) return;
+    setConfirmSending(true);
+    setConfirmError(null);
+    const result = await sendFreeFridayAttendanceConfirmationEmail({
+      parentName: guardianName ?? "",
+      childName: childName ?? "",
+      email: contactEmail,
+    });
+    setConfirmSending(false);
+    if (result.success) {
+      setConfirmSent(true);
+      setTimeout(() => setConfirmSent(false), 3000);
+    } else {
+      setConfirmError(result.error ?? "Failed to send");
+    }
   };
 
   const handleDelete = async () => {
@@ -247,6 +269,25 @@ export function FreeFridayDetailPanel({
                 ? `Shadow Day Agreement signed${row.signature_name ? ` by ${row.signature_name}` : ""}`
                 : "Agreement not signed"}
             </span>
+          </div>
+
+          {/* Outreach */}
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: colors.textTertiary }}>Outreach</p>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleSendConfirmation}
+                disabled={confirmSending || confirmSent || !contactEmail}
+                className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: '#2C5F2E' }}
+              >
+                {confirmSending ? 'Sending…' : confirmSent ? '✓ Sent!' : 'Send Attendance Confirmation'}
+              </button>
+              {confirmError && <span className="text-xs" style={{ color: colors.error }}>{confirmError}</span>}
+            </div>
+            {!contactEmail && (
+              <p className="text-xs mt-1" style={{ color: colors.textTertiary }}>No email on file</p>
+            )}
           </div>
 
           {/* Admin notes */}

@@ -10,6 +10,7 @@ import TeacherNav from "../dashboard/TeacherNav";
 import TeacherNotificationBell from "../components/TeacherNotificationBell";
 import TeacherFeedClient from "./TeacherFeedClient";
 import { getFeedPosts } from "./actions";
+import { getReels } from "./reelActions";
 
 export default async function TeacherFeedPage() {
   const supabase = await createServerSupabaseClient();
@@ -25,7 +26,7 @@ export default async function TeacherFeedPage() {
 
   let currentUser: { full_name: string; role: string; id: string } | null = null;
 
-  const [{ data: adminUser }, initialPosts, { data: teachers }] = await Promise.all([
+  const [{ data: adminUser }, initialPosts, initialReelPosts, { data: teachers }] = await Promise.all([
     adminClient
       .schema("admin")
       .from("users")
@@ -33,6 +34,7 @@ export default async function TeacherFeedPage() {
       .eq("id", user.id)
       .single(),
     getFeedPosts(),
+    getReels(),
     adminClient
       .schema("admin")
       .from("users")
@@ -84,6 +86,7 @@ export default async function TeacherFeedPage() {
         <TeacherFeedClient
           currentUser={currentUser}
           initialPosts={initialPosts}
+          initialReelPosts={initialReelPosts}
           profileImageUrl={adminUser?.profile_image_url ?? null}
           teachers={teachers ?? []}
         />

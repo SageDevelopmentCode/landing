@@ -2993,3 +2993,51 @@ export async function buildFreeFridayAnnouncementEmail(opts: {
 
   return { subject, content };
 }
+
+export async function buildFreeFridayAttendanceConfirmationEmail(opts: {
+  parentName: string;
+  childName: string;
+}): Promise<{ subject: string; content: string }> {
+  const firstName = opts.parentName.split(" ")[0] || opts.parentName;
+  const subject = `See you tomorrow, ${firstName}! Free Friday details 🌿`;
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Hi ${firstName},</p>
+
+  <p>You're all set! We're looking forward to having <strong>${opts.childName}</strong> join us tomorrow for Free Friday at Sage Field. 🌿</p>
+
+  <p>Here's everything you need for a smooth drop-off:</p>
+
+  <div style="background-color: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 18px 20px; margin: 28px 0; border-radius: 4px;">
+    <p style="margin: 0 0 8px 0; font-weight: bold; color: #2c2c2c;">📅 Friday, June 5, 2026</p>
+    <p style="margin: 4px 0; color: #555;">🕗 Drop-off: 8:15 – 9:00 AM</p>
+    <p style="margin: 4px 0; color: #555;">🕒 Pick-up: 1:00 PM</p>
+    <p style="margin: 4px 0; color: #555;">📍 2760 Gattis School Rd, Round Rock TX</p>
+    <p style="margin: 4px 0; color: #555;">👧 Ages 4–11 · 💰 Completely Free</p>
+  </div>
+
+  <p style="font-weight: bold; color: #2c2c2c; margin-bottom: 8px;">🎒 What to pack:</p>
+  <ul style="margin: 0 0 24px 0; padding-left: 20px; color: #555;">
+    <li style="margin-bottom: 4px;">🧴 Sunscreen — applied before drop-off</li>
+    <li style="margin-bottom: 4px;">🩱 Swimsuit + towel</li>
+    <li style="margin-bottom: 4px;">👕 Change of clothes</li>
+    <li style="margin-bottom: 4px;">💧 Water bottle, labeled</li>
+    <li style="margin-bottom: 4px;">🦟 Bug spray</li>
+    <li style="margin-bottom: 4px;">🥪 Snack + lunch from home</li>
+  </ul>
+
+  <p>Kids will be outside most of the day — exploring, learning, cooking, and playing. It'll be a great one.</p>
+
+  <p>If you have any questions or need to reach us, text or call at <a href="sms:+15126775872" style="color: #5a7a5a;">(512) 677-5872</a>.</p>
+
+  <p style="margin-top: 32px;">See you tomorrow!</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
