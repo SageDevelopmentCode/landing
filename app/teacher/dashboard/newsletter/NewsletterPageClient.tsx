@@ -837,6 +837,9 @@ function EditorTab({
       {libraryPickerForSection && (
         <PhotoLibraryPickerModal
           sectionId={libraryPickerForSection}
+          usedStoragePaths={new Set(
+            sections.flatMap((s) => s.images.map((img) => img.storagePath ?? "").filter(Boolean))
+          )}
           onConfirm={handleLibraryConfirm}
           onClose={() => setLibraryPickerForSection(null)}
         />

@@ -1,9 +1,39 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { X, CheckCircle2, ImageIcon, Loader2 } from "lucide-react";
 import { getPhotos, getPhotoSignedUrlsBatch, type TeacherPhoto } from "@/app/actions/photos";
 import { addLibraryPhotoToSection, type DBSectionImage } from "@/app/actions/newsletter";
+
+type DateGroup = { date: string; label: string; photos: TeacherPhoto[] };
+
+function groupPhotosByDate(photos: TeacherPhoto[]): DateGroup[] {
+  const map = new Map<string, TeacherPhoto[]>();
+  for (const p of photos) {
+    const key = p.taken_on ?? "no-date";
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(p);
+  }
+  return Array.from(map.entries())
+    .sort(([a], [b]) => {
+      if (a === "no-date") return 1;
+      if (b === "no-date") return -1;
+      return b.localeCompare(a);
+    })
+    .map(([date, photos]) => ({
+      date,
+      label:
+        date === "no-date"
+          ? "No date"
+          : new Date(date + "T00:00:00").toLocaleDateString("en-US", {
+              weekday: "long",
+              month: "long",
+              day: "numeric",
+              year: "numeric",
+            }),
+      photos,
+    }));
+}
 
 interface LocalImage {
   id: string;
@@ -17,16 +47,19 @@ interface LocalImage {
 
 interface Props {
   sectionId: string;
+  usedStoragePaths?: Set<string>;
   onConfirm: (images: LocalImage[]) => void;
   onClose: () => void;
 }
 
-export default function PhotoLibraryPickerModal({ sectionId, onConfirm, onClose }: Props) {
+export default function PhotoLibraryPickerModal({ sectionId, usedStoragePaths, onConfirm, onClose }: Props) {
   const [photos, setPhotos] = useState<TeacherPhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const dateGroups = useMemo(() => groupPhotosByDate(photos), [photos]);
 
   const urlObserverRef = useRef<IntersectionObserver | null>(null);
   const pendingPathsRef = useRef<Set<string>>(new Set());
@@ -162,48 +195,70 @@ export default function PhotoLibraryPickerModal({ sectionId, onConfirm, onClose 
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-5 gap-3">
-              {photos.map((photo) => {
-                const isSelected = selectedIds.has(photo.id);
-                return (
-                  <div
-                    key={photo.id}
-                    data-storage-path={photo.storage_path}
-                    ref={(el) => {
-                      if (!el || photo.signed_url) return;
-                      if (observedPhotoIds.current.has(photo.id)) return;
-                      observedPhotoIds.current.add(photo.id);
-                      getUrlObserver().observe(el);
-                    }}
-                    onClick={() => toggleSelect(photo.id)}
-                    className={`relative aspect-square rounded-xl overflow-hidden cursor-pointer ring-2 transition-all ${
-                      isSelected ? "ring-[#4a7c59]" : "ring-transparent hover:ring-gray-300"
-                    }`}
-                  >
-                    {photo.signed_url ? (
-                      <img
-                        src={photo.signed_url}
-                        alt={photo.caption ?? ""}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                        <ImageIcon className="w-5 h-5 text-gray-300" />
-                      </div>
-                    )}
-                    {isSelected && (
-                      <div className="absolute inset-0 bg-[#4a7c59]/20 flex items-start justify-end p-1.5">
-                        <CheckCircle2 className="w-5 h-5 text-[#4a7c59] drop-shadow" />
-                      </div>
-                    )}
-                    {photo.caption && (
-                      <div className="absolute bottom-0 inset-x-0 bg-black/40 px-2 py-1">
-                        <p className="text-white text-xs font-body truncate">{photo.caption}</p>
-                      </div>
-                    )}
+            <div className="space-y-4">
+              {dateGroups.map((group) => (
+                <div key={group.date}>
+                  <div className="px-1 pb-2 flex items-baseline gap-2">
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide font-body">
+                      {group.label}
+                    </h3>
+                    <span className="text-xs text-gray-400 font-body">
+                      {group.photos.length} photo{group.photos.length !== 1 ? "s" : ""}
+                    </span>
                   </div>
-                );
-              })}
+                  <div className="grid grid-cols-5 gap-3">
+                    {group.photos.map((photo) => {
+                      const isSelected = selectedIds.has(photo.id);
+                      const isAlreadyUsed = usedStoragePaths?.has(photo.storage_path) ?? false;
+                      return (
+                        <div
+                          key={photo.id}
+                          data-storage-path={photo.storage_path}
+                          ref={(el) => {
+                            if (!el || photo.signed_url) return;
+                            if (observedPhotoIds.current.has(photo.id)) return;
+                            observedPhotoIds.current.add(photo.id);
+                            getUrlObserver().observe(el);
+                          }}
+                          onClick={() => toggleSelect(photo.id)}
+                          className={`relative aspect-square rounded-xl overflow-hidden cursor-pointer ring-2 transition-all ${
+                            isSelected ? "ring-[#4a7c59]" : "ring-transparent hover:ring-gray-300"
+                          }`}
+                        >
+                          {photo.signed_url ? (
+                            <img
+                              src={photo.signed_url}
+                              alt={photo.caption ?? ""}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                              <ImageIcon className="w-5 h-5 text-gray-300" />
+                            </div>
+                          )}
+                          {isAlreadyUsed && !isSelected && (
+                            <div className="absolute inset-0 bg-black/40 flex items-end justify-center pb-2 pointer-events-none">
+                              <span className="text-white text-[10px] font-semibold font-body bg-black/60 px-2 py-0.5 rounded-full">
+                                Already added
+                              </span>
+                            </div>
+                          )}
+                          {isSelected && (
+                            <div className="absolute inset-0 bg-[#4a7c59]/20 flex items-start justify-end p-1.5">
+                              <CheckCircle2 className="w-5 h-5 text-[#4a7c59] drop-shadow" />
+                            </div>
+                          )}
+                          {photo.caption && (
+                            <div className="absolute bottom-0 inset-x-0 bg-black/40 px-2 py-1">
+                              <p className="text-white text-xs font-body truncate">{photo.caption}</p>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
