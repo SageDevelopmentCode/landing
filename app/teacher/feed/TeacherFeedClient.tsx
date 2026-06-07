@@ -1050,11 +1050,15 @@ function ComposeBar({
   onPost,
   profileImageUrl,
   mode = "feed",
+  setReelPosts,
+  setPosts,
 }: {
   initials: string;
   onPost: () => void;
   profileImageUrl?: string | null;
   mode?: "feed" | "reel";
+  setReelPosts: React.Dispatch<React.SetStateAction<ReelPost[]>>;
+  setPosts: React.Dispatch<React.SetStateAction<FeedPost[]>>;
 }) {
   const isReelMode = mode === "reel";
   const [expanded, setExpanded] = useState(false);
@@ -2175,6 +2179,8 @@ export default function TeacherFeedClient({
             initials={initials}
             profileImageUrl={profileImageUrl}
             mode={feedMode}
+            setReelPosts={setReelPosts}
+            setPosts={setPosts}
             onPost={() => {
               console.log("[FeedClient] onPost → router.refresh()");
               router.refresh();
