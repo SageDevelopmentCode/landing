@@ -2122,9 +2122,26 @@ export async function buildShadowDayPaymentConfirmationEmail(opts: {
 
   <p>We are excited to confirm that your shadow day fee of <strong>$${opts.amountDollars}</strong> has been received for <strong>${opts.childName}</strong>! Your child&apos;s visit on <strong>${opts.shadowDate}</strong> is now officially confirmed.</p>
 
-  <p>We can&apos;t wait to welcome ${opts.childName} to Sage Field for a full day of outdoor learning, creative projects, and community.</p>
+  <p>We can&apos;t wait to welcome ${opts.childName} to Sage Field for a full day of real academics, outdoor play, cooking, and genuine community — you&apos;ll get to see exactly how a typical day unfolds.</p>
 
-  <p><strong>A quick reminder:</strong> If you decide to enroll within 14 days of your child&apos;s shadow day visit, the $95 fee will be fully applied toward your registration — so it&apos;s essentially free if you join the family!</p>
+  <h2 style="font-size: 17px; margin-top: 32px; margin-bottom: 10px; color: #2c2c2c;">Your Shadow Day Details</h2>
+  <table style="border-collapse: collapse; width: 100%; font-size: 15px;">
+    <tr><td style="padding: 6px 0; width: 28px;">📅</td><td style="padding: 6px 0;"><strong>Date:</strong> ${opts.shadowDate}</td></tr>
+    <tr><td style="padding: 6px 0;">🕗</td><td style="padding: 6px 0;"><strong>Hours:</strong> 9:00 AM – 3:00 PM</td></tr>
+    <tr><td style="padding: 6px 0;">📍</td><td style="padding: 6px 0;"><strong>Location:</strong> Round Rock, TX &nbsp;·&nbsp; Mon–Thu schedule</td></tr>
+  </table>
+
+  <h2 style="font-size: 17px; margin-top: 32px; margin-bottom: 10px; color: #2c2c2c;">What to Pack</h2>
+  <table style="border-collapse: collapse; width: 100%; font-size: 15px;">
+    <tr><td style="padding: 5px 0; width: 28px;">🧴</td><td style="padding: 5px 0;">Sunscreen <span style="color:#777;">(applied before drop-off)</span></td></tr>
+    <tr><td style="padding: 5px 0;">🩱</td><td style="padding: 5px 0;">Swimsuit + towel</td></tr>
+    <tr><td style="padding: 5px 0;">👕</td><td style="padding: 5px 0;">Change of clothes</td></tr>
+    <tr><td style="padding: 5px 0;">💧</td><td style="padding: 5px 0;">Water bottle, labeled with your child&apos;s name</td></tr>
+    <tr><td style="padding: 5px 0;">🦟</td><td style="padding: 5px 0;">Bug spray</td></tr>
+    <tr><td style="padding: 5px 0;">🥪</td><td style="padding: 5px 0;">Snack + lunch from home</td></tr>
+  </table>
+
+  <p style="margin-top: 28px;"><strong>A quick reminder:</strong> If you decide to enroll within 5 days of your child&apos;s shadow day visit, the $500 enrollment fee is fully waived — so it&apos;s a great time to take the next step if Sage Field feels like the right fit!</p>
 
   <p>If you have any questions before the visit, feel free to reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> or text <a href="sms:+15126775872" style="color: #5a7a5a;">(512) 677-5872</a>.</p>
 
