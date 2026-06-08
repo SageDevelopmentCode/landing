@@ -132,23 +132,23 @@ const WEEK2_ELEM_HIGHLIGHTS = [
 const WHO_ITS_FOR = [
   {
     icon: BookOpen,
-    headline: "Switching from traditional school",
-    body: "If your child has been in conventional classrooms and you're wondering what else is possible, a shadow day makes the contrast unmistakable.",
+    headline: "Your child sits in a classroom all day",
+    body: "At Sage Field, mornings are real academics — reading, writing, and math at your child's actual level. Afternoons are nature, cooking, animals, and art. It's a full school day, just built differently.",
   },
   {
     icon: Leaf,
-    headline: "Curious about Montessori or Waldorf",
-    body: "You've read about child-led learning. Now your child can actually live a day of it and tell you if it fits them.",
+    headline: "You want real learning, not just busy work",
+    body: "We teach by ability, not grade. A 7-year-old and a 9-year-old can sit together and each work at the level where they actually are. No one gets left behind. No one gets bored waiting.",
   },
   {
     icon: Users,
-    headline: "Looking for the right community",
-    body: "Small classes mean every child is known by name. Come see whether Sage Field's families and values feel like home.",
+    headline: "You want your child to actually be known",
+    body: "With about 10 kids per class and mixed ages, there's no hiding. Every child has a name, a role, and a relationship with the teacher. Come see what that actually looks like in a day.",
   },
   {
     icon: Heart,
-    headline: "Your child needs something different",
-    body: "If traditional school hasn't been the right fit — whether for learning style, pace, or simply joy — this day exists for you.",
+    headline: "Traditional school hasn't felt right",
+    body: "Whether it's the pace, the structure, the size, or just the feeling — if your child hasn't thrived yet, a shadow day will tell you more than any website can.",
   },
 ];
 
@@ -764,15 +764,15 @@ export default function ShadowPage() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
               <button
                 onClick={scrollToForm}
-                className="w-full sm:w-auto text-center px-6 py-3.5 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer text-sm"
+                className="w-full sm:w-auto whitespace-nowrap text-center px-6 py-3.5 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer text-sm"
               >
-                Book Your Shadow Day →
+                Book a Shadow Day →
               </button>
               <a
                 href="#timeline"
-                className="w-full sm:w-auto text-center px-6 py-3.5 border-2 border-sage-300 text-gray-600 font-semibold rounded-lg hover:border-primary hover:text-primary transition-colors duration-200 font-body text-sm"
+                className="w-full sm:w-auto whitespace-nowrap text-center px-6 py-3.5 border-2 border-sage-300 text-gray-600 font-semibold rounded-lg hover:border-primary hover:text-primary transition-colors duration-200 font-body text-sm"
               >
-                See What a Day Looks Like
+                See a Day in Action
               </a>
             </div>
 
