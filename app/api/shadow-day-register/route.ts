@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getStripe } from "@/app/lib/stripe";
 import { createAdminClient } from "@/app/lib/supabase-server";
+import { sendDiscordNotification, createErrorEmbed } from "@/app/lib/discord";
 
 const schema = z.object({
   parentName: z.string().min(1, "Parent name required"),
@@ -21,9 +22,10 @@ const schema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  let data: z.infer<typeof schema> | undefined;
   try {
     const body = await request.json();
-    const data = schema.parse(body);
+    data = schema.parse(body);
 
     const adminClient = createAdminClient();
 
@@ -60,6 +62,13 @@ export async function POST(request: NextRequest) {
 
     if (bookingError) {
       console.error("Shadow day booking upsert error:", bookingError);
+      sendDiscordNotification(
+        createErrorEmbed({
+          context: "Shadow Day Register — DB upsert",
+          error: bookingError.message,
+          details: { email: data.email, childName: data.childName },
+        }),
+      ).catch(() => {});
       return NextResponse.json(
         { error: "Failed to save booking. Please try again." },
         { status: 500 },
@@ -108,6 +117,16 @@ export async function POST(request: NextRequest) {
       );
     }
     console.error("Shadow day register error:", error);
+    sendDiscordNotification(
+      createErrorEmbed({
+        context: "Shadow Day Register — Stripe session creation",
+        error: error instanceof Error ? error.message : String(error),
+        details: {
+          email: data?.email ?? "unknown",
+          childName: data?.childName ?? "unknown",
+        },
+      }),
+    ).catch(() => {});
     return NextResponse.json(
       { error: "Failed to create checkout session" },
       { status: 500 },
