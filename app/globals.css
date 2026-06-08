@@ -50,6 +50,7 @@ body {
   background: #ffffff;
   color: var(--foreground);
   font-family: var(--font-poppins);
+  overflow-x: hidden;
 }
 
 /* ─── Admin Portal Theme Variables ─────────────────────────────────────── */

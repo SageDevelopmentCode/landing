@@ -413,18 +413,18 @@ function CalendarGrid({
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 mb-2">
+      <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-2">
         {DAY_HEADERS.map((d) => (
           <div
             key={d}
-            className="text-xs font-semibold text-gray-400 uppercase text-center py-1 font-body"
+            className="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase text-center py-1 font-body"
           >
             {d}
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-1">
+      <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
         {Array.from({ length: paddedCells }).map((_, idx) => {
           const dayNum = idx - startOffset + 1;
           if (dayNum < 1 || dayNum > daysInMonth) {
@@ -442,7 +442,7 @@ function CalendarGrid({
               key={idx}
               onClick={() => available && onSelectDate(date)}
               disabled={!available}
-              className={`aspect-square flex items-center justify-center rounded-xl text-sm font-body transition-all duration-150 ${
+              className={`aspect-square flex items-center justify-center rounded-lg text-xs sm:text-sm font-body transition-all duration-150 ${
                 selected
                   ? "bg-primary text-white font-semibold shadow-sm"
                   : available
@@ -487,7 +487,7 @@ function SelectedDayChip({ date }: { date: Date | null }) {
 // ─── Shared styles ────────────────────────────────────────────────────────────
 
 const inputClass =
-  "w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary focus:outline-none transition-colors font-body text-gray-900 placeholder:text-gray-500 bg-white";
+  "w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary focus:outline-none transition-colors font-body text-base text-gray-900 placeholder:text-gray-500 bg-white";
 
 // ─── Helper Components ────────────────────────────────────────────────────────
 
@@ -560,22 +560,30 @@ export default function ShadowPage() {
   }
 
   const galleryRef = useRef<HTMLDivElement>(null);
+  const desktopGalleryRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
   const formRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const el = galleryRef.current;
-    if (!el) return;
-    el.scrollLeft = 0;
+    const refs = [galleryRef, desktopGalleryRef];
+    refs.forEach((r) => {
+      if (r.current) r.current.scrollLeft = 0;
+    });
     let pos = 0;
     const tick = () => {
-      if (el) {
-        pos += 0.6;
-        el.scrollLeft = Math.round(pos);
-        if (el.scrollLeft >= el.scrollWidth / 2) {
-          pos = 0;
-          el.scrollLeft = 0;
+      refs.forEach((r) => {
+        const el = r.current;
+        if (el) {
+          el.scrollLeft = Math.round(pos);
         }
+      });
+      pos += 0.6;
+      const first = refs.find((r) => r.current)?.current;
+      if (first && first.scrollLeft >= first.scrollWidth / 2) {
+        pos = 0;
+        refs.forEach((r) => {
+          if (r.current) r.current.scrollLeft = 0;
+        });
       }
       rafRef.current = requestAnimationFrame(tick);
     };
@@ -689,9 +697,34 @@ export default function ShadowPage() {
     <div className="min-h-screen bg-white">
       <Navbar darkStyle={true} />
 
+      {/* ── Mobile-only carousel — above heading ── */}
+      <div className="sm:hidden pt-20 bg-sage-50">
+        <div
+          ref={galleryRef}
+          className="overflow-x-auto flex gap-0 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
+        >
+          {[...CAROUSEL_IMAGES, ...CAROUSEL_IMAGES].map((src, i) => (
+            <div
+              key={i}
+              className="relative w-[88%] shrink-0 aspect-[4/3] overflow-hidden"
+            >
+              <Image
+                src={src}
+                alt="Students at Sage Field"
+                fill
+                className="object-cover"
+                sizes="88vw"
+                priority={i === 0}
+                loading={i === 0 ? undefined : "lazy"}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* ── Hero ── */}
-      <section className="bg-sage-50 pt-20">
-        <div className="max-w-6xl mx-auto px-8 sm:px-12 lg:px-16 py-14 lg:py-20 flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
+      <section className="bg-sage-50 sm:pt-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-8 lg:px-16 py-10 lg:py-20 flex flex-col lg:flex-row items-center gap-6 lg:gap-16">
           {/* Left — content */}
           <motion.div
             className="flex-1 text-center lg:text-left"
@@ -699,7 +732,7 @@ export default function ShadowPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55 }}
           >
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-heading text-gray-800 leading-tight mb-4">
+            <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold font-heading text-gray-800 leading-tight mb-4">
               Let Your Child{" "}
               <span className="text-primary">Live a Day Here.</span>
             </h1>
@@ -728,16 +761,16 @@ export default function ShadowPage() {
               ))}
             </div>
 
-            <div className="flex flex-row gap-3 justify-center lg:justify-start">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
               <button
                 onClick={scrollToForm}
-                className="whitespace-nowrap px-6 py-3.5 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer text-sm"
+                className="w-full sm:w-auto text-center px-6 py-3.5 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer text-sm"
               >
                 Book Your Shadow Day →
               </button>
               <a
                 href="#timeline"
-                className="whitespace-nowrap px-6 py-3.5 border-2 border-sage-300 text-gray-600 font-semibold rounded-lg hover:border-primary hover:text-primary transition-colors duration-200 font-body text-sm"
+                className="w-full sm:w-auto text-center px-6 py-3.5 border-2 border-sage-300 text-gray-600 font-semibold rounded-lg hover:border-primary hover:text-primary transition-colors duration-200 font-body text-sm"
               >
                 See What a Day Looks Like
               </a>
@@ -763,9 +796,9 @@ export default function ShadowPage() {
             </motion.div>
           </motion.div>
 
-          {/* Right — photo mosaic */}
+          {/* Right — photo mosaic (desktop only) */}
           <motion.div
-            className="w-full lg:w-auto lg:flex-1 max-w-sm sm:max-w-md lg:max-w-none"
+            className="hidden lg:block lg:flex-1"
             initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.15 }}
@@ -808,16 +841,16 @@ export default function ShadowPage() {
         </div>
       </section>
 
-      {/* ── Photo Strip Carousel ── */}
-      <div className="bg-sage-50">
+      {/* ── Photo Strip Carousel (desktop only — mobile gets the carousel above the heading) ── */}
+      <div className="hidden sm:block bg-sage-50">
         <div
-          ref={galleryRef}
+          ref={desktopGalleryRef}
           className="overflow-x-auto flex gap-0 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
         >
           {[...CAROUSEL_IMAGES, ...CAROUSEL_IMAGES].map((src, i) => (
             <div
               key={i}
-              className="relative w-72 flex-shrink-0 aspect-[4/3] overflow-hidden"
+              className="relative w-52 sm:w-64 lg:w-72 shrink-0 aspect-[4/3] overflow-hidden"
             >
               <Image
                 src={src}
@@ -833,7 +866,7 @@ export default function ShadowPage() {
       </div>
 
       {/* ── Combined W1 + W2 Recap ── */}
-      <section className="py-16 px-8 sm:px-12 lg:px-16 bg-white">
+      <section className="py-12 px-4 sm:py-16 sm:px-8 lg:px-16 bg-white">
         <div className="max-w-4xl mx-auto">
           <motion.div
             className="mb-8"
@@ -845,7 +878,7 @@ export default function ShadowPage() {
             <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4 font-body">
               Weeks 1 &amp; 2 in Review
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 font-heading mb-2">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 font-heading mb-2">
               A Glimpse of What Kids Do Here
             </h2>
             <p className="text-base text-gray-500 font-body leading-relaxed max-w-2xl">
@@ -943,7 +976,7 @@ export default function ShadowPage() {
                   </p>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Week 1 — Early Learners */}
                 <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
                   <div className="mb-2">
@@ -1019,7 +1052,7 @@ export default function ShadowPage() {
                   </p>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Week 1 — Elementary */}
                 <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
                   <div className="mb-2">
@@ -1105,7 +1138,7 @@ export default function ShadowPage() {
       </section>
 
       {/* ── Who This Is For ── */}
-      <section className="py-16 px-8 sm:px-12 lg:px-16 bg-sage-50">
+      <section className="py-12 px-4 sm:py-16 sm:px-8 lg:px-16 bg-sage-50">
         <div className="max-w-4xl mx-auto">
           <motion.div
             className="text-center mb-12"
@@ -1117,7 +1150,7 @@ export default function ShadowPage() {
             <span className="inline-block px-5 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4 font-body">
               Is This Right for Us?
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold font-heading text-gray-800 mb-3">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold font-heading text-gray-800 mb-3">
               Shadow Days Are Made for These Families
             </h2>
             <p className="text-base text-gray-500 font-body">
@@ -1151,7 +1184,7 @@ export default function ShadowPage() {
       </section>
 
       {/* ── Early-Bird Enrollment Fee Block ── */}
-      <section className="py-20 px-8 sm:px-12 lg:px-16 bg-white">
+      <section className="py-12 px-4 sm:py-20 sm:px-8 lg:px-16 bg-white">
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 32, scale: 0.97 }}
@@ -1165,7 +1198,7 @@ export default function ShadowPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-5">
               {/* Left panel */}
-              <div className="md:col-span-3 p-8 md:p-10 pl-10 md:pl-12">
+              <div className="md:col-span-3 p-5 sm:p-8 md:p-10 pl-7 sm:pl-10 md:pl-12">
                 <div className="flex items-center gap-2 mb-6">
                   <div className="w-8 h-8 bg-sage-50 border border-sage-200 rounded-lg flex items-center justify-center">
                     <Shield className="w-4 h-4 text-sage-600" />
@@ -1174,7 +1207,7 @@ export default function ShadowPage() {
                     Early-Bird Offer
                   </span>
                 </div>
-                <h3 className="text-2xl md:text-3xl font-bold font-heading text-gray-800 leading-tight mb-5">
+                <h3 className="text-xl sm:text-2xl md:text-3xl font-bold font-heading text-gray-800 leading-tight mb-5">
                   Enroll in the School Year Program Within 5 Days — Your $500
                   Enrollment Fee Is Waived.
                 </h3>
@@ -1195,7 +1228,7 @@ export default function ShadowPage() {
               </div>
 
               {/* Right panel */}
-              <div className="md:col-span-2 bg-sage-50 border-t-2 md:border-t-0 md:border-l-2 border-sage-200 p-8 md:p-10 flex flex-col justify-center">
+              <div className="md:col-span-2 bg-sage-50 border-t-2 md:border-t-0 md:border-l-2 border-sage-200 p-5 sm:p-8 md:p-10 flex flex-col justify-center">
                 <p className="text-xs uppercase tracking-wide text-gray-400 font-body mb-5">
                   Enrollment Fee
                 </p>
@@ -1281,7 +1314,7 @@ export default function ShadowPage() {
       </section>
 
       {/* ── Registration Form ── */}
-      <section id="reserve" className="py-16 px-8 sm:px-12 lg:px-16 bg-sage-50">
+      <section id="reserve" className="py-12 px-4 sm:py-16 sm:px-8 lg:px-16 bg-sage-50">
         <div ref={formRef} className="max-w-2xl mx-auto">
           <motion.div
             className="text-center mb-8"
@@ -1293,7 +1326,7 @@ export default function ShadowPage() {
             <span className="inline-block px-5 py-1.5 bg-primary/10 text-primary text-sm font-semibold rounded-full mb-4 font-body">
               Reserve Your Spot
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 font-heading mb-2">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 font-heading mb-2">
               Book Your Shadow Day
             </h2>
             <p className="text-gray-500 font-body text-base">
@@ -1306,7 +1339,7 @@ export default function ShadowPage() {
                 key="form"
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="sm:bg-white sm:rounded-2xl sm:p-8 sm:shadow-sm sm:border sm:border-gray-100"
+                className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 sm:p-8"
               >
                 <SectionLabel>Your Info</SectionLabel>
                 <div className="space-y-4">
@@ -1591,7 +1624,7 @@ export default function ShadowPage() {
       </section>
 
       {/* ── Packing List ── */}
-      <section className="py-16 px-8 sm:px-12 lg:px-16 bg-sage-50/40">
+      <section className="py-12 px-4 sm:py-16 sm:px-8 lg:px-16 bg-sage-50/40">
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1603,7 +1636,7 @@ export default function ShadowPage() {
             <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4 font-body">
               Day-of Checklist
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 font-heading">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 font-heading">
               What to Pack for Your Shadow Day
             </h2>
           </motion.div>
@@ -1633,7 +1666,7 @@ export default function ShadowPage() {
       </section>
 
       {/* ── FAQ ── */}
-      <section className="py-20 px-8 sm:px-12 lg:px-16 bg-white">
+      <section className="py-12 px-4 sm:py-20 sm:px-8 lg:px-16 bg-white">
         <div className="max-w-3xl mx-auto">
           <motion.div
             className="text-center mb-12"
@@ -1645,7 +1678,7 @@ export default function ShadowPage() {
             <span className="inline-block px-5 py-2 bg-sage-50 border border-sage-200 text-sage-700 text-sm font-semibold rounded-full mb-4 font-body">
               Common Questions
             </span>
-            <h2 className="text-3xl font-bold font-heading text-gray-800 mb-3">
+            <h2 className="text-2xl sm:text-3xl font-bold font-heading text-gray-800 mb-3">
               Before You Book
             </h2>
             <p className="text-gray-500 font-body">
@@ -1705,10 +1738,10 @@ export default function ShadowPage() {
       </section>
 
       {/* ── Bottom CTA ── */}
-      <section className="py-20 px-8 sm:px-12 lg:px-16 bg-sage-50">
+      <section className="py-12 px-4 sm:py-20 sm:px-8 lg:px-16 bg-sage-50">
         <div className="max-w-2xl mx-auto">
           <motion.div
-            className="bg-white rounded-3xl p-10 shadow-sm border border-gray-100 text-center"
+            className="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border border-gray-100 text-center"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -1717,7 +1750,7 @@ export default function ShadowPage() {
             <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4 font-body">
               Shadow Day · $20
             </span>
-            <h2 className="font-heading text-3xl font-bold text-gray-800 mb-3">
+            <h2 className="font-heading text-2xl sm:text-3xl font-bold text-gray-800 mb-3">
               Ready to see if this is the right fit?
             </h2>
             <p className="text-gray-500 font-body mb-8 leading-relaxed">
@@ -1743,7 +1776,7 @@ export default function ShadowPage() {
 
       {/* ── Mobile sticky bottom bar ── */}
       <motion.div
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 pt-2"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))]"
         initial={{ y: 80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.8, duration: 0.4, ease: "easeOut" as const }}
@@ -1759,7 +1792,7 @@ export default function ShadowPage() {
           </div>
           <button
             onClick={scrollToForm}
-            className="flex-shrink-0 bg-white text-primary font-semibold text-sm font-body px-4 py-2 rounded-xl hover:bg-welcome-bg transition-colors duration-200 cursor-pointer"
+            className="shrink-0 bg-white text-primary font-semibold text-sm font-body px-5 py-3 rounded-xl hover:bg-welcome-bg transition-colors duration-200 cursor-pointer"
           >
             Book Now →
           </button>
@@ -1812,7 +1845,7 @@ export default function ShadowPage() {
               </div>
 
               {/* Scrollable Body */}
-              <div className="flex-1 overflow-y-auto px-6 py-6">
+              <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
                 <div className="flex flex-col gap-8">
                   {/* School info header */}
                   <div className="flex flex-col gap-0.5">
@@ -1826,8 +1859,8 @@ export default function ShadowPage() {
                   </div>
 
                   {/* Pre-filled participant info */}
-                  <div className="flex flex-col gap-3 bg-gray-50 rounded-xl px-5 py-4 border border-gray-100">
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                  <div className="flex flex-col gap-3 bg-gray-50 rounded-xl px-4 py-4 border border-gray-100">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
                       {[
                         { label: "Student Name", value: studentName || "—" },
                         {
@@ -2012,7 +2045,7 @@ export default function ShadowPage() {
                       regarding the child:
                     </p>
                     <div className="bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                           <p className="text-xs font-semibold text-gray-400 font-body">
                             Name
@@ -2087,7 +2120,7 @@ export default function ShadowPage() {
                             value={sigPrintedName}
                             onChange={(e) => setSigPrintedName(e.target.value)}
                             placeholder="Your full legal name"
-                            className="w-full px-3 py-2 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors bg-white"
+                            className="w-full px-3 py-2.5 rounded-lg border border-gray-200 font-body text-base text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors bg-white"
                           />
                         </div>
                         <div>
@@ -2117,7 +2150,7 @@ export default function ShadowPage() {
                               type="button"
                               onClick={() => setSigValue(sigPrintedName)}
                               disabled={!sigPrintedName.trim()}
-                              className="cursor-pointer w-full px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm font-body text-primary hover:bg-primary/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-left"
+                              className="cursor-pointer w-full px-3 py-3 rounded-lg border border-gray-200 bg-white text-base font-body text-primary hover:bg-primary/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-left"
                             >
                               Click to sign
                             </button>
@@ -2128,7 +2161,7 @@ export default function ShadowPage() {
                             type="button"
                             onClick={handleSaveSignature}
                             disabled={!sigValue.trim()}
-                            className="px-4 py-2 bg-primary text-white text-xs font-semibold font-body rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                            className="px-5 py-2.5 bg-primary text-white text-sm font-semibold font-body rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                           >
                             Save signature
                           </button>
