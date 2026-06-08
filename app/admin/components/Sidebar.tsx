@@ -48,7 +48,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     items: [
       { name: "Dashboard",    href: "/admin",               icon: <LayoutDashboard className="w-4 h-4" /> },
       { name: "Leads",        href: "/admin/leads",         icon: <TrendingUp className="w-4 h-4" /> },
-      { name: "Free Friday",  href: "/admin/free-friday",   icon: <Sun className="w-4 h-4" /> },
+      { name: "Shadow Days",  href: "/admin/shadow-days",   icon: <Sun className="w-4 h-4" /> },
       { name: "People",       href: "/admin/people",        icon: <Users className="w-4 h-4" /> },
       { name: "Programs",     href: "/admin/programs",      icon: <BookOpen className="w-4 h-4" /> },
       { name: "Applications", href: "/admin/applications",  icon: <ClipboardList className="w-4 h-4" /> },

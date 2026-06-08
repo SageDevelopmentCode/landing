@@ -40,6 +40,9 @@ const WEEK1_IMAGES = [
   "/assets/highlights/summer_week_one/DDDA3AA2-CDF9-42CF-B8FF-AD61CED60065 2.JPG",
   "/assets/highlights/summer_week_one/1D2BF4A6-5081-4D51-B1E8-F6E0E3D820B3.JPG",
   "/assets/highlights/summer_week_one/B10368B0-5344-4D70-8C0C-C091A086D6B2.JPG",
+  "/assets/highlights/summer_week_one/8018F647-AC55-4EE0-9D25-0F326D805ED8 4.jpg",
+  "/assets/highlights/summer_week_one/58982292-CDE7-4E77-B528-0F01DB604DF7 2.JPG",
+  "/assets/highlights/summer_week_one/E96A3688-D421-43A9-B8CA-93D6B881E555.JPG",
 ];
 
 const WEEK2_IMAGES = [
@@ -53,8 +56,7 @@ const WEEK2_IMAGES = [
   "/assets/highlights/summer_week_two/5B961697-D097-476C-9D47-09F547042841.JPG",
 ];
 
-// Interleaved: [W1[0], W2[0], W1[1], W2[1], ...] — 16 total
-const CAROUSEL_IMAGES = WEEK1_IMAGES.flatMap((img, i) => [img, WEEK2_IMAGES[i]]);
+const CAROUSEL_IMAGES = [...WEEK1_IMAGES, ...WEEK2_IMAGES];
 const GALLERY_INITIAL_COUNT = 9;
 
 // ─── Week 2 Highlights ────────────────────────────────────────────────────────
@@ -273,15 +275,16 @@ const SHADOW_FAQS = [
     highlight: true,
   },
   {
-    question: "What happens to the $20 if we enroll?",
+    question:
+      "What happens to the enrollment fee if we enroll after the shadow day?",
     answer:
-      "If you submit an enrollment application within 14 days of your child's shadow day, the $20 is fully waived from your first payment. No codes. No forms. We just honor it.",
+      "Enrollment at Sage Field is $500 (the school year enrollment fee) — and if you submit an enrollment application within 5 days of your child's shadow day, we waive it entirely. You pay nothing to enroll. No codes. No forms. We just honor it.",
     highlight: false,
   },
   {
     question: "What should my child bring?",
     answer:
-      "Comfortable clothes they can get dirty in, closed-toe shoes (they'll be outdoors), a water bottle, a packed lunch, sunscreen already applied, and bug spray. We'll confirm specifics when we confirm your booking.",
+      "Comfortable clothes they can get dirty in, closed-toe shoes (they'll be outdoors), a swimsuit and towel, a water bottle, a packed lunch, sunscreen already applied, and bug spray. We'll confirm specifics when we confirm your booking.",
     highlight: false,
   },
   {
@@ -301,8 +304,18 @@ const SHADOW_FAQS = [
 // ─── Calendar Constants & Helpers ─────────────────────────────────────────────
 
 const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 const DAY_HEADERS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -497,7 +510,6 @@ function AgreementSectionHeader({ title }: { title: string }) {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function ShadowPage() {
-  const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [agreementOpen, setAgreementOpen] = useState(false);
@@ -524,7 +536,9 @@ export default function ShadowPage() {
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [calendarMonth, setCalendarMonth] = useState(CALENDAR_TODAY.getMonth());
-  const [calendarYear, setCalendarYear] = useState(CALENDAR_TODAY.getFullYear());
+  const [calendarYear, setCalendarYear] = useState(
+    CALENDAR_TODAY.getFullYear(),
+  );
 
   function handlePrevMonth() {
     if (calendarMonth === 0) {
@@ -570,7 +584,6 @@ export default function ShadowPage() {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, []);
-
 
   useEffect(() => {
     if (agreementOpen) {
@@ -629,14 +642,33 @@ export default function ShadowPage() {
       const res = await fetch("/api/shadow-day-register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ formData, signatureName: sigPrintedName }),
+        body: JSON.stringify({
+          parentName: formData.parentName,
+          email: formData.email,
+          phone: formData.phone,
+          childName: formData.childName,
+          childAge: Number(formData.childAge),
+          selectedDate: selectedDate!.toISOString().split("T")[0],
+          referralSource: formData.referralSource,
+          notes: formData.notes,
+          emergencyName: formData.emergencyName,
+          emergencyPhone: formData.emergencyPhone,
+          consentOutdoor: formData.consentOutdoor,
+          consentPhoto: formData.consentPhoto,
+          interestedInEnrollment: formData.interestedInEnrollment,
+          signatureName: sigPrintedName,
+        }),
       });
+      const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const json = await res.json().catch(() => ({}));
         setSubmitError(json.error ?? "Something went wrong. Please try again.");
         return;
       }
-      setSubmitted(true);
+      if (json.url) {
+        window.location.href = json.url;
+        return;
+      }
+      setSubmitError("Unexpected response. Please try again.");
     } catch {
       setSubmitError(
         "Network error. Please check your connection and try again.",
@@ -667,10 +699,6 @@ export default function ShadowPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55 }}
           >
-            <span className="inline-block px-5 py-1.5 bg-white/80 text-gray-700 text-xs font-semibold rounded-full mb-5 font-body border border-sage-200 shadow-sm">
-              Shadow Day · Mon–Thu · $20
-            </span>
-
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-heading text-gray-800 leading-tight mb-4">
               Let Your Child{" "}
               <span className="text-primary">Live a Day Here.</span>
@@ -700,7 +728,7 @@ export default function ShadowPage() {
               ))}
             </div>
 
-            <div className="flex flex-row gap-3 justify-center lg:justify-start flex-wrap">
+            <div className="flex flex-row gap-3 justify-center lg:justify-start">
               <button
                 onClick={scrollToForm}
                 className="whitespace-nowrap px-6 py-3.5 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer text-sm"
@@ -714,6 +742,24 @@ export default function ShadowPage() {
                 See What a Day Looks Like
               </a>
             </div>
+
+            {/* Early-bird teaser */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7, duration: 0.4 }}
+              className="flex justify-center lg:justify-start mt-5"
+            >
+              <div className="inline-flex items-center gap-2.5 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 shadow-sm">
+                <span className="text-base">🎁</span>
+                <p className="text-xs text-amber-800 font-body leading-snug">
+                  Shadow families who enroll within 5 days get the{" "}
+                  <span className="font-bold text-amber-900">
+                    $500 enrollment fee fully waived.
+                  </span>
+                </p>
+              </div>
+            </motion.div>
           </motion.div>
 
           {/* Right — photo mosaic */}
@@ -747,7 +793,7 @@ export default function ShadowPage() {
                 </div>
                 <div className="relative aspect-square rounded-2xl overflow-hidden shadow-md">
                   <Image
-                    src="/assets/highlights/summer_week_two/A0AA3C22-7657-4E63-A3FD-7AB6CD3B85E0.JPG"
+                    src="/assets/highlights/summer_week_one/58982292-CDE7-4E77-B528-0F01DB604DF7 2.JPG"
                     alt="Students at Sage Field"
                     fill
                     className="object-cover"
@@ -891,7 +937,9 @@ export default function ShadowPage() {
                   <h3 className="text-sm font-bold font-heading text-gray-800 leading-tight">
                     Primary / Early Learners
                   </h3>
-                  <p className="text-[11px] text-gray-400 font-body">Ages 4–7</p>
+                  <p className="text-[11px] text-gray-400 font-body">
+                    Ages 4–7
+                  </p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -965,7 +1013,9 @@ export default function ShadowPage() {
                   <h3 className="text-sm font-bold font-heading text-gray-800 leading-tight">
                     Elementary
                   </h3>
-                  <p className="text-[11px] text-gray-400 font-body">Ages 8–11</p>
+                  <p className="text-[11px] text-gray-400 font-body">
+                    Ages 8–11
+                  </p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -1099,7 +1149,7 @@ export default function ShadowPage() {
         </div>
       </section>
 
-      {/* ── $20 Fee + Waived Block ── */}
+      {/* ── Early-Bird Enrollment Fee Block ── */}
       <section className="py-20 px-8 sm:px-12 lg:px-16 bg-white">
         <div className="max-w-4xl mx-auto">
           <motion.div
@@ -1120,26 +1170,27 @@ export default function ShadowPage() {
                     <Shield className="w-4 h-4 text-sage-600" />
                   </div>
                   <span className="text-xs font-bold uppercase tracking-wide text-sage-600 font-body">
-                    Why $20?
+                    Early-Bird Offer
                   </span>
                 </div>
                 <h3 className="text-2xl md:text-3xl font-bold font-heading text-gray-800 leading-tight mb-5">
-                  Enroll Within 14 Days, and Your $20 Is Waived.
+                  Enroll Within 5 Days of Your Shadow Day — Your $500 Enrollment
+                  Fee Is Waived.
                 </h3>
                 <p className="text-base text-gray-600 font-body leading-relaxed mb-6">
-                  The $20 exists because this is a real school day — teacher
-                  time, materials, and outdoor space included. It also means the
-                  families who book are genuinely considering what Sage Field
-                  could be for their child. If you enroll within two weeks, that
-                  $20 disappears from your first payment. No codes. No forms. We
-                  just honor it.
+                  Enrollment at Sage Field is $500 — the school year enrollment
+                  fee. Shadow families who decide quickly get that fee waived
+                  entirely — a thank-you for choosing Sage Field without
+                  hesitation. You already saw it. You already felt it. This is
+                  just our way of honoring that. No codes. No forms. We apply it
+                  automatically.
                 </p>
                 <div className="flex items-start gap-3 bg-sage-50 border border-sage-200 rounded-xl p-4">
                   <Shield className="w-4 h-4 text-sage-600 mt-0.5 flex-shrink-0" />
                   <p className="text-xs text-gray-600 font-body leading-relaxed">
-                    No enrollment pressure. No coupon codes. If you love what
-                    you see and apply within two weeks, we simply honor the
-                    waiver.
+                    No enrollment pressure. If your child loves what they
+                    experience and you&apos;re ready within 5 days, we simply
+                    waive the enrollment fee entirely.
                   </p>
                 </div>
               </div>
@@ -1147,33 +1198,79 @@ export default function ShadowPage() {
               {/* Right panel */}
               <div className="md:col-span-2 bg-sage-50 border-t-2 md:border-t-0 md:border-l-2 border-sage-200 p-8 md:p-10 flex flex-col justify-center">
                 <p className="text-xs uppercase tracking-wide text-gray-400 font-body mb-5">
-                  Shadow Day Investment
+                  Enrollment Fee
                 </p>
 
                 <div className="flex items-baseline gap-4 mb-2">
                   <span className="text-4xl font-bold font-heading text-gray-300 line-through decoration-red-300">
-                    $20
+                    $500
                   </span>
                   <span className="text-sage-400 text-2xl">→</span>
-                  <span className="text-5xl font-bold font-heading text-sage-600">
+                  <span className="text-5xl font-bold font-heading text-emerald-600">
                     $0
                   </span>
                 </div>
                 <p className="text-sm text-gray-500 font-body mb-8">
-                  if you enroll within 14 days
+                  if you enroll within 5 days of your shadow day
                 </p>
 
-                <div className="bg-white rounded-xl border border-sage-200 p-4 space-y-2">
-                  {["Shadow Day: $20", "Enroll within 14 days", "$20 fee waived"].map(
-                    (item) => (
-                      <div key={item} className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-sage-600 flex-shrink-0" />
-                        <span className="text-xs text-gray-700 font-body font-semibold">
-                          {item}
+                <div className="bg-white rounded-xl border border-sage-200 p-4">
+                  <div className="flex items-start justify-between gap-1">
+                    {/* Step 1 */}
+                    <div className="flex flex-col items-center text-center gap-1.5 flex-1">
+                      <div className="w-7 h-7 rounded-full bg-sage-100 border border-sage-300 flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs font-bold text-sage-700 font-body">
+                          1
                         </span>
                       </div>
-                    ),
-                  )}
+                      <p className="text-xs font-bold text-gray-800 font-body leading-tight">
+                        Shadow Day
+                      </p>
+                      <p className="text-[10px] text-gray-400 font-body">
+                        $20 fee
+                      </p>
+                    </div>
+
+                    {/* Arrow */}
+                    <div className="flex items-center pt-2 flex-shrink-0">
+                      <ChevronRight className="w-4 h-4 text-sage-300" />
+                    </div>
+
+                    {/* Step 2 */}
+                    <div className="flex flex-col items-center text-center gap-1.5 flex-1">
+                      <div className="w-7 h-7 rounded-full bg-sage-100 border border-sage-300 flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs font-bold text-sage-700 font-body">
+                          2
+                        </span>
+                      </div>
+                      <p className="text-xs font-bold text-gray-800 font-body leading-tight">
+                        Enroll within
+                      </p>
+                      <p className="text-[10px] text-gray-400 font-body">
+                        5 days
+                      </p>
+                    </div>
+
+                    {/* Arrow */}
+                    <div className="flex items-center pt-2 flex-shrink-0">
+                      <ChevronRight className="w-4 h-4 text-sage-300" />
+                    </div>
+
+                    {/* Step 3 — highlighted */}
+                    <div className="flex flex-col items-center text-center gap-1.5 flex-1">
+                      <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <span className="text-xs font-bold text-white font-body">
+                          3
+                        </span>
+                      </div>
+                      <p className="text-xs font-bold text-primary font-body leading-tight">
+                        $0 Enrollment
+                      </p>
+                      <p className="text-[10px] text-gray-400 font-body">
+                        fee fully waived
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1182,10 +1279,7 @@ export default function ShadowPage() {
       </section>
 
       {/* ── Registration Form ── */}
-      <section
-        id="reserve"
-        className="py-16 px-8 sm:px-12 lg:px-16 bg-sage-50"
-      >
+      <section id="reserve" className="py-16 px-8 sm:px-12 lg:px-16 bg-sage-50">
         <div ref={formRef} className="max-w-2xl mx-auto">
           <motion.div
             className="text-center mb-8"
@@ -1206,29 +1300,6 @@ export default function ShadowPage() {
           </motion.div>
 
           <AnimatePresence>
-            {submitted ? (
-              <motion.div
-                key="success"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-white rounded-2xl p-10 shadow-sm border border-gray-100 text-center"
-              >
-                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle className="w-8 h-8 text-emerald-600" />
-                </div>
-                <h3 className="font-heading font-bold text-2xl text-gray-800 mb-2">
-                  You&apos;re booked!
-                </h3>
-                <p className="text-gray-500 font-body mb-2">
-                  We&apos;ll reach out to confirm details. Check your email for
-                  next steps.
-                </p>
-                <p className="text-sm text-primary font-semibold font-body mt-4">
-                  Bring a water bottle, sunscreen, and wear clothes they can
-                  explore in.
-                </p>
-              </motion.div>
-            ) : (
               <motion.div
                 key="form"
                 initial={{ opacity: 0, y: 16 }}
@@ -1432,7 +1503,10 @@ export default function ShadowPage() {
                         }`}
                       >
                         {checked && (
-                          <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                          <Check
+                            className="w-3 h-3 text-white"
+                            strokeWidth={3}
+                          />
                         )}
                       </div>
                       <input
@@ -1506,13 +1580,10 @@ export default function ShadowPage() {
                     disabled={!isFormValid || !agreementSigned || submitting}
                     className="w-full px-6 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-all duration-200 font-body cursor-pointer shadow-md hover:shadow-lg text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
                   >
-                    {submitting
-                      ? "Submitting…"
-                      : "Book My Shadow Day — $20 →"}
+                    {submitting ? "Submitting…" : "Book My Shadow Day — $20 →"}
                   </button>
                 </motion.div>
               </motion.div>
-            )}
           </AnimatePresence>
         </div>
       </section>
@@ -1593,9 +1664,7 @@ export default function ShadowPage() {
                 }`}
               >
                 <button
-                  onClick={() =>
-                    setFaqOpenIndex(faqOpenIndex === i ? null : i)
-                  }
+                  onClick={() => setFaqOpenIndex(faqOpenIndex === i ? null : i)}
                   className="w-full flex items-center justify-between p-5 text-left cursor-pointer focus:outline-none"
                 >
                   <span className="text-sm font-semibold text-gray-800 font-body pr-4">
@@ -1661,7 +1730,8 @@ export default function ShadowPage() {
               Book Your Shadow Day — $20 →
             </button>
             <p className="text-xs text-gray-400 font-body mt-4">
-              $20 · Fully waived if you enroll within 14 days.
+              $20 shadow day fee · Enroll within 5 days and your $500 enrollment
+              fee is fully waived.
             </p>
           </motion.div>
         </div>
@@ -2013,9 +2083,7 @@ export default function ShadowPage() {
                           <input
                             type="text"
                             value={sigPrintedName}
-                            onChange={(e) =>
-                              setSigPrintedName(e.target.value)
-                            }
+                            onChange={(e) => setSigPrintedName(e.target.value)}
                             placeholder="Your full legal name"
                             className="w-full px-3 py-2 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors bg-white"
                           />
