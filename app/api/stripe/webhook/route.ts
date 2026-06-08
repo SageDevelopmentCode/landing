@@ -11,6 +11,7 @@ import {
   createDonationEmbed,
   createShadowDayPaymentEmbed,
   createCustomTuitionEmbed,
+  createOneTimePaymentEmbed,
   createErrorEmbed,
   sendDiscordNotification,
 } from "@/app/lib/discord";
@@ -23,6 +24,7 @@ import {
   buildAftercareConfirmationEmail,
   buildFunFridayConfirmationEmail,
   buildCustomTuitionConfirmationEmail,
+  buildOneTimePaymentConfirmationEmail,
   sendZohoEmail,
 } from "@/app/lib/zoho";
 
@@ -858,6 +860,73 @@ export async function POST(request: NextRequest) {
           ).catch(() => {});
         }
       })();
+    } else if (session.metadata?.payment_type === "one_time_payment") {
+      const oneTimePaymentId = session.metadata?.one_time_payment_id;
+      const payerEmail =
+        session.metadata?.payer_email || session.customer_email || "";
+      const payerName = session.metadata?.payer_name || "";
+      const memo = session.metadata?.memo || undefined;
+      const amountCents = session.amount_total ?? 0;
+      const coverFees = session.metadata?.cover_fees === "true";
+
+      // Update one_time_payments row to completed
+      if (oneTimePaymentId) {
+        await supabase
+          .schema("billing")
+          .from("one_time_payments")
+          .update({ payment_status: "completed", updated_at: new Date().toISOString() })
+          .eq("id", oneTimePaymentId);
+      }
+
+      const paymentMethod = session.metadata?.payment_method ?? "card";
+
+      // Discord notification (non-blocking)
+      sendDiscordNotification(
+        createOneTimePaymentEmbed({
+          payerName: payerName || "N/A",
+          payerEmail: payerEmail || "N/A",
+          amountCents,
+          memo,
+          coverFees,
+          paymentMethod,
+        }),
+      ).catch((err) =>
+        console.error("Discord one-time payment notification failed:", err),
+      );
+
+      // Confirmation email (non-blocking)
+      if (payerEmail) {
+        (async () => {
+          try {
+            const amountDollars = (amountCents / 100).toFixed(2);
+            const { subject, content } = await buildOneTimePaymentConfirmationEmail({
+              payerName: payerName || "there",
+              amountDollars,
+              memo,
+            });
+            const emailResult = await sendZohoEmail({ toAddress: payerEmail, subject, content });
+            if (emailResult.success) {
+              await supabase.schema("email_logs").from("sends").insert({
+                to_address: payerEmail,
+                subject,
+                template: "one_time_payment_confirmation",
+                status: "success",
+              });
+            } else {
+              throw new Error(emailResult.error ?? "Unknown email error");
+            }
+          } catch (err) {
+            console.error("One-time payment confirmation email failed:", err);
+            sendDiscordNotification(
+              createErrorEmbed({
+                context: "One-time payment confirmation email",
+                error: String(err),
+                details: { payerEmail, sessionId: session.id },
+              }),
+            ).catch(() => {});
+          }
+        })();
+      }
     } else {
       const donorEmail =
         session.metadata?.donor_email || session.customer_email || "";

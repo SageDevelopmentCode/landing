@@ -3132,3 +3132,32 @@ export async function buildFreeFridayAttendanceConfirmationEmail(opts: {
 
   return { subject, content };
 }
+
+export async function buildOneTimePaymentConfirmationEmail(opts: {
+  payerName: string;
+  amountDollars: string;
+  memo?: string;
+}): Promise<{ subject: string; content: string }> {
+  const displayName = opts.payerName.split(" ")[0] || opts.payerName;
+  const subject = "Payment Received — Sage Field School";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${displayName},</p>
+
+  <p>We have received your payment of <strong>$${opts.amountDollars}</strong> to Sage Field School. Thank you!</p>
+
+${opts.memo ? `  <p style="padding: 12px 16px; background: #f7f4f0; border-left: 3px solid #a8c5a0; margin: 24px 0;">📋 <strong>Memo:</strong> ${opts.memo}</p>` : ""}
+
+  <p>If you have any questions about this payment or anything else, feel free to reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> or text <a href="sms:+15126775872" style="color: #5a7a5a;">(512) 677-5872</a>.</p>
+
+  <p style="margin-top: 32px;">Thank you,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}

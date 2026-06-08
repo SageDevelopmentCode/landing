@@ -1363,6 +1363,32 @@ export function createShadowDayPaymentEmbed(data: {
   };
 }
 
+export function createOneTimePaymentEmbed(data: {
+  payerName: string;
+  payerEmail: string;
+  amountCents: number;
+  memo?: string;
+  coverFees: boolean;
+  paymentMethod?: string;
+}): DiscordEmbed {
+  const fields: DiscordEmbedField[] = [
+    { name: "Payer", value: data.payerName, inline: true },
+    { name: "Email", value: data.payerEmail, inline: true },
+    { name: "Amount Paid", value: `$${(data.amountCents / 100).toFixed(2)}`, inline: true },
+    { name: "Method", value: data.paymentMethod === "ach" ? "ACH / Bank" : "Card", inline: true },
+    { name: "Covered Fees", value: data.coverFees ? "Yes" : "No", inline: true },
+  ];
+  if (data.memo) {
+    fields.push({ name: "Memo", value: data.memo, inline: false });
+  }
+  return {
+    title: "💳 One-Time Payment Received",
+    color: 0x4a7c59,
+    fields,
+    timestamp: new Date().toISOString(),
+  };
+}
+
 /**
  * Creates a Discord embed for campus tour booking submissions
  */
