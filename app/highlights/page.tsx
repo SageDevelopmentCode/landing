@@ -24,7 +24,13 @@ const WEEKS: WeekEntry[] = [
     coverImage:
       "/assets/highlights/summer_week_one/C8EAD2FA-0FB2-4D59-A079-493C09298ABF.JPG",
   },
-  { week: 2, dates: "Jun 1–4", theme: "Mystery Camp Escape Challenge" },
+  {
+    week: 2,
+    dates: "Jun 1–4",
+    theme: "Mystery Camp Escape Challenge",
+    href: "/highlights/summer/week-2",
+    coverImage: "/assets/highlights/summer_week_two/A0AA3C22-7657-4E63-A3FD-7AB6CD3B85E0.JPG",
+  },
   { week: 3, dates: "Jun 8–11", theme: "Beach Day Bash" },
   { week: 4, dates: "Jun 15–18", theme: "Scientist and Space Engineering Lab" },
   { week: 5, dates: "Jun 22–25", theme: "Safari Escape" },
