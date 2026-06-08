@@ -4,8 +4,9 @@ import { useState, useEffect } from "react";
 import { SlidersHorizontal, Users, ChevronDown } from "lucide-react";
 import Image from "next/image";
 import type { Activity } from "@/app/actions/activities";
-import type { PreferenceChild, SavedPreference } from "./page";
+import type { PreferenceChild, SavedPreference, StudentDefaultPreference } from "./page";
 import { saveActivityPreferences, type PreferenceEntry } from "@/app/actions/preferences";
+import { saveStudentDefaultPreference } from "@/app/actions/studentDefaultPreferences";
 
 type ParticipationLevel = "watch" | "cook_no_eat" | "full";
 
@@ -41,25 +42,29 @@ interface Props {
   activities: Activity[];
   paidDatesByStudent: Record<string, string[]>;
   savedPreferences: SavedPreference[];
+  studentDefaults: StudentDefaultPreference[];
 }
 
-export default function PreferencesPageClient({ children, activities, paidDatesByStudent, savedPreferences }: Props) {
+export default function PreferencesPageClient({ children, activities, paidDatesByStudent, savedPreferences, studentDefaults: initialStudentDefaults }: Props) {
   const [selectedChildId, setSelectedChildId] = useState(children[0]?.id ?? "");
   const [expandedFoods, setExpandedFoods] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
   const [acknowledged, setAcknowledged] = useState(false);
+  const [defaults, setDefaults] = useState<StudentDefaultPreference[]>(initialStudentDefaults);
+  const [savingDefault, setSavingDefault] = useState(false);
   const [preferences, setPreferences] = useState<AllPreferences>(() => {
     const init: AllPreferences = {};
     for (const child of children) {
       init[child.id] = {};
+      const defaultLevel = initialStudentDefaults.find(d => d.student_id === child.id)?.participation_level ?? null;
       for (const activity of activities) {
         const saved = savedPreferences.find(
           (s) => s.student_id === child.id && s.activity_id === activity.id
         );
         init[child.id][activity.id] = saved
           ? { level: saved.participation_level, notes: saved.notes }
-          : { level: null, notes: "" };
+          : { level: defaultLevel, notes: "" };
       }
     }
     return init;
@@ -82,6 +87,45 @@ export default function PreferencesPageClient({ children, activities, paidDatesB
         },
       },
     }));
+  }
+
+  const savedActivityIds = new Set(
+    savedPreferences
+      .filter((s) => s.student_id === selectedChildId)
+      .map((s) => s.activity_id)
+  );
+
+  async function handleSetDefault(level: ParticipationLevel | null) {
+    setSavingDefault(true);
+    const result = await saveStudentDefaultPreference(selectedChildId, level);
+    if (!result.error) {
+      setDefaults((prev) => {
+        const without = prev.filter((d) => d.student_id !== selectedChildId);
+        return level !== null
+          ? [...without, { student_id: selectedChildId, participation_level: level }]
+          : without;
+      });
+      setPreferences((prev) => {
+        const updated = { ...prev[selectedChildId] };
+        for (const activityId of Object.keys(updated)) {
+          if (!savedActivityIds.has(activityId)) {
+            updated[activityId] = { ...updated[activityId], level };
+          }
+        }
+        return { ...prev, [selectedChildId]: updated };
+      });
+    }
+    setSavingDefault(false);
+  }
+
+  function applyToAll(level: ParticipationLevel, visibleActivities: Activity[]) {
+    setPreferences((prev) => {
+      const updated = { ...prev[selectedChildId] };
+      for (const a of visibleActivities) {
+        updated[a.id] = { ...updated[a.id], level };
+      }
+      return { ...prev, [selectedChildId]: updated };
+    });
   }
 
   async function handleSave(visibleActivities: Activity[]) {
@@ -228,6 +272,64 @@ export default function PreferencesPageClient({ children, activities, paidDatesB
               );
               return (
               <div className="flex flex-col gap-4">
+                {visibleActivities.length > 0 && (() => {
+                  const currentDefault = defaults.find(d => d.student_id === selectedChildId);
+                  const selectedChild = children.find(c => c.id === selectedChildId);
+                  return (
+                    <div className="bg-white border border-gray-100 rounded-2xl shadow-sm px-5 py-4">
+                      <div className="flex flex-wrap items-start gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="bg-[#4a7c59]/10 text-[#4a7c59] text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full font-body">
+                              New
+                            </span>
+                            <p className="text-sm font-semibold font-body text-gray-800">
+                              Auto-fill preference
+                            </p>
+                          </div>
+                          <p className="text-xs text-gray-400 font-body leading-relaxed">
+                            Pick a level and every new activity for {selectedChild?.child_legal_name} will be automatically pre-selected — you can still change any activity individually.
+                          </p>
+                        </div>
+                        <div className="flex gap-2 flex-wrap items-center">
+                          {LEVELS.map(({ value, label, emoji }) => {
+                            const isActive = currentDefault?.participation_level === value;
+                            return (
+                              <button
+                                key={value}
+                                onClick={() => handleSetDefault(isActive ? null : value)}
+                                disabled={savingDefault}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-sm font-body transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                                  isActive
+                                    ? "border-[#4a7c59] bg-[#4a7c59]/8 text-[#4a7c59] font-semibold"
+                                    : "border-gray-200 bg-white text-gray-700 hover:border-[#4a7c59] hover:bg-[#4a7c59]/5 hover:text-[#4a7c59]"
+                                }`}
+                              >
+                                <span>{emoji}</span>
+                                <span className="hidden sm:inline">{label}</span>
+                              </button>
+                            );
+                          })}
+                          {currentDefault && (
+                            <button
+                              onClick={() => handleSetDefault(null)}
+                              disabled={savingDefault}
+                              className="text-xs text-gray-400 font-body hover:text-red-400 transition-colors cursor-pointer disabled:opacity-50"
+                            >
+                              Clear
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      {currentDefault && (
+                        <p className="text-xs text-[#4a7c59] font-body font-semibold mt-2.5">
+                          ✓ Auto-fill active · New activities will be pre-set to &ldquo;{LEVELS.find(l => l.value === currentDefault.participation_level)?.label}&rdquo;
+                        </p>
+                      )}
+                    </div>
+                  );
+                })()}
+
                 {visibleActivities.length === 0 && (
                   <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 flex flex-col items-center text-center">
                     <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mb-5">
@@ -367,6 +469,14 @@ export default function PreferencesPageClient({ children, activities, paidDatesB
                             );
                           })}
                         </div>
+
+                        {/* Default-filled indicator */}
+                        {pref.level !== null && !savedActivityIds.has(activity.id) && defaults.some(d => d.student_id === selectedChildId) && (
+                          <p className="text-xs text-gray-400 font-body mt-2 flex items-center gap-1">
+                            <span>⚡</span>
+                            <span>Pre-filled by your default preference · Select a different option to override</span>
+                          </p>
+                        )}
 
                         {/* Notes textarea */}
                         {pref.level !== null && (

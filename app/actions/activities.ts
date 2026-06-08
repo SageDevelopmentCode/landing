@@ -366,6 +366,42 @@ export async function getPublishedActivities(): Promise<Activity[]> {
 
 // ─── Create Activity ──────────────────────────────────────────────────────────
 
+async function applyDefaultPreferencesForActivity(activityId: string) {
+  const adminClient = createAdminClient()
+
+  const { data: defaults } = await adminClient
+    .schema("parent_app")
+    .from("student_default_preferences")
+    .select("parent_id, student_id, participation_level")
+
+  if (!defaults || defaults.length === 0) return
+
+  const { data: existing } = await adminClient
+    .schema("parent_app")
+    .from("activity_preferences")
+    .select("student_id")
+    .eq("activity_id", activityId)
+
+  const alreadySet = new Set((existing ?? []).map((r) => r.student_id))
+
+  const toInsert = defaults
+    .filter((d) => !alreadySet.has(d.student_id))
+    .map((d) => ({
+      parent_id: d.parent_id,
+      student_id: d.student_id,
+      activity_id: activityId,
+      participation_level: d.participation_level,
+      notes: "",
+    }))
+
+  if (toInsert.length === 0) return
+
+  await adminClient
+    .schema("parent_app")
+    .from("activity_preferences")
+    .upsert(toInsert, { onConflict: "student_id,activity_id" })
+}
+
 export async function createActivity(
   formData: FormData
 ): Promise<{ data?: Activity; error?: string }> {
@@ -447,6 +483,11 @@ export async function createActivity(
     .single()
 
   const [withUrls] = await resolveAndAttach(adminClient, [(final ?? refetched) as any])
+
+  if (status === 'published') {
+    applyDefaultPreferencesForActivity(activityId).catch(() => {})
+  }
+
   return { data: withUrls }
 }
 
@@ -542,6 +583,10 @@ export async function updateActivity(
 
   // 4. Insert change log entry
   await insertChangeLog(adminClient, activityId, user.id, summary)
+
+  if (status === 'published') {
+    applyDefaultPreferencesForActivity(activityId).catch(() => {})
+  }
 
   // 5. Re-fetch and return
   const { data: refetched, error: refetchErr } = await adminClient

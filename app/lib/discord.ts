@@ -1939,3 +1939,32 @@ export function createFreeFridayRegistrationEmbed(data: {
     timestamp: new Date().toISOString(),
   };
 }
+
+export function createDefaultPreferenceSetEmbed(data: {
+  parentName: string;
+  parentEmail: string;
+  childName: string;
+  level: string | null;
+}): DiscordEmbed {
+  const LEVEL_LABELS: Record<string, string> = {
+    watch: "👀 Watch only",
+    cook_no_eat: "🧑‍🍳 Cook, don't eat",
+    full: "✅ Full participation",
+  };
+
+  const action = data.level !== null
+    ? `Set to ${LEVEL_LABELS[data.level] ?? data.level}`
+    : "Cleared (no default)";
+
+  return {
+    title: "⚡ Auto-Fill Default Preference Updated",
+    color: 0x4a7c59,
+    fields: [
+      { name: "Parent", value: data.parentName || "N/A", inline: true },
+      { name: "Email", value: data.parentEmail || "N/A", inline: true },
+      { name: "Child", value: data.childName || "N/A", inline: true },
+      { name: "Default", value: action, inline: false },
+    ],
+    timestamp: new Date().toISOString(),
+  };
+}
