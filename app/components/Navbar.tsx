@@ -198,7 +198,7 @@ const NAV_TABS: NavTab[] = [
       },
       {
         label: "Shadow Day",
-        action: { kind: "link", href: "/shadow-tour" },
+        action: { kind: "link", href: "/shadow" },
         badge: "New!",
         icon: CalendarDays,
         iconClass: "text-purple-500",
