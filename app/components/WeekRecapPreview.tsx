@@ -11,9 +11,9 @@ const PREVIEW_IMAGES = [
   "/assets/highlights/summer_week_two/6B95C9E4-E145-49CA-8818-7AFC9B3B8353.JPG",
   "/assets/highlights/summer_week_two/E3AE964D-CC01-41A0-B040-35DCCB27CD4C.JPG",
   "/assets/highlights/summer_week_two/8DC65D50-316D-44DA-88AA-128F72DF019B.JPG",
-  "/assets/highlights/summer_week_two/D3319D8D-EE61-43C4-93E5-54AEB0A5B58C.JPG",
-  "/assets/highlights/summer_week_two/EE67A184-15E0-425D-BBFB-26891F754F4C.JPG",
-  "/assets/highlights/summer_week_two/3B7A8137-E253-4E45-B71D-AD5325A5460A.JPG",
+  "/assets/highlights/summer_week_two/24E4F2AF-5C30-4C23-9B09-8EA71093A1FD.JPG",
+  "/assets/highlights/summer_week_two/DC1D10EF-768E-48E1-AFA9-B935172FA14B.JPG",
+  "/assets/highlights/summer_week_two/5B961697-D097-476C-9D47-09F547042841.JPG",
 ];
 
 const PRIMARY_HIGHLIGHTS = [

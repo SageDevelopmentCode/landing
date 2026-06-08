@@ -143,6 +143,34 @@ const WEEK_IMAGES: { src: string; caption: string }[] = [
     src: "/assets/highlights/summer_week_two/D9F6F89E-CFCA-4738-B3D6-78A3DACF9636.JPG",
     caption: "Week 2 memories",
   },
+  {
+    src: "/assets/highlights/summer_week_two/24E4F2AF-5C30-4C23-9B09-8EA71093A1FD.JPG",
+    caption: "Hands-on learning in action",
+  },
+  {
+    src: "/assets/highlights/summer_week_two/9AF86705-559C-4F6C-ADC9-4F144413EC9C.JPG",
+    caption: "Curiosity and exploration every day",
+  },
+  {
+    src: "/assets/highlights/summer_week_two/DC1D10EF-768E-48E1-AFA9-B935172FA14B.JPG",
+    caption: "Students engaged and thriving",
+  },
+  {
+    src: "/assets/highlights/summer_week_two/5B961697-D097-476C-9D47-09F547042841.JPG",
+    caption: "Creative energy at Sage Field",
+  },
+  {
+    src: "/assets/highlights/summer_week_two/5490D879-F69D-40E0-B2E7-FAD64DE100D9.JPG",
+    caption: "Learning through doing",
+  },
+  {
+    src: "/assets/highlights/summer_week_two/2B58FEC3-CD58-40D9-93C5-A83D7DBB5A21.JPG",
+    caption: "Every moment is a learning moment",
+  },
+  {
+    src: "/assets/highlights/summer_week_two/3E22E13E-859C-427A-9FA3-73F11B989B65.JPG",
+    caption: "Week 2 was full of joy",
+  },
 ];
 
 const CAROUSEL_COUNT = 8;
