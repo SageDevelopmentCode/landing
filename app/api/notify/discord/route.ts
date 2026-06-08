@@ -14,6 +14,7 @@ import {
   createParentFeedbackEmbed,
   createCareLogEmbed,
   createActivityPreferencesSavedEmbed,
+  createDefaultPreferenceSetEmbed,
 } from "@/app/lib/discord";
 
 export async function POST(request: NextRequest) {
@@ -610,6 +611,19 @@ export async function POST(request: NextRequest) {
         );
       }
       const embed = createActivityPreferencesSavedEmbed({ parentName, parentEmail, childName, preferences });
+      await sendDiscordNotification(embed, process.env.DISCORD_WEBHOOK_URL);
+      return NextResponse.json({ success: true });
+    }
+
+    if (type === "default_preference_set") {
+      const { parentName, parentEmail, childName, level } = data;
+      if (!parentName || !parentEmail || !childName) {
+        return NextResponse.json(
+          { error: "default_preference_set requires parentName, parentEmail, and childName" },
+          { status: 400 },
+        );
+      }
+      const embed = createDefaultPreferenceSetEmbed({ parentName, parentEmail, childName, level: level ?? null });
       await sendDiscordNotification(embed, process.env.DISCORD_WEBHOOK_URL);
       return NextResponse.json({ success: true });
     }
