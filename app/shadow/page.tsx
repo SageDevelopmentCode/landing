@@ -278,7 +278,7 @@ const SHADOW_FAQS = [
     question:
       "What happens to the enrollment fee if we enroll after the shadow day?",
     answer:
-      "Enrollment at Sage Field is $500 (the school year enrollment fee) — and if you submit an enrollment application within 5 days of your child's shadow day, we waive it entirely. You pay nothing to enroll. No codes. No forms. We just honor it.",
+      "Enrollment at Sage Field is $500 (the school year enrollment fee) — and if you submit an enrollment application within 5 days of your child's shadow day, we waive it entirely. You pay nothing to enroll. No codes. No forms. We just honor it. This offer is available for shadow days booked before August 14, 2026.",
     highlight: false,
   },
   {
@@ -756,7 +756,8 @@ export default function ShadowPage() {
                   Shadow families who enroll within 5 days get the{" "}
                   <span className="font-bold text-amber-900">
                     $500 enrollment fee fully waived.
-                  </span>
+                  </span>{" "}
+                  <span className="text-amber-700">Offer ends Aug 14.</span>
                 </p>
               </div>
             </motion.div>
@@ -1174,23 +1175,21 @@ export default function ShadowPage() {
                   </span>
                 </div>
                 <h3 className="text-2xl md:text-3xl font-bold font-heading text-gray-800 leading-tight mb-5">
-                  Enroll Within 5 Days of Your Shadow Day — Your $500 Enrollment
-                  Fee Is Waived.
+                  Enroll in the School Year Program Within 5 Days — Your $500
+                  Enrollment Fee Is Waived.
                 </h3>
                 <p className="text-base text-gray-600 font-body leading-relaxed mb-6">
-                  Enrollment at Sage Field is $500 — the school year enrollment
-                  fee. Shadow families who decide quickly get that fee waived
-                  entirely — a thank-you for choosing Sage Field without
-                  hesitation. You already saw it. You already felt it. This is
-                  just our way of honoring that. No codes. No forms. We apply it
-                  automatically.
+                  The $500 enrollment fee covers your child&apos;s spot in the
+                  Sage Field school year program. If you decide to enroll within
+                  5 days of your shadow day, we waive it completely. No codes,
+                  no forms — we apply it automatically. Offer ends August 14,
+                  2026.
                 </p>
                 <div className="flex items-start gap-3 bg-sage-50 border border-sage-200 rounded-xl p-4">
                   <Shield className="w-4 h-4 text-sage-600 mt-0.5 flex-shrink-0" />
                   <p className="text-xs text-gray-600 font-body leading-relaxed">
-                    No enrollment pressure. If your child loves what they
-                    experience and you&apos;re ready within 5 days, we simply
-                    waive the enrollment fee entirely.
+                    This offer applies to school year enrollment only. Summer
+                    program fees are separate.
                   </p>
                 </div>
               </div>
@@ -1210,8 +1209,11 @@ export default function ShadowPage() {
                     $0
                   </span>
                 </div>
-                <p className="text-sm text-gray-500 font-body mb-8">
+                <p className="text-sm text-gray-500 font-body mb-2">
                   if you enroll within 5 days of your shadow day
+                </p>
+                <p className="text-xs text-gray-400 font-body mb-8">
+                  Offer ends August 14, 2026.
                 </p>
 
                 <div className="bg-white rounded-xl border border-sage-200 p-4">
@@ -1731,7 +1733,7 @@ export default function ShadowPage() {
             </button>
             <p className="text-xs text-gray-400 font-body mt-4">
               $20 shadow day fee · Enroll within 5 days and your $500 enrollment
-              fee is fully waived.
+              fee is fully waived. Offer ends August 14, 2026.
             </p>
           </motion.div>
         </div>
