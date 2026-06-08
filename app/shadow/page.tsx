@@ -10,6 +10,8 @@ import {
   PenLine,
   X,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   BookOpen,
   Users,
   Leaf,
@@ -296,6 +298,179 @@ const SHADOW_FAQS = [
   },
 ];
 
+// ─── Calendar Constants & Helpers ─────────────────────────────────────────────
+
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+const DAY_HEADERS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+const CALENDAR_TODAY = new Date();
+CALENDAR_TODAY.setHours(0, 0, 0, 0);
+
+const CAL_MAX_DATE = new Date(2026, 7, 13);
+CAL_MAX_DATE.setHours(0, 0, 0, 0);
+const CAL_MAX_MONTH = 7;
+const CAL_MAX_YEAR = 2026;
+
+function getDaysInMonth(year: number, month: number): number {
+  return new Date(year, month + 1, 0).getDate();
+}
+
+function getFirstDayOfMonth(year: number, month: number): number {
+  return new Date(year, month, 1).getDay();
+}
+
+function isAvailableDay(date: Date): boolean {
+  const day = date.getDay();
+  return day >= 1 && day <= 4;
+}
+
+function isPastCalDate(date: Date): boolean {
+  return date < CALENDAR_TODAY || date > CAL_MAX_DATE;
+}
+
+function formatShortDate(date: Date): string {
+  return date.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function isDateSelected(date: Date, selected: Date | null): boolean {
+  return selected !== null && date.toDateString() === selected.toDateString();
+}
+
+function isCalToday(date: Date): boolean {
+  return date.toDateString() === CALENDAR_TODAY.toDateString();
+}
+
+// ─── CalendarGrid ─────────────────────────────────────────────────────────────
+
+function CalendarGrid({
+  selectedDate,
+  onSelectDate,
+  calendarMonth,
+  calendarYear,
+  onPrevMonth,
+  onNextMonth,
+}: {
+  selectedDate: Date | null;
+  onSelectDate: (date: Date) => void;
+  calendarMonth: number;
+  calendarYear: number;
+  onPrevMonth: () => void;
+  onNextMonth: () => void;
+}) {
+  const daysInMonth = getDaysInMonth(calendarYear, calendarMonth);
+  const startOffset = getFirstDayOfMonth(calendarYear, calendarMonth);
+  const isPrevDisabled =
+    calendarYear === CALENDAR_TODAY.getFullYear() &&
+    calendarMonth <= CALENDAR_TODAY.getMonth();
+  const isNextDisabled =
+    calendarYear === CAL_MAX_YEAR && calendarMonth >= CAL_MAX_MONTH;
+
+  const totalCells = startOffset + daysInMonth;
+  const paddedCells = Math.ceil(totalCells / 7) * 7;
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-5">
+        <button
+          type="button"
+          onClick={onPrevMonth}
+          disabled={isPrevDisabled}
+          className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        <h3 className="text-base font-bold font-heading text-gray-800">
+          {MONTHS[calendarMonth]} {calendarYear}
+        </h3>
+        <button
+          type="button"
+          onClick={onNextMonth}
+          disabled={isNextDisabled}
+          className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-7 gap-1 mb-2">
+        {DAY_HEADERS.map((d) => (
+          <div
+            key={d}
+            className="text-xs font-semibold text-gray-400 uppercase text-center py-1 font-body"
+          >
+            {d}
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-7 gap-1">
+        {Array.from({ length: paddedCells }).map((_, idx) => {
+          const dayNum = idx - startOffset + 1;
+          if (dayNum < 1 || dayNum > daysInMonth) {
+            return <div key={idx} />;
+          }
+          const date = new Date(calendarYear, calendarMonth, dayNum);
+          const past = isPastCalDate(date);
+          const available = isAvailableDay(date) && !past;
+          const selected = isDateSelected(date, selectedDate);
+          const todayCell = isCalToday(date);
+
+          return (
+            <button
+              type="button"
+              key={idx}
+              onClick={() => available && onSelectDate(date)}
+              disabled={!available}
+              className={`aspect-square flex items-center justify-center rounded-xl text-sm font-body transition-all duration-150 ${
+                selected
+                  ? "bg-primary text-white font-semibold shadow-sm"
+                  : available
+                    ? todayCell
+                      ? "text-primary font-semibold ring-2 ring-primary/30 hover:bg-primary/10"
+                      : "text-gray-700 hover:bg-primary/10 hover:text-primary cursor-pointer"
+                    : "text-gray-300 cursor-not-allowed"
+              }`}
+            >
+              {dayNum}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── SelectedDayChip ──────────────────────────────────────────────────────────
+
+function SelectedDayChip({ date }: { date: Date | null }) {
+  return (
+    <AnimatePresence>
+      {date && (
+        <motion.div
+          initial={{ opacity: 0, y: 8, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 8, scale: 0.95 }}
+          transition={{ type: "spring", stiffness: 300, damping: 22 }}
+          className="mt-4 flex items-center gap-3 bg-sage-50 border border-sage-200 rounded-xl px-4 py-3"
+        >
+          <Check className="w-4 h-4 text-sage-600 flex-shrink-0" />
+          <p className="text-sm font-semibold text-sage-700 font-body">
+            {formatShortDate(date)} · Full Day · 9:00 AM – 3:00 PM
+          </p>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 // ─── Shared styles ────────────────────────────────────────────────────────────
 
 const inputClass =
@@ -346,6 +521,29 @@ export default function ShadowPage() {
     consentPhoto: false,
     interestedInEnrollment: false,
   });
+
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [calendarMonth, setCalendarMonth] = useState(CALENDAR_TODAY.getMonth());
+  const [calendarYear, setCalendarYear] = useState(CALENDAR_TODAY.getFullYear());
+
+  function handlePrevMonth() {
+    if (calendarMonth === 0) {
+      setCalendarMonth(11);
+      setCalendarYear((y) => y - 1);
+    } else {
+      setCalendarMonth((m) => m - 1);
+    }
+  }
+
+  function handleNextMonth() {
+    if (calendarYear === CAL_MAX_YEAR && calendarMonth >= CAL_MAX_MONTH) return;
+    if (calendarMonth === 11) {
+      setCalendarMonth(0);
+      setCalendarYear((y) => y + 1);
+    } else {
+      setCalendarMonth((m) => m + 1);
+    }
+  }
 
   const galleryRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
@@ -414,7 +612,8 @@ export default function ShadowPage() {
     !!formData.email.trim() &&
     !!formData.childName.trim() &&
     !!formData.childAge &&
-    formData.consentOutdoor;
+    formData.consentOutdoor &&
+    selectedDate !== null;
 
   const handleSaveSignature = () => {
     if (!sigPrintedName.trim() || !sigValue.trim()) return;
@@ -1113,6 +1312,19 @@ export default function ShadowPage() {
                       ))}
                     </select>
                   </div>
+                </div>
+
+                <SectionLabel>Preferred Shadow Day</SectionLabel>
+                <div className="rounded-xl border border-gray-200 p-4 bg-white">
+                  <CalendarGrid
+                    selectedDate={selectedDate}
+                    onSelectDate={setSelectedDate}
+                    calendarMonth={calendarMonth}
+                    calendarYear={calendarYear}
+                    onPrevMonth={handlePrevMonth}
+                    onNextMonth={handleNextMonth}
+                  />
+                  <SelectedDayChip date={selectedDate} />
                 </div>
 
                 <SectionLabel>A Bit More</SectionLabel>
