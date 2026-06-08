@@ -2987,16 +2987,24 @@ export async function buildSummerWeekTwoNewsletterEmail(opts: {
   <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">📢 Primary Program Update</h2>
   <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px; font-size: 14px; color: #2c2c2c;">
     <p style="margin: 0 0 12px 0;">We wanted to share an important update regarding our Primary Program for the upcoming school year.</p>
-    <p style="margin: 0 0 12px 0;">After careful consideration, Paige Wood has decided to pursue a different opportunity and will no longer be joining our school for the upcoming year. While we are saddened by this change and know many of you were looking forward to having her in our community, we fully support her decision and wish her all the best in her next chapter.</p>
+    <p style="margin: 0 0 12px 0;">After careful consideration, <strong>Paige Wood</strong> has decided to pursue a different opportunity and will no longer be joining our school for the upcoming year. While we are saddened by this change and know many of you were looking forward to having her in our community, we fully support her decision and wish her all the best in her next chapter.</p>
     <p style="margin: 0 0 12px 0;">At the same time, we are excited to share that we are in the final stages of hiring an exceptional new Primary Guide. We have been intentional in our search and are thrilled about the educator we have selected. She brings a passion for hands-on, engaging learning experiences and aligns beautifully with the culture and values that make our school so special.</p>
-    <p style="margin: 0 0 12px 0;">To ensure a smooth transition, she plans to begin spending time with us during our summer program. This will allow her to get to know our children, families, routines, and school culture before the start of the school year. We are confident this will help create a strong foundation for a successful year together.</p>
+    <p style="margin: 0 0 12px 0;">To ensure a <strong>smooth transition</strong>, she plans to begin spending time with us during our summer program. This will allow her to get to know our children, families, routines, and school culture before the start of the school year. We are confident this will help create a strong foundation for a successful year together.</p>
     <p style="margin: 0;">We look forward to officially introducing her very soon and sharing more about her background, experience, and exciting ideas for the classroom. We know she will bring incredible energy, creativity, and care to our Primary community.</p>
   </div>
 
   <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">✨ New: Activity Preferences Auto-Fill</h2>
   <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px; font-size: 14px; color: #2c2c2c;">
-    <p style="margin: 0 0 10px 0;">When selecting preferences for ${opts.childLegalName}'s activities, we've introduced a helpful new feature: <strong>Auto-fill preference</strong> or <strong>Pick a level</strong>.</p>
-    <p style="margin: 0;">Every new activity for ${opts.childLegalName} will be automatically pre-selected — you can still change any activity individually at any time.</p>
+    <p style="margin: 0 0 10px 0;">We've added a new feature called <strong>Auto-fill Preference</strong> — when you set a preference level, every new activity for ${opts.childLegalName} will be automatically pre-selected. You can still adjust any activity individually at any time.</p>
+    <p style="margin: 0;">This also works on the <strong>mobile app</strong> — just fully close/quit and re-open the app to see the changes.</p>
+  </div>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">🎁 New Referral Program</h2>
+  <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px; font-size: 14px; color: #2c2c2c;">
+    <p style="margin: 0 0 12px 0;">We're excited to introduce our <strong>referral program</strong> — and we'd love your help spreading the word about Sage Field!</p>
+    <p style="margin: 0 0 12px 0;">When a family you refer <strong>enrolls in our upcoming school program and pays their registration fee</strong>, you'll receive a <strong>$500 gift card of your choice</strong>. 🎉</p>
+    <p style="margin: 0 0 16px 0;">Simply share your unique referral link — you can find it on your home dashboard. If sharing the link isn't convenient, you can also just let the family know to <strong>mention your name when they apply</strong> and it will still count toward your referral. We'll take care of the rest!</p>
+    <p style="margin: 0; color: #888; font-size: 13px;">⏳ This offer is available through the end of our summer program.</p>
   </div>
 
   <p style="margin-bottom: 8px; font-size: 14px; color: #555;">We can't wait for all that's ahead this summer. Thank you for sharing your children with us — it truly means the world. 🌱</p>

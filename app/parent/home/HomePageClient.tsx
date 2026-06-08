@@ -165,12 +165,19 @@ function formatPickupTime(hhmm: string) {
   const [h, m] = hhmm.split(":").map(Number);
   const d = new Date();
   d.setHours(h, m, 0, 0);
-  return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+  return d.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
 }
 
-const PROGRAM_CONFIG: Record<AttendanceProgram, { label: string; color: string; bg: string }> = {
-  summer:       { label: "Summer 2026",      color: "#d97706", bg: "#fef9ee" },
-  aftercare:    { label: "Aftercare",         color: "#7c3aed", bg: "#f5f3ff" },
+const PROGRAM_CONFIG: Record<
+  AttendanceProgram,
+  { label: string; color: string; bg: string }
+> = {
+  summer: { label: "Summer 2026", color: "#d97706", bg: "#fef9ee" },
+  aftercare: { label: "Aftercare", color: "#7c3aed", bg: "#f5f3ff" },
   field_friday: { label: "Field Fun Fridays", color: "#0891b2", bg: "#ecfeff" },
 };
 
@@ -270,7 +277,13 @@ function AttendanceSidebar({ student, onClose }: AttendanceSidebarProps) {
                             Picked Up
                           </span>
                         ) : (
-                          <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ backgroundColor: "#eaf2ec", color: "#4a7c59" }}>
+                          <span
+                            className="text-xs font-medium px-2 py-0.5 rounded-full"
+                            style={{
+                              backgroundColor: "#eaf2ec",
+                              color: "#4a7c59",
+                            }}
+                          >
                             Attended
                           </span>
                         )}
@@ -290,45 +303,62 @@ function AttendanceSidebar({ student, onClose }: AttendanceSidebarProps) {
         onClose={() => setSelectedRecord(null)}
         title="Attendance Record"
       >
-        {selectedRecord && (() => {
-          const cfg = PROGRAM_CONFIG[selectedRecord.program];
-          const recordedBy = userMap[selectedRecord.recorded_by]?.full_name ?? "Staff";
-          const pickupRecordedBy = selectedRecord.pickup_recorded_by
-            ? (userMap[selectedRecord.pickup_recorded_by]?.full_name ?? "Staff")
-            : null;
-          return (
-            <SidebarSection title="Record Details">
-              <SidebarField label="Date" value={formatAttendanceDate(selectedRecord.date)} />
-              <div className="flex flex-col gap-0.5">
-                <span className="text-xs text-gray-400">Program</span>
-                <span
-                  className="text-xs font-medium px-2.5 py-0.5 rounded-full w-fit"
-                  style={{ color: cfg.color, backgroundColor: cfg.bg }}
-                >
-                  {cfg.label}
-                </span>
-              </div>
-              <SidebarField label="Recorded By" value={recordedBy} />
-              {selectedRecord.pickup_time && (
-                <>
-                  <SidebarField label="Pickup Time" value={formatPickupTime(selectedRecord.pickup_time)} />
-                  {selectedRecord.picked_up_by_name && (
+        {selectedRecord &&
+          (() => {
+            const cfg = PROGRAM_CONFIG[selectedRecord.program];
+            const recordedBy =
+              userMap[selectedRecord.recorded_by]?.full_name ?? "Staff";
+            const pickupRecordedBy = selectedRecord.pickup_recorded_by
+              ? (userMap[selectedRecord.pickup_recorded_by]?.full_name ??
+                "Staff")
+              : null;
+            return (
+              <SidebarSection title="Record Details">
+                <SidebarField
+                  label="Date"
+                  value={formatAttendanceDate(selectedRecord.date)}
+                />
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-xs text-gray-400">Program</span>
+                  <span
+                    className="text-xs font-medium px-2.5 py-0.5 rounded-full w-fit"
+                    style={{ color: cfg.color, backgroundColor: cfg.bg }}
+                  >
+                    {cfg.label}
+                  </span>
+                </div>
+                <SidebarField label="Recorded By" value={recordedBy} />
+                {selectedRecord.pickup_time && (
+                  <>
                     <SidebarField
-                      label="Picked Up By"
-                      value={[selectedRecord.picked_up_by_name, selectedRecord.picked_up_by_relationship].filter(Boolean).join(" · ")}
+                      label="Pickup Time"
+                      value={formatPickupTime(selectedRecord.pickup_time)}
                     />
-                  )}
-                  {pickupRecordedBy && (
-                    <SidebarField label="Pickup Recorded By" value={pickupRecordedBy} />
-                  )}
-                </>
-              )}
-              {selectedRecord.notes && (
-                <SidebarField label="Notes" value={selectedRecord.notes} />
-              )}
-            </SidebarSection>
-          );
-        })()}
+                    {selectedRecord.picked_up_by_name && (
+                      <SidebarField
+                        label="Picked Up By"
+                        value={[
+                          selectedRecord.picked_up_by_name,
+                          selectedRecord.picked_up_by_relationship,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      />
+                    )}
+                    {pickupRecordedBy && (
+                      <SidebarField
+                        label="Pickup Recorded By"
+                        value={pickupRecordedBy}
+                      />
+                    )}
+                  </>
+                )}
+                {selectedRecord.notes && (
+                  <SidebarField label="Notes" value={selectedRecord.notes} />
+                )}
+              </SidebarSection>
+            );
+          })()}
       </DetailSidebar>
     </>
   );
@@ -438,7 +468,7 @@ export default function HomePageClient({
     (r) => r.status === "enrolled" || r.status === "rewarded",
   ).length;
   const earnedDollars =
-    referrals.filter((r) => r.status === "rewarded").length * 150;
+    referrals.filter((r) => r.status === "rewarded").length * 500;
 
   useEffect(() => {
     setGreeting(getGreeting());
@@ -506,7 +536,7 @@ export default function HomePageClient({
                       Refer a Family
                     </h2>
                     <span className="bg-[#4a7c59] text-white text-xs font-body px-2.5 py-1 rounded-full font-medium">
-                      $150 gift card
+                      $500 gift card
                     </span>
                   </div>
 
@@ -514,8 +544,13 @@ export default function HomePageClient({
                     Know a family who&apos;d be a great fit for Sage Field?
                     Share your link — when they enroll and pay their
                     registration fee, you&apos;ll receive a{" "}
-                    <strong className="text-gray-800">$150 gift card</strong> of
-                    your choice.
+                    <strong className="text-gray-800">$500 gift card</strong> of
+                    your choice. If sharing the link isn&apos;t convenient, just
+                    let them know to{" "}
+                    <strong className="text-gray-800">
+                      mention your name when they apply
+                    </strong>{" "}
+                    — it still counts!
                   </p>
 
                   <div className="flex items-center gap-2">
@@ -601,7 +636,7 @@ export default function HomePageClient({
                       Refer a Family
                     </h2>
                     <span className="bg-[#4a7c59] text-white text-xs font-body px-2.5 py-1 rounded-full font-medium">
-                      $150 gift card
+                      $500 gift card
                     </span>
                   </div>
 
@@ -609,8 +644,13 @@ export default function HomePageClient({
                     Know a family who&apos;d be a great fit for Sage Field?
                     Share your link — when they enroll and pay their
                     registration fee, you&apos;ll receive a{" "}
-                    <strong className="text-gray-800">$150 gift card</strong> of
-                    your choice.
+                    <strong className="text-gray-800">$500 gift card</strong> of
+                    your choice. If sharing the link isn&apos;t convenient, just
+                    let them know to{" "}
+                    <strong className="text-gray-800">
+                      mention your name when they apply
+                    </strong>{" "}
+                    — it still counts!
                   </p>
 
                   <div className="flex items-center gap-2">
@@ -695,7 +735,9 @@ export default function HomePageClient({
                 </span>
               </div>
               <p className="text-xs text-amber-800 font-body leading-relaxed">
-                Your child has upcoming activities at Sage Field. Let us know how they&apos;d like to participate — cooking, watching, or full involvement.
+                Your child has upcoming activities at Sage Field. Let us know
+                how they&apos;d like to participate — cooking, watching, or full
+                involvement.
               </p>
               <div className="self-start inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-3 py-1.5 rounded-full transition-colors font-body">
                 Set Preferences <ChevronRight size={13} />
@@ -766,18 +808,6 @@ export default function HomePageClient({
                 })}
               </div>
             )}
-
-            {/* Mobile app note */}
-            <div className="flex items-center gap-2 mt-3">
-              <Smartphone
-                className="w-3.5 h-3.5 text-gray-300 flex-shrink-0"
-                strokeWidth={1.5}
-              />
-              <p className="text-xs text-gray-400">
-                Check-in and pickup available on the Sage Field mobile app
-                (Coming Soon).
-              </p>
-            </div>
           </section>
 
           {/* First Week Drop-Off Schedule */}
@@ -892,13 +922,20 @@ export default function HomePageClient({
                     Refer a Family
                   </h2>
                   <span className="bg-[#4a7c59] text-white text-xs font-body px-2 py-0.5 rounded-full font-medium">
-                    $150 gift card
+                    $500 gift card
                   </span>
                 </div>
                 <p className="text-sm font-body text-gray-600 leading-relaxed max-w-lg">
                   Know a family who&apos;d be a great fit for Sage Field? Share
                   your link and when they enroll and pay their registration fee,
-                  you&apos;ll receive a $150 gift card of your choice.
+                  you&apos;ll receive a{" "}
+                  <strong className="text-gray-800">$500 gift card</strong> of
+                  your choice. If sharing the link isn&apos;t convenient, just
+                  let them know to{" "}
+                  <strong className="text-gray-800">
+                    mention your name when they apply
+                  </strong>{" "}
+                  — it still counts!
                 </p>
 
                 {/* How it works */}
