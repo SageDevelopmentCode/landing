@@ -327,7 +327,7 @@ function NewsletterView({ newsletter }: { newsletter: DBNewsletter }) {
 
 // ── Password gate ─────────────────────────────────────────────────────────────
 
-function PasswordGate({ id, title, weekRange, onUnlocked }: { id: string; title: string; weekRange: string; onUnlocked: (nl: DBNewsletter) => void }) {
+function PasswordGate({ id, title, weekRange, coverImageUrl, onUnlocked }: { id: string; title: string; weekRange: string; coverImageUrl?: string | null; onUnlocked: (nl: DBNewsletter) => void }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -355,7 +355,7 @@ function PasswordGate({ id, title, weekRange, onUnlocked }: { id: string; title:
           {/* Hero strip */}
           <div className="relative h-36 overflow-hidden">
             {!heroLoaded && <div className="absolute inset-0 bg-[#e8ede9] animate-pulse z-10" />}
-            <Image src="/assets/NewsletterWeek1.jpg" alt="" fill className="object-cover object-center" onLoad={() => setHeroLoaded(true)} />
+            <Image src={coverImageUrl ?? "/assets/NewsletterWeek1.jpg"} alt="" fill className="object-cover object-center" onLoad={() => setHeroLoaded(true)} />
             <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(10,30,18,0.85) 0%, rgba(10,30,18,0.3) 100%)" }} />
             <div className="absolute bottom-0 left-0 right-0 px-5 pb-4">
               <div className="flex items-center gap-2 mb-1.5">
@@ -423,12 +423,12 @@ function PasswordGate({ id, title, weekRange, onUnlocked }: { id: string; title:
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
-export default function PublicNewsletterClient({ id, title, weekRange }: { id: string; title: string; weekRange: string }) {
+export default function PublicNewsletterClient({ id, title, weekRange, coverImageUrl }: { id: string; title: string; weekRange: string; coverImageUrl?: string | null }) {
   const [newsletter, setNewsletter] = useState<DBNewsletter | null>(null);
 
   if (newsletter) {
     return <NewsletterView newsletter={newsletter} />;
   }
 
-  return <PasswordGate id={id} title={title} weekRange={weekRange} onUnlocked={setNewsletter} />;
+  return <PasswordGate id={id} title={title} weekRange={weekRange} coverImageUrl={coverImageUrl} onUnlocked={setNewsletter} />;
 }

@@ -6,5 +6,5 @@ export default async function PublicNewsletterPage({ params }: { params: Promise
   const { id } = await params
   const meta = await getNewsletterMetaPublic(id)
   if (!meta) notFound()
-  return <PublicNewsletterClient id={id} title={meta.title} weekRange={meta.week_range} />
+  return <PublicNewsletterClient id={id} title={meta.title} weekRange={meta.week_range} coverImageUrl={meta.cover_image_signed_url} />
 }

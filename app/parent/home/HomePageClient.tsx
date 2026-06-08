@@ -548,9 +548,8 @@ export default function HomePageClient({
                     your choice. If sharing the link isn&apos;t convenient, just
                     let them know to{" "}
                     <strong className="text-gray-800">
-                      mention your name when they apply
-                    </strong>{" "}
-                    — it still counts!
+                      mention your name when they apply!
+                    </strong>
                   </p>
 
                   <div className="flex items-center gap-2">
@@ -648,9 +647,8 @@ export default function HomePageClient({
                     your choice. If sharing the link isn&apos;t convenient, just
                     let them know to{" "}
                     <strong className="text-gray-800">
-                      mention your name when they apply
-                    </strong>{" "}
-                    — it still counts!
+                      mention your name when they apply!
+                    </strong>
                   </p>
 
                   <div className="flex items-center gap-2">
@@ -933,9 +931,8 @@ export default function HomePageClient({
                   your choice. If sharing the link isn&apos;t convenient, just
                   let them know to{" "}
                   <strong className="text-gray-800">
-                    mention your name when they apply
-                  </strong>{" "}
-                  — it still counts!
+                    mention your name when they apply!
+                  </strong>
                 </p>
 
                 {/* How it works */}
