@@ -14,6 +14,7 @@ type LinkItem = {
   featured?: boolean;
   color?: string;
   hoverColor?: string;
+  badge?: string;
 };
 
 const LINK_GROUPS: { label: string; links: LinkItem[] }[] = [
@@ -22,9 +23,9 @@ const LINK_GROUPS: { label: string; links: LinkItem[] }[] = [
     links: [
       {
         emoji: "📸",
-        title: "Week 1 Highlights Are Live!",
-        subtitle: "Summer 2026 · May 26–29 · See the recap",
-        href: "/highlights/summer/week-1",
+        title: "Week 2 Highlights Are Live!",
+        subtitle: "Summer 2026 · Jun 1–4 · See the recap",
+        href: "/highlights/summer/week-2",
         featured: true,
       },
     ],
@@ -72,8 +73,9 @@ const LINK_GROUPS: { label: string; links: LinkItem[] }[] = [
       {
         emoji: "👀",
         title: "Try a Shadow Day",
-        subtitle: "$95 · Full school day · Mon–Thu",
-        href: "/shadow-tour",
+        subtitle: "$20 · Full day experience",
+        href: "/shadow",
+        badge: "Save $500",
       },
     ],
   },
@@ -115,6 +117,23 @@ const LINK_GROUPS: { label: string; links: LinkItem[] }[] = [
         title: "Call or Text Us",
         subtitle: "(512) 677-5872",
         href: "tel:+15126775872",
+      },
+    ],
+  },
+  {
+    label: "Highlights",
+    links: [
+      {
+        emoji: "📸",
+        title: "Week 2 Highlights",
+        subtitle: "Summer 2026 · Jun 1–4",
+        href: "/highlights/summer/week-2",
+      },
+      {
+        emoji: "📸",
+        title: "Week 1 Highlights",
+        subtitle: "Summer 2026 · May 26–29",
+        href: "/highlights/summer/week-1",
       },
     ],
   },
@@ -290,6 +309,11 @@ export default function LinksPage() {
                                 >
                                   {link.subtitle}
                                 </p>
+                              )}
+                              {link.badge && (
+                                <span className="inline-block mt-1 px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-semibold rounded-full font-body">
+                                  {link.badge}
+                                </span>
                               )}
                             </div>
                           </div>
