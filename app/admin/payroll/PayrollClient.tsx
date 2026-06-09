@@ -489,7 +489,7 @@ export function PayrollClient({ paystubs: initial, teachers, clockSessions, cloc
       {tab === 'periods'  && <PayPeriodHoursTab paystubs={paystubs} />}
       {tab === 'rates'    && <TeacherRatesTab teachers={teachers} />}
       {tab === 'codes'          && <EmployeeCodesTab teachers={teachers as TeacherWithCode[]} />}
-      {tab === 'clock-sessions' && <ClockSessionsTab initialSessions={clockSessions} initialDate={clockSessionsDate} />}
+      {tab === 'clock-sessions' && <ClockSessionsTab initialSessions={clockSessions} initialDate={clockSessionsDate} teachers={teachers} />}
     </div>
   )
 }

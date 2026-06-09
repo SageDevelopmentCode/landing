@@ -1,10 +1,11 @@
 'use client'
 
 import React, { useState, useTransition, useEffect, useMemo } from 'react'
-import { ChevronDown, ChevronRight, Pencil, Check, X } from 'lucide-react'
+import { createPortal } from 'react-dom'
+import { ChevronDown, ChevronRight, Pencil, Check, X, Plus } from 'lucide-react'
 import { Table, TableRow, TableCell } from '../components/Table'
 import { cssColors as colors } from '../design-system'
-import { getClockSessionsForDate, getClockSessionsForRange, updateClockSession } from '@/app/actions/timeclock'
+import { getClockSessionsForDate, getClockSessionsForRange, updateClockSession, createClockSessionForTeacher } from '@/app/actions/timeclock'
 import type { ClockSessionWithTeacher } from '@/app/actions/timeclock'
 
 function fmtTime(iso: string) {
@@ -93,9 +94,10 @@ function getLastWeekRange() {
 interface Props {
   initialSessions: ClockSessionWithTeacher[]
   initialDate: string
+  teachers: Array<{ id: string; full_name: string | null }>
 }
 
-export function ClockSessionsTab({ initialSessions, initialDate }: Props) {
+export function ClockSessionsTab({ initialSessions, initialDate, teachers }: Props) {
   const [mode, setMode] = useState<'day' | 'summary'>('day')
 
   // Day mode
@@ -109,6 +111,16 @@ export function ClockSessionsTab({ initialSessions, initialDate }: Props) {
   const [editClockOut, setEditClockOut] = useState('')
   const [editPending, startEditTransition] = useTransition()
   const [editError, setEditError] = useState<string | null>(null)
+
+  // Add session state
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [addTeacherId, setAddTeacherId] = useState('')
+  const [addDate, setAddDate] = useState(initialDate)
+  const [addClockIn, setAddClockIn] = useState('09:00')
+  const [addClockOut, setAddClockOut] = useState('17:00')
+  const [addNote, setAddNote] = useState('')
+  const [addError, setAddError] = useState<string | null>(null)
+  const [addPending, startAddTransition] = useTransition()
 
   // Summary mode
   const [rangeStart, setRangeStart] = useState(getMondayOfCurrentWeek)
@@ -259,6 +271,29 @@ export function ClockSessionsTab({ initialSessions, initialDate }: Props) {
     })
   }
 
+  function openAddModal() {
+    setAddDate(selectedDate)
+    setAddTeacherId(teachers[0]?.id ?? '')
+    setAddClockIn('09:00')
+    setAddClockOut('17:00')
+    setAddNote('')
+    setAddError(null)
+    setShowAddModal(true)
+  }
+
+  function submitAddSession() {
+    if (!addTeacherId) { setAddError('Select an employee'); return }
+    const clockInISO = new Date(`${addDate}T${addClockIn}:00`).toISOString()
+    const clockOutISO = addClockOut ? new Date(`${addDate}T${addClockOut}:00`).toISOString() : null
+    startAddTransition(async () => {
+      const result = await createClockSessionForTeacher(addTeacherId, clockInISO, clockOutISO, addNote || null)
+      if (result.error) { setAddError(result.error); return }
+      setShowAddModal(false)
+      const refreshed = await getClockSessionsForDate(selectedDate)
+      setSessions(refreshed)
+    })
+  }
+
   const inputStyle = {
     background: colors.surface,
     border: `1px solid ${colors.border}`,
@@ -318,13 +353,23 @@ export function ClockSessionsTab({ initialSessions, initialDate }: Props) {
         )}
         <div className="flex items-center gap-3">
           {mode === 'day' && (
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => handleDateChange(e.target.value)}
-              className="px-2.5 py-1 rounded-lg text-xs focus:outline-none focus:ring-1"
-              style={inputStyle}
-            />
+            <>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => handleDateChange(e.target.value)}
+                className="px-2.5 py-1 rounded-lg text-xs focus:outline-none focus:ring-1"
+                style={inputStyle}
+              />
+              <button
+                onClick={openAddModal}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors"
+                style={{ background: colors.accentLight, color: colors.accent, border: `1px solid ${colors.accent}22` }}
+              >
+                <Plus className="w-3 h-3" />
+                Add Session
+              </button>
+            </>
           )}
           <div className="flex gap-0.5 p-0.5 rounded-lg" style={{ background: colors.elevated, border: `1px solid ${colors.border}` }}>
             <button style={modeBtn(mode === 'day')} onClick={() => setMode('day')}>Day</button>
@@ -460,6 +505,113 @@ export function ClockSessionsTab({ initialSessions, initialDate }: Props) {
             </Table>
           </div>
         )
+      )}
+
+      {/* Add session modal */}
+      {showAddModal && createPortal(
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 60, backgroundColor: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={() => setShowAddModal(false)}
+        >
+          <div
+            style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 24, width: 360, boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm font-semibold" style={{ color: colors.textPrimary }}>Add Time Session</span>
+              <button onClick={() => setShowAddModal(false)} style={{ color: colors.textTertiary, background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs mb-1" style={{ color: colors.textSecondary }}>Employee</label>
+                <select
+                  value={addTeacherId}
+                  onChange={(e) => setAddTeacherId(e.target.value)}
+                  className="w-full px-2.5 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-1"
+                  style={{ ...inputStyle, width: '100%' }}
+                >
+                  <option value="">Select employee…</option>
+                  {[...teachers].sort((a, b) => (a.full_name ?? '').localeCompare(b.full_name ?? '')).map((t) => (
+                    <option key={t.id} value={t.id}>{t.full_name ?? t.id}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs mb-1" style={{ color: colors.textSecondary }}>Date</label>
+                <input
+                  type="date"
+                  value={addDate}
+                  onChange={(e) => setAddDate(e.target.value)}
+                  className="w-full px-2.5 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-1"
+                  style={{ ...inputStyle, width: '100%' }}
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className="block text-xs mb-1" style={{ color: colors.textSecondary }}>Clock In</label>
+                  <input
+                    type="time"
+                    value={addClockIn}
+                    onChange={(e) => setAddClockIn(e.target.value)}
+                    className="w-full px-2.5 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-1"
+                    style={{ ...inputStyle, width: '100%' }}
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-xs mb-1" style={{ color: colors.textSecondary }}>Clock Out <span style={{ color: colors.textTertiary }}>(optional)</span></label>
+                  <input
+                    type="time"
+                    value={addClockOut}
+                    onChange={(e) => setAddClockOut(e.target.value)}
+                    className="w-full px-2.5 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-1"
+                    style={{ ...inputStyle, width: '100%' }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs mb-1" style={{ color: colors.textSecondary }}>Note <span style={{ color: colors.textTertiary }}>(optional)</span></label>
+                <input
+                  type="text"
+                  value={addNote}
+                  onChange={(e) => setAddNote(e.target.value)}
+                  placeholder="e.g. makeup shift"
+                  className="w-full px-2.5 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-1"
+                  style={{ ...inputStyle, width: '100%' }}
+                />
+              </div>
+            </div>
+
+            {addError && (
+              <p className="text-xs mt-3" style={{ color: colors.error }}>{addError}</p>
+            )}
+
+            <div className="flex gap-2 mt-4 justify-end">
+              <button
+                onClick={() => setShowAddModal(false)}
+                disabled={addPending}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium"
+                style={{ background: colors.elevated, color: colors.textSecondary, border: `1px solid ${colors.border}` }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitAddSession}
+                disabled={addPending}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium"
+                style={{ background: colors.accentLight, color: colors.accent, border: `1px solid ${colors.accent}33` }}
+              >
+                {addPending ? 'Saving…' : 'Save Session'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
 
       {/* Summary mode */}
