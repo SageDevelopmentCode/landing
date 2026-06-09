@@ -3161,3 +3161,129 @@ ${opts.memo ? `  <p style="padding: 12px 16px; background: #f7f4f0; border-left:
 
   return { subject, content };
 }
+
+/**
+ * Build confirmation email for the person who submitted a referral
+ */
+export async function buildReferralConfirmationEmail(opts: {
+  referrerName: string;
+  referredName: string;
+}): Promise<{ subject: string; content: string }> {
+  const subject = "Your Referral to Sage Field Has Been Sent!";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${opts.referrerName},</p>
+
+  <p>Thank you for referring <strong>${opts.referredName}</strong> to Sage Field! We've just sent them an introduction email and will be following up personally to answer any questions they have.</p>
+
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; margin: 24px 0;">
+    <p style="margin: 0 0 6px 0; font-weight: bold; font-size: 15px;">Your $250 Gift Card</p>
+    <p style="margin: 0; font-size: 14px; color: #555;">Once <strong>${opts.referredName}</strong>'s family pays their enrollment fee, we'll send both of you a $250 gift card of your choice — Amazon, Target, Visa prepaid, and more. Gift cards are delivered within 5–7 business days of payment clearing.</p>
+  </div>
+
+  <p>There's no limit to how many families you can refer — each successful enrollment earns both parties a $250 gift card.</p>
+
+  <p>If you have any questions in the meantime, don't hesitate to reach out.</p>
+
+  <p style="margin-top: 32px;">With gratitude,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field Private School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
+/**
+ * Build rich invite email for the family being referred
+ */
+export async function buildReferralInviteEmail(opts: {
+  referrerName: string;
+  referredName: string;
+}): Promise<{ subject: string; content: string }> {
+  const subject = `${opts.referrerName} thinks your family would love Sage Field 🌿`;
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${opts.referredName},</p>
+
+  <p><strong>${opts.referrerName}</strong> thought your family might love what we're building at Sage Field, and wanted to personally introduce you. We're so glad they did.</p>
+
+  <h2 style="font-size: 20px; margin-top: 32px; margin-bottom: 8px; color: #2C5F2E;">What Is Sage Field?</h2>
+  <p>Sage Field Private School is a small, outdoor-focused microschool in <strong>Round Rock, Texas</strong>, serving children ages <strong>4–11</strong>. We're not a daycare, and we're not a traditional school — we're something better: a hands-on, nature-rich academic environment where every child is truly known.</p>
+
+  <table style="width: 100%; border-collapse: separate; border-spacing: 0 8px; margin: 24px 0;">
+    <tr>
+      <td style="padding: 14px 16px; background: #f7f4f0; border-radius: 8px; vertical-align: top; width: 50%;">
+        <p style="margin: 0 0 4px 0; font-weight: bold; color: #2C5F2E;">👥 Tiny Classes</p>
+        <p style="margin: 0; font-size: 13px; color: #555;">~10 students per class. Every child gets real attention — no one gets lost in the crowd.</p>
+      </td>
+      <td style="padding: 14px 16px; background: #f7f4f0; border-radius: 8px; vertical-align: top; width: 50%;">
+        <p style="margin: 0 0 4px 0; font-weight: bold; color: #2C5F2E;">🌿 Outdoor Every Day</p>
+        <p style="margin: 0; font-size: 13px; color: #555;">Nature study, gardening, animal care, and outdoor learning are woven into every week.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 14px 16px; background: #f7f4f0; border-radius: 8px; vertical-align: top;">
+        <p style="margin: 0 0 4px 0; font-weight: bold; color: #2C5F2E;">📚 Real Academics</p>
+        <p style="margin: 0; font-size: 13px; color: #555;">TEKS-aligned literacy and math, ability-grouped — not grade-grouped — so every child works at their actual level.</p>
+      </td>
+      <td style="padding: 14px 16px; background: #f7f4f0; border-radius: 8px; vertical-align: top;">
+        <p style="margin: 0 0 4px 0; font-weight: bold; color: #2C5F2E;">🎨 Whole-Child Learning</p>
+        <p style="margin: 0; font-size: 13px; color: #555;">Montessori, Waldorf &amp; Reggio-inspired methods. Art, music, cooking, and social-emotional growth every week.</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 style="font-size: 20px; margin-top: 32px; margin-bottom: 12px; color: #2C5F2E;">Our Programs</h2>
+
+  <a href="https://sagefield.co/summer-2026" style="display: block; text-decoration: none; color: inherit; border: 1px solid #e0dbd5; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px;">
+    <p style="margin: 0 0 4px 0; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; color: #2C5F2E;">☀️ Summer 2026</p>
+    <p style="margin: 0 0 4px 0; font-weight: bold; color: #2c2c2c;">May 26 – August 13, 2026</p>
+    <p style="margin: 0 0 6px 0; font-size: 14px; color: #555;">Twelve weeks of themed academic enrichment — Mon–Thu, ~6 hrs/day. Literacy, math, nature, art, music, cooking, and water play every week.</p>
+    <p style="margin: 0; font-size: 13px; color: #5a7a5a;">Learn more →</p>
+  </a>
+
+  <a href="https://sagefield.co/school-year-2026-2027" style="display: block; text-decoration: none; color: inherit; border: 1px solid #e0dbd5; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px;">
+    <p style="margin: 0 0 4px 0; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; color: #2C5F2E;">📚 School Year 2026–2027</p>
+    <p style="margin: 0 0 4px 0; font-weight: bold; color: #2c2c2c;">Starting August 17, 2026</p>
+    <p style="margin: 0 0 6px 0; font-size: 14px; color: #555;">Up to 4 days/week of structured small-group learning. A six-month commitment with individualized academic support for ages 4–11.</p>
+    <p style="margin: 0; font-size: 13px; color: #5a7a5a;">Learn more →</p>
+  </a>
+
+  <a href="https://sagefield.co/homeschool" style="display: block; text-decoration: none; color: inherit; border: 1px solid #e0dbd5; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px;">
+    <p style="margin: 0 0 4px 0; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; color: #2C5F2E;">🏡 Homeschool Drop-In</p>
+    <p style="margin: 0 0 4px 0; font-weight: bold; color: #2c2c2c;">1–3 Days Per Week</p>
+    <p style="margin: 0 0 6px 0; font-size: 14px; color: #555;">Flexible enrichment days without a long-term commitment. Choose your schedule — and every Friday is a themed Field Day adventure.</p>
+    <p style="margin: 0; font-size: 13px; color: #5a7a5a;">Learn more →</p>
+  </a>
+
+  <p style="text-align: center; margin: 4px 0 20px 0; font-size: 13px;">
+    <a href="https://sagefield.co" style="color: #5a7a5a;">Learn more about Sage Field →</a>
+  </p>
+
+  <div style="background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 16px 20px; margin: 28px 0;">
+    <p style="margin: 0 0 4px 0; font-weight: bold; color: #92400e;">🎁 Your Family Gets $250 Too</p>
+    <p style="margin: 0; font-size: 14px; color: #78350f;">As a referred family, you'll receive a <strong>$250 gift card</strong> of your choice (Amazon, Target, Visa prepaid, and more) once your enrollment fee is processed. No code needed — we send it directly to you.</p>
+  </div>
+
+  <div style="text-align: center; margin: 36px 0;">
+    <a href="https://sagefield.co/apply" style="display: inline-block; background: #2C5F2E; color: #ffffff; font-family: Georgia, serif; font-size: 16px; font-weight: bold; text-decoration: none; padding: 14px 36px; border-radius: 8px;">Apply Now →</a>
+    <p style="margin: 12px 0 0 0; font-size: 13px; color: #888;">sagefield.co/apply &nbsp;·&nbsp; Round Rock, TX &nbsp;·&nbsp; Ages 4–11</p>
+  </div>
+
+  <p>We'd love to meet your family. Feel free to reach out at any time — I personally answer every email.</p>
+
+  <p style="margin-top: 32px;">Warmly,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field Private School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}

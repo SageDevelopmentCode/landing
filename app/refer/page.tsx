@@ -19,6 +19,7 @@ import Footer from "../components/Footer";
 import FloatingSMSButton from "../components/FloatingSMSButton";
 import WeekRecapPreview from "../components/WeekRecapPreview";
 import { formatPhone } from "../utils/formatPhone";
+import { submitReferral } from "../actions/referral";
 
 // ─── Gallery images ───────────────────────────────────────────────────────────
 
@@ -184,14 +185,27 @@ export default function ReferPage() {
     if (!isFormValid || submitting) return;
     setSubmitting(true);
     setSubmitError(null);
-    await new Promise((r) => setTimeout(r, 1100));
-    try {
-      const { default: confetti } = await import("canvas-confetti");
-      confetti({ particleCount: 140, spread: 75, origin: { y: 0.6 } });
-    } catch {
-      // confetti is a nice-to-have
+    const result = await submitReferral({
+      referrerName: formData.yourName,
+      referrerEmail: formData.yourEmail,
+      referrerPhone: formData.yourPhone || undefined,
+      referredName: formData.theirName,
+      referredEmail: formData.theirEmail,
+      referredPhone: formData.theirPhone || undefined,
+      childAge: formData.childAge ? parseInt(formData.childAge) : undefined,
+      message: formData.message || undefined,
+    });
+    if (result.success) {
+      try {
+        const { default: confetti } = await import("canvas-confetti");
+        confetti({ particleCount: 140, spread: 75, origin: { y: 0.6 } });
+      } catch {
+        // confetti is a nice-to-have
+      }
+      setSubmitted(true);
+    } else {
+      setSubmitError(result.message);
     }
-    setSubmitted(true);
     setSubmitting(false);
   };
 

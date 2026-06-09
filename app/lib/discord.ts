@@ -1994,3 +1994,38 @@ export function createDefaultPreferenceSetEmbed(data: {
     timestamp: new Date().toISOString(),
   };
 }
+
+/**
+ * Creates a Discord embed for referral form submissions
+ */
+export function createReferralEmbed(data: {
+  referrerName: string;
+  referrerEmail: string;
+  referrerPhone?: string;
+  referredName: string;
+  referredEmail: string;
+  referredPhone?: string;
+  childAge?: number;
+  message?: string;
+}): DiscordEmbed {
+  const fields: DiscordEmbedField[] = [
+    { name: "Referrer", value: `${data.referrerName} (${data.referrerEmail})`, inline: false },
+    { name: "Referrer Phone", value: data.referrerPhone || "Not provided", inline: true },
+    { name: "Referred Family", value: `${data.referredName} (${data.referredEmail})`, inline: false },
+    { name: "Referred Phone", value: data.referredPhone || "Not provided", inline: true },
+    { name: "Child Age", value: data.childAge ? String(data.childAge) : "Not provided", inline: true },
+  ];
+  if (data.message) {
+    fields.push({
+      name: "Message",
+      value: data.message.length > 1024 ? data.message.substring(0, 1021) + "..." : data.message,
+      inline: false,
+    });
+  }
+  return {
+    title: "🎁 New Referral Submission",
+    color: 0x2c5f2e,
+    fields,
+    timestamp: new Date().toISOString(),
+  };
+}
