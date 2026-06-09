@@ -3,7 +3,7 @@
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
 import { sendZohoEmail, buildDashboardInviteEmail } from '@/app/lib/zoho'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.sagefield.co'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sagefield.co'
 
 export async function inviteForDashboardAccess(invitedEmail: string) {
   const supabase = await createServerSupabaseClient()
