@@ -125,7 +125,7 @@ export async function submitReferral(
       ).catch(() => {});
     }
     if (error instanceof z.ZodError) {
-      return { success: false, message: error.errors[0]?.message ?? "Validation error", error: "Validation error" };
+      return { success: false, message: error.issues[0]?.message ?? "Validation error", error: "Validation error" };
     }
     return {
       success: false,
