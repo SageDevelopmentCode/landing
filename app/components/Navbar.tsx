@@ -20,6 +20,7 @@ import {
   DollarSign,
   ClipboardList,
   Heart,
+  Gift,
   ArrowRight,
   BookMarked,
   CalendarDays,
@@ -183,6 +184,13 @@ const NAV_TABS: NavTab[] = [
       //   badge: "Coming Soon",
       //   icon: BookMarked,
       // },
+      {
+        label: "Refer & Get $250",
+        action: { kind: "link", href: "/refer" },
+        icon: Gift,
+        iconClass: "text-amber-500",
+        colorClass: "bg-amber-50 text-amber-700 hover:bg-amber-100",
+      },
       {
         label: "Academic Calendar",
         action: { kind: "link", href: "/academic-calendar" },

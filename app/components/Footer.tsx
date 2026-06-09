@@ -79,6 +79,7 @@ const FOOTER_COLUMNS: NavColumn[] = [
   {
     heading: "Resources & Login",
     items: [
+      { label: "Refer & Get $250", action: { kind: "link", href: "/refer" } },
       {
         label: "Community & Education Resources",
         action: { kind: "disabled" },
