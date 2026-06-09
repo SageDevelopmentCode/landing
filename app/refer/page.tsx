@@ -200,7 +200,7 @@ export default function ReferPage() {
       <Navbar darkStyle={true} />
 
       {/* ── Hero ── */}
-      <section className="bg-sage-50 pt-20">
+      <section className="bg-blue-50 pt-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-8 lg:px-16 py-10 lg:py-20 flex flex-col lg:flex-row items-center gap-6 lg:gap-16">
           {/* Left — content */}
           <motion.div
@@ -232,7 +232,7 @@ export default function ReferPage() {
               </button>
               <Link
                 href="/about"
-                className="w-full sm:w-auto whitespace-nowrap text-center px-6 py-3.5 border-2 border-sage-300 text-gray-600 font-semibold rounded-lg hover:border-primary hover:text-primary transition-colors duration-200 font-body text-sm"
+                className="w-full sm:w-auto whitespace-nowrap text-center px-6 py-3.5 border-2 border-blue-200 text-gray-600 font-semibold rounded-lg hover:border-primary hover:text-primary transition-colors duration-200 font-body text-sm"
               >
                 Learn About Us
               </Link>
@@ -304,7 +304,7 @@ export default function ReferPage() {
       </section>
 
       {/* ── Photo strip carousel ── */}
-      <div className="bg-sage-50">
+      <div className="bg-blue-50">
         <div
           ref={galleryRef}
           className="overflow-x-auto flex gap-0 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
@@ -337,7 +337,7 @@ export default function ReferPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4 font-body">
+            <span className="inline-block px-5 py-1.5 bg-blue-50 border border-blue-200 text-blue-700 text-sm font-semibold rounded-full mb-4 font-body">
               How It Works
             </span>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 font-heading mb-2">
@@ -376,9 +376,9 @@ export default function ReferPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: i * 0.1 }}
-                className="bg-sage-50 border border-sage-200 rounded-2xl p-6 hover:shadow-md transition-shadow duration-200"
+                className="bg-blue-50 border border-blue-200 rounded-2xl p-6 hover:shadow-md transition-shadow duration-200"
               >
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4 text-2xl">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4 text-2xl">
                   {item.emoji}
                 </div>
                 <span className="text-[10px] font-bold text-primary uppercase tracking-wide font-body">
@@ -397,7 +397,7 @@ export default function ReferPage() {
       </section>
 
       {/* ── Why Sage Field ── */}
-      <section className="py-12 px-4 sm:py-16 sm:px-8 lg:px-16 bg-sage-50">
+      <section className="py-12 px-4 sm:py-16 sm:px-8 lg:px-16 bg-blue-50">
         <div className="max-w-4xl mx-auto">
           <motion.div
             className="text-center mb-12"
@@ -406,7 +406,7 @@ export default function ReferPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <span className="inline-block px-5 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4 font-body">
+            <span className="inline-block px-5 py-2 bg-blue-50 border border-blue-200 text-blue-700 text-sm font-semibold rounded-full mb-4 font-body">
               Why Sage Field
             </span>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold font-heading text-gray-800 mb-3">
@@ -447,10 +447,10 @@ export default function ReferPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: i * 0.1 }}
-                className="bg-white border border-sage-200 rounded-2xl p-6 hover:shadow-md transition-shadow duration-200"
+                className="bg-white border border-blue-200 rounded-2xl p-6 hover:shadow-md transition-shadow duration-200"
               >
-                <div className="w-12 h-12 bg-sage-50 rounded-xl border border-sage-200 flex items-center justify-center mb-4 shadow-sm">
-                  <Icon className="w-5 h-5 text-sage-600" />
+                <div className="w-12 h-12 bg-blue-50 rounded-xl border border-blue-200 flex items-center justify-center mb-4 shadow-sm">
+                  <Icon className="w-5 h-5 text-blue-600" />
                 </div>
                 <h4 className="text-base font-bold font-heading text-gray-800 mb-2">
                   {headline}
@@ -465,7 +465,7 @@ export default function ReferPage() {
           <div className="flex justify-center mt-8">
             <Link
               href="/about"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white text-gray-700 font-semibold rounded-lg border border-sage-200 hover:bg-sage-50 transition-colors duration-200 shadow-sm font-body text-sm"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-white text-gray-700 font-semibold rounded-lg border border-blue-200 hover:bg-blue-50 transition-colors duration-200 shadow-sm font-body text-sm"
             >
               Read our full story →
             </Link>
@@ -481,19 +481,19 @@ export default function ReferPage() {
             whileInView={{ opacity: 1, y: 0, scale: 1 }}
             viewport={{ once: true }}
             transition={{ type: "spring", stiffness: 180, damping: 20 }}
-            className="relative bg-white rounded-3xl shadow-xl border-2 border-sage-200 overflow-hidden"
+            className="relative bg-white rounded-3xl shadow-xl border-2 border-blue-200 overflow-hidden"
           >
             {/* Left accent stripe */}
-            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-primary to-sage-500" />
+            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-primary to-blue-300" />
 
             <div className="grid grid-cols-1 md:grid-cols-5">
               {/* Left panel */}
               <div className="md:col-span-3 p-5 sm:p-8 md:p-10 pl-7 sm:pl-10 md:pl-12">
                 <div className="flex items-center gap-2 mb-6">
-                  <div className="w-8 h-8 bg-sage-50 border border-sage-200 rounded-lg flex items-center justify-center">
-                    <Gift className="w-4 h-4 text-sage-600" />
+                  <div className="w-8 h-8 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-center">
+                    <Gift className="w-4 h-4 text-blue-600" />
                   </div>
-                  <span className="text-xs font-bold uppercase tracking-wide text-sage-600 font-body">
+                  <span className="text-xs font-bold uppercase tracking-wide text-blue-600 font-body">
                     The Reward
                   </span>
                 </div>
@@ -505,8 +505,8 @@ export default function ReferPage() {
                   both of you a $250 gift card. Amazon, Target, Visa prepaid —
                   your choice. No codes, no forms. We just send it.
                 </p>
-                <div className="flex items-start gap-3 bg-sage-50 border border-sage-200 rounded-xl p-4">
-                  <Shield className="w-4 h-4 text-sage-600 mt-0.5 flex-shrink-0" />
+                <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <Shield className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
                   <p className="text-xs text-gray-600 font-body leading-relaxed">
                     Gift cards are sent within 5–7 business days after the
                     referred family&apos;s enrollment fee clears. No referral
@@ -516,7 +516,7 @@ export default function ReferPage() {
               </div>
 
               {/* Right panel */}
-              <div className="md:col-span-2 bg-sage-50 border-t-2 md:border-t-0 md:border-l-2 border-sage-200 p-5 sm:p-8 md:p-10 flex flex-col justify-center gap-6">
+              <div className="md:col-span-2 bg-blue-50 border-t-2 md:border-t-0 md:border-l-2 border-blue-200 p-5 sm:p-8 md:p-10 flex flex-col justify-center gap-6">
                 <div>
                   <p className="text-xs uppercase tracking-wide text-gray-400 font-body mb-3">
                     Gift Card Options
@@ -547,7 +547,7 @@ export default function ReferPage() {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-xl border border-sage-200 p-4">
+                <div className="bg-white rounded-xl border border-blue-200 p-4">
                   <div className="flex items-start justify-between gap-1">
                     {[
                       { num: "1", label: "You Refer", sub: "2 min form" },
@@ -562,12 +562,12 @@ export default function ReferPage() {
                             className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
                               step.highlight
                                 ? "bg-primary shadow-sm"
-                                : "bg-sage-100 border border-sage-300"
+                                : "bg-blue-100 border border-blue-200"
                             }`}
                           >
                             <span
                               className={`text-xs font-bold font-body ${
-                                step.highlight ? "text-white" : "text-sage-700"
+                                step.highlight ? "text-white" : "text-blue-700"
                               }`}
                             >
                               {step.num}
@@ -586,7 +586,7 @@ export default function ReferPage() {
                         </div>
                         {i < 2 && (
                           <div className="flex items-center pt-2 flex-shrink-0">
-                            <span className="text-sage-300 text-sm">›</span>
+                            <span className="text-blue-300 text-sm">›</span>
                           </div>
                         )}
                       </React.Fragment>
@@ -600,7 +600,7 @@ export default function ReferPage() {
       </section>
 
       {/* ── Referral Form ── */}
-      <section className="py-12 px-4 sm:py-16 sm:px-8 lg:px-16 bg-sage-50">
+      <section className="py-12 px-4 sm:py-16 sm:px-8 lg:px-16 bg-blue-50">
         <div ref={formRef} className="max-w-2xl mx-auto">
           <motion.div
             className="text-center mb-8"
@@ -800,7 +800,7 @@ export default function ReferPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <span className="inline-block px-5 py-2 bg-sage-50 border border-sage-200 text-sage-700 text-sm font-semibold rounded-full mb-4 font-body">
+            <span className="inline-block px-5 py-2 bg-blue-50 border border-blue-200 text-blue-700 text-sm font-semibold rounded-full mb-4 font-body">
               Common Questions
             </span>
             <h2 className="text-2xl sm:text-3xl font-bold font-heading text-gray-800 mb-3">
@@ -858,7 +858,7 @@ export default function ReferPage() {
       </section>
 
       {/* ── Bottom CTA ── */}
-      <section className="py-12 px-4 sm:py-20 sm:px-8 lg:px-16 bg-sage-50">
+      <section className="py-12 px-4 sm:py-20 sm:px-8 lg:px-16 bg-blue-50">
         <div className="max-w-2xl mx-auto">
           <motion.div
             className="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border border-gray-100 text-center"
@@ -867,7 +867,7 @@ export default function ReferPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4 font-body">
+            <span className="inline-block px-5 py-1.5 bg-blue-50 border border-blue-200 text-blue-700 text-sm font-semibold rounded-full mb-4 font-body">
               Referral Program
             </span>
             <h2 className="font-heading text-2xl sm:text-3xl font-bold text-gray-800 mb-3">
