@@ -3340,3 +3340,51 @@ export async function buildReferralInviteEmail(opts: {
 
   return { subject, content };
 }
+
+export async function buildGoogleReviewIncentiveEmail(opts: {
+  g1FullName: string
+  childLegalName: string
+}): Promise<{ subject: string; content: string }> {
+  const firstName = opts.g1FullName.split(' ')[0] || opts.g1FullName
+  const subject = `A little thank-you — and a free coffee on us ☕`
+
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+
+  <p>Dear ${firstName},</p>
+
+  <p>It has been such a joy having ${opts.childLegalName} with us at Sage Field. Watching the kids grow, explore, and light up each week is exactly why we do what we do — and families like yours make it all possible.</p>
+
+  <p>We'd love to hear about your experience, and we think other families searching for the right environment for their child would benefit from your honest perspective.</p>
+
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 20px 24px; margin: 28px 0; border-radius: 4px;">
+    <p style="margin: 0 0 8px 0; font-weight: bold; color: #2C5F2E; font-size: 16px;">☕ Free Coffee, On Us</p>
+    <p style="margin: 0 0 10px 0; font-size: 15px;">Leave us a Google Review sharing your honest experience with Sage Field, then reply to this email with a screenshot — and we'll send you a <strong>$15 Starbucks gift card</strong> as a thank-you.</p>
+    <p style="margin: 0; font-size: 14px; color: #555;">It takes less than 2 minutes, and it means the world to us.</p>
+  </div>
+
+  <div style="text-align: center; margin: 36px 0;">
+    <a href="https://g.page/r/CRZn8TwxWZOgEAE/review" style="display: inline-block; background-color: #2C5F2E; color: #ffffff; text-decoration: none; font-weight: bold; padding: 14px 32px; border-radius: 8px; font-size: 15px; font-family: Georgia, serif;">Leave a Google Review →</a>
+    <p style="margin: 16px 0 0 0; font-size: 13px; color: #888;">Or scan the QR code below on your phone</p>
+    <img src="https://sagefield.co/qr-google-review.png" alt="Scan to leave a Google Review" width="160" height="160" style="display: block; margin: 16px auto 0; border-radius: 8px;" />
+  </div>
+
+  <div style="background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 16px 20px; margin: 28px 0;">
+    <p style="margin: 0 0 4px 0; font-weight: bold; color: #92400e;">✨ Your words may be featured on our website</p>
+    <p style="margin: 0; font-size: 14px; color: #78350f;">With your permission, we may share standout testimonials on <a href="https://sagefield.co" style="color: #92400e;">sagefield.co</a> to help other families discover what makes Sage Field special. We'll always ask before we feature anything.</p>
+  </div>
+
+  <p>Thank you for being part of our community. We are so grateful for your trust and your support.</p>
+
+  <p style="margin-top: 32px;">With warmth,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
