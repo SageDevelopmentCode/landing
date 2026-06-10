@@ -1340,6 +1340,30 @@ export function createShadowDayBookingEmbed(data: {
 }
 
 /**
+ * Creates a Discord embed for Beach Bash Day payment received
+ */
+export function createBeachBashPaymentEmbed(data: {
+  parentName: string;
+  parentEmail: string;
+  childNames: string;
+  childCount: number;
+  amountCents: number;
+}): DiscordEmbed {
+  return {
+    title: "🌊 Beach Bash Day Payment Received",
+    color: 0x0ea5e9,
+    fields: [
+      { name: "Parent", value: data.parentName, inline: true },
+      { name: "Email", value: data.parentEmail, inline: true },
+      { name: `Child${data.childCount > 1 ? "ren" : ""}`, value: data.childNames, inline: true },
+      { name: "Event", value: "Beach Bash Day — June 13, 2026", inline: true },
+      { name: "Amount Paid", value: `$${(data.amountCents / 100).toFixed(2)}`, inline: true },
+    ],
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
  * Creates a Discord embed for shadow day payment received
  */
 export function createShadowDayPaymentEmbed(data: {

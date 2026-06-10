@@ -148,9 +148,10 @@ function WaveDivider({
 }
 
 export default function FieldDayFridayPage() {
-  const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "ach">("card");
+  const [coverFees, setCoverFees] = useState(false);
   const [agreementOpen, setAgreementOpen] = useState(false);
   const [agreementSigned, setAgreementSigned] = useState(false);
   const [sigPrintedName, setSigPrintedName] = useState("");
@@ -160,8 +161,6 @@ export default function FieldDayFridayPage() {
     parentName: "",
     email: "",
     phone: "",
-    childName: "",
-    childAge: "",
     referralSource: "",
     notes: "",
     emergencyName: "",
@@ -169,6 +168,16 @@ export default function FieldDayFridayPage() {
     consentOutdoor: false,
     consentPhoto: false,
   });
+
+  const [children, setChildren] = useState([{ name: "", age: "" }]);
+
+  const addChild = () => setChildren((prev) => [...prev, { name: "", age: "" }]);
+  const removeChild = (i: number) =>
+    setChildren((prev) => prev.filter((_, idx) => idx !== i));
+  const updateChild = (i: number, field: "name" | "age", value: string) =>
+    setChildren((prev) =>
+      prev.map((c, idx) => (idx === i ? { ...c, [field]: value } : c)),
+    );
 
   const galleryRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
@@ -231,12 +240,18 @@ export default function FieldDayFridayPage() {
     }));
   };
 
+  const totalBase = children.length * 60;
+  const cardFee = Math.round((totalBase * 0.029 + 0.3) * 100) / 100;
+  const achFee = Math.min(Math.round(totalBase * 0.008 * 100) / 100, 5.0);
+  const processingFee = paymentMethod === "card" ? cardFee : achFee;
+
   const isFormValid =
     !!formData.parentName.trim() &&
     !!formData.email.trim() &&
-    !!formData.childName.trim() &&
-    !!formData.childAge &&
-    formData.consentOutdoor;
+    children.length > 0 &&
+    children.every((c) => !!c.name.trim() && !!c.age) &&
+    formData.consentOutdoor &&
+    coverFees;
 
   const handleSaveSignature = () => {
     if (!sigPrintedName.trim() || !sigValue.trim()) return;
@@ -248,10 +263,41 @@ export default function FieldDayFridayPage() {
     if (!isFormValid || !agreementSigned || submitting) return;
     setSubmitting(true);
     setSubmitError(null);
-    setTimeout(() => {
-      setSubmitted(true);
+    try {
+      const res = await fetch("/api/friday-register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          parentName: formData.parentName,
+          email: formData.email,
+          phone: formData.phone,
+          children: children.map((c) => ({ name: c.name, age: Number(c.age) })),
+          referralSource: formData.referralSource,
+          notes: formData.notes,
+          emergencyName: formData.emergencyName,
+          emergencyPhone: formData.emergencyPhone,
+          consentOutdoor: formData.consentOutdoor,
+          consentPhoto: formData.consentPhoto,
+          signatureName: sigPrintedName,
+          paymentMethod,
+          coverFees,
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setSubmitError(json.error ?? "Something went wrong. Please try again.");
+        return;
+      }
+      if (json.url) {
+        window.location.href = json.url;
+        return;
+      }
+      setSubmitError("Unexpected response. Please try again.");
+    } catch {
+      setSubmitError("Network error. Please check your connection and try again.");
+    } finally {
       setSubmitting(false);
-    }, 600);
+    }
   };
 
   return (
@@ -689,26 +735,6 @@ export default function FieldDayFridayPage() {
             </motion.div>
 
             <AnimatePresence>
-              {submitted ? (
-                <motion.div
-                  key="success"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="bg-white rounded-3xl p-10 shadow-2xl text-center border border-sky-100"
-                >
-                  <div className="text-6xl mb-4">🎉</div>
-                  <h3 className="font-heading font-bold text-2xl text-slate-800 mb-2">
-                    You&apos;re registered!
-                  </h3>
-                  <p className="text-slate-500 font-body mb-2">
-                    We&apos;ll see you Friday, June 13th. Check your email for
-                    details and payment info.
-                  </p>
-                  <p className="text-sm text-primary font-semibold font-body mt-4">
-                    🧴 Sunscreen · 🩱 Swimsuit · 💧 Water bottle
-                  </p>
-                </motion.div>
-              ) : (
                 <motion.div
                   key="form"
                   initial={{ opacity: 0, y: 16 }}
@@ -760,40 +786,80 @@ export default function FieldDayFridayPage() {
                     </div>
                   </div>
 
-                  <SectionLabel>Your Child</SectionLabel>
+                  <SectionLabel>
+                    Your Child{children.length > 1 ? "ren" : ""}{" "}
+                    <span className="text-sky-400 normal-case font-normal text-[10px] ml-1">
+                      $60 per child
+                    </span>
+                  </SectionLabel>
+
                   <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-body">
-                        Child&apos;s name{" "}
-                        <span className="text-red-400">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        name="childName"
-                        value={formData.childName}
-                        onChange={handleChange}
-                        placeholder="First and last name"
-                        className={inputClass}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-body">
-                        Child&apos;s age <span className="text-red-400">*</span>
-                      </label>
-                      <select
-                        name="childAge"
-                        value={formData.childAge}
-                        onChange={handleChange}
-                        className={`${inputClass} cursor-pointer`}
+                    {children.map((child, i) => (
+                      <div
+                        key={i}
+                        className="rounded-2xl border border-sky-100 bg-sky-50/30 p-4 space-y-3"
                       >
-                        <option value="">Select age</option>
-                        {[4, 5, 6, 7, 8, 9, 10, 11].map((age) => (
-                          <option key={age} value={age}>
-                            {age} years old
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-xs font-bold text-sky-500 font-body uppercase tracking-wide">
+                            Child {i + 1}
+                          </p>
+                          {children.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removeChild(i)}
+                              className="text-xs text-slate-400 hover:text-red-400 font-body transition-colors cursor-pointer"
+                            >
+                              Remove
+                            </button>
+                          )}
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-body">
+                            Name <span className="text-red-400">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={child.name}
+                            onChange={(e) => updateChild(i, "name", e.target.value)}
+                            placeholder="First and last name"
+                            className={inputClass}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-body">
+                            Age <span className="text-red-400">*</span>
+                          </label>
+                          <select
+                            value={child.age}
+                            onChange={(e) => updateChild(i, "age", e.target.value)}
+                            className={`${inputClass} cursor-pointer`}
+                          >
+                            <option value="">Select age</option>
+                            {[4, 5, 6, 7, 8, 9, 10, 11].map((age) => (
+                              <option key={age} value={age}>
+                                {age} years old
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    ))}
+
+                    <button
+                      type="button"
+                      onClick={addChild}
+                      className="w-full py-2.5 border-2 border-dashed border-sky-200 rounded-xl text-sm font-semibold text-sky-500 hover:border-sky-400 hover:bg-sky-50 transition-all duration-200 font-body cursor-pointer"
+                    >
+                      + Add Another Child
+                    </button>
+
+                    {children.length > 1 && (
+                      <div className="flex items-center justify-center gap-2 py-2 px-4 bg-sky-100 rounded-xl">
+                        <span className="text-sm font-bold text-sky-700 font-body">
+                          {children.length} children · ${totalBase} total
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   <SectionLabel>A Bit More</SectionLabel>
@@ -880,7 +946,7 @@ export default function FieldDayFridayPage() {
                         name: "consentPhoto" as const,
                         checked: formData.consentPhoto,
                         label:
-                          "I'm okay with photos of my child being taken and shared on Sage Field's social media",
+                          "I'm okay with photos of my child being taken and shared on Sage Field's social media (we cover all kids' faces for privacy)",
                       },
                     ].map(({ name, checked, label }) => (
                       <label
@@ -913,6 +979,66 @@ export default function FieldDayFridayPage() {
                         </span>
                       </label>
                     ))}
+                  </div>
+
+                  {/* Payment Method */}
+                  <div className="mt-6">
+                    <p className="text-sm font-semibold text-slate-700 font-body mb-2">
+                      How will you be paying?
+                    </p>
+                    <div className="flex gap-2 mb-2">
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod("card")}
+                        className={`flex-1 px-3 py-2.5 rounded-xl text-sm font-semibold font-body border-2 transition-colors cursor-pointer ${
+                          paymentMethod === "card"
+                            ? "border-sky-400 bg-sky-50 text-sky-700"
+                            : "border-sky-100 text-slate-600 hover:bg-sky-50"
+                        }`}
+                      >
+                        Credit / Debit Card
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod("ach")}
+                        className={`flex-1 px-3 py-2.5 rounded-xl text-sm font-semibold font-body border-2 transition-colors cursor-pointer ${
+                          paymentMethod === "ach"
+                            ? "border-sky-400 bg-sky-50 text-sky-700"
+                            : "border-sky-100 text-slate-600 hover:bg-sky-50"
+                        }`}
+                      >
+                        ACH / US bank account
+                      </button>
+                    </div>
+                    <p className="text-xs text-slate-400 font-body mb-3">
+                      {paymentMethod === "card"
+                        ? `Processing fee (est.): ~$${cardFee.toFixed(2)}`
+                        : `Processing fee (est.): ~$${achFee.toFixed(2)} (0.8%, max $5.00)`}
+                    </p>
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <div
+                        className={`w-5 h-5 flex-shrink-0 rounded-md border-2 mt-0.5 flex items-center justify-center transition-all ${
+                          coverFees
+                            ? "bg-sky-500 border-sky-500"
+                            : "border-sky-200 bg-white"
+                        }`}
+                        onClick={() => setCoverFees((v) => !v)}
+                      >
+                        {coverFees && (
+                          <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                        )}
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={coverFees}
+                        onChange={(e) => setCoverFees(e.target.checked)}
+                        className="sr-only"
+                      />
+                      <span className="text-sm text-slate-600 font-body leading-snug">
+                        I agree to pay the processing fee so Sage Field receives the full amount{" "}
+                        <span className="text-red-400">*</span>
+                      </span>
+                    </label>
                   </div>
 
                   {/* Agreement + Submit */}
@@ -977,11 +1103,10 @@ export default function FieldDayFridayPage() {
                     >
                       {submitting
                         ? "Submitting…"
-                        : "☀️ Reserve My Spot for June 13 · $60 →"}
+                        : `☀️ Pay $${(60 + processingFee).toFixed(2)} & Reserve My Spot →`}
                     </button>
                   </motion.div>
                 </motion.div>
-              )}
             </AnimatePresence>
           </div>
         </section>
@@ -1220,8 +1345,8 @@ export default function FieldDayFridayPage() {
                       <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                         {[
                           {
-                            label: "Student Name",
-                            value: formData.childName || "—",
+                            label: children.length > 1 ? "Children" : "Student Name",
+                            value: children.map((c) => c.name).filter(Boolean).join(", ") || "—",
                           },
                           {
                             label: "Parent / Guardian",

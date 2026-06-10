@@ -2153,6 +2153,59 @@ export async function buildShadowDayPaymentConfirmationEmail(opts: {
   return { subject, content };
 }
 
+export async function buildBeachBashConfirmationEmail(opts: {
+  parentName: string;
+  childNames: string;
+  childCount: number;
+  amountDollars: string;
+}): Promise<{ subject: string; content: string }> {
+  const childLabel = opts.childCount > 1 ? `${opts.childCount} children` : opts.childNames;
+  const subject = "Beach Bash Day — You're Registered! 🌊";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${opts.parentName},</p>
+
+  <p>Your registration for <strong>${opts.childNames}</strong> is confirmed and your payment of <strong>$${opts.amountDollars}</strong> has been received. We can&apos;t wait to see you at Beach Bash Day${opts.childCount > 1 ? " with the whole crew" : ""}!</p>
+
+  <h2 style="font-size: 17px; margin-top: 32px; margin-bottom: 10px; color: #2c2c2c;">Event Details</h2>
+  <table style="border-collapse: collapse; width: 100%; font-size: 15px;">
+    <tr><td style="padding: 6px 0; width: 28px;">📅</td><td style="padding: 6px 0;"><strong>Date:</strong> Friday, June 13, 2026</td></tr>
+    <tr><td style="padding: 6px 0;">🕗</td><td style="padding: 6px 0;"><strong>Drop-off:</strong> 8:30 AM &nbsp;·&nbsp; <strong>Pick-up:</strong> 1:30 PM</td></tr>
+    <tr><td style="padding: 6px 0;">👧</td><td style="padding: 6px 0;"><strong>Registered:</strong> ${childLabel}</td></tr>
+    <tr><td style="padding: 6px 0;">📍</td><td style="padding: 6px 0;"><strong>Location:</strong> 2760 Gattis School Rd, Round Rock, TX</td></tr>
+  </table>
+
+  <h2 style="font-size: 17px; margin-top: 32px; margin-bottom: 10px; color: #2c2c2c;">What&apos;s on the Agenda</h2>
+  <table style="border-collapse: collapse; width: 100%; font-size: 15px;">
+    <tr><td style="padding: 5px 0; width: 28px;">🌊</td><td style="padding: 5px 0;">Ocean Slime Making — mix up a batch to take home</td></tr>
+    <tr><td style="padding: 5px 0;">🏆</td><td style="padding: 5px 0;">Tug-A-War &amp; Field Day Games</td></tr>
+    <tr><td style="padding: 5px 0;">🐚</td><td style="padding: 5px 0;">Sea Shell Painting — a keepsake to take home</td></tr>
+    <tr><td style="padding: 5px 0;">🍦</td><td style="padding: 5px 0;">Ice Cream Bar — build your own treat</td></tr>
+  </table>
+
+  <h2 style="font-size: 17px; margin-top: 32px; margin-bottom: 10px; color: #2c2c2c;">What to Pack</h2>
+  <table style="border-collapse: collapse; width: 100%; font-size: 15px;">
+    <tr><td style="padding: 5px 0; width: 28px;">🧴</td><td style="padding: 5px 0;">Sunscreen <span style="color:#777;">(applied before drop-off)</span></td></tr>
+    <tr><td style="padding: 5px 0;">🩱</td><td style="padding: 5px 0;">Swimsuit + towel</td></tr>
+    <tr><td style="padding: 5px 0;">👕</td><td style="padding: 5px 0;">Change of clothes</td></tr>
+    <tr><td style="padding: 5px 0;">💧</td><td style="padding: 5px 0;">Water bottle, labeled with your child&apos;s name</td></tr>
+    <tr><td style="padding: 5px 0;">🦟</td><td style="padding: 5px 0;">Bug spray</td></tr>
+    <tr><td style="padding: 5px 0;">🥪</td><td style="padding: 5px 0;">Snack + lunch from home</td></tr>
+  </table>
+
+  <p style="margin-top: 28px;">Questions before Friday? Reach us at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> or text <a href="sms:+15126775872" style="color: #5a7a5a;">(512) 677-5872</a>.</p>
+
+  <p style="margin-top: 32px;">See you at the beach (well, Sage Field)!</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+  return { subject, content };
+}
+
 export async function buildTourThankYouEmail(opts: {
   firstName: string;
 }): Promise<{ subject: string; content: string }> {

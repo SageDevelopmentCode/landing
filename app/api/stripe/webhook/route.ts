@@ -10,6 +10,7 @@ import {
   createHomeschoolDropInEmbed,
   createDonationEmbed,
   createShadowDayPaymentEmbed,
+  createBeachBashPaymentEmbed,
   createCustomTuitionEmbed,
   createOneTimePaymentEmbed,
   createErrorEmbed,
@@ -21,6 +22,7 @@ import {
   buildHomeschoolDropInConfirmationEmail,
   buildDonationConfirmationEmail,
   buildShadowDayPaymentConfirmationEmail,
+  buildBeachBashConfirmationEmail,
   buildAftercareConfirmationEmail,
   buildFunFridayConfirmationEmail,
   buildCustomTuitionConfirmationEmail,
@@ -779,6 +781,93 @@ export async function POST(request: NextRequest) {
               context: "Shadow day fee confirmation email",
               error: String(err),
               details: { bookingId: bookingId ?? "N/A" },
+            }),
+          ).catch(() => {});
+        }
+      })();
+    } else if (session.metadata?.payment_type === "beach_bash_fee") {
+      const registrationId = session.metadata?.registration_id;
+      const amountCents = session.amount_total ?? 0;
+      const amountDollars = (amountCents / 100).toFixed(2);
+
+      if (registrationId) {
+        const { error: updateError } = await supabase
+          .schema("marketing")
+          .from("beach_bash_registrations")
+          .update({ payment_status: "paid" })
+          .eq("id", registrationId);
+
+        if (updateError) {
+          console.error("Failed to update beach bash registration payment status:", updateError);
+        }
+      }
+
+      let parentName = session.metadata?.parent_name ?? "N/A";
+      let parentEmailAddr = session.metadata?.parent_email ?? session.customer_email ?? "N/A";
+      let childNames = session.metadata?.child_names ?? "N/A";
+      let childCount = parseInt(session.metadata?.child_count ?? "1", 10);
+
+      if (registrationId) {
+        const { data: regRow } = await supabase
+          .schema("marketing")
+          .from("beach_bash_registrations")
+          .select("parent_name, email, children, child_count")
+          .eq("id", registrationId)
+          .single();
+
+        if (regRow) {
+          parentName = regRow.parent_name ?? parentName;
+          parentEmailAddr = regRow.email ?? parentEmailAddr;
+          childCount = regRow.child_count ?? childCount;
+          const kids = regRow.children as Array<{ name: string; age: number }> | null;
+          if (kids && kids.length > 0) {
+            childNames = kids.map((c) => c.name).join(", ");
+          }
+        }
+      }
+
+      sendDiscordNotification(
+        createBeachBashPaymentEmbed({
+          parentName,
+          parentEmail: parentEmailAddr,
+          childNames,
+          childCount,
+          amountCents,
+        }),
+      ).catch((err) => console.error("Beach Bash payment Discord notification failed:", err));
+
+      (async () => {
+        try {
+          const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
+          if (!toAddress) return;
+
+          const { subject, content } = await buildBeachBashConfirmationEmail({
+            parentName: parentName !== "N/A" ? parentName : "Parent",
+            childNames: childNames !== "N/A" ? childNames : "your child",
+            childCount,
+            amountDollars,
+          });
+
+          const emailResult = await sendZohoEmail({ toAddress, subject, content });
+
+          if (emailResult.success) {
+            await supabase.schema("email_logs").from("sends").insert({
+              to_address: toAddress,
+              subject,
+              template: "beach_bash_fee_confirmation",
+              application_id: null,
+              status: "success",
+            });
+          } else {
+            throw new Error(emailResult.error ?? "Unknown email error");
+          }
+        } catch (err) {
+          console.error("Beach Bash fee confirmation email failed:", err);
+          sendDiscordNotification(
+            createErrorEmbed({
+              context: "Beach Bash fee confirmation email",
+              error: String(err),
+              details: { registrationId: registrationId ?? "N/A" },
             }),
           ).catch(() => {});
         }
