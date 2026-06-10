@@ -39,6 +39,7 @@ import { enrollApplication } from '../../actions/enrollApplication'
 import { PaymentHistory } from './PaymentHistory'
 import { updateApplicationProgram } from '../../actions/updateApplicationProgram'
 import { updateApplicationTags } from '../../actions/updateApplicationTags'
+import { updateApplicationDropInProgram } from '../../actions/updateApplicationDropInProgram'
 import { PRESET_TAGS } from '../constants/applicationTags'
 
 export type CachedEnrollmentData = AdminEnrollmentData & {
@@ -145,6 +146,7 @@ interface ApplicationDetailSidebarProps {
   onItemClick: (itemId: number, studentId: string, data: CachedEnrollmentData | null) => void
   onEnrolled: (id: string) => void
   onProgramChanged?: (id: string, program: string) => void
+  onDropInChanged?: (id: string, dropInProgram: string) => void
   onTagsChanged?: (id: string, tags: string[]) => void
 }
 
@@ -159,6 +161,7 @@ export function ApplicationDetailSidebar({
   onItemClick,
   onEnrolled,
   onProgramChanged,
+  onDropInChanged,
   onTagsChanged,
 }: ApplicationDetailSidebarProps) {
   const [notes, setNotes] = useState<{ id: string; content: string; created_at: string }[]>([])
@@ -239,6 +242,10 @@ export function ApplicationDetailSidebar({
   const [selectedProgram, setSelectedProgram] = useState<string>(application?.program ?? '')
   const [isUpdatingProgram, setIsUpdatingProgram] = useState(false)
   const [programUpdateError, setProgramUpdateError] = useState<string | null>(null)
+  const [isEditingDropIn, setIsEditingDropIn] = useState(false)
+  const [selectedDropIn, setSelectedDropIn] = useState<string>(application?.drop_in_program ?? '')
+  const [isUpdatingDropIn, setIsUpdatingDropIn] = useState(false)
+  const [dropInUpdateError, setDropInUpdateError] = useState<string | null>(null)
 
   const [healthForms, setHealthForms] = useState<FileObject[]>([])
   const [isLoadingHealthForms, setIsLoadingHealthForms] = useState(false)
@@ -333,6 +340,9 @@ export function ApplicationDetailSidebar({
     setIsEditingProgram(false)
     setSelectedProgram(application?.program ?? '')
     setProgramUpdateError(null)
+    setIsEditingDropIn(false)
+    setSelectedDropIn(application?.drop_in_program ?? '')
+    setDropInUpdateError(null)
   }, [application?.id])
 
   useEffect(() => {
@@ -497,6 +507,26 @@ export function ApplicationDetailSidebar({
       onProgramChanged?.(application.id, selectedProgram)
     } else {
       setProgramUpdateError(result.error ?? 'Failed to update program')
+    }
+  }
+
+  const handleDropInChange = async () => {
+    if (!selectedDropIn || selectedDropIn === application.drop_in_program) {
+      setIsEditingDropIn(false)
+      return
+    }
+    setIsUpdatingDropIn(true)
+    setDropInUpdateError(null)
+    const result = await updateApplicationDropInProgram(
+      application.id,
+      selectedDropIn as 'summer_26' | 'school_year_26_27' | 'both'
+    )
+    setIsUpdatingDropIn(false)
+    if (result.success) {
+      setIsEditingDropIn(false)
+      onDropInChanged?.(application.id, selectedDropIn)
+    } else {
+      setDropInUpdateError(result.error ?? 'Failed to update drop-in program')
     }
   }
 
@@ -973,10 +1003,52 @@ export function ApplicationDetailSidebar({
           <SidebarField label="Grade" value={application.child_grade} />
           <SidebarField label="Program" value={formatProgram(application.program)} />
           {application.program === 'homeschool_drop_in' && (
-            <SidebarField label="Drop-In Program" value={formatProgram(application.drop_in_program)} />
-          )}
-          {!application.registration_fee_paid && (
             <div className="flex flex-col gap-2">
+              <SidebarField label="Drop-In Program" value={formatProgram(application.drop_in_program)} />
+              {!isEditingDropIn ? (
+                <button
+                  onClick={() => { setSelectedDropIn(application.drop_in_program ?? ''); setIsEditingDropIn(true) }}
+                  className="self-start text-xs text-[#2C5F2E] border border-[#2C5F2E]/30 rounded-lg px-2.5 py-1 hover:bg-[#2C5F2E]/5 transition-colors"
+                >
+                  Edit Drop-In Program
+                </button>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <select
+                    value={selectedDropIn}
+                    onChange={(e) => setSelectedDropIn(e.target.value)}
+                    disabled={isUpdatingDropIn}
+                    className="text-sm text-gray-900 border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#2C5F2E]/30 focus:border-[#2C5F2E] disabled:opacity-60"
+                  >
+                    <option value="">— select —</option>
+                    {(['summer_26', 'school_year_26_27', 'both'] as const).map((value) => (
+                      <option key={value} value={value}>
+                        {PROGRAM_LABELS[value]}
+                      </option>
+                    ))}
+                  </select>
+                  {dropInUpdateError && <span className="text-xs text-red-600">{dropInUpdateError}</span>}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleDropInChange}
+                      disabled={isUpdatingDropIn || !selectedDropIn || selectedDropIn === application.drop_in_program}
+                      className="text-xs bg-[#2C5F2E] text-white rounded-lg px-3 py-1.5 hover:bg-[#234d25] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isUpdatingDropIn ? 'Saving…' : 'Confirm'}
+                    </button>
+                    <button
+                      onClick={() => { setIsEditingDropIn(false); setSelectedDropIn(application.drop_in_program ?? ''); setDropInUpdateError(null) }}
+                      disabled={isUpdatingDropIn}
+                      className="text-xs border border-gray-200 text-gray-600 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          <div className="flex flex-col gap-2">
               {!isEditingProgram ? (
                 <button
                   onClick={() => { setSelectedProgram(application.program ?? ''); setIsEditingProgram(true) }}
@@ -1018,7 +1090,6 @@ export function ApplicationDetailSidebar({
                 </div>
               )}
             </div>
-          )}
         </SidebarSection>
 
         <SidebarSection title="Address">

@@ -17,9 +17,9 @@ const dancingScript = Dancing_Script({
 });
 
 const HERO_IMAGES = [
-  "/assets/highlights/summer_week_two/08BB87B0-E53E-4981-9741-8F0AC0C32238.JPG",
-  "/assets/highlights/summer_week_two/2CDB3506-F666-4787-ACCB-97B3A945C6EE.JPG",
-  "/assets/highlights/summer_week_two/17C0053A-E948-49DC-8D32-58D6D753C37D.JPG",
+  "/assets/highlights/summer_week_two/0E23519F-0846-4BB8-9795-BC26B412E702 2.JPG",
+  "/assets/highlights/summer_week_one/66719803-D874-46B5-9B16-C4F79A865A85 2.JPG",
+  "/assets/highlights/summer_week_two/4D005FA0-C22C-4DE9-B589-8130BBB7723A.JPG",
 ];
 
 const CAROUSEL_IMAGES = [
@@ -307,20 +307,6 @@ export default function FieldDayFridayPage() {
             />
           </div>
 
-          {/* Floating seagull accents */}
-          <span
-            className="float-bird absolute top-32 left-10 text-3xl sm:text-4xl pointer-events-none select-none"
-            style={{ zIndex: 1 }}
-          >
-            🐦
-          </span>
-          <span
-            className="float-bird absolute top-48 right-[45%] text-2xl pointer-events-none select-none opacity-60"
-            style={{ zIndex: 1, animationDelay: "2s" }}
-          >
-            🐦
-          </span>
-
           <div className="relative max-w-6xl mx-auto px-6 sm:px-12 lg:px-16 py-14 lg:py-20 flex flex-col lg:flex-row items-center gap-10 lg:gap-16" style={{ zIndex: 2 }}>
             {/* Left — content */}
             <motion.div
@@ -330,16 +316,6 @@ export default function FieldDayFridayPage() {
               transition={{ duration: 0.6 }}
             >
               {/* Badge */}
-              <motion.span
-                className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm text-sky-700 text-xs font-bold rounded-full mb-6 font-body shadow-sm border border-white/60"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1, duration: 0.4 }}
-              >
-                <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse inline-block" />
-                Field Day Friday · Jun 13, 2026 · $60 Drop-In
-              </motion.span>
-
               {/* Headline */}
               <motion.h1
                 className="font-heading font-bold leading-[1.05] mb-3"
@@ -436,8 +412,8 @@ export default function FieldDayFridayPage() {
               <div className="relative h-72 sm:h-80 lg:h-96 flex items-center justify-center">
                 {/* Back photo */}
                 <div
-                  className="absolute w-52 sm:w-60 lg:w-64 bg-white p-2.5 pb-10 shadow-2xl rounded-sm"
-                  style={{ transform: "rotate(6deg) translateX(30px) translateY(-8px)", zIndex: 1 }}
+                  className="absolute w-44 sm:w-52 lg:w-56 bg-white p-2.5 pb-10 shadow-2xl rounded-sm"
+                  style={{ transform: "rotate(10deg) translateX(110px) translateY(-10px)", zIndex: 1 }}
                 >
                   <div className="relative w-full aspect-square overflow-hidden">
                     <Image src={HERO_IMAGES[2]} alt="Students at Sage Field" fill className="object-cover" sizes="256px" loading="lazy" />
@@ -445,8 +421,8 @@ export default function FieldDayFridayPage() {
                 </div>
                 {/* Mid photo */}
                 <div
-                  className="absolute w-52 sm:w-60 lg:w-64 bg-white p-2.5 pb-10 shadow-2xl rounded-sm hover:-translate-y-2 hover:rotate-0 transition-all duration-300 cursor-pointer"
-                  style={{ transform: "rotate(-4deg) translateX(-20px) translateY(4px)", zIndex: 2 }}
+                  className="absolute w-44 sm:w-52 lg:w-56 bg-white p-2.5 pb-10 shadow-2xl rounded-sm hover:-translate-y-2 hover:rotate-0 transition-all duration-300 cursor-pointer"
+                  style={{ transform: "rotate(-8deg) translateX(-110px) translateY(8px)", zIndex: 2 }}
                 >
                   <div className="relative w-full aspect-square overflow-hidden">
                     <Image src={HERO_IMAGES[1]} alt="Students at Sage Field" fill className="object-cover" sizes="256px" priority />
@@ -454,7 +430,7 @@ export default function FieldDayFridayPage() {
                 </div>
                 {/* Front photo */}
                 <div
-                  className="absolute w-52 sm:w-60 lg:w-64 bg-white p-2.5 pb-10 shadow-2xl rounded-sm hover:-translate-y-3 hover:rotate-0 transition-all duration-300 cursor-pointer"
+                  className="absolute w-44 sm:w-52 lg:w-56 bg-white p-2.5 pb-10 shadow-2xl rounded-sm hover:-translate-y-3 hover:rotate-0 transition-all duration-300 cursor-pointer"
                   style={{ transform: "rotate(2deg)", zIndex: 3 }}
                 >
                   <div className="relative w-full aspect-square overflow-hidden">
