@@ -119,9 +119,18 @@ function AgreementSectionHeader({ title }: { title: string }) {
   );
 }
 
-function WaveDivider({ fill = "white", fromColor = "transparent" }: { fill?: string; fromColor?: string }) {
+function WaveDivider({
+  fill = "white",
+  fromColor = "transparent",
+}: {
+  fill?: string;
+  fromColor?: string;
+}) {
   return (
-    <div className="overflow-hidden leading-none" style={{ background: fromColor }}>
+    <div
+      className="overflow-hidden leading-none"
+      style={{ background: fromColor }}
+    >
       <svg
         viewBox="0 0 1440 56"
         xmlns="http://www.w3.org/2000/svg"
@@ -307,7 +316,10 @@ export default function FieldDayFridayPage() {
             />
           </div>
 
-          <div className="relative max-w-6xl mx-auto px-6 sm:px-12 lg:px-16 py-14 lg:py-20 flex flex-col lg:flex-row items-center gap-10 lg:gap-16" style={{ zIndex: 2 }}>
+          <div
+            className="relative max-w-6xl mx-auto px-6 sm:px-12 lg:px-16 py-14 lg:py-20 flex flex-col lg:flex-row items-center gap-10 lg:gap-16"
+            style={{ zIndex: 2 }}
+          >
             {/* Left — content */}
             <motion.div
               className="flex-1 text-center lg:text-left"
@@ -351,10 +363,7 @@ export default function FieldDayFridayPage() {
                 transition={{ delay: 0.25, duration: 0.5 }}
               >
                 One unforgettable Friday at Sage Field. Ocean slime, field day
-                games, shell painting, and an ice cream bar —{" "}
-                <strong className="text-slate-700">
-                  no enrollment required.
-                </strong>
+                games, shell painting, and an ice cream bar to top it all off!
               </motion.p>
 
               {/* Quick-detail pills */}
@@ -413,19 +422,41 @@ export default function FieldDayFridayPage() {
                 {/* Back photo */}
                 <div
                   className="absolute w-44 sm:w-52 lg:w-56 bg-white p-2.5 pb-10 shadow-2xl rounded-sm"
-                  style={{ transform: "rotate(10deg) translateX(110px) translateY(-10px)", zIndex: 1 }}
+                  style={{
+                    transform:
+                      "rotate(10deg) translateX(110px) translateY(-10px)",
+                    zIndex: 1,
+                  }}
                 >
                   <div className="relative w-full aspect-square overflow-hidden">
-                    <Image src={HERO_IMAGES[2]} alt="Students at Sage Field" fill className="object-cover" sizes="256px" loading="lazy" />
+                    <Image
+                      src={HERO_IMAGES[2]}
+                      alt="Students at Sage Field"
+                      fill
+                      className="object-cover"
+                      sizes="256px"
+                      loading="lazy"
+                    />
                   </div>
                 </div>
                 {/* Mid photo */}
                 <div
                   className="absolute w-44 sm:w-52 lg:w-56 bg-white p-2.5 pb-10 shadow-2xl rounded-sm hover:-translate-y-2 hover:rotate-0 transition-all duration-300 cursor-pointer"
-                  style={{ transform: "rotate(-8deg) translateX(-110px) translateY(8px)", zIndex: 2 }}
+                  style={{
+                    transform:
+                      "rotate(-8deg) translateX(-110px) translateY(8px)",
+                    zIndex: 2,
+                  }}
                 >
                   <div className="relative w-full aspect-square overflow-hidden">
-                    <Image src={HERO_IMAGES[1]} alt="Students at Sage Field" fill className="object-cover" sizes="256px" priority />
+                    <Image
+                      src={HERO_IMAGES[1]}
+                      alt="Students at Sage Field"
+                      fill
+                      className="object-cover"
+                      sizes="256px"
+                      priority
+                    />
                   </div>
                 </div>
                 {/* Front photo */}
@@ -434,7 +465,14 @@ export default function FieldDayFridayPage() {
                   style={{ transform: "rotate(2deg)", zIndex: 3 }}
                 >
                   <div className="relative w-full aspect-square overflow-hidden">
-                    <Image src={HERO_IMAGES[0]} alt="Students at Sage Field" fill className="object-cover" sizes="256px" priority />
+                    <Image
+                      src={HERO_IMAGES[0]}
+                      alt="Students at Sage Field"
+                      fill
+                      className="object-cover"
+                      sizes="256px"
+                      priority
+                    />
                   </div>
                   {/* Polaroid caption */}
                   <p className="text-center text-[10px] font-body text-gray-400 mt-1 tracking-wide uppercase">
@@ -474,7 +512,10 @@ export default function FieldDayFridayPage() {
         </div>
 
         {/* ─── WHAT'S HAPPENING ─────────────────────────────────────────────── */}
-        <section id="what-we-do" className="py-20 px-6 sm:px-12 lg:px-16 bg-white">
+        <section
+          id="what-we-do"
+          className="py-20 px-6 sm:px-12 lg:px-16 bg-white"
+        >
           <div className="max-w-4xl mx-auto">
             {/* Header */}
             <motion.div
@@ -541,7 +582,9 @@ export default function FieldDayFridayPage() {
             {/* Logistics strip */}
             <motion.div
               className="rounded-3xl p-6 flex flex-wrap gap-4 justify-center"
-              style={{ background: "linear-gradient(135deg, #e0f2fe 0%, #fef9c3 100%)" }}
+              style={{
+                background: "linear-gradient(135deg, #e0f2fe 0%, #fef9c3 100%)",
+              }}
               initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -571,8 +614,17 @@ export default function FieldDayFridayPage() {
             className="overflow-hidden leading-none"
             style={{ background: "white" }}
           >
-            <svg viewBox="0 0 1440 40" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full block" style={{ height: "40px" }}>
-              <path d="M0,20 C360,40 1080,0 1440,20 L1440,40 L0,40 Z" fill="#f0f9ff" />
+            <svg
+              viewBox="0 0 1440 40"
+              xmlns="http://www.w3.org/2000/svg"
+              preserveAspectRatio="none"
+              className="w-full block"
+              style={{ height: "40px" }}
+            >
+              <path
+                d="M0,20 C360,40 1080,0 1440,20 L1440,40 L0,40 Z"
+                fill="#f0f9ff"
+              />
             </svg>
           </div>
         </div>
@@ -582,8 +634,17 @@ export default function FieldDayFridayPage() {
 
         {/* Wave out of recap */}
         <div style={{ background: "#f0f9ff" }}>
-          <svg viewBox="0 0 1440 40" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full block" style={{ height: "40px" }}>
-            <path d="M0,20 C360,0 1080,40 1440,20 L1440,40 L0,40 Z" fill="#fefce8" />
+          <svg
+            viewBox="0 0 1440 40"
+            xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="none"
+            className="w-full block"
+            style={{ height: "40px" }}
+          >
+            <path
+              d="M0,20 C360,0 1080,40 1440,20 L1440,40 L0,40 Z"
+              fill="#fefce8"
+            />
           </svg>
         </div>
 
@@ -717,8 +778,7 @@ export default function FieldDayFridayPage() {
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-body">
-                        Child&apos;s age{" "}
-                        <span className="text-red-400">*</span>
+                        Child&apos;s age <span className="text-red-400">*</span>
                       </label>
                       <select
                         name="childAge"
@@ -911,7 +971,8 @@ export default function FieldDayFridayPage() {
                       disabled={!isFormValid || !agreementSigned || submitting}
                       className="w-full px-6 py-4 text-white font-bold rounded-2xl transition-all duration-200 font-body cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-y-0"
                       style={{
-                        background: "linear-gradient(135deg, #f29a8f 0%, #e88d82 100%)",
+                        background:
+                          "linear-gradient(135deg, #f29a8f 0%, #e88d82 100%)",
                       }}
                     >
                       {submitting
@@ -926,14 +987,30 @@ export default function FieldDayFridayPage() {
         </section>
 
         {/* Wave before packing list */}
-        <div style={{ background: "linear-gradient(180deg, #fefce8 0%, #e0f2fe 100%)" }}>
-          <svg viewBox="0 0 1440 40" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full block" style={{ height: "40px" }}>
-            <path d="M0,20 C480,40 960,0 1440,20 L1440,40 L0,40 Z" fill="#fef3c7" />
+        <div
+          style={{
+            background: "linear-gradient(180deg, #fefce8 0%, #e0f2fe 100%)",
+          }}
+        >
+          <svg
+            viewBox="0 0 1440 40"
+            xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="none"
+            className="w-full block"
+            style={{ height: "40px" }}
+          >
+            <path
+              d="M0,20 C480,40 960,0 1440,20 L1440,40 L0,40 Z"
+              fill="#fef3c7"
+            />
           </svg>
         </div>
 
         {/* ─── PACKING LIST ─────────────────────────────────────────────────── */}
-        <section className="py-16 px-6 sm:px-12 lg:px-16" style={{ background: "#fef3c7" }}>
+        <section
+          className="py-16 px-6 sm:px-12 lg:px-16"
+          style={{ background: "#fef3c7" }}
+        >
           <div className="max-w-3xl mx-auto">
             <motion.div
               className="text-center mb-10"
@@ -985,8 +1062,17 @@ export default function FieldDayFridayPage() {
 
         {/* Wave before bottom CTA */}
         <div style={{ background: "#fef3c7" }}>
-          <svg viewBox="0 0 1440 40" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full block" style={{ height: "40px" }}>
-            <path d="M0,20 C360,0 1080,40 1440,20 L1440,40 L0,40 Z" fill="#0369a1" />
+          <svg
+            viewBox="0 0 1440 40"
+            xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="none"
+            className="w-full block"
+            style={{ height: "40px" }}
+          >
+            <path
+              d="M0,20 C360,0 1080,40 1440,20 L1440,40 L0,40 Z"
+              fill="#0369a1"
+            />
           </svg>
         </div>
 
@@ -1027,7 +1113,8 @@ export default function FieldDayFridayPage() {
               </h2>
               <p className="text-white/80 font-body text-base mb-8 leading-relaxed max-w-md mx-auto">
                 June 13 is one day. Spots are limited. Reserve your child&apos;s
-                spot now and join us for a day of ocean-themed fun at Sage Field.
+                spot now and join us for a day of ocean-themed fun at Sage
+                Field.
               </p>
               <button
                 onClick={scrollToForm}
@@ -1132,8 +1219,14 @@ export default function FieldDayFridayPage() {
                     <div className="flex flex-col gap-3 bg-gray-50 rounded-xl px-5 py-4 border border-gray-100">
                       <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                         {[
-                          { label: "Student Name", value: formData.childName || "—" },
-                          { label: "Parent / Guardian", value: formData.parentName || "—" },
+                          {
+                            label: "Student Name",
+                            value: formData.childName || "—",
+                          },
+                          {
+                            label: "Parent / Guardian",
+                            value: formData.parentName || "—",
+                          },
                           {
                             label: "Emergency Contact",
                             value: formData.emergencyName
@@ -1142,7 +1235,9 @@ export default function FieldDayFridayPage() {
                           },
                           {
                             label: "Photo Consent",
-                            value: formData.consentPhoto ? "✓ Authorized" : "✗ Not authorized",
+                            value: formData.consentPhoto
+                              ? "✓ Authorized"
+                              : "✗ Not authorized",
                           },
                         ].map((row) => (
                           <div key={row.label}>
@@ -1170,24 +1265,30 @@ export default function FieldDayFridayPage() {
                     <div className="flex flex-col gap-3">
                       <AgreementSectionHeader title="1. Acknowledgment of Program Activities" />
                       <p className="text-sm text-gray-600 font-body leading-relaxed">
-                        I understand that my child is participating in a Field Day
-                        Friday at an outdoor education program where children learn
-                        through active exploration, hands-on experiences, and
-                        supervised outdoor activities. Activities may include, but
-                        are not limited to:
+                        I understand that my child is participating in a Field
+                        Day Friday at an outdoor education program where
+                        children learn through active exploration, hands-on
+                        experiences, and supervised outdoor activities.
+                        Activities may include, but are not limited to:
                       </p>
                       <ul className="flex flex-col gap-1.5">
                         {ACTIVITIES.map((a) => (
-                          <li key={a} className="flex gap-2 text-sm text-gray-600 font-body">
-                            <span className="text-primary mt-0.5 flex-shrink-0">•</span>
+                          <li
+                            key={a}
+                            className="flex gap-2 text-sm text-gray-600 font-body"
+                          >
+                            <span className="text-primary mt-0.5 flex-shrink-0">
+                              •
+                            </span>
                             <span>{a}</span>
                           </li>
                         ))}
                       </ul>
                       <p className="text-sm text-gray-600 font-body leading-relaxed">
-                        I understand that these activities involve inherent risks
-                        that cannot be completely eliminated while preserving the
-                        educational and developmental benefits of participation.
+                        I understand that these activities involve inherent
+                        risks that cannot be completely eliminated while
+                        preserving the educational and developmental benefits of
+                        participation.
                       </p>
                     </div>
 
@@ -1195,13 +1296,18 @@ export default function FieldDayFridayPage() {
                       <AgreementSectionHeader title="2. Assumption of Risk" />
                       <p className="text-sm text-gray-600 font-body leading-relaxed">
                         I knowingly and voluntarily assume all risks associated
-                        with my child&apos;s participation in the Field Day Friday,
-                        including but not limited to:
+                        with my child&apos;s participation in the Field Day
+                        Friday, including but not limited to:
                       </p>
                       <ul className="flex flex-col gap-1.5">
                         {RISKS.map((r) => (
-                          <li key={r} className="flex gap-2 text-sm text-gray-600 font-body">
-                            <span className="text-primary mt-0.5 flex-shrink-0">•</span>
+                          <li
+                            key={r}
+                            className="flex gap-2 text-sm text-gray-600 font-body"
+                          >
+                            <span className="text-primary mt-0.5 flex-shrink-0">
+                              •
+                            </span>
                             <span>{r}</span>
                           </li>
                         ))}
@@ -1216,16 +1322,18 @@ export default function FieldDayFridayPage() {
                       <AgreementSectionHeader title="3. Release of Liability" />
                       <p className="text-sm text-gray-600 font-body leading-relaxed">
                         In consideration of my child&apos;s participation in the
-                        Field Day Friday, I release and hold harmless the School,
-                        its owners, directors, employees, contractors, volunteers,
-                        agents, and representatives from any claims, demands,
-                        causes of action, damages, losses, costs, or expenses
-                        arising out of or related to my child&apos;s participation.
+                        Field Day Friday, I release and hold harmless the
+                        School, its owners, directors, employees, contractors,
+                        volunteers, agents, and representatives from any claims,
+                        demands, causes of action, damages, losses, costs, or
+                        expenses arising out of or related to my child&apos;s
+                        participation.
                       </p>
                       <p className="text-sm text-gray-600 font-body leading-relaxed">
                         This release applies to all claims based upon ordinary
-                        negligence but does not apply to claims arising from gross
-                        negligence, reckless conduct, or intentional misconduct.
+                        negligence but does not apply to claims arising from
+                        gross negligence, reckless conduct, or intentional
+                        misconduct.
                       </p>
                     </div>
 
@@ -1242,8 +1350,13 @@ export default function FieldDayFridayPage() {
                           "I am responsible for all medical expenses incurred on behalf of my child.",
                           "School personnel may administer basic first aid as appropriate.",
                         ].map((item) => (
-                          <li key={item} className="flex gap-2 text-sm text-gray-600 font-body">
-                            <span className="text-primary mt-0.5 flex-shrink-0">•</span>
+                          <li
+                            key={item}
+                            className="flex gap-2 text-sm text-gray-600 font-body"
+                          >
+                            <span className="text-primary mt-0.5 flex-shrink-0">
+                              •
+                            </span>
                             <span>{item}</span>
                           </li>
                         ))}
@@ -1283,19 +1396,27 @@ export default function FieldDayFridayPage() {
                     <div className="flex flex-col gap-3">
                       <AgreementSectionHeader title="6. Emergency Contact Authorization" />
                       <p className="text-sm text-gray-600 font-body leading-relaxed">
-                        If the parent or guardian cannot be reached, the following
-                        individual is authorized to make emergency decisions
-                        regarding the child:
+                        If the parent or guardian cannot be reached, the
+                        following individual is authorized to make emergency
+                        decisions regarding the child:
                       </p>
                       <div className="bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <p className="text-xs font-semibold text-gray-400 font-body">Name</p>
-                            <p className="text-sm text-gray-800 font-body">{formData.emergencyName || "—"}</p>
+                            <p className="text-xs font-semibold text-gray-400 font-body">
+                              Name
+                            </p>
+                            <p className="text-sm text-gray-800 font-body">
+                              {formData.emergencyName || "—"}
+                            </p>
                           </div>
                           <div>
-                            <p className="text-xs font-semibold text-gray-400 font-body">Phone</p>
-                            <p className="text-sm text-gray-800 font-body">{formData.emergencyPhone || "—"}</p>
+                            <p className="text-xs font-semibold text-gray-400 font-body">
+                              Phone
+                            </p>
+                            <p className="text-sm text-gray-800 font-body">
+                              {formData.emergencyPhone || "—"}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -1304,10 +1425,11 @@ export default function FieldDayFridayPage() {
                     <div className="flex flex-col gap-4">
                       <AgreementSectionHeader title="7. Parent Acknowledgment & Signature" />
                       <p className="text-sm text-gray-600 font-body leading-relaxed">
-                        By signing below, I confirm that I have read this Agreement
-                        in its entirety and understand its contents. I certify that
-                        I am the parent or legal guardian of the child named above
-                        and have authority to execute this Agreement.
+                        By signing below, I confirm that I have read this
+                        Agreement in its entirety and understand its contents. I
+                        certify that I am the parent or legal guardian of the
+                        child named above and have authority to execute this
+                        Agreement.
                       </p>
 
                       {agreementSigned ? (
@@ -1316,14 +1438,19 @@ export default function FieldDayFridayPage() {
                             <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
                             <p
                               className="text-2xl text-gray-700 truncate"
-                              style={{ fontFamily: "var(--font-dancing-script)" }}
+                              style={{
+                                fontFamily: "var(--font-dancing-script)",
+                              }}
                             >
                               {sigValue}
                             </p>
                           </div>
                           <button
                             type="button"
-                            onClick={() => { setAgreementSigned(false); setSigValue(""); }}
+                            onClick={() => {
+                              setAgreementSigned(false);
+                              setSigValue("");
+                            }}
                             className="text-xs text-gray-400 hover:text-gray-600 font-body underline shrink-0 cursor-pointer"
                           >
                             Edit
@@ -1337,12 +1464,16 @@ export default function FieldDayFridayPage() {
                           <div>
                             <label className="block text-xs font-semibold text-gray-600 font-body mb-1">
                               Full name{" "}
-                              <span className="font-normal text-gray-400">(print)</span>
+                              <span className="font-normal text-gray-400">
+                                (print)
+                              </span>
                             </label>
                             <input
                               type="text"
                               value={sigPrintedName}
-                              onChange={(e) => setSigPrintedName(e.target.value)}
+                              onChange={(e) =>
+                                setSigPrintedName(e.target.value)
+                              }
                               placeholder="Your full legal name"
                               className="w-full px-3 py-2 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors bg-white"
                             />
@@ -1355,7 +1486,9 @@ export default function FieldDayFridayPage() {
                               <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-dashed border-gray-200 bg-white">
                                 <p
                                   className="text-2xl text-gray-700 flex-1"
-                                  style={{ fontFamily: "var(--font-dancing-script)" }}
+                                  style={{
+                                    fontFamily: "var(--font-dancing-script)",
+                                  }}
                                 >
                                   {sigValue}
                                 </p>
