@@ -2053,3 +2053,32 @@ export function createReferralEmbed(data: {
     timestamp: new Date().toISOString(),
   };
 }
+
+/**
+ * Creates a Discord embed for parent testimonial submissions
+ */
+export function createTestimonialEmbed(data: {
+  parentName: string;
+  parentEmail: string;
+  childName: string;
+  testimonial: string;
+}): DiscordEmbed {
+  return {
+    title: "☕ New Testimonial Submitted",
+    color: 0xa0784a,
+    fields: [
+      { name: "Parent", value: data.parentName || "N/A", inline: true },
+      { name: "Email", value: data.parentEmail || "N/A", inline: true },
+      { name: "Child", value: data.childName || "N/A", inline: true },
+      {
+        name: "Testimonial",
+        value:
+          data.testimonial.length > 1024
+            ? data.testimonial.substring(0, 1021) + "..."
+            : data.testimonial,
+        inline: false,
+      },
+    ],
+    timestamp: new Date().toISOString(),
+  };
+}

@@ -22,6 +22,7 @@ import {
   HelpCircle,
   X,
   ChevronRight,
+  Coffee,
 } from "lucide-react";
 import OnboardingChecklist from "@/app/parent/components/OnboardingChecklist";
 import SummerInfoSheet from "./SummerInfoSheet";
@@ -33,6 +34,7 @@ import {
   type AttendanceProgram,
 } from "@/app/actions/getParentStudentAttendance";
 import { saveDropOffTime } from "@/app/actions/saveDropOffTime";
+import { submitTestimonial } from "@/app/actions/submitTestimonial";
 import { DetailSidebar } from "@/app/admin/components/DetailSidebar";
 import {
   SidebarField,
@@ -426,6 +428,10 @@ export default function HomePageClient({
   const [dropOffSaving, setDropOffSaving] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [referralPopupOpen, setReferralPopupOpen] = useState(false);
+  const [testimonialOpen, setTestimonialOpen] = useState(false);
+  const [testimonialText, setTestimonialText] = useState("");
+  const [testimonialSubmitting, setTestimonialSubmitting] = useState(false);
+  const [testimonialSubmitted, setTestimonialSubmitted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -443,6 +449,19 @@ export default function HomePageClient({
   function closeReferralPopup() {
     sessionStorage.setItem("referralPopupSeen", "1");
     setReferralPopupOpen(false);
+  }
+
+  async function handleSubmitTestimonial() {
+    if (!testimonialText.trim() || testimonialSubmitting) return;
+    setTestimonialSubmitting(true);
+    const childName =
+      students[0]?.child_legal_name ?? "your child";
+    const res = await submitTestimonial({
+      testimonial: testimonialText.trim(),
+      childName,
+    });
+    setTestimonialSubmitting(false);
+    if (res.success) setTestimonialSubmitted(true);
   }
 
   async function handleSaveDropOff() {
@@ -685,6 +704,208 @@ export default function HomePageClient({
                   >
                     Maybe later
                   </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          ))}
+      </AnimatePresence>
+
+      {/* Testimonial Popup */}
+      <AnimatePresence>
+        {testimonialOpen &&
+          (isMobile ? (
+            <>
+              <motion.div
+                className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                onClick={() => !testimonialSubmitting && setTestimonialOpen(false)}
+              />
+              <motion.div
+                className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl overflow-hidden"
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", stiffness: 280, damping: 30 }}
+              >
+                <div className="w-10 h-1 rounded-full bg-gray-200 mx-auto mt-3" />
+                <div className="p-6 pb-10">
+                  <div className="flex items-center gap-3 mb-1">
+                    <div className="w-10 h-10 rounded-full bg-[#a0784a]/10 flex items-center justify-center shrink-0">
+                      <Coffee className="w-5 h-5 text-[#a0784a]" strokeWidth={1.5} />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-heading font-semibold text-gray-900 leading-tight">
+                        Share Your Experience
+                      </h2>
+                      <p className="text-xs font-body text-[#a0784a] font-medium">
+                        $15 Starbucks gift card — coffee on us
+                      </p>
+                    </div>
+                  </div>
+
+                  <p className="text-sm font-body text-gray-500 leading-relaxed mt-4 mb-4">
+                    A few honest sentences from the heart is more than enough. Here are some prompts to get you started:
+                  </p>
+                  <ul className="space-y-1.5 mb-5">
+                    {[
+                      `What has ${students[0]?.child_legal_name?.split(" ")[0] ?? "your child"} enjoyed most at Sage Field?`,
+                      "How has the program impacted your family?",
+                      "Is there a moment or experience that stood out?",
+                      "Would you recommend Sage Field to another family?",
+                    ].map((prompt) => (
+                      <li
+                        key={prompt}
+                        className="flex items-start gap-2 text-xs font-body text-gray-500"
+                      >
+                        <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-[#a0784a]/50 shrink-0" />
+                        {prompt}
+                      </li>
+                    ))}
+                  </ul>
+
+                  {testimonialSubmitted ? (
+                    <div className="flex flex-col items-center gap-2 py-6">
+                      <div className="w-12 h-12 rounded-full bg-[#a0784a]/10 flex items-center justify-center">
+                        <Check className="w-6 h-6 text-[#a0784a]" />
+                      </div>
+                      <p className="text-sm font-body font-medium text-gray-800">Thank you so much!</p>
+                      <p className="text-xs font-body text-gray-500 text-center">We&apos;ll be in touch about your gift card soon.</p>
+                      <button
+                        onClick={() => setTestimonialOpen(false)}
+                        className="mt-3 text-xs font-body text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <textarea
+                        value={testimonialText}
+                        onChange={(e) => setTestimonialText(e.target.value)}
+                        placeholder="Share your experience here…"
+                        rows={4}
+                        className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-body text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-[#a0784a]/30 focus:border-[#a0784a]/50 transition"
+                      />
+                      <button
+                        onClick={handleSubmitTestimonial}
+                        disabled={!testimonialText.trim() || testimonialSubmitting}
+                        className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold font-body bg-[#a0784a] text-white hover:bg-[#8a6640] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Coffee className="w-4 h-4" />
+                        {testimonialSubmitting ? "Submitting…" : "Submit testimonial"}
+                      </button>
+                      <button
+                        onClick={() => setTestimonialOpen(false)}
+                        className="mt-4 w-full text-center text-xs font-body text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                      >
+                        Maybe later
+                      </button>
+                    </>
+                  )}
+                </div>
+              </motion.div>
+            </>
+          ) : (
+            <motion.div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => !testimonialSubmitting && setTestimonialOpen(false)}
+            >
+              <motion.div
+                className="relative w-full max-w-lg rounded-2xl shadow-2xl bg-white overflow-hidden"
+                initial={{ opacity: 0, scale: 0.92, y: 16 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 8 }}
+                transition={{ type: "spring", damping: 26, stiffness: 300 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  onClick={() => !testimonialSubmitting && setTestimonialOpen(false)}
+                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer z-10"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+
+                <div className="p-6">
+                  <div className="flex items-center gap-3 mb-1">
+                    <div className="w-10 h-10 rounded-full bg-[#a0784a]/10 flex items-center justify-center shrink-0">
+                      <Coffee className="w-5 h-5 text-[#a0784a]" strokeWidth={1.5} />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-heading font-semibold text-gray-900 leading-tight">
+                        Share Your Experience
+                      </h2>
+                      <p className="text-xs font-body text-[#a0784a] font-medium">
+                        $15 Starbucks gift card — coffee on us
+                      </p>
+                    </div>
+                  </div>
+
+                  <p className="text-sm font-body text-gray-500 leading-relaxed mt-4 mb-3">
+                    A few honest sentences from the heart is more than enough. Here are some prompts to get you started:
+                  </p>
+                  <ul className="space-y-1.5 mb-5">
+                    {[
+                      `What has ${students[0]?.child_legal_name?.split(" ")[0] ?? "your child"} enjoyed most at Sage Field?`,
+                      "How has the program impacted your family?",
+                      "Is there a moment or experience that stood out?",
+                      "Would you recommend Sage Field to another family?",
+                    ].map((prompt) => (
+                      <li
+                        key={prompt}
+                        className="flex items-start gap-2 text-xs font-body text-gray-500"
+                      >
+                        <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-[#a0784a]/50 shrink-0" />
+                        {prompt}
+                      </li>
+                    ))}
+                  </ul>
+
+                  {testimonialSubmitted ? (
+                    <div className="flex flex-col items-center gap-2 py-4">
+                      <div className="w-12 h-12 rounded-full bg-[#a0784a]/10 flex items-center justify-center">
+                        <Check className="w-6 h-6 text-[#a0784a]" />
+                      </div>
+                      <p className="text-sm font-body font-medium text-gray-800">Thank you so much!</p>
+                      <p className="text-xs font-body text-gray-500 text-center">We&apos;ll be in touch about your gift card soon.</p>
+                      <button
+                        onClick={() => setTestimonialOpen(false)}
+                        className="mt-3 text-xs font-body text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <textarea
+                        value={testimonialText}
+                        onChange={(e) => setTestimonialText(e.target.value)}
+                        placeholder="Share your experience here…"
+                        rows={4}
+                        className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-body text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-[#a0784a]/30 focus:border-[#a0784a]/50 transition"
+                      />
+                      <button
+                        onClick={handleSubmitTestimonial}
+                        disabled={!testimonialText.trim() || testimonialSubmitting}
+                        className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold font-body bg-[#a0784a] text-white hover:bg-[#8a6640] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Coffee className="w-4 h-4" />
+                        {testimonialSubmitting ? "Submitting…" : "Submit testimonial"}
+                      </button>
+                      <button
+                        onClick={() => setTestimonialOpen(false)}
+                        className="mt-4 w-full text-center text-xs font-body text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                      >
+                        Maybe later
+                      </button>
+                    </>
+                  )}
                 </div>
               </motion.div>
             </motion.div>
@@ -1003,6 +1224,59 @@ export default function HomePageClient({
                     )}
                   </button>
                 </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Testimonial Incentive */}
+          <section
+            className="rounded-2xl p-6 shadow-sm border border-[#d6c9b8]"
+            style={{
+              background: "linear-gradient(135deg, #fdf8f3 0%, #f5ede0 100%)",
+            }}
+          >
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-7 h-7 rounded-full bg-[#a0784a]/15 flex items-center justify-center">
+                    <Coffee
+                      className="w-3.5 h-3.5 text-[#a0784a]"
+                      strokeWidth={1.5}
+                    />
+                  </div>
+                  <h2 className="text-base font-heading font-semibold text-gray-800">
+                    Share Your Experience
+                  </h2>
+                  <span className="bg-[#a0784a] text-white text-xs font-body px-2 py-0.5 rounded-full font-medium">
+                    $15 Starbucks
+                  </span>
+                </div>
+                <p className="text-sm font-body text-gray-600 leading-relaxed max-w-lg">
+                  We&apos;d love to hear about your family&apos;s experience at
+                  Sage Field. Share a short testimonial and we&apos;ll send you
+                  a{" "}
+                  <strong className="text-gray-800">
+                    $15 Starbucks gift card
+                  </strong>{" "}
+                  as a thank-you — coffee on us.
+                </p>
+              </div>
+
+              <div className="sm:min-w-[180px] flex sm:justify-end items-center">
+                {testimonialSubmitted ? (
+                  <div className="flex items-center gap-1.5 text-sm font-body text-[#a0784a] font-medium">
+                    <Check className="w-4 h-4" />
+                    Testimonial received!
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setTestimonialOpen(true)}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold font-body bg-[#a0784a] text-white hover:bg-[#8a6640] transition-colors"
+                  >
+                    <Coffee className="w-3.5 h-3.5" />
+                    Share &amp; earn $15
+                  </button>
+                )}
               </div>
             </div>
           </section>
