@@ -36,6 +36,7 @@ import { sendSummerWeekOneNewsletterEmail } from '../../actions/sendSummerWeekOn
 import { sendSummerWeekTwoNewsletterEmail } from '../../actions/sendSummerWeekTwoNewsletterEmail'
 import { sendFreeFridayAnnouncementEmail } from '../../actions/sendFreeFridayAnnouncementEmail'
 import { sendGoogleReviewIncentiveEmail } from '../../actions/sendGoogleReviewIncentiveEmail'
+import { sendFunFridayConfirmationEmail } from '../../actions/sendFunFridayConfirmationEmail'
 import { sendSummerTuitionConfirmationEmail } from '../../actions/sendSummerTuitionConfirmationEmail'
 import { enrollApplication } from '../../actions/enrollApplication'
 import { PaymentHistory } from './PaymentHistory'
@@ -237,6 +238,9 @@ export function ApplicationDetailSidebar({
   const [summerTuitionConfirmSending, setSummerTuitionConfirmSending] = useState(false)
   const [summerTuitionConfirmSent, setSummerTuitionConfirmSent] = useState(false)
   const [summerTuitionConfirmError, setSummerTuitionConfirmError] = useState<string | null>(null)
+  const [funFridayConfirmSending, setFunFridayConfirmSending] = useState(false)
+  const [funFridayConfirmSent, setFunFridayConfirmSent] = useState(false)
+  const [funFridayConfirmError, setFunFridayConfirmError] = useState<string | null>(null)
   const [tagInput, setTagInput] = useState('')
   const [tagSaving, setTagSaving] = useState(false)
   const [tagError, setTagError] = useState<string | null>(null)
@@ -849,6 +853,26 @@ export function ApplicationDetailSidebar({
       setTimeout(() => setSummerTuitionConfirmSent(false), 3000)
     } else {
       setSummerTuitionConfirmError(result.error ?? 'Failed to send')
+    }
+  }
+
+  const handleSendFunFridayConfirmation = async () => {
+    if (funFridayConfirmSending || !application.g1_email) return
+    setFunFridayConfirmSending(true)
+    setFunFridayConfirmError(null)
+    const result = await sendFunFridayConfirmationEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+      applicationId: application.id,
+    })
+    setFunFridayConfirmSending(false)
+    if (result.success) {
+      setFunFridayConfirmSent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setFunFridayConfirmSent(false), 3000)
+    } else {
+      setFunFridayConfirmError(result.error ?? 'Failed to send')
     }
   }
 
@@ -1591,6 +1615,17 @@ export function ApplicationDetailSidebar({
                   {googleReviewSending ? 'Sending…' : googleReviewSent ? '✓ Sent!' : 'Send Google Review Incentive'}
                 </button>
                 {googleReviewError && <span className="text-xs text-red-600">{googleReviewError}</span>}
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleSendFunFridayConfirmation}
+                  disabled={funFridayConfirmSending || funFridayConfirmSent}
+                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                >
+                  {funFridayConfirmSending ? 'Sending…' : funFridayConfirmSent ? '✓ Sent!' : 'Send Fun Friday Confirmation'}
+                </button>
+                {funFridayConfirmError && <span className="text-xs text-red-600">{funFridayConfirmError}</span>}
               </div>
               {application.program === 'homeschool_drop_in' && (
                 <div className="flex items-center gap-3">
