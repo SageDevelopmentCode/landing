@@ -22,6 +22,7 @@ import {
   SlidersHorizontal,
   Camera,
   Gift,
+  Newspaper,
 } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 import HelpWidget from "../components/HelpWidget";
@@ -51,6 +52,7 @@ const moreItems: {
   { label: "Rewards", icon: Gift, href: "/parent/rewards", iconColor: "text-pink-400" },
   { label: "Volunteer Opportunities", icon: Heart, href: "/parent/volunteer", iconColor: "text-rose-400" },
   { label: "Emergency Contacts", icon: Phone, href: "/parent/emergency-contacts", iconColor: "text-red-400" },
+  { label: "Newsletters", icon: Newspaper, href: "/parent/newsletters", iconColor: "text-yellow-500" },
   { label: "Download the App", icon: Download, href: "/download", badge: "New!", iconColor: "text-teal-400" },
   { label: "Need Help", icon: HelpCircle, action: "help", iconColor: "text-orange-400" },
   { label: "Manage Access", icon: Users, action: "manage-access" },

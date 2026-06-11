@@ -246,7 +246,7 @@ export function TestimonialsView({ testimonials: initial }: { testimonials: Test
                 width: '420px',
                 height: '100vh',
                 backgroundColor: 'white',
-                boxShadow: shadows.strong,
+                boxShadow: shadows.large,
                 zIndex: 50,
                 overflowY: 'auto',
                 display: 'flex',

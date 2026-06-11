@@ -47,6 +47,16 @@ export interface DBChangeEntry {
   created_at: string
 }
 
+export interface DBNewsletterListItem {
+  id: string
+  title: string
+  week_range: string
+  cover_image_path: string | null
+  cover_image_signed_url: string | null
+  access_password: string | null
+  published_at: string | null
+}
+
 export interface DBNewsletter {
   id: string
   title: string
@@ -487,6 +497,53 @@ export async function getNewsletterMetaPublic(
 
   if (error || !data) return null
   return { id: data.id, title: data.title, week_range: data.week_range }
+}
+
+export async function getPublishedNewslettersList(): Promise<DBNewsletterListItem[]> {
+  const adminClient = createAdminClient()
+
+  const { data: rows, error } = await adminClient
+    .schema('newsletters')
+    .from('newsletters')
+    .select('id, title, week_range, cover_image_path, access_password, published_at')
+    .eq('is_deleted', false)
+    .eq('status', 'published')
+    .order('published_at', { ascending: false })
+
+  if (error || !rows || rows.length === 0) {
+    if (error) console.error('getPublishedNewslettersList error:', error)
+    return []
+  }
+
+  const pathsByBucket = new Map<string, string[]>()
+  for (const row of rows) {
+    if (!row.cover_image_path) continue
+    const bucket = (row.cover_image_path as string).startsWith('covers/')
+      ? 'newsletter-images'
+      : 'teacher-photos'
+    if (!pathsByBucket.has(bucket)) pathsByBucket.set(bucket, [])
+    pathsByBucket.get(bucket)!.push(row.cover_image_path)
+  }
+
+  const signedUrlMap = new Map<string, string>()
+  await Promise.all(
+    Array.from(pathsByBucket.entries()).map(async ([bucket, paths]) => {
+      const { data: signedUrls } = await adminClient.storage.from(bucket).createSignedUrls(paths, 86400)
+      for (const entry of signedUrls ?? []) {
+        if (entry.signedUrl && entry.path) signedUrlMap.set(entry.path, entry.signedUrl)
+      }
+    })
+  )
+
+  return rows.map((row) => ({
+    id: row.id,
+    title: row.title,
+    week_range: row.week_range,
+    cover_image_path: row.cover_image_path ?? null,
+    cover_image_signed_url: row.cover_image_path ? (signedUrlMap.get(row.cover_image_path) ?? null) : null,
+    access_password: row.access_password ?? null,
+    published_at: row.published_at ?? null,
+  }))
 }
 
 export async function verifyNewsletterPassword(

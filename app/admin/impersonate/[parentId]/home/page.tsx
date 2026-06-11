@@ -68,6 +68,7 @@ export default async function ImpersonateHomePage({
     { data: txData },
     { data: summerData },
     publishedActivities,
+    { data: testimonialData },
   ] = await Promise.all([
     studentIds.length > 0
       ? adminClient
@@ -123,6 +124,14 @@ export default async function ImpersonateHomePage({
       .eq("approved", true)
       .in("program", ["summer_26", "both", "homeschool_drop_in"]),
     getPublishedActivities(),
+    adminClient
+      .schema("marketing")
+      .from("testimonials")
+      .select("id")
+      .eq("parent_id", effectiveParentId)
+      .eq("is_deleted", false)
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   const studentMap: StudentMap = {};
@@ -250,6 +259,7 @@ export default async function ImpersonateHomePage({
   }
 
   const checklistComplete = onboardingCompletedIds.length >= 8;
+  const hasSubmittedTestimonial = !!testimonialData;
 
   const unpaidSummerEnrollments = summerEnrollments.filter(
     (e) => e.program !== "homeschool_drop_in" && (paidWeeksByStudent[e.student_id]?.length ?? 0) < 12
@@ -289,6 +299,7 @@ export default async function ImpersonateHomePage({
           checklistInteractive
           suppressReferralPopup
           hasActivityForPaidDay={hasActivityForPaidDay}
+          hasSubmittedTestimonial={hasSubmittedTestimonial}
         />
       </main>
     </div>
