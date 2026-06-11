@@ -389,7 +389,7 @@ function EditorTab({
   }
 
   async function handleCoverImageFile(file: File | null) {
-    if (!file || isReadOnly) return;
+    if (!file) return;
     const { compressImage } = await import("@/app/utils/compressImage");
     const compressed = await compressImage(file);
     const blobUrl = URL.createObjectURL(compressed);
@@ -410,14 +410,13 @@ function EditorTab({
   }
 
   async function handleRemoveCoverImage() {
-    if (isReadOnly) return;
     setCoverImageUrl(null);
     await deleteNewsletterCoverImage(newsletterId);
   }
 
   async function handleCoverLibraryRaw(rawPhotos: import("@/app/actions/photos").TeacherPhoto[]) {
     const photo = rawPhotos[0];
-    if (!photo || isReadOnly) return;
+    if (!photo) return;
     setShowCoverLibraryPicker(false);
     setCoverImageUrl(photo.signed_url ?? null);
     const result = await addLibraryCoverPhoto(newsletterId, photo.id);
@@ -901,7 +900,7 @@ function EditorTab({
                   <Loader2 className="w-5 h-5 text-white animate-spin" />
                 </div>
               )}
-              {!isReadOnly && !coverUploading && (
+              {!coverUploading && (
                 <button
                   onClick={handleRemoveCoverImage}
                   className="absolute top-1.5 right-1.5 w-6 h-6 bg-gray-900/70 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
@@ -916,8 +915,7 @@ function EditorTab({
               <ImageIcon className="w-6 h-6" />
             </div>
           )}
-          {!isReadOnly && (
-            <div className="flex gap-2 mt-2">
+          <div className="flex gap-2 mt-2">
               <button
                 onClick={() => coverFileInputRef.current?.click()}
                 disabled={coverUploading}
@@ -935,7 +933,6 @@ function EditorTab({
                 Library
               </button>
             </div>
-          )}
           <input
             ref={coverFileInputRef}
             type="file"
