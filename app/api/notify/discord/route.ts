@@ -15,6 +15,7 @@ import {
   createCareLogEmbed,
   createActivityPreferencesSavedEmbed,
   createDefaultPreferenceSetEmbed,
+  createTestimonialEmbed,
 } from "@/app/lib/discord";
 
 export async function POST(request: NextRequest) {
@@ -624,6 +625,19 @@ export async function POST(request: NextRequest) {
         );
       }
       const embed = createDefaultPreferenceSetEmbed({ parentName, parentEmail, childName, level: level ?? null });
+      await sendDiscordNotification(embed, process.env.DISCORD_WEBHOOK_URL);
+      return NextResponse.json({ success: true });
+    }
+
+    if (type === "testimonial_submitted") {
+      const { parentName, parentEmail, childName, testimonial } = data;
+      if (!parentName || !parentEmail || !childName || !testimonial) {
+        return NextResponse.json(
+          { error: "testimonial_submitted requires parentName, parentEmail, childName, and testimonial" },
+          { status: 400 },
+        );
+      }
+      const embed = createTestimonialEmbed({ parentName, parentEmail, childName, testimonial });
       await sendDiscordNotification(embed, process.env.DISCORD_WEBHOOK_URL);
       return NextResponse.json({ success: true });
     }

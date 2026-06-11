@@ -65,10 +65,25 @@ export type ShadowDayBooking = {
   updated_at: string
 }
 
+export type Testimonial = {
+  id: string
+  parent_id: string
+  parent_name: string
+  parent_email: string
+  child_name: string
+  testimonial: string
+  status: 'pending' | 'approved' | 'featured' | 'declined'
+  gift_card_sent: boolean
+  admin_notes: string | null
+  is_deleted: boolean
+  created_at: string
+  updated_at: string
+}
+
 export default async function MarketingPage() {
   const supabase = createAdminClient()
 
-  const [{ data: rsvps }, { data: tourUnavailability }, { data: tourBookings }, { data: enrolledApps }, { data: infoSessionRsvps }, { data: shadowDayBookings }] = await Promise.all([
+  const [{ data: rsvps }, { data: tourUnavailability }, { data: tourBookings }, { data: enrolledApps }, { data: infoSessionRsvps }, { data: shadowDayBookings }, { data: testimonials }] = await Promise.all([
     supabase
       .schema('marketing')
       .from('open_house_rsvps')
@@ -101,6 +116,12 @@ export default async function MarketingPage() {
       .from('shadow_day_bookings')
       .select('*')
       .order('shadow_date', { ascending: true }),
+    supabase
+      .schema('marketing')
+      .from('testimonials')
+      .select('*')
+      .eq('is_deleted', false)
+      .order('created_at', { ascending: false }),
   ])
 
   const enrolledEmailsArr: { email: string; status: string }[] = (enrolledApps ?? []).flatMap((app) => {
@@ -118,6 +139,7 @@ export default async function MarketingPage() {
       enrolledEmailsArr={enrolledEmailsArr}
       infoSessionRsvps={(infoSessionRsvps as InfoSessionRsvp[]) ?? []}
       shadowDayBookings={(shadowDayBookings as ShadowDayBooking[]) ?? []}
+      testimonials={(testimonials as Testimonial[]) ?? []}
     />
   )
 }

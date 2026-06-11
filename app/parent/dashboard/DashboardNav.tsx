@@ -21,18 +21,19 @@ import {
   X,
   SlidersHorizontal,
   Camera,
+  Gift,
 } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 import HelpWidget from "../components/HelpWidget";
 import ManageAccessModal from "./ManageAccessModal";
 
-const primaryNavItems: { label: string; icon: LucideIcon; href: string; badge?: string }[] = [
-  { label: "Home", icon: Home, href: "/parent/home" },
-  { label: "My Children", icon: Users, href: "/parent/children" },
-  { label: "Tuition", icon: CreditCard, href: "/parent/billing" },
-  { label: "Messages", icon: MessageCircle, href: "/parent/messages" },
-  { label: "Calendar", icon: Calendar, href: "/parent/calendar" },
-  { label: "Photos", icon: Camera, href: "/parent/photos", badge: "New!" },
+const primaryNavItems: { label: string; icon: LucideIcon; href: string; badge?: string; iconColor?: string }[] = [
+  { label: "Home", icon: Home, href: "/parent/home", iconColor: "text-emerald-400" },
+  { label: "My Children", icon: Users, href: "/parent/children", iconColor: "text-indigo-400" },
+  { label: "Tuition", icon: CreditCard, href: "/parent/billing", iconColor: "text-green-400" },
+  { label: "Messages", icon: MessageCircle, href: "/parent/messages", iconColor: "text-blue-400" },
+  { label: "Calendar", icon: Calendar, href: "/parent/calendar", iconColor: "text-purple-400" },
+  { label: "Photos", icon: Camera, href: "/parent/photos", badge: "New!", iconColor: "text-fuchsia-400" },
 ];
 
 const moreItems: {
@@ -41,19 +42,17 @@ const moreItems: {
   href?: string;
   action?: string;
   badge?: string;
+  iconColor?: string;
 }[] = [
-  { label: "Feed", icon: Rss, href: "/parent/feed" },
-  { label: "Enrollment", icon: ClipboardCheck, href: "/parent/dashboard" },
-  { label: "Preferences", icon: SlidersHorizontal, href: "/parent/preferences" },
-  { label: "Forms & Documents", icon: FileText, href: "/parent/forms" },
-  { label: "Volunteer Opportunities", icon: Heart, href: "/parent/volunteer" },
-  {
-    label: "Emergency Contacts",
-    icon: Phone,
-    href: "/parent/emergency-contacts",
-  },
-  { label: "Download the App", icon: Download, href: "/download", badge: "New!" },
-  { label: "Need Help", icon: HelpCircle, action: "help" },
+  { label: "Feed", icon: Rss, href: "/parent/feed", iconColor: "text-sky-400" },
+  { label: "Enrollment", icon: ClipboardCheck, href: "/parent/dashboard", iconColor: "text-violet-400" },
+  { label: "Preferences", icon: SlidersHorizontal, href: "/parent/preferences", iconColor: "text-slate-400" },
+  { label: "Forms & Documents", icon: FileText, href: "/parent/forms", iconColor: "text-amber-400" },
+  { label: "Rewards", icon: Gift, href: "/parent/rewards", iconColor: "text-pink-400" },
+  { label: "Volunteer Opportunities", icon: Heart, href: "/parent/volunteer", iconColor: "text-rose-400" },
+  { label: "Emergency Contacts", icon: Phone, href: "/parent/emergency-contacts", iconColor: "text-red-400" },
+  { label: "Download the App", icon: Download, href: "/download", badge: "New!", iconColor: "text-teal-400" },
+  { label: "Need Help", icon: HelpCircle, action: "help", iconColor: "text-orange-400" },
   { label: "Manage Access", icon: Users, action: "manage-access" },
 ];
 
@@ -108,7 +107,7 @@ export default function DashboardNav({
 
       {/* Desktop nav — unchanged */}
       <nav className="hidden md:flex items-center gap-2">
-        {primaryNavItems.map(({ label, icon: Icon, href, badge }) => {
+        {primaryNavItems.map(({ label, icon: Icon, href, badge, iconColor }) => {
           const resolvedHref = navHref(href);
           const isActive = href !== "#" && pathname === resolvedHref;
           return (
@@ -121,7 +120,7 @@ export default function DashboardNav({
                   : "text-gray-600 hover:text-[#4a7c59] hover:bg-gray-50"
               }`}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className={`w-4 h-4 ${!isActive ? (iconColor ?? "") : ""}`} />
               {label}
               {badge && (
                 <span className="ml-1 text-[10px] font-semibold uppercase rounded-full px-2 py-0.5 shrink-0 bg-green-100 text-green-700">
@@ -146,16 +145,27 @@ export default function DashboardNav({
           </button>
 
           {moreOpen && (
-            <div className="absolute left-1/2 -translate-x-1/2 mt-1.5 w-52 bg-white border border-gray-100 rounded-xl shadow-sm z-50 py-1.5">
-              {moreItems.map(({ label, icon: Icon, href, action, badge }) => {
+            <div className="absolute left-1/2 -translate-x-1/2 mt-1.5 w-72 bg-white border border-gray-100 rounded-xl shadow-sm z-50 p-2 grid grid-cols-3 gap-1">
+              {moreItems.map(({ label, icon: Icon, href, action, badge, iconColor }) => {
                 if (action === "manage-access") return null;
                 const resolvedHref = href ? navHref(href) : undefined;
                 const isActive = !!resolvedHref && pathname === resolvedHref;
-                const baseClass = `flex items-center gap-1.5 w-full text-left px-4 py-2 text-sm font-body transition-colors cursor-pointer ${
+                const baseClass = `flex flex-col items-center justify-center gap-1 w-full text-center px-1 py-3 rounded-lg text-xs font-body transition-colors cursor-pointer ${
                   isActive
                     ? "text-[#4a7c59] bg-[#4a7c59]/8 font-semibold"
                     : "text-gray-700 hover:bg-gray-50 hover:text-[#4a7c59]"
                 }`;
+                const tileContent = (
+                  <>
+                    <Icon className={`w-4 h-4 ${!isActive ? (iconColor ?? "") : ""}`} />
+                    <span className="leading-tight">{label}</span>
+                    {badge && (
+                      <span className="text-[9px] font-semibold uppercase rounded-full px-1.5 py-px bg-green-100 text-green-700 whitespace-nowrap">
+                        {badge}
+                      </span>
+                    )}
+                  </>
+                );
                 if (action === "help") {
                   return (
                     <button
@@ -166,23 +176,7 @@ export default function DashboardNav({
                       }}
                       className={baseClass}
                     >
-                      <Icon className="w-4 h-4" />
-                      {label}
-                    </button>
-                  );
-                }
-                if (action === "manage-access") {
-                  return (
-                    <button
-                      key={label}
-                      onClick={() => {
-                        setMoreOpen(false);
-                        setManageAccessOpen(true);
-                      }}
-                      className={baseClass}
-                    >
-                      <Icon className="w-4 h-4" />
-                      {label}
+                      {tileContent}
                     </button>
                   );
                 }
@@ -193,13 +187,7 @@ export default function DashboardNav({
                     onClick={() => setMoreOpen(false)}
                     className={baseClass}
                   >
-                    <Icon className="w-4 h-4" />
-                    {label}
-                    {badge && (
-                      <span className="ml-1 text-[10px] font-semibold uppercase rounded-full px-2 py-0.5 shrink-0 bg-green-100 text-green-700">
-                        {badge}
-                      </span>
-                    )}
+                    {tileContent}
                   </Link>
                 ) : (
                   <button
@@ -207,8 +195,7 @@ export default function DashboardNav({
                     onClick={() => setMoreOpen(false)}
                     className={baseClass}
                   >
-                    <Icon className="w-4 h-4" />
-                    {label}
+                    {tileContent}
                   </button>
                 );
               })}
@@ -221,7 +208,7 @@ export default function DashboardNav({
       {mobileMenuOpen && (
         <div className="md:hidden absolute inset-x-0 top-full z-40 bg-white border-b border-gray-100 shadow-sm">
           <div className="px-4 pt-2 pb-3 grid grid-cols-2 gap-1">
-            {primaryNavItems.map(({ label, icon: Icon, href, badge }) => {
+            {primaryNavItems.map(({ label, icon: Icon, href, badge, iconColor }) => {
               const resolvedHref = navHref(href);
               const isActive = href !== "#" && pathname === resolvedHref;
               return (
@@ -235,7 +222,7 @@ export default function DashboardNav({
                       : "text-gray-600 hover:text-[#4a7c59] hover:bg-gray-50"
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className={`w-4 h-4 ${!isActive ? (iconColor ?? "") : ""}`} />
                   {label}
                   {badge && (
                     <span className="ml-1 text-[10px] font-semibold uppercase rounded-full px-2 py-0.5 shrink-0 bg-green-100 text-green-700">

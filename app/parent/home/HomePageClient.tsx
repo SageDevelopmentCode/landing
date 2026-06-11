@@ -23,6 +23,7 @@ import {
   X,
   ChevronRight,
   Coffee,
+  Sparkles,
 } from "lucide-react";
 import OnboardingChecklist from "@/app/parent/components/OnboardingChecklist";
 import SummerInfoSheet from "./SummerInfoSheet";
@@ -389,6 +390,7 @@ interface Props {
   checklistInteractive?: boolean;
   suppressReferralPopup?: boolean;
   hasActivityForPaidDay: boolean;
+  hasSubmittedTestimonial: boolean;
 }
 
 export default function HomePageClient({
@@ -412,6 +414,7 @@ export default function HomePageClient({
   checklistInteractive,
   suppressReferralPopup,
   hasActivityForPaidDay,
+  hasSubmittedTestimonial,
 }: Props) {
   const [checklistOpen, setChecklistOpen] = useState(false);
   const [bannerIdx, setBannerIdx] = useState(0);
@@ -431,7 +434,7 @@ export default function HomePageClient({
   const [testimonialOpen, setTestimonialOpen] = useState(false);
   const [testimonialText, setTestimonialText] = useState("");
   const [testimonialSubmitting, setTestimonialSubmitting] = useState(false);
-  const [testimonialSubmitted, setTestimonialSubmitted] = useState(false);
+  const [testimonialSubmitted, setTestimonialSubmitted] = useState(hasSubmittedTestimonial);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -1120,166 +1123,68 @@ export default function HomePageClient({
             </section>
           )}
 
-          {/* Referral Section */}
-          <section
-            className="rounded-2xl p-6 shadow-sm border border-[#c2ddc8]"
-            style={{
-              background: "linear-gradient(135deg, #eef5ef 0%, #ddeede 100%)",
-            }}
-          >
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-              {/* Left: heading + description */}
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-7 h-7 rounded-full bg-[#4a7c59]/15 flex items-center justify-center">
-                    <Gift
-                      className="w-3.5 h-3.5 text-[#4a7c59]"
-                      strokeWidth={1.5}
-                    />
-                  </div>
-                  <h2 className="text-base font-heading font-semibold text-gray-800">
-                    Refer a Family
-                  </h2>
-                  <span className="bg-[#4a7c59] text-white text-xs font-body px-2 py-0.5 rounded-full font-medium">
-                    $500 gift card
+          {/* Rewards Banner */}
+          <Link href="/parent/rewards">
+            <section
+              className="rounded-2xl p-6 shadow-sm cursor-pointer hover:opacity-95 transition-opacity"
+              style={{
+                background: "linear-gradient(135deg, #2e5940 0%, #3d6b4a 45%, #4a7c59 100%)",
+              }}
+            >
+              {/* Top label */}
+              <div className="flex items-center gap-1.5 mb-3">
+                <div className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center">
+                  <Sparkles className="w-3 h-3 text-[#a8d5b5]" strokeWidth={1.5} />
+                </div>
+                <span className="text-xs font-body font-semibold text-white/70 uppercase tracking-wide">
+                  Rewards
+                </span>
+              </div>
+
+              {/* Headline */}
+              <h2 className="text-xl font-heading font-bold text-white leading-tight mb-1">
+                Earn up to $515 in gift cards
+              </h2>
+
+              {/* Subtext */}
+              <p className="text-sm font-body text-white/70 leading-relaxed mb-4">
+                Refer a family and share your story — we&apos;ll reward you for both.
+                {earnedDollars > 0 && (
+                  <span className="ml-1 text-white/90 font-medium">
+                    ${earnedDollars} earned so far.
                   </span>
-                </div>
-                <p className="text-sm font-body text-gray-600 leading-relaxed max-w-lg">
-                  Know a family who&apos;d be a great fit for Sage Field? Share
-                  your link and when they enroll and pay their registration fee,
-                  you&apos;ll receive a{" "}
-                  <strong className="text-gray-800">$500 gift card</strong> of
-                  your choice. If sharing the link isn&apos;t convenient, just
-                  let them know to{" "}
-                  <strong className="text-gray-800">
-                    mention your name when they apply!
-                  </strong>
-                </p>
-
-                {/* How it works */}
-                {/* <div className="flex flex-col sm:flex-row gap-3 mt-4">
-                  {[
-                    "Share your link with a family",
-                    "They apply, get approved & enroll",
-                    "You get a $150 gift card",
-                  ].map((step, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <div className="flex-shrink-0 w-5 h-5 rounded-full bg-[#4a7c59]/20 flex items-center justify-center">
-                        <span className="text-[10px] font-bold font-heading text-[#4a7c59]">
-                          {i + 1}
-                        </span>
-                      </div>
-                      <p className="text-xs font-body text-gray-600">{step}</p>
-                    </div>
-                  ))}
-                </div> */}
-              </div>
-
-              {/* Right: stats + copy link */}
-              <div className="flex flex-col gap-3 sm:min-w-[260px]">
-                {/* Stats */}
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { value: String(referralCount), label: "Referred" },
-                    { value: String(enrolledCount), label: "Enrolled" },
-                    { value: `$${earnedDollars}`, label: "Earned" },
-                  ].map(({ value, label }) => (
-                    <div
-                      key={label}
-                      className="text-center bg-white/70 rounded-xl py-2.5 px-2 border border-[#c2ddc8]"
-                    >
-                      <p className="text-base font-semibold font-heading text-gray-800">
-                        {value}
-                      </p>
-                      <p className="text-xs font-body text-gray-500">{label}</p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Copy link */}
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 min-w-0 bg-white/70 border border-[#c2ddc8] rounded-xl px-3 py-2">
-                    <p className="text-xs font-body text-gray-600 truncate">
-                      {referralLink}
-                    </p>
-                  </div>
-                  <button
-                    onClick={copyReferralLink}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold font-body transition-colors whitespace-nowrap ${
-                      copied
-                        ? "bg-green-600 text-white"
-                        : "bg-[#4a7c59] text-white hover:bg-[#3d6b4a]"
-                    }`}
-                  >
-                    {copied ? (
-                      <>
-                        <Check className="w-3.5 h-3.5" />
-                        Copied!
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5" />
-                        Copy link
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Testimonial Incentive */}
-          <section
-            className="rounded-2xl p-6 shadow-sm border border-[#d6c9b8]"
-            style={{
-              background: "linear-gradient(135deg, #fdf8f3 0%, #f5ede0 100%)",
-            }}
-          >
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-7 h-7 rounded-full bg-[#a0784a]/15 flex items-center justify-center">
-                    <Coffee
-                      className="w-3.5 h-3.5 text-[#a0784a]"
-                      strokeWidth={1.5}
-                    />
-                  </div>
-                  <h2 className="text-base font-heading font-semibold text-gray-800">
-                    Share Your Experience
-                  </h2>
-                  <span className="bg-[#a0784a] text-white text-xs font-body px-2 py-0.5 rounded-full font-medium">
-                    $15 Starbucks
-                  </span>
-                </div>
-                <p className="text-sm font-body text-gray-600 leading-relaxed max-w-lg">
-                  We&apos;d love to hear about your family&apos;s experience at
-                  Sage Field. Share a short testimonial and we&apos;ll send you
-                  a{" "}
-                  <strong className="text-gray-800">
-                    $15 Starbucks gift card
-                  </strong>{" "}
-                  as a thank-you — coffee on us.
-                </p>
-              </div>
-
-              <div className="sm:min-w-[180px] flex sm:justify-end items-center">
-                {testimonialSubmitted ? (
-                  <div className="flex items-center gap-1.5 text-sm font-body text-[#a0784a] font-medium">
-                    <Check className="w-4 h-4" />
-                    Testimonial received!
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setTestimonialOpen(true)}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold font-body bg-[#a0784a] text-white hover:bg-[#8a6640] transition-colors"
-                  >
-                    <Coffee className="w-3.5 h-3.5" />
-                    Share &amp; earn $15
-                  </button>
                 )}
+              </p>
+
+              {/* Reward pills */}
+              <div className="flex flex-wrap gap-2 mb-5">
+                <div className="flex items-center gap-1.5 bg-white/15 border border-white/20 rounded-full px-3 py-1.5">
+                  <Gift className="w-3.5 h-3.5 text-[#a8d5b5]" strokeWidth={1.5} />
+                  <span className="text-xs font-body font-medium text-white">
+                    Refer a Family · <strong>$500 gift card</strong>
+                  </span>
+                </div>
+                <div className={`flex items-center gap-1.5 border rounded-full px-3 py-1.5 ${testimonialSubmitted ? "bg-white/10 border-white/15" : "bg-white/15 border-white/20"}`}>
+                  {testimonialSubmitted ? (
+                    <Check className="w-3.5 h-3.5 text-white/60" strokeWidth={2} />
+                  ) : (
+                    <Coffee className="w-3.5 h-3.5 text-[#f0c080]" strokeWidth={1.5} />
+                  )}
+                  <span className={`text-xs font-body font-medium ${testimonialSubmitted ? "text-white/50" : "text-white"}`}>
+                    Share Your Experience ·{" "}
+                    <strong className={testimonialSubmitted ? "line-through" : ""}>$15 Starbucks</strong>
+                    {testimonialSubmitted && <span className="ml-1 no-underline not-italic">✓</span>}
+                  </span>
+                </div>
               </div>
-            </div>
-          </section>
+
+              {/* CTA */}
+              <div className="inline-flex items-center gap-1.5 bg-white text-[#2e5940] font-semibold font-body text-sm px-4 py-2 rounded-xl hover:bg-white/90 transition-colors">
+                View Rewards
+                <ChevronRight className="w-4 h-4" />
+              </div>
+            </section>
+          </Link>
 
           {/* Quick Actions */}
           <section>

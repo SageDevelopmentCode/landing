@@ -8,9 +8,10 @@ import { TourUnavailabilityView } from './TourUnavailabilityView'
 import { InfoSessionTable } from './InfoSessionTable'
 import { InfoSessionFAQView } from './InfoSessionFAQView'
 import { ShadowDayBookingsView } from './ShadowDayBookingsView'
+import { TestimonialsView } from './TestimonialsView'
 import { EmailDetailSidebar } from '../components/EmailDetailSidebar'
 import { Table, TableRow, TableCell } from '../components/Table'
-import type { OpenHouseRsvp, TourBooking, InfoSessionRsvp, ShadowDayBooking } from './page'
+import type { OpenHouseRsvp, TourBooking, InfoSessionRsvp, ShadowDayBooking, Testimonial } from './page'
 import type { TourUnavailability } from '@/app/actions/tourUnavailability'
 
 type ZohoEmailContent = {
@@ -148,7 +149,7 @@ const merriweather = Poppins({
   subsets: ['latin'],
 })
 
-type SubMenuItem = 'open-house' | 'tour-unavailability' | 'info-session' | 'info-session-faq' | 'shadow-day' | 'emails'
+type SubMenuItem = 'open-house' | 'tour-unavailability' | 'info-session' | 'info-session-faq' | 'shadow-day' | 'emails' | 'testimonials'
 
 const subMenuItems: { id: SubMenuItem; label: string; sublabel: string }[] = [
   { id: 'open-house', label: 'Open House', sublabel: 'April 25' },
@@ -156,6 +157,7 @@ const subMenuItems: { id: SubMenuItem; label: string; sublabel: string }[] = [
   { id: 'shadow-day', label: 'Shadow Day', sublabel: 'Bookings & payments' },
   { id: 'info-session', label: 'Info Session', sublabel: 'April 18 RSVPs' },
   { id: 'info-session-faq', label: 'Session FAQ', sublabel: 'April 18 prep' },
+  { id: 'testimonials', label: 'Testimonials', sublabel: 'Parent submissions' },
   { id: 'emails', label: 'Sent Emails', sublabel: 'Via Zoho Mail' },
 ]
 
@@ -166,6 +168,7 @@ export function MarketingClient({
   enrolledEmailsArr,
   infoSessionRsvps,
   shadowDayBookings,
+  testimonials,
 }: {
   rsvps: OpenHouseRsvp[]
   tourUnavailability: TourUnavailability[]
@@ -173,6 +176,7 @@ export function MarketingClient({
   enrolledEmailsArr: { email: string; status: string }[]
   infoSessionRsvps: InfoSessionRsvp[]
   shadowDayBookings: ShadowDayBooking[]
+  testimonials: Testimonial[]
 }) {
   const [active, setActive] = useState<SubMenuItem>('open-house')
 
@@ -310,6 +314,8 @@ export function MarketingClient({
         )}
 
         {active === 'info-session-faq' && <InfoSessionFAQView />}
+
+        {active === 'testimonials' && <TestimonialsView testimonials={testimonials} />}
 
         {active === 'emails' && <EmailsView />}
       </main>

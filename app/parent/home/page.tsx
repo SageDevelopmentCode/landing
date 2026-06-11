@@ -137,7 +137,7 @@ export default async function ParentHomePage() {
   if ((enrolledCheck ?? []).length === 0) redirect("/parent/dashboard");
   const studentIds = students.map((s) => s.id);
 
-  const [{ data: checkInsData }, { data: eventsData }, { data: paymentsData }, { data: referralsData }, { data: dropOffData }, { data: txData }, { data: summerData }, { data: prefsData }, onboardingCompletedIds, publishedActivities] =
+  const [{ data: checkInsData }, { data: eventsData }, { data: paymentsData }, { data: referralsData }, { data: dropOffData }, { data: txData }, { data: summerData }, { data: prefsData }, onboardingCompletedIds, publishedActivities, { data: testimonialData }] =
     await Promise.all([
       studentIds.length > 0
         ? adminClient
@@ -197,6 +197,14 @@ export default async function ParentHomePage() {
         .eq("parent_id", effectiveParentId),
       getOnboardingProgress(),
       getPublishedActivities(),
+      adminClient
+        .schema("marketing")
+        .from("testimonials")
+        .select("id")
+        .eq("parent_id", effectiveParentId)
+        .eq("is_deleted", false)
+        .limit(1)
+        .maybeSingle(),
     ]);
 
   const studentMap: StudentMap = {};
@@ -336,6 +344,8 @@ export default async function ParentHomePage() {
     (e) => e.program !== "homeschool_drop_in" && (paidWeeksByStudent[e.student_id]?.length ?? 0) < 12
   );
 
+  const hasSubmittedTestimonial = !!testimonialData;
+
   return (
     <div className="bg-welcome-bg min-h-screen flex flex-col overflow-x-hidden">
       <DashboardHeader sticky>
@@ -379,6 +389,7 @@ export default async function ParentHomePage() {
           paidFunFridayByStudent={paidFunFridayByStudent}
           checklistComplete={checklistComplete}
           hasActivityForPaidDay={hasActivityForPaidDay}
+          hasSubmittedTestimonial={hasSubmittedTestimonial}
         />
       </main>
 
