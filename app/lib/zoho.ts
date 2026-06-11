@@ -3346,7 +3346,7 @@ export async function buildGoogleReviewIncentiveEmail(opts: {
   childLegalName: string
 }): Promise<{ subject: string; content: string }> {
   const firstName = opts.g1FullName.split(' ')[0] || opts.g1FullName
-  const subject = `A little thank-you — and a free coffee on us ☕`
+  const subject = `We'd love to hear about your Sage Field experience ☕`
 
   const content = `
 <!DOCTYPE html>
@@ -3356,25 +3356,27 @@ export async function buildGoogleReviewIncentiveEmail(opts: {
 
   <p>Dear ${firstName},</p>
 
-  <p>It has been such a joy having ${opts.childLegalName} with us at Sage Field. Watching the kids grow, explore, and light up each week is exactly why we do what we do — and families like yours make it all possible.</p>
+  <p>It has been such a joy having ${opts.childLegalName} with us at Sage Field. Watching the kids grow, explore, and light up each week is why we do what we do — and families like yours make it all possible.</p>
 
-  <p>We'd love to hear about your experience, and we think other families searching for the right environment for their child would benefit from your honest perspective.</p>
+  <p>We'd love to hear about your experience in your own words. Your perspective means so much to us, and it helps other families find the right environment for their child.</p>
 
   <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 20px 24px; margin: 28px 0; border-radius: 4px;">
     <p style="margin: 0 0 8px 0; font-weight: bold; color: #2C5F2E; font-size: 16px;">☕ Free Coffee, On Us</p>
-    <p style="margin: 0 0 10px 0; font-size: 15px;">Leave us a Google Review sharing your honest experience with Sage Field, then reply to this email with a screenshot — and we'll send you a <strong>$15 Starbucks gift card</strong> as a thank-you.</p>
-    <p style="margin: 0; font-size: 14px; color: #555;">It takes less than 2 minutes, and it means the world to us.</p>
+    <p style="margin: 0 0 6px 0; font-size: 15px;"><strong>Reply to this email</strong> with a short testimonial about your family's experience at Sage Field — and we'll send you a <strong>$15 Starbucks gift card</strong> as a little thank-you.</p>
+    <p style="margin: 0; font-size: 14px; color: #555;">It doesn't need to be long. A few honest sentences from the heart is more than enough.</p>
   </div>
 
-  <div style="text-align: center; margin: 36px 0;">
-    <a href="https://g.page/r/CRZn8TwxWZOgEAE/review" style="display: inline-block; background-color: #2C5F2E; color: #ffffff; text-decoration: none; font-weight: bold; padding: 14px 32px; border-radius: 8px; font-size: 15px; font-family: Georgia, serif;">Leave a Google Review →</a>
-    <p style="margin: 16px 0 0 0; font-size: 13px; color: #888;">Or scan the QR code below on your phone</p>
-    <img src="https://sagefield.co/qr-google-review.png" alt="Scan to leave a Google Review" width="160" height="160" style="display: block; margin: 16px auto 0; border-radius: 8px;" />
-  </div>
+  <p style="margin-bottom: 8px;">To help get you started, here are a few prompts — feel free to answer one or all of them:</p>
+  <ul style="padding-left: 20px; margin: 0 0 24px 0; color: #2c2c2c; font-size: 15px; line-height: 2;">
+    <li>What has ${opts.childLegalName} enjoyed most at Sage Field?</li>
+    <li>How has the program impacted them or your family?</li>
+    <li>Is there a specific moment or experience that stood out?</li>
+    <li>Would you recommend Sage Field to another family, and why?</li>
+  </ul>
 
   <div style="background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 16px 20px; margin: 28px 0;">
     <p style="margin: 0 0 4px 0; font-weight: bold; color: #92400e;">✨ Your words may be featured on our website</p>
-    <p style="margin: 0; font-size: 14px; color: #78350f;">With your permission, we may share standout testimonials on <a href="https://sagefield.co" style="color: #92400e;">sagefield.co</a> to help other families discover what makes Sage Field special. We'll always ask before we feature anything.</p>
+    <p style="margin: 0; font-size: 14px; color: #78350f;">With your permission, standout testimonials may be shared on <a href="https://sagefield.co" style="color: #92400e;">sagefield.co</a> to help other families discover what makes Sage Field special. We'll always reach out before featuring anything.</p>
   </div>
 
   <p>Thank you for being part of our community. We are so grateful for your trust and your support.</p>

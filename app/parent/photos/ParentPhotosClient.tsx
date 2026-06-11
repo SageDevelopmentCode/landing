@@ -202,6 +202,37 @@ export default function ParentPhotosClient({ initialPhotos }: Props) {
   const pendingPathsRef = useRef<Set<string>>(new Set());
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // On mount/navigation: reset observer state and fetch all signed URLs upfront.
+  // IntersectionObserver still handles lazy-loading as the user scrolls, but this
+  // ensures photos are visible immediately on first navigation (avoids observer timing race).
+  useEffect(() => {
+    observedPhotoIds.current.clear();
+    pendingPathsRef.current.clear();
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+    if (urlObserverRef.current) {
+      urlObserverRef.current.disconnect();
+      urlObserverRef.current = null;
+    }
+
+    const paths = initialPhotos.map((p) => p.storage_path);
+    if (paths.length === 0) {
+      setPhotos([]);
+      return;
+    }
+
+    let cancelled = false;
+    getPhotoSignedUrlsBatch(paths).then((urlMap) => {
+      if (cancelled) return;
+      setPhotos(initialPhotos.map((p) =>
+        urlMap[p.storage_path] ? { ...p, signed_url: urlMap[p.storage_path] } : p
+      ));
+    });
+    return () => { cancelled = true; };
+  }, [initialPhotos]);
+
   function getUrlObserver() {
     if (!urlObserverRef.current) {
       urlObserverRef.current = new IntersectionObserver(
