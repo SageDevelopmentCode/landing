@@ -112,6 +112,7 @@ function cleanEmailAddress(rawEmail: string): string {
 // In-memory token cache (will be refreshed as needed)
 let cachedAccessToken: string | null = null;
 let tokenExpiresAt: number | null = null;
+let cachedAccountId: string | null = null;
 
 /**
  * Check if Zoho Mail API is configured
@@ -229,6 +230,11 @@ export async function getZohoAccountId(): Promise<string> {
       return ZOHO_ACCOUNT_ID;
     }
 
+    // Return cached account ID if available
+    if (cachedAccountId) {
+      return cachedAccountId;
+    }
+
     // Otherwise, fetch it from API
     const accessToken = await getValidAccessToken();
 
@@ -249,8 +255,8 @@ export async function getZohoAccountId(): Promise<string> {
       throw new Error("No Zoho Mail accounts found");
     }
 
-    // Return the first account ID
-    return data.data[0].accountId;
+    cachedAccountId = data.data[0].accountId;
+    return cachedAccountId;
   } catch (error) {
     console.error("Error getting Zoho account ID:", error);
     throw error;
@@ -1597,39 +1603,57 @@ export async function sendZohoEmail(opts: {
   subject: string;
   content: string;
 }): Promise<{ success: boolean; error?: string }> {
-  try {
-    const accessToken = await getValidAccessToken();
-    const accountId = await getZohoAccountId();
+  const MAX_ATTEMPTS = 3;
+  let lastError = "";
 
-    const response = await fetch(
-      `https://mail.zoho.com/api/accounts/${accountId}/messages`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Zoho-oauthtoken ${accessToken}`,
-          "Content-Type": "application/json",
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const accessToken = await getValidAccessToken();
+      const accountId = await getZohoAccountId();
+
+      const response = await fetch(
+        `https://mail.zoho.com/api/accounts/${accountId}/messages`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Zoho-oauthtoken ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            fromAddress: "sabrina@sagefield.co",
+            toAddress: opts.toAddress,
+            subject: opts.subject,
+            content: opts.content,
+            mailFormat: "html",
+          }),
         },
-        body: JSON.stringify({
-          fromAddress: "sabrina@sagefield.co",
-          toAddress: opts.toAddress,
-          subject: opts.subject,
-          content: opts.content,
-          mailFormat: "html",
-        }),
-      },
-    );
+      );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Failed to send Zoho email:", errorText);
-      return { success: false, error: errorText };
+      if (!response.ok) {
+        const errorText = await response.text();
+        lastError = errorText;
+        // Auth failures won't self-heal — clear stale token and give up
+        if (response.status === 401 || response.status === 403) {
+          cachedAccessToken = null;
+          break;
+        }
+        if (attempt < MAX_ATTEMPTS) {
+          await new Promise((r) => setTimeout(r, attempt * 1000));
+        }
+        continue;
+      }
+
+      return { success: true };
+    } catch (error) {
+      lastError = String(error);
+      if (attempt < MAX_ATTEMPTS) {
+        await new Promise((r) => setTimeout(r, attempt * 1000));
+      }
     }
-
-    return { success: true };
-  } catch (error) {
-    console.error("Error sending Zoho email:", error);
-    return { success: false, error: String(error) };
   }
+
+  console.error("sendZohoEmail failed after retries:", lastError);
+  return { success: false, error: lastError };
 }
 
 /**
