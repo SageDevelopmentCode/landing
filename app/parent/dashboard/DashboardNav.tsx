@@ -232,7 +232,7 @@ export default function DashboardNav({
                 </Link>
               );
             })}
-            {moreItems.map(({ label, icon: Icon, href, action, badge }) => {
+            {moreItems.map(({ label, icon: Icon, href, action, badge, iconColor }) => {
               if (action === "manage-access") return null;
               const resolvedHref = href ? navHref(href) : undefined;
               const isActive = !!resolvedHref && pathname === resolvedHref;
@@ -251,7 +251,7 @@ export default function DashboardNav({
                     }}
                     className={baseClass}
                   >
-                    <Icon className="w-4 h-4" />
+                    <Icon className={`w-4 h-4 ${!isActive ? (iconColor ?? "") : ""}`} />
                     {label}
                   </button>
                 );
@@ -263,7 +263,7 @@ export default function DashboardNav({
                   onClick={() => setMobileMenuOpen(false)}
                   className={baseClass}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className={`w-4 h-4 ${!isActive ? (iconColor ?? "") : ""}`} />
                   {label}
                   {badge && (
                     <span className="ml-1 text-[10px] font-semibold uppercase rounded-full px-2 py-0.5 shrink-0 bg-green-100 text-green-700">
@@ -277,7 +277,7 @@ export default function DashboardNav({
                   onClick={() => setMobileMenuOpen(false)}
                   className={baseClass}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className={`w-4 h-4 ${!isActive ? (iconColor ?? "") : ""}`} />
                   {label}
                 </button>
               );
