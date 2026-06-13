@@ -115,6 +115,27 @@ function formatProgram(program: string | null): string {
   return map[program] ?? program;
 }
 
+const URL_REGEX = /(https?:\/\/[^\s]+)/g;
+
+function renderMessageBody(body: string, fromMe: boolean) {
+  const parts = body.split(URL_REGEX);
+  return parts.map((part, i) =>
+    URL_REGEX.test(part) ? (
+      <a
+        key={i}
+        href={part}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`underline break-all ${fromMe ? "text-white/90 hover:text-white" : "text-[#4a7c59] hover:text-[#3d6849]"}`}
+      >
+        {part}
+      </a>
+    ) : (
+      part
+    )
+  );
+}
+
 function sortByRecent(convos: ConversationWithMeta[]): ConversationWithMeta[] {
   return [...convos].sort(
     (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
@@ -987,7 +1008,7 @@ export default function TeacherMessagesPage({
                             <Download className={`w-3.5 h-3.5 shrink-0 ${fromMe ? "text-white/70" : "text-gray-400"}`} />
                           </a>
                         )}
-                        {msg.body && <p>{msg.body}</p>}
+                        {msg.body && <p className="break-words">{renderMessageBody(msg.body, fromMe)}</p>}
                         <p className={`text-[10px] mt-1 ${fromMe ? "text-white/60" : "text-gray-400"}`}>
                           {formatTime(msg.created_at)}
                         </p>

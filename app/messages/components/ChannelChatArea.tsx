@@ -23,6 +23,27 @@ import {
   type ChannelMember,
 } from "@/app/messages/channel-actions";
 
+const URL_REGEX = /(https?:\/\/[^\s]+)/g;
+
+function renderMessageBody(body: string) {
+  const parts = body.split(URL_REGEX);
+  return parts.map((part, i) =>
+    URL_REGEX.test(part) ? (
+      <a
+        key={i}
+        href={part}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline break-all text-[#4a7c59] hover:text-[#3d6849]"
+      >
+        {part}
+      </a>
+    ) : (
+      part
+    )
+  );
+}
+
 function formatTime(iso: string): string {
   const date = new Date(iso);
   const now = new Date();
@@ -679,7 +700,7 @@ export default function ChannelChatArea({
                         )}
                         {msg.body && (
                           <p className={`text-sm font-body leading-relaxed text-gray-800 break-words ${isTemp ? "opacity-60" : ""}`}>
-                            {msg.body}
+                            {renderMessageBody(msg.body)}
                           </p>
                         )}
                         {/* Reactions row — always visible, emoji button always shown */}
