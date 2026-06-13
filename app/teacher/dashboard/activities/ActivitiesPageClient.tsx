@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useTransition } from "react";
+import { useState, useRef, useTransition, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import {
@@ -36,6 +36,7 @@ type LocalImage = {
 };
 type Ingredient = { id: string; name: string; image: LocalImage | null };
 type Food = { id: string; name: string; allergens: string; images: LocalImage[]; ingredients: Ingredient[] };
+type PreviousFood = { key: string; name: string; ingredients: string[] };
 type ActivityDraft = {
   name: string;
   description: string;
@@ -553,11 +554,13 @@ function FoodCard({
 
 function ActivityDrawer({
   editingActivity,
+  allActivities = [],
   onClose,
   onSaved,
   onUpdated,
 }: {
   editingActivity?: Activity;
+  allActivities?: Activity[];
   onClose: () => void;
   onSaved: (activity: Activity) => void;
   onUpdated: (activity: Activity) => void;
@@ -568,6 +571,25 @@ function ActivityDrawer({
   );
   const [isPending, startTransition] = useTransition();
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  const previousFoods = useMemo(() => {
+    const seen = new Map<string, PreviousFood>();
+    for (const act of allActivities) {
+      if (editingActivity && act.id === editingActivity.id) continue;
+      for (const food of act.foods) {
+        const key = food.name.trim().toLowerCase();
+        if (!key) continue;
+        if (!seen.has(key)) {
+          seen.set(key, {
+            key,
+            name: food.name.trim(),
+            ingredients: food.ingredients.map((i) => i.name.trim()).filter(Boolean),
+          });
+        }
+      }
+    }
+    return [...seen.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }, [allActivities, editingActivity]);
 
   const isDirty = !isEdit || JSON.stringify(draft) !== JSON.stringify(activityToDraft(editingActivity!));
 
@@ -596,6 +618,24 @@ function ActivityDrawer({
 
   function removeFood(id: string) {
     set("foods", draft.foods.filter((f) => f.id !== id));
+  }
+
+  const [prevFoodOpen, setPrevFoodOpen] = useState(false);
+  const [prevFoodSearch, setPrevFoodSearch] = useState("");
+
+  function addFoodFromPrevious(pf: PreviousFood) {
+    set("foods", [
+      ...draft.foods,
+      {
+        id: makeId(),
+        name: pf.name,
+        allergens: "",
+        images: [],
+        ingredients: pf.ingredients.map((name) => ({ id: makeId(), name, image: null })),
+      },
+    ]);
+    setPrevFoodOpen(false);
+    setPrevFoodSearch("");
   }
 
   function handleClose() {
@@ -858,13 +898,71 @@ function ActivityDrawer({
                   />
                 ))}
 
-                <button
-                  onClick={addFood}
-                  className="flex items-center justify-center gap-2 w-full py-2.5 border-2 border-dashed border-gray-200 rounded-2xl text-sm font-semibold font-body text-gray-500 hover:border-[#4a7c59] hover:text-[#4a7c59] hover:bg-[#4a7c59]/5 transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Food
-                </button>
+                {prevFoodOpen && (
+                  <div className="flex flex-col gap-2 border border-gray-200 rounded-xl p-3 bg-white">
+                    <input
+                      autoFocus
+                      type="text"
+                      value={prevFoodSearch}
+                      onChange={(e) => setPrevFoodSearch(e.target.value)}
+                      placeholder="Search previous foods..."
+                      className="w-full border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-body text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59] transition-colors bg-white"
+                    />
+                    {(() => {
+                      const filtered = previousFoods.filter((f) =>
+                        f.name.toLowerCase().includes(prevFoodSearch.toLowerCase())
+                      );
+                      return filtered.length === 0 ? (
+                        <p className="text-xs text-gray-400 font-body italic px-1">No matching foods.</p>
+                      ) : (
+                        <div className="max-h-48 overflow-y-auto flex flex-col gap-0.5">
+                          {filtered.map((pf) => (
+                            <button
+                              key={pf.key}
+                              onClick={() => addFoodFromPrevious(pf)}
+                              className="group text-left px-3 py-2 rounded-lg hover:bg-[#4a7c59]/8 transition-colors"
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-xs font-semibold font-body text-gray-800 group-hover:text-[#4a7c59]">{pf.name}</span>
+                                <span className="text-[10px] font-body text-gray-400 shrink-0">{pf.ingredients.length} ingredient{pf.ingredients.length !== 1 ? "s" : ""}</span>
+                              </div>
+                              {pf.ingredients.length > 0 && (
+                                <p className="text-[10px] font-body text-gray-400 truncate mt-0.5">{pf.ingredients.join(", ")}</p>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => { setPrevFoodOpen(false); setPrevFoodSearch(""); }}
+                        className="px-3 py-1.5 text-xs font-semibold font-body text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={addFood}
+                    className="flex items-center justify-center gap-2 flex-1 py-2.5 border-2 border-dashed border-gray-200 rounded-2xl text-sm font-semibold font-body text-gray-500 hover:border-[#4a7c59] hover:text-[#4a7c59] hover:bg-[#4a7c59]/5 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Food
+                  </button>
+                  {previousFoods.length > 0 && (
+                    <button
+                      onClick={() => { setPrevFoodOpen((v) => !v); setPrevFoodSearch(""); }}
+                      className="flex items-center gap-1.5 px-3 py-2.5 border-2 border-dashed border-gray-200 rounded-2xl text-sm font-semibold font-body text-gray-500 hover:border-[#4a7c59] hover:text-[#4a7c59] hover:bg-[#4a7c59]/5 transition-colors whitespace-nowrap"
+                    >
+                      <History className="w-4 h-4" />
+                      From previous
+                    </button>
+                  )}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -1225,6 +1323,7 @@ export default function ActivitiesPageClient({ initialActivities }: Props) {
         {drawerOpen && (
           <ActivityDrawer
             key="new"
+            allActivities={activities}
             onClose={() => setDrawerOpen(false)}
             onSaved={handleSaved}
             onUpdated={handleUpdated}
@@ -1234,6 +1333,7 @@ export default function ActivitiesPageClient({ initialActivities }: Props) {
           <ActivityDrawer
             key={`edit-${editingActivity.id}`}
             editingActivity={editingActivity}
+            allActivities={activities}
             onClose={() => setEditingActivity(null)}
             onSaved={handleSaved}
             onUpdated={handleUpdated}
