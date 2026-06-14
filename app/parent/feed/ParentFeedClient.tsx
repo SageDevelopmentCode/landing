@@ -888,10 +888,11 @@ function ReelCard({
   onReactionToggle: (postId: string, emoji: string) => void;
   onClick: () => void;
 }) {
-  const isOwner = currentUserId === post.teacher_id;
-  const [menuOpen, setMenuOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -900,102 +901,141 @@ function ReelCard({
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsVisible(true);
-          observer.disconnect();
+          const v = videoRef.current;
+          if (v) { v.muted = isMuted; v.play().then(() => setIsPlaying(true)).catch(() => {}); }
+        } else {
+          videoRef.current?.pause();
+          setIsPlaying(false);
         }
       },
-      { rootMargin: "200px" }
+      { threshold: 0.5 }
     );
     observer.observe(el);
     return () => observer.disconnect();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const togglePlay = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.paused) { v.play(); setIsPlaying(true); }
+    else { v.pause(); setIsPlaying(false); }
+  };
+
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = !v.muted;
+    setIsMuted(v.muted);
+  };
+
   return (
-    <motion.div
+    <div
       ref={containerRef}
-      onClick={onClick}
-      className="bg-white rounded-2xl border border-gray-100 overflow-hidden cursor-pointer hover:border-gray-200 transition-colors duration-200 group"
+      className="relative h-screen w-full snap-start flex items-center justify-center bg-[#f5f3ef] py-4"
     >
-      {/* Header */}
-      <div className="flex items-start justify-between pt-5 px-5 pb-3">
-        <div className="flex items-center gap-2.5">
-          <AuthorAvatar
-            initials={getInitials(post.teacher_name)}
-            color={avatarColor(post.teacher_id)}
-            imageUrl={post.teacher_profile_image_url}
+      {/* Video column */}
+      <div
+        className="relative bg-black flex items-center justify-center shadow-xl rounded-2xl overflow-hidden"
+        style={{ height: "calc(100vh - 2rem)", width: "calc((100vh - 2rem) * 9 / 16)" }}
+        onClick={togglePlay}
+      >
+        {post.storage_url ? (
+          <video
+            ref={videoRef}
+            src={isVisible ? post.storage_url : undefined}
+            loop
+            playsInline
+            preload="metadata"
+            className="w-full h-full object-cover"
           />
-          <div>
-            <p className="text-sm font-semibold font-body text-gray-800 leading-tight">{post.teacher_name}</p>
-            <p className="text-xs text-gray-400 font-body">
-              {formatRole(post.teacher_role)} · {formatTimestamp(post.created_at)}
-            </p>
-          </div>
-        </div>
-        {isOwner && (
-          <div className="relative">
-            <button
-              onClick={(e) => { e.stopPropagation(); setMenuOpen((v) => !v); }}
-              className="p-1.5 rounded-full text-gray-300 hover:text-gray-500 hover:bg-gray-50 transition-colors opacity-0 group-hover:opacity-100"
-            >
-              <MoreHorizontal className="w-4 h-4" />
-            </button>
-            {menuOpen && (
-              <div
-                onClick={(e) => e.stopPropagation()}
-                className="absolute right-0 top-8 bg-white border border-gray-100 rounded-xl shadow-lg py-1 z-10 min-w-[130px]"
-              >
-                <button
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-rose-500 hover:bg-rose-50 transition-colors font-body"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  Delete reel
-                </button>
-              </div>
-            )}
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-100">
+            <Video className="w-12 h-12 text-gray-400" />
           </div>
         )}
-      </div>
 
-      {/* Caption */}
-      {post.caption && (
-        <p className="px-5 pb-3 text-sm font-body text-gray-700 leading-relaxed">{post.caption}</p>
-      )}
+        {/* Play/pause indicator */}
+        {!isPlaying && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-16 h-16 rounded-full bg-black/40 flex items-center justify-center">
+              <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </div>
+          </div>
+        )}
 
-      {/* Inline video player — lazy loaded once visible */}
-      {post.storage_url ? (
-        <div
-          className="w-full bg-black aspect-video"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <video
-            src={isVisible ? post.storage_url : undefined}
-            controls
-            preload="metadata"
-            className="w-full h-full object-contain"
-          />
+        {/* Bottom overlay: author + caption */}
+        <div className="absolute bottom-6 left-4 right-4 pointer-events-none">
+          <div className="flex items-center gap-2 mb-1">
+            <AuthorAvatar
+              initials={getInitials(post.teacher_name)}
+              color={avatarColor(post.teacher_id)}
+              imageUrl={post.teacher_profile_image_url}
+              size="sm"
+            />
+            <div>
+              <p className="text-sm font-semibold font-body text-white leading-tight drop-shadow">{post.teacher_name}</p>
+              <p className="text-xs text-white/70 font-body drop-shadow">{formatTimestamp(post.created_at)}</p>
+            </div>
+          </div>
+          {post.caption && (
+            <p className="text-sm font-body text-white/90 leading-snug mt-1 drop-shadow">{post.caption}</p>
+          )}
         </div>
-      ) : (
-        <div className="w-full aspect-video bg-gray-100 flex items-center justify-center">
-          <Video className="w-8 h-8 text-gray-300" />
-        </div>
-      )}
 
-      {/* Reactions + Comments */}
-      <div className="mt-4 pt-3.5 pb-4 px-5 border-t border-gray-50 flex items-center justify-between">
-        <ReactionPills
-          reactions={post.reactions}
-          onToggle={(emoji) => onReactionToggle(post.id, emoji)}
-          currentUserId={currentUserId}
-        />
+        {/* Mute toggle — top left */}
         <button
-          onClick={(e) => { e.stopPropagation(); onClick(); }}
-          className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-[#4a7c59] transition-colors font-body ml-3 flex-shrink-0"
+          onClick={toggleMute}
+          className="absolute top-4 left-4 p-2 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors"
         >
-          <MessageCircle className="w-3.5 h-3.5" />
-          {post.comments.length} comments
+          {isMuted ? (
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M16.5 12A4.5 4.5 0 0 0 14 7.97V10.18l2.45 2.45c.04-.2.05-.42.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06A8.99 8.99 0 0 0 17.73 18L19 19.27 20.27 18 5.27 3 4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+            </svg>
+          ) : (
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05A4.5 4.5 0 0 0 16.5 12zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+            </svg>
+          )}
         </button>
       </div>
-    </motion.div>
+
+      {/* Right action column */}
+      <div className="absolute right-3 bottom-8 flex flex-col items-center gap-5">
+        {DEFAULT_REACTIONS.map((emoji) => {
+          const reaction = post.reactions.find((r) => r.emoji === emoji);
+          const reacted = reaction?.reacted_by_me ?? false;
+          return (
+            <button
+              key={emoji}
+              onClick={(e) => { e.stopPropagation(); onReactionToggle(post.id, emoji); }}
+              className="flex flex-col items-center gap-1"
+            >
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-all shadow-sm ${
+                reacted ? "bg-[#4a7c59]/15 ring-2 ring-[#4a7c59]/50 scale-110" : "bg-white/80 hover:bg-white"
+              }`}>
+                {emoji}
+              </div>
+              <span className="text-xs font-semibold text-gray-700">{reaction?.count ?? 0}</span>
+            </button>
+          );
+        })}
+
+        <button
+          onClick={(e) => { e.stopPropagation(); onClick(); }}
+          className="flex flex-col items-center gap-1"
+        >
+          <div className="w-12 h-12 rounded-full bg-white/80 hover:bg-white flex items-center justify-center transition-colors shadow-sm text-gray-600">
+            <MessageCircle className="w-6 h-6" />
+          </div>
+          <span className="text-xs font-semibold text-gray-700">{post.comments.length}</span>
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -1152,9 +1192,9 @@ export default function ParentFeedClient({
   const isSelectedReel = selectedPost ? isReelId(selectedPost.id) : false;
 
   return (
-    <div className="flex-1 flex overflow-hidden">
+    <div className={`flex-1 flex overflow-hidden transition-colors duration-300 ${feedMode === "reel" ? "bg-[#f5f3ef]" : ""}`}>
       {/* ── Left: Teachers panel ── */}
-      <aside className="hidden md:flex flex-col w-56 flex-shrink-0 overflow-y-auto px-3 pt-8 gap-1 bg-white">
+      <aside className={`flex-col w-56 flex-shrink-0 overflow-y-auto px-3 pt-8 gap-1 bg-white ${feedMode === "reel" ? "hidden" : "hidden md:flex"}`}>
         <p className="text-xs font-semibold font-body text-gray-400 uppercase tracking-wider px-2 pb-2">
           Teachers
         </p>
@@ -1213,8 +1253,8 @@ export default function ParentFeedClient({
       </aside>
 
       {/* ── Right: Feed column ── */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-2xl mx-auto px-4 py-8">
+      <div className={`flex-1 ${feedMode === "reel" ? "overflow-hidden flex flex-col" : "overflow-y-auto"}`}>
+        <div className={`${feedMode === "reel" ? "max-w-2xl mx-auto px-4 pt-8 pb-4 flex-shrink-0" : "max-w-2xl mx-auto px-4 py-8"}`}>
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1250,53 +1290,67 @@ export default function ParentFeedClient({
               </button>
             ))}
           </div>
+        </div>
 
-          <AnimatePresence mode="wait">
+        {/* Posts */}
+        {feedMode === "reel" ? (
+          <div className="flex-1 overflow-y-auto snap-y snap-mandatory">
             {displayedPosts.length === 0 ? (
-              <motion.div
-                key={feedMode + "-empty"}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 8 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
-                className="text-center py-16 text-gray-400 font-body text-sm"
-              >
+              <div className="h-screen flex items-center justify-center text-gray-500 font-body text-sm snap-start">
                 {selectedTeacherId
-                  ? `No ${feedMode === "reel" ? "reels" : "posts"} from ${teachers.find((t) => t.id === selectedTeacherId)?.full_name ?? "this teacher"} yet.`
-                  : feedMode === "reel"
-                  ? "No reels yet."
-                  : "No posts yet."}
-              </motion.div>
+                  ? `No reels from ${teachers.find((t) => t.id === selectedTeacherId)?.full_name ?? "this teacher"} yet.`
+                  : "No reels yet."}
+              </div>
             ) : (
-              <motion.div
-                key={feedMode}
-                initial="hidden"
-                animate="visible"
-                variants={{
-                  hidden: {},
-                  visible: { transition: { staggerChildren: 0.07 } },
-                }}
-                className="flex flex-col gap-4"
-              >
-                <AnimatePresence>
-                  {displayedPosts.map((post) => (
-                    <motion.div
-                      key={post.id}
-                      variants={{
-                        hidden: { opacity: 0, y: 18 },
-                        visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" as const } },
-                      }}
-                      exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.2 } }}
-                      layout
-                    >
-                      {feedMode === "reel" ? (
-                        <ReelCard
-                          post={post as ReelPost}
-                          currentUserId={currentUser?.id}
-                          onReactionToggle={handleReactionToggle}
-                          onClick={() => setSelectedPost(reelToFeedPost(post as ReelPost))}
-                        />
-                      ) : (
+              displayedPosts.map((post) => (
+                <ReelCard
+                  key={post.id}
+                  post={post as ReelPost}
+                  currentUserId={currentUser?.id}
+                  onReactionToggle={handleReactionToggle}
+                  onClick={() => setSelectedPost(reelToFeedPost(post as ReelPost))}
+                />
+              ))
+            )}
+          </div>
+        ) : (
+          <div className="max-w-2xl mx-auto px-4 pb-8">
+            <AnimatePresence mode="wait">
+              {displayedPosts.length === 0 ? (
+                <motion.div
+                  key="feed-empty"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  transition={{ duration: 0.3, delay: 0.1 }}
+                  className="text-center py-16 text-gray-400 font-body text-sm"
+                >
+                  {selectedTeacherId
+                    ? `No posts from ${teachers.find((t) => t.id === selectedTeacherId)?.full_name ?? "this teacher"} yet.`
+                    : "No posts yet."}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="feed-list"
+                  initial="hidden"
+                  animate="visible"
+                  variants={{
+                    hidden: {},
+                    visible: { transition: { staggerChildren: 0.07 } },
+                  }}
+                  className="flex flex-col gap-4"
+                >
+                  <AnimatePresence>
+                    {displayedPosts.map((post) => (
+                      <motion.div
+                        key={post.id}
+                        variants={{
+                          hidden: { opacity: 0, y: 18 },
+                          visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" as const } },
+                        }}
+                        exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.2 } }}
+                        layout
+                      >
                         <PostCard
                           post={post as FeedPost}
                           currentUserId={currentUser?.id}
@@ -1304,14 +1358,14 @@ export default function ParentFeedClient({
                           onClick={() => setSelectedPost(post as FeedPost)}
                           profileHref={`/parent/profile/${post.teacher_id}`}
                         />
-                      )}
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
       </div>
 
       {/* Post detail sidebar */}

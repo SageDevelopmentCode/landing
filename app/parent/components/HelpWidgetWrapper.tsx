@@ -5,5 +5,5 @@ import HelpWidget from "./HelpWidget";
 
 export default function HelpWidgetWrapper() {
   const pathname = usePathname();
-  return <HelpWidget hideFloatingButton={pathname === "/parent/messages"} />;
+  return <HelpWidget hideFloatingButton={pathname === "/parent/messages" || pathname === "/parent/feed"} />;
 }
