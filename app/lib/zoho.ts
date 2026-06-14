@@ -3118,7 +3118,7 @@ export async function buildSummerWeekThreeNewsletterEmail(opts: {
   childLegalName: string;
 }): Promise<{ subject: string; content: string }> {
   const firstName = opts.g1FullName.split(" ")[0];
-  const subject = "Week Three Down — Read Our Latest Newsletter 🌿";
+  const subject = "Week Three Newsletter + $500 Referral Program 🌿";
   const content = `
 <!DOCTYPE html>
 <html>
@@ -3156,6 +3156,14 @@ export async function buildSummerWeekThreeNewsletterEmail(opts: {
   <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px; font-size: 14px; color: #2c2c2c;">
     <p style="margin: 0 0 12px 0;">Thank you so much to everyone who joined us for <strong>Lunch with a Loved One</strong>. It was such a joyful event and a beautiful reflection of the strong community we're building together. For those who weren't able to attend, please know you are very much a part of this community and we appreciate you deeply.</p>
     <p style="margin: 0;">Our next family event is coming up — <strong>"Donuts with Grown Ups"</strong> during drop-off on <strong>July 6th (8:15–9:00am)</strong>. We hope to see you there!</p>
+  </div>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">🎁 New Referral Program</h2>
+  <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px; font-size: 14px; color: #2c2c2c;">
+    <p style="margin: 0 0 12px 0;">We're excited to introduce our <strong>referral program</strong> — and we'd love your help spreading the word about Sage Field!</p>
+    <p style="margin: 0 0 12px 0;">When a family you refer <strong>enrolls in our upcoming school program and pays their registration fee</strong>, you'll receive a <strong>$500 gift card of your choice</strong>. 🎉</p>
+    <p style="margin: 0 0 16px 0;">Simply share your unique referral link — you can find it on your home dashboard. If sharing the link isn't convenient, you can also just let the family know to <strong>mention your name when they apply</strong> and it will still count toward your referral. We'll take care of the rest!</p>
+    <p style="margin: 0; color: #888; font-size: 13px;">⏳ This offer is available through the end of our summer program.</p>
   </div>
 
   <p style="margin-bottom: 8px; font-size: 14px; color: #555;">We're looking forward to another wonderful week ahead. Thank you for sharing your children with us — it truly means the world. 🌱</p>

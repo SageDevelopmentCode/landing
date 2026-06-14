@@ -6,32 +6,30 @@ import Image from "next/image";
 import Link from "next/link";
 
 const PREVIEW_IMAGES = [
-  "/assets/highlights/summer_week_two/A0AA3C22-7657-4E63-A3FD-7AB6CD3B85E0.JPG",
-  "/assets/highlights/summer_week_two/570FEA28-D009-4038-B966-EAF9E0C9EE73.JPG",
-  "/assets/highlights/summer_week_two/6B95C9E4-E145-49CA-8818-7AFC9B3B8353.JPG",
-  "/assets/highlights/summer_week_two/E3AE964D-CC01-41A0-B040-35DCCB27CD4C.JPG",
-  "/assets/highlights/summer_week_two/8DC65D50-316D-44DA-88AA-128F72DF019B.JPG",
-  "/assets/highlights/summer_week_two/24E4F2AF-5C30-4C23-9B09-8EA71093A1FD.JPG",
-  "/assets/highlights/summer_week_two/DC1D10EF-768E-48E1-AFA9-B935172FA14B.JPG",
-  "/assets/highlights/summer_week_two/5B961697-D097-476C-9D47-09F547042841.JPG",
+  "/assets/highlights/summer_week_three/FE28F7EF-5568-4F11-9C62-E44AC6209D53.JPG",
+  "/assets/highlights/summer_week_three/IMG_9313.JPG",
+  "/assets/highlights/summer_week_three/4C53798C-920D-4497-B46C-1037E6FF21E4.JPG",
+  "/assets/highlights/summer_week_three/ED35AB4E-8E56-43C6-ADA7-A7D9CDE3C95C.jpeg",
+  "/assets/highlights/summer_week_three/4591E194-779B-46AC-A893-B9E75B6D64A7.JPG",
+  "/assets/highlights/summer_week_three/8CE3DD93-63A1-4FD4-A81C-B4949CA60664.JPG",
+  "/assets/highlights/summer_week_three/IMG_9275.jpg",
+  "/assets/highlights/summer_week_three/3F03181F-5761-416B-8C7D-003DA143D804.JPG",
 ];
 
 const PRIMARY_HIGHLIGHTS = [
-  { emoji: "📖", label: "CVC Words & Phonemic Awareness", desc: "Listening for sounds, identifying letters, building emerging reader confidence" },
-  { emoji: "🔠", label: "Capital & Lowercase Letters", desc: "Practicing letter associations and recognition every day" },
-  { emoji: "➕", label: "Addition: Counting On", desc: "Hands-on games and group work to build number sense" },
-  { emoji: "🎨", label: "Color Mixing & Sensory Art", desc: "Mud kitchen experiments exploring what happens when colors combine" },
-  { emoji: "🍝", label: "Homemade Pasta", desc: "Measuring, mixing, and learning from a beautifully flopped batch" },
-  { emoji: "🧃", label: "Strawberry Limeade Popsicles", desc: "Experimenting with flavors and taking pride in the result" },
-  { emoji: "🌱", label: "Growing Independence", desc: "More initiative and confidence than Week 1" },
+  { emoji: "🧠", label: "Montessori Independence", desc: "Choosing between phonics, math, writing, life skills, and art at their own pace" },
+  { emoji: "📖", label: "Phonics: CVC, Blends & Magic E", desc: "Letter identification through digraphs and Magic E — many blending independently" },
+  { emoji: "🍌", label: "Banana Bread Muffins & Popsicles", desc: "Banana bread chocolate chip muffins and banana yogurt popsicles — a big hit" },
+  { emoji: "👨‍👩‍👧", label: "Lunch with a Loved One", desc: "A joyful family event celebrating the community we're building" },
+  { emoji: "🌊", label: "Beach Bash Field Friday", desc: "Water slide, ocean-themed slime, ice cream bar, and painted sea shells" },
 ];
 
 const ELEMENTARY_HIGHLIGHTS = [
-  { emoji: "➕", label: "Addition & Subtraction with Regrouping", desc: "Carrying over and borrowing across multiple digits" },
-  { emoji: "📝", label: "Main Idea & Supporting Details", desc: "Cone = main idea, ice cream scoops = supporting details" },
-  { emoji: "🦁", label: "Animal Research Project", desc: "National Geographic books → rough draft → revised banner" },
-  { emoji: "✏️", label: "Revise & Edit", desc: "Rough draft Tuesday, revised and transferred to banner Thursday" },
-  { emoji: "📚", label: "Differentiated Groups", desc: "Same focus, split by academic level to meet each learner's needs" },
+  { emoji: "📝", label: "Context Clues & Vocabulary", desc: "Using context in passages; charades game to act out vocabulary words" },
+  { emoji: "✖️", label: "Multiplication Fluency", desc: "Arrays for lower el; 2-digit × 1-digit for upper el — facts 6–12" },
+  { emoji: "📐", label: "Area & Perimeter Zoo Project", desc: "Two multiplication facts + a zoo animal → find area/perimeter, draw the enclosure, build a class zoo" },
+  { emoji: "🍽️", label: "Life Skills: Dishwashing", desc: "Each child responsible for two dishes — real soap, sponge, and water" },
+  { emoji: "👨‍👩‍👧", label: "Lunch with a Loved One", desc: "First family event — families got a peek into a day at Sage Field" },
 ];
 
 interface WeekRecapPreviewProps {
@@ -75,13 +73,13 @@ export default function WeekRecapPreview({ className = "" }: WeekRecapPreviewPro
           transition={{ duration: 0.5 }}
         >
           <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4 font-body">
-            Week 2 Recap
+            Week 3 Recap
           </span>
           <h2 className="text-3xl md:text-4xl font-bold text-gray-800 font-heading mb-2">
-            See Week 2 of Our Summer Program
+            See Week 3 of Our Summer Program
           </h2>
           <p className="text-base text-gray-500 font-body">
-            Week 2 is complete — and the growth has been incredible. Here&apos;s a glimpse at what our students experienced.
+            Week 3 is complete — and it&apos;s been our biggest week yet. Here&apos;s a glimpse at what our students experienced.
           </p>
         </motion.div>
       </div>
@@ -104,7 +102,7 @@ export default function WeekRecapPreview({ className = "" }: WeekRecapPreviewPro
             >
               <Image
                 src={src}
-                alt="Week 2 highlight"
+                alt="Week 3 highlight"
                 fill
                 className="object-cover"
                 sizes="256px"
@@ -123,7 +121,7 @@ export default function WeekRecapPreview({ className = "" }: WeekRecapPreviewPro
           transition={{ duration: 0.5, delay: 0.15 }}
         >
           <p className="text-base text-gray-600 font-body leading-relaxed">
-            Students continued building their literacy and math foundations, explored color mixing and sensory art in the mud kitchen, and made homemade pasta (that gloriously flopped!) plus strawberry limeade popsicles. Elementary students dove into regrouping, main idea, and a full animal research project.
+            Week 3 was all about independence and community. Primary students embraced Montessori work cycles, made breakthroughs in phonics, and cooked banana bread muffins and banana yogurt popsicles. Elementary students dove into context clues, multiplication fluency, an area and perimeter zoo project, and a life skills dishwashing lesson. Both groups celebrated with a joyful Lunch with a Loved One family event and a splashy Beach Bash Field Friday.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
@@ -170,10 +168,10 @@ export default function WeekRecapPreview({ className = "" }: WeekRecapPreviewPro
 
         <div className="flex justify-center mt-7">
           <Link
-            href="/highlights/summer/week-2"
+            href="/highlights/summer/week-3"
             className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body text-sm"
           >
-            View Full Week 2 Recap →
+            View Full Week 3 Recap →
           </Link>
         </div>
       </div>

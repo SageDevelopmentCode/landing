@@ -11,34 +11,31 @@ import WaitlistDialog from "../components/WaitlistDialog";
 import ContactDialog from "../components/ContactDialog";
 import FloatingSMSButton from "../components/FloatingSMSButton";
 
-const WEEK1_PREVIEW_IMAGES = [
-  "/assets/highlights/summer_week_one/C8EAD2FA-0FB2-4D59-A079-493C09298ABF.JPG",
-  "/assets/highlights/summer_week_one/79C28EF4-D1A6-4874-AA73-CCA66F04BDEF.JPG",
-  "/assets/highlights/summer_week_one/2B9964FA-0047-4590-880C-095C315B7DE8.JPG",
-  "/assets/highlights/summer_week_one/AB176A40-3DE2-4856-8E87-2D169FB3F41A.JPG",
-  "/assets/highlights/summer_week_one/341400BF-486B-43A0-912E-84623B6299D6.JPG",
-  "/assets/highlights/summer_week_one/DDDA3AA2-CDF9-42CF-B8FF-AD61CED60065 2.JPG",
-  "/assets/highlights/summer_week_one/1D2BF4A6-5081-4D51-B1E8-F6E0E3D820B3.JPG",
-  "/assets/highlights/summer_week_one/B10368B0-5344-4D70-8C0C-C091A086D6B2.JPG",
+const WEEK3_PREVIEW_IMAGES = [
+  "/assets/highlights/summer_week_three/FE28F7EF-5568-4F11-9C62-E44AC6209D53.JPG",
+  "/assets/highlights/summer_week_three/IMG_9313.JPG",
+  "/assets/highlights/summer_week_three/4C53798C-920D-4497-B46C-1037E6FF21E4.JPG",
+  "/assets/highlights/summer_week_three/ED35AB4E-8E56-43C6-ADA7-A7D9CDE3C95C.jpeg",
+  "/assets/highlights/summer_week_three/4591E194-779B-46AC-A893-B9E75B6D64A7.JPG",
+  "/assets/highlights/summer_week_three/8CE3DD93-63A1-4FD4-A81C-B4949CA60664.JPG",
+  "/assets/highlights/summer_week_three/IMG_9275.jpg",
+  "/assets/highlights/summer_week_three/3F03181F-5761-416B-8C7D-003DA143D804.JPG",
 ];
 
-const WEEK1_EARLY_LEARNER_HIGHLIGHTS = [
-  { emoji: "📖", label: "Letter Sounds & CVC Reading", desc: "Building phonics foundations through hands-on practice" },
-  { emoji: "✏️", label: "Handwriting & Number Sense", desc: "Fine motor skills and early numeracy side by side" },
-  { emoji: "➕", label: "Early Addition", desc: "Introducing addition concepts through play and manipulatives" },
-  { emoji: "💧", label: "Water Cycle & Filtration", desc: "Science exploration that sparked curiosity all week" },
-  { emoji: "🎨", label: "Art Creation", desc: "Self-expression through color, texture, and imagination" },
-  { emoji: "🐥", label: "Caring for Our Chicks", desc: "Responsibility and empathy through animal care" },
-  { emoji: "🎵", label: "Rhythm & Note Recognition", desc: "Music foundations woven into every morning" },
+const WEEK3_PRIMARY_HIGHLIGHTS = [
+  { emoji: "🧠", label: "Montessori Independence", desc: "Choosing between phonics, math, writing, life skills, and art at their own pace" },
+  { emoji: "📖", label: "Phonics: CVC, Blends & Magic E", desc: "Letter identification through digraphs and Magic E — many blending independently" },
+  { emoji: "🍌", label: "Banana Bread Muffins & Popsicles", desc: "Banana bread chocolate chip muffins and banana yogurt popsicles — a big hit" },
+  { emoji: "👨‍👩‍👧", label: "Lunch with a Loved One", desc: "A joyful family event celebrating the community we're building" },
+  { emoji: "🌊", label: "Beach Bash Field Friday", desc: "Water slide, ocean-themed slime, ice cream bar, and painted sea shells" },
 ];
 
-const WEEK1_ELEMENTARY_HIGHLIGHTS = [
-  { emoji: "🔢", label: "Place Value Mastery", desc: "Expanded, word, and model forms — plus comparing numbers" },
-  { emoji: "🎲", label: "Collaborative Math Game", desc: "Wrapped up the week by applying what we learned together" },
-  { emoji: "📚", label: "SWBST Comprehension", desc: "Somebody, Wanted, But, So, Then — a framework for deep reading" },
-  { emoji: "✍️", label: "Vocabulary & Sentence Structure", desc: "Building strong writing skills from the ground up" },
-  { emoji: "🔄", label: "Synonyms & Antonyms", desc: "Expanding word knowledge through exploration" },
-  { emoji: "📝", label: "Recipe Card Writing", desc: "Real experiences turned into structured, creative writing" },
+const WEEK3_ELEMENTARY_HIGHLIGHTS = [
+  { emoji: "📝", label: "Context Clues & Vocabulary", desc: "Using context in passages; charades game to act out vocabulary words" },
+  { emoji: "✖️", label: "Multiplication Fluency", desc: "Arrays for lower el; 2-digit × 1-digit for upper el — facts 6–12" },
+  { emoji: "📐", label: "Area & Perimeter Zoo Project", desc: "Two multiplication facts + a zoo animal → find area/perimeter, draw the enclosure, build a class zoo" },
+  { emoji: "🍽️", label: "Life Skills: Dishwashing", desc: "Each child responsible for two dishes — real soap, sponge, and water" },
+  { emoji: "👨‍👩‍👧", label: "Lunch with a Loved One", desc: "First family event — families got a peek into a day at Sage Field" },
 ];
 
 const details = [
@@ -787,7 +784,7 @@ export default function HomeschoolDropInPage() {
         </div>
       </section>
 
-      {/* Week 1 Recap */}
+      {/* Week 3 Recap */}
       <section className="pt-16 pb-16 px-8 sm:px-12 lg:px-16 bg-sage-50">
         <div className="max-w-4xl mx-auto">
           <motion.div
@@ -798,13 +795,13 @@ export default function HomeschoolDropInPage() {
             transition={{ duration: 0.5 }}
           >
             <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4 font-body">
-              Week 1 Recap
+              Week 3 Recap
             </span>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-800 font-heading mb-2">
-              See Week 1 of Our Summer Program
+              See Week 3 of Our Summer Program
             </h2>
             <p className="text-base text-gray-500 font-body">
-              Week 1 is complete — and it was an incredible start. Here&apos;s a glimpse at what our students experienced.
+              Week 3 is complete — and it&apos;s been our biggest week yet. Here&apos;s a glimpse at what our students experienced.
             </p>
           </motion.div>
         </div>
@@ -819,14 +816,14 @@ export default function HomeschoolDropInPage() {
             ref={previewGalleryRef}
             className="overflow-x-auto flex gap-3 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] mb-8"
           >
-            {[...WEEK1_PREVIEW_IMAGES, ...WEEK1_PREVIEW_IMAGES].map((src, i) => (
+            {[...WEEK3_PREVIEW_IMAGES, ...WEEK3_PREVIEW_IMAGES].map((src, i) => (
               <div
                 key={i}
                 className="relative w-64 flex-shrink-0 aspect-[4/3] rounded-xl overflow-hidden shadow-md"
               >
                 <Image
                   src={src}
-                  alt="Week 1 highlight"
+                  alt="Week 3 highlight"
                   fill
                   className="object-cover"
                   sizes="256px"
@@ -845,7 +842,7 @@ export default function HomeschoolDropInPage() {
             transition={{ duration: 0.5 }}
           >
             <p className="text-base text-gray-600 font-body leading-relaxed">
-              Students spent the week learning by doing — building foundations in literacy and math, exploring science, expressing themselves through art, and growing into a real community together. They cooked pizzas, made strawberry ice cream, and were already using Spanish in daily conversations by Friday.
+              Week 3 was all about independence and community. Primary students embraced Montessori work cycles, made breakthroughs in phonics, and cooked banana bread muffins and banana yogurt popsicles. Elementary students dove into context clues, multiplication fluency, an area and perimeter zoo project, and a life skills dishwashing lesson. Both groups celebrated with a joyful Lunch with a Loved One family event and a splashy Beach Bash Field Friday.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
@@ -854,10 +851,10 @@ export default function HomeschoolDropInPage() {
                   <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
                     <span className="text-sm">🌱</span>
                   </div>
-                  <h4 className="text-sm font-bold font-heading text-gray-800">Early Learners</h4>
+                  <h4 className="text-sm font-bold font-heading text-gray-800">Primary</h4>
                 </div>
                 <ul className="space-y-1.5">
-                  {WEEK1_EARLY_LEARNER_HIGHLIGHTS.map((item) => (
+                  {WEEK3_PRIMARY_HIGHLIGHTS.map((item) => (
                     <li key={item.label} className="flex items-start gap-2">
                       <span className="text-base leading-none mt-0.5 flex-shrink-0">{item.emoji}</span>
                       <div>
@@ -876,7 +873,7 @@ export default function HomeschoolDropInPage() {
                   <h4 className="text-sm font-bold font-heading text-gray-800">Elementary</h4>
                 </div>
                 <ul className="space-y-1.5">
-                  {WEEK1_ELEMENTARY_HIGHLIGHTS.map((item) => (
+                  {WEEK3_ELEMENTARY_HIGHLIGHTS.map((item) => (
                     <li key={item.label} className="flex items-start gap-2">
                       <span className="text-base leading-none mt-0.5 flex-shrink-0">{item.emoji}</span>
                       <div>
@@ -892,10 +889,10 @@ export default function HomeschoolDropInPage() {
 
           <div className="flex justify-center mt-7">
             <button
-              onClick={() => router.push("/highlights/summer/week-1")}
+              onClick={() => router.push("/highlights/summer/week-3")}
               className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body text-sm cursor-pointer"
             >
-              View Full Week 1 Recap →
+              View Full Week 3 Recap →
             </button>
           </div>
         </div>
