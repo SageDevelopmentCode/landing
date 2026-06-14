@@ -3127,7 +3127,7 @@ export async function buildSummerWeekThreeNewsletterEmail(opts: {
 
   <p style="margin-bottom: 24px;">Hi ${firstName}!</p>
 
-  <p style="margin-bottom: 16px;">Week three is in the books, and it has been a truly wonderful one. We've fully embraced the Montessori approach — children are moving confidently through their work cycles, choosing their own activities, and building real independence and resilience each day. Seeing them thrive has been such a joy.</p>
+  <p style="margin-bottom: 16px;">Week 3 at Sage Field has been all about embracing independence and community. From Montessori work cycles where students chose their own path, to phonics breakthroughs, delicious cooking projects, a joyful Lunch with a Loved One, and a splashy beach bash Field Friday — it was a week full of growth, connection, and fun.</p>
 
   <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">🌿 What We've Been Up To</h2>
   <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px;">
