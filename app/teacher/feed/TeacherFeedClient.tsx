@@ -2146,101 +2146,41 @@ export default function TeacherFeedClient({
 
   const isSelectedReel = selectedPost ? isReelId(selectedPost.id) : false;
 
+  const panelContent = feedMode === "feed"
+    ? { title: "Class Feed", desc: "Updates, photos, and moments from the classroom" }
+    : { title: "Class Reels", desc: "Short video moments captured by teachers" };
+
   return (
     <div className={`flex-1 flex overflow-hidden transition-colors duration-300 ${feedMode === "reel" ? "bg-[#f5f3ef]" : ""}`}>
-      {/* ── Left: Teachers panel ── */}
-      <aside className={`flex-col w-56 flex-shrink-0 overflow-y-auto px-3 pt-8 gap-1 ${feedMode === "reel" ? "hidden" : "hidden md:flex"}`}>
-        <p className="text-xs font-semibold font-body text-gray-400 uppercase tracking-wider px-2 pb-2">
-          Teachers
-        </p>
-
-        {/* "All Teachers" tab */}
-        <button
-          onClick={() => setSelectedTeacherId(null)}
-          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-colors cursor-pointer ${
-            selectedTeacherId === null
-              ? "bg-[#4a7c59]/8 text-gray-800"
-              : "text-gray-400 hover:text-gray-600 hover:bg-black/5"
-          }`}
+      {/* ── Left: Nav panel ── */}
+      <aside className="hidden md:flex flex-col w-56 flex-shrink-0 px-5 pt-8 gap-4 sticky top-0 h-screen">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" as const }}
         >
-          <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-            <span className="text-[10px] text-gray-500 font-bold">All</span>
-          </div>
-          <span className="text-sm font-body font-medium truncate">All Teachers</span>
-        </button>
+          <h1 className="text-2xl font-bold font-heading text-gray-800">{panelContent.title}</h1>
+          <p className="text-sm font-body mt-1 text-gray-400">{panelContent.desc}</p>
+        </motion.div>
 
-        {/* Teacher tabs */}
-        {teachers.map((teacher) => {
-          const isSelected = selectedTeacherId === teacher.id;
-          return (
-            <div
-              key={teacher.id}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition-colors ${
-                isSelected
-                  ? "bg-[#4a7c59]/8 text-gray-800"
-                  : "text-gray-400 hover:text-gray-600 hover:bg-black/5"
+        <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
+          {(["feed", "reel"] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => setFeedMode(m)}
+              className={`px-4 py-1.5 rounded-lg text-sm font-semibold font-body transition-colors ${
+                feedMode === m ? "bg-white text-gray-800 shadow-sm" : "text-gray-400 hover:text-gray-600"
               }`}
             >
-              <Link
-                href={`/teacher/profile/${teacher.id}`}
-                className="flex-shrink-0 hover:opacity-80 transition-opacity"
-                title={`View ${teacher.full_name}'s profile`}
-              >
-                <AuthorAvatar
-                  initials={getInitials(teacher.full_name)}
-                  color={avatarColor(teacher.id)}
-                  size="sm"
-                  imageUrl={teacher.profile_image_url}
-                />
-              </Link>
-              <button
-                onClick={() => setSelectedTeacherId(isSelected ? null : teacher.id)}
-                className="min-w-0 flex-1 text-left cursor-pointer"
-              >
-                <p className="text-sm font-body font-medium truncate leading-tight">
-                  {teacher.full_name}
-                </p>
-                <p className="text-[11px] font-body text-gray-400 truncate">
-                  {formatRole(teacher.role)}
-                </p>
-              </button>
-            </div>
-          );
-        })}
+              {m === "feed" ? "Feed" : "Reels"}
+            </button>
+          ))}
+        </div>
       </aside>
 
       {/* ── Right: Feed column ── */}
       <div className={`flex-1 ${feedMode === "reel" ? "overflow-hidden flex flex-col" : "overflow-y-auto"}`}>
         <div className={`${feedMode === "reel" ? "max-w-2xl mx-auto px-4 pt-8 pb-4 flex-shrink-0" : "max-w-2xl mx-auto px-4 py-8"}`}>
-          {/* Page title */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: "easeOut" as const }}
-            className="mb-6"
-          >
-            <h1 className="text-2xl font-bold font-heading text-gray-800">Class Feed</h1>
-            <p className="text-sm font-body mt-1 text-gray-400">
-              Updates, photos, and moments from the classroom
-            </p>
-          </motion.div>
-
-          {/* Feed / Reels tab switcher */}
-          <div className="flex gap-1 mb-5 bg-gray-100 p-1 rounded-xl w-fit">
-            {(["feed", "reel"] as const).map((m) => (
-              <button
-                key={m}
-                onClick={() => setFeedMode(m)}
-                className={`px-4 py-1.5 rounded-lg text-sm font-semibold font-body transition-colors ${
-                  feedMode === m
-                    ? "bg-white text-gray-800 shadow-sm"
-                    : "text-gray-400 hover:text-gray-600"
-                }`}
-              >
-                {m === "feed" ? "Feed" : "Reels"}
-              </button>
-            ))}
-          </div>
 
           {/* Compose bar */}
           <ComposeBar
