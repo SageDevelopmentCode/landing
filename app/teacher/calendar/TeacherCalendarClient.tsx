@@ -1563,9 +1563,7 @@ export default function TeacherCalendarClient({
   const [editEvent, setEditEvent] = useState<CalendarEvent | null>(null);
   const [selectedProgram, setSelectedProgram] = useState<ProgramKey>("summer");
   const [view, setView] = useState<ViewMode>("weekly");
-  const [currentDate, setCurrentDate] = useState<Date>(
-    new Date(programs.summer.start)
-  );
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [addEventOpen, setAddEventOpen] = useState(false);
   const [addEventDate, setAddEventDate] = useState<Date | null>(null);
   const [addEventTime, setAddEventTime] = useState<number | null>(null);
