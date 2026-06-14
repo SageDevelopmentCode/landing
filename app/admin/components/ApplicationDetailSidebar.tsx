@@ -34,6 +34,7 @@ import { sendSummerStartingEmail } from '../../actions/sendSummerStartingEmail'
 import { sendSummerFirstDayEmail } from '../../actions/sendSummerFirstDayEmail'
 import { sendSummerWeekOneNewsletterEmail } from '../../actions/sendSummerWeekOneNewsletterEmail'
 import { sendSummerWeekTwoNewsletterEmail } from '../../actions/sendSummerWeekTwoNewsletterEmail'
+import { sendSummerWeekThreeNewsletterEmail } from '../../actions/sendSummerWeekThreeNewsletterEmail'
 import { sendFreeFridayAnnouncementEmail } from '../../actions/sendFreeFridayAnnouncementEmail'
 import { sendGoogleReviewIncentiveEmail } from '../../actions/sendGoogleReviewIncentiveEmail'
 import { sendFunFridayConfirmationEmail } from '../../actions/sendFunFridayConfirmationEmail'
@@ -229,6 +230,9 @@ export function ApplicationDetailSidebar({
   const [weekTwoNewsletterSending, setWeekTwoNewsletterSending] = useState(false)
   const [weekTwoNewsletterSent, setWeekTwoNewsletterSent] = useState(false)
   const [weekTwoNewsletterError, setWeekTwoNewsletterError] = useState<string | null>(null)
+  const [weekThreeNewsletterSending, setWeekThreeNewsletterSending] = useState(false)
+  const [weekThreeNewsletterSent, setWeekThreeNewsletterSent] = useState(false)
+  const [weekThreeNewsletterError, setWeekThreeNewsletterError] = useState<string | null>(null)
   const [freeFridaySending, setFreeFridaySending] = useState(false)
   const [freeFridaySent, setFreeFridaySent] = useState(false)
   const [freeFridayError, setFreeFridayError] = useState<string | null>(null)
@@ -933,6 +937,25 @@ export function ApplicationDetailSidebar({
     }
   }
 
+  const handleSendWeekThreeNewsletter = async () => {
+    if (weekThreeNewsletterSending || !application.g1_email) return
+    setWeekThreeNewsletterSending(true)
+    setWeekThreeNewsletterError(null)
+    const result = await sendSummerWeekThreeNewsletterEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+    })
+    setWeekThreeNewsletterSending(false)
+    if (result.success) {
+      setWeekThreeNewsletterSent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setWeekThreeNewsletterSent(false), 3000)
+    } else {
+      setWeekThreeNewsletterError(result.error ?? 'Failed to send')
+    }
+  }
+
   const handleSendOpenHouseEnrollment = async () => {
     if (openHouseSending || !application.g1_email) return
     setOpenHouseSending(true)
@@ -1593,6 +1616,17 @@ export function ApplicationDetailSidebar({
                   {weekTwoNewsletterSending ? 'Sending…' : weekTwoNewsletterSent ? '✓ Sent!' : 'Send Week Two Newsletter'}
                 </button>
                 {weekTwoNewsletterError && <span className="text-xs text-red-600">{weekTwoNewsletterError}</span>}
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleSendWeekThreeNewsletter}
+                  disabled={weekThreeNewsletterSending || weekThreeNewsletterSent}
+                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                >
+                  {weekThreeNewsletterSending ? 'Sending…' : weekThreeNewsletterSent ? '✓ Sent!' : 'Send Week Three Newsletter'}
+                </button>
+                {weekThreeNewsletterError && <span className="text-xs text-red-600">{weekThreeNewsletterError}</span>}
               </div>
               <div className="flex items-center gap-3">
                 <button

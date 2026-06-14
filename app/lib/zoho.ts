@@ -3113,6 +3113,63 @@ export async function buildSummerWeekTwoNewsletterEmail(opts: {
   return { subject, content };
 }
 
+export async function buildSummerWeekThreeNewsletterEmail(opts: {
+  g1FullName: string;
+  childLegalName: string;
+}): Promise<{ subject: string; content: string }> {
+  const firstName = opts.g1FullName.split(" ")[0];
+  const subject = "Week Three Down — Read Our Latest Newsletter 🌿";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+
+  <p style="margin-bottom: 24px;">Hi ${firstName}!</p>
+
+  <p style="margin-bottom: 16px;">Week three is in the books, and it has been a truly wonderful one. We've fully embraced the Montessori approach — children are moving confidently through their work cycles, choosing their own activities, and building real independence and resilience each day. Seeing them thrive has been such a joy.</p>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">🌿 What We've Been Up To</h2>
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px;">
+    <ul style="margin: 0; padding-left: 18px; line-height: 2.1; font-size: 14px; color: #2c2c2c;">
+      <li>🔤 <strong>Phonics</strong> — letter identification, CVC words, blends, digraphs, and Magic E patterns</li>
+      <li>✖️ <strong>Math</strong> — multiplication arrays (lower el), 2-digit × 1-digit (upper el), and a hands-on area &amp; perimeter zoo project</li>
+      <li>📚 <strong>ELA</strong> — context clues, vocabulary building, and a charades game to bring it all to life</li>
+      <li>🍌 <strong>Cooking</strong> — banana bread chocolate chip muffins and banana yogurt popsicles</li>
+      <li>🍽️ <strong>Life Skills</strong> — a real dishwashing lesson using our play kitchen (kids were incredible!)</li>
+      <li>🏖️ <strong>Field Friday Beach Bash</strong> — inflatable water slide, ocean-themed slime, ice cream bar, and painted sea shells</li>
+    </ul>
+  </div>
+
+  <p style="margin-bottom: 20px; font-size: 14px; color: #444;">We've put together our third newsletter — a closer look at the week through photos and classroom moments.</p>
+
+  <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 8px; padding: 20px 24px; margin: 28px 0; text-align: center;">
+    <p style="margin: 0 0 6px 0; font-size: 15px; font-weight: bold; color: #2C5F2E;">📰 Our Third Newsletter is Live!</p>
+    <p style="margin: 0 0 18px 0; font-size: 13px; color: #555;">Photos, classroom moments, and a deeper look into our third week.</p>
+    <a href="https://www.sagefield.co/newsletter/6d9846b6-68b6-4d59-8e57-aa8b2b0db7b5" style="background: #2C5F2E; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-family: Georgia, serif; font-size: 15px; display: inline-block;">Read the Newsletter →</a>
+    <div style="margin-top: 14px;">
+      <span style="display: inline-block; background: #f7f4f0; border: 1px solid #a8c5a0; border-radius: 999px; padding: 5px 14px; font-size: 12px; color: #555;">🔑 Password: <strong>weekthree</strong></span>
+    </div>
+  </div>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">👨‍👩‍👧 Community Corner</h2>
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px; font-size: 14px; color: #2c2c2c;">
+    <p style="margin: 0 0 12px 0;">Thank you so much to everyone who joined us for <strong>Lunch with a Loved One</strong>. It was such a joyful event and a beautiful reflection of the strong community we're building together. For those who weren't able to attend, please know you are very much a part of this community and we appreciate you deeply.</p>
+    <p style="margin: 0;">Our next family event is coming up — <strong>"Donuts with Grown Ups"</strong> during drop-off on <strong>July 6th (8:15–9:00am)</strong>. We hope to see you there!</p>
+  </div>
+
+  <p style="margin-bottom: 8px; font-size: 14px; color: #555;">We're looking forward to another wonderful week ahead. Thank you for sharing your children with us — it truly means the world. 🌱</p>
+
+  <p style="margin-top: 32px; margin-bottom: 4px;">Warmly,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
 export async function buildFreeFridayAnnouncementEmail(opts: {
   parentName: string;
   childName: string;
