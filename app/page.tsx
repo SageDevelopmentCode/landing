@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search } from "lucide-react";
+import { Search, Shield, Clock, Calendar, Star, BookOpen } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import WelcomeSection from "./components/WelcomeSection";
@@ -24,15 +26,59 @@ import EnrollmentAnnouncementPopup from "./components/EnrollmentAnnouncementPopu
 import WeekRecapPreview from "./components/WeekRecapPreview";
 
 
+interface LatestPost {
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  author_name: string | null;
+  published_at: string | null;
+  cover_image_signed_url: string | null;
+}
+
+const PREVIEW_WEEKS = [
+  {
+    week: 1,
+    dates: "May 26–29",
+    theme: "Welcome to Summer",
+    href: "/highlights/summer/week-1",
+    coverImage: "/assets/highlights/summer_week_one/C8EAD2FA-0FB2-4D59-A079-493C09298ABF.JPG",
+  },
+  {
+    week: 2,
+    dates: "Jun 1–4",
+    theme: "Mystery Camp Escape Challenge",
+    href: "/highlights/summer/week-2",
+    coverImage: "/assets/highlights/summer_week_two/A0AA3C22-7657-4E63-A3FD-7AB6CD3B85E0.JPG",
+  },
+  {
+    week: 3,
+    dates: "Jun 9–13",
+    theme: "Beach Day Bash",
+    href: "/highlights/summer/week-3",
+    coverImage: "/assets/highlights/summer_week_three/FE28F7EF-5568-4F11-9C62-E44AC6209D53.JPG",
+  },
+];
+
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isWaitlistDialogOpen, setIsWaitlistDialogOpen] = useState(false);
   const [pastHero, setPastHero] = useState(false);
+  const [latestPost, setLatestPost] = useState<LatestPost | null>(null);
+
   useEffect(() => {
     const handleScroll = () =>
       setPastHero(window.scrollY > window.innerHeight * 0.8);
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/blog/latest")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.title) setLatestPost(data as LatestPost);
+      })
+      .catch(() => {});
   }, []);
 
 
@@ -171,6 +217,338 @@ export default function Home() {
       </div> */}
       <MeetTheTeamSection />
       <EnrollmentCTASection />
+
+      {/* ── Tour Preview ── */}
+      <section className="py-16 px-8 sm:px-12 lg:px-16 bg-welcome-bg">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left: text */}
+            <motion.div
+              initial={{ opacity: 0, x: -24 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              <span className="inline-block px-5 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-5 font-body">
+                Private Tours
+              </span>
+              <h2 className="text-3xl md:text-4xl font-bold font-heading text-gray-800 leading-tight mb-4">
+                See Where Your Child Will Thrive
+              </h2>
+              <p className="text-base text-gray-600 font-body leading-relaxed mb-6 max-w-md">
+                Come walk our outdoor campus, meet Ms. Sabrina, and feel the Sage Field difference for yourself. Private, personal, and 100% free.
+              </p>
+              <div className="flex flex-wrap gap-3 mb-8">
+                {[
+                  { icon: Shield, label: "Private Tour" },
+                  { icon: Clock, label: "~45 Minutes" },
+                  { icon: Calendar, label: "Mon – Sat" },
+                  { icon: Star, label: "100% Free" },
+                ].map(({ icon: Icon, label }) => (
+                  <span
+                    key={label}
+                    className="flex items-center gap-2 bg-white border border-sage-200 rounded-full px-4 py-2 text-xs font-semibold text-gray-700 font-body shadow-sm"
+                  >
+                    <Icon className="w-3.5 h-3.5 text-sage-600" />
+                    {label}
+                  </span>
+                ))}
+              </div>
+              <Link
+                href="/tour"
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white font-semibold font-body px-7 py-3.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
+              >
+                Schedule a Free Tour →
+              </Link>
+            </motion.div>
+
+            {/* Right: image with educator chip */}
+            <motion.div
+              className="relative w-full h-[380px] rounded-3xl overflow-hidden shadow-xl"
+              initial={{ opacity: 0, x: 24 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55, delay: 0.1 }}
+            >
+              <Image
+                src="/assets/Stock3.jpg"
+                alt="Sage Field outdoor campus"
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+              />
+              <div className="absolute bottom-5 left-5 bg-white/95 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-lg flex items-center gap-3">
+                <div className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                  <Image
+                    src="/assets/team/sabrina.jpg"
+                    alt="Ms. Sabrina"
+                    fill
+                    className="object-cover"
+                    sizes="40px"
+                  />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-gray-800 font-body">Ms. Sabrina</p>
+                  <p className="text-[10px] text-gray-500 font-body">Lead Teacher & Director</p>
+                </div>
+                <span className="ml-1 bg-sage-100 text-sage-700 text-[10px] font-bold px-2 py-0.5 rounded-full font-body">
+                  Your Host
+                </span>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Shadow Day Preview ── */}
+      <section className="py-16 px-8 sm:px-12 lg:px-16 bg-white">
+        <div className="max-w-5xl mx-auto">
+          <motion.div
+            className="text-center mb-10"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <span className="inline-block px-5 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-5 font-body">
+              Shadow Day · $20
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold font-heading text-gray-800 mb-3">
+              Let Your Child Live a Day Here
+            </h2>
+            <p className="text-base text-gray-500 font-body max-w-xl mx-auto">
+              A full school day at Sage Field — real lessons, real outdoor time, real lunch with classmates. Not a tour. An experience.
+            </p>
+          </motion.div>
+
+          <motion.div
+            className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-5">
+              {/* Left panel: value bullets */}
+              <div className="md:col-span-3 p-8 md:p-10">
+                <ul className="space-y-5 mb-8">
+                  {[
+                    { emoji: "🕗", label: "Full School Day", desc: "9:00 AM – 3:00 PM, Monday through Thursday" },
+                    { emoji: "👧", label: "Ages 4–11", desc: "Mixed-age groups, individualized learning pace" },
+                    { emoji: "💰", label: "$20 Shadow Day Fee", desc: "Holds your child's spot for the day" },
+                    { emoji: "🌿", label: "Real Learning", desc: "Academics, outdoor time, cooking, and community" },
+                  ].map((item) => (
+                    <li key={item.label} className="flex items-start gap-4">
+                      <span className="text-2xl flex-shrink-0">{item.emoji}</span>
+                      <div>
+                        <p className="text-sm font-bold text-gray-800 font-body">{item.label}</p>
+                        <p className="text-xs text-gray-500 font-body mt-0.5">{item.desc}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href="/shadow"
+                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white font-semibold font-body px-7 py-3.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
+                >
+                  Book a Shadow Day — $20 →
+                </Link>
+              </div>
+
+              {/* Right panel: early-bird offer */}
+              <div className="md:col-span-2 bg-amber-50 border-t-2 md:border-t-0 md:border-l-2 border-amber-200 p-8 md:p-10 flex flex-col justify-center">
+                <span className="text-3xl mb-4">🎁</span>
+                <h4 className="text-lg font-bold font-heading text-amber-900 mb-2 leading-snug">
+                  Enroll within 5 days — your $500 enrollment fee is waived
+                </h4>
+                <p className="text-sm text-amber-800 font-body leading-relaxed mb-5">
+                  Shadow families who enroll in the school year program within 5 days of their shadow day have the full $500 enrollment fee waived. No codes, no forms. Offer ends August 14, 2026.
+                </p>
+                <div className="flex items-baseline gap-3">
+                  <span className="text-2xl font-bold font-heading text-gray-300 line-through decoration-red-300">$500</span>
+                  <span className="text-amber-500 text-xl">→</span>
+                  <span className="text-3xl font-bold font-heading text-emerald-600">$0</span>
+                </div>
+                <p className="text-xs text-amber-700 font-body mt-1">enrollment fee, if you enroll within 5 days</p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── Highlights Preview ── */}
+      <section className="py-16 px-8 sm:px-12 lg:px-16 bg-sage-50">
+        <div className="max-w-5xl mx-auto">
+          <motion.div
+            className="text-center mb-10"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <span className="inline-block px-5 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-5 font-body">
+              Summer 2026
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold font-heading text-gray-800 mb-3">
+              See What Kids Are Doing Here
+            </h2>
+            <p className="text-base text-gray-500 font-body max-w-xl mx-auto">
+              12 weeks of outdoor learning, real academics, and joy. Take a look at our first three weeks.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+            {PREVIEW_WEEKS.map((week, i) => (
+              <motion.div
+                key={week.week}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: i * 0.1 }}
+              >
+                <Link
+                  href={week.href}
+                  className="group block bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md hover:scale-[1.02] transition-all duration-200"
+                >
+                  <div className="relative w-full aspect-[4/3] bg-gray-100">
+                    <Image
+                      src={week.coverImage}
+                      alt={`Week ${week.week} — ${week.theme}`}
+                      fill
+                      className="object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    />
+                    <span className="absolute top-3 left-3 bg-primary text-white text-[10px] font-bold px-2.5 py-1 rounded-full font-body shadow-sm">
+                      Week {week.week} · Live
+                    </span>
+                  </div>
+                  <div className="p-4">
+                    <p className="text-xs text-gray-400 font-body mb-1">{week.dates}</p>
+                    <h3 className="text-sm font-bold font-heading text-gray-800 leading-snug mb-2">
+                      {week.theme}
+                    </h3>
+                    <span className="text-xs font-semibold text-primary font-body group-hover:underline">
+                      View Recap →
+                    </span>
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div
+            className="text-center"
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+          >
+            <Link
+              href="/highlights"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white font-semibold font-body px-7 py-3.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
+            >
+              See All Highlights →
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── Blog Preview ── */}
+      <section className="py-16 px-8 sm:px-12 lg:px-16 bg-white">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left: text */}
+            <motion.div
+              initial={{ opacity: 0, x: -24 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              <span className="inline-block px-5 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-5 font-body">
+                From the Blog
+              </span>
+              <h2 className="text-3xl md:text-4xl font-bold font-heading text-gray-800 leading-tight mb-4">
+                Thoughts from Sage Field
+              </h2>
+              <p className="text-base text-gray-600 font-body leading-relaxed mb-6 max-w-md">
+                We write about child-led learning, outdoor education, family partnership, and what it really looks like to raise curious, confident kids. New posts added regularly by Ms. Sabrina and the team.
+              </p>
+              <div className="flex flex-wrap gap-2 mb-8">
+                {["Outdoor Learning", "Phonics & Reading", "Parenting Insights", "What We're Building"].map((topic) => (
+                  <span
+                    key={topic}
+                    className="px-3 py-1.5 bg-sage-50 border border-sage-200 text-sage-700 text-xs font-semibold rounded-full font-body"
+                  >
+                    {topic}
+                  </span>
+                ))}
+              </div>
+              <Link
+                href="/blog"
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white font-semibold font-body px-7 py-3.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
+              >
+                Read the Blog →
+              </Link>
+            </motion.div>
+
+            {/* Right: dynamic latest post card */}
+            <motion.div
+              initial={{ opacity: 0, x: 24 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55, delay: 0.1 }}
+            >
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                {/* Cover image or gradient placeholder */}
+                <div className="relative w-full h-48 bg-gradient-to-br from-sage-50 to-badge-bg overflow-hidden">
+                  {latestPost?.cover_image_signed_url ? (
+                    <img
+                      src={latestPost.cover_image_signed_url}
+                      alt={latestPost.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full">
+                      <BookOpen className="w-10 h-10 text-sage-400 mb-2" />
+                      <p className="text-xs text-sage-600 font-body font-semibold">Sage Field Blog</p>
+                    </div>
+                  )}
+                </div>
+                <div className="p-5">
+                  <p className="text-xs text-gray-400 font-body mb-2">
+                    {latestPost?.author_name ?? "Ms. Sabrina"}
+                    {latestPost?.published_at
+                      ? ` · ${new Date(latestPost.published_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`
+                      : " · Round Rock, TX"}
+                  </p>
+                  <h3 className="text-base font-bold font-heading text-gray-800 mb-2 leading-snug">
+                    {latestPost?.title ?? "Why Small Class Sizes Change Everything"}
+                  </h3>
+                  {(latestPost?.excerpt) && (
+                    <p className="text-sm text-gray-500 font-body line-clamp-3 leading-relaxed">
+                      {latestPost.excerpt}
+                    </p>
+                  )}
+                  {!latestPost && (
+                    <p className="text-sm text-gray-500 font-body line-clamp-3 leading-relaxed">
+                      When a teacher knows every child&apos;s name, learning style, and what lights them up — something shifts. Here&apos;s what 10 students per class looks like in practice at Sage Field...
+                    </p>
+                  )}
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <Link
+                      href={latestPost ? `/blog/${latestPost.slug}` : "/blog"}
+                      className="text-xs font-semibold text-primary font-body hover:underline"
+                    >
+                      Read on the blog →
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       <SocialMediaSection />
       <ContactUsSection />
 
