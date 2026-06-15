@@ -24,12 +24,12 @@ const slides = [
     buttonHref: "/summer-2026",
   },
   {
-    image: "/assets/highlights/summer_week_one/C8EAD2FA-0FB2-4D59-A079-493C09298ABF.JPG",
-    title: "Week 1 Highlights Are Live!",
+    image: "/assets/highlights/summer_week_three/FE28F7EF-5568-4F11-9C62-E44AC6209D53.JPG",
+    title: "Week 3 Highlights Are Live!",
     description:
-      "Our Summer Program kicked off with an incredible first week — letters, math, cooking, chicks, and so much more. See what our students experienced.",
-    buttonLabel: "View Week 1 Recap →",
-    buttonHref: "/highlights/summer/week-1",
+      "Independence, phonics breakthroughs, banana bread muffins, Lunch with a Loved One, and a splashy Beach Bash — see what our students experienced.",
+    buttonLabel: "View Week 3 Recap →",
+    buttonHref: "/highlights/summer/week-3",
   },
   {
     image: "/assets/Stock4.jpg",
