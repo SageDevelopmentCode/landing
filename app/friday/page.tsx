@@ -64,6 +64,8 @@ const PACKING_LIST = [
   { emoji: "💧", item: "Water bottle, labeled" },
   { emoji: "🥪", item: "Snack + lunch from home" },
   { emoji: "🎒", item: "Small backpack for their rocket & slime" },
+  { emoji: "🩱", item: "Swimsuit (for water play)" },
+  { emoji: "🏖️", item: "Towel" },
 ];
 
 const ACTIVITIES = [
