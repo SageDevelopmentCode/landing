@@ -34,11 +34,13 @@ const ELEMENTARY_HIGHLIGHTS = [
 
 interface WeekRecapPreviewProps {
   className?: string;
+  variant?: "light" | "dark";
 }
 
-export default function WeekRecapPreview({ className = "" }: WeekRecapPreviewProps) {
+export default function WeekRecapPreview({ className = "", variant = "light" }: WeekRecapPreviewProps) {
   const galleryRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
+  const dark = variant === "dark";
 
   useEffect(() => {
     const el = galleryRef.current;
@@ -72,13 +74,21 @@ export default function WeekRecapPreview({ className = "" }: WeekRecapPreviewPro
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4 font-body">
+          <span
+            className={`inline-block px-5 py-1.5 text-sm font-semibold rounded-full mb-4 font-body ${
+              dark ? "bg-white/10 text-violet-200" : "bg-badge-bg text-black"
+            }`}
+          >
             Week 3 Recap
           </span>
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 font-heading mb-2">
+          <h2
+            className={`text-3xl md:text-4xl font-bold font-heading mb-2 ${
+              dark ? "text-white" : "text-gray-800"
+            }`}
+          >
             See Week 3 of Our Summer Program
           </h2>
-          <p className="text-base text-gray-500 font-body">
+          <p className={`text-base font-body ${dark ? "text-slate-300" : "text-gray-500"}`}>
             Week 3 is complete — and it&apos;s been our biggest week yet. Here&apos;s a glimpse at what our students experienced.
           </p>
         </motion.div>
@@ -120,44 +130,79 @@ export default function WeekRecapPreview({ className = "" }: WeekRecapPreviewPro
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.15 }}
         >
-          <p className="text-base text-gray-600 font-body leading-relaxed">
+          <p className={`text-base font-body leading-relaxed ${dark ? "text-slate-300" : "text-gray-600"}`}>
             Week 3 was all about independence and community. Primary students embraced Montessori work cycles, made breakthroughs in phonics, and cooked banana bread muffins and banana yogurt popsicles. Elementary students dove into context clues, multiplication fluency, an area and perimeter zoo project, and a life skills dishwashing lesson. Both groups celebrated with a joyful Lunch with a Loved One family event and a splashy Beach Bash Field Friday.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+            {/* Primary card */}
+            <div
+              className={`rounded-xl p-4 shadow-sm border ${
+                dark
+                  ? "bg-white/[0.07] backdrop-blur-sm border-white/10"
+                  : "bg-white border-gray-100"
+              }`}
+            >
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    dark ? "bg-violet-500/20" : "bg-primary/10"
+                  }`}
+                >
                   <span className="text-sm">🌱</span>
                 </div>
-                <h4 className="text-sm font-bold font-heading text-gray-800">Primary</h4>
+                <h4 className={`text-sm font-bold font-heading ${dark ? "text-white" : "text-gray-800"}`}>
+                  Primary
+                </h4>
               </div>
               <ul className="space-y-1.5">
                 {PRIMARY_HIGHLIGHTS.map((item) => (
                   <li key={item.label} className="flex items-start gap-2">
                     <span className="text-base leading-none mt-0.5 flex-shrink-0">{item.emoji}</span>
                     <div>
-                      <p className="text-xs font-bold text-gray-800 font-body leading-tight">{item.label}</p>
-                      <p className="text-[11px] text-gray-400 font-body">{item.desc}</p>
+                      <p className={`text-xs font-bold font-body leading-tight ${dark ? "text-violet-100" : "text-gray-800"}`}>
+                        {item.label}
+                      </p>
+                      <p className={`text-[11px] font-body ${dark ? "text-slate-400" : "text-gray-400"}`}>
+                        {item.desc}
+                      </p>
                     </div>
                   </li>
                 ))}
               </ul>
             </div>
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+
+            {/* Elementary card */}
+            <div
+              className={`rounded-xl p-4 shadow-sm border ${
+                dark
+                  ? "bg-white/[0.07] backdrop-blur-sm border-white/10"
+                  : "bg-white border-gray-100"
+              }`}
+            >
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 bg-sage-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    dark ? "bg-indigo-500/20" : "bg-sage-100"
+                  }`}
+                >
                   <span className="text-sm">📐</span>
                 </div>
-                <h4 className="text-sm font-bold font-heading text-gray-800">Elementary</h4>
+                <h4 className={`text-sm font-bold font-heading ${dark ? "text-white" : "text-gray-800"}`}>
+                  Elementary
+                </h4>
               </div>
               <ul className="space-y-1.5">
                 {ELEMENTARY_HIGHLIGHTS.map((item) => (
                   <li key={item.label} className="flex items-start gap-2">
                     <span className="text-base leading-none mt-0.5 flex-shrink-0">{item.emoji}</span>
                     <div>
-                      <p className="text-xs font-bold text-gray-800 font-body leading-tight">{item.label}</p>
-                      <p className="text-[11px] text-gray-400 font-body">{item.desc}</p>
+                      <p className={`text-xs font-bold font-body leading-tight ${dark ? "text-violet-100" : "text-gray-800"}`}>
+                        {item.label}
+                      </p>
+                      <p className={`text-[11px] font-body ${dark ? "text-slate-400" : "text-gray-400"}`}>
+                        {item.desc}
+                      </p>
                     </div>
                   </li>
                 ))}
@@ -169,7 +214,11 @@ export default function WeekRecapPreview({ className = "" }: WeekRecapPreviewPro
         <div className="flex justify-center mt-7">
           <Link
             href="/highlights/summer/week-3"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body text-sm"
+            className={`inline-flex items-center gap-2 px-6 py-3 font-semibold rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg font-body text-sm text-white ${
+              dark
+                ? "bg-violet-600 hover:bg-violet-500"
+                : "bg-primary hover:bg-primary-hover"
+            }`}
           >
             View Full Week 3 Recap →
           </Link>

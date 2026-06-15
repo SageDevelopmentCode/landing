@@ -301,7 +301,7 @@ const ANNOUNCEMENTS = [
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
+export default function Navbar({ darkStyle, lightText }: { darkStyle?: boolean; lightText?: boolean } = {}) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [announcementIndex, setAnnouncementIndex] = useState(0);
   const [announcementDirection, setAnnouncementDirection] = useState(1);
@@ -506,9 +506,11 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
   // ── Trigger text color ───────────────────────────────────────────────────
 
   const triggerClass =
-    useDarkStyle || scrolled
+    scrolled
       ? "text-gray-800/90 hover:text-gray-800"
-      : "text-white/90 hover:text-white";
+      : lightText || !useDarkStyle
+        ? "text-white/90 hover:text-white"
+        : "text-gray-800/90 hover:text-gray-800";
 
   return (
     <motion.nav
@@ -700,7 +702,7 @@ export default function Navbar({ darkStyle }: { darkStyle?: boolean } = {}) {
           <div className="lg:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className={`${pathname === "/" && !scrolled ? "text-white" : "text-gray-900"} focus:outline-none cursor-pointer`}
+              className={`${(pathname === "/" || lightText) && !scrolled ? "text-white" : "text-gray-900"} focus:outline-none cursor-pointer`}
               aria-label="Toggle menu"
             >
               <svg

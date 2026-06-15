@@ -33,44 +33,37 @@ const CAROUSEL_IMAGES = [
   "/assets/highlights/summer_week_two/2F8E12CF-285F-4629-A621-7DA20ED68F65.JPG",
 ];
 
-const BEACH_BASH_ACTIVITIES = [
+const SPACE_LAB_ACTIVITIES = [
   {
-    emoji: "🌊",
-    title: "Ocean Slime Making",
-    desc: "Mix up your own batch of ocean-themed slime to take home",
-    accent: "#e0f2fe",
-    accentText: "#0369a1",
+    emoji: "🌋",
+    title: "Volcano Model",
+    desc: "Build and erupt your own baking-soda volcano — science you can feel rumble!",
+    accent: "#ede9fe",
+    accentText: "#6d28d9",
   },
   {
-    emoji: "🏆",
-    title: "Tug-A-War & Field Day Games",
-    desc: "Team challenges, relays, and classic outdoor competition",
-    accent: "#fef3c7",
-    accentText: "#b45309",
+    emoji: "🚀",
+    title: "Rocket Ship Craft",
+    desc: "Design and build a take-home rocket using craft materials and problem-solving skills",
+    accent: "#dbeafe",
+    accentText: "#1d4ed8",
   },
   {
-    emoji: "🐚",
-    title: "Sea Shell Painting",
-    desc: "Paint and decorate real sea shells as a keepsake to take home",
-    accent: "#fce7f3",
-    accentText: "#be185d",
-  },
-  {
-    emoji: "🍦",
-    title: "Ice Cream Bar",
-    desc: "Cool off with a build-your-own ice cream treat",
-    accent: "#dcfce7",
-    accentText: "#15803d",
+    emoji: "🌌",
+    title: "Galaxy Slime",
+    desc: "Mix shimmery galaxy-themed slime with glitter and cosmic colors to take home",
+    accent: "#fae8ff",
+    accentText: "#86198f",
   },
 ];
 
 const PACKING_LIST = [
+  { emoji: "👟", item: "Closed-toe shoes (no sandals or flip-flops)" },
+  { emoji: "👕", item: "Old clothes they can get messy in" },
   { emoji: "🧴", item: "Sunscreen (applied before drop-off)" },
-  { emoji: "🩱", item: "Swimsuit + towel" },
-  { emoji: "👕", item: "Change of clothes" },
   { emoji: "💧", item: "Water bottle, labeled" },
-  { emoji: "🦟", item: "Bug spray" },
   { emoji: "🥪", item: "Snack + lunch from home" },
+  { emoji: "🎒", item: "Small backpack for their rocket & slime" },
 ];
 
 const ACTIVITIES = [
@@ -101,11 +94,11 @@ const RISKS = [
 ];
 
 const inputClass =
-  "w-full px-4 py-3 border-2 border-sky-100 rounded-xl focus:border-sky-400 focus:outline-none transition-colors font-body text-gray-900 placeholder:text-gray-400 bg-white";
+  "w-full px-4 py-3 border-2 border-violet-100 rounded-xl focus:border-violet-400 focus:outline-none transition-colors font-body text-gray-900 placeholder:text-gray-400 bg-white";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-xs font-bold text-sky-400 uppercase tracking-wider mt-6 mb-3 font-body">
+    <p className="text-xs font-bold text-violet-400 uppercase tracking-wider mt-6 mb-3 font-body">
       {children}
     </p>
   );
@@ -156,6 +149,8 @@ export default function FieldDayFridayPage() {
   const [agreementSigned, setAgreementSigned] = useState(false);
   const [sigPrintedName, setSigPrintedName] = useState("");
   const [sigValue, setSigValue] = useState("");
+  const [packingChecked, setPackingChecked] = useState<Set<number>>(new Set());
+  const [countdown, setCountdown] = useState({ days: 0, hours: 0, mins: 0 });
 
   const [formData, setFormData] = useState({
     parentName: "",
@@ -178,6 +173,13 @@ export default function FieldDayFridayPage() {
     setChildren((prev) =>
       prev.map((c, idx) => (idx === i ? { ...c, [field]: value } : c)),
     );
+
+  const togglePacking = (i: number) =>
+    setPackingChecked((prev) => {
+      const n = new Set(prev);
+      n.has(i) ? n.delete(i) : n.add(i);
+      return n;
+    });
 
   const galleryRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
@@ -203,6 +205,22 @@ export default function FieldDayFridayPage() {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
+  }, []);
+
+  useEffect(() => {
+    const target = new Date("2026-06-19T08:30:00-05:00");
+    const tick = () => {
+      const diff = target.getTime() - Date.now();
+      if (diff <= 0) return;
+      setCountdown({
+        days: Math.floor(diff / 86400000),
+        hours: Math.floor((diff % 86400000) / 3600000),
+        mins: Math.floor((diff % 3600000) / 60000),
+      });
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
   }, []);
 
   useEffect(() => {
@@ -303,64 +321,114 @@ export default function FieldDayFridayPage() {
   return (
     <>
       <style>{`
-        @keyframes wave-bob {
-          0%, 100% { transform: translateY(0px) rotate(-1deg); }
-          50%       { transform: translateY(-8px) rotate(1deg); }
+        @keyframes rocket-float {
+          0%, 100% { transform: translateY(0px) rotate(-5deg); }
+          40%       { transform: translateY(-14px) rotate(-3deg); }
+          70%       { transform: translateY(-8px) rotate(-6deg); }
         }
-        @keyframes sun-spin-slow {
+        @keyframes star-twinkle {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50%       { opacity: 0.3; transform: scale(0.6); }
+        }
+        @keyframes planet-spin {
           from { transform: rotate(0deg); }
           to   { transform: rotate(360deg); }
         }
-        @keyframes sun-glow {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(251,191,36,0.4), 0 0 0 0 rgba(251,191,36,0.2); }
-          50%       { box-shadow: 0 0 0 16px rgba(251,191,36,0.15), 0 0 0 32px rgba(251,191,36,0.05); }
+        @keyframes shooting-star {
+          0%   { transform: translateX(0) translateY(0); opacity: 1; width: 2px; }
+          70%  { opacity: 0.8; width: 80px; }
+          100% { transform: translateX(-300px) translateY(200px); opacity: 0; width: 2px; }
         }
-        @keyframes float-seagull {
-          0%, 100% { transform: translateY(0) translateX(0); }
-          33%       { transform: translateY(-10px) translateX(6px); }
-          66%       { transform: translateY(-4px) translateX(-4px); }
+        @keyframes nebula-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(139,92,246,0.5), 0 0 0 0 rgba(99,102,241,0.25); }
+          50%       { box-shadow: 0 0 0 18px rgba(139,92,246,0.15), 0 0 0 36px rgba(99,102,241,0.06); }
         }
-        @keyframes tide-in {
-          0%   { transform: scaleX(1) translateX(0); }
-          50%  { transform: scaleX(1.04) translateX(-2%); }
-          100% { transform: scaleX(1) translateX(0); }
-        }
-        .wave-bob   { animation: wave-bob 4s ease-in-out infinite; }
-        .sun-glow   { animation: sun-glow 3s ease-in-out infinite; }
-        .float-bird { animation: float-seagull 6s ease-in-out infinite; }
-        .tide-wave  { animation: tide-in 8s ease-in-out infinite; }
+        .rocket-float  { animation: rocket-float 4s ease-in-out infinite; }
+        .nebula-pulse  { animation: nebula-pulse 3s ease-in-out infinite; }
+        .star-twinkle  { animation: star-twinkle 2s ease-in-out infinite; }
+        .shooting-star-1 { animation: shooting-star 6s ease-in infinite; }
+        .shooting-star-2 { animation: shooting-star 6s ease-in 3s infinite; }
+        .planet-ring   { animation: planet-spin 24s linear infinite; }
+        /* Flip card */
+        .flip-card-inner { transform-style: preserve-3d; transition: transform 0.55s cubic-bezier(0.4,0,0.2,1); }
+        .flip-card:hover .flip-card-inner { transform: rotateY(180deg); }
+        .flip-face { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+        .flip-back { transform: rotateY(180deg); backface-visibility: hidden; -webkit-backface-visibility: hidden; }
       `}</style>
 
       <div className="min-h-screen bg-white overflow-x-hidden">
-        <Navbar darkStyle={true} />
+        <Navbar darkStyle={true} lightText={true} />
 
         {/* ─── HERO ─────────────────────────────────────────────────────────── */}
         <section
           className="relative pt-20 overflow-hidden"
           style={{
             background:
-              "linear-gradient(180deg, #bae6fd 0%, #e0f2fe 40%, #fef9c3 80%, #fef3c7 100%)",
+              "linear-gradient(180deg, #0f0a2e 0%, #1a1040 35%, #1e0a4a 65%, #0d1b3e 100%)",
           }}
         >
-          {/* Decorative animated sun */}
+          {/* Shooting stars */}
           <div
-            className="sun-glow absolute top-12 right-8 sm:right-16 lg:right-24 w-24 h-24 sm:w-32 sm:h-32 rounded-full pointer-events-none"
+            className="shooting-star-1 absolute top-[15%] right-[10%] h-0.5 rounded-full pointer-events-none opacity-70"
+            style={{ background: "linear-gradient(90deg, transparent, white)", width: "2px", zIndex: 0 }}
+          />
+          <div
+            className="shooting-star-2 absolute top-[8%] right-[35%] h-0.5 rounded-full pointer-events-none opacity-50"
+            style={{ background: "linear-gradient(90deg, transparent, #c4b5fd)", width: "2px", zIndex: 0 }}
+          />
+
+          {/* Decorative animated planet */}
+          <div
+            className="nebula-pulse absolute top-12 right-8 sm:right-16 lg:right-24 w-24 h-24 sm:w-32 sm:h-32 rounded-full pointer-events-none"
             style={{
               background:
-                "radial-gradient(circle, #fde047 30%, #fbbf24 60%, #f59e0b 100%)",
+                "radial-gradient(circle at 35% 35%, #a78bfa 0%, #6d28d9 45%, #3b0764 100%)",
               zIndex: 1,
             }}
           >
-            {/* Sun rays — CSS only */}
+            {/* Planet ring */}
             <div
-              className="absolute inset-[-8px] rounded-full"
+              className="planet-ring absolute"
+              style={{
+                width: "160%",
+                height: "30%",
+                top: "35%",
+                left: "-30%",
+                border: "3px solid rgba(167,139,250,0.55)",
+                borderRadius: "50%",
+                transform: "rotateX(70deg)",
+              }}
+            />
+            {/* Surface highlight */}
+            <div
+              className="absolute inset-0 rounded-full"
               style={{
                 background:
-                  "radial-gradient(circle, transparent 40%, rgba(251,191,36,0.25) 60%, transparent 75%)",
-                animation: "sun-spin-slow 20s linear infinite",
+                  "radial-gradient(circle at 30% 25%, rgba(255,255,255,0.18) 0%, transparent 55%)",
               }}
             />
           </div>
+
+          {/* Twinkling stars */}
+          {[
+            { top: "20%", right: "18%", size: 6, delay: "0s" },
+            { top: "55%", right: "6%", size: 4, delay: "0.8s" },
+            { top: "10%", right: "30%", size: 5, delay: "1.4s" },
+          ].map((s, i) => (
+            <div
+              key={i}
+              className="star-twinkle absolute rounded-full pointer-events-none"
+              style={{
+                top: s.top,
+                right: s.right,
+                width: s.size,
+                height: s.size,
+                background: "#e0e7ff",
+                animationDelay: s.delay,
+                zIndex: 1,
+              }}
+            />
+          ))}
 
           <div
             className="relative max-w-6xl mx-auto px-6 sm:px-12 lg:px-16 py-14 lg:py-20 flex flex-col lg:flex-row items-center gap-10 lg:gap-16"
@@ -373,7 +441,6 @@ export default function FieldDayFridayPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              {/* Badge */}
               {/* Headline */}
               <motion.h1
                 className="font-heading font-bold leading-[1.05] mb-3"
@@ -385,42 +452,42 @@ export default function FieldDayFridayPage() {
                   className="block italic"
                   style={{
                     fontSize: "clamp(3rem, 8vw, 5.5rem)",
-                    color: "#0369a1",
-                    textShadow: "0 2px 12px rgba(3,105,161,0.15)",
+                    color: "#818cf8",
+                    textShadow: "0 2px 16px rgba(129,140,248,0.35)",
                   }}
                 >
-                  Beach Bash
+                  Science & Space
                 </span>
                 <span
                   className="block"
                   style={{
                     fontSize: "clamp(2.4rem, 6vw, 4.5rem)",
-                    color: "#f29a8f",
+                    color: "#c084fc",
                   }}
                 >
-                  Day 🌊
+                  Lab Day 🚀
                 </span>
               </motion.h1>
 
               <motion.p
-                className="text-base sm:text-lg text-slate-600 font-body leading-relaxed mb-7 max-w-md mx-auto lg:mx-0"
+                className="text-base sm:text-lg text-slate-300 font-body leading-relaxed mb-7 max-w-md mx-auto lg:mx-0"
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25, duration: 0.5 }}
               >
-                One unforgettable Friday at Sage Field. Ocean slime, field day
-                games, shell painting, and an ice cream bar to top it all off!
+                One unforgettable Friday at Sage Field. Build a volcano, engineer
+                a rocket ship craft, and mix galaxy slime to take home!
               </motion.p>
 
               {/* Quick-detail pills */}
               <motion.div
-                className="flex flex-wrap gap-2 justify-center lg:justify-start mb-8"
+                className="flex flex-wrap gap-2 justify-center lg:justify-start mb-5"
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.45 }}
               >
                 {[
-                  { icon: "📅", text: "Jun 13, 2026" },
+                  { icon: "📅", text: "Jun 19, 2026" },
                   { icon: "🕗", text: "Drop-off 8:30 AM" },
                   { icon: "🕒", text: "Pick-up 1:30 PM" },
                   { icon: "👧", text: "Ages 4–11" },
@@ -428,11 +495,40 @@ export default function FieldDayFridayPage() {
                 ].map((pill) => (
                   <span
                     key={pill.text}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/70 backdrop-blur-sm border border-white/60 rounded-full text-xs font-semibold text-slate-700 font-body shadow-sm"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-xs font-semibold text-white/90 font-body shadow-sm"
                   >
                     {pill.icon} {pill.text}
                   </span>
                 ))}
+              </motion.div>
+
+              {/* Countdown timer */}
+              <motion.div
+                className="flex gap-2 justify-center lg:justify-start mb-8 items-center"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35, duration: 0.45 }}
+              >
+                {[
+                  { val: countdown.days, label: "days" },
+                  { val: countdown.hours, label: "hrs" },
+                  { val: countdown.mins, label: "min" },
+                ].map(({ val, label }) => (
+                  <div
+                    key={label}
+                    className="flex flex-col items-center px-3 py-2 bg-white/10 backdrop-blur-sm border border-white/15 rounded-xl min-w-[48px]"
+                  >
+                    <span className="text-xl font-bold text-white font-heading tabular-nums">
+                      {String(val).padStart(2, "0")}
+                    </span>
+                    <span className="text-[10px] text-violet-300 font-body uppercase tracking-wide">
+                      {label}
+                    </span>
+                  </div>
+                ))}
+                <span className="text-xs text-violet-300 font-body pl-1">
+                  until launch 🚀
+                </span>
               </motion.div>
 
               {/* CTAs */}
@@ -440,17 +536,21 @@ export default function FieldDayFridayPage() {
                 className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start"
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.38, duration: 0.45 }}
+                transition={{ delay: 0.42, duration: 0.45 }}
               >
                 <button
                   onClick={scrollToForm}
-                  className="px-7 py-4 bg-primary text-white font-bold rounded-2xl hover:bg-primary-hover transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 font-body cursor-pointer text-sm"
+                  className="px-7 py-4 text-white font-bold rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 font-body cursor-pointer text-sm"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #6d28d9 0%, #4f46e5 100%)",
+                  }}
                 >
-                  ☀️ Reserve Your Spot →
+                  🚀 Reserve Your Spot →
                 </button>
                 <a
                   href="#what-we-do"
-                  className="px-7 py-4 bg-white/70 backdrop-blur-sm border-2 border-white text-sky-700 font-bold rounded-2xl hover:bg-white transition-all duration-200 font-body text-sm text-center"
+                  className="px-7 py-4 bg-white/10 backdrop-blur-sm border-2 border-white/20 text-white font-bold rounded-2xl hover:bg-white/20 transition-all duration-200 font-body text-sm text-center"
                 >
                   See the Activities ↓
                 </a>
@@ -522,7 +622,7 @@ export default function FieldDayFridayPage() {
                   </div>
                   {/* Polaroid caption */}
                   <p className="text-center text-[10px] font-body text-gray-400 mt-1 tracking-wide uppercase">
-                    Beach Bash Day ✦ Jun 13
+                    Science & Space Lab ✦ Jun 19
                   </p>
                 </div>
               </div>
@@ -571,52 +671,61 @@ export default function FieldDayFridayPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
-              <span className="inline-block px-5 py-2 bg-sky-100 text-sky-700 text-sm font-bold rounded-full mb-5 font-body">
-                🌊 This Friday&apos;s Theme
+              <span className="inline-block px-5 py-2 bg-violet-100 text-indigo-700 text-sm font-bold rounded-full mb-5 font-body">
+                🚀 This Friday&apos;s Theme
               </span>
               <h2
                 className="font-heading font-bold text-slate-800 mb-3 leading-tight"
                 style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)" }}
               >
-                Four Hours of Beach Day Fun
+                Four Hours of Science & Space Fun
               </h2>
               <p className="text-base text-slate-500 font-body max-w-xl mx-auto">
-                Ocean Slime · Field Day Games · Shell Painting · Ice Cream Bar
+                Volcano Model · Rocket Ship Craft · Galaxy Slime
               </p>
             </motion.div>
 
-            {/* Activity cards — 2×2 mosaic */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-12">
-              {BEACH_BASH_ACTIVITIES.map((activity, i) => (
+            {/* Activity cards — flip on hover */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-12">
+              {SPACE_LAB_ACTIVITIES.map((activity, i) => (
                 <motion.div
                   key={activity.title}
-                  className="relative bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-default border border-gray-100"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  className="flip-card relative"
+                  style={{ perspective: "800px", minHeight: "180px" }}
+                  initial={{ opacity: 0, y: 20, x: i % 2 === 0 ? -20 : 20 }}
+                  whileInView={{ opacity: 1, y: 0, x: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: 0.08 * i }}
+                  transition={{ duration: 0.45, delay: 0.1 * i }}
                 >
-                  {/* Color top strip */}
-                  <div
-                    className="h-2 w-full"
-                    style={{ background: activity.accentText }}
-                  />
-                  <div className="p-6 flex items-start gap-4">
-                    {/* Large emoji in accent circle */}
+                  <div className="flip-card-inner relative w-full h-full" style={{ minHeight: "180px" }}>
+                    {/* Front face */}
                     <div
-                      className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 text-3xl"
-                      style={{ background: activity.accent }}
+                      className="flip-face absolute inset-0 bg-white rounded-3xl overflow-hidden shadow-md border border-gray-100 flex flex-col"
                     >
-                      {activity.emoji}
+                      <div className="h-2 w-full" style={{ background: activity.accentText }} />
+                      <div className="flex-1 flex flex-col items-center justify-center p-6 gap-3 text-center">
+                        <div
+                          className="w-16 h-16 rounded-2xl flex items-center justify-center text-4xl shadow-sm"
+                          style={{ background: activity.accent }}
+                        >
+                          {activity.emoji}
+                        </div>
+                        <h3 className="font-heading font-bold text-slate-800 text-base leading-tight">
+                          {activity.title}
+                        </h3>
+                        <p className="text-[11px] text-slate-400 font-body">hover to learn more ✦</p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3
-                        className="font-heading font-bold text-slate-800 mb-1 leading-tight"
-                        style={{ fontSize: "1rem" }}
-                      >
+                    {/* Back face */}
+                    <div
+                      className="flip-back absolute inset-0 rounded-3xl flex flex-col items-center justify-center p-6 text-center gap-3"
+                      style={{ background: activity.accentText }}
+                    >
+                      <span className="text-4xl">{activity.emoji}</span>
+                      <h3 className="font-heading font-bold text-white text-base leading-tight">
                         {activity.title}
                       </h3>
-                      <p className="text-sm text-slate-500 font-body leading-relaxed">
+                      <p className="text-sm text-white/85 font-body leading-relaxed">
                         {activity.desc}
                       </p>
                     </div>
@@ -629,7 +738,7 @@ export default function FieldDayFridayPage() {
             <motion.div
               className="rounded-3xl p-6 flex flex-wrap gap-4 justify-center"
               style={{
-                background: "linear-gradient(135deg, #e0f2fe 0%, #fef9c3 100%)",
+                background: "linear-gradient(135deg, #ede9fe 0%, #dbeafe 100%)",
               }}
               initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -669,17 +778,17 @@ export default function FieldDayFridayPage() {
             >
               <path
                 d="M0,20 C360,40 1080,0 1440,20 L1440,40 L0,40 Z"
-                fill="#f0f9ff"
+                fill="#1e1b4b"
               />
             </svg>
           </div>
         </div>
 
         {/* ─── WEEK RECAP ───────────────────────────────────────────────────── */}
-        <WeekRecapPreview className="bg-sky-50" />
+        <WeekRecapPreview className="bg-indigo-950" variant="dark" />
 
         {/* Wave out of recap */}
-        <div style={{ background: "#f0f9ff" }}>
+        <div style={{ background: "#1e1b4b" }}>
           <svg
             viewBox="0 0 1440 40"
             xmlns="http://www.w3.org/2000/svg"
@@ -689,7 +798,7 @@ export default function FieldDayFridayPage() {
           >
             <path
               d="M0,20 C360,0 1080,40 1440,20 L1440,40 L0,40 Z"
-              fill="#fefce8"
+              fill="#0f0a2e"
             />
           </svg>
         </div>
@@ -700,7 +809,7 @@ export default function FieldDayFridayPage() {
           className="py-20 px-6 sm:px-12 lg:px-16"
           style={{
             background:
-              "linear-gradient(180deg, #fefce8 0%, #fef9c3 40%, #e0f2fe 100%)",
+              "linear-gradient(180deg, #0f0a2e 0%, #1a1040 40%, #0d1b3e 100%)",
           }}
         >
           <div ref={formRef} className="max-w-xl mx-auto">
@@ -712,23 +821,23 @@ export default function FieldDayFridayPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
-              <div className="text-5xl mb-3">🌊</div>
+              <div className="text-5xl mb-3">🚀</div>
               <h2
-                className="font-heading font-bold text-slate-800 mb-2"
+                className="font-heading font-bold text-white mb-2"
                 style={{ fontSize: "clamp(1.7rem, 4vw, 2.4rem)" }}
               >
                 Reserve Your Spot
               </h2>
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-sky-100 rounded-full mb-3">
-                <span className="text-sky-700 font-bold font-body text-sm">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-violet-100 rounded-full mb-3">
+                <span className="text-indigo-700 font-bold font-body text-sm">
                   $60 per child
                 </span>
-                <span className="text-sky-400">·</span>
-                <span className="text-sky-600 font-body text-sm">
+                <span className="text-violet-400">·</span>
+                <span className="text-indigo-600 font-body text-sm">
                   No enrollment required
                 </span>
-                <span className="text-sky-400">·</span>
-                <span className="text-sky-600 font-body text-sm">
+                <span className="text-violet-400">·</span>
+                <span className="text-indigo-600 font-body text-sm">
                   Limited spots
                 </span>
               </div>
@@ -739,8 +848,8 @@ export default function FieldDayFridayPage() {
                   key="form"
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-sky-100"
-                  style={{ borderTop: "4px solid #38bdf8" }}
+                  className="bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-violet-100"
+                  style={{ borderTop: "4px solid #818cf8" }}
                 >
                   <SectionLabel>Your Info</SectionLabel>
                   <div className="space-y-4">
@@ -788,7 +897,7 @@ export default function FieldDayFridayPage() {
 
                   <SectionLabel>
                     Your Child{children.length > 1 ? "ren" : ""}{" "}
-                    <span className="text-sky-400 normal-case font-normal text-[10px] ml-1">
+                    <span className="text-violet-400 normal-case font-normal text-[10px] ml-1">
                       $60 per child
                     </span>
                   </SectionLabel>
@@ -797,10 +906,10 @@ export default function FieldDayFridayPage() {
                     {children.map((child, i) => (
                       <div
                         key={i}
-                        className="rounded-2xl border border-sky-100 bg-sky-50/30 p-4 space-y-3"
+                        className="rounded-2xl border border-violet-100 bg-violet-50/30 p-4 space-y-3"
                       >
                         <div className="flex items-center justify-between mb-1">
-                          <p className="text-xs font-bold text-sky-500 font-body uppercase tracking-wide">
+                          <p className="text-xs font-bold text-violet-500 font-body uppercase tracking-wide">
                             Child {i + 1}
                           </p>
                           {children.length > 1 && (
@@ -848,14 +957,14 @@ export default function FieldDayFridayPage() {
                     <button
                       type="button"
                       onClick={addChild}
-                      className="w-full py-2.5 border-2 border-dashed border-sky-200 rounded-xl text-sm font-semibold text-sky-500 hover:border-sky-400 hover:bg-sky-50 transition-all duration-200 font-body cursor-pointer"
+                      className="w-full py-2.5 border-2 border-dashed border-violet-200 rounded-xl text-sm font-semibold text-violet-500 hover:border-violet-400 hover:bg-violet-50 transition-all duration-200 font-body cursor-pointer"
                     >
                       + Add Another Child
                     </button>
 
                     {children.length > 1 && (
-                      <div className="flex items-center justify-center gap-2 py-2 px-4 bg-sky-100 rounded-xl">
-                        <span className="text-sm font-bold text-sky-700 font-body">
+                      <div className="flex items-center justify-center gap-2 py-2 px-4 bg-violet-100 rounded-xl">
+                        <span className="text-sm font-bold text-indigo-700 font-body">
                           {children.length} children · ${totalBase} total
                         </span>
                       </div>
@@ -956,8 +1065,8 @@ export default function FieldDayFridayPage() {
                         <div
                           className={`w-5 h-5 flex-shrink-0 rounded-md border-2 mt-0.5 flex items-center justify-center transition-all ${
                             checked
-                              ? "bg-sky-500 border-sky-500"
-                              : "border-sky-200 bg-white"
+                              ? "bg-violet-500 border-violet-500"
+                              : "border-violet-200 bg-white"
                           }`}
                         >
                           {checked && (
@@ -992,8 +1101,8 @@ export default function FieldDayFridayPage() {
                         onClick={() => setPaymentMethod("card")}
                         className={`flex-1 px-3 py-2.5 rounded-xl text-sm font-semibold font-body border-2 transition-colors cursor-pointer ${
                           paymentMethod === "card"
-                            ? "border-sky-400 bg-sky-50 text-sky-700"
-                            : "border-sky-100 text-slate-600 hover:bg-sky-50"
+                            ? "border-violet-400 bg-violet-50 text-indigo-700"
+                            : "border-violet-100 text-slate-600 hover:bg-violet-50"
                         }`}
                       >
                         Credit / Debit Card
@@ -1003,8 +1112,8 @@ export default function FieldDayFridayPage() {
                         onClick={() => setPaymentMethod("ach")}
                         className={`flex-1 px-3 py-2.5 rounded-xl text-sm font-semibold font-body border-2 transition-colors cursor-pointer ${
                           paymentMethod === "ach"
-                            ? "border-sky-400 bg-sky-50 text-sky-700"
-                            : "border-sky-100 text-slate-600 hover:bg-sky-50"
+                            ? "border-violet-400 bg-violet-50 text-indigo-700"
+                            : "border-violet-100 text-slate-600 hover:bg-violet-50"
                         }`}
                       >
                         ACH / US bank account
@@ -1019,8 +1128,8 @@ export default function FieldDayFridayPage() {
                       <div
                         className={`w-5 h-5 flex-shrink-0 rounded-md border-2 mt-0.5 flex items-center justify-center transition-all ${
                           coverFees
-                            ? "bg-sky-500 border-sky-500"
-                            : "border-sky-200 bg-white"
+                            ? "bg-violet-500 border-violet-500"
+                            : "border-violet-200 bg-white"
                         }`}
                         onClick={() => setCoverFees((v) => !v)}
                       >
@@ -1052,7 +1161,7 @@ export default function FieldDayFridayPage() {
                       className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-colors ${
                         agreementSigned
                           ? "border-emerald-200 bg-emerald-50"
-                          : "border-dashed border-sky-200 bg-sky-50/50"
+                          : "border-dashed border-violet-200 bg-violet-50/50"
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -1076,7 +1185,7 @@ export default function FieldDayFridayPage() {
                         type="button"
                         onClick={() => setAgreementOpen(true)}
                         disabled={!isFormValid}
-                        className="text-xs font-semibold text-sky-600 font-body hover:underline cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 ml-2"
+                        className="text-xs font-semibold text-violet-600 font-body hover:underline cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 ml-2"
                       >
                         {agreementSigned ? "View" : "Review & Sign →"}
                       </button>
@@ -1098,12 +1207,12 @@ export default function FieldDayFridayPage() {
                       className="w-full px-6 py-4 text-white font-bold rounded-2xl transition-all duration-200 font-body cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-y-0"
                       style={{
                         background:
-                          "linear-gradient(135deg, #f29a8f 0%, #e88d82 100%)",
+                          "linear-gradient(135deg, #6d28d9 0%, #4f46e5 100%)",
                       }}
                     >
                       {submitting
                         ? "Submitting…"
-                        : `☀️ Pay $${(60 + processingFee).toFixed(2)} & Reserve My Spot →`}
+                        : `🚀 Pay $${(60 + processingFee).toFixed(2)} & Reserve My Spot →`}
                     </button>
                   </motion.div>
                 </motion.div>
@@ -1114,7 +1223,7 @@ export default function FieldDayFridayPage() {
         {/* Wave before packing list */}
         <div
           style={{
-            background: "linear-gradient(180deg, #fefce8 0%, #e0f2fe 100%)",
+            background: "linear-gradient(180deg, #0f0a2e 0%, #0d1b3e 100%)",
           }}
         >
           <svg
@@ -1126,7 +1235,7 @@ export default function FieldDayFridayPage() {
           >
             <path
               d="M0,20 C480,40 960,0 1440,20 L1440,40 L0,40 Z"
-              fill="#fef3c7"
+              fill="#0f172a"
             />
           </svg>
         </div>
@@ -1134,7 +1243,7 @@ export default function FieldDayFridayPage() {
         {/* ─── PACKING LIST ─────────────────────────────────────────────────── */}
         <section
           className="py-16 px-6 sm:px-12 lg:px-16"
-          style={{ background: "#fef3c7" }}
+          style={{ background: "#0f172a" }}
         >
           <div className="max-w-3xl mx-auto">
             <motion.div
@@ -1144,49 +1253,84 @@ export default function FieldDayFridayPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
-              <div className="text-4xl mb-3">🎒</div>
+              <div className="text-4xl mb-3">🧪</div>
               <h2
-                className="font-heading font-bold text-slate-800"
+                className="font-heading font-bold text-white"
                 style={{ fontSize: "clamp(1.6rem, 3.5vw, 2.2rem)" }}
               >
-                Pack Your Beach Bag
+                Pack Your Science Bag
               </h2>
-              <p className="text-sm text-slate-500 font-body mt-1">
-                Don&apos;t forget anything for Beach Bash Day
+              <p className="text-sm text-slate-400 font-body mt-1">
+                Tap each item to check it off — don&apos;t forget anything for Science & Space Lab Day
               </p>
             </motion.div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {PACKING_LIST.map((item, i) => (
-                <motion.div
-                  key={item.item}
-                  className="flex items-center gap-4 bg-white rounded-2xl px-5 py-4 shadow-sm border border-amber-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-                  initial={{ opacity: 0, x: -12 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.35, delay: i * 0.07 }}
-                >
-                  {/* Left color accent bar */}
-                  <div
-                    className="w-1 h-8 rounded-full flex-shrink-0"
-                    style={{ background: i % 2 === 0 ? "#38bdf8" : "#f29a8f" }}
-                  />
-                  <span className="text-2xl flex-shrink-0">{item.emoji}</span>
-                  <span className="text-sm font-body text-slate-700 font-semibold">
-                    {item.item}
-                  </span>
-                </motion.div>
-              ))}
+              {PACKING_LIST.map((item, i) => {
+                const isChecked = packingChecked.has(i);
+                return (
+                  <motion.div
+                    key={item.item}
+                    layout
+                    onClick={() => togglePacking(i)}
+                    className={`flex items-center gap-4 rounded-2xl px-5 py-4 shadow-sm border transition-all duration-200 cursor-pointer select-none ${
+                      isChecked
+                        ? "bg-violet-50 border-violet-300 opacity-70"
+                        : "bg-white border-violet-100 hover:shadow-md hover:-translate-y-0.5"
+                    }`}
+                    initial={{ opacity: 0, x: -12 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.35, delay: i * 0.07 }}
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    {/* Left color accent bar */}
+                    <div
+                      className="w-1 h-8 rounded-full flex-shrink-0 transition-all duration-300"
+                      style={{
+                        background: isChecked
+                          ? "#a855f7"
+                          : i % 2 === 0
+                          ? "#6366f1"
+                          : "#a855f7",
+                      }}
+                    />
+                    <span className="text-2xl flex-shrink-0 transition-all duration-200">
+                      {isChecked ? "✅" : item.emoji}
+                    </span>
+                    <span
+                      className={`text-sm font-body text-slate-700 font-semibold transition-all duration-200 ${
+                        isChecked ? "line-through text-slate-400" : ""
+                      }`}
+                    >
+                      {item.item}
+                    </span>
+                  </motion.div>
+                );
+              })}
             </div>
 
-            <p className="text-sm text-slate-400 font-body text-center mt-8">
+            <AnimatePresence>
+              {packingChecked.size === PACKING_LIST.length && (
+                <motion.p
+                  className="text-center text-violet-300 text-sm font-body mt-5 font-semibold"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                >
+                  🚀 All packed! Ready for launch.
+                </motion.p>
+              )}
+            </AnimatePresence>
+
+            <p className="text-sm text-slate-500 font-body text-center mt-6">
               Questions? Text or call us: (512) 677-5872
             </p>
           </div>
         </section>
 
         {/* Wave before bottom CTA */}
-        <div style={{ background: "#fef3c7" }}>
+        <div style={{ background: "#0f172a" }}>
           <svg
             viewBox="0 0 1440 40"
             xmlns="http://www.w3.org/2000/svg"
@@ -1196,7 +1340,7 @@ export default function FieldDayFridayPage() {
           >
             <path
               d="M0,20 C360,0 1080,40 1440,20 L1440,40 L0,40 Z"
-              fill="#0369a1"
+              fill="#1a0a3e"
             />
           </svg>
         </div>
@@ -1206,17 +1350,29 @@ export default function FieldDayFridayPage() {
           className="py-24 px-6 sm:px-12 lg:px-16 relative overflow-hidden"
           style={{
             background:
-              "linear-gradient(160deg, #0369a1 0%, #0284c7 50%, #0ea5e9 100%)",
+              "linear-gradient(160deg, #1a0a3e 0%, #2d1b69 50%, #4c1d95 100%)",
           }}
         >
-          {/* Decorative wave shapes */}
+          {/* Decorative meteor streaks */}
           <div
-            className="tide-wave absolute bottom-0 left-0 right-0 h-16 opacity-20 pointer-events-none"
+            className="shooting-star-1 absolute top-8 right-[15%] rounded-full pointer-events-none opacity-60"
             style={{
-              background:
-                "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 64'%3E%3Cpath fill='white' d='M0,32 C360,64 1080,0 1440,32 L1440,64 L0,64 Z'/%3E%3C/svg%3E\") repeat-x bottom",
+              height: "2px",
+              width: "2px",
+              background: "linear-gradient(90deg, transparent 0%, #c4b5fd 100%)",
+              transform: "rotate(35deg)",
             }}
           />
+          <div
+            className="shooting-star-2 absolute top-16 right-[25%] rounded-full pointer-events-none opacity-40"
+            style={{
+              height: "1px",
+              width: "2px",
+              background: "linear-gradient(90deg, transparent 0%, #a78bfa 100%)",
+              transform: "rotate(35deg)",
+            }}
+          />
+
           <div className="max-w-2xl mx-auto text-center relative z-10">
             <motion.div
               initial={{ opacity: 0, y: 24 }}
@@ -1224,26 +1380,26 @@ export default function FieldDayFridayPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.55 }}
             >
-              <div className="wave-bob text-5xl mb-6 inline-block">🌊</div>
+              <div className="rocket-float text-5xl mb-6 inline-block">🚀</div>
               <div className="inline-block px-4 py-1.5 bg-white/20 rounded-full mb-6">
                 <span className="text-white/90 text-xs font-semibold font-body uppercase tracking-wider">
-                  This Friday Only · Jun 13
+                  This Friday Only · Jun 19
                 </span>
               </div>
               <h2
                 className="font-heading font-bold text-white mb-4 leading-tight"
                 style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)" }}
               >
-                Don&apos;t miss Beach Bash Day.
+                Don&apos;t miss Science & Space Lab Day.
               </h2>
               <p className="text-white/80 font-body text-base mb-8 leading-relaxed max-w-md mx-auto">
-                June 13 is one day. Spots are limited. Reserve your child&apos;s
-                spot now and join us for a day of ocean-themed fun at Sage
-                Field.
+                June 19 is one day. Spots are limited. Reserve your child&apos;s
+                spot now and join us for a day of science, engineering, and
+                space exploration at Sage Field.
               </p>
               <button
                 onClick={scrollToForm}
-                className="px-10 py-4 bg-white text-sky-700 font-bold rounded-2xl hover:bg-sky-50 transition-all duration-200 shadow-xl hover:shadow-2xl hover:-translate-y-1 font-body text-base cursor-pointer"
+                className="px-10 py-4 bg-white text-indigo-700 font-bold rounded-2xl hover:bg-violet-50 transition-all duration-200 shadow-xl hover:shadow-2xl hover:-translate-y-1 font-body text-base cursor-pointer"
               >
                 Reserve Spot · $60 →
               </button>
@@ -1266,12 +1422,12 @@ export default function FieldDayFridayPage() {
           <div
             className="rounded-2xl shadow-xl flex items-center justify-between px-5 py-3 gap-3"
             style={{
-              background: "linear-gradient(135deg, #0284c7 0%, #f29a8f 100%)",
+              background: "linear-gradient(135deg, #4c1d95 0%, #6d28d9 100%)",
             }}
           >
             <div>
               <p className="text-white font-heading font-bold text-sm leading-tight">
-                🌊 Beach Bash Day · Jun 13
+                🚀 Science & Space Lab Day · Jun 19
               </p>
               <p className="text-white/80 font-body text-xs">
                 $60 drop-in — limited spots
@@ -1279,7 +1435,7 @@ export default function FieldDayFridayPage() {
             </div>
             <button
               onClick={scrollToForm}
-              className="flex-shrink-0 bg-white text-sky-700 font-bold text-sm font-body px-4 py-2 rounded-xl hover:bg-sky-50 transition-colors duration-200 cursor-pointer"
+              className="flex-shrink-0 bg-white text-indigo-700 font-bold text-sm font-body px-4 py-2 rounded-xl hover:bg-violet-50 transition-colors duration-200 cursor-pointer"
             >
               Reserve →
             </button>
@@ -1336,7 +1492,7 @@ export default function FieldDayFridayPage() {
                         Sage Field Private Microschool
                       </p>
                       <p className="text-xs text-gray-500 font-body">
-                        Location: Round Rock, Texas · Field Day Friday: June 13,
+                        Location: Round Rock, Texas · Field Day Friday: June 19,
                         2026
                       </p>
                     </div>
