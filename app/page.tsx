@@ -197,6 +197,32 @@ export default function Home() {
           0%, 100% { transform: translateY(0px); }
           50%       { transform: translateY(-8px); }
         }
+        @keyframes fdf-shimmer-text {
+          0%   { background-position: -200% center; }
+          100% { background-position: 200% center; }
+        }
+        @keyframes fdf-glow-pulse {
+          0%, 100% { text-shadow: 0 2px 16px rgba(129,140,248,0.35), 0 0 0px rgba(196,181,253,0); }
+          50%       { text-shadow: 0 2px 32px rgba(129,140,248,0.7), 0 0 40px rgba(196,181,253,0.3); }
+        }
+        @keyframes fdf-letter-drop {
+          0%   { opacity: 0; transform: translateY(-24px) scale(0.85); filter: blur(4px); }
+          60%  { opacity: 1; transform: translateY(4px) scale(1.04); filter: blur(0); }
+          100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+        }
+        .fdf-shimmer-text {
+          background: linear-gradient(90deg, #818cf8 0%, #c084fc 25%, #e0e7ff 50%, #c084fc 75%, #818cf8 100%);
+          background-size: 200% auto;
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          animation: fdf-shimmer-text 4s linear infinite, fdf-glow-pulse 3s ease-in-out infinite;
+        }
+        .fdf-letter-drop span {
+          display: inline-block;
+          opacity: 0;
+          animation: fdf-letter-drop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
+        }
         .fdf-star-twinkle    { animation: fdf-star-twinkle 2.2s ease-in-out infinite; }
         .fdf-shooting-star-a { animation: fdf-shooting-star 7s ease-in infinite; }
         .fdf-shooting-star-b { animation: fdf-shooting-star 7s ease-in 3.5s infinite; }
@@ -265,9 +291,17 @@ export default function Home() {
                 className="font-heading font-bold leading-tight mb-3"
                 style={{ fontSize: "clamp(1.9rem, 4vw, 3rem)" }}
               >
-                <span style={{ color: "#818cf8" }}>Science & Space</span>
-                <br />
-                <span style={{ color: "#c084fc" }}>Lab Day</span>
+                <span className="block italic fdf-shimmer-text">Science &amp; Space</span>
+                <span className="fdf-letter-drop block">
+                  {Array.from("Lab Day").map((ch, i) => (
+                    <span
+                      key={i}
+                      style={{ animationDelay: `${0.3 + i * 0.06}s`, color: "#c084fc" }}
+                    >
+                      {ch === " " ? " " : ch}
+                    </span>
+                  ))}
+                </span>
               </h2>
               <p className="text-slate-300 font-body text-base leading-relaxed mb-6 max-w-md">
                 One Friday of volcanoes, rockets, and galaxy slime. Drop off, we handle the magic, you pick up an excited kid with a take-home creation.
