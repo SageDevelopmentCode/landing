@@ -630,7 +630,7 @@ export default function FieldDayFridayPage() {
           </div>
 
           {/* Wave divider at bottom of hero → white */}
-          <WaveDivider fill="white" fromColor="transparent" />
+          <WaveDivider fill="white" fromColor="#0d1b3e" />
         </section>
 
         {/* ─── PHOTO STRIP ──────────────────────────────────────────────────── */}
@@ -764,37 +764,32 @@ export default function FieldDayFridayPage() {
         </section>
 
         {/* Wave into recap */}
-        <div style={{ background: "white" }}>
-          <div
-            className="overflow-hidden leading-none"
-            style={{ background: "white" }}
-          >
-            <svg
-              viewBox="0 0 1440 40"
-              xmlns="http://www.w3.org/2000/svg"
-              preserveAspectRatio="none"
-              className="w-full block"
-              style={{ height: "40px" }}
-            >
-              <path
-                d="M0,20 C360,40 1080,0 1440,20 L1440,40 L0,40 Z"
-                fill="#1e1b4b"
-              />
-            </svg>
-          </div>
-        </div>
-
-        {/* ─── WEEK RECAP ───────────────────────────────────────────────────── */}
-        <WeekRecapPreview className="bg-indigo-950" variant="dark" />
-
-        {/* Wave out of recap */}
-        <div style={{ background: "#1e1b4b" }}>
+        <div style={{ background: "white", marginBottom: "-1px" }}>
           <svg
             viewBox="0 0 1440 40"
             xmlns="http://www.w3.org/2000/svg"
             preserveAspectRatio="none"
             className="w-full block"
-            style={{ height: "40px" }}
+            style={{ height: "40px", display: "block" }}
+          >
+            <path
+              d="M0,20 C360,40 1080,0 1440,20 L1440,40 L0,40 Z"
+              fill="#030712"
+            />
+          </svg>
+        </div>
+
+        {/* ─── WEEK RECAP ───────────────────────────────────────────────────── */}
+        <WeekRecapPreview className="bg-[#030712]" variant="dark" />
+
+        {/* Wave out of recap */}
+        <div style={{ background: "#030712", marginTop: "-1px", marginBottom: "-1px" }}>
+          <svg
+            viewBox="0 0 1440 40"
+            xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="none"
+            className="w-full block"
+            style={{ height: "40px", display: "block" }}
           >
             <path
               d="M0,20 C360,0 1080,40 1440,20 L1440,40 L0,40 Z"
@@ -1221,17 +1216,13 @@ export default function FieldDayFridayPage() {
         </section>
 
         {/* Wave before packing list */}
-        <div
-          style={{
-            background: "linear-gradient(180deg, #0f0a2e 0%, #0d1b3e 100%)",
-          }}
-        >
+        <div style={{ background: "#0d1b3e", marginBottom: "-1px" }}>
           <svg
             viewBox="0 0 1440 40"
             xmlns="http://www.w3.org/2000/svg"
             preserveAspectRatio="none"
             className="w-full block"
-            style={{ height: "40px" }}
+            style={{ height: "40px", display: "block" }}
           >
             <path
               d="M0,20 C480,40 960,0 1440,20 L1440,40 L0,40 Z"
@@ -1330,13 +1321,13 @@ export default function FieldDayFridayPage() {
         </section>
 
         {/* Wave before bottom CTA */}
-        <div style={{ background: "#0f172a" }}>
+        <div style={{ background: "#0f172a", marginBottom: "-1px" }}>
           <svg
             viewBox="0 0 1440 40"
             xmlns="http://www.w3.org/2000/svg"
             preserveAspectRatio="none"
             className="w-full block"
-            style={{ height: "40px" }}
+            style={{ height: "40px", display: "block" }}
           >
             <path
               d="M0,20 C360,0 1080,40 1440,20 L1440,40 L0,40 Z"

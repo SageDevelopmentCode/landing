@@ -182,6 +182,178 @@ export default function Home() {
       <Hero />
       <WelcomeSection />
 
+      {/* ── Field Day Friday Preview ── */}
+      <style>{`
+        @keyframes fdf-star-twinkle {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50%       { opacity: 0.25; transform: scale(0.55); }
+        }
+        @keyframes fdf-shooting-star {
+          0%   { transform: translateX(0) translateY(0); opacity: 1; width: 2px; }
+          70%  { opacity: 0.7; width: 70px; }
+          100% { transform: translateX(-260px) translateY(180px); opacity: 0; width: 2px; }
+        }
+        @keyframes fdf-rocket-float {
+          0%, 100% { transform: translateY(0px); }
+          50%       { transform: translateY(-8px); }
+        }
+        .fdf-star-twinkle    { animation: fdf-star-twinkle 2.2s ease-in-out infinite; }
+        .fdf-shooting-star-a { animation: fdf-shooting-star 7s ease-in infinite; }
+        .fdf-shooting-star-b { animation: fdf-shooting-star 7s ease-in 3.5s infinite; }
+        .fdf-rocket-float    { animation: fdf-rocket-float 3s ease-in-out infinite; }
+      `}</style>
+
+      {/* Top wave: cream → dark */}
+      <div style={{ background: "#FFF9F5", marginBottom: "-1px" }}>
+        <svg viewBox="0 0 1440 56" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full block" style={{ height: "56px" }}>
+          <path d="M0,28 C240,56 480,0 720,28 C960,56 1200,0 1440,28 L1440,56 L0,56 Z" fill="#0f0a2e" />
+        </svg>
+      </div>
+
+      <section
+        className="relative overflow-hidden py-16 px-8 sm:px-12 lg:px-16"
+        style={{ background: "linear-gradient(180deg, #0f0a2e 0%, #1a1040 40%, #0d1b3e 100%)" }}
+      >
+        {/* Shooting stars */}
+        <div
+          className="fdf-shooting-star-a absolute top-[12%] right-[8%] h-0.5 rounded-full pointer-events-none opacity-60"
+          style={{ background: "linear-gradient(90deg, transparent, white)", width: "2px", zIndex: 0 }}
+        />
+        <div
+          className="fdf-shooting-star-b absolute top-[6%] right-[30%] h-0.5 rounded-full pointer-events-none opacity-40"
+          style={{ background: "linear-gradient(90deg, transparent, #c4b5fd)", width: "2px", zIndex: 0 }}
+        />
+
+        {/* Twinkling stars */}
+        {[
+          { top: "18%", right: "15%", size: 5, delay: "0s" },
+          { top: "60%", right: "5%",  size: 3, delay: "0.9s" },
+          { top: "8%",  right: "42%", size: 4, delay: "1.6s" },
+          { top: "40%", right: "22%", size: 3, delay: "0.4s" },
+        ].map((s, i) => (
+          <div
+            key={i}
+            className="fdf-star-twinkle absolute rounded-full pointer-events-none"
+            style={{ top: s.top, right: s.right, width: s.size, height: s.size, background: "#e0e7ff", animationDelay: s.delay, zIndex: 1 }}
+          />
+        ))}
+
+        <div className="relative max-w-5xl mx-auto" style={{ zIndex: 2 }}>
+          {/* Urgency badge */}
+          <motion.div
+            className="text-center mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <span className="inline-flex items-center gap-2 px-5 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-xs font-semibold text-violet-200 font-body uppercase tracking-wide">
+              🚀 This Friday · Jun 19 · Limited Spots
+            </span>
+          </motion.div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+            {/* Left — headline + CTA */}
+            <motion.div
+              initial={{ opacity: 0, x: -24 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55 }}
+            >
+              <div className="fdf-rocket-float text-4xl mb-4 inline-block">🚀</div>
+              <h2
+                className="font-heading font-bold leading-tight mb-3"
+                style={{ fontSize: "clamp(1.9rem, 4vw, 3rem)" }}
+              >
+                <span style={{ color: "#818cf8" }}>Science & Space</span>
+                <br />
+                <span style={{ color: "#c084fc" }}>Lab Day</span>
+              </h2>
+              <p className="text-slate-300 font-body text-base leading-relaxed mb-6 max-w-md">
+                One Friday of volcanoes, rockets, and galaxy slime. Drop off, we handle the magic, you pick up an excited kid with a take-home creation.
+              </p>
+
+              {/* Event detail pills */}
+              <div className="flex flex-wrap gap-2 mb-7">
+                {[
+                  { icon: "📅", text: "Jun 19, 2026" },
+                  { icon: "🕗", text: "8:30 AM – 1:30 PM" },
+                  { icon: "💰", text: "$60 / child" },
+                  { icon: "👧", text: "Ages 4–11" },
+                ].map((pill) => (
+                  <span
+                    key={pill.text}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-xs font-semibold text-white/90 font-body shadow-sm"
+                  >
+                    {pill.icon} {pill.text}
+                  </span>
+                ))}
+              </div>
+
+              <Link
+                href="/friday"
+                className="inline-flex items-center gap-2 px-7 py-3.5 font-bold font-body rounded-2xl text-white text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
+                style={{ background: "linear-gradient(135deg, #6d28d9 0%, #4f46e5 100%)" }}
+              >
+                Reserve Your Spot →
+              </Link>
+              <p className="text-xs text-violet-400 font-body mt-3">
+                No enrollment required · One-time drop-in
+              </p>
+            </motion.div>
+
+            {/* Right — activity cards */}
+            <motion.div
+              initial={{ opacity: 0, x: 24 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55, delay: 0.1 }}
+            >
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { emoji: "🌋", title: "Volcano Model",     accent: "#ede9fe" },
+                  { emoji: "🚀", title: "Rocket Ship Craft", accent: "#dbeafe" },
+                  { emoji: "🌌", title: "Galaxy Slime",      accent: "#fae8ff" },
+                ].map((act, i) => (
+                  <motion.div
+                    key={act.title}
+                    className="bg-white/10 backdrop-blur-sm border border-white/15 rounded-2xl p-4 flex flex-col items-center text-center gap-2"
+                    initial={{ opacity: 0, y: 16 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: 0.15 + i * 0.1 }}
+                  >
+                    <div
+                      className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
+                      style={{ background: act.accent }}
+                    >
+                      {act.emoji}
+                    </div>
+                    <p className="text-xs font-bold text-white font-body leading-tight">{act.title}</p>
+                  </motion.div>
+                ))}
+              </div>
+              <motion.p
+                className="text-center text-xs text-violet-300 font-body mt-4"
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: 0.45 }}
+              >
+                All activities included · Everything provided · Take-home projects
+              </motion.p>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Bottom wave: dark → cream */}
+      <div style={{ background: "#0d1b3e", marginBottom: "-1px" }}>
+        <svg viewBox="0 0 1440 56" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full block" style={{ height: "56px" }}>
+          <path d="M0,28 C360,0 1080,56 1440,28 L1440,56 L0,56 Z" fill="#FFF9F5" />
+        </svg>
+      </div>
+
       <WeekRecapPreview className="bg-welcome-bg" />
 
       <WhatWeOfferSection />
