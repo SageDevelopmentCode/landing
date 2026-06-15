@@ -49,9 +49,9 @@ const SPACE_LAB_ACTIVITIES = [
     accentText: "#1d4ed8",
   },
   {
-    emoji: "🌌",
-    title: "Galaxy Slime",
-    desc: "Mix shimmery galaxy-themed slime with glitter and cosmic colors to take home",
+    emoji: "🍡",
+    title: "Marshmallow Tower",
+    desc: "Stack, balance, and engineer the tallest marshmallow tower using spaghetti and teamwork!",
     accent: "#fae8ff",
     accentText: "#86198f",
   },
@@ -515,7 +515,7 @@ export default function FieldDayFridayPage() {
                 transition={{ delay: 0.25, duration: 0.5 }}
               >
                 One unforgettable Friday at Sage Field. Build a volcano, engineer
-                a rocket ship craft, and mix galaxy slime to take home!
+                a rocket ship craft, and engineer a marshmallow tower!
               </motion.p>
 
               {/* Quick-detail pills */}
@@ -720,7 +720,7 @@ export default function FieldDayFridayPage() {
                 Four Hours of Science & Space Fun
               </h2>
               <p className="text-base text-slate-500 font-body max-w-xl mx-auto">
-                Volcano Model · Rocket Ship Craft · Galaxy Slime
+                Volcano Model · Rocket Ship Craft · Marshmallow Tower
               </p>
             </motion.div>
 
