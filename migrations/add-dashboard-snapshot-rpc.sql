@@ -24,13 +24,14 @@ BEGIN
     ORDER BY cs.clock_in_at ASC
   ) t;
 
-  -- 2. Enrolled kids per program
+  -- 2. Enrolled kids per program, excluding "Don't Include" tagged applications
   SELECT json_agg(row_to_json(t)) INTO v_enrollment
   FROM (
     SELECT program, count(*)::int AS count
     FROM parent_app.applications
     WHERE status = 'enrolled'
       AND is_active = true
+      AND NOT (admin_tags @> ARRAY['Don''t Include'::text])
     GROUP BY program
     ORDER BY program
   ) t;
