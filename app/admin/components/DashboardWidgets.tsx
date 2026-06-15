@@ -1,6 +1,21 @@
-import { Clock, Users, DollarSign, MapPin } from "lucide-react";
-import { cssColors as colors, radius, cssShadows as shadows } from "../design-system";
+"use client";
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { Clock, Users, DollarSign, MapPin, ChevronRight, RefreshCw, CalendarDays } from "lucide-react";
+import { cssColors as colors } from "../design-system";
 import type { DashboardSnapshot } from "@/app/actions/getDashboardSnapshot";
+import { getDashboardSnapshot } from "@/app/actions/getDashboardSnapshot";
+
+// --- Types ---
+
+export type ProgramConfig = {
+  name: string;
+  date: string;
+  accentColor: string;
+};
+
+// --- Helpers ---
 
 const PROGRAM_LABELS: Record<string, string> = {
   summer_26:          "Summer '26",
@@ -15,7 +30,6 @@ const TOUR_STATUS_COLORS: Record<string, string> = {
 };
 
 function fmt12h(time: string) {
-  // time is "HH:MM" or "HH:MM:SS"
   const [h, m] = time.split(":").map(Number);
   const ampm = h >= 12 ? "PM" : "AM";
   const h12  = h % 12 || 12;
@@ -23,59 +37,107 @@ function fmt12h(time: string) {
 }
 
 function fmtDate(iso: string) {
-  return new Date(iso + "T00:00:00").toLocaleDateString("en-US", {
-    month: "short",
-    day:   "numeric",
-  });
+  return new Date(iso + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 function fmtClockIn(isoTs: string) {
-  return new Date(isoTs).toLocaleTimeString("en-US", {
-    hour:   "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
+  return new Date(isoTs).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
 }
 
 function fmtCurrency(n: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
 }
 
-function WidgetCard({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
+function getDaysRemaining(isoDate: string): number {
+  const target = new Date(isoDate);
+  const now = new Date();
+  target.setHours(0, 0, 0, 0);
+  now.setHours(0, 0, 0, 0);
+  return Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function formatLongDate(isoDate: string): string {
+  return new Date(isoDate).toLocaleDateString("en-US", {
+    month: "long", day: "numeric", year: "numeric", timeZone: "UTC",
+  });
+}
+
+// --- Shared primitives ---
+
+function WidgetCard({ icon, iconColor, title, href, children }: {
+  icon: React.ReactNode;
+  iconColor: string;
+  title: string;
+  href: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div
-      className="flex flex-col gap-3 p-5"
-      style={{
-        backgroundColor: colors.elevated,
-        borderRadius: radius.lg,
-        border: `1px solid ${colors.border}`,
-        boxShadow: shadows.card,
-      }}
-    >
+    <div className="flex flex-col gap-3">
       <div className="flex items-center gap-2">
-        <span style={{ color: colors.accent }}>{icon}</span>
+        <span style={{ color: iconColor }}>{icon}</span>
         <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: colors.textTertiary }}>
           {title}
         </span>
       </div>
-      {children}
+      <div className="flex-1">{children}</div>
+      <div style={{ height: 1, backgroundColor: colors.border }} />
+      <Link
+        href={href}
+        className="flex items-center gap-1 text-xs font-medium transition-colors duration-150"
+        style={{ color: colors.textTertiary }}
+        onMouseOver={(e) => (e.currentTarget.style.color = iconColor)}
+        onMouseOut={(e) => (e.currentTarget.style.color = colors.textTertiary)}
+      >
+        View all
+        <ChevronRight className="w-3 h-3" />
+      </Link>
     </div>
   );
 }
 
 function EmptyState({ label }: { label: string }) {
+  return <p className="text-xs" style={{ color: colors.textQuaternary }}>{label}</p>;
+}
+
+// --- Countdown cell (no card chrome) ---
+
+function CountdownCell({ program }: { program: ProgramConfig }) {
+  const [days, setDays] = useState<number | null>(null);
+
+  useEffect(() => {
+    setDays(getDaysRemaining(program.date));
+  }, [program.date]);
+
+  const started = days !== null && days <= 0;
+
   return (
-    <p className="text-xs" style={{ color: colors.textQuaternary }}>
-      {label}
-    </p>
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-2">
+        <span style={{ color: program.accentColor }}><CalendarDays className="w-4 h-4" /></span>
+        <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: colors.textTertiary }}>
+          {program.name}
+        </span>
+      </div>
+      <div className="flex-1">
+        <p className="text-xs mb-2" style={{ color: colors.textQuaternary }}>{formatLongDate(program.date)}</p>
+        {started ? (
+          <p className="text-base font-semibold" style={{ color: program.accentColor }}>Program started</p>
+        ) : (
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-3xl font-bold" style={{ color: colors.textPrimary }}>{days ?? "—"}</span>
+            <span className="text-sm font-medium" style={{ color: colors.textTertiary }}>days away</span>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
-// --- Individual widgets ---
+// --- Data widgets ---
 
 function ClockedInWidget({ sessions }: { sessions: DashboardSnapshot["active_sessions"] }) {
   return (
-    <WidgetCard icon={<Clock className="w-4 h-4" />} title="Clocked In">
+    <WidgetCard icon={<Clock className="w-4 h-4" />} iconColor="#F59E0B" title="Clocked In" href="/admin/payroll">
       {sessions.length === 0 ? (
         <EmptyState label="No one clocked in today" />
       ) : (
@@ -84,10 +146,7 @@ function ClockedInWidget({ sessions }: { sessions: DashboardSnapshot["active_ses
             className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold"
             style={{ backgroundColor: colors.successBg, color: colors.success }}
           >
-            <span
-              className="w-1.5 h-1.5 rounded-full animate-pulse"
-              style={{ backgroundColor: colors.success }}
-            />
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: colors.success }} />
             {sessions.length} active
           </div>
           {sessions.map((s) => (
@@ -109,7 +168,7 @@ function ClockedInWidget({ sessions }: { sessions: DashboardSnapshot["active_ses
 function EnrollmentWidget({ rows }: { rows: DashboardSnapshot["enrollment"] }) {
   const total = rows.reduce((s, r) => s + r.count, 0);
   return (
-    <WidgetCard icon={<Users className="w-4 h-4" />} title="Enrolled Students">
+    <WidgetCard icon={<Users className="w-4 h-4" />} iconColor="#38BDF8" title="Enrolled Students" href="/admin/applications">
       {rows.length === 0 ? (
         <EmptyState label="No enrolled students" />
       ) : (
@@ -141,31 +200,22 @@ function FinancialsWidget({ financials }: { financials: DashboardSnapshot["finan
   const net = financials.revenue - financials.expenses;
   const isProfit = net >= 0;
   return (
-    <WidgetCard icon={<DollarSign className="w-4 h-4" />} title="This Month">
+    <WidgetCard icon={<DollarSign className="w-4 h-4" />} iconColor="#22C55E" title="This Month" href="/admin/budget">
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-xs" style={{ color: colors.textTertiary }}>Revenue</span>
-          <span className="text-sm font-semibold" style={{ color: colors.success }}>
-            {fmtCurrency(financials.revenue)}
-          </span>
+          <span className="text-sm font-semibold" style={{ color: colors.success }}>{fmtCurrency(financials.revenue)}</span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-xs" style={{ color: colors.textTertiary }}>Expenses</span>
-          <span className="text-sm font-semibold" style={{ color: colors.error }}>
-            {fmtCurrency(financials.expenses)}
-          </span>
+          <span className="text-sm font-semibold" style={{ color: colors.error }}>{fmtCurrency(financials.expenses)}</span>
         </div>
-        <div
-          style={{ height: 1, backgroundColor: colors.border, margin: "4px 0" }}
-        />
+        <div style={{ height: 1, backgroundColor: colors.border, margin: "4px 0" }} />
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium" style={{ color: colors.textSecondary }}>
             {isProfit ? "Net Profit" : "Net Loss"}
           </span>
-          <span
-            className="text-sm font-bold"
-            style={{ color: isProfit ? colors.success : colors.error }}
-          >
+          <span className="text-sm font-bold" style={{ color: isProfit ? colors.success : colors.error }}>
             {isProfit ? "+" : ""}{fmtCurrency(net)}
           </span>
         </div>
@@ -176,7 +226,7 @@ function FinancialsWidget({ financials }: { financials: DashboardSnapshot["finan
 
 function ToursWidget({ tours }: { tours: DashboardSnapshot["upcoming_tours"] }) {
   return (
-    <WidgetCard icon={<MapPin className="w-4 h-4" />} title="Upcoming Tours">
+    <WidgetCard icon={<MapPin className="w-4 h-4" />} iconColor="#EC4899" title="Upcoming Tours" href="/admin/marketing">
       {tours.length === 0 ? (
         <EmptyState label="No upcoming tours" />
       ) : (
@@ -212,13 +262,71 @@ function ToursWidget({ tours }: { tours: DashboardSnapshot["upcoming_tours"] }) 
 
 // --- Main export ---
 
-export function DashboardWidgets({ snapshot }: { snapshot: DashboardSnapshot }) {
+export function DashboardWidgets({
+  initialSnapshot,
+  programs,
+}: {
+  initialSnapshot: DashboardSnapshot;
+  programs: ProgramConfig[];
+}) {
+  const [snapshot, setSnapshot] = useState(initialSnapshot);
+  const [refreshing, setRefreshing] = useState(false);
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    try {
+      const fresh = await getDashboardSnapshot();
+      setSnapshot(fresh);
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
+  const cell = (content: React.ReactNode, borderRight?: boolean, borderBottom?: boolean) => (
+    <div style={{
+      padding: "20px",
+      borderRight: borderRight ? `1px solid var(--admin-border)` : undefined,
+      borderBottom: borderBottom ? `1px solid var(--admin-border)` : undefined,
+    }}>
+      {content}
+    </div>
+  );
+
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <ClockedInWidget  sessions={snapshot.active_sessions} />
-      <EnrollmentWidget rows={snapshot.enrollment} />
-      <FinancialsWidget financials={snapshot.financials} />
-      <ToursWidget      tours={snapshot.upcoming_tours} />
+    <div>
+      {/* Header with refresh button */}
+      <div className="flex items-center justify-end mb-3">
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          title="Refresh stats"
+          className="flex items-center gap-1.5 text-xs font-medium transition-colors duration-150"
+          style={{ color: colors.textTertiary, background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}
+          onMouseOver={(e) => (e.currentTarget.style.color = colors.textSecondary)}
+          onMouseOut={(e) => (e.currentTarget.style.color = colors.textTertiary)}
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+          {refreshing ? "Refreshing…" : "Refresh"}
+        </button>
+      </div>
+
+      {/* Unified 3-row × 2-col grid */}
+      <div
+        className="grid grid-cols-1 sm:grid-cols-2"
+        style={{ border: `1px solid var(--admin-border)`, borderRadius: "12px", overflow: "hidden" }}
+      >
+        {/* Row 1: Countdowns */}
+        {cell(<CountdownCell program={programs[0]} />, true, true)}
+        {cell(<CountdownCell program={programs[1]} />, false, true)}
+
+        {/* Row 2: Clocked In + Enrolled */}
+        {cell(<ClockedInWidget sessions={snapshot.active_sessions} />, true, true)}
+        {cell(<EnrollmentWidget rows={snapshot.enrollment} />, false, true)}
+
+        {/* Row 3: Financials + Tours */}
+        {cell(<FinancialsWidget financials={snapshot.financials} />, true, false)}
+        {cell(<ToursWidget tours={snapshot.upcoming_tours} />, false, false)}
+      </div>
     </div>
   );
 }

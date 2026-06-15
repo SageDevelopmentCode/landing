@@ -14,16 +14,16 @@ import {
 import { cssColors as colors, radius, cssShadows as shadows } from "../design-system";
 
 const QUICK_ACTIONS = [
-  { label: "Applications",     href: "/admin/applications",  icon: ClipboardList },
-  { label: "Manual Payments",  href: "/admin/payments",      icon: PenLine },
-  { label: "Budget",           href: "/admin/budget",        icon: DollarSign },
-  { label: "Payroll",          href: "/admin/payroll",       icon: CreditCard },
-  { label: "Pipeline",         href: "/admin/pipeline",      icon: Activity },
-  { label: "Impersonate",      href: "/admin/impersonate",   icon: Eye },
-  { label: "Teacher View",     href: "/teacher/dashboard",   icon: School, newTab: true },
+  { label: "Applications",    href: "/admin/applications", icon: ClipboardList, color: "#38BDF8" }, // sky blue
+  { label: "Manual Payments", href: "/admin/payments",     icon: PenLine,       color: "#A78BFA" }, // violet
+  { label: "Budget",          href: "/admin/budget",       icon: DollarSign,    color: "#22C55E" }, // green
+  { label: "Payroll",         href: "/admin/payroll",      icon: CreditCard,    color: "#F59E0B" }, // amber
+  { label: "Pipeline",        href: "/admin/pipeline",     icon: Activity,      color: "#EC4899" }, // pink
+  { label: "Impersonate",     href: "/admin/impersonate",  icon: Eye,           color: "#F97316" }, // orange
+  { label: "Teacher View",    href: "/teacher/dashboard",  icon: School,        color: "#5E7C68", newTab: true }, // sage
 ];
 
-function ActionButton({ label, href, icon: Icon, newTab }: typeof QUICK_ACTIONS[number]) {
+function ActionButton({ label, href, icon: Icon, color, newTab }: typeof QUICK_ACTIONS[number]) {
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -45,7 +45,7 @@ function ActionButton({ label, href, icon: Icon, newTab }: typeof QUICK_ACTIONS[
         boxShadow: hovered ? shadows.card : "none",
       }}
     >
-      <Icon className="w-5 h-5" style={{ color: hovered ? colors.accent : colors.textTertiary }} />
+      <Icon className="w-5 h-5" style={{ color }} />
       <span className="text-xs font-medium text-center leading-tight">{label}</span>
     </Link>
   );

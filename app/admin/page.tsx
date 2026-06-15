@@ -1,4 +1,3 @@
-import { CountdownCard } from './components/CountdownCard'
 import { QuickActionsBar } from './components/QuickActionsBar'
 import { DashboardWidgets } from './components/DashboardWidgets'
 import { getDashboardSnapshot } from '@/app/actions/getDashboardSnapshot'
@@ -23,24 +22,13 @@ export default async function AdminDashboard() {
 
       <QuickActionsBar />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <CountdownCard
-          programName="Summer Program"
-          date="2026-05-26"
-          accentColor={colors.warning}
-          iconBgColor={colors.warningBg}
-          delay={0}
-        />
-        <CountdownCard
-          programName="School Year Program"
-          date="2026-09-08"
-          accentColor={colors.accent}
-          iconBgColor={colors.accentLight}
-          delay={0.1}
-        />
-      </div>
-
-      <DashboardWidgets snapshot={snapshot} />
+      <DashboardWidgets
+        initialSnapshot={snapshot}
+        programs={[
+          { name: "Summer Program",      date: "2026-05-26", accentColor: colors.warning },
+          { name: "School Year Program", date: "2026-09-08", accentColor: colors.accent  },
+        ]}
+      />
     </div>
   )
 }
