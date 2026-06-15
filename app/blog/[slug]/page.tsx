@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Navbar from '@/app/components/Navbar'
 import Footer from '@/app/components/Footer'
-import { getPublishedPostBySlug, getPublishedPosts } from '@/app/actions/blog'
+import { getPublishedPostBySlug, getPublishedPosts, getOtherPublishedPosts } from '@/app/actions/blog'
 import BlogPostClient from './BlogPostClient'
 
 export const revalidate = 3600
@@ -38,14 +38,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const post = await getPublishedPostBySlug(slug)
+  const [post, otherPosts] = await Promise.all([
+    getPublishedPostBySlug(slug),
+    getOtherPublishedPosts(slug),
+  ])
   if (!post) notFound()
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Navbar darkStyle />
       <main className="flex-1">
-        <BlogPostClient post={post} />
+        <BlogPostClient post={post} otherPosts={otherPosts} />
       </main>
       <Footer />
     </div>

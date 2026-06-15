@@ -142,6 +142,11 @@ export async function getPublishedPosts(): Promise<BlogPost[]> {
   return resolvePostRows(rows, adminClient)
 }
 
+export async function getOtherPublishedPosts(excludeSlug: string): Promise<BlogPost[]> {
+  const posts = await getPublishedPosts()
+  return posts.filter((p) => p.slug !== excludeSlug).slice(0, 3)
+}
+
 export async function getPublishedPostBySlug(slug: string): Promise<BlogPost | null> {
   const adminClient = createAdminClient()
 
