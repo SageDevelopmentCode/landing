@@ -152,6 +152,13 @@ export default function FieldDayFridayPage() {
   const [sigPrintedName, setSigPrintedName] = useState("");
   const [sigValue, setSigValue] = useState("");
   const [packingChecked, setPackingChecked] = useState<Set<number>>(new Set());
+  const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set());
+  const toggleCard = (i: number) =>
+    setFlippedCards((prev) => {
+      const n = new Set(prev);
+      n.has(i) ? n.delete(i) : n.add(i);
+      return n;
+    });
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, mins: 0 });
 
   const [formData, setFormData] = useState({
@@ -379,7 +386,8 @@ export default function FieldDayFridayPage() {
         .planet-ring   { animation: planet-spin 24s linear infinite; }
         /* Flip card */
         .flip-card-inner { transform-style: preserve-3d; transition: transform 0.55s cubic-bezier(0.4,0,0.2,1); }
-        .flip-card:hover .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card:hover .flip-card-inner,
+        .flip-card-inner.flipped { transform: rotateY(180deg); }
         .flip-face { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
         .flip-back { transform: rotateY(180deg); backface-visibility: hidden; -webkit-backface-visibility: hidden; }
       `}</style>
@@ -721,14 +729,15 @@ export default function FieldDayFridayPage() {
               {SPACE_LAB_ACTIVITIES.map((activity, i) => (
                 <motion.div
                   key={activity.title}
-                  className="flip-card relative"
+                  className="flip-card relative cursor-pointer"
                   style={{ perspective: "800px", minHeight: "180px" }}
                   initial={{ opacity: 0, y: 20, x: i % 2 === 0 ? -20 : 20 }}
                   whileInView={{ opacity: 1, y: 0, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.45, delay: 0.1 * i }}
+                  onClick={() => toggleCard(i)}
                 >
-                  <div className="flip-card-inner relative w-full h-full" style={{ minHeight: "180px" }}>
+                  <div className={`flip-card-inner relative w-full h-full${flippedCards.has(i) ? " flipped" : ""}`} style={{ minHeight: "180px" }}>
                     {/* Front face */}
                     <div
                       className="flip-face absolute inset-0 bg-white rounded-3xl overflow-hidden shadow-md border border-gray-100 flex flex-col"
@@ -744,7 +753,7 @@ export default function FieldDayFridayPage() {
                         <h3 className="font-heading font-bold text-slate-800 text-base leading-tight">
                           {activity.title}
                         </h3>
-                        <p className="text-[11px] text-slate-400 font-body">hover to learn more ✦</p>
+                        <p className="text-[11px] text-slate-400 font-body">tap to learn more ✦</p>
                       </div>
                     </div>
                     {/* Back face */}
