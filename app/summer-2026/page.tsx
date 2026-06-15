@@ -245,6 +245,26 @@ export default function Summer2026Page() {
           >
             May 26 – August 13, 2026 · 12 Weeks · Mon–Thu
           </motion.p>
+
+          <motion.div
+            className="flex flex-col sm:flex-row gap-3 justify-center mt-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
+          >
+            <button
+              onClick={() => router.push("/apply")}
+              className="px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body cursor-pointer"
+            >
+              Apply Now
+            </button>
+            <button
+              onClick={() => router.push("/tour")}
+              className="px-8 py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:border-primary hover:text-primary transition-colors duration-200 font-body cursor-pointer"
+            >
+              🏡 Interested in a Tour?
+            </button>
+          </motion.div>
         </div>
       </section>
 
