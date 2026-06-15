@@ -31,7 +31,7 @@ import {
   type BlogPost,
 } from "@/app/actions/blog";
 import PhotoLibraryPickerModal from "@/app/teacher/dashboard/newsletter/PhotoLibraryPickerModal";
-import type { TeacherPhoto } from "@/app/actions/photos";
+import { getPhotos, type TeacherPhoto } from "@/app/actions/photos";
 
 interface Props {
   post: BlogPost;
@@ -49,21 +49,26 @@ export default function BlogEditorClient({ post, currentUserId }: Props) {
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(post.cover_image_signed_url);
   const [coverUploading, setCoverUploading] = useState(false);
   const [showLibraryPicker, setShowLibraryPicker] = useState(false);
+  const [libraryPhotos, setLibraryPhotos] = useState<TeacherPhoto[]>([]);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [previewing, setPreviewing] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editorScrollRef = useRef<HTMLDivElement>(null);
   const coverFileInputRef = useRef<HTMLInputElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Auto-resize textarea
+  // Auto-resize textarea without jumping scroll position
   useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
-    }
+    const ta = textareaRef.current;
+    const scroller = editorScrollRef.current;
+    if (!ta) return;
+    const scrollTop = scroller?.scrollTop ?? 0;
+    ta.style.height = "auto";
+    ta.style.height = ta.scrollHeight + "px";
+    if (scroller) scroller.scrollTop = scrollTop;
   }, [body]);
 
   // Auto-save on change (debounced 2s)
@@ -78,6 +83,10 @@ export default function BlogEditorClient({ post, currentUserId }: Props) {
     scheduleAutoSave();
     return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
   }, [title, body, excerpt, scheduleAutoSave]);
+
+  useEffect(() => {
+    getPhotos().then(setLibraryPhotos);
+  }, []);
 
   async function handleSave() {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
@@ -158,7 +167,7 @@ export default function BlogEditorClient({ post, currentUserId }: Props) {
     const newVal = ta.value.slice(0, start) + before + selected + after + ta.value.slice(end);
     setBody(newVal);
     requestAnimationFrame(() => {
-      ta.focus();
+      ta.focus({ preventScroll: true });
       ta.setSelectionRange(start + before.length, end + before.length);
     });
   }
@@ -170,7 +179,7 @@ export default function BlogEditorClient({ post, currentUserId }: Props) {
     const newVal = ta.value.slice(0, start) + "\n- " + ta.value.slice(start);
     setBody(newVal);
     requestAnimationFrame(() => {
-      ta.focus();
+      ta.focus({ preventScroll: true });
       ta.setSelectionRange(start + 3, start + 3);
     });
   }
@@ -187,7 +196,7 @@ export default function BlogEditorClient({ post, currentUserId }: Props) {
     const newVal = ta.value.slice(0, start) + insertion + ta.value.slice(end);
     setBody(newVal);
     requestAnimationFrame(() => {
-      ta.focus();
+      ta.focus({ preventScroll: true });
       ta.setSelectionRange(start + insertion.length, start + insertion.length);
     });
   }
@@ -200,7 +209,7 @@ export default function BlogEditorClient({ post, currentUserId }: Props) {
     const newVal = ta.value.slice(0, start) + insertion + ta.value.slice(start);
     setBody(newVal);
     requestAnimationFrame(() => {
-      ta.focus();
+      ta.focus({ preventScroll: true });
       ta.setSelectionRange(start + insertion.length, start + insertion.length);
     });
   }
@@ -215,7 +224,7 @@ export default function BlogEditorClient({ post, currentUserId }: Props) {
     const newVal = ta.value.slice(0, lineStart) + prefix + ta.value.slice(lineStart);
     setBody(newVal);
     requestAnimationFrame(() => {
-      ta.focus();
+      ta.focus({ preventScroll: true });
       ta.setSelectionRange(start + prefix.length, start + prefix.length);
     });
   }
@@ -311,7 +320,7 @@ export default function BlogEditorClient({ post, currentUserId }: Props) {
         </div>
 
         {/* Editor area */}
-        <div className="flex-1 overflow-y-auto px-10 py-8 max-w-3xl w-full mx-auto">
+        <div ref={editorScrollRef} className="flex-1 overflow-y-auto px-10 py-8 max-w-3xl w-full mx-auto">
           {previewing ? (
             <article className="font-body text-gray-700 leading-relaxed">
               {coverImageUrl && (
@@ -478,6 +487,7 @@ export default function BlogEditorClient({ post, currentUserId }: Props) {
           onConfirm={() => {}}
           onClose={() => setShowLibraryPicker(false)}
           onSelectRaw={handleLibraryPick}
+          initialPhotos={libraryPhotos}
         />
       )}
     </div>

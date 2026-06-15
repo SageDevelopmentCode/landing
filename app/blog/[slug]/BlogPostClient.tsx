@@ -11,7 +11,7 @@ interface Props {
 
 export default function BlogPostClient({ post }: Props) {
   return (
-    <article className="max-w-2xl mx-auto w-full px-5 py-14">
+    <article className="max-w-2xl mx-auto w-full px-5 pt-32 pb-14">
       {/* Back */}
       <Link
         href="/blog"

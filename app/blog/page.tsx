@@ -40,7 +40,7 @@ export default async function BlogListPage() {
                 className="group flex flex-col rounded-2xl border border-gray-100 overflow-hidden hover:border-gray-200 hover:shadow-sm transition-all"
               >
                 {/* Cover image */}
-                <div className="relative w-full aspect-[16/9] bg-[#f5f2ed] flex-shrink-0">
+                <div className="relative w-full h-48 bg-[#f5f2ed] flex-shrink-0 overflow-hidden">
                   {post.cover_image_signed_url ? (
                     <img
                       src={post.cover_image_signed_url}
