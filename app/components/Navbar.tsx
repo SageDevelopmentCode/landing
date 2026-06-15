@@ -192,6 +192,12 @@ const NAV_TABS: NavTab[] = [
         colorClass: "bg-amber-50 text-amber-700 hover:bg-amber-100",
       },
       {
+        label: "Blog",
+        action: { kind: "link", href: "/blog" },
+        icon: BookMarked,
+        iconClass: "text-indigo-500",
+      },
+      {
         label: "Academic Calendar",
         action: { kind: "link", href: "/academic-calendar" },
         icon: CalendarDays,
@@ -210,18 +216,6 @@ const NAV_TABS: NavTab[] = [
         badge: "New!",
         icon: CalendarDays,
         iconClass: "text-purple-500",
-      },
-      {
-        label: "FAQ",
-        action: { kind: "link", href: "/faq" },
-        icon: HelpCircle,
-        iconClass: "text-slate-400",
-      },
-      {
-        label: "Contact",
-        action: { kind: "link", href: "/contact" },
-        icon: Mail,
-        iconClass: "text-emerald-500",
       },
       {
         label: "Donate",
