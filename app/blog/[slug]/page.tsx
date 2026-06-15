@@ -16,9 +16,23 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const post = await getPublishedPostBySlug(slug)
   if (!post) return {}
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sagefield.co'
+  const postUrl = `${siteUrl}/blog/${post.slug}`
+  const metaDesc = post.meta_description ?? post.excerpt ?? undefined
+
   return {
     title: `${post.title} — Sage Field Blog`,
-    description: post.excerpt ?? undefined,
+    description: metaDesc,
+    openGraph: {
+      type: 'article',
+      title: post.title,
+      description: metaDesc,
+      url: postUrl,
+      images: post.cover_image_signed_url ? [{ url: post.cover_image_signed_url }] : [],
+      publishedTime: post.published_at ?? undefined,
+      authors: post.author_name ? [post.author_name] : [],
+    },
   }
 }
 

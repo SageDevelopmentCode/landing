@@ -31,7 +31,7 @@ import {
   type BlogPost,
 } from "@/app/actions/blog";
 import PhotoLibraryPickerModal from "@/app/teacher/dashboard/newsletter/PhotoLibraryPickerModal";
-import { getPhotos, type TeacherPhoto } from "@/app/actions/photos";
+import { type TeacherPhoto } from "@/app/actions/photos";
 
 interface Props {
   post: BlogPost;
@@ -44,12 +44,12 @@ export default function BlogEditorClient({ post, currentUserId }: Props) {
   const [title, setTitle] = useState(post.title);
   const [body, setBody] = useState(post.body);
   const [excerpt, setExcerpt] = useState(post.excerpt ?? "");
+  const [metaDescription, setMetaDescription] = useState(post.meta_description ?? "");
   const [status, setStatus] = useState<"draft" | "published">(post.status);
   const [publishedAt, setPublishedAt] = useState<string | null>(post.published_at);
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(post.cover_image_signed_url);
   const [coverUploading, setCoverUploading] = useState(false);
   const [showLibraryPicker, setShowLibraryPicker] = useState(false);
-  const [libraryPhotos, setLibraryPhotos] = useState<TeacherPhoto[]>([]);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
@@ -75,23 +75,20 @@ export default function BlogEditorClient({ post, currentUserId }: Props) {
   const scheduleAutoSave = useCallback(() => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(async () => {
-      await saveBlogDraft({ postId: post.id, title, body, excerpt });
+      await saveBlogDraft({ postId: post.id, title, body, excerpt, meta_description: metaDescription });
     }, 2000);
-  }, [post.id, title, body, excerpt]);
+  }, [post.id, title, body, excerpt, metaDescription]);
 
   useEffect(() => {
     scheduleAutoSave();
     return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
-  }, [title, body, excerpt, scheduleAutoSave]);
+  }, [title, body, excerpt, metaDescription, scheduleAutoSave]);
 
-  useEffect(() => {
-    getPhotos().then(setLibraryPhotos);
-  }, []);
 
   async function handleSave() {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     setSaving(true);
-    const result = await saveBlogDraft({ postId: post.id, title, body, excerpt });
+    const result = await saveBlogDraft({ postId: post.id, title, body, excerpt, meta_description: metaDescription });
     setSaving(false);
     setSaveMsg(result.error ? "Failed to save" : "Saved");
     setTimeout(() => setSaveMsg(null), 2000);
@@ -100,7 +97,7 @@ export default function BlogEditorClient({ post, currentUserId }: Props) {
   async function handlePublish() {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     setPublishing(true);
-    await saveBlogDraft({ postId: post.id, title, body, excerpt });
+    await saveBlogDraft({ postId: post.id, title, body, excerpt, meta_description: metaDescription });
     const result = await publishPost(post.id);
     setPublishing(false);
     if (!result.error) {
@@ -421,6 +418,23 @@ export default function BlogEditorClient({ post, currentUserId }: Props) {
           />
         </div>
 
+        {/* Meta Description */}
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Meta Description</p>
+          <p className="text-[10px] font-body text-gray-400 mb-1.5">For search engines &amp; social sharing. Leave blank to use the excerpt.</p>
+          <textarea
+            value={metaDescription}
+            onChange={(e) => setMetaDescription(e.target.value)}
+            placeholder="Leave blank to use the excerpt…"
+            rows={3}
+            maxLength={160}
+            className="w-full text-xs font-body text-gray-700 border border-gray-200 bg-gray-50 rounded-lg px-2.5 py-2 outline-none resize-none focus:ring-2 focus:ring-[#4a7c59]/30 focus:border-[#4a7c59] placeholder:text-gray-300"
+          />
+          <p className={`text-[10px] font-body mt-0.5 text-right ${metaDescription.length > 155 ? "text-amber-500" : "text-gray-300"}`}>
+            {metaDescription.length}/160
+          </p>
+        </div>
+
         {/* Cover Image */}
         <div>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
@@ -487,7 +501,6 @@ export default function BlogEditorClient({ post, currentUserId }: Props) {
           onConfirm={() => {}}
           onClose={() => setShowLibraryPicker(false)}
           onSelectRaw={handleLibraryPick}
-          initialPhotos={libraryPhotos}
         />
       )}
     </div>

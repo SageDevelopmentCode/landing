@@ -10,6 +10,7 @@ export interface BlogPost {
   slug: string
   body: string
   excerpt: string | null
+  meta_description: string | null
   cover_image_path: string | null
   cover_image_bucket: 'blog-images' | 'teacher-photos' | null
   cover_image_signed_url: string | null
@@ -68,6 +69,7 @@ async function resolvePostRows(rows: any[], adminClient: ReturnType<typeof creat
     slug: row.slug,
     body: row.body,
     excerpt: row.excerpt ?? null,
+    meta_description: row.meta_description ?? null,
     cover_image_path: row.cover_image_path ?? null,
     cover_image_bucket: row.cover_image_bucket ?? null,
     cover_image_signed_url: row.cover_image_path ? (signedUrlMap.get(row.cover_image_path) ?? null) : null,
@@ -211,6 +213,7 @@ export async function saveBlogDraft(input: {
   title: string
   body: string
   excerpt: string
+  meta_description?: string
 }): Promise<{ error?: string; success?: boolean }> {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -225,6 +228,7 @@ export async function saveBlogDraft(input: {
       title: input.title,
       body: input.body,
       excerpt: input.excerpt || null,
+      meta_description: input.meta_description || null,
       updated_at: new Date().toISOString(),
     })
     .eq('id', input.postId)

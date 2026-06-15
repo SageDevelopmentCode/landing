@@ -10,8 +10,24 @@ interface Props {
 }
 
 export default function BlogPostClient({ post }: Props) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: post.title,
+    description: post.meta_description ?? post.excerpt ?? undefined,
+    ...(post.cover_image_signed_url ? { image: post.cover_image_signed_url } : {}),
+    datePublished: post.published_at ?? undefined,
+    dateModified: post.updated_at,
+    author: post.author_name ? { '@type': 'Person', name: post.author_name } : undefined,
+    publisher: { '@type': 'Organization', name: 'Sage Field Private School' },
+  }
+
   return (
     <article className="max-w-2xl mx-auto w-full px-5 pt-32 pb-14">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Back */}
       <Link
         href="/blog"
