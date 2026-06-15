@@ -345,6 +345,32 @@ export default function FieldDayFridayPage() {
           0%, 100% { box-shadow: 0 0 0 0 rgba(139,92,246,0.5), 0 0 0 0 rgba(99,102,241,0.25); }
           50%       { box-shadow: 0 0 0 18px rgba(139,92,246,0.15), 0 0 0 36px rgba(99,102,241,0.06); }
         }
+        @keyframes shimmer-text {
+          0%   { background-position: -200% center; }
+          100% { background-position: 200% center; }
+        }
+        @keyframes glow-pulse {
+          0%, 100% { text-shadow: 0 2px 16px rgba(129,140,248,0.35), 0 0 0px rgba(196,181,253,0); }
+          50%       { text-shadow: 0 2px 32px rgba(129,140,248,0.7), 0 0 40px rgba(196,181,253,0.3); }
+        }
+        @keyframes letter-drop {
+          0%   { opacity: 0; transform: translateY(-24px) scale(0.85); filter: blur(4px); }
+          60%  { opacity: 1; transform: translateY(4px) scale(1.04); filter: blur(0); }
+          100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+        }
+        .shimmer-text {
+          background: linear-gradient(90deg, #818cf8 0%, #c084fc 25%, #e0e7ff 50%, #c084fc 75%, #818cf8 100%);
+          background-size: 200% auto;
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          animation: shimmer-text 4s linear infinite, glow-pulse 3s ease-in-out infinite;
+        }
+        .letter-drop span {
+          display: inline-block;
+          opacity: 0;
+          animation: letter-drop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
+        }
         .rocket-float  { animation: rocket-float 4s ease-in-out infinite; }
         .nebula-pulse  { animation: nebula-pulse 3s ease-in-out infinite; }
         .star-twinkle  { animation: star-twinkle 2s ease-in-out infinite; }
@@ -451,23 +477,26 @@ export default function FieldDayFridayPage() {
                 transition={{ delay: 0.15, duration: 0.55 }}
               >
                 <span
-                  className="block italic"
-                  style={{
-                    fontSize: "clamp(3rem, 8vw, 5.5rem)",
-                    color: "#818cf8",
-                    textShadow: "0 2px 16px rgba(129,140,248,0.35)",
-                  }}
+                  className="block italic shimmer-text"
+                  style={{ fontSize: "clamp(3rem, 8vw, 5.5rem)" }}
                 >
-                  Science & Space
+                  Science &amp; Space
                 </span>
                 <span
-                  className="block"
-                  style={{
-                    fontSize: "clamp(2.4rem, 6vw, 4.5rem)",
-                    color: "#c084fc",
-                  }}
+                  className="letter-drop block"
+                  style={{ fontSize: "clamp(2.4rem, 6vw, 4.5rem)" }}
                 >
-                  Lab Day 🚀
+                  {Array.from("Lab Day 🚀").map((ch, i) => (
+                    <span
+                      key={i}
+                      style={{
+                        animationDelay: `${0.55 + i * 0.06}s`,
+                        color: "#c084fc",
+                      }}
+                    >
+                      {ch === " " ? " " : ch}
+                    </span>
+                  ))}
                 </span>
               </motion.h1>
 
