@@ -146,29 +146,30 @@ export async function POST(request: NextRequest) {
 
         // Email notification (non-blocking, with error embed fallback)
         (async () => {
+          const toAddress =
+            firstApplication?.g1_email ?? session.customer_email ?? "";
+          let subject: string | undefined;
           try {
-            const toAddress =
-              firstApplication?.g1_email ?? session.customer_email ?? "";
             if (!toAddress) return;
 
-            const { subject, content } =
-              await buildRegistrationFeeConfirmationEmail({
+            const built = await buildRegistrationFeeConfirmationEmail({
                 g1FullName: firstApplication?.g1_full_name ?? "Parent",
                 childLegalName: childSummary || "your children",
                 program: "all enrolled programs",
                 amountDollars,
               });
+            subject = built.subject;
 
             const emailResult = await sendZohoEmail({
               toAddress,
-              subject,
-              content,
+              subject: built.subject,
+              content: built.content,
             });
 
             if (emailResult.success) {
               await supabase.schema("email_logs").from("sends").insert({
                 to_address: toAddress,
-                subject,
+                subject: built.subject,
                 template: "registration_fee_confirmation",
                 application_id: null,
                 status: "success",
@@ -181,6 +182,16 @@ export async function POST(request: NextRequest) {
               "Combined registration fee confirmation email failed:",
               err,
             );
+            if (toAddress) {
+              await supabase.schema("email_logs").from("sends").insert({
+                to_address: toAddress,
+                subject: subject ?? "registration_fee_confirmation (failed to build)",
+                template: "registration_fee_confirmation",
+                application_id: null,
+                status: "error",
+                error_message: String(err).slice(0, 500),
+              }).then(undefined, () => {});
+            }
             sendDiscordNotification(
               createErrorEmbed({
                 context: "Combined registration fee confirmation email",
@@ -240,29 +251,30 @@ export async function POST(request: NextRequest) {
 
         // Email notification (non-blocking, with error embed fallback)
         (async () => {
+          const toAddress =
+            application?.g1_email ?? session.customer_email ?? "";
+          let subject: string | undefined;
           try {
-            const toAddress =
-              application?.g1_email ?? session.customer_email ?? "";
             if (!toAddress) return;
 
-            const { subject, content } =
-              await buildRegistrationFeeConfirmationEmail({
+            const built = await buildRegistrationFeeConfirmationEmail({
                 g1FullName: application?.g1_full_name ?? "Parent",
                 childLegalName: application?.child_legal_name ?? "your child",
                 program: programLabel,
                 amountDollars,
               });
+            subject = built.subject;
 
             const emailResult = await sendZohoEmail({
               toAddress,
-              subject,
-              content,
+              subject: built.subject,
+              content: built.content,
             });
 
             if (emailResult.success) {
               await supabase.schema("email_logs").from("sends").insert({
                 to_address: toAddress,
-                subject,
+                subject: built.subject,
                 template: "registration_fee_confirmation",
                 application_id: applicationId,
                 status: "success",
@@ -272,6 +284,16 @@ export async function POST(request: NextRequest) {
             }
           } catch (err) {
             console.error("Registration fee confirmation email failed:", err);
+            if (toAddress) {
+              await supabase.schema("email_logs").from("sends").insert({
+                to_address: toAddress,
+                subject: subject ?? "registration_fee_confirmation (failed to build)",
+                template: "registration_fee_confirmation",
+                application_id: applicationId,
+                status: "error",
+                error_message: String(err).slice(0, 500),
+              }).then(undefined, () => {});
+            }
             sendDiscordNotification(
               createErrorEmbed({
                 context: "Registration fee confirmation email",
@@ -338,8 +360,9 @@ export async function POST(request: NextRequest) {
 
       // Email confirmation (non-blocking, with error embed fallback)
       (async () => {
+        const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
+        let subject: string | undefined;
         try {
-          const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
           if (!toAddress) return;
 
           // Parse sibling data for bundled multi-child payments
@@ -386,7 +409,7 @@ export async function POST(request: NextRequest) {
             }
           }
 
-          const { subject, content } = await buildSummerTuitionConfirmationEmail({
+          const built = await buildSummerTuitionConfirmationEmail({
             g1FullName: parentName !== "N/A" ? parentName : "Parent",
             childLegalName: childName !== "N/A" ? childName : "your child",
             planType,
@@ -394,13 +417,14 @@ export async function POST(request: NextRequest) {
             weeks: weeks.length > 0 ? weeks : undefined,
             siblings: emailSiblings.length > 0 ? emailSiblings : undefined,
           });
+          subject = built.subject;
 
-          const emailResult = await sendZohoEmail({ toAddress, subject, content });
+          const emailResult = await sendZohoEmail({ toAddress, subject: built.subject, content: built.content });
 
           if (emailResult.success) {
             await supabase.schema("email_logs").from("sends").insert({
               to_address: toAddress,
-              subject,
+              subject: built.subject,
               template: "summer_tuition_confirmation",
               application_id: applicationId ?? null,
               status: "success",
@@ -410,6 +434,16 @@ export async function POST(request: NextRequest) {
           }
         } catch (err) {
           console.error("Summer tuition confirmation email failed:", err);
+          if (toAddress) {
+            await supabase.schema("email_logs").from("sends").insert({
+              to_address: toAddress,
+              subject: subject ?? "summer_tuition_confirmation (failed to build)",
+              template: "summer_tuition_confirmation",
+              application_id: applicationId ?? null,
+              status: "error",
+              error_message: String(err).slice(0, 500),
+            }).then(undefined, () => {});
+          }
           sendDiscordNotification(
             createErrorEmbed({
               context: "Summer tuition confirmation email",
@@ -473,10 +507,11 @@ export async function POST(request: NextRequest) {
       ).catch((err) => console.error("Aftercare Discord notification failed:", err));
       const amountDollars = (amountCents / 100).toFixed(2);
       (async () => {
+        const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
+        let subject: string | undefined;
         try {
-          const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
           if (!toAddress) return;
-          const { subject, content } = await buildAftercareConfirmationEmail({
+          const built = await buildAftercareConfirmationEmail({
             g1FullName: parentName !== "N/A" ? parentName : "Parent",
             childLegalName: childName !== "N/A" ? childName : "your child",
             planType,
@@ -484,11 +519,12 @@ export async function POST(request: NextRequest) {
             selectedDays,
             amountDollars,
           });
-          const emailResult = await sendZohoEmail({ toAddress, subject, content });
+          subject = built.subject;
+          const emailResult = await sendZohoEmail({ toAddress, subject: built.subject, content: built.content });
           if (emailResult.success) {
             await supabase.schema("email_logs").from("sends").insert({
               to_address: toAddress,
-              subject,
+              subject: built.subject,
               template: "aftercare_tuition_confirmation",
               application_id: applicationId ?? null,
               status: "success",
@@ -498,6 +534,16 @@ export async function POST(request: NextRequest) {
           }
         } catch (err) {
           console.error("Aftercare confirmation email failed:", err);
+          if (toAddress) {
+            await supabase.schema("email_logs").from("sends").insert({
+              to_address: toAddress,
+              subject: subject ?? "aftercare_tuition_confirmation (failed to build)",
+              template: "aftercare_tuition_confirmation",
+              application_id: applicationId ?? null,
+              status: "error",
+              error_message: String(err).slice(0, 500),
+            }).then(undefined, () => {});
+          }
           sendDiscordNotification(
             createErrorEmbed({
               context: "Aftercare confirmation email",
@@ -568,11 +614,12 @@ export async function POST(request: NextRequest) {
 
       // Email confirmation (non-blocking, with error embed fallback)
       (async () => {
+        const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
+        let subject: string | undefined;
         try {
-          const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
           if (!toAddress) return;
 
-          const { subject, content } = await buildHomeschoolDropInConfirmationEmail({
+          const built = await buildHomeschoolDropInConfirmationEmail({
             g1FullName: parentName !== "N/A" ? parentName : "Parent",
             childLegalName: childName !== "N/A" ? childName : "your child",
             program,
@@ -581,13 +628,14 @@ export async function POST(request: NextRequest) {
             selectedWeeks,
             amountDollars,
           });
+          subject = built.subject;
 
-          const emailResult = await sendZohoEmail({ toAddress, subject, content });
+          const emailResult = await sendZohoEmail({ toAddress, subject: built.subject, content: built.content });
 
           if (emailResult.success) {
             await supabase.schema("email_logs").from("sends").insert({
               to_address: toAddress,
-              subject,
+              subject: built.subject,
               template: "homeschool_dropin_confirmation",
               application_id: applicationId ?? null,
               status: "success",
@@ -597,6 +645,16 @@ export async function POST(request: NextRequest) {
           }
         } catch (err) {
           console.error("Homeschool drop-in confirmation email failed:", err);
+          if (toAddress) {
+            await supabase.schema("email_logs").from("sends").insert({
+              to_address: toAddress,
+              subject: subject ?? "homeschool_dropin_confirmation (failed to build)",
+              template: "homeschool_dropin_confirmation",
+              application_id: applicationId ?? null,
+              status: "error",
+              error_message: String(err).slice(0, 500),
+            }).then(undefined, () => {});
+          }
           sendDiscordNotification(
             createErrorEmbed({
               context: "Homeschool drop-in confirmation email",
@@ -660,10 +718,11 @@ export async function POST(request: NextRequest) {
       ).catch((err) => console.error("Fun Friday Discord notification failed:", err));
       const amountDollars = (amountCents / 100).toFixed(2);
       (async () => {
+        const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
+        let subject: string | undefined;
         try {
-          const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
           if (!toAddress) return;
-          const { subject, content } = await buildFunFridayConfirmationEmail({
+          const built = await buildFunFridayConfirmationEmail({
             g1FullName: parentName !== "N/A" ? parentName : "Parent",
             childLegalName: childName !== "N/A" ? childName : "your child",
             planType,
@@ -671,11 +730,12 @@ export async function POST(request: NextRequest) {
             selectedFridays,
             amountDollars,
           });
-          const emailResult = await sendZohoEmail({ toAddress, subject, content });
+          subject = built.subject;
+          const emailResult = await sendZohoEmail({ toAddress, subject: built.subject, content: built.content });
           if (emailResult.success) {
             await supabase.schema("email_logs").from("sends").insert({
               to_address: toAddress,
-              subject,
+              subject: built.subject,
               template: "fun_friday_tuition_confirmation",
               application_id: applicationId ?? null,
               status: "success",
@@ -685,6 +745,16 @@ export async function POST(request: NextRequest) {
           }
         } catch (err) {
           console.error("Fun Friday confirmation email failed:", err);
+          if (toAddress) {
+            await supabase.schema("email_logs").from("sends").insert({
+              to_address: toAddress,
+              subject: subject ?? "fun_friday_tuition_confirmation (failed to build)",
+              template: "fun_friday_tuition_confirmation",
+              application_id: applicationId ?? null,
+              status: "error",
+              error_message: String(err).slice(0, 500),
+            }).then(undefined, () => {});
+          }
           sendDiscordNotification(
             createErrorEmbed({
               context: "Fun Friday confirmation email",
@@ -750,23 +820,25 @@ export async function POST(request: NextRequest) {
 
       // Email confirmation (non-blocking, with error embed fallback)
       (async () => {
+        const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
+        let subject: string | undefined;
         try {
-          const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
           if (!toAddress) return;
 
-          const { subject, content } = await buildShadowDayPaymentConfirmationEmail({
+          const built = await buildShadowDayPaymentConfirmationEmail({
             parentName: parentName !== "N/A" ? parentName : "Parent",
             childName: childName !== "N/A" ? childName : "your child",
             shadowDate,
             amountDollars,
           });
+          subject = built.subject;
 
-          const emailResult = await sendZohoEmail({ toAddress, subject, content });
+          const emailResult = await sendZohoEmail({ toAddress, subject: built.subject, content: built.content });
 
           if (emailResult.success) {
             await supabase.schema("email_logs").from("sends").insert({
               to_address: toAddress,
-              subject,
+              subject: built.subject,
               template: "shadow_day_fee_confirmation",
               application_id: null,
               status: "success",
@@ -776,6 +848,16 @@ export async function POST(request: NextRequest) {
           }
         } catch (err) {
           console.error("Shadow day fee confirmation email failed:", err);
+          if (toAddress) {
+            await supabase.schema("email_logs").from("sends").insert({
+              to_address: toAddress,
+              subject: subject ?? "shadow_day_fee_confirmation (failed to build)",
+              template: "shadow_day_fee_confirmation",
+              application_id: null,
+              status: "error",
+              error_message: String(err).slice(0, 500),
+            }).then(undefined, () => {});
+          }
           sendDiscordNotification(
             createErrorEmbed({
               context: "Shadow day fee confirmation email",
@@ -837,23 +919,25 @@ export async function POST(request: NextRequest) {
       ).catch((err) => console.error("Beach Bash payment Discord notification failed:", err));
 
       (async () => {
+        const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
+        let subject: string | undefined;
         try {
-          const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
           if (!toAddress) return;
 
-          const { subject, content } = await buildBeachBashConfirmationEmail({
+          const built = await buildBeachBashConfirmationEmail({
             parentName: parentName !== "N/A" ? parentName : "Parent",
             childNames: childNames !== "N/A" ? childNames : "your child",
             childCount,
             amountDollars,
           });
+          subject = built.subject;
 
-          const emailResult = await sendZohoEmail({ toAddress, subject, content });
+          const emailResult = await sendZohoEmail({ toAddress, subject: built.subject, content: built.content });
 
           if (emailResult.success) {
             await supabase.schema("email_logs").from("sends").insert({
               to_address: toAddress,
-              subject,
+              subject: built.subject,
               template: "beach_bash_fee_confirmation",
               application_id: null,
               status: "success",
@@ -863,6 +947,16 @@ export async function POST(request: NextRequest) {
           }
         } catch (err) {
           console.error("Beach Bash fee confirmation email failed:", err);
+          if (toAddress) {
+            await supabase.schema("email_logs").from("sends").insert({
+              to_address: toAddress,
+              subject: subject ?? "beach_bash_fee_confirmation (failed to build)",
+              template: "beach_bash_fee_confirmation",
+              application_id: null,
+              status: "error",
+              error_message: String(err).slice(0, 500),
+            }).then(undefined, () => {});
+          }
           sendDiscordNotification(
             createErrorEmbed({
               context: "Beach Bash fee confirmation email",
@@ -915,22 +1009,24 @@ export async function POST(request: NextRequest) {
       ).catch((err) => console.error("Custom tuition Discord notification failed:", err));
 
       (async () => {
+        const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
+        let subject: string | undefined;
         try {
-          const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
           if (!toAddress) return;
 
-          const { subject, content } = await buildCustomTuitionConfirmationEmail({
+          const built = await buildCustomTuitionConfirmationEmail({
             g1FullName: parentName !== "N/A" ? parentName : "Parent",
             label,
             amountDollars,
           });
+          subject = built.subject;
 
-          const emailResult = await sendZohoEmail({ toAddress, subject, content });
+          const emailResult = await sendZohoEmail({ toAddress, subject: built.subject, content: built.content });
 
           if (emailResult.success) {
             await supabase.schema("email_logs").from("sends").insert({
               to_address: toAddress,
-              subject,
+              subject: built.subject,
               template: "custom_tuition_confirmation",
               application_id: null,
               status: "success",
@@ -940,6 +1036,16 @@ export async function POST(request: NextRequest) {
           }
         } catch (err) {
           console.error("Custom tuition confirmation email failed:", err);
+          if (toAddress) {
+            await supabase.schema("email_logs").from("sends").insert({
+              to_address: toAddress,
+              subject: subject ?? "custom_tuition_confirmation (failed to build)",
+              template: "custom_tuition_confirmation",
+              application_id: null,
+              status: "error",
+              error_message: String(err).slice(0, 500),
+            }).then(undefined, () => {});
+          }
           sendDiscordNotification(
             createErrorEmbed({
               context: "Custom tuition confirmation email",
@@ -986,18 +1092,20 @@ export async function POST(request: NextRequest) {
       // Confirmation email (non-blocking)
       if (payerEmail) {
         (async () => {
+          let subject: string | undefined;
           try {
             const amountDollars = (amountCents / 100).toFixed(2);
-            const { subject, content } = await buildOneTimePaymentConfirmationEmail({
+            const built = await buildOneTimePaymentConfirmationEmail({
               payerName: payerName || "there",
               amountDollars,
               memo,
             });
-            const emailResult = await sendZohoEmail({ toAddress: payerEmail, subject, content });
+            subject = built.subject;
+            const emailResult = await sendZohoEmail({ toAddress: payerEmail, subject: built.subject, content: built.content });
             if (emailResult.success) {
               await supabase.schema("email_logs").from("sends").insert({
                 to_address: payerEmail,
-                subject,
+                subject: built.subject,
                 template: "one_time_payment_confirmation",
                 status: "success",
               });
@@ -1006,6 +1114,13 @@ export async function POST(request: NextRequest) {
             }
           } catch (err) {
             console.error("One-time payment confirmation email failed:", err);
+            await supabase.schema("email_logs").from("sends").insert({
+              to_address: payerEmail,
+              subject: subject ?? "one_time_payment_confirmation (failed to build)",
+              template: "one_time_payment_confirmation",
+              status: "error",
+              error_message: String(err).slice(0, 500),
+            }).then(undefined, () => {});
             sendDiscordNotification(
               createErrorEmbed({
                 context: "One-time payment confirmation email",
@@ -1068,25 +1183,27 @@ export async function POST(request: NextRequest) {
       // Confirmation email (non-blocking, with error embed fallback)
       if (donorEmail) {
         (async () => {
+          let subject: string | undefined;
           try {
             const amountDollars = (amountCents / 100).toFixed(2);
-            const { subject, content } = await buildDonationConfirmationEmail({
+            const built = await buildDonationConfirmationEmail({
               donorName,
               donorEmail,
               amountDollars,
               message: donationMessage,
             });
+            subject = built.subject;
 
             const emailResult = await sendZohoEmail({
               toAddress: donorEmail,
-              subject,
-              content,
+              subject: built.subject,
+              content: built.content,
             });
 
             if (emailResult.success) {
               await supabase.schema("email_logs").from("sends").insert({
                 to_address: donorEmail,
-                subject,
+                subject: built.subject,
                 template: "donation_confirmation",
                 status: "success",
               });
@@ -1095,6 +1212,15 @@ export async function POST(request: NextRequest) {
             }
           } catch (err) {
             console.error("Donation confirmation email failed:", err);
+            if (donorEmail) {
+              await supabase.schema("email_logs").from("sends").insert({
+                to_address: donorEmail,
+                subject: subject ?? "donation_confirmation (failed to build)",
+                template: "donation_confirmation",
+                status: "error",
+                error_message: String(err).slice(0, 500),
+              }).then(undefined, () => {});
+            }
             sendDiscordNotification(
               createErrorEmbed({
                 context: "Donation confirmation email",
@@ -1127,7 +1253,7 @@ export async function POST(request: NextRequest) {
           cover_fees: session.metadata?.cover_fees === "true",
           payer_name: session.metadata?.donor_name || null,
           payer_email:
-            session.metadata?.parent_email || session.metadata?.donor_email || session.customer_email || "",
+            session.metadata?.payer_email || session.metadata?.parent_email || session.metadata?.donor_email || session.customer_email || "",
           description: session.metadata?.description || null,
           student_id: session.metadata?.student_id || null,
           application_id: session.metadata?.application_id || null,
@@ -1284,21 +1410,23 @@ export async function POST(request: NextRequest) {
       ).catch((err) => console.error("Mobile summer tuition Discord notification failed:", err));
 
       (async () => {
+        const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
+        let subject: string | undefined;
         try {
-          const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
           if (!toAddress) return;
-          const { subject, content } = await buildSummerTuitionConfirmationEmail({
+          const built = await buildSummerTuitionConfirmationEmail({
             g1FullName: parentName !== "N/A" ? parentName : "Parent",
             childLegalName: childName !== "N/A" ? childName : "your child",
             planType,
             amountDollars,
             weeks: weeks.length > 0 ? weeks : undefined,
           });
-          const emailResult = await sendZohoEmail({ toAddress, subject, content });
+          subject = built.subject;
+          const emailResult = await sendZohoEmail({ toAddress, subject: built.subject, content: built.content });
           if (emailResult.success) {
             await supabase.schema("email_logs").from("sends").insert({
               to_address: toAddress,
-              subject,
+              subject: built.subject,
               template: "summer_tuition_confirmation",
               application_id: applicationId ?? null,
               status: "success",
@@ -1308,6 +1436,16 @@ export async function POST(request: NextRequest) {
           }
         } catch (err) {
           console.error("Mobile summer tuition confirmation email failed:", err);
+          if (toAddress) {
+            await supabase.schema("email_logs").from("sends").insert({
+              to_address: toAddress,
+              subject: subject ?? "summer_tuition_confirmation (failed to build)",
+              template: "summer_tuition_confirmation",
+              application_id: applicationId ?? null,
+              status: "error",
+              error_message: String(err).slice(0, 500),
+            }).then(undefined, () => {});
+          }
           sendDiscordNotification(createErrorEmbed({ context: "Mobile summer tuition confirmation email", error: String(err), details: { applicationId: applicationId ?? "N/A", studentId: studentId ?? "N/A" } })).catch(() => {});
         }
       })();
@@ -1346,10 +1484,11 @@ export async function POST(request: NextRequest) {
       ).catch((err) => console.error("Mobile aftercare Discord notification failed:", err));
 
       (async () => {
+        const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
+        let subject: string | undefined;
         try {
-          const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
           if (!toAddress) return;
-          const { subject, content } = await buildAftercareConfirmationEmail({
+          const built = await buildAftercareConfirmationEmail({
             g1FullName: parentName !== "N/A" ? parentName : "Parent",
             childLegalName: childName !== "N/A" ? childName : "your child",
             planType,
@@ -1357,14 +1496,18 @@ export async function POST(request: NextRequest) {
             selectedDays,
             amountDollars,
           });
-          const emailResult = await sendZohoEmail({ toAddress, subject, content });
+          subject = built.subject;
+          const emailResult = await sendZohoEmail({ toAddress, subject: built.subject, content: built.content });
           if (emailResult.success) {
-            await supabase.schema("email_logs").from("sends").insert({ to_address: toAddress, subject, template: "aftercare_tuition_confirmation", application_id: applicationId ?? null, status: "success" });
+            await supabase.schema("email_logs").from("sends").insert({ to_address: toAddress, subject: built.subject, template: "aftercare_tuition_confirmation", application_id: applicationId ?? null, status: "success" });
           } else {
             throw new Error(emailResult.error ?? "Unknown email error");
           }
         } catch (err) {
           console.error("Mobile aftercare confirmation email failed:", err);
+          if (toAddress) {
+            await supabase.schema("email_logs").from("sends").insert({ to_address: toAddress, subject: subject ?? "aftercare_tuition_confirmation (failed to build)", template: "aftercare_tuition_confirmation", application_id: applicationId ?? null, status: "error", error_message: String(err).slice(0, 500) }).then(undefined, () => {});
+          }
           sendDiscordNotification(createErrorEmbed({ context: "Mobile aftercare confirmation email", error: String(err), details: { applicationId: applicationId ?? "N/A", studentId: studentId ?? "N/A" } })).catch(() => {});
         }
       })();
@@ -1404,10 +1547,11 @@ export async function POST(request: NextRequest) {
       ).catch((err) => console.error("Mobile homeschool Discord notification failed:", err));
 
       (async () => {
+        const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
+        let subject: string | undefined;
         try {
-          const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
           if (!toAddress) return;
-          const { subject, content } = await buildHomeschoolDropInConfirmationEmail({
+          const built = await buildHomeschoolDropInConfirmationEmail({
             g1FullName: parentName !== "N/A" ? parentName : "Parent",
             childLegalName: childName !== "N/A" ? childName : "your child",
             program,
@@ -1416,14 +1560,18 @@ export async function POST(request: NextRequest) {
             selectedWeeks,
             amountDollars,
           });
-          const emailResult = await sendZohoEmail({ toAddress, subject, content });
+          subject = built.subject;
+          const emailResult = await sendZohoEmail({ toAddress, subject: built.subject, content: built.content });
           if (emailResult.success) {
-            await supabase.schema("email_logs").from("sends").insert({ to_address: toAddress, subject, template: "homeschool_dropin_confirmation", application_id: applicationId ?? null, status: "success" });
+            await supabase.schema("email_logs").from("sends").insert({ to_address: toAddress, subject: built.subject, template: "homeschool_dropin_confirmation", application_id: applicationId ?? null, status: "success" });
           } else {
             throw new Error(emailResult.error ?? "Unknown email error");
           }
         } catch (err) {
           console.error("Mobile homeschool drop-in confirmation email failed:", err);
+          if (toAddress) {
+            await supabase.schema("email_logs").from("sends").insert({ to_address: toAddress, subject: subject ?? "homeschool_dropin_confirmation (failed to build)", template: "homeschool_dropin_confirmation", application_id: applicationId ?? null, status: "error", error_message: String(err).slice(0, 500) }).then(undefined, () => {});
+          }
           sendDiscordNotification(createErrorEmbed({ context: "Mobile homeschool drop-in confirmation email", error: String(err), details: { applicationId: applicationId ?? "N/A", studentId: studentId ?? "N/A" } })).catch(() => {});
         }
       })();
@@ -1462,10 +1610,11 @@ export async function POST(request: NextRequest) {
       ).catch((err) => console.error("Mobile fun friday Discord notification failed:", err));
 
       (async () => {
+        const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
+        let subject: string | undefined;
         try {
-          const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
           if (!toAddress) return;
-          const { subject, content } = await buildFunFridayConfirmationEmail({
+          const built = await buildFunFridayConfirmationEmail({
             g1FullName: parentName !== "N/A" ? parentName : "Parent",
             childLegalName: childName !== "N/A" ? childName : "your child",
             planType,
@@ -1473,14 +1622,18 @@ export async function POST(request: NextRequest) {
             selectedFridays,
             amountDollars,
           });
-          const emailResult = await sendZohoEmail({ toAddress, subject, content });
+          subject = built.subject;
+          const emailResult = await sendZohoEmail({ toAddress, subject: built.subject, content: built.content });
           if (emailResult.success) {
-            await supabase.schema("email_logs").from("sends").insert({ to_address: toAddress, subject, template: "fun_friday_tuition_confirmation", application_id: applicationId ?? null, status: "success" });
+            await supabase.schema("email_logs").from("sends").insert({ to_address: toAddress, subject: built.subject, template: "fun_friday_tuition_confirmation", application_id: applicationId ?? null, status: "success" });
           } else {
             throw new Error(emailResult.error ?? "Unknown email error");
           }
         } catch (err) {
           console.error("Mobile fun friday confirmation email failed:", err);
+          if (toAddress) {
+            await supabase.schema("email_logs").from("sends").insert({ to_address: toAddress, subject: subject ?? "fun_friday_tuition_confirmation (failed to build)", template: "fun_friday_tuition_confirmation", application_id: applicationId ?? null, status: "error", error_message: String(err).slice(0, 500) }).then(undefined, () => {});
+          }
           sendDiscordNotification(createErrorEmbed({ context: "Mobile fun friday confirmation email", error: String(err), details: { applicationId: applicationId ?? "N/A", studentId: studentId ?? "N/A" } })).catch(() => {});
         }
       })();

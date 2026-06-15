@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { cssColors as colors, radius, shadows } from '../design-system'
+import { TransactionSidebar } from './TransactionSidebar'
 
 type Transaction = {
   id: string
@@ -128,7 +129,7 @@ export function PipelineClient({ transactions, emailLogs }: { transactions: Tran
   const [typeFilter, setTypeFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
   const [dateRange, setDateRange] = useState(30)
-  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [selectedRow, setSelectedRow] = useState<PipelineRow | null>(null)
 
   const rows = useMemo<PipelineRow[]>(() => {
     // Index email logs by application_id
@@ -146,13 +147,14 @@ export function PipelineClient({ transactions, emailLogs }: { transactions: Tran
     return transactions.map(tx => {
       let email: EmailLog | null = null
       const txTime = new Date(tx.created_at).getTime()
-      const WINDOW_MS = 30 * 60 * 1000
+      const WINDOW_MS = 24 * 60 * 60 * 1000
 
       if (tx.application_id && byAppId[tx.application_id]) {
         email = byAppId[tx.application_id]
           .filter(l => Math.abs(new Date(l.sent_at).getTime() - txTime) < WINDOW_MS)
           .sort((a, b) => Math.abs(new Date(a.sent_at).getTime() - txTime) - Math.abs(new Date(b.sent_at).getTime() - txTime))[0] ?? null
-      } else if (tx.payer_email) {
+      }
+      if (!email && tx.payer_email) {
         email = noAppLogs
           .filter(l => l.to_address === tx.payer_email && Math.abs(new Date(l.sent_at).getTime() - txTime) < WINDOW_MS)
           .sort((a, b) => Math.abs(new Date(a.sent_at).getTime() - txTime) - Math.abs(new Date(b.sent_at).getTime() - txTime))[0] ?? null
@@ -328,11 +330,11 @@ export function PipelineClient({ transactions, emailLogs }: { transactions: Tran
           </div>
         ) : (
           filtered.map(row => {
-            const isExpanded = expandedId === row.tx.id
+            const isSelected = selectedRow?.tx.id === row.tx.id
             return (
               <div key={row.tx.id} style={{ borderBottom: `1px solid ${colors.border}` }}>
                 <div
-                  onClick={() => setExpandedId(isExpanded ? null : row.tx.id)}
+                  onClick={() => setSelectedRow(isSelected ? null : row)}
                   style={{
                     display: 'grid',
                     gridTemplateColumns: '160px 1fr 140px 90px 90px 1fr',
@@ -340,11 +342,11 @@ export function PipelineClient({ transactions, emailLogs }: { transactions: Tran
                     gap: 12,
                     cursor: 'pointer',
                     alignItems: 'center',
-                    backgroundColor: isExpanded ? colors.elevated : 'transparent',
+                    backgroundColor: isSelected ? colors.elevated : 'transparent',
                     transition: 'background-color 0.1s',
                   }}
-                  onMouseEnter={e => { if (!isExpanded) (e.currentTarget as HTMLDivElement).style.backgroundColor = colors.elevated }}
-                  onMouseLeave={e => { if (!isExpanded) (e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent' }}
+                  onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLDivElement).style.backgroundColor = colors.elevated }}
+                  onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent' }}
                 >
                   <div style={{ fontSize: 12, color: colors.textSecondary }}>
                     {formatDate(row.tx.created_at)}
@@ -369,57 +371,16 @@ export function PipelineClient({ transactions, emailLogs }: { transactions: Tran
                      row.email?.subject ?? (row.emailStatus === 'missing' ? 'No email log found' : '—')}
                   </div>
                 </div>
-
-                {/* Expanded metadata panel */}
-                {isExpanded && (
-                  <div style={{
-                    padding: '12px 16px 16px',
-                    backgroundColor: colors.elevated,
-                    borderTop: `1px solid ${colors.border}`,
-                  }}>
-                    <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', marginBottom: 12 }}>
-                      <div>
-                        <div style={{ fontSize: 10, fontWeight: 600, color: colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Stripe Session</div>
-                        <div style={{ fontSize: 12, color: colors.textSecondary, fontFamily: 'monospace' }}>{row.tx.stripe_session_id}</div>
-                      </div>
-                      {row.email && (
-                        <div>
-                          <div style={{ fontSize: 10, fontWeight: 600, color: colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Email Sent At</div>
-                          <div style={{ fontSize: 12, color: colors.textSecondary }}>{formatDate(row.email.sent_at)}</div>
-                        </div>
-                      )}
-                      {row.email?.error_message && (
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 10, fontWeight: 600, color: colors.error, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Error Message</div>
-                          <div style={{ fontSize: 12, color: colors.error, fontFamily: 'monospace', wordBreak: 'break-all' }}>{row.email.error_message}</div>
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 10, fontWeight: 600, color: colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Stripe Metadata</div>
-                      <pre style={{
-                        fontSize: 11,
-                        color: colors.textSecondary,
-                        backgroundColor: colors.bg,
-                        border: `1px solid ${colors.border}`,
-                        borderRadius: radius.md,
-                        padding: '10px 12px',
-                        overflow: 'auto',
-                        maxHeight: 240,
-                        margin: 0,
-                        fontFamily: 'monospace',
-                        lineHeight: 1.6,
-                      }}>
-                        {JSON.stringify(row.tx.metadata, null, 2)}
-                      </pre>
-                    </div>
-                  </div>
-                )}
               </div>
             )
           })
         )}
       </div>
+
+      <TransactionSidebar
+        row={selectedRow}
+        onClose={() => setSelectedRow(null)}
+      />
     </div>
   )
 }
