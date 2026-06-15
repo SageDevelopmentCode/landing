@@ -8,8 +8,9 @@ DECLARE
   v_active_sessions json;
   v_enrollment      json;
   v_financials      json;
-  v_upcoming_tours  json;
-  v_month_start     date := date_trunc('month', now())::date;
+  v_upcoming_tours   json;
+  v_mobile_app_users json;
+  v_month_start      date := date_trunc('month', now())::date;
   v_month_end       date := (date_trunc('month', now()) + interval '1 month - 1 day')::date;
   v_today           date := now()::date;
 BEGIN
@@ -73,11 +74,27 @@ BEGIN
     LIMIT 5
   ) t;
 
+  -- 5. Users with push token (mobile app installed)
+  SELECT json_build_object(
+    'count', coalesce((SELECT count(*)::int FROM admin.users WHERE push_token IS NOT NULL AND is_deleted = false), 0),
+    'users', coalesce(
+      (SELECT json_agg(row_to_json(t)) FROM (
+        SELECT id, full_name, email, role
+        FROM admin.users
+        WHERE push_token IS NOT NULL
+          AND is_deleted = false
+        ORDER BY full_name ASC
+      ) t),
+      '[]'::json
+    )
+  ) INTO v_mobile_app_users;
+
   RETURN json_build_object(
-    'active_sessions', coalesce(v_active_sessions, '[]'::json),
-    'enrollment',      coalesce(v_enrollment, '[]'::json),
-    'financials',      coalesce(v_financials, json_build_object('revenue', 0, 'expenses', 0)),
-    'upcoming_tours',  coalesce(v_upcoming_tours, '[]'::json)
+    'active_sessions',  coalesce(v_active_sessions, '[]'::json),
+    'enrollment',       coalesce(v_enrollment, '[]'::json),
+    'financials',       coalesce(v_financials, json_build_object('revenue', 0, 'expenses', 0)),
+    'upcoming_tours',   coalesce(v_upcoming_tours, '[]'::json),
+    'mobile_app_users', coalesce(v_mobile_app_users, json_build_object('count', 0))
   );
 END;
 $$;

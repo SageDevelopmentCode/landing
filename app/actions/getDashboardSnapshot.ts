@@ -29,11 +29,24 @@ export type UpcomingTour = {
   num_children: number;
 };
 
+export type MobileAppUser = {
+  id: string;
+  full_name: string | null;
+  email: string;
+  role: string | null;
+};
+
+export type MobileAppUsers = {
+  count: number;
+  users: MobileAppUser[];
+};
+
 export type DashboardSnapshot = {
   active_sessions: ActiveSession[];
   enrollment: EnrollmentRow[];
   financials: Financials;
   upcoming_tours: UpcomingTour[];
+  mobile_app_users: MobileAppUsers;
 };
 
 export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {

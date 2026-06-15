@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Clock, Users, DollarSign, MapPin, ChevronRight, RefreshCw, CalendarDays } from "lucide-react";
+import { Clock, Users, DollarSign, MapPin, ChevronRight, RefreshCw, CalendarDays, Smartphone } from "lucide-react";
 import { cssColors as colors } from "../design-system";
 import type { DashboardSnapshot } from "@/app/actions/getDashboardSnapshot";
 import { getDashboardSnapshot } from "@/app/actions/getDashboardSnapshot";
@@ -260,6 +260,37 @@ function ToursWidget({ tours }: { tours: DashboardSnapshot["upcoming_tours"] }) 
   );
 }
 
+function MobileAppWidget({ mobileAppUsers }: { mobileAppUsers: DashboardSnapshot["mobile_app_users"] }) {
+  return (
+    <WidgetCard icon={<Smartphone className="w-4 h-4" />} iconColor={colors.info} title="Mobile App Users" href="/admin/users">
+      {mobileAppUsers.count === 0 ? (
+        <EmptyState label="No users on the app" />
+      ) : (
+        <div className="space-y-2">
+          <div
+            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold"
+            style={{ backgroundColor: colors.infoBg, color: colors.info }}
+          >
+            {mobileAppUsers.count} on the app
+          </div>
+          {mobileAppUsers.users.map((u) => (
+            <div key={u.id} className="flex items-center justify-between">
+              <span className="text-sm font-medium truncate" style={{ color: colors.textPrimary }}>
+                {u.full_name ?? u.email}
+              </span>
+              {u.role && (
+                <span className="text-xs flex-shrink-0 ml-2 capitalize" style={{ color: colors.textTertiary }}>
+                  {u.role}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </WidgetCard>
+  );
+}
+
 // --- Main export ---
 
 export function DashboardWidgets({
@@ -324,8 +355,12 @@ export function DashboardWidgets({
         {cell(<EnrollmentWidget rows={snapshot.enrollment} />, false, true)}
 
         {/* Row 3: Financials + Tours */}
-        {cell(<FinancialsWidget financials={snapshot.financials} />, true, false)}
-        {cell(<ToursWidget tours={snapshot.upcoming_tours} />, false, false)}
+        {cell(<FinancialsWidget financials={snapshot.financials} />, true, true)}
+        {cell(<ToursWidget tours={snapshot.upcoming_tours} />, false, true)}
+
+        {/* Row 4: Mobile App Users */}
+        {cell(<MobileAppWidget mobileAppUsers={snapshot.mobile_app_users} />, true, false)}
+        {cell(null, false, false)}
       </div>
     </div>
   );
