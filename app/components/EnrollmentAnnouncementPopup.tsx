@@ -87,11 +87,11 @@ export default function EnrollmentAnnouncementPopup() {
             {/* Bottom content zone */}
             <div className="bg-white px-8 py-8">
               <h2 className="text-3xl font-heading font-bold text-gray-800 mb-3">
-                Summer Enrollment is Open!
+                Our School Year Enrollment is Open!
               </h2>
 
               <p className="text-gray-600 font-body mb-1">
-                Limited spots! Apply today for our 2026 Summer Program.
+                Limited spots! Apply today for School Year 2026-2027.
               </p>
               <p className="text-gray-400 text-sm font-body mb-7">
                 Outdoor-centered. Small groups. Real learning.
@@ -99,7 +99,7 @@ export default function EnrollmentAnnouncementPopup() {
 
               {/* CTA button */}
               <Link
-                href="/apply"
+                href="/apply?tab=school-year"
                 onClick={dismiss}
                 className="flex items-center justify-center gap-2 w-full py-3.5 bg-primary text-white
                            font-semibold rounded-xl hover:bg-primary-hover transition-colors duration-200
@@ -112,7 +112,7 @@ export default function EnrollmentAnnouncementPopup() {
               {/* Dismiss link */}
               <div className="flex justify-center mt-4">
                 <Link
-                  href="/summer-2026"
+                  href="/school-year-2026-2027"
                   onClick={dismiss}
                   className="text-sm text-gray-400 hover:text-gray-600 transition-colors font-body"
                 >
