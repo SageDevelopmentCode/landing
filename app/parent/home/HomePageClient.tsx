@@ -967,8 +967,25 @@ export default function HomePageClient({
             </Link>
           )}
 
-          {/* Summer info banner */}
-          <SummerInfoSheet />
+          {/* Summer info + photos announcement cards side by side */}
+          <div className="grid grid-cols-2 gap-2">
+            <SummerInfoSheet />
+            <Link
+              href="/parent/photos"
+              className="w-full h-full rounded-2xl bg-gradient-to-br from-[#4a7c59] to-[#2d5a2d] px-4 py-3 shadow-sm hover:shadow-md transition-shadow flex items-center gap-3"
+            >
+              <span className="text-xl shrink-0">📸</span>
+              <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                <span className="text-sm font-bold text-white leading-snug">
+                  Check out today&apos;s photos!
+                </span>
+                <span className="text-xs text-white/70">
+                  ✨ New memories from school
+                </span>
+              </div>
+              <span className="text-white/70 text-sm shrink-0">→</span>
+            </Link>
+          </div>
 
           {/* Student Cards */}
           <section>

@@ -30,19 +30,18 @@ export default function SummerInfoSheet() {
       {/* Banner trigger */}
       <button
         onClick={() => setOpen(true)}
-        className="w-full text-left rounded-2xl bg-gradient-to-r from-[#f59e0b] to-[#f97316] p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+        className="w-full h-full text-left rounded-2xl bg-gradient-to-br from-[#f59e0b] to-[#f97316] px-4 py-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer flex items-center gap-3"
       >
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-1">
-            <span className="text-sm font-bold text-white">
-              ☀️ Summer Checklist &amp; Important Tuition Info
-            </span>
-            <span className="text-xs text-white/80">
-              Tap to view what to pack + tuition deadlines
-            </span>
-          </div>
-          <ChevronRight size={18} className="text-white shrink-0 ml-2" />
+        <span className="text-xl shrink-0">☀️</span>
+        <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+          <span className="text-sm font-bold text-white leading-snug">
+            Summer Checklist &amp; Tuition Info
+          </span>
+          <span className="text-xs text-white/80">
+            What to pack + deadlines
+          </span>
         </div>
+        <ChevronRight size={16} className="text-white/70 shrink-0" />
       </button>
 
       {/* Sidebar */}
