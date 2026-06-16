@@ -304,7 +304,7 @@ export default function Home() {
                 </span>
               </h2>
               <p className="text-slate-300 font-body text-base leading-relaxed mb-6 max-w-md">
-                One Friday of volcanoes, rockets, and galaxy slime. Drop off, we handle the magic, you pick up an excited kid with a take-home creation.
+                One Friday of volcanoes, rockets, and marshmallow towers. Drop off, we handle the magic, you pick up an excited kid with a take-home creation.
               </p>
 
               {/* Event detail pills */}
@@ -347,7 +347,7 @@ export default function Home() {
                 {[
                   { emoji: "🌋", title: "Volcano Model",     accent: "#ede9fe" },
                   { emoji: "🚀", title: "Rocket Ship Craft", accent: "#dbeafe" },
-                  { emoji: "🌌", title: "Galaxy Slime",      accent: "#fae8ff" },
+                  { emoji: "🍡", title: "Marshmallow Tower", accent: "#fae8ff" },
                 ].map((act, i) => (
                   <motion.div
                     key={act.title}
