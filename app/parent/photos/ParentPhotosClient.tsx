@@ -146,15 +146,14 @@ function PhotoLightbox({
 function ParentPhotoCard({
   photo,
   onOpen,
-  containerRef,
 }: {
   photo: TeacherPhoto;
   onOpen: (p: TeacherPhoto) => void;
-  containerRef?: (el: HTMLDivElement | null) => void;
 }) {
+  const [loaded, setLoaded] = useState(false);
+
   return (
     <motion.div
-      ref={containerRef}
       data-storage-path={photo.storage_path}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -162,17 +161,19 @@ function ParentPhotoCard({
       className="relative aspect-square overflow-hidden cursor-pointer bg-gray-100"
       onClick={() => onOpen(photo)}
     >
-      {photo.signed_url ? (
+      {(!photo.signed_url || !loaded) && (
+        <div className="absolute inset-0 bg-[#e8ede9] animate-pulse" />
+      )}
+      {photo.signed_url && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={photo.signed_url}
           alt={photo.caption ?? ""}
-          className="absolute inset-0 w-full h-full object-cover"
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+            loaded ? "opacity-100" : "opacity-0"
+          }`}
+          onLoad={() => setLoaded(true)}
         />
-      ) : (
-        <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-          <Camera className="w-8 h-8 text-gray-400" />
-        </div>
       )}
     </motion.div>
   );
@@ -196,80 +197,33 @@ export default function ParentPhotosClient({ initialPhotos }: Props) {
     initialPhotos.length > 0 ? (initialPhotos[0].taken_on ?? "no-date") : null
   );
 
-  // ─── Lazy signed-URL loading ──────────────────────────────────────────────
-  const urlObserverRef = useRef<IntersectionObserver | null>(null);
-  const observedPhotoIds = useRef<Set<string>>(new Set());
-  const pendingPathsRef = useRef<Set<string>>(new Set());
-  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // ─── Signed-URL loading ───────────────────────────────────────────────────
+  const CHUNK_SIZE = 30;
 
-  // On mount/navigation: reset observer state and fetch all signed URLs upfront.
-  // IntersectionObserver still handles lazy-loading as the user scrolls, but this
-  // ensures photos are visible immediately on first navigation (avoids observer timing race).
+  // Fetch all signed URLs in parallel chunks on mount.
+  // Earlier chunks resolve first, so photos near the top appear quickly.
   useEffect(() => {
-    observedPhotoIds.current.clear();
-    pendingPathsRef.current.clear();
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-      debounceTimerRef.current = null;
-    }
-    if (urlObserverRef.current) {
-      urlObserverRef.current.disconnect();
-      urlObserverRef.current = null;
-    }
-
-    const paths = initialPhotos.map((p) => p.storage_path);
-    if (paths.length === 0) {
+    if (initialPhotos.length === 0) {
       setPhotos([]);
       return;
     }
 
+    const chunks: string[][] = [];
+    for (let i = 0; i < initialPhotos.length; i += CHUNK_SIZE) {
+      chunks.push(initialPhotos.slice(i, i + CHUNK_SIZE).map((p) => p.storage_path));
+    }
+
     let cancelled = false;
-    getPhotoSignedUrlsBatch(paths).then((urlMap) => {
-      if (cancelled) return;
-      setPhotos(initialPhotos.map((p) =>
-        urlMap[p.storage_path] ? { ...p, signed_url: urlMap[p.storage_path] } : p
-      ));
+    chunks.forEach((chunkPaths) => {
+      getPhotoSignedUrlsBatch(chunkPaths).then((urlMap) => {
+        if (cancelled) return;
+        setPhotos((prev) =>
+          prev.map((p) => (urlMap[p.storage_path] ? { ...p, signed_url: urlMap[p.storage_path] } : p))
+        );
+      });
     });
     return () => { cancelled = true; };
   }, [initialPhotos]);
-
-  function getUrlObserver() {
-    if (!urlObserverRef.current) {
-      urlObserverRef.current = new IntersectionObserver(
-        (entries) => {
-          let added = false;
-          for (const entry of entries) {
-            if (!entry.isIntersecting) continue;
-            const storagePath = (entry.target as HTMLElement).dataset.storagePath;
-            if (storagePath) {
-              pendingPathsRef.current.add(storagePath);
-              added = true;
-            }
-            urlObserverRef.current?.unobserve(entry.target);
-          }
-          if (!added) return;
-          if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-          debounceTimerRef.current = setTimeout(async () => {
-            const paths = [...pendingPathsRef.current];
-            pendingPathsRef.current.clear();
-            const urlMap = await getPhotoSignedUrlsBatch(paths);
-            setPhotos((prev) =>
-              prev.map((p) => (urlMap[p.storage_path] ? { ...p, signed_url: urlMap[p.storage_path] } : p))
-            );
-          }, 50);
-        },
-        { rootMargin: "200px" }
-      );
-    }
-    return urlObserverRef.current;
-  }
-
-  useEffect(() => {
-    return () => {
-      urlObserverRef.current?.disconnect();
-      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-    };
-  }, []);
 
   // ─── TOC scroll tracking ──────────────────────────────────────────────────
   function scrollToSection(date: string) {
@@ -369,12 +323,6 @@ export default function ParentPhotosClient({ initialPhotos }: Props) {
                       key={photo.id}
                       photo={photo}
                       onOpen={setLightboxPhoto}
-                      containerRef={(el) => {
-                        if (!el || photo.signed_url) return;
-                        if (observedPhotoIds.current.has(photo.id)) return;
-                        observedPhotoIds.current.add(photo.id);
-                        getUrlObserver().observe(el);
-                      }}
                     />
                   ))}
                 </div>
