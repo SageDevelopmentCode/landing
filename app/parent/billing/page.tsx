@@ -136,7 +136,7 @@ export default async function BillingRoute() {
       .schema("billing")
       .from("stripe_transactions")
       .select("*")
-      .eq("parent_id", effectiveParentId)
+      .in("parent_id", [...new Set([effectiveParentId, user.id])])
       .eq("is_deleted", false)
       .order("created_at", { ascending: false }),
     adminClient
@@ -149,7 +149,7 @@ export default async function BillingRoute() {
       .schema("billing")
       .from("pending_payment_requests")
       .select("id, student_id, program, payment_type, week, month, label, amount_cents, created_at")
-      .eq("parent_id", effectiveParentId)
+      .in("parent_id", [...new Set([effectiveParentId, user.id])])
       .eq("status", "pending")
       .order("created_at", { ascending: false }),
     adminClient
@@ -386,7 +386,7 @@ export default async function BillingRoute() {
         <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={primaryOwnerName} />
 
         <main className="flex-1 flex overflow-hidden">
-          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} unpaidSummerEnrollments={unpaidSummerEnrollments} paidWeeksByStudent={paidWeeksByStudent} parentId={user.id} parentEmail={user.email ?? ""} nonEnrolledApps={nonEnrolledApps} homeschoolDropInApps={homeschoolDropInApps} paidHomeschoolByStudent={paidHomeschoolByStudent} paidAftercareByStudent={paidAftercareByStudent} paidFunFridayByStudent={paidFunFridayByStudent} summerNotesByStudent={summerNotesByStudent} homeschoolNotesByStudent={homeschoolNotesByStudent} schoolYearOnlyApps={schoolYearOnlyApps} hasSubmittedTuitionFeedback={hasSubmittedTuitionFeedback} />
+          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} unpaidSummerEnrollments={unpaidSummerEnrollments} paidWeeksByStudent={paidWeeksByStudent} parentId={effectiveParentId} parentEmail={user.email ?? ""} nonEnrolledApps={nonEnrolledApps} homeschoolDropInApps={homeschoolDropInApps} paidHomeschoolByStudent={paidHomeschoolByStudent} paidAftercareByStudent={paidAftercareByStudent} paidFunFridayByStudent={paidFunFridayByStudent} summerNotesByStudent={summerNotesByStudent} homeschoolNotesByStudent={homeschoolNotesByStudent} schoolYearOnlyApps={schoolYearOnlyApps} hasSubmittedTuitionFeedback={hasSubmittedTuitionFeedback} />
         </main>
       </div>
       <Footer />

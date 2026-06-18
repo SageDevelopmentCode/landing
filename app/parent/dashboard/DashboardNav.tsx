@@ -23,6 +23,7 @@ import {
   Camera,
   Gift,
   Newspaper,
+  Clapperboard,
 } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 import HelpWidget from "../components/HelpWidget";
@@ -46,6 +47,7 @@ const moreItems: {
   iconColor?: string;
 }[] = [
   { label: "Feed", icon: Rss, href: "/parent/feed", iconColor: "text-sky-400" },
+  { label: "Reels", icon: Clapperboard, href: "/parent/feed?tab=reel", iconColor: "text-rose-400" },
   { label: "Enrollment", icon: ClipboardCheck, href: "/parent/dashboard", iconColor: "text-violet-400" },
   { label: "Preferences", icon: SlidersHorizontal, href: "/parent/preferences", iconColor: "text-slate-400" },
   { label: "Forms & Documents", icon: FileText, href: "/parent/forms", iconColor: "text-amber-400" },
@@ -80,8 +82,10 @@ export default function DashboardNav({
 
   function navHref(parentPath: string) {
     if (!impersonateBase) return parentPath;
-    const slug = parentPath.replace("/parent/", "");
-    return `${impersonateBase}/${slug}`;
+    const [path, query] = parentPath.split("?");
+    const slug = path.replace("/parent/", "");
+    const base = `${impersonateBase}/${slug}`;
+    return query ? `${base}?${query}` : base;
   }
 
   useEffect(() => {
@@ -111,7 +115,7 @@ export default function DashboardNav({
       <nav className="hidden md:flex items-center gap-2">
         {primaryNavItems.map(({ label, icon: Icon, href, badge, iconColor }) => {
           const resolvedHref = navHref(href);
-          const isActive = href !== "#" && pathname === resolvedHref;
+          const isActive = href !== "#" && pathname === resolvedHref.split("?")[0];
           return (
             <Link
               key={label}
@@ -151,7 +155,7 @@ export default function DashboardNav({
               {moreItems.map(({ label, icon: Icon, href, action, badge, iconColor }) => {
                 if (action === "manage-access") return null;
                 const resolvedHref = href ? navHref(href) : undefined;
-                const isActive = !!resolvedHref && pathname === resolvedHref;
+                const isActive = !!resolvedHref && pathname === resolvedHref.split("?")[0];
                 const baseClass = `flex flex-col items-center justify-center gap-1 w-full text-center px-1 py-3 rounded-lg text-xs font-body transition-colors cursor-pointer ${
                   isActive
                     ? "text-[#4a7c59] bg-[#4a7c59]/8 font-semibold"
@@ -212,7 +216,7 @@ export default function DashboardNav({
           <div className="px-4 pt-2 pb-3 grid grid-cols-2 gap-1">
             {primaryNavItems.map(({ label, icon: Icon, href, badge, iconColor }) => {
               const resolvedHref = navHref(href);
-              const isActive = href !== "#" && pathname === resolvedHref;
+              const isActive = href !== "#" && pathname === resolvedHref.split("?")[0];
               return (
                 <Link
                   key={label}
@@ -237,7 +241,7 @@ export default function DashboardNav({
             {moreItems.map(({ label, icon: Icon, href, action, badge, iconColor }) => {
               if (action === "manage-access") return null;
               const resolvedHref = href ? navHref(href) : undefined;
-              const isActive = !!resolvedHref && pathname === resolvedHref;
+              const isActive = !!resolvedHref && pathname === resolvedHref.split("?")[0];
               const baseClass = `flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-body transition-colors cursor-pointer ${
                 isActive
                   ? "text-[#4a7c59] bg-[#4a7c59]/8 font-semibold"

@@ -3,6 +3,7 @@
 import { useState, useTransition, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MoreHorizontal,
@@ -1075,6 +1076,7 @@ export default function ParentFeedClient({
   profileImageUrl?: string | null;
   teachers: Teacher[];
 }) {
+  const searchParams = useSearchParams();
   const [posts, setPosts] = useState<FeedPost[]>(initialPosts);
   const [reelPosts, setReelPosts] = useState<ReelPost[]>(initialReelPosts);
   const [feedMode, setFeedMode] = useState<"feed" | "reel">("feed");
@@ -1082,8 +1084,13 @@ export default function ParentFeedClient({
   const [selectedTeacherId, setSelectedTeacherId] = useState<string | null>(null);
 
   useEffect(() => {
-    const saved = sessionStorage.getItem("parentFeedMode");
-    if (saved === "feed" || saved === "reel") setFeedMode(saved);
+    const param = searchParams.get("tab");
+    if (param === "feed" || param === "reel") {
+      setFeedMode(param);
+    } else {
+      const saved = sessionStorage.getItem("parentFeedMode");
+      if (saved === "feed" || saved === "reel") setFeedMode(saved);
+    }
   }, []);
   useEffect(() => { sessionStorage.setItem("parentFeedMode", feedMode); }, [feedMode]);
 

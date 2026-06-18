@@ -5,6 +5,7 @@ import {
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { Suspense } from "react";
 import DashboardNav from "../dashboard/DashboardNav";
 import DashboardHeader from "../dashboard/DashboardHeader";
 import SharedAccessBanner from "@/app/parent/dashboard/SharedAccessBanner";
@@ -103,13 +104,15 @@ export default async function ParentFeedPage() {
       <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={primaryOwnerName} />
 
       <main className="flex-1 flex flex-col overflow-hidden">
-        <ParentFeedClient
-          currentUser={currentUser}
-          initialPosts={initialPosts}
-          initialReelPosts={initialReelPosts}
-          profileImageUrl={adminUser?.profile_image_url ?? null}
-          teachers={teachers ?? []}
-        />
+        <Suspense>
+          <ParentFeedClient
+            currentUser={currentUser}
+            initialPosts={initialPosts}
+            initialReelPosts={initialReelPosts}
+            profileImageUrl={adminUser?.profile_image_url ?? null}
+            teachers={teachers ?? []}
+          />
+        </Suspense>
       </main>
     </div>
   );
