@@ -17,7 +17,7 @@ import {
 
 export async function POST(request: NextRequest) {
   try {
-    const { transactionId } = await request.json()
+    const { transactionId, overrideEmail } = await request.json()
     if (!transactionId) {
       return NextResponse.json({ error: 'transactionId is required' }, { status: 400 })
     }
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Transaction not found' }, { status: 404 })
     }
 
-    const toAddress: string = tx.payer_email ?? (tx.metadata as Record<string, string> | null)?.payer_email ?? (tx.metadata as Record<string, string> | null)?.parent_email ?? (tx.metadata as Record<string, string> | null)?.donor_email ?? ''
+    const toAddress: string = (overrideEmail?.trim()) || tx.payer_email || (tx.metadata as Record<string, string> | null)?.payer_email || (tx.metadata as Record<string, string> | null)?.parent_email || (tx.metadata as Record<string, string> | null)?.donor_email || ''
     if (!toAddress) {
       return NextResponse.json({ error: 'No email address on file for this transaction.' }, { status: 400 })
     }

@@ -87,12 +87,14 @@ export function TransactionSidebar({ row, onClose }: TransactionSidebarProps) {
   const [sendResult, setSendResult] = useState<'success' | 'error' | null>(null)
   const [sendError, setSendError] = useState<string | null>(null)
   const [emailThreadKey, setEmailThreadKey] = useState(0)
+  const [showResendForm, setShowResendForm] = useState(false)
+  const [resendEmail, setResendEmail] = useState('')
 
   const tx = row?.tx ?? null
   const emailStatus = row?.emailStatus ?? 'missing'
   const emailLog = row?.email ?? null
 
-  const handleResend = async () => {
+  const handleResend = async (overrideEmail?: string) => {
     if (!tx || sending) return
     setSending(true)
     setSendResult(null)
@@ -101,7 +103,7 @@ export function TransactionSidebar({ row, onClose }: TransactionSidebarProps) {
       const res = await fetch('/api/admin/resend-payment-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ transactionId: tx.id }),
+        body: JSON.stringify({ transactionId: tx.id, ...(overrideEmail?.trim() ? { overrideEmail: overrideEmail.trim() } : {}) }),
       })
       const json = await res.json().catch(() => ({}))
       if (!res.ok) {
@@ -215,19 +217,99 @@ export function TransactionSidebar({ row, onClose }: TransactionSidebarProps) {
                 )}
               </div>
             ) : emailStatus === 'sent' ? (
-              <div style={{
-                padding: '10px 14px',
-                backgroundColor: colors.elevated,
-                border: `1px solid ${colors.border}`,
-                borderRadius: radius.md,
-              }}>
-                <p style={{ fontSize: 13, color: colors.success, margin: 0 }}>
-                  ✓ Confirmation email was sent
-                </p>
-                {emailLog && (
-                  <p style={{ fontSize: 11, color: colors.textTertiary, marginTop: 4, marginBottom: 0 }}>
-                    {formatDate(emailLog.sent_at)} · {emailLog.subject}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{
+                  padding: '10px 14px',
+                  backgroundColor: colors.elevated,
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: radius.md,
+                }}>
+                  <p style={{ fontSize: 13, color: colors.success, margin: 0 }}>
+                    ✓ Confirmation email was sent
                   </p>
+                  {emailLog && (
+                    <p style={{ fontSize: 11, color: colors.textTertiary, marginTop: 4, marginBottom: 0 }}>
+                      {formatDate(emailLog.sent_at)} · {emailLog.subject}
+                    </p>
+                  )}
+                  {emailLog?.to_address && (
+                    <p style={{ fontSize: 11, color: colors.textTertiary, marginTop: 2, marginBottom: 0 }}>
+                      Sent to: <span style={{ fontFamily: 'monospace' }}>{emailLog.to_address}</span>
+                    </p>
+                  )}
+                </div>
+                {!showResendForm ? (
+                  <button
+                    onClick={() => { setShowResendForm(true); setResendEmail(tx.payer_email ?? ''); setSendResult(null); setSendError(null); }}
+                    style={{
+                      alignSelf: 'flex-start',
+                      background: 'none',
+                      border: 'none',
+                      padding: 0,
+                      fontSize: 12,
+                      color: colors.textSecondary,
+                      cursor: 'pointer',
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    Resend to a different address
+                  </button>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <input
+                      type="email"
+                      value={resendEmail}
+                      onChange={(e) => setResendEmail(e.target.value)}
+                      placeholder="Email address"
+                      style={{
+                        width: '100%',
+                        padding: '8px 10px',
+                        fontSize: 13,
+                        border: `1px solid ${colors.border}`,
+                        borderRadius: radius.md,
+                        backgroundColor: colors.elevated,
+                        color: colors.textPrimary,
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button
+                        onClick={() => handleResend(resendEmail)}
+                        disabled={sending || !resendEmail.trim() || sendResult === 'success'}
+                        style={{
+                          flex: 1,
+                          padding: '8px 12px',
+                          backgroundColor: sendResult === 'success' ? colors.success : colors.accent,
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: radius.md,
+                          fontSize: 13,
+                          fontWeight: 600,
+                          cursor: sending || !resendEmail.trim() || sendResult === 'success' ? 'default' : 'pointer',
+                          opacity: sending || !resendEmail.trim() ? 0.6 : 1,
+                        }}
+                      >
+                        {sending ? 'Sending…' : sendResult === 'success' ? '✓ Sent!' : 'Send'}
+                      </button>
+                      <button
+                        onClick={() => { setShowResendForm(false); setSendResult(null); setSendError(null); }}
+                        style={{
+                          padding: '8px 12px',
+                          background: 'none',
+                          border: `1px solid ${colors.border}`,
+                          borderRadius: radius.md,
+                          fontSize: 13,
+                          color: colors.textSecondary,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    {sendResult === 'error' && sendError && (
+                      <p style={{ fontSize: 12, color: colors.error, margin: 0 }}>{sendError}</p>
+                    )}
+                  </div>
                 )}
               </div>
             ) : (
