@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { Download, Share2 } from "lucide-react";
 import { type ReelPost } from "@/app/teacher/feed/reelActions";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -80,6 +81,7 @@ function ReelCard({
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const shouldLoad = index <= activeIndex + 2;
   const isActive = index === activeIndex;
@@ -124,6 +126,13 @@ function ReelCard({
     if (!v) return;
     if (v.paused) { v.play(); setIsPlaying(true); }
     else { v.pause(); setIsPlaying(false); }
+  }
+
+  function handleShare(e: React.MouseEvent) {
+    e.stopPropagation();
+    navigator.clipboard.writeText(`${window.location.origin}/reels/${reel.id}`);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   function handleToggleMute(e: React.MouseEvent) {
@@ -189,6 +198,37 @@ function ReelCard({
           )}
         </div>
 
+        {/* Download + share buttons — top left, side by side */}
+        <div className="absolute top-4 left-4 flex flex-col gap-1" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center gap-2">
+            {reel.storage_url && (
+              <a
+                href={reel.storage_url}
+                download
+                onClick={(e) => e.stopPropagation()}
+                className="p-2.5 rounded-full bg-black/40 text-white active:bg-black/60 transition-colors"
+                aria-label="Download video"
+              >
+                <Download className="w-5 h-5" />
+              </a>
+            )}
+            <button
+              onClick={handleShare}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-full text-white text-xs font-bold shadow-lg active:scale-95 transition-transform"
+              style={{ background: "linear-gradient(135deg, #f97316, #ec4899)" }}
+              aria-label="Copy share link"
+            >
+              <Share2 className="w-4 h-4" />
+              Share
+            </button>
+          </div>
+          {copied && (
+            <div className="mt-1 bg-white text-gray-800 text-xs font-semibold px-3 py-1.5 rounded-full shadow-lg pointer-events-none whitespace-nowrap">
+              Link copied!
+            </div>
+          )}
+        </div>
+
         {/* Mute toggle — top right */}
         <button
           onClick={handleToggleMute}
@@ -211,10 +251,26 @@ function ReelCard({
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-export default function ReelsPageClient({ initialReels }: { initialReels: ReelPost[] }) {
+export default function ReelsPageClient({
+  initialReels,
+  initialIndex = 0,
+}: {
+  initialReels: ReelPost[];
+  initialIndex?: number;
+}) {
   const [reels] = useState<ReelPost[]>(initialReels);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(initialIndex);
   const [isMuted, setIsMuted] = useState(true);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to the deep-linked reel on first render
+  useEffect(() => {
+    if (!initialIndex) return;
+    const container = scrollRef.current;
+    if (!container) return;
+    container.scrollTop = initialIndex * window.innerHeight;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (reels.length === 0) {
     return (
@@ -226,7 +282,7 @@ export default function ReelsPageClient({ initialReels }: { initialReels: ReelPo
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-black">
-      <div className="h-full w-full overflow-y-auto snap-y snap-mandatory">
+      <div ref={scrollRef} className="h-full w-full overflow-y-auto snap-y snap-mandatory">
         {reels.map((reel, i) => (
           <ReelCard
             key={reel.id}
