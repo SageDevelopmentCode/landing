@@ -189,7 +189,7 @@ export function TransactionSidebar({ row, onClose }: TransactionSidebarProps) {
                   Our system has no record of sending this — check the Zoho email history below before resending, in case it was already delivered.
                 </p>
                 <button
-                  onClick={handleResend}
+                  onClick={() => handleResend()}
                   disabled={sending || sendResult === 'success'}
                   style={{
                     width: '100%',
