@@ -143,14 +143,14 @@ function ReelCard({
   }
 
   return (
-    // Mobile: full-bleed black. Desktop: neutral bg, centered 9:16 pillarbox.
+    // Outer card: flex centering container. Inner wrapper: always relative so buttons anchor to it.
     <div
       ref={containerRef}
-      className="relative h-screen w-full snap-start flex-shrink-0 bg-black md:bg-[#f5f3ef] md:flex md:items-center md:justify-center md:py-4"
+      className="h-screen w-full snap-start flex-shrink-0 bg-black flex items-center justify-center"
       onClick={togglePlay}
     >
-      {/* Inner video column — mobile: fills screen; desktop: 9:16 centered box */}
-      <div className="absolute inset-0 bg-black md:static md:inset-auto md:rounded-2xl md:overflow-hidden md:shadow-xl md:h-full md:aspect-[9/16]">
+      {/* Inner video column — mobile: w-full h-full; desktop: 9:16 centered box. Always relative. */}
+      <div className="relative w-full h-full bg-black md:w-auto md:h-full md:aspect-[9/16] md:rounded-2xl md:overflow-hidden md:shadow-xl">
         {/* Video */}
         <video
           ref={videoRef}
