@@ -206,7 +206,7 @@ function ReelCard({
                 href={reel.storage_url}
                 download
                 onClick={(e) => e.stopPropagation()}
-                className="p-2.5 rounded-full bg-black/40 text-white active:bg-black/60 transition-colors"
+                className="p-2.5 rounded-full bg-[#4a7c59] text-white shadow-sm active:scale-95 transition-transform"
                 aria-label="Download video"
               >
                 <Download className="w-5 h-5" />
@@ -214,7 +214,7 @@ function ReelCard({
             )}
             <button
               onClick={handleShare}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-full text-white text-xs font-bold shadow-lg active:scale-95 transition-transform"
+              className="flex items-center gap-1.5 px-3 h-10 rounded-full text-white text-xs font-bold shadow-lg active:scale-95 transition-transform"
               style={{ background: "linear-gradient(135deg, #f97316, #ec4899)" }}
               aria-label="Copy share link"
             >
@@ -232,7 +232,7 @@ function ReelCard({
         {/* Mute toggle — top right */}
         <button
           onClick={handleToggleMute}
-          className="absolute top-4 right-4 p-2.5 rounded-full bg-black/40 text-white active:bg-black/60 transition-colors"
+          className="absolute top-4 right-4 p-2.5 rounded-full bg-[#4a7c59] text-white shadow-sm active:scale-95 transition-transform"
         >
           {isMuted ? (
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
