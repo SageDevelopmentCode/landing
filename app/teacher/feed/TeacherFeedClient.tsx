@@ -134,6 +134,14 @@ function formatTimestamp(iso: string): string {
   return date.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
+function ClientTimestamp({ iso }: { iso: string }) {
+  const [label, setLabel] = useState("");
+  useEffect(() => {
+    setLabel(formatTimestamp(iso));
+  }, [iso]);
+  return <span>{label}</span>;
+}
+
 function formatFileSize(bytes: number | null): string {
   if (!bytes) return "";
   if (bytes < 1024) return `${bytes} B`;
@@ -456,7 +464,7 @@ function PostCard({
               {post.teacher_name}
             </p>
             <p className="text-xs text-gray-400 font-body">
-              {formatRole(post.teacher_role)} · {formatTimestamp(post.created_at)}
+              {formatRole(post.teacher_role)} · <ClientTimestamp iso={post.created_at} />
             </p>
           </div>
         </div>
@@ -681,7 +689,7 @@ function ReelCard({
             />
             <div>
               <p className="text-sm font-semibold font-body text-white leading-tight drop-shadow">{post.teacher_name}</p>
-              <p className="text-xs text-white/70 font-body drop-shadow">{formatTimestamp(post.created_at)}</p>
+              <p className="text-xs text-white/70 font-body drop-shadow"><ClientTimestamp iso={post.created_at} /></p>
             </div>
           </div>
           {post.caption && (
@@ -799,7 +807,7 @@ function CommentItem({
           <p className="text-sm font-body text-gray-600 leading-relaxed">{comment.body}</p>
         </div>
         <div className="flex items-center gap-3 mt-1 ml-1">
-          <p className="text-xs text-gray-400 font-body">{formatTimestamp(comment.created_at)}</p>
+          <p className="text-xs text-gray-400 font-body"><ClientTimestamp iso={comment.created_at} /></p>
           <button
             onClick={() => onReply(comment.id, comment.author_name)}
             className="text-xs text-gray-300 hover:text-[#4a7c59] transition-colors opacity-0 group-hover/comment:opacity-100 font-body"
@@ -890,7 +898,7 @@ function PostSidebarContent({
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold font-body text-gray-800">{post.teacher_name}</p>
           <p className="text-xs text-gray-400 font-body">
-            {formatRole(post.teacher_role)} · {formatTimestamp(post.created_at)}
+            {formatRole(post.teacher_role)} · <ClientTimestamp iso={post.created_at} />
           </p>
         </div>
         <button
