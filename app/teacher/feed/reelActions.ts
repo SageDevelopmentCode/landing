@@ -168,46 +168,33 @@ export async function createReel(formData: FormData): Promise<string> {
   return reel.id;
 }
 
-// ─── Upload Reel Video ────────────────────────────────────────────────────────
+// ─── Update Reel Storage Path ─────────────────────────────────────────────────
+// Called after the client uploads the video directly to Supabase Storage.
+// Only persists the resulting path — no binary data passes through the Server Action.
 
-export async function uploadReelVideo(formData: FormData): Promise<{ error?: string }> {
+export async function updateReelStoragePath(
+  reelId: string,
+  storagePath: string,
+  durationSecs: number | null,
+): Promise<{ error?: string }> {
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated" };
 
-  const reelId = formData.get("reelId") as string;
-  const file = formData.get("file") as File;
-  const durationSecs = formData.get("durationSecs") ? Number(formData.get("durationSecs")) : null;
-
-  if (!reelId || !file) return { error: "Missing required fields" };
-
-  const timestamp = Date.now();
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-  const storagePath = `reels/${user.id}/${reelId}/${timestamp}-${safeName}`;
-
   const adminClient = createAdminClient();
 
-  const { error: uploadError } = await adminClient.storage
-    .from("feed-media")
-    .upload(storagePath, file, { contentType: file.type, upsert: false });
-
-  if (uploadError) {
-    console.error("[uploadReelVideo] storage upload error:", uploadError.message);
-    return { error: uploadError.message };
-  }
-
-  const { error: dbError } = await adminClient
+  const { error } = await adminClient
     .schema("reels")
     .from("posts")
     .update({ storage_url: storagePath, duration_secs: durationSecs })
     .eq("id", reelId)
     .eq("teacher_id", user.id);
 
-  if (dbError) {
-    console.error("[uploadReelVideo] DB update error:", dbError.message);
-    return { error: dbError.message };
+  if (error) {
+    console.error("[updateReelStoragePath] DB update error:", error.message);
+    return { error: error.message };
   }
 
   revalidatePath("/teacher/feed");

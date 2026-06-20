@@ -39,13 +39,14 @@ import {
 import {
   getReels,
   createReel,
-  uploadReelVideo,
+  updateReelStoragePath,
   deleteReel,
   toggleReelReaction,
   addReelComment,
   deleteReelComment,
   type ReelPost,
 } from "./reelActions";
+import { createClient as createBrowserClient } from "@/app/lib/supabase-browser";
 import { DEFAULT_REACTIONS } from "./constants";
 import { POST_TYPES, getPostType } from "./postTypes";
 import { compressImage } from "@/app/utils/compressImage";
@@ -1318,12 +1319,27 @@ function ComposeBar({
           return;
         }
         if (mediaQueue.length > 0) {
-          const mfd = new FormData();
-          mfd.append("reelId", reelId);
-          mfd.append("file", mediaQueue[0].file);
-          const result = await uploadReelVideo(mfd);
+          const file = mediaQueue[0].file;
+          const supabase = createBrowserClient();
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) { setUploadError("Not authenticated"); return; }
+
+          const timestamp = Date.now();
+          const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+          const storagePath = `reels/${user.id}/${reelId}/${timestamp}-${safeName}`;
+
+          const { error: storageError } = await supabase.storage
+            .from("feed-media")
+            .upload(storagePath, file, { contentType: file.type, upsert: false });
+
+          if (storageError) {
+            setUploadError(`Video upload failed: ${storageError.message}`);
+            return;
+          }
+
+          const result = await updateReelStoragePath(reelId, storagePath, null);
           if (result.error) {
-            setUploadError(`Video upload failed: ${result.error}`);
+            setUploadError(`Failed to save video: ${result.error}`);
             return;
           }
         }
