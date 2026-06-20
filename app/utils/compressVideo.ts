@@ -73,7 +73,7 @@ export async function compressVideo(
   const uint8 = data instanceof Uint8Array ? data : new Uint8Array(data as unknown as ArrayBuffer);
   const plain = uint8.buffer.slice(uint8.byteOffset, uint8.byteOffset + uint8.byteLength);
   const baseName = file.name.replace(/\.[^.]+$/, "");
-  return new File([plain], `${baseName}.mp4`, { type: "video/mp4" });
+  return new File([plain as ArrayBuffer], `${baseName}.mp4`, { type: "video/mp4" });
 }
 
 function getExtension(filename: string): string {
