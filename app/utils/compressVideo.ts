@@ -70,7 +70,7 @@ export async function compressVideo(
   // Produce a detached plain ArrayBuffer — new Uint8Array(sab).buffer still references
   // the SharedArrayBuffer, which can't be serialized across the Server Action boundary.
   // slice() always returns a plain ArrayBuffer copy.
-  const uint8 = data instanceof Uint8Array ? data : new Uint8Array(data as ArrayBuffer);
+  const uint8 = data instanceof Uint8Array ? data : new Uint8Array(data as unknown as ArrayBuffer);
   const plain = uint8.buffer.slice(uint8.byteOffset, uint8.byteOffset + uint8.byteLength);
   const baseName = file.name.replace(/\.[^.]+$/, "");
   return new File([plain], `${baseName}.mp4`, { type: "video/mp4" });
