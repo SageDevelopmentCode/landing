@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Download, Share2 } from "lucide-react";
+import { ChevronUp, Download, Share2 } from "lucide-react";
 import { type ReelPost } from "@/app/teacher/feed/reelActions";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -58,6 +58,28 @@ function AuthorAvatar({
     <div className={`w-7 h-7 text-xs ${color} rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0`}>
       {initials}
     </div>
+  );
+}
+
+// ─── SwipeUpHint ──────────────────────────────────────────────────────────────
+
+function SwipeUpHint() {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.4 }}
+      className="absolute bottom-28 left-0 right-0 flex flex-col items-center gap-1 pointer-events-none"
+    >
+      <motion.div
+        animate={{ y: [0, -6, 0] }}
+        transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <ChevronUp className="w-5 h-5 text-white/60" />
+      </motion.div>
+      <span className="text-xs text-white/50 tracking-wide">Swipe up</span>
+    </motion.div>
   );
 }
 
@@ -178,6 +200,11 @@ function ReelCard({
               </div>
             </motion.div>
           )}
+        </AnimatePresence>
+
+        {/* Swipe-up hint — first reel only */}
+        <AnimatePresence>
+          {index === 0 && isActive && <SwipeUpHint />}
         </AnimatePresence>
 
         {/* Bottom gradient + author + caption */}
