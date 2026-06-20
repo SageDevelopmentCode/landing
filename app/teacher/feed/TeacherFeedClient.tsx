@@ -1224,6 +1224,10 @@ function ComposeBar({
         }
         setCompressing(false);
         setCompressionProgress(0);
+        if (compressed.size < 10_000) {
+          setUploadError("Compressed video is empty. Try a different file or format.");
+          continue;
+        }
         valid.push({ file: compressed, previewUrl: null });
       } else {
         let processedFile: File;

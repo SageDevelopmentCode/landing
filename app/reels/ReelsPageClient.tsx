@@ -260,7 +260,7 @@ export default function ReelsPageClient({
 }) {
   const [reels] = useState<ReelPost[]>(initialReels);
   const [activeIndex, setActiveIndex] = useState(initialIndex);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Scroll to the deep-linked reel on first render
