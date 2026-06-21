@@ -78,7 +78,8 @@ function SwipeUpHint() {
       >
         <ChevronUp className="w-5 h-5 text-white/60" />
       </motion.div>
-      <span className="text-xs text-white/50 tracking-wide">Swipe up</span>
+      <span className="text-xs text-white/50 tracking-wide md:hidden">Swipe up</span>
+      <span className="text-xs text-white/50 tracking-wide hidden md:inline">Scroll for more</span>
     </motion.div>
   );
 }
