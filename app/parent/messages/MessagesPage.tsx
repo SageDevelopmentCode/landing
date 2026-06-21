@@ -1,7 +1,19 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Search, Send, ChevronLeft, SquarePen, X, Loader2, ImageIcon, Paperclip, FileText, Download, Hash } from "lucide-react";
+import {
+  Search,
+  Send,
+  ChevronLeft,
+  SquarePen,
+  X,
+  Loader2,
+  ImageIcon,
+  Paperclip,
+  FileText,
+  Download,
+  Hash,
+} from "lucide-react";
 import { createClient } from "@/app/lib/supabase-browser";
 import {
   getConversations,
@@ -16,6 +28,9 @@ import {
   type TeacherOrAdmin,
   type ConversationWithMeta,
   type MessageRow,
+  type UserSearchResult,
+  type EnrolledParent,
+  getEnrolledParents,
 } from "./actions";
 import {
   getChannels,
@@ -25,7 +40,15 @@ import {
 import ChannelChatArea from "@/app/messages/components/ChannelChatArea";
 
 // Renders images, converting HEIC/HEIF URLs on-the-fly for browsers that can't display them natively
-function HeicImage({ src, className, onClick }: { src: string; className?: string; onClick?: () => void }) {
+function HeicImage({
+  src,
+  className,
+  onClick,
+}: {
+  src: string;
+  className?: string;
+  onClick?: () => void;
+}) {
   const [displaySrc, setDisplaySrc] = useState<string | null>(null);
   const [error, setError] = useState(false);
 
@@ -42,7 +65,11 @@ function HeicImage({ src, className, onClick }: { src: string; className?: strin
         const res = await fetch(src);
         const blob = await res.blob();
         const heic2any = (await import("heic2any")).default;
-        const converted = await heic2any({ blob, toType: "image/jpeg", quality: 0.85 });
+        const converted = await heic2any({
+          blob,
+          toType: "image/jpeg",
+          quality: 0.85,
+        });
         const out = Array.isArray(converted) ? converted[0] : converted;
         objectUrl = URL.createObjectURL(out);
         setDisplaySrc(objectUrl);
@@ -50,13 +77,28 @@ function HeicImage({ src, className, onClick }: { src: string; className?: strin
         setError(true);
       }
     })();
-    return () => { if (objectUrl) URL.revokeObjectURL(objectUrl); };
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
   }, [src, isHeic]);
 
-  if (error) return <span className="text-xs text-gray-400">Image could not be displayed</span>;
-  if (!displaySrc) return <div className="h-20 w-20 rounded-xl bg-gray-100 animate-pulse" />;
+  if (error)
+    return (
+      <span className="text-xs text-gray-400">
+        Image could not be displayed
+      </span>
+    );
+  if (!displaySrc)
+    return <div className="h-20 w-20 rounded-xl bg-gray-100 animate-pulse" />;
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src={displaySrc} alt="attachment" className={className} onClick={onClick} />;
+  return (
+    <img
+      src={displaySrc}
+      alt="attachment"
+      className={className}
+      onClick={onClick}
+    />
+  );
 }
 
 // Deterministic color from a string (user id)
@@ -71,7 +113,8 @@ const AVATAR_COLORS = [
 
 function colorForId(id: string): string {
   let hash = 0;
-  for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  for (let i = 0; i < id.length; i++)
+    hash = id.charCodeAt(i) + ((hash << 5) - hash);
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
@@ -94,14 +137,35 @@ function initialsFor(name: string): string {
     .join("");
 }
 
-function UserAvatar({ id, name, imageUrl, size = "md" }: { id: string; name: string; imageUrl: string | null; size?: "sm" | "md" }) {
-  const dim = size === "sm" ? "w-9 h-9" : "w-10 h-10";
+function UserAvatar({
+  id,
+  name,
+  imageUrl,
+  size = "md",
+}: {
+  id: string;
+  name: string;
+  imageUrl: string | null;
+  size?: "sm" | "md" | "lg";
+}) {
+  const dim =
+    size === "sm" ? "w-9 h-9" : size === "lg" ? "w-14 h-14" : "w-10 h-10";
+  const textSize = size === "lg" ? "text-lg" : "text-xs";
+  const ring = size === "lg" ? "ring-2 ring-white shadow-sm" : "";
   if (imageUrl) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={imageUrl} alt={name} className={`${dim} rounded-full object-cover shrink-0`} />;
+    return (
+      <img
+        src={imageUrl}
+        alt={name}
+        className={`${dim} ${ring} rounded-full object-cover shrink-0`}
+      />
+    );
   }
   return (
-    <div className={`${colorForId(id)} ${dim} rounded-full flex items-center justify-center text-white text-xs font-semibold font-body shrink-0`}>
+    <div
+      className={`${colorForId(id)} ${dim} ${ring} rounded-full flex items-center justify-center text-white ${textSize} font-semibold font-body shrink-0`}
+    >
       {initialsFor(name)}
     </div>
   );
@@ -124,13 +188,14 @@ function renderMessageBody(body: string, fromMe: boolean) {
       </a>
     ) : (
       part
-    )
+    ),
   );
 }
 
 function sortByRecent(convos: ConversationWithMeta[]): ConversationWithMeta[] {
   return [...convos].sort(
-    (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+    (a, b) =>
+      new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
   );
 }
 
@@ -141,8 +206,7 @@ function formatTime(iso: string): string {
   if (diffDays === 0)
     return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
   if (diffDays === 1) return "Yesterday";
-  if (diffDays < 7)
-    return date.toLocaleDateString([], { weekday: "short" });
+  if (diffDays < 7) return date.toLocaleDateString([], { weekday: "short" });
   return date.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
@@ -157,7 +221,9 @@ export default function MessagesPage({
   initialRecipientName?: string | null;
   initialTab?: "direct" | "community";
 }) {
-  const [conversations, setConversations] = useState<ConversationWithMeta[]>([]);
+  const [conversations, setConversations] = useState<ConversationWithMeta[]>(
+    [],
+  );
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessageRow[]>([]);
   const [search, setSearch] = useState("");
@@ -174,19 +240,31 @@ export default function MessagesPage({
   const attachmentInputRef = useRef<HTMLInputElement>(null);
 
   // Community channels
-  const [activeTab, setActiveTab] = useState<"direct" | "community">(initialTab ?? "direct");
+  const [activeTab, setActiveTab] = useState<"direct" | "community">(
+    initialTab ?? "direct",
+  );
   const [channels, setChannels] = useState<ChannelWithMeta[]>([]);
   const [loadingChannels, setLoadingChannels] = useState(true);
   const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
 
   // Compose new message
   const [isComposingNew, setIsComposingNew] = useState(false);
-  const [selectedRecipient, setSelectedRecipient] = useState<{ id: string; full_name: string; profile_image_url: string | null } | null>(null);
+  const [selectedRecipient, setSelectedRecipient] = useState<{
+    id: string;
+    full_name: string;
+    profile_image_url: string | null;
+    role?: string | null;
+  } | null>(null);
   const [recipientSearch, setRecipientSearch] = useState("");
-  const [recipientResults, setRecipientResults] = useState<{ id: string; full_name: string; profile_image_url: string | null }[]>([]);
+  const [recipientResults, setRecipientResults] = useState<UserSearchResult[]>(
+    [],
+  );
   const [searchingUsers, setSearchingUsers] = useState(false);
   const [creatingConvo, setCreatingConvo] = useState(false);
   const [suggestedStaff, setSuggestedStaff] = useState<TeacherOrAdmin[]>([]);
+  const [suggestedParents, setSuggestedParents] = useState<EnrolledParent[]>(
+    [],
+  );
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -212,24 +290,31 @@ export default function MessagesPage({
     });
   }, [userId]);
 
-  // Fetch teachers/admins once for the empty state suggestions
+  // Fetch suggestions once for compose new message panel
   useEffect(() => {
     getTeachersAndAdmins().then(setSuggestedStaff);
-  }, []);
+    getEnrolledParents(userId).then(setSuggestedParents);
+  }, [userId]);
 
   // Handle deep-link to a specific recipient (e.g. from teacher card)
   useEffect(() => {
     if (!initialRecipientId || loadingConvos) return;
-    const existing = conversations.find((c) => c.otherUser.id === initialRecipientId);
+    const existing = conversations.find(
+      (c) => c.otherUser.id === initialRecipientId,
+    );
     if (existing) {
       setActiveId(existing.id);
       setMobileShowChat(true);
     } else if (initialRecipientName) {
       setIsComposingNew(true);
-      setSelectedRecipient({ id: initialRecipientId, full_name: initialRecipientName, profile_image_url: null });
+      setSelectedRecipient({
+        id: initialRecipientId,
+        full_name: initialRecipientName,
+        profile_image_url: null,
+      });
       setMobileShowChat(true);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadingConvos]);
 
   // Load messages when active conversation changes
@@ -242,7 +327,7 @@ export default function MessagesPage({
       markMessagesRead(activeId, userId);
       // Clear unread count locally
       setConversations((prev) =>
-        prev.map((c) => (c.id === activeId ? { ...c, unreadCount: 0 } : c))
+        prev.map((c) => (c.id === activeId ? { ...c, unreadCount: 0 } : c)),
       );
     });
   }, [activeId, userId]);
@@ -287,15 +372,15 @@ export default function MessagesPage({
                       },
                       updated_at: newMsg.created_at,
                     }
-                  : c
-              )
-            )
+                  : c,
+              ),
+            ),
           );
           // Mark read immediately if it's from the other person
           if (newMsg.sender_id !== userId) {
             markMessagesRead(activeId, userId);
           }
-        }
+        },
       )
       .subscribe();
 
@@ -314,13 +399,18 @@ export default function MessagesPage({
     }
     searchDebounceRef.current = setTimeout(async () => {
       setSearchingUsers(true);
-      const results = await searchUsers(query);
+      const results = await searchUsers(query, userId);
       setRecipientResults(results);
       setSearchingUsers(false);
     }, 300);
   }, []);
 
-  const handleSelectRecipient = (recipient: { id: string; full_name: string; profile_image_url: string | null }) => {
+  const handleSelectRecipient = (recipient: {
+    id: string;
+    full_name: string;
+    profile_image_url: string | null;
+    role?: string | null;
+  }) => {
     setSelectedRecipient(recipient);
     setRecipientSearch("");
     setRecipientResults([]);
@@ -340,7 +430,12 @@ export default function MessagesPage({
   };
 
   const handleSendNew = async () => {
-    if (!selectedRecipient || (!draft.trim() && !imageFile && !attachedFile) || sending) return;
+    if (
+      !selectedRecipient ||
+      (!draft.trim() && !imageFile && !attachedFile) ||
+      sending
+    )
+      return;
     const body = draft.trim();
     setDraft("");
     setSendError(null);
@@ -418,7 +513,11 @@ export default function MessagesPage({
     if (isHeic) {
       try {
         const heic2any = (await import("heic2any")).default;
-        const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.85 });
+        const converted = await heic2any({
+          blob: file,
+          toType: "image/jpeg",
+          quality: 0.85,
+        });
         const blob = Array.isArray(converted) ? converted[0] : converted;
         const jpegName = file.name.replace(/\.(heic|heif)$/i, ".jpg");
         file = new File([blob], jpegName, { type: "image/jpeg" });
@@ -434,7 +533,8 @@ export default function MessagesPage({
   };
 
   const handleSend = async () => {
-    if ((!draft.trim() && !imageFile && !attachedFile) || !activeId || sending) return;
+    if ((!draft.trim() && !imageFile && !attachedFile) || !activeId || sending)
+      return;
     const body = draft.trim();
     setDraft("");
     setSendError(null);
@@ -492,7 +592,13 @@ export default function MessagesPage({
     };
     setMessages((prev) => [...prev, optimistic]);
 
-    const saved = await sendMessage(activeId, body, imageUrl, fileUrl, fileName);
+    const saved = await sendMessage(
+      activeId,
+      body,
+      imageUrl,
+      fileUrl,
+      fileName,
+    );
 
     // Replace optimistic with real row
     if (saved) {
@@ -506,12 +612,16 @@ export default function MessagesPage({
             c.id === activeId
               ? {
                   ...c,
-                  lastMessage: { body: saved.body, created_at: saved.created_at, sender_id: saved.sender_id },
+                  lastMessage: {
+                    body: saved.body,
+                    created_at: saved.created_at,
+                    sender_id: saved.sender_id,
+                  },
                   updated_at: saved.created_at,
                 }
-              : c
-          )
-        )
+              : c,
+          ),
+        ),
       );
     } else {
       console.error("[handleSend] sendMessage returned null");
@@ -521,47 +631,58 @@ export default function MessagesPage({
     setSending(false);
   };
 
-  const filtered = conversations.filter(
-    (c) =>
-      c.otherUser.full_name.toLowerCase().includes(search.toLowerCase())
+  const filtered = conversations.filter((c) =>
+    c.otherUser.full_name.toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
     <div className="flex flex-1 min-h-0 bg-white overflow-hidden">
       {/* Conversation list */}
-      <div className={`w-full md:w-80 md:min-w-[320px] bg-white border-r border-gray-100 flex flex-col min-h-0 overflow-hidden ${mobileShowChat ? "hidden md:flex" : "flex"}`}>
+      <div
+        className={`w-full md:w-80 md:min-w-[320px] bg-white border-r border-gray-100 flex flex-col min-h-0 overflow-hidden ${mobileShowChat ? "hidden md:flex" : "flex"}`}
+      >
         {/* Tabs */}
         <div className="flex border-b border-gray-100 shrink-0">
           <button
             onClick={() => setActiveTab("direct")}
             className={`flex-1 py-2.5 text-xs font-semibold font-body transition-colors relative ${
-              activeTab === "direct" ? "text-[#4a7c59]" : "text-gray-400 hover:text-gray-600"
+              activeTab === "direct"
+                ? "text-[#4a7c59]"
+                : "text-gray-400 hover:text-gray-600"
             }`}
           >
             Messages
-            {activeTab === "direct" && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#4a7c59]" />}
-            {activeTab !== "direct" && conversations.reduce((s, c) => s + c.unreadCount, 0) > 0 && (
-              <span className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#4a7c59] text-white text-[9px] font-bold">
-                {conversations.reduce((s, c) => s + c.unreadCount, 0)}
-              </span>
+            {activeTab === "direct" && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#4a7c59]" />
             )}
+            {activeTab !== "direct" &&
+              conversations.reduce((s, c) => s + c.unreadCount, 0) > 0 && (
+                <span className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#4a7c59] text-white text-[9px] font-bold">
+                  {conversations.reduce((s, c) => s + c.unreadCount, 0)}
+                </span>
+              )}
           </button>
           <button
             onClick={() => setActiveTab("community")}
             className={`flex-1 py-2.5 text-xs font-semibold font-body transition-colors relative ${
-              activeTab === "community" ? "text-[#4a7c59]" : "text-gray-400 hover:text-gray-600"
+              activeTab === "community"
+                ? "text-[#4a7c59]"
+                : "text-gray-400 hover:text-gray-600"
             }`}
           >
             Community
             <span className="ml-1 inline-flex items-center px-1 py-0.5 rounded text-[9px] font-bold bg-[#4a7c59] text-white leading-none">
               New!
             </span>
-            {activeTab === "community" && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#4a7c59]" />}
-            {activeTab !== "community" && channels.reduce((s, c) => s + c.unreadCount, 0) > 0 && (
-              <span className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#4a7c59] text-white text-[9px] font-bold">
-                {channels.reduce((s, c) => s + c.unreadCount, 0)}
-              </span>
+            {activeTab === "community" && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#4a7c59]" />
             )}
+            {activeTab !== "community" &&
+              channels.reduce((s, c) => s + c.unreadCount, 0) > 0 && (
+                <span className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#4a7c59] text-white text-[9px] font-bold">
+                  {channels.reduce((s, c) => s + c.unreadCount, 0)}
+                </span>
+              )}
           </button>
         </div>
 
@@ -591,7 +712,9 @@ export default function MessagesPage({
                   setMobileShowChat(true);
                 }}
                 className={`w-full flex items-center justify-center gap-2 text-white text-sm font-medium py-2 rounded-lg transition-colors cursor-pointer ${
-                  isComposingNew ? "bg-[#3d6849]" : "bg-[#4a7c59] hover:bg-[#3d6849]"
+                  isComposingNew
+                    ? "bg-[#3d6849]"
+                    : "bg-[#4a7c59] hover:bg-[#3d6849]"
                 }`}
               >
                 <SquarePen className="w-4 h-4" />
@@ -607,7 +730,9 @@ export default function MessagesPage({
                 </div>
               ) : filtered.length === 0 ? (
                 <p className="text-sm text-gray-400 font-body text-center py-8">
-                  {search ? "No conversations found" : "No messages yet. Start one!"}
+                  {search
+                    ? "No conversations found"
+                    : "No messages yet. Start one!"}
                 </p>
               ) : (
                 filtered.map((convo) => (
@@ -626,7 +751,11 @@ export default function MessagesPage({
                         : "hover:bg-gray-50"
                     }`}
                   >
-                    <UserAvatar id={convo.otherUser.id} name={convo.otherUser.full_name} imageUrl={convo.otherUser.profile_image_url} />
+                    <UserAvatar
+                      id={convo.otherUser.id}
+                      name={convo.otherUser.full_name}
+                      imageUrl={convo.otherUser.profile_image_url}
+                    />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-semibold font-body text-gray-800 truncate">
@@ -667,7 +796,9 @@ export default function MessagesPage({
                 <Loader2 className="w-5 h-5 animate-spin text-gray-300" />
               </div>
             ) : channels.length === 0 ? (
-              <p className="text-sm text-gray-400 font-body text-center py-8">No channels yet</p>
+              <p className="text-sm text-gray-400 font-body text-center py-8">
+                No channels yet
+              </p>
             ) : (
               channels.map((ch) => (
                 <button
@@ -689,10 +820,14 @@ export default function MessagesPage({
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm font-semibold font-body text-gray-800 truncate">{ch.name}</span>
+                      <span className="text-sm font-semibold font-body text-gray-800 truncate">
+                        {ch.name}
+                      </span>
                       <div className="flex items-center gap-1.5 shrink-0">
                         {ch.lastMessage && (
-                          <span className="text-[11px] text-gray-400 font-body">{formatTime(ch.lastMessage.created_at)}</span>
+                          <span className="text-[11px] text-gray-400 font-body">
+                            {formatTime(ch.lastMessage.created_at)}
+                          </span>
                         )}
                         {!ch.isMember && (
                           <span className="text-[10px] font-semibold font-body text-[#4a7c59] border border-[#4a7c59]/30 px-1.5 py-0.5 rounded-full">
@@ -701,7 +836,9 @@ export default function MessagesPage({
                         )}
                       </div>
                     </div>
-                    <p className="text-[11px] text-gray-400 font-body">{ch.memberCount} member{ch.memberCount !== 1 ? "s" : ""}</p>
+                    <p className="text-[11px] text-gray-400 font-body">
+                      {ch.memberCount} member{ch.memberCount !== 1 ? "s" : ""}
+                    </p>
                     <div className="flex items-center gap-2 mt-0.5">
                       <p className="text-xs text-gray-500 font-body truncate flex-1">
                         {ch.lastMessage?.body ?? "No messages yet"}
@@ -721,18 +858,31 @@ export default function MessagesPage({
       </div>
 
       {/* Chat area */}
-      <div className={`flex-1 min-h-0 flex flex-col ${mobileShowChat ? "flex" : "hidden md:flex"}`}>
+      <div
+        className={`flex-1 min-h-0 flex flex-col ${mobileShowChat ? "flex" : "hidden md:flex"}`}
+      >
         {activeChannel ? (
           <ChannelChatArea
             channel={activeChannel}
             userId={userId}
             userRole="parent"
-            onBack={() => { setActiveChannelId(null); setMobileShowChat(false); }}
+            onBack={() => {
+              setActiveChannelId(null);
+              setMobileShowChat(false);
+            }}
             onMembershipChange={(channelId, isMember) => {
-              setChannels((prev) => prev.map((c) => c.id === channelId ? { ...c, isMember } : c));
+              setChannels((prev) =>
+                prev.map((c) => (c.id === channelId ? { ...c, isMember } : c)),
+              );
             }}
             onMessageSent={(channelId, lastMsg) => {
-              setChannels((prev) => prev.map((c) => c.id === channelId ? { ...c, lastMessage: lastMsg, unreadCount: 0 } : c));
+              setChannels((prev) =>
+                prev.map((c) =>
+                  c.id === channelId
+                    ? { ...c, lastMessage: lastMsg, unreadCount: 0 }
+                    : c,
+                ),
+              );
             }}
           />
         ) : isComposingNew ? (
@@ -740,18 +890,25 @@ export default function MessagesPage({
             {/* Compose header */}
             <div className="flex items-center gap-3 px-5 py-3.5 border-b border-gray-100 shrink-0">
               <button
-                onClick={() => { setIsComposingNew(false); setMobileShowChat(false); }}
+                onClick={() => {
+                  setIsComposingNew(false);
+                  setMobileShowChat(false);
+                }}
                 className="md:hidden text-gray-500 hover:text-gray-700 cursor-pointer"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
-              <p className="text-sm font-semibold font-body text-gray-800">New Message</p>
+              <p className="text-sm font-semibold font-body text-gray-800">
+                New Message
+              </p>
             </div>
 
             {/* To: row */}
             <div className="px-5 py-3 border-b border-gray-100 shrink-0 relative">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-body text-gray-500 shrink-0">To:</span>
+                <span className="text-sm font-body text-gray-500 shrink-0">
+                  To:
+                </span>
                 {!selectedRecipient ? (
                   <input
                     autoFocus
@@ -782,7 +939,9 @@ export default function MessagesPage({
                       <Loader2 className="w-4 h-4 animate-spin text-gray-300" />
                     </div>
                   ) : recipientResults.length === 0 ? (
-                    <p className="text-sm text-gray-400 font-body text-center py-6">No users found</p>
+                    <p className="text-sm text-gray-400 font-body text-center py-6">
+                      No users found
+                    </p>
                   ) : (
                     recipientResults.map((user) => (
                       <button
@@ -790,8 +949,22 @@ export default function MessagesPage({
                         onClick={() => handleSelectRecipient(user)}
                         className="w-full flex items-center gap-3 px-5 py-2.5 hover:bg-gray-50 text-left transition-colors cursor-pointer"
                       >
-                        <UserAvatar id={user.id} name={user.full_name} imageUrl={user.profile_image_url} size="sm" />
-                        <span className="text-sm font-body text-gray-800">{user.full_name}</span>
+                        <UserAvatar
+                          id={user.id}
+                          name={user.full_name}
+                          imageUrl={user.profile_image_url}
+                          size="sm"
+                        />
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-sm font-body text-gray-800">
+                            {user.full_name}
+                          </span>
+                          {roleLabel(user.role) && (
+                            <span className="text-xs text-gray-400 font-body">
+                              {roleLabel(user.role)}
+                            </span>
+                          )}
+                        </div>
                       </button>
                     ))
                   )}
@@ -799,13 +972,148 @@ export default function MessagesPage({
               )}
             </div>
 
-            {/* Empty message area */}
-            <div className="flex-1 overflow-y-auto px-5 py-4">
-              {!selectedRecipient && (
-                <p className="text-sm text-gray-400 font-body text-center py-8">
-                  Search for someone to start a conversation
-                </p>
-              )}
+            {/* Compose suggestions / empty area */}
+            <div className="flex-1 overflow-y-auto px-5 py-6">
+              {!selectedRecipient &&
+                (() => {
+                  const EARLY_GRADES = ["Pre-K", "Kindergarten", "1st Grade"];
+                  const UPPER_GRADES = ["2nd Grade", "3rd Grade", "4th Grade"];
+                  const earlyParents = suggestedParents.filter((p) =>
+                    EARLY_GRADES.includes(p.child_grade ?? ""),
+                  );
+                  const upperParents = suggestedParents.filter((p) =>
+                    UPPER_GRADES.includes(p.child_grade ?? ""),
+                  );
+                  const otherParents = suggestedParents.filter(
+                    (p) =>
+                      !EARLY_GRADES.includes(p.child_grade ?? "") &&
+                      !UPPER_GRADES.includes(p.child_grade ?? ""),
+                  );
+
+                  const sectionHeading = (label: string) => (
+                    <div className="mb-4">
+                      <span className="inline-flex items-center bg-[#4a7c59]/10 text-[#4a7c59] text-xs font-semibold font-body px-3 py-1 rounded-full">
+                        {label}
+                      </span>
+                    </div>
+                  );
+
+                  const shortName = (full: string) => {
+                    const parts = full.trim().split(/\s+/);
+                    if (parts.length < 2) return full;
+                    return `${parts[0]} ${parts[parts.length - 1][0]}.`;
+                  };
+
+                  const parentCard = (person: EnrolledParent) => (
+                    <div
+                      key={person.id}
+                      className="bg-[#f8faf8] border border-[#e8f0ea] rounded-2xl p-5 flex flex-col items-center text-center gap-3"
+                    >
+                      <UserAvatar
+                        id={person.id}
+                        name={person.full_name}
+                        imageUrl={person.profile_image_url}
+                        size="lg"
+                      />
+                      <div className="min-w-0 w-full space-y-1">
+                        <p className="text-sm font-semibold font-body text-gray-800 truncate">
+                          {shortName(person.full_name)}
+                        </p>
+                        <span className="inline-flex items-center bg-[#4a7c59]/10 text-[#4a7c59] text-[10px] font-semibold font-body px-2 py-0.5 rounded-full">
+                          {person.child_names.length > 0
+                            ? person.child_names.join(", ")
+                            : "Parent"}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => handleSelectRecipient(person)}
+                        className="w-full py-2 rounded-xl text-sm font-semibold font-body text-white bg-[#4a7c59] hover:bg-[#3d6849] transition-colors cursor-pointer"
+                      >
+                        Message
+                      </button>
+                    </div>
+                  );
+
+                  return (
+                    <div className="space-y-8">
+                      {suggestedStaff.length > 0 && (
+                        <div>
+                          {sectionHeading("Teachers & Staff")}
+                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                            {suggestedStaff.map((person) => (
+                              <div
+                                key={person.id}
+                                className="bg-[#f8faf8] border border-[#e8f0ea] rounded-2xl p-5 flex flex-col items-center text-center gap-3"
+                              >
+                                <UserAvatar
+                                  id={person.id}
+                                  name={person.full_name}
+                                  imageUrl={person.profile_image_url}
+                                  size="lg"
+                                />
+                                <div className="min-w-0 w-full space-y-1">
+                                  <p className="text-sm font-semibold font-body text-gray-800 truncate">
+                                    {person.full_name}
+                                  </p>
+                                  <span className="inline-flex items-center bg-[#4a7c59]/10 text-[#4a7c59] text-[10px] font-semibold font-body px-2 py-0.5 rounded-full">
+                                    Teacher
+                                  </span>
+                                </div>
+                                <button
+                                  onClick={() => handleSelectRecipient(person)}
+                                  className="w-full py-2 rounded-xl text-sm font-semibold font-body text-white bg-[#4a7c59] hover:bg-[#3d6849] transition-colors cursor-pointer"
+                                >
+                                  Message
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* suggestedParents.length > 0 && (
+                        <div className="space-y-6">
+                          <p className="text-lg font-semibold font-body text-gray-700">
+                            Need a carpool or want to schedule a playdate?
+                          </p>
+
+                          {earlyParents.length > 0 && (
+                            <div>
+                              {sectionHeading("🌱 Primary")}
+                              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                                {earlyParents.map(parentCard)}
+                              </div>
+                            </div>
+                          )}
+
+                          {upperParents.length > 0 && (
+                            <div>
+                              {sectionHeading("🚀 Lower Elementary")}
+                              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                                {upperParents.map(parentCard)}
+                              </div>
+                            </div>
+                          )}
+
+                          {otherParents.length > 0 && (
+                            <div>
+                              {sectionHeading("✨ Other Families")}
+                              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                                {otherParents.map(parentCard)}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) */}
+
+                      {suggestedStaff.length === 0 && (
+                          <p className="text-sm text-gray-400 font-body text-center py-8">
+                            Search for someone to start a conversation
+                          </p>
+                        )}
+                    </div>
+                  );
+                })()}
             </div>
 
             {/* Input */}
@@ -817,9 +1125,16 @@ export default function MessagesPage({
                 <div className="px-4 pt-2 flex items-center gap-2">
                   <div className="relative">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={imagePreview} alt="preview" className="h-16 w-16 object-cover rounded-lg border border-gray-200" />
+                    <img
+                      src={imagePreview}
+                      alt="preview"
+                      className="h-16 w-16 object-cover rounded-lg border border-gray-200"
+                    />
                     <button
-                      onClick={() => { setImageFile(null); setImagePreview(null); }}
+                      onClick={() => {
+                        setImageFile(null);
+                        setImagePreview(null);
+                      }}
                       className="absolute -top-1.5 -right-1.5 bg-white rounded-full shadow p-0.5 cursor-pointer"
                     >
                       <X className="w-3 h-3 text-gray-500" />
@@ -831,7 +1146,9 @@ export default function MessagesPage({
                 <div className="px-4 pt-2 flex items-center gap-2">
                   <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 max-w-xs">
                     <FileText className="w-4 h-4 text-gray-400 shrink-0" />
-                    <span className="text-xs font-body text-gray-700 truncate">{attachedFile.name}</span>
+                    <span className="text-xs font-body text-gray-700 truncate">
+                      {attachedFile.name}
+                    </span>
                     <button
                       onClick={() => setAttachedFile(null)}
                       className="text-gray-400 hover:text-gray-600 cursor-pointer shrink-0"
@@ -874,7 +1191,11 @@ export default function MessagesPage({
                 </button>
                 <input
                   type="text"
-                  placeholder={selectedRecipient ? "Type a message..." : "Select a recipient first..."}
+                  placeholder={
+                    selectedRecipient
+                      ? "Type a message..."
+                      : "Select a recipient first..."
+                  }
                   value={draft}
                   disabled={!selectedRecipient}
                   onChange={(e) => setDraft(e.target.value)}
@@ -888,10 +1209,15 @@ export default function MessagesPage({
                 />
                 <button
                   onClick={handleSendNew}
-                  disabled={!selectedRecipient || (!draft.trim() && !imageFile && !attachedFile) || sending || creatingConvo}
+                  disabled={
+                    !selectedRecipient ||
+                    (!draft.trim() && !imageFile && !attachedFile) ||
+                    sending ||
+                    creatingConvo
+                  }
                   className="w-10 h-10 rounded-xl bg-[#4a7c59] hover:bg-[#3d6849] disabled:opacity-50 text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
                 >
-                  {(sending || creatingConvo) ? (
+                  {sending || creatingConvo ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
                     <Send className="w-4 h-4" />
@@ -908,7 +1234,8 @@ export default function MessagesPage({
                   Who would you like to reach?
                 </h2>
                 <p className="text-sm text-gray-400 font-body leading-relaxed">
-                  Message your child&apos;s teachers and school staff directly from here.
+                  Message your child&apos;s teachers and school staff directly
+                  from here.
                 </p>
               </div>
 
@@ -960,7 +1287,9 @@ export default function MessagesPage({
             </div>
           ) : (
             <div className="flex-1 flex items-center justify-center">
-              <p className="text-sm text-gray-400 font-body">Select a conversation or start a new one</p>
+              <p className="text-sm text-gray-400 font-body">
+                Select a conversation or start a new one
+              </p>
             </div>
           )
         ) : (
@@ -973,7 +1302,12 @@ export default function MessagesPage({
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
-              <UserAvatar id={active.otherUser.id} name={active.otherUser.full_name} imageUrl={active.otherUser.profile_image_url} size="sm" />
+              <UserAvatar
+                id={active.otherUser.id}
+                name={active.otherUser.full_name}
+                imageUrl={active.otherUser.profile_image_url}
+                size="sm"
+              />
               <div>
                 <p className="text-sm font-semibold font-body text-gray-800">
                   {active.otherUser.full_name}
@@ -1000,7 +1334,10 @@ export default function MessagesPage({
                 messages.map((msg) => {
                   const fromMe = msg.sender_id === userId;
                   return (
-                    <div key={msg.id} className={`flex ${fromMe ? "justify-end" : "justify-start"}`}>
+                    <div
+                      key={msg.id}
+                      className={`flex ${fromMe ? "justify-end" : "justify-start"}`}
+                    >
                       <div
                         className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm font-body leading-relaxed ${
                           fromMe
@@ -1012,7 +1349,9 @@ export default function MessagesPage({
                           <HeicImage
                             src={msg.image_url}
                             className="rounded-xl max-w-full max-h-60 object-cover cursor-pointer mb-1"
-                            onClick={() => window.open(msg.image_url!, "_blank")}
+                            onClick={() =>
+                              window.open(msg.image_url!, "_blank")
+                            }
                           />
                         )}
                         {msg.file_url && msg.file_name && (
@@ -1022,15 +1361,27 @@ export default function MessagesPage({
                             rel="noopener noreferrer"
                             className={`flex items-center gap-2 mb-1 px-3 py-2 rounded-xl border ${fromMe ? "border-white/20 bg-white/10 hover:bg-white/20" : "border-gray-200 bg-white hover:bg-gray-50"} transition-colors`}
                           >
-                            <FileText className={`w-4 h-4 shrink-0 ${fromMe ? "text-white/80" : "text-gray-400"}`} />
-                            <span className={`text-xs font-body truncate max-w-[160px] ${fromMe ? "text-white" : "text-gray-700"}`}>
+                            <FileText
+                              className={`w-4 h-4 shrink-0 ${fromMe ? "text-white/80" : "text-gray-400"}`}
+                            />
+                            <span
+                              className={`text-xs font-body truncate max-w-[160px] ${fromMe ? "text-white" : "text-gray-700"}`}
+                            >
                               {msg.file_name}
                             </span>
-                            <Download className={`w-3.5 h-3.5 shrink-0 ${fromMe ? "text-white/70" : "text-gray-400"}`} />
+                            <Download
+                              className={`w-3.5 h-3.5 shrink-0 ${fromMe ? "text-white/70" : "text-gray-400"}`}
+                            />
                           </a>
                         )}
-                        {msg.body && <p className="break-words">{renderMessageBody(msg.body, fromMe)}</p>}
-                        <p className={`text-[10px] mt-1 ${fromMe ? "text-white/60" : "text-gray-400"}`}>
+                        {msg.body && (
+                          <p className="break-words">
+                            {renderMessageBody(msg.body, fromMe)}
+                          </p>
+                        )}
+                        <p
+                          className={`text-[10px] mt-1 ${fromMe ? "text-white/60" : "text-gray-400"}`}
+                        >
                           {formatTime(msg.created_at)}
                         </p>
                       </div>
@@ -1050,9 +1401,16 @@ export default function MessagesPage({
                 <div className="px-4 pt-2 flex items-center gap-2">
                   <div className="relative">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={imagePreview} alt="preview" className="h-16 w-16 object-cover rounded-lg border border-gray-200" />
+                    <img
+                      src={imagePreview}
+                      alt="preview"
+                      className="h-16 w-16 object-cover rounded-lg border border-gray-200"
+                    />
                     <button
-                      onClick={() => { setImageFile(null); setImagePreview(null); }}
+                      onClick={() => {
+                        setImageFile(null);
+                        setImagePreview(null);
+                      }}
                       className="absolute -top-1.5 -right-1.5 bg-white rounded-full shadow p-0.5 cursor-pointer"
                     >
                       <X className="w-3 h-3 text-gray-500" />
@@ -1064,7 +1422,9 @@ export default function MessagesPage({
                 <div className="px-4 pt-2 flex items-center gap-2">
                   <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 max-w-xs">
                     <FileText className="w-4 h-4 text-gray-400 shrink-0" />
-                    <span className="text-xs font-body text-gray-700 truncate">{attachedFile.name}</span>
+                    <span className="text-xs font-body text-gray-700 truncate">
+                      {attachedFile.name}
+                    </span>
                     <button
                       onClick={() => setAttachedFile(null)}
                       className="text-gray-400 hover:text-gray-600 cursor-pointer shrink-0"
@@ -1118,7 +1478,9 @@ export default function MessagesPage({
                 />
                 <button
                   onClick={handleSend}
-                  disabled={(!draft.trim() && !imageFile && !attachedFile) || sending}
+                  disabled={
+                    (!draft.trim() && !imageFile && !attachedFile) || sending
+                  }
                   className="w-10 h-10 rounded-xl bg-[#4a7c59] hover:bg-[#3d6849] disabled:opacity-50 text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
                 >
                   <Send className="w-4 h-4" />

@@ -39,6 +39,7 @@ export type Database = {
           needs_aide: string | null
           needs_aide_description: string | null
           parent_id: string
+          profile_image_url: string | null
           regulation_strategies: string | null
           special_interests: string | null
           strengths_interests: string | null
@@ -67,6 +68,7 @@ export type Database = {
           needs_aide?: string | null
           needs_aide_description?: string | null
           parent_id: string
+          profile_image_url?: string | null
           regulation_strategies?: string | null
           special_interests?: string | null
           strengths_interests?: string | null
@@ -95,6 +97,7 @@ export type Database = {
           needs_aide?: string | null
           needs_aide_description?: string | null
           parent_id?: string
+          profile_image_url?: string | null
           regulation_strategies?: string | null
           special_interests?: string | null
           strengths_interests?: string | null

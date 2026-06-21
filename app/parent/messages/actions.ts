@@ -201,20 +201,152 @@ export async function createConversation(
   return newConvo.id;
 }
 
-export async function searchUsers(query: string): Promise<{ id: string; full_name: string; profile_image_url: string | null }[]> {
+export async function searchUsers(query: string, currentUserId: string): Promise<UserSearchResult[]> {
   if (!query.trim()) return [];
   const adminClient = createAdminClient();
 
-  const { data, error } = await adminClient
+  const [staffResult, enrolledResult] = await Promise.all([
+    adminClient
+      .schema("admin")
+      .from("users")
+      .select("id, full_name, profile_image_url, role")
+      .ilike("full_name", `%${query}%`)
+      .in("role", ["teacher", "super_admin"])
+      .eq("is_deleted", false)
+      .limit(10),
+    adminClient
+      .schema("parent_app")
+      .from("applications")
+      .select("user_id")
+      .eq("status", "enrolled"),
+  ]);
+
+  const staffResults: UserSearchResult[] = (staffResult.data ?? []).map((u) => ({
+    id: u.id,
+    full_name: u.full_name,
+    profile_image_url: u.profile_image_url ?? null,
+    role: u.role,
+  }));
+
+  const enrolledUserIds = (enrolledResult.data ?? []).map((r: { user_id: string }) => r.user_id);
+  let parentResults: UserSearchResult[] = [];
+
+  if (enrolledUserIds.length > 0) {
+    const { data: parents } = await adminClient
+      .schema("admin")
+      .from("users")
+      .select("id, full_name, profile_image_url, role")
+      .ilike("full_name", `%${query}%`)
+      .eq("role", "parent")
+      .eq("is_deleted", false)
+      .neq("id", currentUserId)
+      .in("id", enrolledUserIds)
+      .limit(10);
+
+    const rawParents = parents ?? [];
+    const noPhotoParentIds = rawParents.filter((u) => !u.profile_image_url).map((u) => u.id);
+    const childPhotos: Record<string, string> = {};
+    if (noPhotoParentIds.length > 0) {
+      const { data: students } = await adminClient
+        .schema("admin")
+        .from("students")
+        .select("parent_id, profile_image_url")
+        .in("parent_id", noPhotoParentIds)
+        .eq("is_deleted", false)
+        .not("profile_image_url", "is", null);
+      for (const s of students ?? []) {
+        if (s.parent_id && s.profile_image_url && !childPhotos[s.parent_id]) {
+          childPhotos[s.parent_id] = s.profile_image_url;
+        }
+      }
+    }
+    parentResults = rawParents.map((u) => ({
+      id: u.id,
+      full_name: u.full_name,
+      profile_image_url: u.profile_image_url ?? childPhotos[u.id] ?? null,
+      role: u.role,
+    }));
+  }
+
+  const seen = new Set<string>();
+  const merged: UserSearchResult[] = [];
+  for (const u of [...staffResults, ...parentResults]) {
+    if (!seen.has(u.id)) {
+      seen.add(u.id);
+      merged.push(u);
+    }
+  }
+  return merged.slice(0, 10);
+}
+
+export type EnrolledParent = {
+  id: string;
+  full_name: string;
+  profile_image_url: string | null;
+  role: string;
+  child_grade: string | null;
+  child_names: string[];
+};
+
+export async function getEnrolledParents(currentUserId: string): Promise<EnrolledParent[]> {
+  const adminClient = createAdminClient();
+
+  const { data: enrolled } = await adminClient
+    .schema("parent_app")
+    .from("applications")
+    .select("user_id, child_grade")
+    .eq("status", "enrolled");
+
+  const gradeMap: Record<string, string | null> = {};
+  const enrolledIds = (enrolled ?? [])
+    .filter((r: { user_id: string; child_grade: string | null }) => r.user_id !== currentUserId)
+    .map((r: { user_id: string; child_grade: string | null }) => {
+      gradeMap[r.user_id] = r.child_grade ?? null;
+      return r.user_id;
+    });
+
+  if (enrolledIds.length === 0) return [];
+
+  const { data: parents } = await adminClient
     .schema("admin")
     .from("users")
-    .select("id, full_name, profile_image_url")
-    .ilike("full_name", `%${query}%`)
-    .in("role", ["teacher", "super_admin"])
-    .limit(10);
+    .select("id, full_name, profile_image_url, role")
+    .eq("role", "parent")
+    .eq("is_deleted", false)
+    .in("id", enrolledIds);
 
-  if (error) return [];
-  return (data ?? []).map((u) => ({ ...u, profile_image_url: u.profile_image_url ?? null }));
+  if (!parents?.length) return [];
+
+  const allParentIds = parents.map((p) => p.id);
+  const { data: students } = await adminClient
+    .schema("admin")
+    .from("students")
+    .select("parent_id, profile_image_url, child_legal_name")
+    .in("parent_id", allParentIds)
+    .eq("is_deleted", false);
+
+  const childPhotos: Record<string, string> = {};
+  const childNamesMap: Record<string, string[]> = {};
+  for (const s of students ?? []) {
+    if (!s.parent_id) continue;
+    if (s.profile_image_url && !childPhotos[s.parent_id]) {
+      childPhotos[s.parent_id] = s.profile_image_url;
+    }
+    const firstName = (s.child_legal_name ?? "").split(" ")[0];
+    if (firstName) {
+      if (!childNamesMap[s.parent_id]) childNamesMap[s.parent_id] = [];
+      childNamesMap[s.parent_id].push(firstName);
+    }
+  }
+
+  return parents.map((p) => ({
+    id: p.id,
+    full_name: p.full_name,
+    profile_image_url: p.profile_image_url ?? childPhotos[p.id] ?? null,
+    role: p.role,
+    child_grade: gradeMap[p.id] ?? null,
+    child_names: childNamesMap[p.id] ?? [],
+  }));
 }
 
 export async function uploadMessageImage(
@@ -302,6 +434,13 @@ export async function markMessagesRead(conversationId: string, userId: string): 
 }
 
 export type TeacherOrAdmin = {
+  id: string;
+  full_name: string;
+  profile_image_url: string | null;
+  role: string;
+};
+
+export type UserSearchResult = {
   id: string;
   full_name: string;
   profile_image_url: string | null;
