@@ -50,8 +50,7 @@ export default function ReelsPasswordGate({
         <form action={formAction} className="w-full flex flex-col gap-3">
           <input
             name="password"
-            type="password"
-            autoComplete="current-password"
+            type="text"
             autoFocus
             required
             placeholder="Password"
