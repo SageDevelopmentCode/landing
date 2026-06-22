@@ -16,11 +16,11 @@ const SABRINA = {
 
 const TEAM_MEMBERS = [
   {
-    name: "Paige Wood",
+    name: "Joy Paige",
     role: "Primary Lead Teacher",
-    image: "/assets/team/Paige.webp",
+    image: "/assets/team/Joy (1).png",
     description:
-      "Ms. Paige is the Lead Primary Teacher at Sage Field Private School. She has a passion for outdoor-based learning and creating environments where young children feel safe, curious, and inspired. With experience in Montessori-style education and outdoor learning, she brings creativity and intentionality to every lesson.",
+      "Ms. Joy is a passionate early childhood educator with experience in a Reggio Emilia-inspired microschool, where she worked closely with children through hands-on learning experiences in gardening, engineering, art, literacy, and science. She is dedicated to creating environments where children feel confident, curious, and empowered to take ownership of their learning. With a degree in Religious Studies from The University of Texas at El Paso, Ms. Joy brings a love of storytelling, history, and meaningful connections into the classroom.",
   },
   {
     name: "Zelinda Melo",
