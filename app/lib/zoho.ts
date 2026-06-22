@@ -3113,6 +3113,91 @@ export async function buildSummerWeekTwoNewsletterEmail(opts: {
   return { subject, content };
 }
 
+export async function buildSummerWeekFourNewsletterEmail(opts: {
+  g1FullName: string;
+  childLegalName: string;
+}): Promise<{ subject: string; content: string }> {
+  const firstName = opts.g1FullName.split(" ")[0];
+  const subject = "Week Four Newsletter + Meet Miss Joy 🌿";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+
+  <p style="margin-bottom: 24px;">Hi ${firstName}!</p>
+
+  <p style="margin-bottom: 16px;">We've officially wrapped up four incredible weeks of summer at Sage Field — and the growth, curiosity, and connection we are seeing in your children continue to inspire us every single day. From new friendships forming to big academic breakthroughs, this week was one to remember.</p>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">🌿 What We've Been Up To</h2>
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px;">
+    <ul style="margin: 0; padding-left: 18px; line-height: 2.1; font-size: 14px; color: #2c2c2c;">
+      <li>📖 <strong>Summarizing Fiction &amp; Non-Fiction</strong> — Venn diagrams, comparing and contrasting texts, reading comprehension mastery</li>
+      <li>✖️ <strong>Multi-Digit Multiplication</strong> — area model &amp; standard method (upper el), fact fluency numbers 6+ (lower el)</li>
+      <li>🍓 <strong>Strawberry Jam</strong> — a full cooking project from maceration to stovetop simmering and jar storage</li>
+      <li>☕ <strong>Donuts with Grownups</strong> — Monday July 6, 8:15–9:00am, a special morning with families</li>
+      <li>🎬 <strong>Sage Field Reels</strong> — our brand-new highlight video page is live at sagefield.co/reels</li>
+    </ul>
+  </div>
+
+  <p style="margin-bottom: 20px; font-size: 14px; color: #444;">We've put together our fourth newsletter — a closer look at the week through photos and classroom moments.</p>
+
+  <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 8px; padding: 20px 24px; margin: 28px 0; text-align: center;">
+    <p style="margin: 0 0 6px 0; font-size: 15px; font-weight: bold; color: #2C5F2E;">📰 Our Fourth Newsletter is Live!</p>
+    <p style="margin: 0 0 18px 0; font-size: 13px; color: #555;">Photos, classroom moments, and a deeper look into our fourth week.</p>
+    <a href="https://www.sagefield.co/newsletter/5363a0e4-44b7-4ab2-909f-e673a8752627" style="background: #2C5F2E; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-family: Georgia, serif; font-size: 15px; display: inline-block;">Read the Newsletter →</a>
+    <div style="margin-top: 14px;">
+      <span style="display: inline-block; background: #f7f4f0; border: 1px solid #a8c5a0; border-radius: 999px; padding: 5px 14px; font-size: 12px; color: #555;">🔑 Password: <strong>weekfour</strong></span>
+    </div>
+  </div>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">🎬 Sage Field Reels</h2>
+  <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px; font-size: 14px; color: #2c2c2c;">
+    <p style="margin: 0 0 12px 0;">We're excited to introduce our new <strong>Sage Field Reels</strong> page, where families can enjoy short highlight videos and special moments from the past four weeks of learning, exploration, and fun.</p>
+    <p style="margin: 0 0 12px 0;">These reels offer a glimpse into the daily experiences, projects, outdoor adventures, and memories being made by our students. We hope you enjoy these snapshots of life at Sage Field!</p>
+    <p style="margin: 0 0 16px 0; text-align: center;">
+      <a href="https://sagefield.co/reels" style="background: #2C5F2E; color: #ffffff; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-family: Georgia, serif; font-size: 14px; display: inline-block;">Watch the Reels →</a>
+    </p>
+    <p style="margin: 0; text-align: center;">
+      <span style="display: inline-block; background: #f7f4f0; border: 1px solid #a8c5a0; border-radius: 999px; padding: 5px 14px; font-size: 12px; color: #555;">🔑 Password: <strong>childhood</strong></span>
+    </p>
+  </div>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">👋 Welcome, Miss Joy!</h2>
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px; font-size: 14px; color: #2c2c2c;">
+    <p style="margin: 0 0 12px 0;">We are thrilled to officially introduce the newest member of our school family, <strong>Miss Joy</strong>!</p>
+    <p style="margin: 0 0 12px 0;">Finding the right teacher is something we take very seriously, and we spent considerable time carefully evaluating candidates to ensure we brought in someone who not only possesses strong teaching skills, but also embodies the values, warmth, flexibility, and dedication that are so important to our school community.</p>
+    <p style="margin: 0 0 12px 0;">Miss Joy brings a genuine love for children, a positive attitude, and a passion for helping students grow both academically and personally. She studied Religious Studies at the University of Texas at El Paso and has experience working in a Reggio Emilia-inspired microschool with a rich history of over 40 years. She is drawn to approaches that respect children as capable, independent learners — which makes her a wonderful fit for Sage Field.</p>
+    <p style="margin: 0 0 12px 0;">Miss Joy will officially begin with us on <strong>August 10</strong>, during the final week of our Summer Program. This will give her a wonderful opportunity to begin getting to know our students, families, routines, and culture before the start of the new school year.</p>
+    <p style="margin: 0;">Please join us in giving Miss Joy a warm welcome when you see her around campus. We are so excited for this next chapter!</p>
+  </div>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">🏡 Logistical Updates</h2>
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px; font-size: 14px; color: #2c2c2c;">
+    <p style="margin: 0 0 12px 0;">Based on family feedback, we have now established a <strong>weekly mowing service</strong> and a <strong>monthly pest control service</strong> to help keep our outdoor learning environment safe and comfortable for students.</p>
+    <p style="margin: 0;">To prioritize student safety, all pest control treatments will take place <strong>after school on Fridays</strong>, ensuring that students do not return to campus for more than <strong>50 hours after treatment</strong>. We appreciate your partnership and are committed to maintaining a safe, well-cared-for environment for all of our students.</p>
+  </div>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">🎁 Referral Program</h2>
+  <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px; font-size: 14px; color: #2c2c2c;">
+    <p style="margin: 0 0 12px 0;">We're excited to introduce our <strong>referral program</strong> — and we'd love your help spreading the word about Sage Field!</p>
+    <p style="margin: 0 0 12px 0;">When a family you refer <strong>enrolls in our upcoming school program and pays their registration fee</strong>, you'll receive a <strong>$500 gift card of your choice</strong>. 🎉</p>
+    <p style="margin: 0 0 16px 0;">Simply share your unique referral link — you can find it on your home dashboard. If sharing the link isn't convenient, you can also just let the family know to <strong>mention your name when they apply</strong> and it will still count toward your referral. We'll take care of the rest!</p>
+    <p style="margin: 0; color: #888; font-size: 13px;">⏳ This offer is available through the end of our summer program.</p>
+  </div>
+
+  <p style="margin-bottom: 8px; font-size: 14px; color: #555;">We're so grateful for your continued trust and partnership — it is a privilege to serve your families each day. 🌱</p>
+
+  <p style="margin-top: 32px; margin-bottom: 4px;">Warmly,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
 export async function buildSummerWeekThreeNewsletterEmail(opts: {
   g1FullName: string;
   childLegalName: string;
