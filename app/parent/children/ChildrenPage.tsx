@@ -220,7 +220,7 @@ const TEACHER_CARD_DATA: Record<
       "Ms. Paige is the Lead Primary Teacher at Sage Field Private School. She has a passion for outdoor-based learning and creating environments where young children feel safe, curious, and inspired. With experience in Montessori-style education and outdoor learning, she brings creativity and intentionality to every lesson.",
   },
   "Zelinda Melo": {
-    role: "Teacher Aide",
+    role: "Lower Elementary Teacher",
     image: "/assets/team/Zelinda.webp",
     email: "zelinda@sagefieldschool.com",
     about:

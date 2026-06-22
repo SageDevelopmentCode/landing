@@ -24,7 +24,7 @@ const TEAM_MEMBERS = [
   },
   {
     name: "Zelinda Melo",
-    role: "Teacher Aide",
+    role: "Lower Elementary Teacher",
     image: "/assets/team/Zelinda.webp",
     description:
       "Hello, Sage Field families!! My name is Zelinda and I am so excited to be a part of this incredible team. I have a deep love for children and a heart for nurturing their growth in a safe and encouraging environment. I look forward to supporting each child's learning journey and being a positive presence in their day.",
