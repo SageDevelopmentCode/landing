@@ -63,9 +63,12 @@ type ContentTab =
   | "pickup"
   | "profile";
 
-const PROGRAM_CONFIG: Record<AttendanceProgram, { label: string; color: string; bg: string }> = {
-  summer:       { label: "Summer 2026",      color: "#d97706", bg: "#fef9ee" },
-  aftercare:    { label: "Aftercare",         color: "#7c3aed", bg: "#f5f3ff" },
+const PROGRAM_CONFIG: Record<
+  AttendanceProgram,
+  { label: string; color: string; bg: string }
+> = {
+  summer: { label: "Summer 2026", color: "#d97706", bg: "#fef9ee" },
+  aftercare: { label: "Aftercare", color: "#7c3aed", bg: "#f5f3ff" },
   field_friday: { label: "Field Fun Fridays", color: "#0891b2", bg: "#ecfeff" },
 };
 
@@ -207,7 +210,7 @@ const TEACHER_CARD_DATA: Record<
     image: "/assets/team/sabrina.jpg",
     email: "sabrina@sagefieldschool.com",
     about:
-      "Ms. Sabrina brings a wealth of experience to SageField. She holds a Bachelor's degree in Elementary Education with a concentration in Early Childhood Development from Biola University and a Teaching Credential. Her background includes working with children in a wide range of roles both in the U.S. and internationally—spanning special education, Pre-K, homeschooling, tutoring, coaching, traditional schooling, nature school guide, and more.",
+      "Ms. Sabrina brings a wealth of experience to Sage Field. She holds a Bachelor's degree in Elementary Education with a concentration in Early Childhood Development from Biola University and a Teaching Credential. Her background includes working with children in a wide range of roles both in the U.S. and internationally—spanning special education, Pre-K, homeschooling, tutoring, coaching, traditional schooling, nature school guide, and more.",
   },
   "Paige Wood": {
     role: "Primary Lead Teacher",
@@ -450,7 +453,11 @@ function AttendanceTab({
     const [h, m] = hhmm.split(":").map(Number);
     const d = new Date();
     d.setHours(h, m, 0, 0);
-    return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+    return d.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
   };
 
   return (
@@ -496,7 +503,9 @@ function AttendanceTab({
                     i < records.length - 1 ? "border-b border-gray-100" : ""
                   }`}
                 >
-                  <span className="text-sm text-gray-700">{formatYMD(r.date)}</span>
+                  <span className="text-sm text-gray-700">
+                    {formatYMD(r.date)}
+                  </span>
                   <span
                     className="text-xs font-medium px-2.5 py-0.5 rounded-full self-center w-fit"
                     style={{ color: cfg.color, backgroundColor: cfg.bg }}
@@ -509,7 +518,10 @@ function AttendanceTab({
                         Picked Up
                       </span>
                     ) : (
-                      <span className="text-xs font-medium px-2.5 py-0.5 rounded-full" style={{ backgroundColor: "#eaf2ec", color: "#4a7c59" }}>
+                      <span
+                        className="text-xs font-medium px-2.5 py-0.5 rounded-full"
+                        style={{ backgroundColor: "#eaf2ec", color: "#4a7c59" }}
+                      >
                         Attended
                       </span>
                     )}
@@ -526,45 +538,62 @@ function AttendanceTab({
         onClose={() => setSelectedRecord(null)}
         title="Attendance Record"
       >
-        {selectedRecord && (() => {
-          const cfg = PROGRAM_CONFIG[selectedRecord.program];
-          const recordedBy = userMap[selectedRecord.recorded_by]?.full_name ?? "Staff";
-          const pickupRecordedBy = selectedRecord.pickup_recorded_by
-            ? (userMap[selectedRecord.pickup_recorded_by]?.full_name ?? "Staff")
-            : null;
-          return (
-            <SidebarSection title="Record Details">
-              <SidebarField label="Date" value={formatYMD(selectedRecord.date)} />
-              <div className="flex flex-col gap-0.5">
-                <span className="text-xs text-gray-400">Program</span>
-                <span
-                  className="text-xs font-medium px-2.5 py-0.5 rounded-full w-fit"
-                  style={{ color: cfg.color, backgroundColor: cfg.bg }}
-                >
-                  {cfg.label}
-                </span>
-              </div>
-              <SidebarField label="Recorded By" value={recordedBy} />
-              {selectedRecord.pickup_time && (
-                <>
-                  <SidebarField label="Pickup Time" value={formatPickupTime(selectedRecord.pickup_time)} />
-                  {selectedRecord.picked_up_by_name && (
+        {selectedRecord &&
+          (() => {
+            const cfg = PROGRAM_CONFIG[selectedRecord.program];
+            const recordedBy =
+              userMap[selectedRecord.recorded_by]?.full_name ?? "Staff";
+            const pickupRecordedBy = selectedRecord.pickup_recorded_by
+              ? (userMap[selectedRecord.pickup_recorded_by]?.full_name ??
+                "Staff")
+              : null;
+            return (
+              <SidebarSection title="Record Details">
+                <SidebarField
+                  label="Date"
+                  value={formatYMD(selectedRecord.date)}
+                />
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-xs text-gray-400">Program</span>
+                  <span
+                    className="text-xs font-medium px-2.5 py-0.5 rounded-full w-fit"
+                    style={{ color: cfg.color, backgroundColor: cfg.bg }}
+                  >
+                    {cfg.label}
+                  </span>
+                </div>
+                <SidebarField label="Recorded By" value={recordedBy} />
+                {selectedRecord.pickup_time && (
+                  <>
                     <SidebarField
-                      label="Picked Up By"
-                      value={[selectedRecord.picked_up_by_name, selectedRecord.picked_up_by_relationship].filter(Boolean).join(" · ")}
+                      label="Pickup Time"
+                      value={formatPickupTime(selectedRecord.pickup_time)}
                     />
-                  )}
-                  {pickupRecordedBy && (
-                    <SidebarField label="Pickup Recorded By" value={pickupRecordedBy} />
-                  )}
-                </>
-              )}
-              {selectedRecord.notes && (
-                <SidebarField label="Notes" value={selectedRecord.notes} />
-              )}
-            </SidebarSection>
-          );
-        })()}
+                    {selectedRecord.picked_up_by_name && (
+                      <SidebarField
+                        label="Picked Up By"
+                        value={[
+                          selectedRecord.picked_up_by_name,
+                          selectedRecord.picked_up_by_relationship,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      />
+                    )}
+                    {pickupRecordedBy && (
+                      <SidebarField
+                        label="Pickup Recorded By"
+                        value={pickupRecordedBy}
+                      />
+                    )}
+                  </>
+                )}
+                {selectedRecord.notes && (
+                  <SidebarField label="Notes" value={selectedRecord.notes} />
+                )}
+              </SidebarSection>
+            );
+          })()}
       </DetailSidebar>
     </>
   );
@@ -770,27 +799,29 @@ function LearningTab({
                           {note.note_text}
                         </p>
                       </div>
-                      {!isSharedAccess && <div className="flex gap-1.5 flex-shrink-0 mt-0.5">
-                        <button
-                          onClick={() => startEdit(note)}
-                          className="text-gray-300 hover:text-[#4a7c59] transition-colors cursor-pointer"
-                          aria-label="Edit note"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(note.id)}
-                          disabled={deletingId === note.id}
-                          className="text-gray-300 hover:text-red-400 transition-colors cursor-pointer disabled:opacity-50"
-                          aria-label="Delete note"
-                        >
-                          {deletingId === note.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-4 h-4" />
-                          )}
-                        </button>
-                      </div>}
+                      {!isSharedAccess && (
+                        <div className="flex gap-1.5 flex-shrink-0 mt-0.5">
+                          <button
+                            onClick={() => startEdit(note)}
+                            className="text-gray-300 hover:text-[#4a7c59] transition-colors cursor-pointer"
+                            aria-label="Edit note"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(note.id)}
+                            disabled={deletingId === note.id}
+                            className="text-gray-300 hover:text-red-400 transition-colors cursor-pointer disabled:opacity-50"
+                            aria-label="Delete note"
+                          >
+                            {deletingId === note.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </li>
@@ -1196,28 +1227,30 @@ function PickupTab({
                     />
                   )}
                 </div>
-                {!isSharedAccess && <div className="flex items-center gap-1 flex-shrink-0 pt-0.5">
-                  <button
-                    onClick={() => startEdit(person)}
-                    disabled={saving}
-                    className="p-1.5 text-gray-400 hover:text-[#4a7c59] rounded-lg hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-40"
-                    title="Edit"
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(person._key)}
-                    disabled={saving}
-                    className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-40"
-                    title="Delete"
-                  >
-                    {saving ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <Trash2 className="w-3.5 h-3.5" />
-                    )}
-                  </button>
-                </div>}
+                {!isSharedAccess && (
+                  <div className="flex items-center gap-1 flex-shrink-0 pt-0.5">
+                    <button
+                      onClick={() => startEdit(person)}
+                      disabled={saving}
+                      className="p-1.5 text-gray-400 hover:text-[#4a7c59] rounded-lg hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-40"
+                      title="Edit"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(person._key)}
+                      disabled={saving}
+                      className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-40"
+                      title="Delete"
+                    >
+                      {saving ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -1319,7 +1352,7 @@ function ProfileTab({
       SECTION_FIELDS[section].map((f) => [
         f,
         (child[f as keyof Student] as string | null) ?? "",
-      ])
+      ]),
     );
     setDraft(snapshot);
     setSectionError(null);
@@ -1429,7 +1462,9 @@ function ProfileTab({
             </div>
             {draft.has_medical_conditions === "yes" && (
               <div className="py-2.5 border-b border-gray-50">
-                <label className={labelCls}>Medical Conditions Description</label>
+                <label className={labelCls}>
+                  Medical Conditions Description
+                </label>
                 <textarea
                   className={`${inputCls} resize-none`}
                   rows={3}
@@ -1492,7 +1527,9 @@ function ProfileTab({
             </div>
             {draft.has_emergency_medications === "yes" && (
               <div className="py-2.5">
-                <label className={labelCls}>Emergency Medications Description</label>
+                <label className={labelCls}>
+                  Emergency Medications Description
+                </label>
                 <textarea
                   className={`${inputCls} resize-none`}
                   rows={3}
@@ -1522,10 +1559,7 @@ function ProfileTab({
             )}
             <Field label="Has Allergies" value={child.has_allergies} />
             {child.has_allergies?.toLowerCase() === "yes" && (
-              <Field
-                label="Allergies"
-                value={child.allergies_description}
-              />
+              <Field label="Allergies" value={child.allergies_description} />
             )}
             <Field
               label="Has Emergency Medications"
@@ -1807,7 +1841,9 @@ function ChildProfile({
   );
   const [avatarHovered, setAvatarHovered] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [attendanceRecords, setAttendanceRecords] = useState<UnifiedAttendanceRecord[]>([]);
+  const [attendanceRecords, setAttendanceRecords] = useState<
+    UnifiedAttendanceRecord[]
+  >([]);
   const [attendanceUserMap, setAttendanceUserMap] = useState<UserMap>({});
   const [attendanceLoading, setAttendanceLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1862,7 +1898,9 @@ function ChildProfile({
           className={`relative flex-shrink-0 w-20 h-20 rounded-full overflow-hidden ${isSharedAccess ? "" : "cursor-pointer"}`}
           onMouseEnter={() => !isSharedAccess && setAvatarHovered(true)}
           onMouseLeave={() => setAvatarHovered(false)}
-          onClick={() => !uploading && !isSharedAccess && fileInputRef.current?.click()}
+          onClick={() =>
+            !uploading && !isSharedAccess && fileInputRef.current?.click()
+          }
         >
           {currentImageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -2003,7 +2041,11 @@ function ChildProfile({
           )}
 
           {activeTab === "pickup" && (
-            <PickupTab pickup={pickup} studentId={child.id} isSharedAccess={isSharedAccess} />
+            <PickupTab
+              pickup={pickup}
+              studentId={child.id}
+              isSharedAccess={isSharedAccess}
+            />
           )}
 
           {activeTab === "profile" && (
@@ -2151,30 +2193,30 @@ export default function ChildrenPage({
           })}
         </div>
         <div className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto px-6 py-12">
-          <div className="mb-10">
-            <h1 className="text-3xl font-bold font-heading text-gray-800 mb-2">
-              My Children
-            </h1>
+          <div className="max-w-4xl mx-auto px-6 py-12">
+            <div className="mb-10">
+              <h1 className="text-3xl font-bold font-heading text-gray-800 mb-2">
+                My Children
+              </h1>
+            </div>
+            <ChildProfile
+              key={activeChild.id}
+              child={activeChild}
+              teachers={teachersByStudent[activeChild.id] ?? []}
+              enrollmentAppId={nonEnrolledAppByStudent[activeChild.id]}
+              initialProfileImageUrl={
+                ((activeChild as Record<string, unknown>).profile_image_url as
+                  | string
+                  | null) ?? null
+              }
+              pickup={
+                pickupByStudent[activeChild.id] ?? { plan: null, persons: [] }
+              }
+              initialNotes={notesByStudent[activeChild.id] ?? []}
+              isSharedAccess={isSharedAccess}
+            />
           </div>
-          <ChildProfile
-            key={activeChild.id}
-            child={activeChild}
-            teachers={teachersByStudent[activeChild.id] ?? []}
-            enrollmentAppId={nonEnrolledAppByStudent[activeChild.id]}
-            initialProfileImageUrl={
-              ((activeChild as Record<string, unknown>).profile_image_url as
-                | string
-                | null) ?? null
-            }
-            pickup={
-              pickupByStudent[activeChild.id] ?? { plan: null, persons: [] }
-            }
-            initialNotes={notesByStudent[activeChild.id] ?? []}
-            isSharedAccess={isSharedAccess}
-          />
         </div>
-      </div>
       </div>
     </div>
   );
