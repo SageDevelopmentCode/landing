@@ -142,7 +142,7 @@ function TraditionalImageGrid({ images }: { images: DBSectionImage[] }) {
         <img
           src={images[0].signed_url ?? ""}
           alt=""
-          className="w-full h-60 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+          className="w-full h-auto object-contain cursor-pointer hover:opacity-90 transition-opacity"
           onClick={() => setLightboxIdx(0)}
         />
         <p className="text-xs text-gray-400 font-body mt-1.5">1 photo</p>

@@ -142,7 +142,9 @@ function TraditionalImageGrid({ images }: { images: DBSectionImage[] }) {
   if (images.length === 1) {
     return (
       <div className="mt-4">
-        <SkeletonImage src={images[0].signed_url ?? ""} className="w-full h-60" onClick={() => setLightboxIdx(0)} />
+        <div className="relative overflow-hidden cursor-pointer hover:opacity-90 transition-opacity" onClick={() => setLightboxIdx(0)}>
+          <img src={images[0].signed_url ?? ""} alt="" loading="lazy" className="w-full h-auto object-contain" />
+        </div>
         <p className="text-xs text-gray-400 font-body mt-1.5">1 photo</p>
         {lightboxIdx !== null && <NewsletterImageLightbox images={images} initialIndex={lightboxIdx} onClose={() => setLightboxIdx(null)} />}
       </div>
