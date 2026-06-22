@@ -29,9 +29,13 @@ import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
 import FloatingSMSButton from "@/app/components/FloatingSMSButton";
 import ContactDialog from "@/app/components/ContactDialog";
+import WaitlistDialog from "@/app/components/WaitlistDialog";
 import { formatPhone } from "@/app/utils/formatPhone";
 import { submitTourBooking } from "@/app/actions/submitTourBooking";
 import WeekRecapPreview from "@/app/components/WeekRecapPreview";
+import EducationalPhilosophySection from "@/app/components/EducationalPhilosophySection";
+import MeetTheTeamSection from "@/app/components/MeetTheTeamSection";
+import FAQAccordion from "@/app/components/FAQAccordion";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -193,6 +197,39 @@ const TRUST_BENEFITS = [
     headline: "Meet Your Child's Teacher",
     body: "Tours are led by Ms. Sabrina herself. You'll leave knowing exactly who will care for your child every day.",
     accentClass: "bg-sage-50 border-sage-200",
+  },
+];
+
+const SCHOOL_FAQS = [
+  {
+    question: "What is Sage Field?",
+    answer:
+      "Sage Field Private School is an outdoor-focused private microschool in Round Rock, Texas. We are a small-group, outdoor-centered education that fosters curiosity, confidence, and wisdom — a structured drop-off program without the rigidity of traditional school.",
+  },
+  {
+    question: "What is a microschool?",
+    answer:
+      "A microschool is a small, independent private school — typically serving no more than 10–12 students per class — that offers a more personalized, flexible alternative to traditional schooling. Microschools prioritize small class sizes, individualized pacing, and innovative approaches to learning.",
+  },
+  {
+    question: "What ages do you serve and how big are the groups?",
+    answer:
+      "We serve ages 4–11, with flexibility based on developmental fit. Students learn together in mixed-age groups so children can move at their own pace. We intentionally keep our groups small — typically no more than 10–12 children per class — so that our adults can stay closely attuned to each child's needs.",
+  },
+  {
+    question: "What does a typical day at Sage Field look like?",
+    answer:
+      "Our days are designed to feel calm, connected, and alive with curiosity. Mornings are for focused academics in reading, writing, fluency, and math, individualized to each child's abilities. Afternoons flow into nature exploration, science, art, movement, and social-emotional learning. We prioritize real-world, hands-on experiences and time outdoors over worksheets and repetition.",
+  },
+  {
+    question: "What subjects does Sage Field teach?",
+    answer:
+      "Our core curriculum includes reading, spelling, grammar, mathematics, and good citizenship. We complement these foundations with nature study, art, music, movement, and social-emotional learning, drawing from Montessori, Waldorf, and Reggio-inspired approaches with broadly TEKS-aligned academics.",
+  },
+  {
+    question: "How does enrollment work and what is the financial commitment?",
+    answer:
+      "Families start by completing an application and connecting with us to ensure a good mutual fit. Enrollment is finalized when you sign our Enrollment Agreement (including a six-month commitment), sign our risk and media forms, and pay the non-refundable registration/materials fee.",
   },
 ];
 
@@ -972,6 +1009,7 @@ export default function TourPage() {
 
 
   const [isContactOpen, setIsContactOpen] = useState(false);
+  const [isWaitlistOpen, setIsWaitlistOpen] = useState(false);
 
   const [unavailability, setUnavailability] = useState<UnavailabilityEntry[]>(
     [],
@@ -1467,6 +1505,98 @@ export default function TourPage() {
         </div>
       </section>
 
+      {/* ── Tour Walkthrough ── */}
+      <TourWalkthrough />
+
+      {/* ── Tour FAQ ── */}
+      <TourFAQ />
+
+      {/* ── Location Bar ── */}
+      <section className="py-16 px-6 sm:px-12 lg:px-16 bg-sage-50/60">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4 }}
+          >
+            <div className="flex items-center gap-4">
+              <MapPin className="w-5 h-5 text-primary flex-shrink-0" />
+              <div>
+                <p className="text-xs text-gray-400 uppercase tracking-wide font-body mb-0.5">
+                  Location
+                </p>
+                <p className="text-sm font-semibold text-gray-800 font-body">
+                  2760 Gattis School Rd, Round Rock, TX 78664
+                </p>
+              </div>
+            </div>
+
+            <div className="hidden sm:block h-12 w-px bg-gray-200" />
+
+            <div className="flex items-center gap-4">
+              <Clock className="w-5 h-5 text-primary flex-shrink-0" />
+              <div>
+                <p className="text-xs text-gray-400 uppercase tracking-wide font-body mb-0.5">
+                  Available
+                </p>
+                <p className="text-sm font-semibold text-gray-800 font-body">
+                  Mon – Sat · 9:00 AM – 5:00 PM
+                </p>
+              </div>
+            </div>
+
+            <div className="hidden sm:block h-12 w-px bg-gray-200" />
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <p className="text-sm text-gray-600 font-body whitespace-nowrap">
+                Questions before booking?
+              </p>
+              <button
+                onClick={() => setIsContactOpen(true)}
+                className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold font-body px-5 py-2.5 rounded-lg transition-colors duration-200"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Contact Us
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      <WeekRecapPreview className="bg-white" />
+
+      {/* ── Educational Philosophy ── */}
+      <EducationalPhilosophySection />
+
+      {/* ── Meet the Team ── */}
+      <MeetTheTeamSection featured={true} />
+
+      {/* ── School FAQ ── */}
+      <section className="py-20 px-6 sm:px-12 lg:px-16 bg-welcome-bg">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            className="text-center mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <span className="inline-block px-5 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4 font-body">
+              FAQ
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold font-heading text-gray-800 mb-3">
+              Common Questions
+            </h2>
+            <p className="text-base text-gray-500 font-body max-w-xl mx-auto">
+              Everything families ask before their first visit to Sage Field.
+            </p>
+          </motion.div>
+          <FAQAccordion items={SCHOOL_FAQS} />
+        </div>
+      </section>
+
       {/* ── Scheduling Panel ── */}
       <section
         id="schedule"
@@ -1793,73 +1923,48 @@ export default function TourPage() {
         </div>
       </section>
 
-      {/* ── Tour Walkthrough ── */}
-      <TourWalkthrough />
-
-      {/* ── FAQ ── */}
-      <TourFAQ />
-
-      {/* ── Location Bar ── */}
-      <section className="py-16 px-6 sm:px-12 lg:px-16 bg-sage-50/60">
-        <div className="max-w-6xl mx-auto">
-          <motion.div
-            className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4 }}
-          >
-            <div className="flex items-center gap-4">
-              <MapPin className="w-5 h-5 text-primary flex-shrink-0" />
-              <div>
-                <p className="text-xs text-gray-400 uppercase tracking-wide font-body mb-0.5">
-                  Location
-                </p>
-                <p className="text-sm font-semibold text-gray-800 font-body">
-                  2760 Gattis School Rd, Round Rock, TX 78664
-                </p>
-              </div>
-            </div>
-
-            <div className="hidden sm:block h-12 w-px bg-gray-200" />
-
-            <div className="flex items-center gap-4">
-              <Clock className="w-5 h-5 text-primary flex-shrink-0" />
-              <div>
-                <p className="text-xs text-gray-400 uppercase tracking-wide font-body mb-0.5">
-                  Available
-                </p>
-                <p className="text-sm font-semibold text-gray-800 font-body">
-                  Mon – Sat · 9:00 AM – 5:00 PM
-                </p>
-              </div>
-            </div>
-
-            <div className="hidden sm:block h-12 w-px bg-gray-200" />
-
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-              <p className="text-sm text-gray-600 font-body whitespace-nowrap">
-                Questions before booking?
-              </p>
-              <button
-                onClick={() => setIsContactOpen(true)}
-                className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold font-body px-5 py-2.5 rounded-lg transition-colors duration-200"
-              >
-                <MessageCircle className="w-4 h-4" />
-                Contact Us
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      <WeekRecapPreview className="bg-white" />
-
       <Footer />
-      <FloatingSMSButton />
+
+      {/* Mobile floating "Schedule Tour" bar */}
+      <motion.div
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 pt-2"
+        initial={{ y: 80, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.6, duration: 0.4, ease: "easeOut" as const }}
+      >
+        <div className="bg-sage-700 rounded-2xl shadow-xl flex items-center justify-between px-5 py-3 gap-3">
+          <div>
+            <p className="text-white font-heading font-bold text-sm leading-tight">
+              Come see Sage Field!
+            </p>
+            <p className="text-white/75 font-body text-xs">
+              Book a free private tour
+            </p>
+          </div>
+          <button
+            onClick={() =>
+              document
+                .getElementById("schedule")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" })
+            }
+            className="flex-shrink-0 bg-white text-sage-700 font-semibold text-sm font-body px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+          >
+            Schedule Tour →
+          </button>
+        </div>
+      </motion.div>
+
+      <div className="hidden lg:block">
+        <FloatingSMSButton />
+      </div>
+
       <ContactDialog
         isOpen={isContactOpen}
         onClose={() => setIsContactOpen(false)}
+      />
+      <WaitlistDialog
+        isOpen={isWaitlistOpen}
+        onClose={() => setIsWaitlistOpen(false)}
       />
     </div>
   );
