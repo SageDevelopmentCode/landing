@@ -221,7 +221,7 @@ const TEACHER_CARD_DATA: Record<
   },
   "Zelinda Melo": {
     role: "Lower Elementary Teacher",
-    image: "/assets/team/Zelinda.webp",
+    image: "/assets/team/Zelinda2.JPG",
     email: "zelinda@sagefieldschool.com",
     about:
       "Ms. Zelinda has a deep love for children and a heart for nurturing their growth in a safe and encouraging environment. She looks forward to supporting each child's learning journey and being a positive presence in their day.",

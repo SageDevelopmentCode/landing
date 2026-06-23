@@ -188,7 +188,7 @@ const teamMembers = [
   {
     name: "Zelinda Melo",
     role: "Lower Elementary Teacher",
-    image: "/assets/team/Zelinda.webp",
+    image: "/assets/team/Zelinda2.JPG",
     objectPosition: "center 25%",
   },
   // {
