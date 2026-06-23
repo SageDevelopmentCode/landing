@@ -523,8 +523,6 @@ export default function ShadowPage() {
     parentName: "",
     email: "",
     phone: "",
-    childName: "",
-    childAge: "",
     referralSource: "",
     notes: "",
     emergencyName: "",
@@ -533,6 +531,18 @@ export default function ShadowPage() {
     consentPhoto: false,
     interestedInEnrollment: false,
   });
+
+  const [children, setChildren] = useState([{ name: "", age: "" }]);
+
+  const addChild = () => setChildren((prev) => [...prev, { name: "", age: "" }]);
+  const removeChild = (i: number) =>
+    setChildren((prev) => prev.filter((_, idx) => idx !== i));
+  const updateChild = (i: number, field: "name" | "age", value: string) =>
+    setChildren((prev) =>
+      prev.map((c, idx) => (idx === i ? { ...c, [field]: value } : c)),
+    );
+
+  const totalBase = children.length * 20;
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [calendarMonth, setCalendarMonth] = useState(CALENDAR_TODAY.getMonth());
@@ -631,8 +641,8 @@ export default function ShadowPage() {
   const isFormValid =
     !!formData.parentName.trim() &&
     !!formData.email.trim() &&
-    !!formData.childName.trim() &&
-    !!formData.childAge &&
+    children.length > 0 &&
+    children.every((c) => !!c.name.trim() && !!c.age) &&
     formData.consentOutdoor &&
     selectedDate !== null;
 
@@ -654,8 +664,7 @@ export default function ShadowPage() {
           parentName: formData.parentName,
           email: formData.email,
           phone: formData.phone,
-          childName: formData.childName,
-          childAge: Number(formData.childAge),
+          children: children.map((c) => ({ name: c.name, age: Number(c.age) })),
           selectedDate: selectedDate!.toISOString().split("T")[0],
           referralSource: formData.referralSource,
           notes: formData.notes,
@@ -686,7 +695,6 @@ export default function ShadowPage() {
     }
   };
 
-  const studentName = formData.childName;
   const guardianName = formData.parentName;
   const notesForAgreement = formData.notes;
   const photoConsent = formData.consentPhoto;
@@ -1385,39 +1393,79 @@ export default function ShadowPage() {
                   </div>
                 </div>
 
-                <SectionLabel>Your Child</SectionLabel>
+                <SectionLabel>
+                  Your Child{children.length > 1 ? "ren" : ""}{" "}
+                  <span className="text-gray-400 normal-case font-normal text-[10px] ml-1">
+                    $20 per child
+                  </span>
+                </SectionLabel>
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5 font-body">
-                      Child&apos;s name <span className="text-red-400">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="childName"
-                      value={formData.childName}
-                      onChange={handleChange}
-                      placeholder="First and last name"
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5 font-body">
-                      Child&apos;s age <span className="text-red-400">*</span>
-                    </label>
-                    <select
-                      name="childAge"
-                      value={formData.childAge}
-                      onChange={handleChange}
-                      className={`${inputClass} cursor-pointer`}
+                  {children.map((child, i) => (
+                    <div
+                      key={i}
+                      className="rounded-xl border border-gray-200 bg-gray-50/50 p-4 space-y-3"
                     >
-                      <option value="">Select age</option>
-                      {[4, 5, 6, 7, 8, 9, 10, 11].map((age) => (
-                        <option key={age} value={age}>
-                          {age} years old
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-xs font-bold text-gray-400 font-body uppercase tracking-wide">
+                          Child {i + 1}
+                        </p>
+                        {children.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeChild(i)}
+                            className="text-xs text-gray-400 hover:text-red-400 font-body transition-colors cursor-pointer"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 font-body">
+                          Name <span className="text-red-400">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={child.name}
+                          onChange={(e) => updateChild(i, "name", e.target.value)}
+                          placeholder="First and last name"
+                          className={inputClass}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 font-body">
+                          Age <span className="text-red-400">*</span>
+                        </label>
+                        <select
+                          value={child.age}
+                          onChange={(e) => updateChild(i, "age", e.target.value)}
+                          className={`${inputClass} cursor-pointer`}
+                        >
+                          <option value="">Select age</option>
+                          {[4, 5, 6, 7, 8, 9, 10, 11].map((age) => (
+                            <option key={age} value={age}>
+                              {age} years old
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  ))}
+
+                  <button
+                    type="button"
+                    onClick={addChild}
+                    className="w-full py-2.5 border-2 border-dashed border-gray-300 rounded-xl text-sm font-semibold text-gray-500 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-body cursor-pointer"
+                  >
+                    + Add Another Child
+                  </button>
+
+                  {children.length > 1 && (
+                    <div className="flex items-center justify-center gap-2 py-2 px-4 bg-primary/10 rounded-xl">
+                      <span className="text-sm font-bold text-primary font-body">
+                        {children.length} children · ${totalBase} total
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <SectionLabel>Preferred Shadow Day</SectionLabel>
@@ -1615,7 +1663,7 @@ export default function ShadowPage() {
                     disabled={!isFormValid || !agreementSigned || submitting}
                     className="w-full px-6 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-all duration-200 font-body cursor-pointer shadow-md hover:shadow-lg text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
                   >
-                    {submitting ? "Submitting…" : "Book My Shadow Day — $20 →"}
+                    {submitting ? "Submitting…" : `Book My Shadow Day — $${totalBase} →`}
                   </button>
                 </motion.div>
               </motion.div>
@@ -1862,7 +1910,10 @@ export default function ShadowPage() {
                   <div className="flex flex-col gap-3 bg-gray-50 rounded-xl px-4 py-4 border border-gray-100">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
                       {[
-                        { label: "Student Name", value: studentName || "—" },
+                        {
+                          label: children.length > 1 ? "Children" : "Student Name",
+                          value: children.map((c) => c.name).filter(Boolean).join(", ") || "—",
+                        },
                         {
                           label: "Parent / Guardian",
                           value: guardianName || "—",
