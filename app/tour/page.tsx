@@ -1565,8 +1565,6 @@ export default function TourPage() {
         </div>
       </section>
 
-      <WeekRecapPreview className="bg-white" />
-
       {/* ── Educational Philosophy ── */}
       <EducationalPhilosophySection />
 
@@ -1922,6 +1920,8 @@ export default function TourPage() {
           </motion.div>
         </div>
       </section>
+
+      <WeekRecapPreview className="bg-white" />
 
       <Footer />
 
