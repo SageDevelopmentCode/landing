@@ -12,7 +12,7 @@ export default function Card({ title, description, iconPlaceholder = '🌱', ima
     <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 h-full flex flex-col">
       {image ? (
         <div className="relative h-48 w-full">
-          <Image src={image} alt={title} fill className="object-cover" />
+          <Image src={image} alt={title} fill className="object-cover" style={{ objectPosition: "center 60%" }} />
         </div>
       ) : (
         <div className="flex items-center justify-center w-16 h-16 m-6 mb-0 bg-secondary/20 rounded-full text-3xl">

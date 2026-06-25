@@ -10,28 +10,32 @@ export default function WelcomeSection() {
       description:
         "We stay in close communication with families and invite parents to support the learning journey at home — while Sage Field handles the full in-school program.",
       icon: "🤝",
-      image: "/assets/foto-dial-mrTd-QXJqK0-unsplash.jpg",
+      image:
+        "/assets/highlights/summer_week_three/4591E194-779B-46AC-A893-B9E75B6D64A7.JPG",
     },
     {
       title: "Hands-on Learning",
       description:
         "Hands-on outdoor and movement-based experiences that connect children to the world around them and foster real-world wisdom.",
       icon: "🌿",
-      image: "/assets/ImageEleven.jpg",
+      image:
+        "/assets/highlights/summer_week_two/3E22E13E-859C-427A-9FA3-73F11B989B65.JPG",
     },
     {
       title: "Small Groups",
       description:
         "Personalized attention in intimate learning environments designed for learning and growth.",
       icon: "👥",
-      image: "/assets/ImageFive.jpg",
+      image:
+        "/assets/highlights/summer_week_four/A4107889-4FC8-4F4F-BE2E-5F49868F3AA4 2.JPG",
     },
     {
       title: "Wisdom Focus",
       description:
         "Beyond memorization - transforming knowledge into living wisdom through curiosity, reflection, and experience.",
       icon: "💡",
-      image: "/assets/ImageSeven.jpg",
+      image:
+        "/assets/highlights/summer_week_three/FE28F7EF-5568-4F11-9C62-E44AC6209D53.JPG",
     },
   ];
 
