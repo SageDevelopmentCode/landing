@@ -138,7 +138,7 @@ const WEEK_FOUR: GalleryImage[] = [
   "IMG_9586.JPG",
 ].map((f) => ({ src: `/assets/highlights/summer_week_four/${f}`, alt: `Week 4 — ${f}`, week: 4 }));
 
-const ALL_IMAGES: GalleryImage[] = [...WEEK_ONE, ...WEEK_TWO, ...WEEK_THREE, ...WEEK_FOUR];
+const ALL_IMAGES: GalleryImage[] = [...WEEK_FOUR, ...WEEK_THREE, ...WEEK_TWO, ...WEEK_ONE];
 
 // ─── Skeleton card ─────────────────────────────────────────────────────────────
 
