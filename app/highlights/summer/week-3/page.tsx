@@ -256,7 +256,7 @@ export default function SummerWeekThreePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
           >
-            Jun 9–13, 2026
+            Jun 8–12, 2026
           </motion.p>
         </div>
 
@@ -328,7 +328,7 @@ export default function SummerWeekThreePage() {
               Week 3 Highlights ☀️
             </h1>
             <p className="text-sm font-semibold text-primary font-body mb-4">
-              Jun 9–13, 2026
+              Jun 8–12, 2026
             </p>
           </div>
 

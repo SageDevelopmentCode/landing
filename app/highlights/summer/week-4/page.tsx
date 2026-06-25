@@ -252,7 +252,7 @@ export default function SummerWeekFourPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
           >
-            Jun 16–20, 2026
+            Jun 15–19, 2026
           </motion.p>
         </div>
 
@@ -324,7 +324,7 @@ export default function SummerWeekFourPage() {
               Week 4 Highlights ☀️
             </h1>
             <p className="text-sm font-semibold text-primary font-body mb-4">
-              Jun 16–20, 2026
+              Jun 15–19, 2026
             </p>
           </div>
 

@@ -23,9 +23,9 @@ const LINK_GROUPS: { label: string; links: LinkItem[] }[] = [
     links: [
       {
         emoji: "📸",
-        title: "Week 2 Highlights Are Live!",
-        subtitle: "Summer 2026 · Jun 1–4 · See the recap",
-        href: "/highlights/summer/week-2",
+        title: "Week 4 Highlights Are Live!",
+        subtitle: "Summer 2026 · Jun 15–19 · See the recap",
+        href: "/highlights/summer/week-4",
         featured: true,
       },
     ],
@@ -123,6 +123,18 @@ const LINK_GROUPS: { label: string; links: LinkItem[] }[] = [
   {
     label: "Highlights",
     links: [
+      {
+        emoji: "📸",
+        title: "Week 4 Highlights",
+        subtitle: "Summer 2026 · Jun 15–19",
+        href: "/highlights/summer/week-4",
+      },
+      {
+        emoji: "📸",
+        title: "Week 3 Highlights",
+        subtitle: "Summer 2026 · Jun 8–12",
+        href: "/highlights/summer/week-3",
+      },
       {
         emoji: "📸",
         title: "Week 2 Highlights",
