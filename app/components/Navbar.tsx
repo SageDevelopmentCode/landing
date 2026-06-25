@@ -28,6 +28,7 @@ import {
   User,
   Mail,
   Handshake,
+  Images,
 } from "lucide-react";
 import ContactDialog from "./ContactDialog";
 import WaitlistDialog from "./WaitlistDialog";
@@ -111,6 +112,12 @@ const NAV_TABS: NavTab[] = [
         action: { kind: "link", href: "/educational-philosophy" },
         icon: GraduationCap,
         iconClass: "text-indigo-500",
+      },
+      {
+        label: "Gallery",
+        action: { kind: "link", href: "/gallery" },
+        icon: Images,
+        iconClass: "text-pink-500",
       },
     ],
   },
@@ -354,7 +361,8 @@ export default function Navbar({ darkStyle, lightText }: { darkStyle?: boolean; 
       pathname === "/contact" ||
       pathname === "/privacy" ||
       pathname === "/terms" ||
-      pathname === "/partnerships");
+      pathname === "/partnerships" ||
+      pathname === "/gallery");
 
   // Close everything on route change
   useEffect(() => {

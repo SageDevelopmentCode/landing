@@ -74,18 +74,6 @@ export default function ImageLightbox({ images, initialIndex, onClose }: ImageLi
           </button>
         )}
 
-        {/* Dot indicators */}
-        {images.length > 1 && (
-          <div className="absolute bottom-5 flex gap-1.5">
-            {images.map((_, i) => (
-              <button
-                key={i}
-                onClick={(e) => { e.stopPropagation(); setIndex(i); }}
-                className={`w-2 h-2 rounded-full transition-colors ${i === index ? "bg-white" : "bg-white/40"}`}
-              />
-            ))}
-          </div>
-        )}
       </motion.div>
     </AnimatePresence>
   );
