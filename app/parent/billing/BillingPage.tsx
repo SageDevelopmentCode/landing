@@ -5092,20 +5092,22 @@ export default function BillingPage({
                 ? fullName.trim().split(/\s+/)[0]
                 : null;
               return (
-                <div className="flex items-center gap-2 mt-2">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mt-2">
                   {firstName && (
                     <span className="text-xs font-body text-gray-400">
                       {firstName}&apos;s programs:
                     </span>
                   )}
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-body bg-[#d4e6d0] text-[#4a7c59]">
-                    {programBadgeLabel}
-                  </span>
-                  {dropInBadgeLabel && (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-body bg-amber-100 text-amber-700">
-                      {dropInBadgeLabel}
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-body bg-[#d4e6d0] text-[#4a7c59]">
+                      {programBadgeLabel}
                     </span>
-                  )}
+                    {dropInBadgeLabel && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-body bg-amber-100 text-amber-700">
+                        {dropInBadgeLabel}
+                      </span>
+                    )}
+                  </div>
                 </div>
               );
             })()}
