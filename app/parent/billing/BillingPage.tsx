@@ -3867,7 +3867,7 @@ function PendingPaymentsSection({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -6 }}
         transition={{ duration: 0.15, ease: "easeInOut" as const }}
-        className="grid grid-cols-2 gap-3"
+        className="grid grid-cols-1 sm:grid-cols-2 gap-3"
       >
         {activeNonEnrolled ? (
           <NonEnrolledCard app={activeNonEnrolled} />
@@ -3941,7 +3941,7 @@ function PendingPaymentsSection({
             {/* Total bar */}
             {totalCents > 0 && (
               <div
-                className="col-span-2 rounded-xl px-4 py-3 flex items-center justify-between"
+                className="col-span-1 sm:col-span-2 rounded-xl px-4 py-3 flex items-center justify-between"
                 style={{ backgroundColor: "#f6faf7" }}
               >
                 <span className="text-sm text-gray-500 font-body">
@@ -5150,6 +5150,14 @@ export default function BillingPage({
                   )
                 }
               />
+              <div className="mt-3">
+                <button
+                  onClick={() => setTuitionCodeModalOpen(true)}
+                  className="text-sm font-body text-gray-400 hover:text-gray-500 transition-colors cursor-pointer"
+                >
+                  Have a tuition code?
+                </button>
+              </div>
             </div>
           )}
 
