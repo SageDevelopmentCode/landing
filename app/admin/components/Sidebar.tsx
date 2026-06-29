@@ -32,6 +32,7 @@ import {
   Shield,
   Camera,
   Activity,
+  BarChart2,
 } from "lucide-react";
 import { cssColors as colors, radius, cssShadows as shadows } from "../design-system";
 import { useTheme } from "./ThemeProvider";
@@ -59,6 +60,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { name: "Tuition Codes", href: "/admin/payments/tuition-codes", icon: <Ticket className="w-4 h-4" /> },
       { name: "Week Swap",    href: "/admin/week-swap",     icon: <ArrowLeftRight className="w-4 h-4" /> },
       { name: "Referrals",    href: "/admin/referrals",     icon: <Gift className="w-4 h-4" /> },
+      { name: "Oversight",    href: "/admin/oversight",     icon: <BarChart2 className="w-4 h-4" /> },
     ],
   },
   {
