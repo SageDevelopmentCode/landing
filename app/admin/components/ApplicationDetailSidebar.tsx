@@ -36,6 +36,7 @@ import { sendSummerWeekOneNewsletterEmail } from '../../actions/sendSummerWeekOn
 import { sendSummerWeekTwoNewsletterEmail } from '../../actions/sendSummerWeekTwoNewsletterEmail'
 import { sendSummerWeekThreeNewsletterEmail } from '../../actions/sendSummerWeekThreeNewsletterEmail'
 import { sendSummerWeekFourNewsletterEmail } from '../../actions/sendSummerWeekFourNewsletterEmail'
+import { sendSummerWeekFiveNewsletterEmail } from '../../actions/sendSummerWeekFiveNewsletterEmail'
 import { sendFreeFridayAnnouncementEmail } from '../../actions/sendFreeFridayAnnouncementEmail'
 import { sendGoogleReviewIncentiveEmail } from '../../actions/sendGoogleReviewIncentiveEmail'
 import { sendFunFridayConfirmationEmail } from '../../actions/sendFunFridayConfirmationEmail'
@@ -237,6 +238,9 @@ export function ApplicationDetailSidebar({
   const [weekFourNewsletterSending, setWeekFourNewsletterSending] = useState(false)
   const [weekFourNewsletterSent, setWeekFourNewsletterSent] = useState(false)
   const [weekFourNewsletterError, setWeekFourNewsletterError] = useState<string | null>(null)
+  const [weekFiveNewsletterSending, setWeekFiveNewsletterSending] = useState(false)
+  const [weekFiveNewsletterSent, setWeekFiveNewsletterSent] = useState(false)
+  const [weekFiveNewsletterError, setWeekFiveNewsletterError] = useState<string | null>(null)
   const [freeFridaySending, setFreeFridaySending] = useState(false)
   const [freeFridaySent, setFreeFridaySent] = useState(false)
   const [freeFridayError, setFreeFridayError] = useState<string | null>(null)
@@ -258,6 +262,7 @@ export function ApplicationDetailSidebar({
   const [isEnrolling, setIsEnrolling] = useState(false)
   const [enrollError, setEnrollError] = useState<string | null>(null)
   const [emailThreadKey, setEmailThreadKey] = useState(0)
+  const [outreachTab, setOutreachTab] = useState<'enrollment' | 'summer' | 'newsletters' | 'other'>('enrollment')
   const [isEditingProgram, setIsEditingProgram] = useState(false)
   const [selectedProgram, setSelectedProgram] = useState<string>(application?.program ?? '')
   const [isUpdatingProgram, setIsUpdatingProgram] = useState(false)
@@ -979,6 +984,25 @@ export function ApplicationDetailSidebar({
     }
   }
 
+  const handleSendWeekFiveNewsletter = async () => {
+    if (weekFiveNewsletterSending || !application.g1_email) return
+    setWeekFiveNewsletterSending(true)
+    setWeekFiveNewsletterError(null)
+    const result = await sendSummerWeekFiveNewsletterEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+    })
+    setWeekFiveNewsletterSending(false)
+    if (result.success) {
+      setWeekFiveNewsletterSent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setWeekFiveNewsletterSent(false), 3000)
+    } else {
+      setWeekFiveNewsletterError(result.error ?? 'Failed to send')
+    }
+  }
+
   const handleSendOpenHouseEnrollment = async () => {
     if (openHouseSending || !application.g1_email) return
     setOpenHouseSending(true)
@@ -1452,262 +1476,301 @@ export function ApplicationDetailSidebar({
 
         {application.approved && application.g1_email && (
           <SidebarSection title="Outreach">
+            {/* Tab bar */}
+            <div className="flex gap-1 mb-3 flex-wrap">
+              {(['enrollment', 'summer', 'newsletters', 'other'] as const).map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setOutreachTab(tab)}
+                  className={`px-2.5 py-1 text-xs font-medium rounded-md capitalize transition-colors ${
+                    outreachTab === tab
+                      ? 'bg-[#2C5F2E] text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {tab === 'enrollment' ? 'Enrollment' : tab === 'summer' ? 'Summer' : tab === 'newsletters' ? 'Newsletters' : 'Other'}
+                </button>
+              ))}
+            </div>
+
             <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleSendRegFeeConfirmation}
-                  disabled={regFeeSending || regFeeSent}
-                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
-                >
-                  {regFeeSending ? 'Sending…' : regFeeSent ? '✓ Sent!' : 'Send Reg Fee Confirmation'}
-                </button>
-                {regFeeError && <span className="text-xs text-red-600">{regFeeError}</span>}
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleSendEnrollmentReminder}
-                  disabled={reminderSending || reminderSent}
-                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
-                >
-                  {reminderSending ? 'Sending…' : reminderSent ? '✓ Sent!' : 'Send Enrollment Reminder'}
-                </button>
-                {reminderError && <span className="text-xs text-red-600">{reminderError}</span>}
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleSendEnrollmentReminder2}
-                  disabled={reminder2Sending || reminder2Sent}
-                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
-                >
-                  {reminder2Sending ? 'Sending…' : reminder2Sent ? '✓ Sent!' : 'Send Enrollment Reminder 2'}
-                </button>
-                {reminder2Error && <span className="text-xs text-red-600">{reminder2Error}</span>}
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleSendEnrollmentReminder3}
-                  disabled={reminder3Sending || reminder3Sent}
-                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
-                >
-                  {reminder3Sending ? 'Sending…' : reminder3Sent ? '✓ Sent!' : 'Send Enrollment Reminder 3'}
-                </button>
-                {reminder3Error && <span className="text-xs text-red-600">{reminder3Error}</span>}
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleSendEnrollmentConfirmation}
-                  disabled={confirmationSending || confirmationSent}
-                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
-                >
-                  {confirmationSending ? 'Sending…' : confirmationSent ? '✓ Sent!' : 'Send Enrollment Confirmation'}
-                </button>
-                {confirmationError && <span className="text-xs text-red-600">{confirmationError}</span>}
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleSendInfoSessionInvite}
-                  disabled={infoSessionSending || infoSessionSent}
-                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
-                >
-                  {infoSessionSending ? 'Sending…' : infoSessionSent ? '✓ Sent!' : 'Send Info Session Invite'}
-                </button>
-                {infoSessionError && <span className="text-xs text-red-600">{infoSessionError}</span>}
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleSendOpenHouseEnrollment}
-                  disabled={openHouseSending || openHouseSent}
-                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
-                >
-                  {openHouseSending ? 'Sending…' : openHouseSent ? '✓ Sent!' : 'Send Open House Follow-Up'}
-                </button>
-                {openHouseError && <span className="text-xs text-red-600">{openHouseError}</span>}
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleSendPaySummerTuition}
-                  disabled={summerTuitionSending || summerTuitionSent}
-                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
-                >
-                  {summerTuitionSending ? 'Sending…' : summerTuitionSent ? '✓ Sent!' : 'Send Summer Week Selection'}
-                </button>
-                {summerTuitionError && <span className="text-xs text-red-600">{summerTuitionError}</span>}
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleSendPaySummerTuition2}
-                  disabled={summerTuition2Sending || summerTuition2Sent}
-                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
-                >
-                  {summerTuition2Sending ? 'Sending…' : summerTuition2Sent ? '✓ Sent!' : 'Send Summer Week Selection 2'}
-                </button>
-                {summerTuition2Error && <span className="text-xs text-red-600">{summerTuition2Error}</span>}
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleSendSummerWelcome}
-                  disabled={summerWelcomeSending || summerWelcomeSent}
-                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
-                >
-                  {summerWelcomeSending ? 'Sending…' : summerWelcomeSent ? '✓ Sent!' : 'Send Summer Welcome'}
-                </button>
-                {summerWelcomeError && <span className="text-xs text-red-600">{summerWelcomeError}</span>}
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleSendSummerTuitionConfirmation}
-                  disabled={summerTuitionConfirmSending || summerTuitionConfirmSent}
-                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
-                >
-                  {summerTuitionConfirmSending ? 'Sending…' : summerTuitionConfirmSent ? '✓ Sent!' : 'Send Summer Tuition Confirmation'}
-                </button>
-                {summerTuitionConfirmError && <span className="text-xs text-red-600">{summerTuitionConfirmError}</span>}
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleSendTuitionDueReminder}
-                  disabled={tuitionDueSending || tuitionDueSent}
-                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
-                >
-                  {tuitionDueSending ? 'Sending…' : tuitionDueSent ? '✓ Sent!' : 'Send Summer Tuition Due Date Reminder'}
-                </button>
-                {tuitionDueError && <span className="text-xs text-red-600">{tuitionDueError}</span>}
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleSendTuitionDueTodayReminder}
-                  disabled={tuitionDueTodaySending || tuitionDueTodaySent}
-                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
-                >
-                  {tuitionDueTodaySending ? 'Sending…' : tuitionDueTodaySent ? '✓ Sent!' : 'Send Tuition Due Today Reminder'}
-                </button>
-                {tuitionDueTodayError && <span className="text-xs text-red-600">{tuitionDueTodayError}</span>}
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleSendSummerStarting}
-                  disabled={summerStartingSending || summerStartingSent}
-                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
-                >
-                  {summerStartingSending ? 'Sending…' : summerStartingSent ? '✓ Sent!' : 'Send Summer Starting Soon'}
-                </button>
-                {summerStartingError && <span className="text-xs text-red-600">{summerStartingError}</span>}
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleSendSummerFirstDay}
-                  disabled={summerFirstDaySending || summerFirstDaySent}
-                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
-                >
-                  {summerFirstDaySending ? 'Sending…' : summerFirstDaySent ? '✓ Sent!' : 'Send Summer First Day'}
-                </button>
-                {summerFirstDayError && <span className="text-xs text-red-600">{summerFirstDayError}</span>}
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleSendWeekOneNewsletter}
-                  disabled={weekOneNewsletterSending || weekOneNewsletterSent}
-                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
-                >
-                  {weekOneNewsletterSending ? 'Sending…' : weekOneNewsletterSent ? '✓ Sent!' : 'Send Week One Newsletter'}
-                </button>
-                {weekOneNewsletterError && <span className="text-xs text-red-600">{weekOneNewsletterError}</span>}
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleSendWeekTwoNewsletter}
-                  disabled={weekTwoNewsletterSending || weekTwoNewsletterSent}
-                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
-                >
-                  {weekTwoNewsletterSending ? 'Sending…' : weekTwoNewsletterSent ? '✓ Sent!' : 'Send Week Two Newsletter'}
-                </button>
-                {weekTwoNewsletterError && <span className="text-xs text-red-600">{weekTwoNewsletterError}</span>}
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleSendWeekThreeNewsletter}
-                  disabled={weekThreeNewsletterSending || weekThreeNewsletterSent}
-                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
-                >
-                  {weekThreeNewsletterSending ? 'Sending…' : weekThreeNewsletterSent ? '✓ Sent!' : 'Send Week Three Newsletter'}
-                </button>
-                {weekThreeNewsletterError && <span className="text-xs text-red-600">{weekThreeNewsletterError}</span>}
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleSendWeekFourNewsletter}
-                  disabled={weekFourNewsletterSending || weekFourNewsletterSent}
-                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
-                >
-                  {weekFourNewsletterSending ? 'Sending…' : weekFourNewsletterSent ? '✓ Sent!' : 'Send Week Four Newsletter'}
-                </button>
-                {weekFourNewsletterError && <span className="text-xs text-red-600">{weekFourNewsletterError}</span>}
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleSendFreeFriday}
-                  disabled={freeFridaySending || freeFridaySent}
-                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
-                >
-                  {freeFridaySending ? 'Sending…' : freeFridaySent ? '✓ Sent!' : 'Send Free Friday Announcement'}
-                </button>
-                {freeFridayError && <span className="text-xs text-red-600">{freeFridayError}</span>}
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleSendGoogleReviewIncentive}
-                  disabled={googleReviewSending || googleReviewSent}
-                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
-                >
-                  {googleReviewSending ? 'Sending…' : googleReviewSent ? '✓ Sent!' : 'Send Google Review Incentive'}
-                </button>
-                {googleReviewError && <span className="text-xs text-red-600">{googleReviewError}</span>}
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleSendFunFridayConfirmation}
-                  disabled={funFridayConfirmSending || funFridayConfirmSent}
-                  className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
-                >
-                  {funFridayConfirmSending ? 'Sending…' : funFridayConfirmSent ? '✓ Sent!' : 'Send Fun Friday Confirmation'}
-                </button>
-                {funFridayConfirmError && <span className="text-xs text-red-600">{funFridayConfirmError}</span>}
-              </div>
-              {application.program === 'homeschool_drop_in' && (
+              {outreachTab === 'enrollment' && <>
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={handleSendDropInConfirmation}
-                    disabled={dropInConfirmSending || dropInConfirmSent}
+                    onClick={handleSendRegFeeConfirmation}
+                    disabled={regFeeSending || regFeeSent}
                     className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
                   >
-                    {dropInConfirmSending ? 'Sending…' : dropInConfirmSent ? '✓ Sent!' : 'Send Drop-In Payment Confirmation'}
+                    {regFeeSending ? 'Sending…' : regFeeSent ? '✓ Sent!' : 'Send Reg Fee Confirmation'}
                   </button>
-                  {dropInConfirmError && <span className="text-xs text-red-600">{dropInConfirmError}</span>}
+                  {regFeeError && <span className="text-xs text-red-600">{regFeeError}</span>}
                 </div>
-              )}
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendEnrollmentReminder}
+                    disabled={reminderSending || reminderSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {reminderSending ? 'Sending…' : reminderSent ? '✓ Sent!' : 'Send Enrollment Reminder'}
+                  </button>
+                  {reminderError && <span className="text-xs text-red-600">{reminderError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendEnrollmentReminder2}
+                    disabled={reminder2Sending || reminder2Sent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {reminder2Sending ? 'Sending…' : reminder2Sent ? '✓ Sent!' : 'Send Enrollment Reminder 2'}
+                  </button>
+                  {reminder2Error && <span className="text-xs text-red-600">{reminder2Error}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendEnrollmentReminder3}
+                    disabled={reminder3Sending || reminder3Sent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {reminder3Sending ? 'Sending…' : reminder3Sent ? '✓ Sent!' : 'Send Enrollment Reminder 3'}
+                  </button>
+                  {reminder3Error && <span className="text-xs text-red-600">{reminder3Error}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendEnrollmentConfirmation}
+                    disabled={confirmationSending || confirmationSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {confirmationSending ? 'Sending…' : confirmationSent ? '✓ Sent!' : 'Send Enrollment Confirmation'}
+                  </button>
+                  {confirmationError && <span className="text-xs text-red-600">{confirmationError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendInfoSessionInvite}
+                    disabled={infoSessionSending || infoSessionSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {infoSessionSending ? 'Sending…' : infoSessionSent ? '✓ Sent!' : 'Send Info Session Invite'}
+                  </button>
+                  {infoSessionError && <span className="text-xs text-red-600">{infoSessionError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendOpenHouseEnrollment}
+                    disabled={openHouseSending || openHouseSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {openHouseSending ? 'Sending…' : openHouseSent ? '✓ Sent!' : 'Send Open House Follow-Up'}
+                  </button>
+                  {openHouseError && <span className="text-xs text-red-600">{openHouseError}</span>}
+                </div>
+                {application.program === 'homeschool_drop_in' && (
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleSendDropInConfirmation}
+                      disabled={dropInConfirmSending || dropInConfirmSent}
+                      className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                    >
+                      {dropInConfirmSending ? 'Sending…' : dropInConfirmSent ? '✓ Sent!' : 'Send Drop-In Payment Confirmation'}
+                    </button>
+                    {dropInConfirmError && <span className="text-xs text-red-600">{dropInConfirmError}</span>}
+                  </div>
+                )}
+              </>}
+
+              {outreachTab === 'summer' && <>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendPaySummerTuition}
+                    disabled={summerTuitionSending || summerTuitionSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {summerTuitionSending ? 'Sending…' : summerTuitionSent ? '✓ Sent!' : 'Send Summer Week Selection'}
+                  </button>
+                  {summerTuitionError && <span className="text-xs text-red-600">{summerTuitionError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendPaySummerTuition2}
+                    disabled={summerTuition2Sending || summerTuition2Sent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {summerTuition2Sending ? 'Sending…' : summerTuition2Sent ? '✓ Sent!' : 'Send Summer Week Selection 2'}
+                  </button>
+                  {summerTuition2Error && <span className="text-xs text-red-600">{summerTuition2Error}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendSummerWelcome}
+                    disabled={summerWelcomeSending || summerWelcomeSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {summerWelcomeSending ? 'Sending…' : summerWelcomeSent ? '✓ Sent!' : 'Send Summer Welcome'}
+                  </button>
+                  {summerWelcomeError && <span className="text-xs text-red-600">{summerWelcomeError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendSummerTuitionConfirmation}
+                    disabled={summerTuitionConfirmSending || summerTuitionConfirmSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {summerTuitionConfirmSending ? 'Sending…' : summerTuitionConfirmSent ? '✓ Sent!' : 'Send Summer Tuition Confirmation'}
+                  </button>
+                  {summerTuitionConfirmError && <span className="text-xs text-red-600">{summerTuitionConfirmError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendTuitionDueReminder}
+                    disabled={tuitionDueSending || tuitionDueSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {tuitionDueSending ? 'Sending…' : tuitionDueSent ? '✓ Sent!' : 'Send Summer Tuition Due Date Reminder'}
+                  </button>
+                  {tuitionDueError && <span className="text-xs text-red-600">{tuitionDueError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendTuitionDueTodayReminder}
+                    disabled={tuitionDueTodaySending || tuitionDueTodaySent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {tuitionDueTodaySending ? 'Sending…' : tuitionDueTodaySent ? '✓ Sent!' : 'Send Tuition Due Today Reminder'}
+                  </button>
+                  {tuitionDueTodayError && <span className="text-xs text-red-600">{tuitionDueTodayError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendSummerStarting}
+                    disabled={summerStartingSending || summerStartingSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {summerStartingSending ? 'Sending…' : summerStartingSent ? '✓ Sent!' : 'Send Summer Starting Soon'}
+                  </button>
+                  {summerStartingError && <span className="text-xs text-red-600">{summerStartingError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendSummerFirstDay}
+                    disabled={summerFirstDaySending || summerFirstDaySent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {summerFirstDaySending ? 'Sending…' : summerFirstDaySent ? '✓ Sent!' : 'Send Summer First Day'}
+                  </button>
+                  {summerFirstDayError && <span className="text-xs text-red-600">{summerFirstDayError}</span>}
+                </div>
+              </>}
+
+              {outreachTab === 'newsletters' && <>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendWeekOneNewsletter}
+                    disabled={weekOneNewsletterSending || weekOneNewsletterSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {weekOneNewsletterSending ? 'Sending…' : weekOneNewsletterSent ? '✓ Sent!' : 'Send Week One Newsletter'}
+                  </button>
+                  {weekOneNewsletterError && <span className="text-xs text-red-600">{weekOneNewsletterError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendWeekTwoNewsletter}
+                    disabled={weekTwoNewsletterSending || weekTwoNewsletterSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {weekTwoNewsletterSending ? 'Sending…' : weekTwoNewsletterSent ? '✓ Sent!' : 'Send Week Two Newsletter'}
+                  </button>
+                  {weekTwoNewsletterError && <span className="text-xs text-red-600">{weekTwoNewsletterError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendWeekThreeNewsletter}
+                    disabled={weekThreeNewsletterSending || weekThreeNewsletterSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {weekThreeNewsletterSending ? 'Sending…' : weekThreeNewsletterSent ? '✓ Sent!' : 'Send Week Three Newsletter'}
+                  </button>
+                  {weekThreeNewsletterError && <span className="text-xs text-red-600">{weekThreeNewsletterError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendWeekFourNewsletter}
+                    disabled={weekFourNewsletterSending || weekFourNewsletterSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {weekFourNewsletterSending ? 'Sending…' : weekFourNewsletterSent ? '✓ Sent!' : 'Send Week Four Newsletter'}
+                  </button>
+                  {weekFourNewsletterError && <span className="text-xs text-red-600">{weekFourNewsletterError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendWeekFiveNewsletter}
+                    disabled={weekFiveNewsletterSending || weekFiveNewsletterSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {weekFiveNewsletterSending ? 'Sending…' : weekFiveNewsletterSent ? '✓ Sent!' : 'Send Week Five Newsletter'}
+                  </button>
+                  {weekFiveNewsletterError && <span className="text-xs text-red-600">{weekFiveNewsletterError}</span>}
+                </div>
+              </>}
+
+              {outreachTab === 'other' && <>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendFreeFriday}
+                    disabled={freeFridaySending || freeFridaySent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {freeFridaySending ? 'Sending…' : freeFridaySent ? '✓ Sent!' : 'Send Free Friday Announcement'}
+                  </button>
+                  {freeFridayError && <span className="text-xs text-red-600">{freeFridayError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendFunFridayConfirmation}
+                    disabled={funFridayConfirmSending || funFridayConfirmSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {funFridayConfirmSending ? 'Sending…' : funFridayConfirmSent ? '✓ Sent!' : 'Send Fun Friday Confirmation'}
+                  </button>
+                  {funFridayConfirmError && <span className="text-xs text-red-600">{funFridayConfirmError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendGoogleReviewIncentive}
+                    disabled={googleReviewSending || googleReviewSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {googleReviewSending ? 'Sending…' : googleReviewSent ? '✓ Sent!' : 'Send Google Review Incentive'}
+                  </button>
+                  {googleReviewError && <span className="text-xs text-red-600">{googleReviewError}</span>}
+                </div>
+              </>}
             </div>
           </SidebarSection>
         )}
