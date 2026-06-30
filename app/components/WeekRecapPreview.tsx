@@ -8,7 +8,6 @@ import Link from "next/link";
 const PREVIEW_IMAGES = [
   "/assets/highlights/summer_week_five/077864BA-405A-4468-8A16-0FB0AFBC8CB0.JPG",
   "/assets/highlights/summer_week_five/39A6CEAD-799A-4EC3-8F59-D95B4C419D9B.JPG",
-  "/assets/highlights/summer_week_five/4A2A8F4A-28FE-40A0-BD40-738475BBE89D.JPG",
   "/assets/highlights/summer_week_five/61997CDB-20A1-4835-BE41-3ABB4BF37DEA.JPG",
   "/assets/highlights/summer_week_five/7849AC4D-E6E4-4F8C-BEDC-56401FBAB1A7.JPG",
   "/assets/highlights/summer_week_five/E3BD0EC6-88F5-48F2-B510-591805C426F8.JPG",
