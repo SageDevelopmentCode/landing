@@ -57,6 +57,20 @@ const PREVIEW_WEEKS = [
     href: "/highlights/summer/week-3",
     coverImage: "/assets/highlights/summer_week_three/FE28F7EF-5568-4F11-9C62-E44AC6209D53.JPG",
   },
+  {
+    week: 4,
+    dates: "Jun 15–19",
+    theme: "STEM Adventure & Strawberry Jam",
+    href: "/highlights/summer/week-4",
+    coverImage: "/assets/highlights/summer_week_four/C4EB78AE-3AE3-4DB4-BAF4-DA09B3A7E941 2.JPG",
+  },
+  {
+    week: 5,
+    dates: "Jun 22–26",
+    theme: "Safari Adventure & Snake Deep Dive",
+    href: "/highlights/summer/week-5",
+    coverImage: "/assets/highlights/summer_week_five/69BAEEC0-7C4B-4821-8595-02152DC7E7FB.JPG",
+  },
 ];
 
 export default function Home() {
