@@ -59,6 +59,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { name: "Manual Payments", href: "/admin/payments",  icon: <PenLine className="w-4 h-4" /> },
       { name: "Tuition Codes", href: "/admin/payments/tuition-codes", icon: <Ticket className="w-4 h-4" /> },
       { name: "Week Swap",    href: "/admin/week-swap",     icon: <ArrowLeftRight className="w-4 h-4" /> },
+      { name: "Day Swap",     href: "/admin/day-swap",      icon: <CalendarDays className="w-4 h-4" /> },
       { name: "Referrals",    href: "/admin/referrals",     icon: <Gift className="w-4 h-4" /> },
       { name: "Oversight",    href: "/admin/oversight",     icon: <BarChart2 className="w-4 h-4" /> },
     ],
