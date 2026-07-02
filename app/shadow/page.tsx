@@ -275,13 +275,6 @@ const SHADOW_FAQS = [
     highlight: true,
   },
   {
-    question:
-      "What happens to the enrollment fee if we enroll after the shadow day?",
-    answer:
-      "Enrollment at Sage Field is $500 (the school year enrollment fee) — and if you submit an enrollment application within 5 days of your child's shadow day, we waive it entirely. You pay nothing to enroll. No codes. No forms. We just honor it. This offer is available for shadow days booked before August 14, 2026.",
-    highlight: false,
-  },
-  {
     question: "What should my child bring?",
     answer:
       "Comfortable clothes they can get dirty in, closed-toe shoes (they'll be outdoors), a swimsuit and towel, a water bottle, a packed lunch, sunscreen already applied, and bug spray. We'll confirm specifics when we confirm your booking.",
@@ -784,24 +777,6 @@ export default function ShadowPage() {
               </a>
             </div>
 
-            {/* Early-bird teaser */}
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7, duration: 0.4 }}
-              className="flex justify-center lg:justify-start mt-5"
-            >
-              <div className="inline-flex items-center gap-2.5 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 shadow-sm">
-                <span className="text-base">🎁</span>
-                <p className="text-xs text-amber-800 font-body leading-snug">
-                  Shadow families who enroll within 5 days get the{" "}
-                  <span className="font-bold text-amber-900">
-                    $500 enrollment fee fully waived.
-                  </span>{" "}
-                  <span className="text-amber-700">Offer ends Aug 14.</span>
-                </p>
-              </div>
-            </motion.div>
           </motion.div>
 
           {/* Right — photo mosaic (desktop only) */}
@@ -1191,136 +1166,6 @@ export default function ShadowPage() {
         </div>
       </section>
 
-      {/* ── Early-Bird Enrollment Fee Block ── */}
-      <section className="py-12 px-4 sm:py-20 sm:px-8 lg:px-16 bg-white">
-        <div className="max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 32, scale: 0.97 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ type: "spring", stiffness: 180, damping: 20 }}
-            className="relative bg-white rounded-3xl shadow-xl border-2 border-sage-200 overflow-hidden"
-          >
-            {/* Left accent stripe */}
-            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-primary to-sage-500" />
-
-            <div className="grid grid-cols-1 md:grid-cols-5">
-              {/* Left panel */}
-              <div className="md:col-span-3 p-5 sm:p-8 md:p-10 pl-7 sm:pl-10 md:pl-12">
-                <div className="flex items-center gap-2 mb-6">
-                  <div className="w-8 h-8 bg-sage-50 border border-sage-200 rounded-lg flex items-center justify-center">
-                    <Shield className="w-4 h-4 text-sage-600" />
-                  </div>
-                  <span className="text-xs font-bold uppercase tracking-wide text-sage-600 font-body">
-                    Early-Bird Offer
-                  </span>
-                </div>
-                <h3 className="text-xl sm:text-2xl md:text-3xl font-bold font-heading text-gray-800 leading-tight mb-5">
-                  Enroll in the School Year Program Within 5 Days — Your $500
-                  Enrollment Fee Is Waived.
-                </h3>
-                <p className="text-base text-gray-600 font-body leading-relaxed mb-6">
-                  The $500 enrollment fee covers your child&apos;s spot in the
-                  Sage Field school year program. If you decide to enroll within
-                  5 days of your shadow day, we waive it completely. No codes,
-                  no forms — we apply it automatically. Offer ends August 14,
-                  2026.
-                </p>
-                <div className="flex items-start gap-3 bg-sage-50 border border-sage-200 rounded-xl p-4">
-                  <Shield className="w-4 h-4 text-sage-600 mt-0.5 flex-shrink-0" />
-                  <p className="text-xs text-gray-600 font-body leading-relaxed">
-                    This offer applies to school year enrollment only. Summer
-                    program fees are separate.
-                  </p>
-                </div>
-              </div>
-
-              {/* Right panel */}
-              <div className="md:col-span-2 bg-sage-50 border-t-2 md:border-t-0 md:border-l-2 border-sage-200 p-5 sm:p-8 md:p-10 flex flex-col justify-center">
-                <p className="text-xs uppercase tracking-wide text-gray-400 font-body mb-5">
-                  Enrollment Fee
-                </p>
-
-                <div className="flex items-baseline gap-4 mb-2">
-                  <span className="text-4xl font-bold font-heading text-gray-300 line-through decoration-red-300">
-                    $500
-                  </span>
-                  <span className="text-sage-400 text-2xl">→</span>
-                  <span className="text-5xl font-bold font-heading text-emerald-600">
-                    $0
-                  </span>
-                </div>
-                <p className="text-sm text-gray-500 font-body mb-2">
-                  if you enroll within 5 days of your shadow day
-                </p>
-                <p className="text-xs text-gray-400 font-body mb-8">
-                  Offer ends August 14, 2026.
-                </p>
-
-                <div className="bg-white rounded-xl border border-sage-200 p-4">
-                  <div className="flex items-start justify-between gap-1">
-                    {/* Step 1 */}
-                    <div className="flex flex-col items-center text-center gap-1.5 flex-1">
-                      <div className="w-7 h-7 rounded-full bg-sage-100 border border-sage-300 flex items-center justify-center flex-shrink-0">
-                        <span className="text-xs font-bold text-sage-700 font-body">
-                          1
-                        </span>
-                      </div>
-                      <p className="text-xs font-bold text-gray-800 font-body leading-tight">
-                        Shadow Day
-                      </p>
-                      <p className="text-[10px] text-gray-400 font-body">
-                        $20 fee
-                      </p>
-                    </div>
-
-                    {/* Arrow */}
-                    <div className="flex items-center pt-2 flex-shrink-0">
-                      <ChevronRight className="w-4 h-4 text-sage-300" />
-                    </div>
-
-                    {/* Step 2 */}
-                    <div className="flex flex-col items-center text-center gap-1.5 flex-1">
-                      <div className="w-7 h-7 rounded-full bg-sage-100 border border-sage-300 flex items-center justify-center flex-shrink-0">
-                        <span className="text-xs font-bold text-sage-700 font-body">
-                          2
-                        </span>
-                      </div>
-                      <p className="text-xs font-bold text-gray-800 font-body leading-tight">
-                        Enroll within
-                      </p>
-                      <p className="text-[10px] text-gray-400 font-body">
-                        5 days
-                      </p>
-                    </div>
-
-                    {/* Arrow */}
-                    <div className="flex items-center pt-2 flex-shrink-0">
-                      <ChevronRight className="w-4 h-4 text-sage-300" />
-                    </div>
-
-                    {/* Step 3 — highlighted */}
-                    <div className="flex flex-col items-center text-center gap-1.5 flex-1">
-                      <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center flex-shrink-0 shadow-sm">
-                        <span className="text-xs font-bold text-white font-body">
-                          3
-                        </span>
-                      </div>
-                      <p className="text-xs font-bold text-primary font-body leading-tight">
-                        $0 Enrollment
-                      </p>
-                      <p className="text-[10px] text-gray-400 font-body">
-                        fee fully waived
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
       {/* ── Registration Form ── */}
       <section id="reserve" className="py-12 px-4 sm:py-16 sm:px-8 lg:px-16 bg-sage-50">
         <div ref={formRef} className="max-w-2xl mx-auto">
@@ -1338,7 +1183,7 @@ export default function ShadowPage() {
               Book Your Shadow Day
             </h2>
             <p className="text-gray-500 font-body text-base">
-              Takes 60 seconds. $20 holds your spot. Waived if you enroll.
+              Takes 60 seconds. $20 holds your spot.
             </p>
           </motion.div>
 
@@ -1813,8 +1658,7 @@ export default function ShadowPage() {
               Book Your Shadow Day — $20 →
             </button>
             <p className="text-xs text-gray-400 font-body mt-4">
-              $20 shadow day fee · Enroll within 5 days and your $500 enrollment
-              fee is fully waived. Offer ends August 14, 2026.
+              $20 shadow day fee
             </p>
           </motion.div>
         </div>
