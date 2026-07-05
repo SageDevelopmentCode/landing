@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useTransition, useMemo } from "react";
+import { useState, useRef, useTransition, useMemo, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import {
@@ -571,6 +571,7 @@ function ActivityDrawer({
   );
   const [isPending, startTransition] = useTransition();
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [showConfirmClose, setShowConfirmClose] = useState(false);
 
   const previousFoods = useMemo(() => {
     const seen = new Map<string, PreviousFood>();
@@ -592,6 +593,20 @@ function ActivityDrawer({
   }, [allActivities, editingActivity]);
 
   const isDirty = !isEdit || JSON.stringify(draft) !== JSON.stringify(activityToDraft(editingActivity!));
+
+  const hasUnsavedChanges = isEdit
+    ? JSON.stringify(draft) !== JSON.stringify(activityToDraft(editingActivity!))
+    : JSON.stringify(draft) !== JSON.stringify(EMPTY_DRAFT);
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      e.preventDefault();
+      e.returnValue = "";
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   function set<K extends keyof ActivityDraft>(key: K, value: ActivityDraft[K]) {
     setDraft((prev) => ({ ...prev, [key]: value }));
@@ -638,8 +653,8 @@ function ActivityDrawer({
     setPrevFoodSearch("");
   }
 
-  function handleClose() {
-    // Only revoke ObjectURLs for images we created (not signed URLs from DB)
+  // Real teardown — only called when close is confirmed or after a successful save
+  function doClose() {
     draft.images.forEach((img) => { if (img.compressedFile) URL.revokeObjectURL(img.preview); });
     draft.foods.forEach((f) => {
       f.images.forEach((img) => { if (img.compressedFile) URL.revokeObjectURL(img.preview); });
@@ -649,6 +664,15 @@ function ActivityDrawer({
     });
     setSaveError(null);
     onClose();
+  }
+
+  // Gate: show modal if unsaved changes, otherwise close directly
+  function requestClose() {
+    if (hasUnsavedChanges) {
+      setShowConfirmClose(true);
+    } else {
+      doClose();
+    }
   }
 
   function buildFormData(): FormData {
@@ -713,11 +737,11 @@ function ActivityDrawer({
         fd.append("summary", JSON.stringify(summary));
         const result = await updateActivity(fd);
         if (result.error) { setSaveError(result.error); return; }
-        if (result.data) { onUpdated(result.data); handleClose(); }
+        if (result.data) { onUpdated(result.data); doClose(); }
       } else {
         const result = await createActivity(fd);
         if (result.error) { setSaveError(result.error); return; }
-        if (result.data) { onSaved(result.data); handleClose(); }
+        if (result.data) { onSaved(result.data); doClose(); }
       }
     });
   }
@@ -730,7 +754,7 @@ function ActivityDrawer({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
-        onClick={!isPending ? handleClose : undefined}
+        onClick={!isPending ? requestClose : undefined}
       />
 
       <motion.div
@@ -749,7 +773,7 @@ function ActivityDrawer({
             </h2>
           </div>
           <button
-            onClick={handleClose}
+            onClick={requestClose}
             disabled={isPending}
             className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-40"
           >
@@ -972,7 +996,7 @@ function ActivityDrawer({
           {saveError && <p className="text-xs text-red-500 font-body text-right">{saveError}</p>}
           <div className="flex items-center justify-end gap-3">
             <button
-              onClick={handleClose}
+              onClick={requestClose}
               disabled={isPending}
               className="px-4 py-2 text-sm font-semibold font-body text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-40"
             >
@@ -989,6 +1013,39 @@ function ActivityDrawer({
           </div>
         </div>
       </motion.div>
+
+      {showConfirmClose && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+            onClick={() => setShowConfirmClose(false)}
+          />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 flex flex-col gap-4">
+            <div className="flex flex-col gap-1">
+              <h3 className="text-base font-semibold font-heading text-gray-900">
+                Discard unsaved changes?
+              </h3>
+              <p className="text-sm font-body text-gray-500">
+                You have unsaved changes. If you close now, your changes will be lost.
+              </p>
+            </div>
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setShowConfirmClose(false)}
+                className="px-4 py-2 text-sm font-semibold font-body text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+              >
+                Keep editing
+              </button>
+              <button
+                onClick={doClose}
+                className="px-4 py-2 text-sm font-semibold font-body text-white bg-red-500 hover:bg-red-600 rounded-xl transition-colors"
+              >
+                Discard changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
