@@ -605,6 +605,55 @@ export async function updateActivity(
   return { data: withUrls }
 }
 
+// ─── Auto-Fill Students ───────────────────────────────────────────────────────
+
+export type AutoFillStudent = {
+  student_id: string;
+  student_name: string;
+  profile_image_url: string | null;
+  participation_level: "watch" | "cook_no_eat" | "full";
+  parent_name: string | null;
+};
+
+export async function getStudentsWithAutoFill(): Promise<AutoFillStudent[]> {
+  const adminClient = createAdminClient();
+
+  const { data: defaults } = await adminClient
+    .schema("parent_app")
+    .from("student_default_preferences")
+    .select("student_id, parent_id, participation_level");
+
+  if (!defaults?.length) return [];
+
+  const [{ data: students }, { data: parents }] = await Promise.all([
+    adminClient
+      .schema("admin")
+      .from("students")
+      .select("id, child_legal_name, profile_image_url")
+      .in("id", defaults.map((d) => d.student_id)),
+    adminClient
+      .schema("admin")
+      .from("users")
+      .select("id, full_name")
+      .in("id", defaults.map((d) => d.parent_id)),
+  ]);
+
+  const studentMap = new Map((students ?? []).map((s) => [s.id, s]));
+  const parentMap = new Map((parents ?? []).map((p) => [p.id, p]));
+
+  return defaults.map((d) => {
+    const s = studentMap.get(d.student_id);
+    const p = parentMap.get(d.parent_id);
+    return {
+      student_id: d.student_id,
+      student_name: s?.child_legal_name ?? "Unknown",
+      profile_image_url: s?.profile_image_url ?? null,
+      participation_level: d.participation_level,
+      parent_name: p?.full_name ?? null,
+    };
+  }).sort((a, b) => a.student_name.localeCompare(b.student_name));
+}
+
 // ─── Delete Activity ──────────────────────────────────────────────────────────
 
 export async function deleteActivity(

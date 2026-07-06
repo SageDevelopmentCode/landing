@@ -20,10 +20,11 @@ import {
   History,
   ChevronDown,
   ChevronUp,
+  Users,
 } from "lucide-react";
 import { createActivity, deleteActivity, updateActivity } from "@/app/actions/activities";
 import ActivityDatePicker from "./ActivityDatePicker";
-import type { Activity, ActivityChangeLogEntry } from "@/app/actions/activities";
+import type { Activity, ActivityChangeLogEntry, AutoFillStudent } from "@/app/actions/activities";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1154,6 +1155,105 @@ function ChangeLogEntry({ entry }: { entry: ActivityChangeLogEntry }) {
   );
 }
 
+// ─── Auto-Fill Panel ──────────────────────────────────────────────────────────
+
+function AutoFillPanel({
+  students,
+  onClose,
+}: {
+  students: AutoFillStudent[];
+  onClose: () => void;
+}) {
+  const levelLabel = (level: string) => {
+    if (level === "watch") return "Watch only";
+    if (level === "cook_no_eat") return "Cook, don't eat";
+    return "Full participation";
+  };
+  const levelColor = (level: string) => {
+    if (level === "watch") return "text-slate-600 bg-slate-100 border-slate-200";
+    if (level === "cook_no_eat") return "text-amber-700 bg-amber-50 border-amber-100";
+    return "text-[#4a7c59] bg-[#4a7c59]/10 border-[#4a7c59]/20";
+  };
+
+  return (
+    <>
+      <motion.div
+        key="autofill-overlay"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+        onClick={onClose}
+      />
+      <motion.div
+        key="autofill-panel"
+        initial={{ x: "100%" }}
+        animate={{ x: 0 }}
+        exit={{ x: "100%" }}
+        transition={{ type: "spring", damping: 28, stiffness: 280 }}
+        className="fixed right-0 top-0 h-full w-96 bg-white shadow-xl z-50 flex flex-col"
+      >
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div className="flex items-center gap-2">
+            <Users className="w-4.5 h-4.5 text-[#4a7c59]" />
+            <div>
+              <h2 className="text-sm font-semibold font-heading text-gray-900">Auto-fill Preferences</h2>
+              <p className="text-[11px] font-body text-gray-400 leading-tight">
+                {students.length} student{students.length !== 1 ? "s" : ""} with a default set
+              </p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-2">
+          {students.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-center py-12">
+              <Users className="w-8 h-8 text-gray-300 mb-3" />
+              <p className="text-sm font-semibold font-heading text-gray-500">No auto-fill set</p>
+              <p className="text-xs font-body text-gray-400 mt-1">
+                No families in your class have set a default preference yet.
+              </p>
+            </div>
+          ) : (
+            students.map((s) => (
+              <div key={s.student_id} className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
+                {s.profile_image_url ? (
+                  <Image
+                    src={s.profile_image_url}
+                    alt={s.student_name}
+                    width={40}
+                    height={40}
+                    className="rounded-full object-cover shrink-0"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-[#4a7c59]/15 flex items-center justify-center shrink-0">
+                    <span className="text-sm font-semibold font-body text-[#4a7c59]">
+                      {s.student_name.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold font-body text-gray-900 truncate">{s.student_name}</p>
+                  {s.parent_name && (
+                    <p className="text-xs font-body text-gray-400 truncate">{s.parent_name}</p>
+                  )}
+                </div>
+                <span className={`text-[10px] font-semibold font-body px-2 py-0.5 rounded-full border shrink-0 ${levelColor(s.participation_level)}`}>
+                  {levelLabel(s.participation_level)}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+      </motion.div>
+    </>
+  );
+}
+
 // ─── Activity Card ────────────────────────────────────────────────────────────
 
 function ActivityCard({
@@ -1261,16 +1361,18 @@ function ActivityCard({
 interface Props {
   initialActivities: Activity[];
   currentUserId: string;
+  autoFillStudents: AutoFillStudent[];
 }
 
 type FilterTab = "all" | "published" | "draft";
 
-export default function ActivitiesPageClient({ initialActivities }: Props) {
+export default function ActivitiesPageClient({ initialActivities, autoFillStudents }: Props) {
   const [activities, setActivities] = useState<Activity[]>(initialActivities);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [historyActivity, setHistoryActivity] = useState<Activity | null>(null);
   const [filter, setFilter] = useState<FilterTab>("all");
+  const [autoFillOpen, setAutoFillOpen] = useState(false);
 
   function handleSaved(activity: Activity) {
     setActivities((prev) => [activity, ...prev]);
@@ -1305,13 +1407,22 @@ export default function ActivitiesPageClient({ initialActivities }: Props) {
             Create and manage classroom activities for your students.
           </p>
         </div>
-        <button
-          onClick={() => setDrawerOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-semibold font-body text-white bg-[#4a7c59] hover:bg-[#3d6b4f] rounded-xl transition-colors shadow-sm"
-        >
-          <Plus className="w-4 h-4" />
-          New Activity
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setAutoFillOpen((v) => !v)}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold font-body text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+          >
+            <Users className="w-4 h-4" />
+            Auto-fill ({autoFillStudents.length})
+          </button>
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold font-body text-white bg-[#4a7c59] hover:bg-[#3d6b4f] rounded-xl transition-colors shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            New Activity
+          </button>
+        </div>
       </div>
 
       {activities.length > 0 && (
@@ -1401,6 +1512,13 @@ export default function ActivitiesPageClient({ initialActivities }: Props) {
             key={`log-${historyActivity.id}`}
             activity={historyActivity}
             onClose={() => setHistoryActivity(null)}
+          />
+        )}
+        {autoFillOpen && (
+          <AutoFillPanel
+            key="autofill"
+            students={autoFillStudents}
+            onClose={() => setAutoFillOpen(false)}
           />
         )}
       </AnimatePresence>

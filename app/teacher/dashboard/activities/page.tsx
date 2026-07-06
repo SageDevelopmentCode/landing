@@ -6,7 +6,7 @@ import ProfileDropdown from '@/app/apply/dashboard/ProfileDropdown'
 import TeacherNotificationBell from '../../components/TeacherNotificationBell'
 import TeacherNav from '../TeacherNav'
 import ActivitiesPageClient from './ActivitiesPageClient'
-import { getActivities } from '@/app/actions/activities'
+import { getActivities, getStudentsWithAutoFill } from '@/app/actions/activities'
 
 export default async function ActivitiesPage() {
   const supabase = await createServerSupabaseClient()
@@ -15,7 +15,7 @@ export default async function ActivitiesPage() {
   if (!user) redirect('/login')
 
   const adminClient = createAdminClient()
-  const [{ data: adminUser }, initialActivities] = await Promise.all([
+  const [{ data: adminUser }, initialActivities, autoFillStudents] = await Promise.all([
     adminClient
       .schema('admin')
       .from('users')
@@ -23,6 +23,7 @@ export default async function ActivitiesPage() {
       .eq('id', user.id)
       .single(),
     getActivities(),
+    getStudentsWithAutoFill(),
   ])
 
   return (
@@ -53,6 +54,7 @@ export default async function ActivitiesPage() {
         <ActivitiesPageClient
           initialActivities={initialActivities}
           currentUserId={user.id}
+          autoFillStudents={autoFillStudents}
         />
       </main>
     </div>
