@@ -2183,7 +2183,8 @@ export async function buildBeachBashConfirmationEmail(opts: {
   childCount: number;
   amountDollars: string;
 }): Promise<{ subject: string; content: string }> {
-  const childLabel = opts.childCount > 1 ? `${opts.childCount} children` : opts.childNames;
+  const childLabel =
+    opts.childCount > 1 ? `${opts.childCount} children` : opts.childNames;
   const subject = "Beach Bash Day — You're Registered! 🌊";
   const content = `
 <!DOCTYPE html>
@@ -3591,11 +3592,11 @@ export async function buildReferralInviteEmail(opts: {
 }
 
 export async function buildGoogleReviewIncentiveEmail(opts: {
-  g1FullName: string
-  childLegalName: string
+  g1FullName: string;
+  childLegalName: string;
 }): Promise<{ subject: string; content: string }> {
-  const firstName = opts.g1FullName.split(' ')[0] || opts.g1FullName
-  const subject = `We'd love to hear about your Sage Field experience ☕`
+  const firstName = opts.g1FullName.split(" ")[0] || opts.g1FullName;
+  const subject = `We'd love to hear about your Sage Field experience ☕`;
 
   const content = `
 <!DOCTYPE html>
@@ -3632,6 +3633,67 @@ export async function buildGoogleReviewIncentiveEmail(opts: {
 
   <p style="margin-top: 32px;">With warmth,</p>
   <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
+export async function buildSummerWeekSixNewsletterEmail(opts: {
+  g1FullName: string;
+  childLegalName: string;
+}): Promise<{ subject: string; content: string }> {
+  const firstName = opts.g1FullName.split(" ")[0];
+  const subject = "Week Six Newsletter 🌿";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+
+  <p style="margin-bottom: 24px;">Hi ${firstName}!</p>
+
+  <p style="margin-bottom: 20px;">We are incredibly proud of every student and the growth we are seeing each day. In Miss Sabrina's Primary class, students are becoming more and more resilient as they work through challenges, stretch their brains, and continue learning how to be thoughtful students, kind friends, and confident young learners. In Ms. Zelinda's Elementary class, students have been diving deep into multi-step problem solving, rich literacy work, and an exciting Natural Disaster research project. It is so special to watch both groups thrive.</p>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">🌿 What We've Been Up To</h2>
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px;">
+    <ul style="margin: 0; padding-left: 18px; line-height: 2.1; font-size: 14px; color: #2c2c2c;">
+      <li>📖 <strong>Primary Core Skills</strong> — reading, letter recognition, and foundational math building confidence every day</li>
+      <li>🥞 <strong>Banana Oatmeal Pancakes &amp; Pineapple Popsicles</strong> — students made both completely from scratch!</li>
+      <li>🍳 <strong>Cooking Together</strong> — food safety, careful movements, following directions, and cooperative work</li>
+      <li>📝 <strong>Elementary ELA</strong> — comparing and contrasting across texts using Venn Diagrams</li>
+      <li>➕ <strong>Math: Multi-Step Word Problems</strong> — upper el tackled multiplication, subtraction, division &amp; addition; lower el worked two-step equations with two-digit numbers</li>
+      <li>🌍 <strong>Natural Disaster Projects</strong> — final drafts nearly complete; 3D models coming next!</li>
+      <li>📦 <strong>Shoe Box Reminder</strong> — please send a shoe box by <strong>Wednesday</strong> for our 3D model building</li>
+      <li>🎉 <strong>Halfway There!</strong> — six weeks done, and what an incredible journey it's been</li>
+    </ul>
+  </div>
+
+  <p style="margin-bottom: 20px; font-size: 14px; color: #444;">We've put together our sixth newsletter — a closer look at the week through photos and classroom moments.</p>
+
+  <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 8px; padding: 20px 24px; margin: 28px 0; text-align: center;">
+    <p style="margin: 0 0 6px 0; font-size: 15px; font-weight: bold; color: #2C5F2E;">📰 Our Sixth Newsletter is Live!</p>
+    <p style="margin: 0 0 18px 0; font-size: 13px; color: #555;">Photos, classroom moments, and a deeper look into our sixth week.</p>
+    <a href="https://sagefield.co/newsletter/83274eee-3358-41dc-bc85-dd4ac827537c" style="background: #2C5F2E; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-family: Georgia, serif; font-size: 15px; display: inline-block;">Read the Newsletter →</a>
+    <div style="margin-top: 14px;">
+      <span style="display: inline-block; background: #f7f4f0; border: 1px solid #a8c5a0; border-radius: 999px; padding: 5px 14px; font-size: 12px; color: #555;">🔑 Password: <strong>weeksix</strong></span>
+    </div>
+  </div>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">🎁 Referral Program</h2>
+  <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px; font-size: 14px; color: #2c2c2c;">
+    <p style="margin: 0 0 12px 0;">We're excited to share our <strong>referral program</strong> — and we'd love your help spreading the word about Sage Field!</p>
+    <p style="margin: 0 0 12px 0;">When a family you refer <strong>enrolls in our upcoming school program and pays their registration fee</strong>, you'll receive a <strong>$500 gift card of your choice</strong>. 🎉</p>
+    <p style="margin: 0 0 16px 0;">Simply share your unique referral link — you can find it on your home dashboard. If sharing the link isn't convenient, you can also just let the family know to <strong>mention your name when they apply</strong> and it will still count toward your referral.</p>
+    <p style="margin: 0; color: #888; font-size: 13px;">⏳ This offer is available through the end of our summer program.</p>
+  </div>
+
+  <p style="margin-bottom: 8px; font-size: 14px; color: #555;">We are so thankful for each of your families and for the beautiful community we are building together. 🌱</p>
+
+  <p style="margin-top: 32px; margin-bottom: 4px;">Warmly,</p>
+  <p style="margin-top: 4px;"><strong>Sage Field School</strong></p>
 
 </body>
 </html>
