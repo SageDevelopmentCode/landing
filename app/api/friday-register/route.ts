@@ -100,8 +100,8 @@ export async function POST(request: NextRequest) {
               ? Math.round(finalAmountCents / data.children.length)
               : PRICE_PER_CHILD_CENTS,
             product_data: {
-              name: "Beach Bash Day — June 13",
-              description: "Sage Field Private School · $60 per child · June 13, 2026",
+              name: "Dino Hunt — July 10",
+              description: "Sage Field Private School · $60 per child · July 10, 2026",
             },
           },
         },
