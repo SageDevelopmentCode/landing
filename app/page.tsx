@@ -248,22 +248,22 @@ export default function Home() {
       {/* Top wave: cream → dark */}
       <div style={{ background: "#FFF9F5", marginBottom: "-1px" }}>
         <svg viewBox="0 0 1440 56" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full block" style={{ height: "56px" }}>
-          <path d="M0,28 C240,56 480,0 720,28 C960,56 1200,0 1440,28 L1440,56 L0,56 Z" fill="#0a1a0c" />
+          <path d="M0,28 C240,56 480,0 720,28 C960,56 1200,0 1440,28 L1440,56 L0,56 Z" fill="#1a0a00" />
         </svg>
       </div>
 
       <section
         className="relative overflow-hidden py-16 px-8 sm:px-12 lg:px-16"
-        style={{ background: "linear-gradient(180deg, #0a1a0c 0%, #132a14 40%, #0f2410 100%)" }}
+        style={{ background: "linear-gradient(180deg, #1a0a00 0%, #2d1500 40%, #1a0800 100%)" }}
       >
         {/* Left palm accent */}
         <div className="fdf-jungle-sway absolute bottom-0 left-0 w-16 sm:w-20 pointer-events-none opacity-50" style={{ zIndex: 1 }}>
           <svg viewBox="0 0 80 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto">
-            <path d="M40 200 Q38 160 36 120 Q34 80 40 20" stroke="#2d5a1b" strokeWidth="6" fill="none" strokeLinecap="round"/>
-            <path d="M40 20 Q10 -5 0 30" stroke="#3d7a26" strokeWidth="3.5" fill="none" strokeLinecap="round"/>
-            <path d="M40 20 Q70 -5 80 25" stroke="#3d7a26" strokeWidth="3.5" fill="none" strokeLinecap="round"/>
-            <path d="M40 20 Q5 40 0 65" stroke="#2d5a1b" strokeWidth="3" fill="none" strokeLinecap="round"/>
-            <path d="M40 20 Q75 40 80 60" stroke="#2d5a1b" strokeWidth="3" fill="none" strokeLinecap="round"/>
+            <path d="M40 200 Q38 160 36 120 Q34 80 40 20" stroke="#78350f" strokeWidth="6" fill="none" strokeLinecap="round"/>
+            <path d="M40 20 Q10 -5 0 30" stroke="#92400e" strokeWidth="3.5" fill="none" strokeLinecap="round"/>
+            <path d="M40 20 Q70 -5 80 25" stroke="#92400e" strokeWidth="3.5" fill="none" strokeLinecap="round"/>
+            <path d="M40 20 Q5 40 0 65" stroke="#78350f" strokeWidth="3" fill="none" strokeLinecap="round"/>
+            <path d="M40 20 Q75 40 80 60" stroke="#78350f" strokeWidth="3" fill="none" strokeLinecap="round"/>
           </svg>
         </div>
 
@@ -299,7 +299,7 @@ export default function Home() {
             transition={{ duration: 0.5 }}
           >
             <span className="inline-flex items-center gap-2 px-5 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-xs font-semibold text-amber-200 font-body uppercase tracking-wide">
-              🦁 This Friday · Jun 26 · Limited Spots
+              🦕 This Friday · Jul 10 · Limited Spots
             </span>
           </motion.div>
 
@@ -311,14 +311,14 @@ export default function Home() {
               viewport={{ once: true }}
               transition={{ duration: 0.55 }}
             >
-              <div className="fdf-animal-peek text-4xl mb-4 inline-block">🦁</div>
+              <div className="fdf-animal-peek text-4xl mb-4 inline-block">🦕</div>
               <h2
                 className="font-heading font-bold leading-tight mb-3"
                 style={{ fontSize: "clamp(1.9rem, 4vw, 3rem)" }}
               >
-                <span className="block italic fdf-safari-shimmer-text">Safari Escape</span>
+                <span className="block italic fdf-safari-shimmer-text">Dino Hunt</span>
                 <span className="fdf-letter-drop block">
-                  {Array.from("Field Day").map((ch, i) => (
+                  {Array.from("Field Day 🦕").map((ch, i) => (
                     <span
                       key={i}
                       style={{ animationDelay: `${0.3 + i * 0.06}s`, color: "#fbbf24" }}
@@ -329,13 +329,13 @@ export default function Home() {
                 </span>
               </h2>
               <p className="text-slate-300 font-body text-base leading-relaxed mb-6 max-w-md">
-                One Friday of safari bingo, animal masks, and a wild scavenger hunt. Drop off, we handle the magic, you pick up an excited explorer with a take-home animal mask.
+                One wild Friday of dino digging, fossil making, and an epic egg hunt. Drop off, we handle the magic, you pick up an excited paleontologist with a real take-home fossil!
               </p>
 
               {/* Event detail pills */}
               <div className="flex flex-wrap gap-2 mb-7">
                 {[
-                  { icon: "📅", text: "Jun 26, 2026" },
+                  { icon: "📅", text: "Jul 10, 2026" },
                   { icon: "🕗", text: "8:30 AM – 1:30 PM" },
                   { icon: "💰", text: "$60 / child" },
                   { icon: "👧", text: "Ages 4–11" },
@@ -370,9 +370,9 @@ export default function Home() {
             >
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { emoji: "🦁", title: "Safari Bingo",         accent: "#fef3c7" },
-                  { emoji: "🦒", title: "Animal Masks",          accent: "#dcfce7" },
-                  { emoji: "🔍", title: "Animal Scavenger Hunt", accent: "#fed7aa" },
+                  { emoji: "🦴", title: "Dino Dig",      accent: "#fef3c7" },
+                  { emoji: "🪨", title: "Fossil Making", accent: "#dcfce7" },
+                  { emoji: "🥚", title: "Dino Egg Hunt", accent: "#fed7aa" },
                 ].map((act, i) => (
                   <motion.div
                     key={act.title}
@@ -399,7 +399,7 @@ export default function Home() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: 0.45 }}
               >
-                All activities included · Everything provided · Take-home projects
+                All activities included · Everything provided · Take-home fossil!
               </motion.p>
             </motion.div>
           </div>
@@ -407,7 +407,7 @@ export default function Home() {
       </section>
 
       {/* Bottom wave: dark → cream */}
-      <div style={{ background: "#0f2410", marginBottom: "-1px" }}>
+      <div style={{ background: "#1a0800", marginBottom: "-1px" }}>
         <svg viewBox="0 0 1440 56" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full block" style={{ height: "56px" }}>
           <path d="M0,28 C360,0 1080,56 1440,28 L1440,56 L0,56 Z" fill="#FFF9F5" />
         </svg>

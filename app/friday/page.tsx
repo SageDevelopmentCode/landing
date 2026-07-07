@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
 import { Check, CheckCircle, PenLine, X } from "lucide-react";
 import { Dancing_Script } from "next/font/google";
@@ -168,6 +168,22 @@ export default function FieldDayFridayPage() {
     });
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, mins: 0 });
 
+  // Enhancement: dino egg hatch
+  const [eggHatched, setEggHatched] = useState(false);
+  // Enhancement: egg hunt counter in activities
+  const [eggsFound, setEggsFound] = useState<Set<number>>(new Set());
+  // Enhancement: cursor trail
+  const [cursorTrail, setCursorTrail] = useState<{ id: number; x: number; y: number }[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
+  const cursorTrailId = useRef(0);
+  // Enhancement: card shake
+  const [shakingCards, setShakingCards] = useState<Set<number>>(new Set());
+  // Enhancement: pterodactyl scroll parallax
+  const heroRef = useRef<HTMLElement>(null);
+  const { scrollY } = useScroll();
+  const pteroX = useTransform(scrollY, [0, 400], ["0%", "-120%"]);
+  const pteroOpacity = useTransform(scrollY, [0, 300], [0.3, 0]);
+
   const [formData, setFormData] = useState({
     parentName: "",
     email: "",
@@ -252,6 +268,38 @@ export default function FieldDayFridayPage() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [agreementOpen]);
+
+  useEffect(() => {
+    setIsMobile(window.innerWidth <= 768);
+  }, []);
+
+  const handleHeroMouseMove = useCallback((e: React.MouseEvent<HTMLElement>) => {
+    if (isMobile) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const id = ++cursorTrailId.current;
+    setCursorTrail((prev) => [...prev.slice(-7), { id, x, y }]);
+    setTimeout(() => {
+      setCursorTrail((prev) => prev.filter((p) => p.id !== id));
+    }, 1000);
+  }, [isMobile]);
+
+  const handleCardFlip = useCallback((i: number) => {
+    toggleCard(i);
+    setShakingCards((prev) => {
+      const n = new Set(prev);
+      n.add(i);
+      return n;
+    });
+    setTimeout(() => {
+      setShakingCards((prev) => {
+        const n = new Set(prev);
+        n.delete(i);
+        return n;
+      });
+    }, 400);
+  }, []);
 
   const scrollToForm = () =>
     formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -413,6 +461,25 @@ export default function FieldDayFridayPage() {
         .flip-card-inner.flipped { transform: rotateY(180deg); }
         .flip-face { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
         .flip-back { transform: rotateY(180deg); backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+        @keyframes footprint-stamp {
+          from { opacity: 0; transform: scale(0) rotate(var(--rot)); }
+          to   { opacity: 0.35; transform: scale(1) rotate(var(--rot)); }
+        }
+        @keyframes digit-pop {
+          0%   { opacity: 0; transform: translateY(-10px) scale(0.8); }
+          60%  { opacity: 1; transform: translateY(2px) scale(1.05); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes baby-dino-pop {
+          0%   { opacity: 0; transform: translateY(20px) scale(0); }
+          50%  { opacity: 1; transform: translateY(-30px) scale(1.4); }
+          100% { opacity: 1; transform: translateY(-20px) scale(1); }
+        }
+        @keyframes claw-fade {
+          0%   { opacity: 0.7; transform: scale(1); }
+          100% { opacity: 0; transform: scale(0.3); }
+        }
+        .digit-pop { animation: digit-pop 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards; }
       `}</style>
 
       <div className="min-h-screen bg-white overflow-x-hidden">
@@ -420,11 +487,13 @@ export default function FieldDayFridayPage() {
 
         {/* ─── HERO ─────────────────────────────────────────────────────────── */}
         <section
+          ref={heroRef}
           className="relative pt-20 overflow-hidden"
           style={{
             background:
               "linear-gradient(180deg, #1a0a00 0%, #2d1500 30%, #3d1a00 60%, #1a0800 100%)",
           }}
+          onMouseMove={handleHeroMouseMove}
         >
           {/* Left prehistoric fern — dino stomp sway */}
           <div
@@ -444,10 +513,10 @@ export default function FieldDayFridayPage() {
             </svg>
           </div>
 
-          {/* Right pterodactyl silhouette — reversed stomp glide */}
-          <div
-            className="dino-stomp-reverse absolute top-16 right-0 w-20 sm:w-28 pointer-events-none opacity-30"
-            style={{ zIndex: 1 }}
+          {/* Right pterodactyl silhouette — scroll parallax glide */}
+          <motion.div
+            className="dino-stomp-reverse absolute top-16 right-0 w-20 sm:w-28 pointer-events-none"
+            style={{ zIndex: 1, x: pteroX, opacity: pteroOpacity }}
           >
             <svg viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto">
               <path d="M50 30 Q20 5 0 15 Q20 25 35 28 Q20 35 0 45 Q20 38 35 32 Q42 40 50 30Z" fill="#d97706"/>
@@ -455,7 +524,7 @@ export default function FieldDayFridayPage() {
               <ellipse cx="50" cy="26" rx="6" ry="8" fill="#b45309"/>
               <path d="M50 18 L54 10 L56 18" fill="#b45309"/>
             </svg>
-          </div>
+          </motion.div>
 
           {/* Prehistoric spore particles */}
           {[
@@ -481,6 +550,48 @@ export default function FieldDayFridayPage() {
                 zIndex: 1,
               }}
             />
+          ))}
+
+          {/* Dino footprint trail */}
+          {[
+            { bottom: "12%", left: "8%",  rot: "-15deg", delay: "0.3s" },
+            { bottom: "10%", left: "18%", rot: "10deg",  delay: "0.7s" },
+            { bottom: "14%", left: "29%", rot: "-8deg",  delay: "1.1s" },
+            { bottom: "9%",  left: "40%", rot: "12deg",  delay: "1.5s" },
+            { bottom: "13%", left: "51%", rot: "-5deg",  delay: "1.9s" },
+            { bottom: "10%", left: "62%", rot: "8deg",   delay: "2.3s" },
+          ].map((fp, i) => (
+            <div
+              key={i}
+              className="absolute pointer-events-none text-lg select-none"
+              style={{
+                bottom: fp.bottom,
+                left: fp.left,
+                ["--rot" as string]: fp.rot,
+                opacity: 0,
+                animation: `footprint-stamp 0.4s ease-out ${fp.delay} forwards`,
+                zIndex: 1,
+              }}
+            >
+              🦶
+            </div>
+          ))}
+
+          {/* T-Rex cursor trail */}
+          {!isMobile && cursorTrail.map((pt) => (
+            <div
+              key={pt.id}
+              className="absolute pointer-events-none text-sm select-none"
+              style={{
+                left: pt.x,
+                top: pt.y,
+                zIndex: 5,
+                animation: "claw-fade 1s ease-out forwards",
+                transform: "translate(-50%, -50%)",
+              }}
+            >
+              🐾
+            </div>
           ))}
 
           {/* Volcano orb — lava pulse */}
@@ -604,9 +715,18 @@ export default function FieldDayFridayPage() {
                     key={label}
                     className="flex flex-col items-center px-3 py-2 bg-white/10 backdrop-blur-sm border border-white/15 rounded-xl min-w-[48px]"
                   >
-                    <span className="text-xl font-bold text-white font-heading tabular-nums">
-                      {String(val).padStart(2, "0")}
-                    </span>
+                    <AnimatePresence mode="popLayout">
+                      <motion.span
+                        key={`${label}-${val}`}
+                        className="text-xl font-bold text-white font-heading tabular-nums"
+                        initial={{ opacity: 0, y: -10, scale: 0.8 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        transition={{ duration: 0.25, type: "spring", stiffness: 300, damping: 20 }}
+                      >
+                        {String(val).padStart(2, "0")}
+                      </motion.span>
+                    </AnimatePresence>
                     <span className="text-[10px] text-amber-300 font-body uppercase tracking-wide">
                       {label}
                     </span>
@@ -640,6 +760,43 @@ export default function FieldDayFridayPage() {
                 >
                   See the Activities ↓
                 </a>
+              </motion.div>
+
+              {/* Interactive dino egg */}
+              <motion.div
+                className="mt-6 flex flex-col items-center lg:items-start gap-1"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.45 }}
+              >
+                <button
+                  onClick={() => setEggHatched((v) => !v)}
+                  className="relative text-5xl cursor-pointer select-none focus:outline-none"
+                  style={{
+                    animation: eggHatched ? "none" : "egg-wobble 2.5s ease-in-out infinite",
+                    display: "inline-block",
+                  }}
+                  aria-label="Hatch the egg"
+                >
+                  {eggHatched ? (
+                    <span style={{ display: "inline-block" }}>🥚<span style={{ fontSize: "0.5em", verticalAlign: "top" }}>💥</span></span>
+                  ) : "🥚"}
+                </button>
+                <AnimatePresence>
+                  {eggHatched && (
+                    <motion.span
+                      className="text-3xl"
+                      initial={{ opacity: 0, y: 20, scale: 0 }}
+                      animate={{ opacity: 1, y: -20, scale: 1, transition: { type: "spring", damping: 10, stiffness: 200 } }}
+                      exit={{ opacity: 0, scale: 0 }}
+                    >
+                      🦕
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+                <p className="text-[11px] text-amber-400 font-body">
+                  {eggHatched ? "It hatched! 🦕" : "tap the egg 🥚"}
+                </p>
               </motion.div>
             </motion.div>
 
@@ -782,9 +939,10 @@ export default function FieldDayFridayPage() {
                   whileInView={{ opacity: 1, y: 0, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.45, delay: 0.1 * i }}
-                  onClick={() => toggleCard(i)}
+                  whileTap={{ scale: [1, 1.08, 1] }}
+                  onClick={() => handleCardFlip(i)}
                 >
-                  <div className={`flip-card-inner relative w-full h-full${flippedCards.has(i) ? " flipped" : ""}`} style={{ minHeight: "180px" }}>
+                  <div className={`flip-card-inner relative w-full h-full${flippedCards.has(i) ? " flipped" : ""}${shakingCards.has(i) ? " ground-shake" : ""}`} style={{ minHeight: "180px", animation: shakingCards.has(i) ? "ground-shake 0.4s ease" : undefined }}>
                     {/* Front face */}
                     <div
                       className="flip-face absolute inset-0 bg-white rounded-3xl overflow-hidden shadow-md border border-gray-100 flex flex-col"
@@ -820,6 +978,50 @@ export default function FieldDayFridayPage() {
                 </motion.div>
               ))}
             </div>
+
+            {/* Dino Egg Hunt Counter */}
+            <motion.div
+              className="mb-8 text-center"
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: 0.15 }}
+            >
+              <p className="text-sm font-bold text-amber-800 font-body mb-3">
+                🥚 Find all the hidden dino eggs before Jul 10!
+              </p>
+              <div className="flex gap-3 justify-center items-center flex-wrap">
+                {[0, 1, 2, 3, 4].map((idx) => (
+                  <motion.button
+                    key={idx}
+                    onClick={() => setEggsFound((prev) => {
+                      const n = new Set(prev);
+                      n.has(idx) ? n.delete(idx) : n.add(idx);
+                      return n;
+                    })}
+                    className="text-3xl cursor-pointer focus:outline-none select-none"
+                    whileTap={{ scale: 1.3 }}
+                    animate={eggsFound.has(idx) ? { rotate: [0, 20, -10, 0], scale: [1, 1.4, 1] } : { rotate: 0, scale: 1 }}
+                    transition={{ duration: 0.4 }}
+                    aria-label={`Egg ${idx + 1}`}
+                  >
+                    {eggsFound.has(idx) ? "✅" : "🥚"}
+                  </motion.button>
+                ))}
+              </div>
+              <AnimatePresence>
+                {eggsFound.size === 5 && (
+                  <motion.p
+                    className="text-sm font-bold text-amber-700 font-body mt-3"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    All eggs found! 🦕 You&apos;re ready for the real hunt!
+                  </motion.p>
+                )}
+              </AnimatePresence>
+            </motion.div>
 
             {/* Logistics strip */}
             <motion.div
@@ -1386,6 +1588,41 @@ export default function FieldDayFridayPage() {
                   </motion.div>
                 );
               })}
+            </div>
+
+            {/* Fossil Dig Progress Bar */}
+            <div className="mt-6 mb-2">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-bold text-amber-300 font-body uppercase tracking-wide">
+                  Dig Progress
+                </span>
+                <span className="text-xs text-amber-200/60 font-body">
+                  {packingChecked.size} / {PACKING_LIST.length} packed
+                </span>
+              </div>
+              <div
+                className="relative w-full h-5 rounded-full overflow-visible"
+                style={{ background: "#78350f" }}
+              >
+                <div
+                  className="h-full rounded-full transition-all duration-500 ease-out"
+                  style={{
+                    width: `${(packingChecked.size / PACKING_LIST.length) * 100}%`,
+                    background: "linear-gradient(90deg, #92400e 0%, #d97706 50%, #fbbf24 100%)",
+                    minWidth: packingChecked.size > 0 ? "20px" : "0px",
+                  }}
+                />
+                {packingChecked.size > 0 && (
+                  <span
+                    className="absolute top-1/2 -translate-y-1/2 text-base pointer-events-none transition-all duration-500 ease-out"
+                    style={{
+                      left: `calc(${(packingChecked.size / PACKING_LIST.length) * 100}% - 12px)`,
+                    }}
+                  >
+                    🦴
+                  </span>
+                )}
+              </div>
             </div>
 
             <AnimatePresence>
