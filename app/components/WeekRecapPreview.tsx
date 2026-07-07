@@ -6,29 +6,28 @@ import Image from "next/image";
 import Link from "next/link";
 
 const PREVIEW_IMAGES = [
-  "/assets/highlights/summer_week_five/077864BA-405A-4468-8A16-0FB0AFBC8CB0.JPG",
-  "/assets/highlights/summer_week_five/39A6CEAD-799A-4EC3-8F59-D95B4C419D9B.JPG",
-  "/assets/highlights/summer_week_five/61997CDB-20A1-4835-BE41-3ABB4BF37DEA.JPG",
-  "/assets/highlights/summer_week_five/7849AC4D-E6E4-4F8C-BEDC-56401FBAB1A7.JPG",
-  "/assets/highlights/summer_week_five/E3BD0EC6-88F5-48F2-B510-591805C426F8.JPG",
-  "/assets/highlights/summer_week_five/D08CDD06-DF61-4D1B-B1F4-CF3D9FB4D665.JPG",
-  "/assets/highlights/summer_week_five/69BAEEC0-7C4B-4821-8595-02152DC7E7FB.JPG",
+  "/assets/highlights/summer_week_six/1A73BC70-CEC1-4979-8576-39585C31DB07.JPG",
+  "/assets/highlights/summer_week_six/1D47ADF7-BFF8-4E74-8A51-E0444E1E5AB2.JPG",
+  "/assets/highlights/summer_week_six/337A7F28-CB3D-47AD-9B02-76706D3EC299.JPG",
+  "/assets/highlights/summer_week_six/6015040C-CE16-4977-A8FF-8243A4968654.JPG",
+  "/assets/highlights/summer_week_six/6ED6BA87-AB2C-42FA-97F4-57719463AB1A.JPG",
+  "/assets/highlights/summer_week_six/IMG_9916.JPG",
+  "/assets/highlights/summer_week_six/sagefield_1783398462180.jpg",
 ];
 
 const PRIMARY_HIGHLIGHTS = [
-  { emoji: "🐍", label: "Animal Architects & Snakes", desc: "Discovered how animals build homes — then dove into snakes by student request" },
-  { emoji: "🍳", label: "Egg Bites & Popsicles", desc: "Made their own food from start to finish — fine motor skills and real confidence" },
-  { emoji: "📖", label: "Core Skills — Reading & Math", desc: "Letter recognition, CVC words, counting, addition, and subtraction through play" },
-  { emoji: "🎨", label: "Product Art: Snake Crafts", desc: "Multi-step guided snake crafts — intention, materials, and a finished goal" },
-  { emoji: "🌿", label: "New Faces, Fuller Hearts", desc: "New families joined — and the warmth in our backyard grew right along with our circle" },
+  { emoji: "🍌", label: "Banana Oatmeal Pancakes", desc: "Made from scratch — food safety, careful movements, and real pride" },
+  { emoji: "🍍", label: "Pineapple Popsicles", desc: "Cooking together was a highlight of the week" },
+  { emoji: "📖", label: "Core Foundations", desc: "Reading and foundational skills continuing to grow" },
+  { emoji: "💪", label: "Resilience & Growth", desc: "Stretching brains, becoming thoughtful students and kind friends" },
+  { emoji: "🌱", label: "Hands-On Learning", desc: "Strong foundations give students freedom to explore through play" },
 ];
 
 const ELEMENTARY_HIGHLIGHTS = [
-  { emoji: "🧠", label: "Making Inferences", desc: "Context clues to draw meaning beyond the page — clicked naturally this week" },
-  { emoji: "➗", label: "Division Strategies", desc: "Upper el: bins, marbles, drawn circles. Lower el: daily multiplication number focus" },
-  { emoji: "🌋", label: "Natural Disaster Research", desc: "Each student chose their disaster — research drafted, dioramas coming next week" },
-  { emoji: "🐍", label: "Snake Deep Dive", desc: "Student questions and stories sparked a full classroom exploration of snakes" },
-  { emoji: "🦁", label: "Safari Adventure Friday", desc: "Four hours of Safari Bingo, handmade animal masks, and an outdoor scavenger hunt" },
+  { emoji: "🧮", label: "Multi-Step Word Problems", desc: "Upper el: all four operations; lower el: two-step equations" },
+  { emoji: "📚", label: "Comparing & Contrasting", desc: "Venn Diagrams to compare stories across texts" },
+  { emoji: "🌋", label: "Natural Disaster Projects", desc: "Final drafts wrapping up, 3D shoe box models starting" },
+  { emoji: "🎉", label: "Halfway Through Summer!", desc: "6 weeks of growth — students and families adjusting beautifully" },
 ];
 
 interface WeekRecapPreviewProps {
@@ -78,17 +77,17 @@ export default function WeekRecapPreview({ className = "", variant = "light" }: 
               dark ? "bg-white/10 text-violet-200" : "bg-badge-bg text-black"
             }`}
           >
-            Week 5 Recap
+            Week 6 Recap
           </span>
           <h2
             className={`text-3xl md:text-4xl font-bold font-heading mb-2 ${
               dark ? "text-white" : "text-gray-800"
             }`}
           >
-            See Week 5 of Our Summer Program
+            See Week 6 of Our Summer Program
           </h2>
           <p className={`text-base font-body ${dark ? "text-slate-300" : "text-gray-500"}`}>
-            Week 5 is complete — and it was one for the books. Here&apos;s a glimpse at what our students experienced.
+            Week 6 hit the halfway mark — and what a week it was. Here&apos;s a glimpse at what our students experienced.
           </p>
         </motion.div>
       </div>
@@ -111,7 +110,7 @@ export default function WeekRecapPreview({ className = "", variant = "light" }: 
             >
               <Image
                 src={src}
-                alt="Week 5 highlight"
+                alt="Week 6 highlight"
                 fill
                 className="object-cover"
                 sizes="256px"
@@ -130,7 +129,7 @@ export default function WeekRecapPreview({ className = "", variant = "light" }: 
           transition={{ duration: 0.5, delay: 0.15 }}
         >
           <p className={`text-base font-body leading-relaxed ${dark ? "text-slate-300" : "text-gray-600"}`}>
-            Week 5 was one for the books. New kids joined, sand was delivered, and the mud kitchen doubled in size. Primary students explored animal architects, dove into snakes by student request, and made their own egg bites and popsicles. Elementary students made inferences, tackled division with hands-on manipulatives, launched natural disaster research projects, and capped the week with four hours of full Safari Adventure — bingo, animal masks, and a scavenger hunt.
+            Week 6 marked the halfway point of summer — and it was full. Primary students made banana oatmeal pancakes and pineapple popsicles from scratch, practicing food safety and building real confidence in the kitchen. Foundational reading and math skills continued to deepen through hands-on play. Elementary students tackled multi-step word problems across all four operations, used Venn Diagrams to compare texts, wrapped up natural disaster research drafts, and started building 3D shoe box models. Six weeks in, students and families have found their rhythm — and the growth shows.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
@@ -212,14 +211,14 @@ export default function WeekRecapPreview({ className = "", variant = "light" }: 
 
         <div className="flex justify-center mt-7">
           <Link
-            href="/highlights/summer/week-5"
+            href="/highlights/summer/week-6"
             className={`inline-flex items-center gap-2 px-6 py-3 font-semibold rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg font-body text-sm text-white ${
               dark
                 ? "bg-violet-600 hover:bg-violet-500"
                 : "bg-primary hover:bg-primary-hover"
             }`}
           >
-            View Full Week 5 Recap →
+            View Full Week 6 Recap →
           </Link>
         </div>
       </div>
