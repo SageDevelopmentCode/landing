@@ -171,7 +171,24 @@ const WEEK_FIVE: GalleryImage[] = [
   "F262D857-0D3E-47F6-A8C2-4A0A0CC3529C.JPG",
 ].map((f) => ({ src: `/assets/highlights/summer_week_five/${f}`, alt: `Week 5 — ${f}`, week: 5 }));
 
-const ALL_IMAGES: GalleryImage[] = [...WEEK_FIVE, ...WEEK_FOUR, ...WEEK_THREE, ...WEEK_TWO, ...WEEK_ONE];
+const WEEK_SIX: GalleryImage[] = [
+  "1A73BC70-CEC1-4979-8576-39585C31DB07.JPG",
+  "1D47ADF7-BFF8-4E74-8A51-E0444E1E5AB2.JPG",
+  "229F0F64-45E0-44C9-8EDE-E7F39D948130.JPG",
+  "337A7F28-CB3D-47AD-9B02-76706D3EC299.JPG",
+  "5065B50D-86EC-4CD1-92CD-C4327D38CA14.JPG",
+  "6015040C-CE16-4977-A8FF-8243A4968654.JPG",
+  "6A828A98-5226-4767-BDD7-6FC3133E19D8.JPG",
+  "6ED6BA87-AB2C-42FA-97F4-57719463AB1A.JPG",
+  "C40F5D0B-D238-425F-B29C-ABB8F47F8FC8.JPG",
+  "D9C252D3-D1B9-43D5-8B1A-6F161765E253 2.JPG",
+  "IMG_9916.JPG",
+  "IMG_9918.JPG",
+  "IMG_9919.JPG",
+  "sagefield_1783398462180.jpg",
+].map((f) => ({ src: `/assets/highlights/summer_week_six/${f}`, alt: `Week 6 — ${f}`, week: 6 }));
+
+const ALL_IMAGES: GalleryImage[] = [...WEEK_SIX, ...WEEK_FIVE, ...WEEK_FOUR, ...WEEK_THREE, ...WEEK_TWO, ...WEEK_ONE];
 
 // ─── Skeleton card ─────────────────────────────────────────────────────────────
 
