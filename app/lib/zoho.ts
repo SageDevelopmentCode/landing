@@ -3701,3 +3701,71 @@ export async function buildSummerWeekSixNewsletterEmail(opts: {
 
   return { subject, content };
 }
+
+export async function buildMeetTheTeacherJoyEmail(opts: {
+  parentName: string;
+}): Promise<{ subject: string; content: string }> {
+  const firstName = opts.parentName.split(" ")[0];
+  const subject = "You're invited — Meet Miss Joy! Monday, July 13 | 5:30–6:30pm";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+
+  <p style="margin-bottom: 24px;">Dear ${firstName},</p>
+
+  <p style="margin-bottom: 20px;">We are so excited to invite you to a special evening at Sage Field — a chance to meet our wonderful new teacher, Miss Joy Paige, and get a warm, detailed look at what your child's days will look like this fall.</p>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">Event Details</h2>
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px;">
+    <p style="margin: 0 0 6px 0;"><strong>Date:</strong> <strong>Monday, July 13</strong></p>
+    <p style="margin: 0 0 6px 0;"><strong>Time:</strong> <strong>5:30pm – 6:30pm</strong></p>
+    <p style="margin: 0;"><strong>Location:</strong> <strong><a href="https://maps.google.com/?q=2760+Gattis+School+Rd,+Round+Rock,+TX+78664" style="color: #2C5F2E;">2760 Gattis School Rd, Round Rock, TX 78664</a></strong></p>
+  </div>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">About Miss Joy</h2>
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px; font-size: 15px;">
+    <p style="margin: 0;">Miss Joy Paige is a passionate early childhood educator with a background in Reggio Emilia-inspired learning. She brings hands-on exploration in gardening, engineering, art, literacy, and science — and creates a classroom where children feel confident, curious, and empowered to take ownership of their learning. She loves storytelling, history, and building meaningful connections with every child.</p>
+  </div>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">Program Agenda</h2>
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px;">
+    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+      <tr style="border-bottom: 1px solid #e0dbd5;">
+        <td style="width: 36px; padding: 10px 8px 10px 0; vertical-align: top; font-size: 18px;">👋</td>
+        <td style="padding: 10px 0; vertical-align: top;"><strong>Welcome &amp; all about Miss Joy</strong></td>
+      </tr>
+      <tr style="border-bottom: 1px solid #e0dbd5;">
+        <td style="width: 36px; padding: 10px 8px 10px 0; vertical-align: top; font-size: 18px;">🗓️</td>
+        <td style="padding: 10px 0; vertical-align: top;"><strong>A day in our life at Sage Field</strong></td>
+      </tr>
+      <tr style="border-bottom: 1px solid #e0dbd5;">
+        <td style="width: 36px; padding: 10px 8px 10px 0; vertical-align: top; font-size: 18px;">🧩</td>
+        <td style="padding: 10px 0; vertical-align: top;"><strong>How Primary block stations work</strong></td>
+      </tr>
+      <tr style="border-bottom: 1px solid #e0dbd5;">
+        <td style="width: 36px; padding: 10px 8px 10px 0; vertical-align: top; font-size: 18px;">📚</td>
+        <td style="padding: 10px 0; vertical-align: top;"><strong>Our weekly curriculum</strong></td>
+      </tr>
+      <tr>
+        <td style="width: 36px; padding: 10px 8px 10px 0; vertical-align: top; font-size: 18px;">🎂</td>
+        <td style="padding: 10px 0; vertical-align: top;"><strong>Birthday circle celebration</strong></td>
+      </tr>
+    </table>
+  </div>
+
+  <p style="margin-bottom: 20px;">We can't wait for you to meet Miss Joy and get a feel for the warmth and intentionality she brings to every moment in the classroom. We hope to see you there!</p>
+
+  <p style="margin-top: 32px; margin-bottom: 4px;">Warmly,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br/>
+  Sage Field School<br/>
+  <a href="mailto:sabrina@sagefield.co" style="color: #2C5F2E;">sabrina@sagefield.co</a><br/>
+  (512) 677-5872</p>
+
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}

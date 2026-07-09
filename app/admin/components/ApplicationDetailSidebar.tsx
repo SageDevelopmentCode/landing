@@ -40,6 +40,7 @@ import { sendSummerWeekFiveNewsletterEmail } from '../../actions/sendSummerWeekF
 import { sendSummerWeekSixNewsletterEmail } from '../../actions/sendSummerWeekSixNewsletterEmail'
 import { sendFreeFridayAnnouncementEmail } from '../../actions/sendFreeFridayAnnouncementEmail'
 import { sendGoogleReviewIncentiveEmail } from '../../actions/sendGoogleReviewIncentiveEmail'
+import { sendMeetTheTeacherJoyEmail } from '../../actions/sendMeetTheTeacherJoyEmail'
 import { sendFunFridayConfirmationEmail } from '../../actions/sendFunFridayConfirmationEmail'
 import { sendSummerTuitionConfirmationEmail } from '../../actions/sendSummerTuitionConfirmationEmail'
 import { enrollApplication } from '../../actions/enrollApplication'
@@ -251,6 +252,9 @@ export function ApplicationDetailSidebar({
   const [googleReviewSending, setGoogleReviewSending] = useState(false)
   const [googleReviewSent, setGoogleReviewSent] = useState(false)
   const [googleReviewError, setGoogleReviewError] = useState<string | null>(null)
+  const [meetJoySending, setMeetJoySending] = useState(false)
+  const [meetJoySent, setMeetJoySent] = useState(false)
+  const [meetJoyError, setMeetJoyError] = useState<string | null>(null)
   const [summerTuitionConfirmSending, setSummerTuitionConfirmSending] = useState(false)
   const [summerTuitionConfirmSent, setSummerTuitionConfirmSent] = useState(false)
   const [summerTuitionConfirmError, setSummerTuitionConfirmError] = useState<string | null>(null)
@@ -909,6 +913,24 @@ export function ApplicationDetailSidebar({
       setTimeout(() => setGoogleReviewSent(false), 3000)
     } else {
       setGoogleReviewError(result.error ?? 'Failed to send')
+    }
+  }
+
+  async function handleSendMeetJoy() {
+    if (!application?.g1_email) return
+    setMeetJoySending(true)
+    setMeetJoyError(null)
+    const result = await sendMeetTheTeacherJoyEmail({
+      parentName: application.g1_full_name ?? '',
+      email: application.g1_email,
+    })
+    setMeetJoySending(false)
+    if (result.success) {
+      setMeetJoySent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setMeetJoySent(false), 3000)
+    } else {
+      setMeetJoyError(result.error ?? 'Failed to send')
     }
   }
 
@@ -1803,6 +1825,17 @@ export function ApplicationDetailSidebar({
                     {googleReviewSending ? 'Sending…' : googleReviewSent ? '✓ Sent!' : 'Send Google Review Incentive'}
                   </button>
                   {googleReviewError && <span className="text-xs text-red-600">{googleReviewError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendMeetJoy}
+                    disabled={meetJoySending || meetJoySent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {meetJoySending ? 'Sending…' : meetJoySent ? '✓ Sent!' : 'Send Meet Miss Joy Invite'}
+                  </button>
+                  {meetJoyError && <span className="text-xs text-red-600">{meetJoyError}</span>}
                 </div>
               </>}
             </div>
