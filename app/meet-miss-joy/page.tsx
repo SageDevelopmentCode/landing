@@ -51,6 +51,13 @@ const PREVIEW_WEEKS = [
     coverImage:
       "/assets/highlights/summer_week_five/69BAEEC0-7C4B-4821-8595-02152DC7E7FB.JPG",
   },
+  {
+    week: 6,
+    dates: "Jun 29–Jul 2",
+    theme: "Cooking from Scratch & Halfway There",
+    href: "/highlights/summer/week-6",
+    coverImage: "/assets/highlights/summer_week_six/1A73BC70-CEC1-4979-8576-39585C31DB07.JPG",
+  },
 ];
 
 const AGENDA_ITEMS = [
@@ -125,7 +132,9 @@ export default function MeetMissJoyPage() {
   const [formError, setFormError] = useState<string | null>(null);
 
   const scrollToRSVP = () => {
-    document.getElementById("rsvp-section")?.scrollIntoView({ behavior: "smooth" });
+    document
+      .getElementById("rsvp-section")
+      ?.scrollIntoView({ behavior: "smooth" });
   };
 
   const handleRSVPSubmit = async (e: React.FormEvent) => {
@@ -181,10 +190,10 @@ export default function MeetMissJoyPage() {
                 <span className="text-primary">Miss Joy</span>
               </h1>
               <p className="text-lg sm:text-xl text-text-gray font-body leading-relaxed max-w-xl">
-                Join us for an intimate evening with Miss Joy Paige — Sage
-                Field&apos;s Primary Lead Teacher — where you&apos;ll learn
-                about our classroom, curriculum, and the warm, intentional
-                environment your child will thrive in.
+                Join us for an evening with Miss Joy Paige — Sage Field&apos;s
+                Primary Lead Teacher — where you&apos;ll learn about our
+                classroom, curriculum, and the warm, intentional environment
+                your child will thrive in.
               </p>
 
               {/* Event pills */}
@@ -192,7 +201,10 @@ export default function MeetMissJoyPage() {
                 {[
                   { icon: "📅", label: "Monday, July 13" },
                   { icon: "🕔", label: "5:30 PM – 6:30 PM" },
-                  { icon: "📍", label: "2760 Gattis School Rd, Round Rock, TX 78664" },
+                  {
+                    icon: "📍",
+                    label: "2760 Gattis School Rd, Round Rock, TX 78664",
+                  },
                 ].map((pill) => (
                   <span
                     key={pill.label}
@@ -323,41 +335,43 @@ export default function MeetMissJoyPage() {
               <>
                 <p>
                   My love for teaching began when I was a little girl. I used to
-                  gather my friends in my garage and spend hours playing teacher.
-                  Looking back, it&apos;s no surprise that I followed that passion
-                  into education. I find so much joy in creating a safe place to
-                  learn. I&apos;ve had the opportunity to work with children of all
-                  ages. While I loved many aspects of traditional education, I found
-                  myself wanting to be in a space where children&apos;s ideas could
-                  truly drive the learning.
+                  gather my friends in my garage and spend hours playing
+                  teacher. Looking back, it&apos;s no surprise that I followed
+                  that passion into education. I find so much joy in creating a
+                  safe place to learn. I&apos;ve had the opportunity to work
+                  with children of all ages. While I loved many aspects of
+                  traditional education, I found myself wanting to be in a space
+                  where children&apos;s ideas could truly drive the learning.
                 </p>
                 <p>
                   That&apos;s what led me to Sage Field. I was drawn to the
                   Montessori approach because it respects children as capable,
-                  independent learners. It creates an environment where children can
-                  explore, make choices, and learn through hands-on experiences. I
-                  appreciate how it fosters curiosity, confidence, and a love of
-                  learning while allowing each child to develop at their own pace.
+                  independent learners. It creates an environment where children
+                  can explore, make choices, and learn through hands-on
+                  experiences. I appreciate how it fosters curiosity,
+                  confidence, and a love of learning while allowing each child
+                  to develop at their own pace.
                 </p>
                 <p>
-                  I&apos;ve had the opportunity to learn alongside children through
-                  projects involving gardening, engineering, art, literacy, and
-                  scientific investigation. One of my favorite parts of teaching is
-                  watching a simple question turn into a meaningful project filled
-                  with discovery, collaboration, and wonder. What excites me most is
-                  creating a classroom where children feel safe enough to take risks,
-                  confident enough to share their ideas, and supported enough to
-                  learn from one another. Seeing children advocate for their peers,
-                  solve problems together, and take ownership of their learning
+                  I&apos;ve had the opportunity to learn alongside children
+                  through projects involving gardening, engineering, art,
+                  literacy, and scientific investigation. One of my favorite
+                  parts of teaching is watching a simple question turn into a
+                  meaningful project filled with discovery, collaboration, and
+                  wonder. What excites me most is creating a classroom where
+                  children feel safe enough to take risks, confident enough to
+                  share their ideas, and supported enough to learn from one
+                  another. Seeing children advocate for their peers, solve
+                  problems together, and take ownership of their learning
                   reminds me why I chose this path.
                 </p>
                 <p>
-                  I believe education is about more than preparing children for the
-                  next grade; it&apos;s about helping them become thoughtful,
-                  curious, resilient, and compassionate people. I am grateful to be
-                  part of a school community that shares those values, and I look
-                  forward to continuing to grow alongside the children and families
-                  I connect with.
+                  I believe education is about more than preparing children for
+                  the next grade; it&apos;s about helping them become
+                  thoughtful, curious, resilient, and compassionate people. I am
+                  grateful to be part of a school community that shares those
+                  values, and I look forward to continuing to grow alongside the
+                  children and families I connect with.
                 </p>
               </>
             )}
@@ -397,9 +411,9 @@ export default function MeetMissJoyPage() {
             className="mt-5 p-5 bg-primary/10 rounded-xl border-l-4 border-primary"
           >
             <p className="text-base text-text-gray leading-relaxed font-body italic">
-              &ldquo;I&apos;m so excited to continue this journey with such
-              an inspiring school community and can&apos;t wait to share my
-              joy, creativity, and heart with all of you.&rdquo;
+              &ldquo;I&apos;m so excited to continue this journey with such an
+              inspiring school community and can&apos;t wait to share my joy,
+              creativity, and heart with all of you.&rdquo;
             </p>
             <p className="text-sm text-primary font-semibold mt-2 font-body">
               — Miss Joy Paige
@@ -427,9 +441,8 @@ export default function MeetMissJoyPage() {
               A Peek at the Evening
             </h2>
             <p className="text-base text-text-gray font-body mt-3 max-w-lg mx-auto">
-              In just one hour, you&apos;ll come away knowing exactly what
-              your child&apos;s day looks like and feel confident in your
-              decision.
+              In just one hour, you&apos;ll come away knowing exactly what your
+              child&apos;s day looks like and feel confident in your decision.
             </p>
           </motion.div>
 
@@ -443,7 +456,9 @@ export default function MeetMissJoyPage() {
                 transition={{ duration: 0.5, delay: 0.08 * i }}
                 className="bg-white rounded-xl border-l-4 border-primary p-5 shadow-sm flex items-start gap-4"
               >
-                <span className="text-2xl flex-shrink-0 mt-0.5">{item.icon}</span>
+                <span className="text-2xl flex-shrink-0 mt-0.5">
+                  {item.icon}
+                </span>
                 <div>
                   <p className="text-base font-bold text-text-gray font-heading">
                     {item.label}
@@ -473,7 +488,8 @@ export default function MeetMissJoyPage() {
               Summer in Action
             </h2>
             <p className="text-base text-gray-500 font-body">
-              Wondering what a day here really looks like? Here&apos;s a glimpse at our summer.
+              Wondering what a day here really looks like? Here&apos;s a glimpse
+              at our summer.
             </p>
           </motion.div>
         </div>
@@ -483,7 +499,10 @@ export default function MeetMissJoyPage() {
       {/* ───────────────────────────────────────────
           5. ABOUT SAGE FIELD — "What We're Building"
       ─────────────────────────────────────────── */}
-      <section id="about-sage-field" className="bg-white py-16 px-8 sm:px-12 lg:px-16">
+      <section
+        id="about-sage-field"
+        className="bg-white py-16 px-8 sm:px-12 lg:px-16"
+      >
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -514,7 +533,11 @@ export default function MeetMissJoyPage() {
                   className="inline-flex items-center gap-1.5 bg-primary/10 text-primary font-semibold px-5 py-2 rounded-full text-sm font-body"
                 >
                   <strong>{stat.big}</strong>
-                  {stat.label && <span className="text-text-gray font-normal">{stat.label}</span>}
+                  {stat.label && (
+                    <span className="text-text-gray font-normal">
+                      {stat.label}
+                    </span>
+                  )}
                 </span>
               ))}
             </div>
@@ -630,10 +653,10 @@ export default function MeetMissJoyPage() {
               Summer Highlights
             </span>
             <h2 className="text-3xl md:text-4xl font-bold text-text-gray font-heading">
-              5 Weeks of Learning & Adventure
+              6 Weeks of Learning & Adventure
             </h2>
             <p className="text-base text-text-gray font-body mt-3">
-              See what our students have been up to this summer.
+              We&apos;re 6 weeks in — see what your child has been up to.
             </p>
           </motion.div>
 
@@ -663,7 +686,9 @@ export default function MeetMissJoyPage() {
                   </div>
                 </div>
                 <div className="p-4 space-y-1">
-                  <p className="text-xs text-gray-400 font-body">{week.dates}</p>
+                  <p className="text-xs text-gray-400 font-body">
+                    {week.dates}
+                  </p>
                   <p className="text-sm font-bold text-text-gray font-heading leading-snug">
                     {week.theme}
                   </p>
@@ -690,7 +715,116 @@ export default function MeetMissJoyPage() {
       </section>
 
       {/* ───────────────────────────────────────────
-          8. RSVP SECTION (Bottom CTA)
+          8. PROGRAMS SECTION
+      ─────────────────────────────────────────── */}
+      <section className="bg-white py-16 px-8 sm:px-12 lg:px-16">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-10"
+          >
+            <span className="inline-block bg-badge-bg px-5 py-2 rounded-full text-sm font-semibold text-text-gray font-body mb-4">
+              Programs
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-text-gray font-heading">
+              Find the Right Fit for Your Family
+            </h2>
+            <p className="text-base text-text-gray font-body mt-3 max-w-xl mx-auto">
+              Whether you&apos;re looking for a summer adventure, a full school year, or flexible drop-in days, Sage Field has a program built for your child.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+            {[
+              {
+                badge: "Summer 2026",
+                title: "Summer Program",
+                dates: "May 26 – Aug 13, 2026",
+                pills: ["12 weeks", "Ages 4–11", "Mon–Fri"],
+                description: "Outdoor learning, real academics, and unforgettable themes — every week is a new adventure.",
+                image: "/assets/ImageFive.jpg",
+                href: "/summer-2026",
+              },
+              {
+                badge: "School Year 2026–2027",
+                title: "School Year Program",
+                dates: "Aug 17, 2026 – Mar 2027",
+                pills: ["Full year", "Ages 4–11", "Mon–Fri"],
+                description: "A rigorous, joyful school year with individualized academics and deep outdoor exploration.",
+                image: "/assets/ImageTwo.jpg",
+                href: "/school-year-2026-2027",
+              },
+              {
+                badge: "Flexible",
+                title: "Homeschool Drop-In",
+                dates: "Flexible scheduling",
+                pills: ["Drop-in days", "Ages 4–11", "Mon–Fri"],
+                description: "Supplement your homeschool routine with structured, community-based days at Sage Field.",
+                image: "/assets/After1.png",
+                href: "/homeschool",
+              },
+            ].map((program, i) => (
+              <motion.div
+                key={program.title}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.1 * i }}
+              >
+                <Link
+                  href={program.href}
+                  className="group block bg-welcome-bg rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md hover:scale-[1.02] transition-all duration-200 h-full"
+                >
+                  <div className="relative w-full aspect-[4/3] bg-gray-100">
+                    <Image
+                      src={program.image}
+                      alt={program.title}
+                      fill
+                      className="object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    />
+                    <span className="absolute top-3 left-3 bg-primary text-white text-[10px] font-bold px-2.5 py-1 rounded-full font-body shadow-sm">
+                      {program.badge}
+                    </span>
+                  </div>
+                  <div className="p-4">
+                    <p className="text-xs text-gray-400 font-body mb-1">{program.dates}</p>
+                    <h3 className="text-sm font-bold font-heading text-text-gray leading-snug mb-2">
+                      {program.title}
+                    </h3>
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {program.pills.map((pill) => (
+                        <span key={pill} className="text-[10px] font-semibold bg-sage-50 border border-sage-200 text-text-gray px-2 py-0.5 rounded-full font-body">
+                          {pill}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="text-xs text-text-gray font-body leading-relaxed mb-3">{program.description}</p>
+                    <span className="text-xs font-semibold text-primary font-body group-hover:underline">
+                      Learn More →
+                    </span>
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="flex justify-center mt-2">
+            <Link
+              href="/programs"
+              className="bg-primary hover:bg-primary-hover text-white font-semibold px-7 py-3 rounded-xl text-sm font-body shadow-md transition-colors duration-200"
+            >
+              Explore All Programs →
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ───────────────────────────────────────────
+          9. RSVP SECTION (Bottom CTA)
       ─────────────────────────────────────────── */}
       <section
         id="rsvp-section"
@@ -711,8 +845,8 @@ export default function MeetMissJoyPage() {
               We&apos;d Love to See You There
             </h2>
             <p className="text-lg text-gray-500 font-body leading-relaxed">
-              Come meet Miss Joy, see our classroom, and discover why Sage
-              Field families love what we&apos;re building here.
+              Come meet Miss Joy, see our classroom, and discover why Sage Field
+              families love what we&apos;re building here.
             </p>
           </motion.div>
 
@@ -753,7 +887,9 @@ export default function MeetMissJoyPage() {
                   You&apos;re on the list!
                 </h3>
                 <p className="text-base text-gray-500 font-body leading-relaxed">
-                  We&apos;ve received your RSVP and sent a confirmation to your email. We can&apos;t wait to see you on <strong>Monday, July 13</strong>!
+                  We&apos;ve received your RSVP and sent a confirmation to your
+                  email. We can&apos;t wait to see you on{" "}
+                  <strong>Monday, July 13</strong>!
                 </p>
               </div>
             ) : (
@@ -764,7 +900,8 @@ export default function MeetMissJoyPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-sm font-semibold text-text-gray font-body">
-                      Parent / Guardian Name <span className="text-red-500">*</span>
+                      Parent / Guardian Name{" "}
+                      <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -830,7 +967,8 @@ export default function MeetMissJoyPage() {
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="text-sm font-semibold text-text-gray font-body">
-                      Number of Adults Attending <span className="text-red-500">*</span>
+                      Number of Adults Attending{" "}
+                      <span className="text-red-500">*</span>
                     </label>
                     <select
                       required
