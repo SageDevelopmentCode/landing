@@ -9,6 +9,7 @@ import WeekRecapPreview from "../components/WeekRecapPreview";
 import Footer from "../components/Footer";
 import FloatingSMSButton from "../components/FloatingSMSButton";
 import WaitlistDialog from "../components/WaitlistDialog";
+import WhatWeOfferSection from "../components/WhatWeOfferSection";
 
 const PREVIEW_WEEKS = [
   {
@@ -638,193 +639,12 @@ export default function MeetMissJoyPage() {
       </section>
 
       {/* ───────────────────────────────────────────
-          7. SUMMER HIGHLIGHTS — Week Cards
+          7. PROGRAMS SECTION
       ─────────────────────────────────────────── */}
-      <section className="bg-welcome-bg py-16 px-8 sm:px-12 lg:px-16">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-10"
-          >
-            <span className="inline-block bg-badge-bg px-5 py-2 rounded-full text-sm font-semibold text-text-gray font-body mb-4">
-              Summer Highlights
-            </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-text-gray font-heading">
-              6 Weeks of Learning & Adventure
-            </h2>
-            <p className="text-base text-text-gray font-body mt-3">
-              We&apos;re 6 weeks in — see what your child has been up to.
-            </p>
-          </motion.div>
-
-          {/* Mobile: horizontal scroll, sm+: 3-col grid */}
-          <div className="flex overflow-x-auto gap-4 pb-4 sm:grid sm:grid-cols-3 sm:gap-6 sm:overflow-visible sm:pb-0">
-            {PREVIEW_WEEKS.map((week, i) => (
-              <motion.div
-                key={week.week}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.08 * i }}
-                className="w-[72vw] shrink-0 sm:w-auto sm:shrink bg-white rounded-2xl overflow-hidden shadow-md"
-              >
-                <div className="relative w-full aspect-[4/3]">
-                  <Image
-                    src={week.coverImage}
-                    alt={`Week ${week.week} — ${week.theme}`}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 640px) 72vw, 33vw"
-                  />
-                  <div className="absolute top-3 left-3">
-                    <span className="bg-primary text-white text-xs font-bold px-3 py-1 rounded-full font-body">
-                      Week {week.week}
-                    </span>
-                  </div>
-                </div>
-                <div className="p-4 space-y-1">
-                  <p className="text-xs text-gray-400 font-body">
-                    {week.dates}
-                  </p>
-                  <p className="text-sm font-bold text-text-gray font-heading leading-snug">
-                    {week.theme}
-                  </p>
-                  <Link
-                    href={week.href}
-                    className="inline-block text-xs text-primary font-semibold font-body mt-1 hover:underline"
-                  >
-                    View Recap →
-                  </Link>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
-          <div className="flex justify-center mt-8">
-            <Link
-              href="/highlights"
-              className="bg-primary hover:bg-primary-hover text-white font-semibold px-7 py-3 rounded-xl text-sm font-body shadow-md transition-colors duration-200"
-            >
-              See All Summer Highlights →
-            </Link>
-          </div>
-        </div>
-      </section>
+      <WhatWeOfferSection />
 
       {/* ───────────────────────────────────────────
-          8. PROGRAMS SECTION
-      ─────────────────────────────────────────── */}
-      <section className="bg-white py-16 px-8 sm:px-12 lg:px-16">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-10"
-          >
-            <span className="inline-block bg-badge-bg px-5 py-2 rounded-full text-sm font-semibold text-text-gray font-body mb-4">
-              Programs
-            </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-text-gray font-heading">
-              Find the Right Fit for Your Family
-            </h2>
-            <p className="text-base text-text-gray font-body mt-3 max-w-xl mx-auto">
-              Whether you&apos;re looking for a summer adventure, a full school year, or flexible drop-in days, Sage Field has a program built for your child.
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-            {[
-              {
-                badge: "Summer 2026",
-                title: "Summer Program",
-                dates: "May 26 – Aug 13, 2026",
-                pills: ["12 weeks", "Ages 4–11", "Mon–Fri"],
-                description: "Outdoor learning, real academics, and unforgettable themes — every week is a new adventure.",
-                image: "/assets/ImageFive.jpg",
-                href: "/summer-2026",
-              },
-              {
-                badge: "School Year 2026–2027",
-                title: "School Year Program",
-                dates: "Aug 17, 2026 – Mar 2027",
-                pills: ["Full year", "Ages 4–11", "Mon–Fri"],
-                description: "A rigorous, joyful school year with individualized academics and deep outdoor exploration.",
-                image: "/assets/ImageTwo.jpg",
-                href: "/school-year-2026-2027",
-              },
-              {
-                badge: "Flexible",
-                title: "Homeschool Drop-In",
-                dates: "Flexible scheduling",
-                pills: ["Drop-in days", "Ages 4–11", "Mon–Fri"],
-                description: "Supplement your homeschool routine with structured, community-based days at Sage Field.",
-                image: "/assets/After1.png",
-                href: "/homeschool",
-              },
-            ].map((program, i) => (
-              <motion.div
-                key={program.title}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.1 * i }}
-              >
-                <Link
-                  href={program.href}
-                  className="group block bg-welcome-bg rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md hover:scale-[1.02] transition-all duration-200 h-full"
-                >
-                  <div className="relative w-full aspect-[4/3] bg-gray-100">
-                    <Image
-                      src={program.image}
-                      alt={program.title}
-                      fill
-                      className="object-cover group-hover:scale-[1.03] transition-transform duration-500"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    />
-                    <span className="absolute top-3 left-3 bg-primary text-white text-[10px] font-bold px-2.5 py-1 rounded-full font-body shadow-sm">
-                      {program.badge}
-                    </span>
-                  </div>
-                  <div className="p-4">
-                    <p className="text-xs text-gray-400 font-body mb-1">{program.dates}</p>
-                    <h3 className="text-sm font-bold font-heading text-text-gray leading-snug mb-2">
-                      {program.title}
-                    </h3>
-                    <div className="flex flex-wrap gap-1.5 mb-2">
-                      {program.pills.map((pill) => (
-                        <span key={pill} className="text-[10px] font-semibold bg-sage-50 border border-sage-200 text-text-gray px-2 py-0.5 rounded-full font-body">
-                          {pill}
-                        </span>
-                      ))}
-                    </div>
-                    <p className="text-xs text-text-gray font-body leading-relaxed mb-3">{program.description}</p>
-                    <span className="text-xs font-semibold text-primary font-body group-hover:underline">
-                      Learn More →
-                    </span>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-
-          <div className="flex justify-center mt-2">
-            <Link
-              href="/programs"
-              className="bg-primary hover:bg-primary-hover text-white font-semibold px-7 py-3 rounded-xl text-sm font-body shadow-md transition-colors duration-200"
-            >
-              Explore All Programs →
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ───────────────────────────────────────────
-          9. RSVP SECTION (Bottom CTA)
+          8. RSVP SECTION (Bottom CTA)
       ─────────────────────────────────────────── */}
       <section
         id="rsvp-section"
@@ -1022,6 +842,83 @@ export default function MeetMissJoyPage() {
                 Reach out via our contact page
               </Link>
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ───────────────────────────────────────────
+          9. SUMMER HIGHLIGHTS — Week Cards
+      ─────────────────────────────────────────── */}
+      <section className="bg-welcome-bg py-16 px-8 sm:px-12 lg:px-16">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-10"
+          >
+            <span className="inline-block bg-badge-bg px-5 py-2 rounded-full text-sm font-semibold text-text-gray font-body mb-4">
+              Summer Highlights
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-text-gray font-heading">
+              6 Weeks of Learning & Adventure
+            </h2>
+            <p className="text-base text-text-gray font-body mt-3">
+              We&apos;re 6 weeks in — see what your child has been up to.
+            </p>
+          </motion.div>
+
+          {/* Mobile: horizontal scroll, sm+: 3-col grid */}
+          <div className="flex overflow-x-auto gap-4 pb-4 sm:grid sm:grid-cols-3 sm:gap-6 sm:overflow-visible sm:pb-0">
+            {PREVIEW_WEEKS.map((week, i) => (
+              <motion.div
+                key={week.week}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.08 * i }}
+                className="w-[72vw] shrink-0 sm:w-auto sm:shrink bg-white rounded-2xl overflow-hidden shadow-md"
+              >
+                <div className="relative w-full aspect-[4/3]">
+                  <Image
+                    src={week.coverImage}
+                    alt={`Week ${week.week} — ${week.theme}`}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 640px) 72vw, 33vw"
+                  />
+                  <div className="absolute top-3 left-3">
+                    <span className="bg-primary text-white text-xs font-bold px-3 py-1 rounded-full font-body">
+                      Week {week.week}
+                    </span>
+                  </div>
+                </div>
+                <div className="p-4 space-y-1">
+                  <p className="text-xs text-gray-400 font-body">
+                    {week.dates}
+                  </p>
+                  <p className="text-sm font-bold text-text-gray font-heading leading-snug">
+                    {week.theme}
+                  </p>
+                  <Link
+                    href={week.href}
+                    className="inline-block text-xs text-primary font-semibold font-body mt-1 hover:underline"
+                  >
+                    View Recap →
+                  </Link>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="flex justify-center mt-8">
+            <Link
+              href="/highlights"
+              className="bg-primary hover:bg-primary-hover text-white font-semibold px-7 py-3 rounded-xl text-sm font-body shadow-md transition-colors duration-200"
+            >
+              See All Summer Highlights →
+            </Link>
           </div>
         </div>
       </section>
