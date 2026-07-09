@@ -168,19 +168,7 @@ export default function MeetMissJoyPage() {
       ─────────────────────────────────────────── */}
       <section className="bg-welcome-bg pt-32 sm:pt-36 pb-16 px-8 sm:px-12 lg:px-16 overflow-hidden">
         <div className="max-w-7xl mx-auto">
-          {/* Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mb-8"
-          >
-            <span className="inline-block bg-badge-bg px-5 py-2 rounded-full text-sm font-semibold text-text-gray font-body">
-              Special Evening · Free · Open to Families
-            </span>
-          </motion.div>
-
-          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+          <div className="flex flex-col-reverse lg:flex-row items-center gap-12 lg:gap-20">
             {/* Left: Headline + CTA */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
