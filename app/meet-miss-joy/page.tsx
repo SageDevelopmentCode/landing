@@ -112,8 +112,51 @@ export default function MeetMissJoyPage() {
   const [isWaitlistDialogOpen, setIsWaitlistDialogOpen] = useState(false);
   const [bioExpanded, setBioExpanded] = useState(false);
 
+  // RSVP form state
+  const [parentName, setParentName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [childName, setChildName] = useState("");
+  const [childAge, setChildAge] = useState("");
+  const [adultsAttending, setAdultsAttending] = useState("");
+  const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+
   const scrollToRSVP = () => {
     document.getElementById("rsvp-section")?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleRSVPSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError(null);
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/meet-miss-joy/rsvp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          parentName,
+          email,
+          phone: phone || undefined,
+          childName,
+          childAge: parseInt(childAge, 10),
+          adultsAttending,
+          notes: notes || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setFormError(data.error ?? "Something went wrong. Please try again.");
+      } else {
+        setSubmitted(true);
+      }
+    } catch {
+      setFormError("Network error. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -715,98 +758,129 @@ export default function MeetMissJoyPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <div className="bg-white rounded-2xl shadow-md p-8 text-left space-y-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-semibold text-text-gray font-body">
-                    Parent / Guardian Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Jane Smith"
-                    disabled
-                    className="border border-gray-200 rounded-xl px-4 py-3 text-sm font-body text-text-gray placeholder-gray-400 bg-gray-50 cursor-not-allowed"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-semibold text-text-gray font-body">
-                    Email <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    placeholder="jane@example.com"
-                    disabled
-                    className="border border-gray-200 rounded-xl px-4 py-3 text-sm font-body text-text-gray placeholder-gray-400 bg-gray-50 cursor-not-allowed"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-semibold text-text-gray font-body">
-                    Phone (Optional)
-                  </label>
-                  <input
-                    type="tel"
-                    placeholder="(512) 555-0100"
-                    disabled
-                    className="border border-gray-200 rounded-xl px-4 py-3 text-sm font-body text-text-gray placeholder-gray-400 bg-gray-50 cursor-not-allowed"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-semibold text-text-gray font-body">
-                    Child&apos;s Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Alex Smith"
-                    disabled
-                    className="border border-gray-200 rounded-xl px-4 py-3 text-sm font-body text-text-gray placeholder-gray-400 bg-gray-50 cursor-not-allowed"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-semibold text-text-gray font-body">
-                    Child&apos;s Age <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="4"
-                    min={1}
-                    max={12}
-                    disabled
-                    className="border border-gray-200 rounded-xl px-4 py-3 text-sm font-body text-text-gray placeholder-gray-400 bg-gray-50 cursor-not-allowed"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-semibold text-text-gray font-body">
-                    Number of Adults Attending <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    disabled
-                    className="border border-gray-200 rounded-xl px-4 py-3 text-sm font-body text-text-gray bg-gray-50 cursor-not-allowed"
-                  >
-                    <option value="">Select…</option>
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3+">3+</option>
-                  </select>
-                </div>
+            {submitted ? (
+              <div className="sm:bg-white sm:rounded-2xl sm:shadow-md sm:p-8 px-0 py-0 text-center space-y-4">
+                <div className="text-5xl">🎉</div>
+                <h3 className="text-2xl font-bold text-text-gray font-heading">
+                  You&apos;re on the list!
+                </h3>
+                <p className="text-base text-gray-500 font-body leading-relaxed">
+                  We&apos;ve received your RSVP and sent a confirmation to your email. We can&apos;t wait to see you on <strong>Monday, July 13</strong>!
+                </p>
               </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-semibold text-text-gray font-body">
-                  Questions or Notes
-                </label>
-                <textarea
-                  rows={3}
-                  placeholder="Anything you'd like us to know…"
-                  disabled
-                  className="border border-gray-200 rounded-xl px-4 py-3 text-sm font-body text-text-gray placeholder-gray-400 bg-gray-50 cursor-not-allowed resize-none"
-                />
-              </div>
-              <button
-                disabled
-                className="w-full bg-primary text-white font-bold px-8 py-4 rounded-xl text-base font-body shadow-md opacity-60 cursor-not-allowed"
+            ) : (
+              <form
+                onSubmit={handleRSVPSubmit}
+                className="text-left space-y-5 sm:bg-white sm:rounded-2xl sm:shadow-md sm:p-8 px-0 py-0"
               >
-                RSVP — I&apos;ll Be There →
-              </button>
-            </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-semibold text-text-gray font-body">
+                      Parent / Guardian Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Jane Smith"
+                      required
+                      value={parentName}
+                      onChange={(e) => setParentName(e.target.value)}
+                      className="border border-gray-200 rounded-xl px-4 py-3 text-sm font-body text-text-gray placeholder-gray-400 bg-white sm:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-semibold text-text-gray font-body">
+                      Email <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="jane@example.com"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="border border-gray-200 rounded-xl px-4 py-3 text-sm font-body text-text-gray placeholder-gray-400 bg-white sm:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-semibold text-text-gray font-body">
+                      Phone (Optional)
+                    </label>
+                    <input
+                      type="tel"
+                      placeholder="(512) 555-0100"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="border border-gray-200 rounded-xl px-4 py-3 text-sm font-body text-text-gray placeholder-gray-400 bg-white sm:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-semibold text-text-gray font-body">
+                      Child&apos;s Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Alex Smith"
+                      required
+                      value={childName}
+                      onChange={(e) => setChildName(e.target.value)}
+                      className="border border-gray-200 rounded-xl px-4 py-3 text-sm font-body text-text-gray placeholder-gray-400 bg-white sm:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-semibold text-text-gray font-body">
+                      Child&apos;s Age <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="4"
+                      min={1}
+                      max={12}
+                      required
+                      value={childAge}
+                      onChange={(e) => setChildAge(e.target.value)}
+                      className="border border-gray-200 rounded-xl px-4 py-3 text-sm font-body text-text-gray placeholder-gray-400 bg-white sm:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-semibold text-text-gray font-body">
+                      Number of Adults Attending <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      required
+                      value={adultsAttending}
+                      onChange={(e) => setAdultsAttending(e.target.value)}
+                      className="border border-gray-200 rounded-xl px-4 py-3 text-sm font-body text-text-gray bg-white sm:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                    >
+                      <option value="">Select…</option>
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="3+">3+</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-semibold text-text-gray font-body">
+                    Questions or Notes
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="Anything you'd like us to know…"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className="border border-gray-200 rounded-xl px-4 py-3 text-sm font-body text-text-gray placeholder-gray-400 bg-white sm:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none"
+                  />
+                </div>
+                {formError && (
+                  <p className="text-sm text-red-500 font-body">{formError}</p>
+                )}
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full bg-primary hover:bg-primary-hover text-white font-bold px-8 py-4 rounded-xl text-base font-body shadow-md transition-colors duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {submitting ? "Submitting…" : "RSVP — I'll Be There →"}
+                </button>
+              </form>
+            )}
           </motion.div>
 
           <div className="space-y-2">

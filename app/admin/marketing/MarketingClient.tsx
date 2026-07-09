@@ -9,9 +9,10 @@ import { InfoSessionTable } from './InfoSessionTable'
 import { InfoSessionFAQView } from './InfoSessionFAQView'
 import { ShadowDayBookingsView } from './ShadowDayBookingsView'
 import { TestimonialsView } from './TestimonialsView'
+import { MeetMissJoyRSVPsView } from './MeetMissJoyRSVPsView'
 import { EmailDetailSidebar } from '../components/EmailDetailSidebar'
 import { Table, TableRow, TableCell } from '../components/Table'
-import type { OpenHouseRsvp, TourBooking, InfoSessionRsvp, ShadowDayBooking, Testimonial } from './page'
+import type { OpenHouseRsvp, TourBooking, InfoSessionRsvp, ShadowDayBooking, Testimonial, MeetMissJoyRsvp } from './page'
 import type { TourUnavailability } from '@/app/actions/tourUnavailability'
 
 type ZohoEmailContent = {
@@ -149,13 +150,14 @@ const merriweather = Poppins({
   subsets: ['latin'],
 })
 
-type SubMenuItem = 'open-house' | 'tour-unavailability' | 'info-session' | 'info-session-faq' | 'shadow-day' | 'emails' | 'testimonials'
+type SubMenuItem = 'open-house' | 'tour-unavailability' | 'info-session' | 'info-session-faq' | 'shadow-day' | 'emails' | 'testimonials' | 'meet-miss-joy'
 
 const subMenuItems: { id: SubMenuItem; label: string; sublabel: string }[] = [
   { id: 'open-house', label: 'Open House', sublabel: 'April 25' },
   { id: 'tour-unavailability', label: 'Campus Tours', sublabel: 'Manage availability' },
   { id: 'shadow-day', label: 'Shadow Day', sublabel: 'Bookings & payments' },
   { id: 'info-session', label: 'Info Session', sublabel: 'April 18 RSVPs' },
+  { id: 'meet-miss-joy', label: 'Meet Miss Joy', sublabel: 'July 13 RSVPs' },
   { id: 'info-session-faq', label: 'Session FAQ', sublabel: 'April 18 prep' },
   { id: 'testimonials', label: 'Testimonials', sublabel: 'Parent submissions' },
   { id: 'emails', label: 'Sent Emails', sublabel: 'Via Zoho Mail' },
@@ -169,6 +171,7 @@ export function MarketingClient({
   infoSessionRsvps,
   shadowDayBookings,
   testimonials,
+  meetMissJoyRsvps,
 }: {
   rsvps: OpenHouseRsvp[]
   tourUnavailability: TourUnavailability[]
@@ -177,6 +180,7 @@ export function MarketingClient({
   infoSessionRsvps: InfoSessionRsvp[]
   shadowDayBookings: ShadowDayBooking[]
   testimonials: Testimonial[]
+  meetMissJoyRsvps: MeetMissJoyRsvp[]
 }) {
   const [active, setActive] = useState<SubMenuItem>('open-house')
 
@@ -310,6 +314,28 @@ export function MarketingClient({
               </p>
             </div>
             <InfoSessionTable rsvps={infoSessionRsvps} />
+          </div>
+        )}
+
+        {active === 'meet-miss-joy' && (
+          <div>
+            <div style={{ marginBottom: '28px' }}>
+              <h1
+                className={merriweather.className}
+                style={{
+                  fontSize: '22px',
+                  fontWeight: 900,
+                  color: colors.textPrimary,
+                  marginBottom: '6px',
+                }}
+              >
+                Meet Miss Joy — July 13
+              </h1>
+              <p style={{ fontSize: '13px', color: colors.textSecondary }}>
+                RSVPs from the Meet Miss Joy event page
+              </p>
+            </div>
+            <MeetMissJoyRSVPsView rsvps={meetMissJoyRsvps} />
           </div>
         )}
 

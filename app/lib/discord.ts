@@ -2082,3 +2082,43 @@ export function createTestimonialEmbed(data: {
     timestamp: new Date().toISOString(),
   };
 }
+
+/**
+ * Creates a Discord embed for Meet Miss Joy RSVP submissions
+ */
+export function createMeetMissJoyRSVPEmbed(data: {
+  parentName: string;
+  email: string;
+  phone?: string;
+  childName: string;
+  childAge: number;
+  adultsAttending: string;
+  notes?: string;
+}): DiscordEmbed {
+  const fields: DiscordEmbedField[] = [
+    { name: "Parent/Guardian", value: data.parentName, inline: true },
+    { name: "Email", value: data.email, inline: true },
+    { name: "Phone", value: data.phone || "Not provided", inline: true },
+    { name: "Child Name", value: data.childName, inline: true },
+    { name: "Child Age", value: data.childAge.toString(), inline: true },
+    { name: "Adults Attending", value: data.adultsAttending, inline: true },
+  ];
+
+  if (data.notes) {
+    fields.push({
+      name: "Notes",
+      value:
+        data.notes.length > 1024
+          ? data.notes.substring(0, 1021) + "..."
+          : data.notes,
+      inline: false,
+    });
+  }
+
+  return {
+    title: "🌿 New Meet Miss Joy RSVP",
+    color: 0xa8c5a0, // Sage green
+    fields,
+    timestamp: new Date().toISOString(),
+  };
+}

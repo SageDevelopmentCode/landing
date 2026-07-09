@@ -3769,3 +3769,52 @@ export async function buildMeetTheTeacherJoyEmail(opts: {
 
   return { subject, content };
 }
+
+/**
+ * Build HTML confirmation email after a family RSVPs for Meet Miss Joy
+ */
+export async function buildMeetMissJoyRSVPEmail(opts: {
+  firstName: string;
+}): Promise<{ subject: string; content: string }> {
+  const subject = "You're all set for Meet Miss Joy! — Monday, July 13";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${opts.firstName},</p>
+
+  <p>You're all set for <strong>Meet Miss Joy</strong>! We're so glad you'll be joining us for this special evening and we can't wait to introduce you to our Primary Lead Teacher.</p>
+
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; margin: 28px 0;">
+    <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 15px;">Event Details</p>
+    <p style="margin: 4px 0;"><strong>Date:</strong> Monday, July 13, 2026</p>
+    <p style="margin: 4px 0;"><strong>Time:</strong> 5:30 – 6:30 PM</p>
+    <p style="margin: 4px 0;"><strong>Location:</strong> <a href="https://maps.google.com/?q=2760+Gattis+School+Rd,+Round+Rock,+TX+78664" style="color: #5a7a5a;">2760 Gattis School Rd, Round Rock, TX 78664</a></p>
+  </div>
+
+  <h2 style="font-size: 18px; margin-top: 32px; margin-bottom: 8px; color: #2c2c2c;">What to Expect</h2>
+  <ul style="padding-left: 20px;">
+    <li style="margin-bottom: 8px;">👋 <strong>Welcome &amp; All About Miss Joy</strong> — Get to know her background, teaching philosophy, and what she brings to the Primary classroom every day.</li>
+    <li style="margin-bottom: 8px;">🗓️ <strong>A Day in Our Life at Sage Field</strong> — We'll walk you through a typical morning from arrival to stations, outdoor time, and circle.</li>
+    <li style="margin-bottom: 8px;">🧩 <strong>How Primary Block Stations Work</strong> — See how students rotate through hands-on learning centers designed around the Reggio Emilia approach.</li>
+    <li style="margin-bottom: 8px;">📚 <strong>Our Weekly Curriculum</strong> — Reading, math, science, art, and nature all woven together into a cohesive weekly rhythm.</li>
+    <li style="margin-bottom: 8px;">🎂 <strong>Birthday Circle Celebration</strong> — Join us for a special birthday circle, a beloved Sage Field tradition that closes every special gathering.</li>
+  </ul>
+
+  <p>This is a free, intimate evening open to all families. No enrollment required — just come as you are and bring your questions!</p>
+
+  <p>If you need to reach us before the event, feel free to get in touch:</p>
+  <ul style="padding-left: 20px; margin: 8px 0;">
+    <li style="margin-bottom: 6px;">📧 Email: <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></li>
+    <li style="margin-bottom: 6px;">📱 Call/Text: <a href="tel:5126775872" style="color: #5a7a5a;">(512) 677-5872</a></li>
+  </ul>
+
+  <p style="margin-top: 32px;">With warmth,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
