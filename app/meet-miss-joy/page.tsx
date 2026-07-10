@@ -7,7 +7,6 @@ import Link from "next/link";
 import Navbar from "../components/Navbar";
 import WeekRecapPreview from "../components/WeekRecapPreview";
 import Footer from "../components/Footer";
-import FloatingSMSButton from "../components/FloatingSMSButton";
 import WaitlistDialog from "../components/WaitlistDialog";
 import WhatWeOfferSection from "../components/WhatWeOfferSection";
 
@@ -924,7 +923,32 @@ export default function MeetMissJoyPage() {
       </section>
 
       <Footer />
-      <FloatingSMSButton />
+
+      {/* Floating RSVP bar — mobile only */}
+      <motion.div
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 pt-2"
+        initial={{ y: 80, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.6, duration: 0.4, ease: "easeOut" }}
+      >
+        <div className="bg-sage-700 rounded-2xl shadow-xl flex items-center justify-between px-5 py-3 gap-3">
+          <div>
+            <p className="text-white font-heading font-bold text-sm leading-tight">
+              Meet Miss Joy — July 13
+            </p>
+            <p className="text-white/75 font-body text-xs">
+              Free event · RSVP today
+            </p>
+          </div>
+          <button
+            onClick={scrollToRSVP}
+            className="flex-shrink-0 bg-white text-sage-700 font-semibold text-sm font-body px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+          >
+            RSVP →
+          </button>
+        </div>
+      </motion.div>
+
       <WaitlistDialog
         isOpen={isWaitlistDialogOpen}
         onClose={() => setIsWaitlistDialogOpen(false)}
