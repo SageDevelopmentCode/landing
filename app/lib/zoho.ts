@@ -473,13 +473,21 @@ export async function fetchEmailThread(
     const allEmails = Array.from(emailMap.values());
     console.log(`[Zoho] Total unique emails: ${allEmails.length}`);
 
-    if (allEmails.length === 0) {
+    const normalizedTarget = emailAddress.toLowerCase().trim();
+    const relevantEmails = allEmails.filter((email) => {
+      const to = (email.toAddress || '').toLowerCase();
+      const from = (email.fromAddress || '').toLowerCase();
+      return to.includes(normalizedTarget) || from.includes(normalizedTarget);
+    });
+    console.log(`[Zoho] Relevant emails after filter: ${relevantEmails.length}`);
+
+    if (relevantEmails.length === 0) {
       console.log(`[Zoho] No emails found for ${emailAddress}`);
       return [];
     }
 
     // Fetch full HTML content for each email and merge with summary data
-    const emailPromises = allEmails.map(async (email) => {
+    const emailPromises = relevantEmails.map(async (email) => {
       try {
         // Zoho requires folderId in the URL path
         const contentUrl = `https://mail.zoho.com/api/accounts/${accountId}/folders/${email.folderId}/messages/${email.messageId}/content`;
