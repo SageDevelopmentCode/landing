@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CheckCircle2,
@@ -137,7 +138,16 @@ export default function SchoolYearCommitmentPage() {
       const res = await fetch("/api/school-year-2026-commitment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ intent, children, programType, notes, contactMethod, email, phone, firstName }),
+        body: JSON.stringify({
+          intent,
+          children,
+          programType,
+          notes,
+          contactMethod,
+          email,
+          phone,
+          firstName,
+        }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -146,7 +156,11 @@ export default function SchoolYearCommitmentPage() {
       fireConfetti();
       setSubmitted(true);
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      setSubmitError(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong. Please try again.",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -172,12 +186,12 @@ export default function SchoolYearCommitmentPage() {
             Sabrina will be in touch as enrollment opens — we can&apos;t wait to
             keep growing with your family. 🌿
           </p>
-          <a
+          <Link
             href="/"
             className="inline-flex items-center gap-2 mt-8 text-sm font-body font-semibold text-sage-700 hover:text-sage-800 transition-colors"
           >
-            Back to Sagefield <ArrowRight className="w-4 h-4" />
-          </a>
+            Back to Sage Field <ArrowRight className="w-4 h-4" />
+          </Link>
         </motion.div>
       </div>
     );
@@ -190,7 +204,7 @@ export default function SchoolYearCommitmentPage() {
       {/* Minimal header */}
       <header className="sticky top-0 z-40 bg-welcome-bg/90 backdrop-blur-sm border-b border-sage-100/60">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center">
-          <a href="/" className="flex items-center gap-2.5 group">
+          <Link href="/" className="flex items-center gap-2.5 group">
             <Image
               src="/assets/Logo.png"
               alt="Sage Field logo"
@@ -201,7 +215,7 @@ export default function SchoolYearCommitmentPage() {
             <span className="font-heading font-bold text-sage-700 text-sm tracking-tight">
               Sage Field Private Microschool
             </span>
-          </a>
+          </Link>
         </div>
       </header>
 
@@ -213,9 +227,6 @@ export default function SchoolYearCommitmentPage() {
           transition={{ duration: 0.5, ease: "easeOut" }}
           className="mb-8"
         >
-          <p className="text-xs font-body font-bold text-primary uppercase tracking-widest mb-3">
-            School Year 2026–2027
-          </p>
           <h1 className="font-heading text-3xl sm:text-4xl font-bold text-sage-700 leading-tight mb-4">
             Are you joining us for the school year?
           </h1>
@@ -379,7 +390,8 @@ export default function SchoolYearCommitmentPage() {
                     Which program are you interested in?
                   </p>
                   <p className="font-body text-xs text-sage-700 bg-sage-50 border border-sage-200 rounded-lg px-3 py-2 mb-4">
-                    💡 Aftercare and Field Day Fridays are also available as add-ons for both programs.
+                    💡 Aftercare and Field Day Fridays are also available as
+                    add-ons for both programs.
                   </p>
                   <div className="space-y-2.5">
                     {programOptions.map((opt) => {
@@ -395,11 +407,15 @@ export default function SchoolYearCommitmentPage() {
                               : "border-gray-200 bg-white hover:border-sage-200"
                           }`}
                         >
-                          <span className={`flex-shrink-0 ${active ? "text-sage-600" : "text-gray-400"}`}>
+                          <span
+                            className={`flex-shrink-0 ${active ? "text-sage-600" : "text-gray-400"}`}
+                          >
                             {opt.icon}
                           </span>
                           <span className="flex-1 min-w-0">
-                            <span className={`block font-body font-semibold text-sm ${active ? "text-gray-800" : "text-gray-700"}`}>
+                            <span
+                              className={`block font-body font-semibold text-sm ${active ? "text-gray-800" : "text-gray-700"}`}
+                            >
                               {opt.label}
                             </span>
                             <span className="block font-body text-xs text-gray-500 mt-0.5">
@@ -410,7 +426,11 @@ export default function SchoolYearCommitmentPage() {
                             <motion.div
                               initial={{ scale: 0 }}
                               animate={{ scale: 1 }}
-                              transition={{ type: "spring", stiffness: 380, damping: 20 }}
+                              transition={{
+                                type: "spring",
+                                stiffness: 380,
+                                damping: 20,
+                              }}
                               className="w-5 h-5 rounded-full flex-shrink-0 bg-sage-500 flex items-center justify-center"
                             >
                               <div className="w-2 h-2 rounded-full bg-white" />
@@ -519,13 +539,16 @@ export default function SchoolYearCommitmentPage() {
                 {/* Q5 — Questions or concerns */}
                 <div className="p-6 border-t border-gray-100">
                   <p className="text-[10px] font-body font-bold text-gray-400 uppercase tracking-widest mb-3">
-                    {showFollowUp ? `Question 5 of ${totalQuestions}` : `Question 3 of ${totalQuestions}`}
+                    {showFollowUp
+                      ? `Question 5 of ${totalQuestions}`
+                      : `Question 3 of ${totalQuestions}`}
                   </p>
                   <p className="font-body font-semibold text-gray-800 text-base mb-1.5">
                     Any questions or concerns?
                   </p>
                   <p className="font-body text-xs text-gray-500 mb-3">
-                    Optional — share anything you&apos;d like us to know before we reach out.
+                    Optional — share anything you&apos;d like us to know before
+                    we reach out.
                   </p>
                   <textarea
                     rows={3}
@@ -560,9 +583,24 @@ export default function SchoolYearCommitmentPage() {
           >
             {isLoading ? (
               <>
-                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                <svg
+                  className="w-4 h-4 animate-spin"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                  />
                 </svg>
                 Submitting…
               </>
@@ -575,7 +613,9 @@ export default function SchoolYearCommitmentPage() {
             )}
           </motion.button>
           {submitError && (
-            <p className="text-center font-body text-xs text-rose-500">{submitError}</p>
+            <p className="text-center font-body text-xs text-rose-500">
+              {submitError}
+            </p>
           )}
           <p className="text-center font-body text-xs text-gray-400">
             No commitment required — just helping us plan 🌿
