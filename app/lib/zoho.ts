@@ -3863,6 +3863,40 @@ export async function buildMeetMissJoyRSVPEmail(opts: {
   return { subject, content };
 }
 
+export async function buildTestimonialConfirmationEmail(opts: {
+  firstName: string;
+}): Promise<{ subject: string; content: string }> {
+  const subject = `Thank you for sharing your story, ${opts.firstName}! 🌿`;
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${opts.firstName},</p>
+
+  <p>Thank you so much for sharing your Sage Field experience with us. Stories like yours help other families find a place where their children can truly thrive — and we're so grateful you took the time to write.</p>
+
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; margin: 28px 0;">
+    <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 15px; color: #5a7a5a;">☕ Coffee on us!</p>
+    <p style="margin: 0; font-size: 15px;">As a small thank-you, we'd love to send you a <strong>$15 Starbucks gift card</strong>. Once we've had a chance to review your story, we'll reach out with your gift. It's the least we can do for sharing such a thoughtful reflection.</p>
+  </div>
+
+  <p>We'll review your submission with care and be in touch soon. If you have any questions in the meantime, feel free to reach out:</p>
+
+  <ul style="padding-left: 20px; margin: 8px 0;">
+    <li style="margin-bottom: 6px;">📧 Email: <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></li>
+    <li style="margin-bottom: 6px;">📱 Call/Text: <a href="tel:5126775872" style="color: #5a7a5a;">(512) 677-5872</a></li>
+  </ul>
+
+  <p style="margin-top: 32px;">With gratitude,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
 export async function buildSchoolYearCommitmentEmail(opts: {
   firstName: string;
 }): Promise<{ subject: string; content: string }> {

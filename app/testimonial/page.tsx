@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -25,27 +25,47 @@ export default function TestimonialPage() {
   const [featureConsent, setFeatureConsent] = useState<FeatureConsent>(null);
   const [submitted, setSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [activePromptIndex, setActivePromptIndex] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const [placeholderVisible, setPlaceholderVisible] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPlaceholderVisible(false);
+      setTimeout(() => {
+        setPlaceholderIndex((i) => (i + 1) % PROMPTS.length);
+        setPlaceholderVisible(true);
+      }, 400);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   const canSubmit =
     firstName.trim().length > 0 &&
     email.trim().length > 3 &&
     testimonial.trim().length > 0;
 
-  function handlePromptClick(index: number) {
-    setActivePromptIndex(index);
-    if (!testimonial.trim()) {
-      setTestimonial(PROMPTS[index]);
-    }
-    textareaRef.current?.focus();
-  }
-
   async function handleSubmit() {
     if (!canSubmit || isLoading) return;
     setIsLoading(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setIsLoading(false);
-    setSubmitted(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/testimonial/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ firstName, lastName, email, testimonial, featureConsent }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Something went wrong. Please try again.");
+        return;
+      }
+      setSubmitted(true);
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   if (submitted) {
@@ -110,7 +130,7 @@ export default function TestimonialPage() {
             Share your Sage Field experience.
           </h1>
           <p className="font-body text-gray-600 text-sm leading-relaxed">
-            Your words help other families find us. Takes under 60 seconds.
+            Your words help other families find us. Share your story and we&apos;ll send you a <strong>$15 Starbucks gift card</strong> — coffee on us! ☕
           </p>
         </motion.div>
 
@@ -173,33 +193,23 @@ export default function TestimonialPage() {
               Your story
             </p>
 
-            {/* Prompt chips */}
-            <div className="flex flex-wrap gap-2 mb-3">
-              {PROMPTS.map((prompt, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => handlePromptClick(i)}
-                  className={`text-xs font-body font-medium px-3 py-1.5 rounded-full border transition-colors duration-150 cursor-pointer ${
-                    activePromptIndex === i
-                      ? "bg-sage-700 text-white border-sage-700"
-                      : "bg-sage-50 text-sage-700 border-sage-200 hover:bg-sage-100"
-                  }`}
-                >
-                  {prompt}
-                </button>
-              ))}
-            </div>
-
             {/* Textarea */}
             <div className="relative">
+              {!testimonial && (
+                <span
+                  className="absolute left-4 top-3 text-sm text-gray-400 font-body pointer-events-none select-none transition-opacity duration-[400ms]"
+                  style={{ opacity: placeholderVisible ? 1 : 0 }}
+                >
+                  {PROMPTS[placeholderIndex]}
+                </span>
+              )}
               <textarea
                 ref={textareaRef}
                 rows={5}
                 value={testimonial}
                 onChange={(e) => setTestimonial(e.target.value)}
-                placeholder="Share your Sage Field experience…"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:outline-none transition-colors font-body text-sm text-gray-800 placeholder:text-gray-400 resize-none"
+                placeholder=""
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:outline-none transition-colors font-body text-sm text-gray-800 resize-none"
               />
               <span className="absolute bottom-3 right-3 text-xs text-gray-400 font-body">
                 {testimonial.length} chars
@@ -227,7 +237,7 @@ export default function TestimonialPage() {
                 }`}
               >
                 <span
-                  className={`flex-shrink-0 ${featureConsent === "yes" ? "text-sage-600" : "text-gray-400"}`}
+                  className="flex-shrink-0 text-sage-600"
                 >
                   <CheckCircle2 className="w-5 h-5" />
                 </span>
@@ -266,7 +276,7 @@ export default function TestimonialPage() {
                 }`}
               >
                 <span
-                  className={`flex-shrink-0 ${featureConsent === "ask" ? "text-amber-500" : "text-gray-400"}`}
+                  className="flex-shrink-0 text-amber-500"
                 >
                   <HelpCircle className="w-5 h-5" />
                 </span>
@@ -349,6 +359,9 @@ export default function TestimonialPage() {
               </>
             )}
           </motion.button>
+          {error && (
+            <p className="text-center font-body text-xs text-red-500">{error}</p>
+          )}
           <p className="text-center font-body text-xs text-gray-400">
             Your story is yours — we only feature with permission 🌿
           </p>
