@@ -238,7 +238,7 @@ const goodEarthPages = [
     url: "https://goodearthfarmschool.com/blog",
     sageStatus: "missing" as const,
     sageNote:
-      "Neither school has active blog — huge SEO opportunity for Sagefield to lead",
+      "Neither school has active blog — huge SEO opportunity for Sage Field to lead",
   },
 ];
 
@@ -406,7 +406,7 @@ function GoodEarthAnalysis() {
             marginBottom: "12px",
           }}
         >
-          Pages Good Earth has — compared against Sagefield&apos;s current site:
+          Pages Good Earth has — compared against Sage Field&apos;s current site:
         </p>
         <div style={{ overflowX: "auto" }}>
           <table
@@ -418,7 +418,7 @@ function GoodEarthAnalysis() {
           >
             <thead>
               <tr style={{ borderBottom: `1px solid ${colors.border}` }}>
-                {["Page", "Good Earth", "Sagefield", "Sagefield Action"].map(
+                {["Page", "Good Earth", "Sage Field", "Sage Field Action"].map(
                   (h) => (
                     <th
                       key={h}
@@ -708,7 +708,7 @@ function GoodEarthAnalysis() {
             An 18-month waitlist means hundreds of families annually cannot
             enroll. These families are pre-qualified — they already value
             outdoor-based, Waldorf-aligned early childhood education.
-            Sagefield&apos;s aligned philosophy makes a referral partnership
+            Sage Field&apos;s aligned philosophy makes a referral partnership
             natural and credible.
           </p>
         </div>
@@ -726,7 +726,7 @@ function GoodEarthAnalysis() {
           </p>
           <p style={{ marginBottom: "8px" }}>
             <strong>Offer:</strong> Formal referral arrangement — they send
-            waitlisted families to Sagefield, we acknowledge Good Earth as the
+            waitlisted families to Sage Field, we acknowledge Good Earth as the
             gold standard in the region.
           </p>
           <p>
@@ -848,7 +848,7 @@ const acresGrovePages = [
     acresStatus: "missing" as const,
     sageStatus: "missing" as const,
     sageNote:
-      "Neither school has this — huge SEO opportunity for Sagefield to lead",
+      "Neither school has this — huge SEO opportunity for Sage Field to lead",
   },
 ];
 
@@ -925,7 +925,7 @@ const insideOutsidePages = [
     url: "https://insideoutsideschool.org/tuition",
     iosStatus: "has" as const,
     sageStatus: "missing" as const,
-    sageNote: "Inside Outside leads here — Sagefield needs this urgently",
+    sageNote: "Inside Outside leads here — Sage Field needs this urgently",
   },
   {
     name: "Enrollment / Apply",
@@ -953,7 +953,7 @@ const insideOutsidePages = [
     url: "https://insideoutsideschool.org/blog",
     iosStatus: "has" as const,
     sageStatus: "missing" as const,
-    sageNote: "Sagefield should lead here — SEO goldmine",
+    sageNote: "Sage Field should lead here — SEO goldmine",
   },
   {
     name: "Testimonials",
@@ -1191,7 +1191,7 @@ function AcresGroveAnalysis() {
             marginBottom: "12px",
           }}
         >
-          Pages Acres Grove has — compared against Sagefield&apos;s current
+          Pages Acres Grove has — compared against Sage Field&apos;s current
           site:
         </p>
         <div style={{ overflowX: "auto" }}>
@@ -1204,7 +1204,7 @@ function AcresGroveAnalysis() {
           >
             <thead>
               <tr style={{ borderBottom: `1px solid ${colors.border}` }}>
-                {["Page", "Acres Grove", "Sagefield", "Sagefield Action"].map(
+                {["Page", "Acres Grove", "Sage Field", "Sage Field Action"].map(
                   (h) => (
                     <th
                       key={h}
@@ -1494,7 +1494,7 @@ function AcresGroveAnalysis() {
             }}
           >
             Both schools are new, nature-based, and actively building
-            enrollment. Acres Grove serves Round Rock; Sagefield serves a
+            enrollment. Acres Grove serves Round Rock; Sage Field serves a
             different area. A partnership framed around shared expertise — not
             competition — builds goodwill before either school reaches capacity.
           </p>
@@ -1684,7 +1684,7 @@ function InsideOutsideAnalysis() {
             marginBottom: "12px",
           }}
         >
-          Pages Inside Outside has — compared against Sagefield&apos;s current
+          Pages Inside Outside has — compared against Sage Field&apos;s current
           site:
         </p>
         <div style={{ overflowX: "auto" }}>
@@ -1700,8 +1700,8 @@ function InsideOutsideAnalysis() {
                 {[
                   "Page",
                   "Inside Outside",
-                  "Sagefield",
-                  "Sagefield Action",
+                  "Sage Field",
+                  "Sage Field Action",
                 ].map((h) => (
                   <th
                     key={h}
@@ -1885,7 +1885,7 @@ function InsideOutsideAnalysis() {
             {
               platform: "Instagram",
               detail1: "No account",
-              detail2: "Significant gap Sagefield can exploit",
+              detail2: "Significant gap Sage Field can exploit",
               icon: "📸",
             },
           ].map((s) => (
@@ -1987,7 +1987,7 @@ function InsideOutsideAnalysis() {
             Inside Outside serves K–6 only — no infant, toddler, or Pre-K
             programs. Families with a child at Inside Outside who have a new
             baby or toddler have no in-network option for early childhood
-            outdoor-based education. Sagefield is that option.
+            outdoor-based education. Sage Field is that option.
           </p>
         </div>
         <div
@@ -2009,7 +2009,7 @@ function InsideOutsideAnalysis() {
           </p>
           <p>
             <strong>Talking points:</strong> Same nature-based, progressive
-            values. Inside Outside families who enroll at Sagefield may
+            values. Inside Outside families who enroll at Sage Field may
             transition into Inside Outside for K and beyond — a pipeline that
             benefits both schools.
           </p>

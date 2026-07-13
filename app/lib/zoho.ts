@@ -2403,7 +2403,7 @@ export async function buildDashboardInviteEmail(opts: {
   inviteLink: string;
   studentNames: string[];
 }): Promise<{ subject: string; content: string }> {
-  const subject = `${opts.ownerName} invited you to their Sagefield dashboard`;
+  const subject = `${opts.ownerName} invited you to their Sage Field dashboard`;
 
   const studentLine =
     opts.studentNames.length > 0

@@ -1,4 +1,4 @@
-// Dark Professional Design System for Sagefield School Admin Portal
+// Dark Professional Design System for Sage Field School Admin Portal
 // admin-2 scheme with sage green accent instead of purple
 
 export const colors = {

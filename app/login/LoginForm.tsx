@@ -209,7 +209,7 @@ export default function LoginForm() {
           <div className="flex justify-center mb-8">
             <Image
               src="/assets/Logo.png"
-              alt="Sagefield School Logo"
+              alt="Sage Field School Logo"
               width={64}
               height={64}
               priority

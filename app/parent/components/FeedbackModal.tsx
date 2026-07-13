@@ -147,7 +147,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                 {/* Blurb */}
                 <div className="bg-[#4a7c59]/8 rounded-xl px-4 py-3">
                   <p className="text-sm text-[#4a7c59] font-body leading-relaxed">
-                    Sagefield&apos;s parent portal is brand new, and your
+                    Sage Field&apos;s parent portal is brand new, and your
                     experience matters to us. A few minutes of your honest
                     feedback helps us build something every family loves.
                   </p>

@@ -1,6 +1,6 @@
 -- =====================================================================
 -- BLOG SCHEMA
--- Sagefield School — Blog / Content Marketing
+-- Sage Field School — Blog / Content Marketing
 -- Paste this entire block into the Supabase SQL Editor and run it.
 -- =====================================================================
 

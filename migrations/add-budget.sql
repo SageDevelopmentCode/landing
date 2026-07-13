@@ -1,5 +1,5 @@
 -- =====================================================
--- Budget Schema for Sagefield School
+-- Budget Schema for Sage Field School
 -- Run in Supabase SQL Editor (super_admin access only)
 -- =====================================================
 

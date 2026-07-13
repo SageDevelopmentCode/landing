@@ -192,7 +192,7 @@ export default function Admin2Dashboard() {
           Dashboard
         </h1>
         <p className="text-sm mt-0.5" style={{ color: colors.textTertiary }}>
-          Sagefield School — Spring / Summer 2026
+          Sage Field School — Spring / Summer 2026
         </p>
       </div>
 

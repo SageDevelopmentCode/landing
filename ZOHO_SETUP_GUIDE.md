@@ -20,7 +20,7 @@ This guide will walk you through setting up Zoho Mail API integration to fetch s
 
 4. **Fill in the application details**:
 
-   - **Client Name**: `Sagefield School Admin` (or any name you prefer)
+   - **Client Name**: `Sage Field School Admin` (or any name you prefer)
 
    - **Homepage URL**:
      - For local development: `http://localhost:3000`

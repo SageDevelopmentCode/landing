@@ -59,7 +59,7 @@ export function Sidebar() {
             S
           </div>
           <span className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
-            Sagefield
+            Sage Field
           </span>
         </div>
         <kbd

@@ -1,6 +1,6 @@
 -- =====================================================================
 -- NEWSLETTER SCHEMA
--- Sagefield School — Weekly Newsletter Builder
+-- Sage Field School — Weekly Newsletter Builder
 -- Paste this entire block into the Supabase SQL Editor and run it.
 -- =====================================================================
 

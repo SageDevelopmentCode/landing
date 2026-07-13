@@ -1,6 +1,6 @@
 -- =====================================================================
 -- CARE LOG SCHEMA
--- Sagefield School — Sunscreen & Bug Spray Tracking
+-- Sage Field School — Sunscreen & Bug Spray Tracking
 -- Paste this entire block into the Supabase SQL Editor and run it.
 -- =====================================================================
 

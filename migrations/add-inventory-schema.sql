@@ -1,6 +1,6 @@
 -- =====================================================================
 -- INVENTORY SCHEMA
--- Sagefield School — Classroom Supply Tracking
+-- Sage Field School — Classroom Supply Tracking
 -- Paste this entire block into the Supabase SQL Editor and run it.
 -- =====================================================================
 

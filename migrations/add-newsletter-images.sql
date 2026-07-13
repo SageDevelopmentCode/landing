@@ -1,6 +1,6 @@
 -- =====================================================================
 -- NEWSLETTER IMAGES
--- Sagefield School — Section image storage for newsletters
+-- Sage Field School — Section image storage for newsletters
 -- Paste this entire block into the Supabase SQL Editor and run it.
 -- =====================================================================
 

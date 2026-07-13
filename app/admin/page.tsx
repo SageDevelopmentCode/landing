@@ -16,7 +16,7 @@ export default async function AdminDashboard() {
           Dashboard
         </h1>
         <p className="mt-1 text-sm" style={{ color: colors.textTertiary }}>
-          Welcome to your Sagefield School admin portal
+          Welcome to your Sage Field School admin portal
         </p>
       </div>
 

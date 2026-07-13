@@ -34,6 +34,7 @@ import {
   Activity,
   BarChart2,
   SlidersHorizontal,
+  Star,
 } from "lucide-react";
 import { cssColors as colors, radius, cssShadows as shadows } from "../design-system";
 import { useTheme } from "./ThemeProvider";
@@ -54,6 +55,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { name: "Leads",        href: "/admin/leads",         icon: <TrendingUp className="w-4 h-4" /> },
       { name: "Shadow Days",  href: "/admin/shadow-days",   icon: <Sun className="w-4 h-4" /> },
       { name: "People",       href: "/admin/people",        icon: <Users className="w-4 h-4" /> },
+      { name: "Parent Feedback", href: "/admin/parents/feedback", icon: <Star className="w-4 h-4" /> },
       { name: "Programs",     href: "/admin/programs",      icon: <BookOpen className="w-4 h-4" /> },
       { name: "Applications", href: "/admin/applications",  icon: <ClipboardList className="w-4 h-4" /> },
       { name: "Transactions", href: "/admin/transactions",  icon: <CreditCard className="w-4 h-4" /> },
@@ -205,7 +207,7 @@ export function Sidebar({
       >
         <Image
           src="/assets/Logo.png"
-          alt="Sagefield School"
+          alt="Sage Field School"
           width={28}
           height={28}
           priority
@@ -214,7 +216,7 @@ export function Sidebar({
         {expanded && (
           <div>
             <div className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
-              Sagefield
+              Sage Field
             </div>
             <div className="text-xs" style={{ color: colors.textTertiary }}>
               Admin Portal
