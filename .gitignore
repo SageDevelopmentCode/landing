@@ -47,3 +47,5 @@ next-env.d.ts
 STYLE_GUIDE.md
 SUPABASE_MOBILE_GUIDE.md
 guides
+
+.mcp.json

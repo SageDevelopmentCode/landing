@@ -216,7 +216,9 @@ export default async function ImpersonateBillingPage({
     ) {
       const meta = (tx.metadata ?? {}) as Record<string, string>;
       const months =
-        meta.selected_months?.split(",").filter(Boolean) ?? [];
+        meta.plan_type === "monthly"
+          ? (meta.selected_months?.split(",").filter(Boolean) ?? [])
+          : [];
       const days = meta.selected_days?.split(",").filter(Boolean) ?? [];
       if (!paidAftercareByStudent[tx.student_id]) {
         paidAftercareByStudent[tx.student_id] = { months: [], days: [] };

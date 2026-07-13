@@ -6,5 +6,9 @@
       "Bash(sips -g pixelWidth /Users/juliuscecilia/Desktop/Desktop/Projects/sagefield-school-landing/public/assets/Stock10.PNG)",
       "Bash(awk '/pixelWidth/{print $2}')"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "supabase"
+  ],
+  "enableAllProjectMcpServers": true
 }

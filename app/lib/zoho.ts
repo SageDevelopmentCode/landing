@@ -3778,6 +3778,42 @@ export async function buildMeetTheTeacherJoyEmail(opts: {
   return { subject, content };
 }
 
+export async function buildMeetTheTeacherJoyReminderEmail(opts: {
+  parentName: string;
+}): Promise<{ subject: string; content: string }> {
+  const firstName = opts.parentName.split(" ")[0];
+  const subject = "Reminder — Meet Miss Joy is TOMORROW! Monday, July 13 | 5:30–6:30pm";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+
+  <p style="margin-bottom: 24px;">Dear ${firstName},</p>
+
+  <p style="margin-bottom: 20px;">Just a quick reminder — <strong>Meet Miss Joy is tomorrow evening!</strong> We'd love to see you there for what's sure to be a wonderful evening together.</p>
+
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px;">
+    <p style="margin: 0 0 6px 0;"><strong>Date:</strong> <strong>Monday, July 13</strong></p>
+    <p style="margin: 0 0 6px 0;"><strong>Time:</strong> <strong>5:30pm – 6:30pm</strong></p>
+    <p style="margin: 0;"><strong>Location:</strong> <strong><a href="https://maps.google.com/?q=2760+Gattis+School+Rd,+Round+Rock,+TX+78664" style="color: #2C5F2E;">2760 Gattis School Rd, Round Rock, TX 78664</a></strong></p>
+  </div>
+
+  <p style="margin-bottom: 20px;">Come meet Miss Joy Paige, hear about what a day at Sage Field looks like, and ask any questions you have before the school year begins.</p>
+
+  <p style="margin-top: 32px; margin-bottom: 4px;">Warmly,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br/>
+  Sage Field School<br/>
+  <a href="mailto:sabrina@sagefield.co" style="color: #2C5F2E;">sabrina@sagefield.co</a><br/>
+  (512) 677-5872</p>
+
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
 /**
  * Build HTML confirmation email after a family RSVPs for Meet Miss Joy
  */

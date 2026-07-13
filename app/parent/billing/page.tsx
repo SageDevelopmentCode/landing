@@ -288,7 +288,10 @@ export default async function BillingRoute() {
   for (const tx of transactions) {
     if (tx.payment_type === "aftercare_tuition" && tx.status === "completed" && tx.student_id) {
       const meta = (tx.metadata ?? {}) as Record<string, string>;
-      const months = meta.selected_months?.split(",").filter(Boolean) ?? [];
+      const months =
+        meta.plan_type === "monthly"
+          ? (meta.selected_months?.split(",").filter(Boolean) ?? [])
+          : [];
       const days = meta.selected_days?.split(",").filter(Boolean) ?? [];
       if (!paidAftercareByStudent[tx.student_id]) {
         paidAftercareByStudent[tx.student_id] = { months: [], days: [] };
