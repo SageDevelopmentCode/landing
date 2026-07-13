@@ -74,7 +74,8 @@ export default function ImpersonateShell({
     const q = search.toLowerCase();
     return (
       p.full_name?.toLowerCase().includes(q) ||
-      p.email?.toLowerCase().includes(q)
+      p.email?.toLowerCase().includes(q) ||
+      p.children.some((c) => c.name.toLowerCase().includes(q))
     );
   });
 
