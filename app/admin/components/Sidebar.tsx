@@ -63,6 +63,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { name: "Day Swap",     href: "/admin/day-swap",      icon: <CalendarDays className="w-4 h-4" /> },
       { name: "Referrals",    href: "/admin/referrals",     icon: <Gift className="w-4 h-4" /> },
       { name: "Oversight",    href: "/admin/oversight",     icon: <BarChart2 className="w-4 h-4" /> },
+      { name: "SY Commitments", href: "/admin/school-year-commitments", icon: <ClipboardList className="w-4 h-4" /> },
     ],
   },
   {

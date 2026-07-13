@@ -14,6 +14,8 @@ import {
   Mail,
   Phone,
   CalendarClock,
+  Home,
+  School,
 } from "lucide-react";
 import { formatPhone } from "@/app/utils/formatPhone";
 
@@ -73,23 +75,40 @@ const intentOptions: {
   },
 ];
 
-const dayOptions = [
-  { value: "1", label: "1 day/week" },
-  { value: "2", label: "2 days/week" },
-  { value: "3", label: "3 days/week" },
-  { value: "4-5", label: "4–5 days/week" },
-  { value: "full", label: "Full week (M–F)" },
+type ProgramType = "homeschool_dropin" | "full_time" | null;
+
+const programOptions: {
+  value: ProgramType;
+  label: string;
+  sub: string;
+  icon: React.ReactNode;
+}[] = [
+  {
+    value: "homeschool_dropin",
+    label: "Homeschool Drop-In",
+    sub: "1–3 days per week, flexible schedule",
+    icon: <Home className="w-5 h-5" />,
+  },
+  {
+    value: "full_time",
+    label: "Full-Time Program",
+    sub: "Monday–Thursday, our full school-year experience",
+    icon: <School className="w-5 h-5" />,
+  },
 ];
 
 export default function SchoolYearCommitmentPage() {
   const [intent, setIntent] = useState<Intent>(null);
   const [children, setChildren] = useState<string[]>([""]);
-  const [selectedDays, setSelectedDays] = useState<string[]>([]);
+  const [programType, setProgramType] = useState<ProgramType>(null);
+  const [notes, setNotes] = useState("");
   const [contactMethod, setContactMethod] = useState<ContactMethod>("email");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [firstName, setFirstName] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const showFollowUp = intent === "yes" || intent === "maybe";
   const contactFilled =
@@ -110,25 +129,27 @@ export default function SchoolYearCommitmentPage() {
     setChildren((prev) => prev.map((n, idx) => (idx === i ? name : n)));
   }
 
-  function toggleDay(val: string) {
-    setSelectedDays((prev) =>
-      prev.includes(val) ? prev.filter((d) => d !== val) : [...prev, val],
-    );
-  }
-
-  function handleSubmit() {
-    if (!canSubmit) return;
-    console.log({
-      intent,
-      children,
-      selectedDays,
-      contactMethod,
-      email,
-      phone,
-      firstName,
-    });
-    fireConfetti();
-    setSubmitted(true);
+  async function handleSubmit() {
+    if (!canSubmit || isLoading) return;
+    setIsLoading(true);
+    setSubmitError(null);
+    try {
+      const res = await fetch("/api/school-year-2026-commitment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ intent, children, programType, notes, contactMethod, email, phone, firstName }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Something went wrong");
+      }
+      fireConfetti();
+      setSubmitted(true);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   if (submitted) {
@@ -162,7 +183,7 @@ export default function SchoolYearCommitmentPage() {
     );
   }
 
-  const totalQuestions = showFollowUp ? 4 : 2;
+  const totalQuestions = showFollowUp ? 5 : 3;
 
   return (
     <div className="min-h-screen bg-welcome-bg">
@@ -349,32 +370,52 @@ export default function SchoolYearCommitmentPage() {
                   </div>
                 </div>
 
-                {/* Q3 — Days per week */}
+                {/* Q3 — Program type */}
                 <div className="p-6 border-b border-gray-100">
                   <p className="text-[10px] font-body font-bold text-gray-400 uppercase tracking-widest mb-3">
                     Question 3 of {totalQuestions}
                   </p>
-                  <p className="font-body font-semibold text-gray-800 text-base mb-1.5">
-                    How many days per week are you thinking?
+                  <p className="font-body font-semibold text-gray-800 text-base mb-3">
+                    Which program are you interested in?
                   </p>
-                  <p className="font-body text-xs text-gray-500 mb-4">
-                    Select all that apply — we offer flexible schedules.
+                  <p className="font-body text-xs text-sage-700 bg-sage-50 border border-sage-200 rounded-lg px-3 py-2 mb-4">
+                    💡 Aftercare and Field Day Fridays are also available as add-ons for both programs.
                   </p>
-                  <div className="flex flex-wrap gap-2">
-                    {dayOptions.map((day) => {
-                      const active = selectedDays.includes(day.value);
+                  <div className="space-y-2.5">
+                    {programOptions.map((opt) => {
+                      const active = programType === opt.value;
                       return (
                         <motion.button
-                          key={day.value}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => toggleDay(day.value)}
-                          className={`px-4 py-2 rounded-full text-sm font-body font-semibold border-2 transition-all duration-150 cursor-pointer ${
+                          key={opt.value as string}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => setProgramType(opt.value)}
+                          className={`w-full flex items-center gap-3.5 px-4 py-3.5 rounded-xl border-2 text-left transition-all duration-200 cursor-pointer ${
                             active
-                              ? "border-sage-500 bg-sage-50 text-sage-700"
-                              : "border-gray-200 bg-white text-gray-600 hover:border-sage-300"
+                              ? "border-sage-500 bg-sage-50"
+                              : "border-gray-200 bg-white hover:border-sage-200"
                           }`}
                         >
-                          {day.label}
+                          <span className={`flex-shrink-0 ${active ? "text-sage-600" : "text-gray-400"}`}>
+                            {opt.icon}
+                          </span>
+                          <span className="flex-1 min-w-0">
+                            <span className={`block font-body font-semibold text-sm ${active ? "text-gray-800" : "text-gray-700"}`}>
+                              {opt.label}
+                            </span>
+                            <span className="block font-body text-xs text-gray-500 mt-0.5">
+                              {opt.sub}
+                            </span>
+                          </span>
+                          {active && (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ type: "spring", stiffness: 380, damping: 20 }}
+                              className="w-5 h-5 rounded-full flex-shrink-0 bg-sage-500 flex items-center justify-center"
+                            >
+                              <div className="w-2 h-2 rounded-full bg-white" />
+                            </motion.div>
+                          )}
                         </motion.button>
                       );
                     })}
@@ -401,6 +442,7 @@ export default function SchoolYearCommitmentPage() {
                       ? `Question 4 of ${totalQuestions}`
                       : `Question 2 of ${totalQuestions}`}
                   </p>
+
                   <p className="font-body font-semibold text-gray-800 text-base mb-4">
                     Where should we follow up with you?
                   </p>
@@ -473,6 +515,26 @@ export default function SchoolYearCommitmentPage() {
                     )}
                   </AnimatePresence>
                 </div>
+
+                {/* Q5 — Questions or concerns */}
+                <div className="p-6 border-t border-gray-100">
+                  <p className="text-[10px] font-body font-bold text-gray-400 uppercase tracking-widest mb-3">
+                    {showFollowUp ? `Question 5 of ${totalQuestions}` : `Question 3 of ${totalQuestions}`}
+                  </p>
+                  <p className="font-body font-semibold text-gray-800 text-base mb-1.5">
+                    Any questions or concerns?
+                  </p>
+                  <p className="font-body text-xs text-gray-500 mb-3">
+                    Optional — share anything you&apos;d like us to know before we reach out.
+                  </p>
+                  <textarea
+                    rows={3}
+                    placeholder="Anything on your mind? We're happy to help."
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:outline-none transition-colors font-body text-sm text-gray-800 placeholder:text-gray-400 resize-none"
+                  />
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -486,20 +548,35 @@ export default function SchoolYearCommitmentPage() {
           className="mt-5 space-y-3"
         >
           <motion.button
-            whileHover={canSubmit ? { scale: 1.01 } : {}}
-            whileTap={canSubmit ? { scale: 0.98 } : {}}
+            whileHover={canSubmit && !isLoading ? { scale: 1.01 } : {}}
+            whileTap={canSubmit && !isLoading ? { scale: 0.98 } : {}}
             onClick={handleSubmit}
-            disabled={!canSubmit}
+            disabled={!canSubmit || isLoading}
             className={`w-full py-4 px-6 rounded-xl font-body font-semibold text-sm flex items-center justify-center gap-2.5 transition-all duration-200 cursor-pointer ${
-              canSubmit
+              canSubmit && !isLoading
                 ? "bg-primary text-white hover:bg-primary-hover shadow-sm"
                 : "bg-gray-100 text-gray-400 cursor-not-allowed"
             }`}
           >
-            <Sparkles className="w-4 h-4" />
-            Submit My Interest
-            <ArrowRight className="w-4 h-4" />
+            {isLoading ? (
+              <>
+                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                </svg>
+                Submitting…
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4" />
+                Submit My Interest
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
           </motion.button>
+          {submitError && (
+            <p className="text-center font-body text-xs text-rose-500">{submitError}</p>
+          )}
           <p className="text-center font-body text-xs text-gray-400">
             No commitment required — just helping us plan 🌿
           </p>

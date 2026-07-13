@@ -3826,3 +3826,37 @@ export async function buildMeetMissJoyRSVPEmail(opts: {
 
   return { subject, content };
 }
+
+export async function buildSchoolYearCommitmentEmail(opts: {
+  firstName: string;
+}): Promise<{ subject: string; content: string }> {
+  const subject = `Thanks for letting us know, ${opts.firstName}! 🌿`;
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${opts.firstName},</p>
+
+  <p>Thank you for taking a moment to let us know your thoughts on the <strong>2026–2027 school year</strong>. We truly appreciate you sharing your family's plans with us — it helps us make sure every family who wants a spot has one.</p>
+
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; margin: 28px 0;">
+    <p style="margin: 0; font-size: 15px;">We'll be in touch as enrollment opens. Sabrina will reach out personally to walk you through next steps and answer any questions you have.</p>
+  </div>
+
+  <p>In the meantime, if anything changes or you have questions, don't hesitate to reach out:</p>
+  <ul style="padding-left: 20px; margin: 8px 0;">
+    <li style="margin-bottom: 6px;">📧 Email: <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></li>
+    <li style="margin-bottom: 6px;">📱 Call/Text: <a href="tel:5126775872" style="color: #5a7a5a;">(512) 677-5872</a></li>
+  </ul>
+
+  <p style="margin-top: 32px;">We can't wait to keep growing with your family. 🌿</p>
+
+  <p style="margin-top: 32px;">With warmth,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}

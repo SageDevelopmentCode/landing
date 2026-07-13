@@ -2086,6 +2086,72 @@ export function createTestimonialEmbed(data: {
 /**
  * Creates a Discord embed for Meet Miss Joy RSVP submissions
  */
+/**
+ * Creates a Discord embed for school year 2026 commitment submissions
+ */
+export function createSchoolYearCommitmentEmbed(data: {
+  firstName?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  intent: string;
+  children: string[];
+  programType?: string | null;
+  notes?: string | null;
+  contactMethod: string;
+}): DiscordEmbed {
+  const INTENT_LABELS: Record<string, string> = {
+    yes: "✅ Yes, we're in!",
+    maybe: "🤔 Still deciding",
+    no: "❌ Just summer for us",
+  };
+
+  const PROGRAM_LABELS: Record<string, string> = {
+    homeschool_dropin: "Homeschool Drop-In (1–3x/week)",
+    full_time: "Full-Time Program (M–F)",
+  };
+
+  const fields: DiscordEmbedField[] = [
+    { name: "Parent", value: data.firstName || "Not provided", inline: true },
+    {
+      name: data.contactMethod === "phone" ? "Phone" : "Email",
+      value: (data.contactMethod === "phone" ? data.phone : data.email) || "Not provided",
+      inline: true,
+    },
+    { name: "Intent", value: INTENT_LABELS[data.intent] ?? data.intent, inline: true },
+  ];
+
+  if (data.children.length > 0) {
+    fields.push({
+      name: `Children (${data.children.length})`,
+      value: data.children.join(", "),
+      inline: false,
+    });
+  }
+
+  if (data.programType) {
+    fields.push({
+      name: "Program Interest",
+      value: PROGRAM_LABELS[data.programType] ?? data.programType,
+      inline: false,
+    });
+  }
+
+  if (data.notes) {
+    fields.push({
+      name: "Questions / Notes",
+      value: data.notes.length > 1024 ? data.notes.substring(0, 1021) + "..." : data.notes,
+      inline: false,
+    });
+  }
+
+  return {
+    title: "📋 School Year 2026–2027 Commitment",
+    color: 0x4a7c59,
+    fields,
+    timestamp: new Date().toISOString(),
+  };
+}
+
 export function createMeetMissJoyRSVPEmbed(data: {
   parentName: string;
   email: string;
