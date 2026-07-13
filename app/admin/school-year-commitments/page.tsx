@@ -116,7 +116,7 @@ export default async function SchoolYearCommitmentsPage() {
           backgroundColor: colors.surface,
           borderRadius: radius.xl,
           border: `1px solid ${colors.border}`,
-          boxShadow: shadows.small,
+          boxShadow: shadows.soft,
           overflow: "hidden",
         }}
       >
