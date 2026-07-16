@@ -548,30 +548,58 @@ function SummerTuitionCard({
   );
 }
 
-function SchoolYearTuitionDisabledCard() {
+function SchoolYearTuitionCard({ onClick }: { onClick: () => void }) {
   return (
-    <div className="rounded-2xl overflow-hidden bg-white border border-gray-100 flex flex-col opacity-60">
+    <div
+      className="rounded-2xl overflow-hidden cursor-pointer group bg-white border border-gray-100 flex flex-col"
+      onClick={onClick}
+    >
       <div className="relative h-28 overflow-hidden bg-gray-200">
-        <img
-          src="/assets/ImageFive.jpg"
-          alt=""
-          className="w-full h-full object-cover grayscale"
+        <img src="/assets/ImageFive.jpg" alt=""
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        <div className="absolute inset-0 bg-black/20" />
+        <div className="absolute inset-0 bg-black/10" />
       </div>
       <div className="p-3.5 flex flex-col gap-2.5">
         <div>
-          <div className="text-xs font-medium text-gray-400 mb-0.5">
-            School Year 26–27
-          </div>
-          <div className="text-sm font-semibold text-gray-800 leading-snug">
-            School Year Tuition
-          </div>
+          <div className="text-xs font-medium text-gray-400 mb-0.5">School Year 26–27</div>
+          <div className="text-sm font-semibold text-gray-800 leading-snug">School Year Tuition</div>
         </div>
         <div className="flex items-center justify-between mt-auto">
-          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-gray-500 bg-gray-100 cursor-not-allowed">
-            <Clock className="w-3 h-3" />
-            Not available yet
+          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white"
+            style={{ backgroundColor: "#4a7c59" }}>
+            Pay tuition <ChevronRight className="w-3 h-3" strokeWidth={2.5} />
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SupplyFeeCard({ onClick }: { onClick: () => void }) {
+  return (
+    <div
+      className="rounded-2xl overflow-hidden cursor-pointer group bg-white border border-gray-100 flex flex-col"
+      onClick={onClick}
+    >
+      <div className="relative h-28 overflow-hidden">
+        <img src="/assets/ImageFive.jpg" alt=""
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-black/10" />
+        <span className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/80 text-gray-600 shadow-sm backdrop-blur-sm">
+          $300
+        </span>
+      </div>
+      <div className="p-3.5 flex flex-col gap-2.5">
+        <div>
+          <div className="text-xs font-medium text-gray-400 mb-0.5">School Year 26–27</div>
+          <div className="text-sm font-semibold text-gray-800 leading-snug">Annual Supply Fee</div>
+        </div>
+        <div className="flex items-center justify-between mt-auto">
+          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white"
+            style={{ backgroundColor: "#4a7c59" }}>
+            Pay now <ChevronRight className="w-3 h-3" strokeWidth={2.5} />
           </span>
         </div>
       </div>
@@ -872,6 +900,566 @@ function HomeschoolDropInCard({
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function HomeschoolSchoolYearCard({
+  app,
+  studentName,
+  paidData,
+  onClick,
+  onViewHistory,
+}: {
+  app: HomeschoolDropInApp;
+  studentName: string | null;
+  paidData?: PaidHomeschoolByStudent[string];
+  onClick: () => void;
+  onViewHistory?: () => void;
+}) {
+  const hasSchoolYear = (paidData?.schoolYear.length ?? 0) > 0;
+
+  let ctaLabel = "Set up plan";
+  let badgeLabel = "Select schedule & days";
+
+  if (hasSchoolYear) {
+    ctaLabel = "Add month";
+    badgeLabel = "Plan active";
+  }
+
+  return (
+    <div
+      className="rounded-2xl overflow-hidden cursor-pointer group bg-white border border-gray-100 flex flex-col"
+      onClick={onClick}
+    >
+      <div className="relative h-28 overflow-hidden">
+        <img
+          src="/assets/Homeschool.jpg"
+          alt=""
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-black/10" />
+        <span
+          className={`absolute top-2.5 right-2.5 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold shadow-sm ${
+            hasSchoolYear
+              ? "bg-emerald-500 text-white"
+              : "bg-white/80 backdrop-blur-sm text-gray-600"
+          }`}
+        >
+          {badgeLabel}
+        </span>
+      </div>
+      <div className="p-3.5 flex flex-col gap-2.5">
+        <div>
+          <div className="text-xs font-medium text-gray-400 mb-0.5">School Year 26–27</div>
+          <div className="text-sm font-semibold text-gray-800 leading-snug">Homeschool Drop-In</div>
+        </div>
+        <div className="flex items-center justify-between mt-auto">
+          <span
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white"
+            style={{ backgroundColor: "#4a7c59" }}
+          >
+            {ctaLabel}
+            <ChevronRight className="w-3 h-3" strokeWidth={2.5} />
+          </span>
+          {hasSchoolYear && onViewHistory && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onViewHistory(); }}
+              className="text-xs font-semibold text-gray-400 hover:text-gray-600 transition-colors cursor-pointer underline underline-offset-2"
+            >
+              View current plan
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function tierToDays(tier: HomeschoolTier): string[] {
+  if (tier === "dropin") return ["mon"];
+  if (tier === "2day") return ["mon", "tue"];
+  return ["mon", "tue", "wed"];
+}
+
+const SCHOOL_YEAR_MONTHS = [
+  { index: 1, label: "August 2026", short: "Aug" },
+  { index: 2, label: "September 2026", short: "Sep" },
+  { index: 3, label: "October 2026", short: "Oct" },
+  { index: 4, label: "November 2026", short: "Nov" },
+  { index: 5, label: "December 2026", short: "Dec" },
+  { index: 6, label: "January 2027", short: "Jan" },
+  { index: 7, label: "February 2027", short: "Feb" },
+  { index: 8, label: "March 2027", short: "Mar" },
+  { index: 9, label: "April 2027", short: "Apr" },
+  { index: 10, label: "May 2027", short: "May" },
+];
+
+function getWeekdaysForMonth(monthIndex: number): { encoded: number; label: string; dayOfMonth: number }[] {
+  const monthOffsets: [number, number][] = [
+    [2026, 7], [2026, 8], [2026, 9], [2026, 10], [2026, 11],
+    [2027, 0], [2027, 1], [2027, 2], [2027, 3], [2027, 4],
+  ];
+  const [year, month] = monthOffsets[monthIndex - 1];
+  const days: { encoded: number; label: string; dayOfMonth: number }[] = [];
+  const date = new Date(year, month, 1);
+  while (date.getMonth() === month) {
+    const dow = date.getDay();
+    if (dow >= 1 && dow <= 4) {
+      const dom = date.getDate();
+      const encoded = (monthIndex - 1) * 31 + dom;
+      const label = date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+      days.push({ encoded, label, dayOfMonth: dom });
+    }
+    date.setDate(date.getDate() + 1);
+  }
+  return days;
+}
+
+function HomeschoolSchoolYearModal({
+  app,
+  studentName,
+  parentId,
+  parentEmail,
+  paidData,
+  onClose,
+}: {
+  app: HomeschoolDropInApp;
+  studentName: string | null;
+  parentId: string;
+  parentEmail: string;
+  paidData?: PaidHomeschoolByStudent[string];
+  onClose: () => void;
+}) {
+  const gradeTier = getGradeTier(app.child_grade);
+  const [selectedTier, setSelectedTier] = useState<HomeschoolTier | null>(null);
+  const [selectedMonthIndices, setSelectedMonthIndices] = useState<Set<number>>(new Set());
+  const [dropinSelectedDates, setDropinSelectedDates] = useState<Set<number>>(new Set());
+  const [dropinExpandedMonths, setDropinExpandedMonths] = useState<Set<number>>(
+    new Set(SCHOOL_YEAR_MONTHS.map((m) => m.index))
+  );
+  const [step, setStep] = useState<"plan" | "payment">("plan");
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "ach">("card");
+  const [coverFees, setCoverFees] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const paidMonthIndices = new Set<number>(
+    (paidData?.schoolYear ?? []).flatMap((entry) => entry.weeks)
+  );
+
+  const unitCount = selectedTier === "dropin" ? dropinSelectedDates.size : selectedMonthIndices.size;
+  const pricePerUnit = selectedTier ? HOMESCHOOL_SCHOOL_YEAR_PRICING[selectedTier][gradeTier] : 0;
+  const baseAmountCents = pricePerUnit * unitCount;
+
+  const cardFeeRate = 0.029;
+  const cardFeeFixed = 30;
+  const achFeeRate = 0.008;
+  const achFeeCap = 500;
+  const cardFee = Math.round(baseAmountCents * cardFeeRate) + cardFeeFixed;
+  const achFee = Math.min(Math.round(baseAmountCents * achFeeRate), achFeeCap);
+  const feeAmount = paymentMethod === "card" ? cardFee : achFee;
+  const totalWithFees = coverFees ? baseAmountCents + feeAmount : baseAmountCents;
+
+  const canContinuePlan = selectedTier !== null && unitCount >= 1;
+
+  const handlePayNow = async () => {
+    if (!selectedTier) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const selectedDays = tierToDays(selectedTier);
+      const selectedWeeks = selectedTier === "dropin"
+        ? Array.from(dropinSelectedDates).sort((a, b) => a - b)
+        : Array.from(selectedMonthIndices).sort((a, b) => a - b);
+      const weekSelectionsJson = JSON.stringify(
+        selectedWeeks.map((w) => ({ week: w, days: selectedDays })),
+      );
+      const res = await fetch("/api/stripe/create-homeschool-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          parentId,
+          parentEmail,
+          studentId: app.student_id,
+          applicationId: app.id,
+          program: "school_year_26_27",
+          tier: selectedTier,
+          gradeTier,
+          selectedDays,
+          selectedWeeks,
+          weekSelectionsJson,
+          intendedAmountCents: baseAmountCents,
+          coverFees,
+          paymentMethod,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.url) {
+        throw new Error(data.error ?? "Failed to create checkout session");
+      }
+      window.location.href = data.url;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+      <motion.div
+        className="absolute inset-0 bg-black/40"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+      />
+      <motion.div
+        className="relative bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden z-10"
+        initial={{ y: 60, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 60, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div>
+            <h2 className="text-base font-bold font-heading text-gray-800">
+              Homeschool Drop-In
+            </h2>
+            {studentName && (
+              <p className="text-xs text-gray-400 mt-0.5">{studentName} · School Year 26–27</p>
+            )}
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
+          >
+            <X className="w-4 h-4 text-gray-500" />
+          </button>
+        </div>
+
+        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
+          {step === "plan" ? (
+            <>
+              {/* Grade tier */}
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-gray-500 font-body">
+                  {gradeTierLabel(gradeTier)}
+                </span>
+                <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                  School Year 26–27 · Aug 2026–May 2027
+                </span>
+              </div>
+
+              {/* Tier selection */}
+              <div>
+                <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">
+                  Choose your schedule
+                </p>
+                <div className="space-y-2">
+                  {HOMESCHOOL_TIERS.map((tier) => {
+                    const price = HOMESCHOOL_SCHOOL_YEAR_PRICING[tier.key][gradeTier];
+                    const isSelected = selectedTier === tier.key;
+                    const unitSuffix = tier.key === "dropin" ? "/day" : "/mo";
+                    return (
+                      <button
+                        key={tier.key}
+                        onClick={() => {
+                          setSelectedTier(tier.key);
+                          setSelectedMonthIndices(new Set());
+                          setDropinSelectedDates(new Set());
+                          setDropinExpandedMonths(new Set(SCHOOL_YEAR_MONTHS.map(m => m.index)));
+                        }}
+                        className={`w-full rounded-xl border px-4 py-3 text-left transition-all cursor-pointer ${
+                          isSelected
+                            ? "border-primary bg-primary/5"
+                            : "border-gray-100 bg-white hover:border-gray-200"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className={`text-sm font-semibold ${isSelected ? "text-primary" : "text-gray-800"}`}>
+                              {tier.label}
+                            </div>
+                            <div className="text-xs text-gray-400">{tier.sub}</div>
+                          </div>
+                          <div className="text-right">
+                            <div className={`text-sm font-bold ${isSelected ? "text-primary" : "text-gray-700"}`}>
+                              {formatCents(price)}
+                            </div>
+                            <div className="text-xs text-gray-400">{unitSuffix}</div>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Month grid for 2day/3day tiers */}
+              {selectedTier && selectedTier !== "dropin" && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">
+                    Select months to pay
+                  </p>
+                  <div className="grid grid-cols-5 gap-2">
+                    {SCHOOL_YEAR_MONTHS.map((month) => {
+                      const isPaid = paidMonthIndices.has(month.index);
+                      const isSelected = selectedMonthIndices.has(month.index);
+                      return (
+                        <button
+                          key={month.index}
+                          disabled={isPaid}
+                          onClick={() => {
+                            if (isPaid) return;
+                            setSelectedMonthIndices((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(month.index)) next.delete(month.index);
+                              else next.add(month.index);
+                              return next;
+                            });
+                          }}
+                          title={month.label}
+                          className={`rounded-lg py-2 text-xs font-semibold transition-all cursor-pointer flex flex-col items-center gap-0.5 ${
+                            isPaid
+                              ? "bg-green-50 border border-green-200 text-green-600 cursor-not-allowed"
+                              : isSelected
+                                ? "border-2 border-primary text-white"
+                                : "border border-gray-200 text-gray-600 hover:border-gray-300 bg-white"
+                          }`}
+                          style={isSelected && !isPaid ? { backgroundColor: "#4a7c59" } : undefined}
+                        >
+                          {isPaid && <Check className="w-3 h-3" />}
+                          {month.short}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {selectedMonthIndices.size > 0 && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      {selectedMonthIndices.size} month{selectedMonthIndices.size !== 1 ? "s" : ""} · <span className="font-bold" style={{ color: "#4a7c59" }}>{formatCents(baseAmountCents)}</span>
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Day picker for drop-in tier — accordion */}
+              {selectedTier === "dropin" && (
+                <div className="space-y-2">
+                  {SCHOOL_YEAR_MONTHS.map((month) => {
+                    const isExpanded = dropinExpandedMonths.has(month.index);
+                    const days = getWeekdaysForMonth(month.index);
+                    const selectedInMonth = days.filter(d => dropinSelectedDates.has(d.encoded)).length;
+
+                    return (
+                      <div key={month.index} className="rounded-xl border border-gray-100 overflow-hidden">
+                        {/* Accordion header */}
+                        <button
+                          onClick={() => {
+                            setDropinExpandedMonths((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(month.index)) next.delete(month.index);
+                              else next.add(month.index);
+                              return next;
+                            });
+                          }}
+                          className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold font-heading text-gray-700">
+                              {month.label}
+                            </span>
+                            {selectedInMonth > 0 && (
+                              <span
+                                className="px-2 py-0.5 rounded-full text-xs font-semibold text-white"
+                                style={{ backgroundColor: "#4a7c59" }}
+                              >
+                                {selectedInMonth} selected
+                              </span>
+                            )}
+                          </div>
+                          <motion.span
+                            animate={{ rotate: isExpanded ? 90 : 0 }}
+                            transition={{ duration: 0.15 }}
+                            className="text-gray-400"
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </motion.span>
+                        </button>
+
+                        {/* Day chips */}
+                        <AnimatePresence initial={false}>
+                          {isExpanded && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2, ease: "easeInOut" }}
+                              className="overflow-hidden"
+                            >
+                              <div className="px-4 py-3 flex flex-wrap gap-2">
+                                {days.map(({ encoded, label }) => {
+                                  const isSelected = dropinSelectedDates.has(encoded);
+                                  return (
+                                    <button
+                                      key={encoded}
+                                      onClick={() => setDropinSelectedDates((prev) => {
+                                        const next = new Set(prev);
+                                        if (next.has(encoded)) next.delete(encoded);
+                                        else next.add(encoded);
+                                        return next;
+                                      })}
+                                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold font-body transition-colors border cursor-pointer ${
+                                        isSelected
+                                          ? "text-white border-transparent"
+                                          : "bg-white text-gray-600 border-gray-200 hover:border-primary hover:text-primary"
+                                      }`}
+                                      style={isSelected ? { backgroundColor: "#4a7c59", borderColor: "#4a7c59" } : undefined}
+                                    >
+                                      {label}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })}
+
+                  {/* Running total bar */}
+                  <motion.div
+                    className="rounded-xl px-4 py-3 flex items-center justify-between"
+                    style={{ backgroundColor: dropinSelectedDates.size > 0 ? "#f0f9f4" : "#f9fafb" }}
+                    layout
+                    transition={{ duration: 0.2 }}
+                  >
+                    <span className="text-sm text-gray-500 font-body">
+                      {dropinSelectedDates.size === 0
+                        ? "No days selected"
+                        : `${dropinSelectedDates.size} day${dropinSelectedDates.size !== 1 ? "s" : ""} × ${formatCents(pricePerUnit)}/day`}
+                    </span>
+                    <span className="text-base font-bold font-heading" style={{ color: "#4a7c59" }}>
+                      {dropinSelectedDates.size > 0 ? formatCents(baseAmountCents) : "—"}
+                    </span>
+                  </motion.div>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              {/* Payment method step */}
+              <div>
+                <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">
+                  Payment method
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setPaymentMethod("card")}
+                    className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${
+                      paymentMethod === "card"
+                        ? "border-primary bg-primary/5 text-primary"
+                        : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    Credit/Debit Card
+                  </button>
+                  <button
+                    onClick={() => setPaymentMethod("ach")}
+                    className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${
+                      paymentMethod === "ach"
+                        ? "border-primary bg-primary/5 text-primary"
+                        : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    ACH / US bank account
+                  </button>
+                </div>
+                <p className="text-xs text-gray-400 font-body mt-1.5">
+                  {paymentMethod === "card"
+                    ? `Processing fee (est.): ~${formatCents(cardFee)}`
+                    : `Processing fee (est.): ~${formatCents(achFee)} (0.8%, max $5.00)`}
+                </p>
+              </div>
+
+              {/* Cover fees checkbox */}
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={coverFees}
+                  onChange={(e) => setCoverFees(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded cursor-pointer"
+                  style={{ accentColor: "#4a7c59" }}
+                />
+                <span className="text-sm text-gray-600 font-body group-hover:text-gray-800 transition-colors">
+                  I agree to pay the processing fee
+                </span>
+              </label>
+
+              <p className="text-xs text-gray-400 font-body">
+                Prefer to pay by check? Email us at{" "}
+                <a
+                  href="mailto:sabrina@sagefield.co"
+                  className="underline hover:text-gray-600 transition-colors"
+                >
+                  sabrina@sagefield.co
+                </a>{" "}
+                and we&apos;ll send you instructions.
+              </p>
+
+              {/* Total */}
+              <div
+                className="rounded-xl px-4 py-3 flex items-center justify-between"
+                style={{ backgroundColor: "#f6faf7" }}
+              >
+                <span className="text-sm text-gray-500 font-body">Total</span>
+                <span
+                  className="text-base font-bold font-heading"
+                  style={{ color: "#4a7c59" }}
+                >
+                  {formatCents(totalWithFees)}
+                </span>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div className="px-6 pb-2">
+            <p className="text-xs text-red-500 font-body">{error}</p>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
+          {step === "payment" && (
+            <button
+              onClick={() => setStep("plan")}
+              className="px-4 py-3 rounded-xl text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer"
+            >
+              Back
+            </button>
+          )}
+          <button
+            disabled={step === "plan" ? !canContinuePlan : loading || !coverFees}
+            className="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ backgroundColor: "#4a7c59" }}
+            onClick={() => {
+              if (step === "plan") setStep("payment");
+              else handlePayNow();
+            }}
+          >
+            {step === "plan"
+              ? "Continue"
+              : loading
+                ? "Processing…"
+                : `Pay Now · ${formatCents(totalWithFees)}`}
+          </button>
+        </div>
+      </motion.div>
     </div>
   );
 }
@@ -1418,6 +2006,279 @@ function HomeschoolPaymentModal({
               : loading
                 ? "Processing…"
                 : `Pay Now · ${formatCents(totalWithFees)}`}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function SupplyFeeModal({
+  studentId,
+  studentName,
+  parentId,
+  parentEmail,
+  onClose,
+}: {
+  studentId: string;
+  studentName: string | null;
+  parentId: string;
+  parentEmail: string;
+  onClose: () => void;
+}) {
+  const BASE_CENTS = 30000;
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "ach">("card");
+  const [coverFees, setCoverFees] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const cardFee = Math.round((BASE_CENTS + 30) / (1 - 0.029)) - BASE_CENTS;
+  const achFee = Math.min(Math.round(BASE_CENTS * 0.008), 500);
+  const feeAmount = paymentMethod === "card" ? cardFee : achFee;
+  const totalWithFees = coverFees ? BASE_CENTS + feeAmount : BASE_CENTS;
+
+  const handlePayNow = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/stripe/create-supply-fee-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ parentId, parentEmail, studentId, coverFees, paymentMethod }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.url) throw new Error(data.error ?? "Failed to create checkout session");
+      window.location.href = data.url;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+      <motion.div
+        className="absolute inset-0 bg-black/40"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+      />
+      <motion.div
+        className="relative bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden z-10"
+        initial={{ y: 60, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 60, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      >
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div>
+            <h2 className="text-base font-bold font-heading text-gray-800">Annual Supply Fee</h2>
+            {studentName && <p className="text-xs text-gray-400 mt-0.5">{studentName}</p>}
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-full hover:bg-gray-100 transition-colors cursor-pointer">
+            <X className="w-4 h-4 text-gray-500" />
+          </button>
+        </div>
+        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
+          <div className="rounded-xl border border-gray-100 px-4 py-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-gray-800">Annual Supply Fee</span>
+              <span className="text-sm font-bold" style={{ color: "#4a7c59" }}>$300.00</span>
+            </div>
+            <p className="text-xs text-gray-400 mt-1">One-time fee · School Year 26–27</p>
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">Payment method</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPaymentMethod("card")}
+                className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${paymentMethod === "card" ? "border-primary bg-primary/5 text-primary" : "border-gray-200 text-gray-600 hover:bg-gray-50"}`}
+              >
+                Credit/Debit Card
+              </button>
+              <button
+                onClick={() => setPaymentMethod("ach")}
+                className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${paymentMethod === "ach" ? "border-primary bg-primary/5 text-primary" : "border-gray-200 text-gray-600 hover:bg-gray-50"}`}
+              >
+                ACH / US bank account
+              </button>
+            </div>
+            <p className="text-xs text-gray-400 font-body mt-1.5">
+              {paymentMethod === "card"
+                ? `Processing fee (est.): ~${formatCents(cardFee)}`
+                : `Processing fee (est.): ~${formatCents(achFee)} (0.8%, max $5.00)`}
+            </p>
+          </div>
+          <label className="flex items-start gap-3 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={coverFees}
+              onChange={(e) => setCoverFees(e.target.checked)}
+              className="mt-0.5 w-4 h-4 rounded cursor-pointer"
+              style={{ accentColor: "#4a7c59" }}
+            />
+            <span className="text-sm text-gray-600 font-body group-hover:text-gray-800 transition-colors">
+              I agree to pay the processing fee
+            </span>
+          </label>
+          <div className="rounded-xl px-4 py-3 flex items-center justify-between" style={{ backgroundColor: "#f6faf7" }}>
+            <span className="text-sm text-gray-500 font-body">Total</span>
+            <span className="text-base font-bold font-heading" style={{ color: "#4a7c59" }}>{formatCents(totalWithFees)}</span>
+          </div>
+        </div>
+        {error && (
+          <div className="px-6 pb-2">
+            <p className="text-xs text-red-500 font-body">{error}</p>
+          </div>
+        )}
+        <div className="px-6 py-4 border-t border-gray-100">
+          <button
+            disabled={loading || !coverFees}
+            className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ backgroundColor: "#4a7c59" }}
+            onClick={handlePayNow}
+          >
+            {loading ? "Processing…" : `Pay Now · ${formatCents(totalWithFees)}`}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function SchoolYearTuitionModal({
+  studentId,
+  studentName,
+  childGrade,
+  parentId,
+  parentEmail,
+  onClose,
+}: {
+  studentId: string;
+  studentName: string | null;
+  childGrade: string | null;
+  parentId: string;
+  parentEmail: string;
+  onClose: () => void;
+}) {
+  const gradeTier = getGradeTier(childGrade);
+  const BASE_CENTS = gradeTier === "primary" ? 119500 : 109500;
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "ach">("card");
+  const [coverFees, setCoverFees] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const cardFee = Math.round((BASE_CENTS + 30) / (1 - 0.029)) - BASE_CENTS;
+  const achFee = Math.min(Math.round(BASE_CENTS * 0.008), 500);
+  const feeAmount = paymentMethod === "card" ? cardFee : achFee;
+  const totalWithFees = coverFees ? BASE_CENTS + feeAmount : BASE_CENTS;
+
+  const handlePayNow = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/stripe/create-school-year-tuition-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ parentId, parentEmail, studentId, intendedAmountCents: BASE_CENTS, coverFees, paymentMethod }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.url) throw new Error(data.error ?? "Failed to create checkout session");
+      window.location.href = data.url;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+      <motion.div
+        className="absolute inset-0 bg-black/40"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+      />
+      <motion.div
+        className="relative bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden z-10"
+        initial={{ y: 60, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 60, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      >
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div>
+            <h2 className="text-base font-bold font-heading text-gray-800">School Year Tuition</h2>
+            {studentName && <p className="text-xs text-gray-400 mt-0.5">{studentName}</p>}
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-full hover:bg-gray-100 transition-colors cursor-pointer">
+            <X className="w-4 h-4 text-gray-500" />
+          </button>
+        </div>
+        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
+          <div className="rounded-xl border border-gray-100 px-4 py-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-gray-800">Monthly Tuition</span>
+              <span className="text-sm font-bold" style={{ color: "#4a7c59" }}>{formatCents(BASE_CENTS)}/mo</span>
+            </div>
+            <p className="text-xs text-gray-400 mt-1">
+              {gradeTier === "primary" ? "Primary / K–1st grade" : "2nd–4th grade"} · School Year 26–27
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">Payment method</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPaymentMethod("card")}
+                className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${paymentMethod === "card" ? "border-primary bg-primary/5 text-primary" : "border-gray-200 text-gray-600 hover:bg-gray-50"}`}
+              >
+                Credit/Debit Card
+              </button>
+              <button
+                onClick={() => setPaymentMethod("ach")}
+                className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${paymentMethod === "ach" ? "border-primary bg-primary/5 text-primary" : "border-gray-200 text-gray-600 hover:bg-gray-50"}`}
+              >
+                ACH / US bank account
+              </button>
+            </div>
+            <p className="text-xs text-gray-400 font-body mt-1.5">
+              {paymentMethod === "card"
+                ? `Processing fee (est.): ~${formatCents(cardFee)}`
+                : `Processing fee (est.): ~${formatCents(achFee)} (0.8%, max $5.00)`}
+            </p>
+          </div>
+          <label className="flex items-start gap-3 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={coverFees}
+              onChange={(e) => setCoverFees(e.target.checked)}
+              className="mt-0.5 w-4 h-4 rounded cursor-pointer"
+              style={{ accentColor: "#4a7c59" }}
+            />
+            <span className="text-sm text-gray-600 font-body group-hover:text-gray-800 transition-colors">
+              I agree to pay the processing fee
+            </span>
+          </label>
+          <div className="rounded-xl px-4 py-3 flex items-center justify-between" style={{ backgroundColor: "#f6faf7" }}>
+            <span className="text-sm text-gray-500 font-body">Total</span>
+            <span className="text-base font-bold font-heading" style={{ color: "#4a7c59" }}>{formatCents(totalWithFees)}</span>
+          </div>
+        </div>
+        {error && (
+          <div className="px-6 pb-2">
+            <p className="text-xs text-red-500 font-body">{error}</p>
+          </div>
+        )}
+        <div className="px-6 py-4 border-t border-gray-100">
+          <button
+            disabled={loading || !coverFees}
+            className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ backgroundColor: "#4a7c59" }}
+            onClick={handlePayNow}
+          >
+            {loading ? "Processing…" : `Pay Now · ${formatCents(totalWithFees)}`}
           </button>
         </div>
       </motion.div>
@@ -3760,6 +4621,8 @@ function PendingPaymentsSection({
   onSelectFunFriday,
   onSelectHomeschool,
   onViewHomeschoolHistory,
+  onSelectSchoolYearHomeschool,
+  onViewSchoolYearHomeschoolHistory,
   nonEnrolledApps,
   homeschoolDropInApps,
   paidHomeschoolByStudent,
@@ -3767,6 +4630,8 @@ function PendingPaymentsSection({
   schoolYearOnlyApps,
   showMultiChildBanner,
   onOpenFirstSummer,
+  onSelectSupplyFee,
+  onSelectSchoolYearTuition,
 }: {
   summerEnrollments: SummerEnrollment[];
   unpaidSummerEnrollments: SummerEnrollment[];
@@ -3779,6 +4644,8 @@ function PendingPaymentsSection({
   onSelectFunFriday: (e: SummerEnrollment) => void;
   onSelectHomeschool: (app: HomeschoolDropInApp) => void;
   onViewHomeschoolHistory: (app: HomeschoolDropInApp) => void;
+  onSelectSchoolYearHomeschool: (app: HomeschoolDropInApp) => void;
+  onViewSchoolYearHomeschoolHistory: (app: HomeschoolDropInApp) => void;
   nonEnrolledApps: NonEnrolledApp[];
   homeschoolDropInApps: HomeschoolDropInApp[];
   paidHomeschoolByStudent: PaidHomeschoolByStudent;
@@ -3786,12 +4653,28 @@ function PendingPaymentsSection({
   schoolYearOnlyApps: SchoolYearOnlyApp[];
   showMultiChildBanner: boolean;
   onOpenFirstSummer: () => void;
+  onSelectSupplyFee: (studentId: string) => void;
+  onSelectSchoolYearTuition: (studentId: string, childGrade: string | null) => void;
 }) {
+  const [activeTermTab, setActiveTermTab] = useState<"summer" | "school_year">("summer");
+
   const nonEnrolledMap = new Map(nonEnrolledApps.map((a) => [a.student_id, a]));
 
   const isSchoolYearOnly = schoolYearOnlyApps.some(
     (a) => a.student_id === activeStudentId,
   );
+
+  const hasSchoolYearContent =
+    isSchoolYearOnly ||
+    summerEnrollments.some(e => e.student_id === activeStudentId && e.program === "both") ||
+    homeschoolDropInApps.some(
+      a => a.student_id === activeStudentId &&
+      (a.drop_in_program === "school_year_26_27" || a.drop_in_program === "both")
+    );
+
+  useEffect(() => {
+    setActiveTermTab("summer");
+  }, [activeStudentId]);
 
   if (
     !isSchoolYearOnly &&
@@ -3837,6 +4720,29 @@ function PendingPaymentsSection({
     ? nonEnrolledMap.get(activeStudentId)
     : undefined;
 
+  // Tab-filtered items
+  const showSchoolYearTab = hasSchoolYearContent && activeTermTab === "school_year";
+
+  const summerPendingItems = currentItems.filter(
+    (r) => r.program !== "school_year_26_27",
+  );
+  const schoolYearPendingItems = currentItems.filter(
+    (r) => r.program === "school_year_26_27",
+  );
+  const summerHomeschoolApps = currentHomeschool.filter(
+    (a) => a.drop_in_program === "summer_26" || a.drop_in_program === "both",
+  );
+  const schoolYearHomeschoolApps = currentHomeschool.filter(
+    (a) => a.drop_in_program === "school_year_26_27" || a.drop_in_program === "both",
+  );
+
+  const summerTotalCents = (
+    activeStudentId === "__other__" ? orphanRequests : summerPendingItems
+  ).reduce((sum, r) => sum + (r.amount_cents ?? 0), 0);
+  const schoolYearTotalCents = schoolYearPendingItems.reduce(
+    (sum, r) => sum + (r.amount_cents ?? 0), 0,
+  );
+
   return (
     <>
       {showMultiChildBanner && (
@@ -3860,9 +4766,33 @@ function PendingPaymentsSection({
           </button>
         </div>
       )}
+      {hasSchoolYearContent && !isOtherTab && (
+        <div className="flex gap-2 mb-4">
+          <button
+            onClick={() => setActiveTermTab("summer")}
+            className={`px-4 py-1.5 rounded-full text-sm font-semibold font-body transition-colors ${
+              activeTermTab === "summer"
+                ? "bg-[#e07a3a] text-white"
+                : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+            }`}
+          >
+            Summer
+          </button>
+          <button
+            onClick={() => setActiveTermTab("school_year")}
+            className={`px-4 py-1.5 rounded-full text-sm font-semibold font-body transition-colors ${
+              activeTermTab === "school_year"
+                ? "bg-[#4a7c59] text-white"
+                : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+            }`}
+          >
+            School Year
+          </button>
+        </div>
+      )}
       <AnimatePresence mode="wait">
       <motion.div
-        key={activeStudentId}
+        key={`${activeStudentId}-${activeTermTab}`}
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -6 }}
@@ -3871,12 +4801,78 @@ function PendingPaymentsSection({
       >
         {activeNonEnrolled ? (
           <NonEnrolledCard app={activeNonEnrolled} />
-        ) : isSchoolYearOnly ? (
-          <SchoolYearTuitionDisabledCard />
+        ) : showSchoolYearTab ? (
+          <>
+            {(isSchoolYearOnly ||
+              summerEnrollments.some(e => e.student_id === activeStudentId && e.program === "both") ||
+              schoolYearHomeschoolApps.length > 0) && (
+              <>
+                {(isSchoolYearOnly || summerEnrollments.some(e => e.student_id === activeStudentId && e.program === "both")) && (
+                  <SchoolYearTuitionCard
+                    key="school-year-tuition"
+                    onClick={() => {
+                      const grade = schoolYearOnlyApps.find(a => a.student_id === activeStudentId)?.child_grade
+                        ?? summerEnrollments.find(e => e.student_id === activeStudentId && e.program === "both")?.child_grade
+                        ?? null;
+                      onSelectSchoolYearTuition(activeStudentId!, grade);
+                    }}
+                  />
+                )}
+                <SupplyFeeCard
+                  key="supply-fee"
+                  onClick={() => onSelectSupplyFee(activeStudentId!)}
+                />
+              </>
+            )}
+            {schoolYearPendingItems.map((req) => (
+              <PendingPaymentCard
+                key={req.id}
+                request={req}
+                studentName={
+                  req.student_id
+                    ? (studentMap[req.student_id]?.name ?? null)
+                    : null
+                }
+                onClick={() => onSelectPending(req)}
+              />
+            ))}
+            {schoolYearHomeschoolApps.map((app) => (
+              <HomeschoolSchoolYearCard
+                key={app.id}
+                app={app}
+                studentName={studentMap[app.student_id]?.name ?? null}
+                paidData={paidHomeschoolByStudent[app.student_id]}
+                onClick={() => onSelectSchoolYearHomeschool(app)}
+                onViewHistory={() => onViewSchoolYearHomeschoolHistory(app)}
+              />
+            ))}
+            {!isSchoolYearOnly &&
+              !summerEnrollments.some(e => e.student_id === activeStudentId && e.program === "both") &&
+              schoolYearPendingItems.length === 0 &&
+              schoolYearHomeschoolApps.length === 0 && (
+              <AllCaughtUpCard />
+            )}
+            {schoolYearTotalCents > 0 && (
+              <div
+                className="col-span-1 sm:col-span-2 rounded-xl px-4 py-3 flex items-center justify-between"
+                style={{ backgroundColor: "#f6faf7" }}
+              >
+                <span className="text-sm text-gray-500 font-body">
+                  Total owed
+                </span>
+                <span
+                  className="text-base font-bold font-heading"
+                  style={{ color: "#4a7c59" }}
+                >
+                  {formatCents(schoolYearTotalCents)}
+                </span>
+              </div>
+            )}
+          </>
         ) : currentSummer.length === 0 &&
-          currentItems.length === 0 &&
+          (hasSchoolYearContent ? summerPendingItems : currentItems).length === 0 &&
           currentAllSummer.length === 0 &&
-          currentHomeschool.length === 0 ? (
+          (hasSchoolYearContent ? summerHomeschoolApps : currentHomeschool).length === 0 ? (
           <AllCaughtUpCard />
         ) : (
           <>
@@ -3902,7 +4898,7 @@ function PendingPaymentsSection({
                 onClick={() => onSelectFunFriday(enrollment)}
               />
             ))}
-            {currentItems.map((req) => (
+            {(hasSchoolYearContent ? summerPendingItems : currentItems).map((req) => (
               <PendingPaymentCard
                 key={req.id}
                 request={req}
@@ -3914,7 +4910,7 @@ function PendingPaymentsSection({
                 onClick={() => onSelectPending(req)}
               />
             ))}
-            {currentHomeschool.map((app) => (
+            {(hasSchoolYearContent ? summerHomeschoolApps : currentHomeschool).map((app) => (
               <HomeschoolDropInCard
                 key={app.id}
                 app={app}
@@ -3924,22 +4920,9 @@ function PendingPaymentsSection({
                 onViewHistory={() => onViewHomeschoolHistory(app)}
               />
             ))}
-            {/* Disabled School Year Tuition card for "both"-program students */}
-            {!isOtherTab &&
-              activeStudentId &&
-              (() => {
-                const hasBoth = summerEnrollments.some(
-                  (e) =>
-                    e.student_id === activeStudentId && e.program === "both",
-                );
-                if (!hasBoth) return null;
-                return (
-                  <SchoolYearTuitionDisabledCard key="school-year-disabled" />
-                );
-              })()}
 
             {/* Total bar */}
-            {totalCents > 0 && (
+            {(hasSchoolYearContent ? summerTotalCents : totalCents) > 0 && (
               <div
                 className="col-span-1 sm:col-span-2 rounded-xl px-4 py-3 flex items-center justify-between"
                 style={{ backgroundColor: "#f6faf7" }}
@@ -3951,7 +4934,7 @@ function PendingPaymentsSection({
                   className="text-base font-bold font-heading"
                   style={{ color: "#4a7c59" }}
                 >
-                  {formatCents(totalCents)}
+                  {formatCents(hasSchoolYearContent ? summerTotalCents : totalCents)}
                 </span>
               </div>
             )}
@@ -4874,6 +5857,10 @@ export default function BillingPage({
     useState<HomeschoolDropInApp | null>(null);
   const [selectedHomeschoolHistoryApp, setSelectedHomeschoolHistoryApp] =
     useState<HomeschoolDropInApp | null>(null);
+  const [selectedSchoolYearHomeschoolApp, setSelectedSchoolYearHomeschoolApp] =
+    useState<HomeschoolDropInApp | null>(null);
+  const [selectedSchoolYearHomeschoolHistoryApp, setSelectedSchoolYearHomeschoolHistoryApp] =
+    useState<HomeschoolDropInApp | null>(null);
   const [tuitionCodeModalOpen, setTuitionCodeModalOpen] = useState(false);
   const [payByCheckModalOpen, setPayByCheckModalOpen] = useState(false);
   const [validatedTuitionResult, setValidatedTuitionResult] = useState<{
@@ -4882,6 +5869,8 @@ export default function BillingPage({
     code: string;
   } | null>(null);
   const [feedbackPopupOpen, setFeedbackPopupOpen] = useState(false);
+  const [supplyFeeStudentId, setSupplyFeeStudentId] = useState<string | null>(null);
+  const [schoolYearTuitionTarget, setSchoolYearTuitionTarget] = useState<{ studentId: string; childGrade: string | null } | null>(null);
 
   const hasPaidAny = transactions.some((tx) => tx.status === "completed" && tx.payment_type !== "registration_fee");
 
@@ -5138,6 +6127,8 @@ export default function BillingPage({
                 onSelectFunFriday={setSelectedFunFridayEnrollment}
                 onSelectHomeschool={setSelectedHomeschoolApp}
                 onViewHomeschoolHistory={setSelectedHomeschoolHistoryApp}
+                onSelectSchoolYearHomeschool={setSelectedSchoolYearHomeschoolApp}
+                onViewSchoolYearHomeschoolHistory={setSelectedSchoolYearHomeschoolHistoryApp}
                 nonEnrolledApps={nonEnrolledApps}
                 homeschoolDropInApps={homeschoolDropInApps}
                 paidHomeschoolByStudent={paidHomeschoolByStudent}
@@ -5151,6 +6142,8 @@ export default function BillingPage({
                     ) ?? null,
                   )
                 }
+                onSelectSupplyFee={setSupplyFeeStudentId}
+                onSelectSchoolYearTuition={(id, grade) => setSchoolYearTuitionTarget({ studentId: id, childGrade: grade })}
               />
               <div className="mt-3">
                 <button
@@ -5596,6 +6589,52 @@ export default function BillingPage({
               }}
             />
           )}
+        {selectedSchoolYearHomeschoolApp && (
+          <HomeschoolSchoolYearModal
+            app={selectedSchoolYearHomeschoolApp}
+            studentName={studentMap[selectedSchoolYearHomeschoolApp.student_id]?.name ?? null}
+            parentId={parentId}
+            parentEmail={parentEmail}
+            paidData={paidHomeschoolByStudent[selectedSchoolYearHomeschoolApp.student_id]}
+            onClose={() => setSelectedSchoolYearHomeschoolApp(null)}
+          />
+        )}
+        {selectedSchoolYearHomeschoolHistoryApp &&
+          paidHomeschoolByStudent[selectedSchoolYearHomeschoolHistoryApp.student_id] && (
+            <HomeschoolPlanHistoryModal
+              app={selectedSchoolYearHomeschoolHistoryApp}
+              studentName={
+                studentMap[selectedSchoolYearHomeschoolHistoryApp.student_id]?.name ?? null
+              }
+              paidData={
+                paidHomeschoolByStudent[selectedSchoolYearHomeschoolHistoryApp.student_id]
+              }
+              onClose={() => setSelectedSchoolYearHomeschoolHistoryApp(null)}
+              onAddMore={() => {
+                setSelectedSchoolYearHomeschoolApp(selectedSchoolYearHomeschoolHistoryApp);
+                setSelectedSchoolYearHomeschoolHistoryApp(null);
+              }}
+            />
+          )}
+        {supplyFeeStudentId && (
+          <SupplyFeeModal
+            studentId={supplyFeeStudentId}
+            studentName={studentMap[supplyFeeStudentId]?.name ?? null}
+            parentId={parentId}
+            parentEmail={parentEmail}
+            onClose={() => setSupplyFeeStudentId(null)}
+          />
+        )}
+        {schoolYearTuitionTarget && (
+          <SchoolYearTuitionModal
+            studentId={schoolYearTuitionTarget.studentId}
+            studentName={studentMap[schoolYearTuitionTarget.studentId]?.name ?? null}
+            childGrade={schoolYearTuitionTarget.childGrade}
+            parentId={parentId}
+            parentEmail={parentEmail}
+            onClose={() => setSchoolYearTuitionTarget(null)}
+          />
+        )}
         {payByCheckModalOpen && (
           <PayByCheckModal onClose={() => setPayByCheckModalOpen(false)} />
         )}

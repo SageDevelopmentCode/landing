@@ -1055,6 +1055,84 @@ export async function POST(request: NextRequest) {
           ).catch(() => {});
         }
       })();
+    } else if (session.metadata?.payment_type === "supply_fee") {
+      const parentId = session.metadata?.parent_id;
+      const studentId = session.metadata?.student_id;
+      const parentEmailAddr = session.metadata?.parent_email ?? session.customer_email ?? "N/A";
+      const amountCents = session.amount_total ?? 0;
+
+      let parentName = "N/A";
+      let childName = "N/A";
+
+      if (parentId) {
+        const { data: userRow } = await supabase
+          .schema("admin")
+          .from("users")
+          .select("full_name")
+          .eq("id", parentId)
+          .single();
+        if (userRow) parentName = userRow.full_name ?? "N/A";
+      }
+      if (studentId) {
+        const { data: student } = await supabase
+          .schema("admin")
+          .from("students")
+          .select("child_legal_name")
+          .eq("id", studentId)
+          .single();
+        if (student) childName = student.child_legal_name ?? "N/A";
+      }
+
+      sendDiscordNotification(
+        createCustomTuitionEmbed({
+          parentName,
+          parentEmail: parentEmailAddr,
+          childName,
+          label: "Annual Supply Fee — School Year 26–27",
+          tuitionCode: "N/A",
+          amountCents,
+        }),
+      ).catch((err) => console.error("Supply fee Discord notification failed:", err));
+
+    } else if (session.metadata?.payment_type === "school_year_tuition") {
+      const parentId = session.metadata?.parent_id;
+      const studentId = session.metadata?.student_id;
+      const parentEmailAddr = session.metadata?.parent_email ?? session.customer_email ?? "N/A";
+      const amountCents = session.amount_total ?? 0;
+
+      let parentName = "N/A";
+      let childName = "N/A";
+
+      if (parentId) {
+        const { data: userRow } = await supabase
+          .schema("admin")
+          .from("users")
+          .select("full_name")
+          .eq("id", parentId)
+          .single();
+        if (userRow) parentName = userRow.full_name ?? "N/A";
+      }
+      if (studentId) {
+        const { data: student } = await supabase
+          .schema("admin")
+          .from("students")
+          .select("child_legal_name")
+          .eq("id", studentId)
+          .single();
+        if (student) childName = student.child_legal_name ?? "N/A";
+      }
+
+      sendDiscordNotification(
+        createCustomTuitionEmbed({
+          parentName,
+          parentEmail: parentEmailAddr,
+          childName,
+          label: "School Year Tuition — School Year 26–27",
+          tuitionCode: "N/A",
+          amountCents,
+        }),
+      ).catch((err) => console.error("School year tuition Discord notification failed:", err));
+
     } else if (session.metadata?.payment_type === "one_time_payment") {
       const oneTimePaymentId = session.metadata?.one_time_payment_id;
       const payerEmail =
