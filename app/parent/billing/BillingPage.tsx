@@ -4720,9 +4720,17 @@ function PendingPaymentsSection({
       (a.drop_in_program === "school_year_26_27" || a.drop_in_program === "both")
     );
 
+  const isSchoolYearOnlyStudent =
+    isSchoolYearOnly ||
+    homeschoolDropInApps.some(
+      (a) =>
+        a.student_id === activeStudentId &&
+        a.drop_in_program === "school_year_26_27"
+    );
+
   useEffect(() => {
-    setActiveTermTab("summer");
-  }, [activeStudentId]);
+    setActiveTermTab(isSchoolYearOnlyStudent ? "school_year" : "summer");
+  }, [activeStudentId, isSchoolYearOnlyStudent]);
 
   if (
     !isSchoolYearOnly &&
@@ -4816,16 +4824,18 @@ function PendingPaymentsSection({
       )}
       {hasSchoolYearContent && !isOtherTab && (
         <div className="flex gap-2 mb-4">
-          <button
-            onClick={() => setActiveTermTab("summer")}
-            className={`px-4 py-1.5 rounded-full text-sm font-semibold font-body transition-colors ${
-              activeTermTab === "summer"
-                ? "bg-[#e07a3a] text-white"
-                : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-            }`}
-          >
-            Summer
-          </button>
+          {!isSchoolYearOnlyStudent && (
+            <button
+              onClick={() => setActiveTermTab("summer")}
+              className={`px-4 py-1.5 rounded-full text-sm font-semibold font-body transition-colors ${
+                activeTermTab === "summer"
+                  ? "bg-[#e07a3a] text-white"
+                  : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+              }`}
+            >
+              Summer
+            </button>
+          )}
           <button
             onClick={() => setActiveTermTab("school_year")}
             className={`px-4 py-1.5 rounded-full text-sm font-semibold font-body transition-colors ${
@@ -6219,19 +6229,6 @@ export default function BillingPage({
                 applicationId={activeHomeschoolDropIn.id}
                 dropInProgram={activeHomeschoolDropIn.drop_in_program}
               />
-            );
-          })()}
-
-          {(() => {
-            const activeSchoolYear = schoolYearOnlyApps.find(
-              (a) => a.student_id === activeStudentId,
-            );
-            if (!activeSchoolYear) return null;
-            return (
-              <div className="space-y-4">
-                <WantToAddSummerSection applicationId={activeSchoolYear.id} />
-                <SchoolYearComingSoonCard />
-              </div>
             );
           })()}
 
