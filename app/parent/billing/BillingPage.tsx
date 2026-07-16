@@ -4876,10 +4876,52 @@ function PendingPaymentsSection({
                     }}
                   />
                 )}
+                {schoolYearHomeschoolApps.map((app) => (
+                  <HomeschoolSchoolYearCard
+                    key={app.id}
+                    app={app}
+                    studentName={studentMap[app.student_id]?.name ?? null}
+                    paidData={paidHomeschoolByStudent[app.student_id]}
+                    onClick={() => onSelectSchoolYearHomeschool(app)}
+                    onViewHistory={() => onViewSchoolYearHomeschoolHistory(app)}
+                  />
+                ))}
                 <SupplyFeeCard
                   key="supply-fee"
                   onClick={() => onSelectSupplyFee(activeStudentId!)}
                 />
+                {(() => {
+                  // Resolve the active school-year enrollment from any of the three possible sources
+                  const schoolYearOnly = schoolYearOnlyApps.find(
+                    (a) => a.student_id === activeStudentId,
+                  );
+                  const bothEnrollment = summerEnrollments.find(
+                    (e) => e.student_id === activeStudentId && e.program === "both",
+                  );
+                  const homeschoolApp = schoolYearHomeschoolApps.find(
+                    (a) => a.student_id === activeStudentId,
+                  );
+
+                  const enrollment =
+                    (schoolYearOnly as unknown as SummerEnrollment) ??
+                    bothEnrollment ??
+                    (homeschoolApp as unknown as SummerEnrollment) ??
+                    null;
+
+                  if (!enrollment) return null;
+                  return (
+                    <>
+                      <FunFridayCard
+                        studentName={studentMap[enrollment.student_id]?.name ?? null}
+                        onClick={() => onSelectFunFriday(enrollment)}
+                      />
+                      <AftercareCard
+                        studentName={studentMap[enrollment.student_id]?.name ?? null}
+                        onClick={() => onSelectAftercare(enrollment)}
+                      />
+                    </>
+                  );
+                })()}
               </>
             )}
             {schoolYearPendingItems.map((req) => (
@@ -4892,16 +4934,6 @@ function PendingPaymentsSection({
                     : null
                 }
                 onClick={() => onSelectPending(req)}
-              />
-            ))}
-            {schoolYearHomeschoolApps.map((app) => (
-              <HomeschoolSchoolYearCard
-                key={app.id}
-                app={app}
-                studentName={studentMap[app.student_id]?.name ?? null}
-                paidData={paidHomeschoolByStudent[app.student_id]}
-                onClick={() => onSelectSchoolYearHomeschool(app)}
-                onViewHistory={() => onViewSchoolYearHomeschoolHistory(app)}
               />
             ))}
             {!isSchoolYearOnly &&
