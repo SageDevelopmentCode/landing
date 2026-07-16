@@ -78,6 +78,7 @@ import type {
   SummerNotesByStudent,
   HomeschoolNotesByStudent,
   SchoolYearOnlyApp,
+  PaidSchoolYearByStudent,
 } from "./page";
 
 interface Props {
@@ -98,6 +99,7 @@ interface Props {
   homeschoolNotesByStudent: HomeschoolNotesByStudent;
   schoolYearOnlyApps: SchoolYearOnlyApp[];
   hasSubmittedTuitionFeedback: boolean;
+  paidSchoolYearByStudent: PaidSchoolYearByStudent;
 }
 
 // --- Summer pricing ---
@@ -2154,6 +2156,7 @@ function SchoolYearTuitionModal({
   parentId,
   parentEmail,
   onClose,
+  paidMonthIndices,
 }: {
   studentId: string;
   studentName: string | null;
@@ -2161,6 +2164,7 @@ function SchoolYearTuitionModal({
   parentId: string;
   parentEmail: string;
   onClose: () => void;
+  paidMonthIndices: Set<number>;
 }) {
   const gradeTier = getGradeTier(childGrade);
   const BASE_CENTS = gradeTier === "primary" ? 119500 : 109500;
@@ -2168,11 +2172,14 @@ function SchoolYearTuitionModal({
   const [coverFees, setCoverFees] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedMonthIndices, setSelectedMonthIndices] = useState<Set<number>>(new Set());
 
-  const cardFee = Math.round((BASE_CENTS + 30) / (1 - 0.029)) - BASE_CENTS;
-  const achFee = Math.min(Math.round(BASE_CENTS * 0.008), 500);
+  const unitCount = selectedMonthIndices.size;
+  const totalBaseCents = BASE_CENTS * unitCount;
+  const cardFee = unitCount > 0 ? Math.round((totalBaseCents + 30) / (1 - 0.029)) - totalBaseCents : 0;
+  const achFee = unitCount > 0 ? Math.min(Math.round(totalBaseCents * 0.008), 500) : 0;
   const feeAmount = paymentMethod === "card" ? cardFee : achFee;
-  const totalWithFees = coverFees ? BASE_CENTS + feeAmount : BASE_CENTS;
+  const totalWithFees = coverFees ? totalBaseCents + feeAmount : totalBaseCents;
 
   const handlePayNow = async () => {
     setLoading(true);
@@ -2181,7 +2188,12 @@ function SchoolYearTuitionModal({
       const res = await fetch("/api/stripe/create-school-year-tuition-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ parentId, parentEmail, studentId, intendedAmountCents: BASE_CENTS, coverFees, paymentMethod }),
+        body: JSON.stringify({
+          parentId, parentEmail, studentId,
+          intendedAmountCents: totalBaseCents,
+          coverFees, paymentMethod,
+          selectedMonths: Array.from(selectedMonthIndices).sort((a, b) => a - b),
+        }),
       });
       const data = await res.json();
       if (!res.ok || !data.url) throw new Error(data.error ?? "Failed to create checkout session");
@@ -2218,14 +2230,44 @@ function SchoolYearTuitionModal({
           </button>
         </div>
         <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
-          <div className="rounded-xl border border-gray-100 px-4 py-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-gray-800">Monthly Tuition</span>
-              <span className="text-sm font-bold" style={{ color: "#4a7c59" }}>{formatCents(BASE_CENTS)}/mo</span>
-            </div>
-            <p className="text-xs text-gray-400 mt-1">
-              {gradeTier === "primary" ? "Primary / K–1st grade" : "2nd–4th grade"} · School Year 26–27
+          <div>
+            <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">
+              Select months to pay · {formatCents(BASE_CENTS)}/mo
             </p>
+            <div className="grid grid-cols-5 gap-2">
+              {SCHOOL_YEAR_MONTHS.map((month) => {
+                const isPaid = paidMonthIndices.has(month.index);
+                const isSelected = selectedMonthIndices.has(month.index);
+                return (
+                  <button
+                    key={month.index}
+                    disabled={isPaid}
+                    onClick={() => {
+                      if (isPaid) return;
+                      setSelectedMonthIndices((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(month.index)) next.delete(month.index);
+                        else next.add(month.index);
+                        return next;
+                      });
+                    }}
+                    className={`relative rounded-lg py-2 text-xs font-semibold border transition-all cursor-pointer ${
+                      isPaid
+                        ? "border-green-200 bg-green-50 text-green-700 cursor-default opacity-70"
+                        : isSelected
+                        ? "text-white border-transparent"
+                        : "border-gray-200 text-gray-600 hover:border-primary hover:text-primary bg-white"
+                    }`}
+                    style={isSelected && !isPaid ? { backgroundColor: "#4a7c59", borderColor: "#4a7c59" } : undefined}
+                  >
+                    {month.short}
+                    {isPaid && (
+                      <span className="block text-[9px] font-semibold text-green-600 leading-none mt-0.5">Paid</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
           <div>
             <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">Payment method</p>
@@ -2261,9 +2303,15 @@ function SchoolYearTuitionModal({
               I agree to pay the processing fee
             </span>
           </label>
-          <div className="rounded-xl px-4 py-3 flex items-center justify-between" style={{ backgroundColor: "#f6faf7" }}>
-            <span className="text-sm text-gray-500 font-body">Total</span>
-            <span className="text-base font-bold font-heading" style={{ color: "#4a7c59" }}>{formatCents(totalWithFees)}</span>
+          <div className="rounded-xl px-4 py-3 flex items-center justify-between" style={{ backgroundColor: unitCount > 0 ? "#f0f9f4" : "#f9fafb" }}>
+            <span className="text-sm text-gray-500 font-body">
+              {unitCount === 0
+                ? "No months selected"
+                : `${unitCount} month${unitCount !== 1 ? "s" : ""} × ${formatCents(BASE_CENTS)}/mo`}
+            </span>
+            <span className="text-base font-bold font-heading" style={{ color: "#4a7c59" }}>
+              {unitCount > 0 ? formatCents(totalWithFees) : "—"}
+            </span>
           </div>
         </div>
         {error && (
@@ -2273,12 +2321,12 @@ function SchoolYearTuitionModal({
         )}
         <div className="px-6 py-4 border-t border-gray-100">
           <button
-            disabled={loading || !coverFees}
+            disabled={loading || !coverFees || unitCount < 1}
             className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             style={{ backgroundColor: "#4a7c59" }}
             onClick={handlePayNow}
           >
-            {loading ? "Processing…" : `Pay Now · ${formatCents(totalWithFees)}`}
+            {loading ? "Processing…" : unitCount > 0 ? `Pay Now · ${formatCents(totalWithFees)}` : "Select months to continue"}
           </button>
         </div>
       </motion.div>
@@ -5843,6 +5891,7 @@ export default function BillingPage({
   homeschoolNotesByStudent,
   schoolYearOnlyApps,
   hasSubmittedTuitionFeedback,
+  paidSchoolYearByStudent,
 }: Props) {
   const [selectedTx, setSelectedTx] = useState<StripeTransaction | null>(null);
   const [selectedPending, setSelectedPending] =
@@ -6633,6 +6682,7 @@ export default function BillingPage({
             parentId={parentId}
             parentEmail={parentEmail}
             onClose={() => setSchoolYearTuitionTarget(null)}
+            paidMonthIndices={new Set(paidSchoolYearByStudent[schoolYearTuitionTarget.studentId] ?? [])}
           />
         )}
         {payByCheckModalOpen && (

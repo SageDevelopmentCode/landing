@@ -82,6 +82,8 @@ export type PaidFunFridayByStudent = Record<string, {
 export type SummerNotesByStudent = Record<string, string>; // studentId → note text
 export type HomeschoolNotesByStudent = Record<string, string>; // studentId → note text
 
+export type PaidSchoolYearByStudent = Record<string, number[]>; // studentId → paid monthIndices (1–10)
+
 export type StudentInfo = {
   name: string;
   profileImageUrl: string | null;
@@ -316,6 +318,19 @@ export default async function BillingRoute() {
     }
   }
 
+  // Build paid school-year tuition months per student
+  const paidSchoolYearByStudent: PaidSchoolYearByStudent = {};
+  for (const tx of transactions) {
+    if (tx.payment_type === "school_year_tuition" && tx.status === "completed" && tx.student_id) {
+      const meta = (tx.metadata ?? {}) as Record<string, string>;
+      const months = meta.selected_months?.split(",").map(Number).filter(Boolean) ?? [];
+      if (!paidSchoolYearByStudent[tx.student_id]) {
+        paidSchoolYearByStudent[tx.student_id] = [];
+      }
+      paidSchoolYearByStudent[tx.student_id].push(...months);
+    }
+  }
+
   // Build summer commitment notes map per student
   const summerNotesByStudent: SummerNotesByStudent = {};
   for (const row of notesData ?? []) {
@@ -389,7 +404,7 @@ export default async function BillingRoute() {
         <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={primaryOwnerName} />
 
         <main className="flex-1 flex overflow-hidden">
-          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} unpaidSummerEnrollments={unpaidSummerEnrollments} paidWeeksByStudent={paidWeeksByStudent} parentId={effectiveParentId} parentEmail={user.email ?? ""} nonEnrolledApps={nonEnrolledApps} homeschoolDropInApps={homeschoolDropInApps} paidHomeschoolByStudent={paidHomeschoolByStudent} paidAftercareByStudent={paidAftercareByStudent} paidFunFridayByStudent={paidFunFridayByStudent} summerNotesByStudent={summerNotesByStudent} homeschoolNotesByStudent={homeschoolNotesByStudent} schoolYearOnlyApps={schoolYearOnlyApps} hasSubmittedTuitionFeedback={hasSubmittedTuitionFeedback} />
+          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} unpaidSummerEnrollments={unpaidSummerEnrollments} paidWeeksByStudent={paidWeeksByStudent} parentId={effectiveParentId} parentEmail={user.email ?? ""} nonEnrolledApps={nonEnrolledApps} homeschoolDropInApps={homeschoolDropInApps} paidHomeschoolByStudent={paidHomeschoolByStudent} paidAftercareByStudent={paidAftercareByStudent} paidFunFridayByStudent={paidFunFridayByStudent} summerNotesByStudent={summerNotesByStudent} homeschoolNotesByStudent={homeschoolNotesByStudent} schoolYearOnlyApps={schoolYearOnlyApps} hasSubmittedTuitionFeedback={hasSubmittedTuitionFeedback} paidSchoolYearByStudent={paidSchoolYearByStudent} />
         </main>
       </div>
       <Footer />

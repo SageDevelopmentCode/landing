@@ -10,16 +10,18 @@ const schema = z.object({
   intendedAmountCents: z.number().int().positive(),
   coverFees: z.boolean().optional().default(false),
   paymentMethod: z.enum(["card", "ach"]).optional().default("card"),
+  selectedMonths: z.array(z.number().int().positive()).optional().default([]),
 });
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const validated = schema.parse(body);
-    const { parentId, parentEmail, studentId, intendedAmountCents, coverFees, paymentMethod } = validated;
+    const { parentId, parentEmail, studentId, intendedAmountCents, coverFees, paymentMethod, selectedMonths } = validated;
 
     const baseCents = intendedAmountCents;
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
+    const productName = selectedMonths.length === 1 ? "School Year Tuition (1 month)" : `School Year Tuition (${selectedMonths.length} months)`;
 
     let lineItems;
     if (coverFees && paymentMethod === "ach") {
@@ -31,7 +33,7 @@ export async function POST(request: NextRequest) {
             currency: "usd",
             unit_amount: baseCents,
             product_data: {
-              name: "School Year Tuition",
+              name: productName,
               description: "Sage Field Private School — School Year 2026–27 monthly tuition",
             },
           },
@@ -54,7 +56,7 @@ export async function POST(request: NextRequest) {
             currency: "usd",
             unit_amount: baseCents,
             product_data: {
-              name: "School Year Tuition",
+              name: productName,
               description: "Sage Field Private School — School Year 2026–27 monthly tuition",
             },
           },
@@ -76,7 +78,7 @@ export async function POST(request: NextRequest) {
             currency: "usd",
             unit_amount: baseCents,
             product_data: {
-              name: "School Year Tuition",
+              name: productName,
               description: "Sage Field Private School — School Year 2026–27 monthly tuition",
             },
           },
@@ -107,6 +109,7 @@ export async function POST(request: NextRequest) {
         cover_fees: String(coverFees),
         payment_method: paymentMethod,
         intended_amount_cents: String(baseCents),
+        selected_months: selectedMonths.join(","),
       },
       success_url: `${baseUrl}/parent/billing`,
       cancel_url: `${baseUrl}/parent/billing`,

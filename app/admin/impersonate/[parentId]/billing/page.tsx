@@ -20,6 +20,7 @@ import type {
   HomeschoolNotesByStudent,
   StudentInfo,
   SchoolYearOnlyApp,
+  PaidSchoolYearByStudent,
 } from "@/app/parent/billing/page";
 
 export default async function ImpersonateBillingPage({
@@ -248,6 +249,18 @@ export default async function ImpersonateBillingPage({
     }
   }
 
+  const paidSchoolYearByStudent: PaidSchoolYearByStudent = {};
+  for (const tx of transactions) {
+    if (tx.payment_type === "school_year_tuition" && tx.status === "completed" && tx.student_id) {
+      const meta = (tx.metadata ?? {}) as Record<string, string>;
+      const months = meta.selected_months?.split(",").map(Number).filter(Boolean) ?? [];
+      if (!paidSchoolYearByStudent[tx.student_id]) {
+        paidSchoolYearByStudent[tx.student_id] = [];
+      }
+      paidSchoolYearByStudent[tx.student_id].push(...months);
+    }
+  }
+
   const summerNotesByStudent: SummerNotesByStudent = {};
   for (const row of notesData ?? []) {
     if (row.student_id && row.note) {
@@ -330,6 +343,7 @@ export default async function ImpersonateBillingPage({
           homeschoolNotesByStudent={homeschoolNotesByStudent}
           schoolYearOnlyApps={schoolYearOnlyApps}
           hasSubmittedTuitionFeedback={false}
+          paidSchoolYearByStudent={paidSchoolYearByStudent}
         />
       </main>
     </div>
