@@ -38,6 +38,8 @@ import { sendSummerWeekThreeNewsletterEmail } from '../../actions/sendSummerWeek
 import { sendSummerWeekFourNewsletterEmail } from '../../actions/sendSummerWeekFourNewsletterEmail'
 import { sendSummerWeekFiveNewsletterEmail } from '../../actions/sendSummerWeekFiveNewsletterEmail'
 import { sendSummerWeekSixNewsletterEmail } from '../../actions/sendSummerWeekSixNewsletterEmail'
+import { sendSummerWeekSevenNewsletterEmail } from '../../actions/sendSummerWeekSevenNewsletterEmail'
+import { sendSchoolYearCommitmentEmail } from '../../actions/sendSchoolYearCommitmentEmail'
 import { sendFreeFridayAnnouncementEmail } from '../../actions/sendFreeFridayAnnouncementEmail'
 import { sendGoogleReviewIncentiveEmail } from '../../actions/sendGoogleReviewIncentiveEmail'
 import { sendMeetTheTeacherJoyEmail } from '../../actions/sendMeetTheTeacherJoyEmail'
@@ -247,6 +249,9 @@ export function ApplicationDetailSidebar({
   const [weekSixNewsletterSending, setWeekSixNewsletterSending] = useState(false)
   const [weekSixNewsletterSent, setWeekSixNewsletterSent] = useState(false)
   const [weekSixNewsletterError, setWeekSixNewsletterError] = useState<string | null>(null)
+  const [weekSevenNewsletterSending, setWeekSevenNewsletterSending] = useState(false)
+  const [weekSevenNewsletterSent, setWeekSevenNewsletterSent] = useState(false)
+  const [weekSevenNewsletterError, setWeekSevenNewsletterError] = useState<string | null>(null)
   const [freeFridaySending, setFreeFridaySending] = useState(false)
   const [freeFridaySent, setFreeFridaySent] = useState(false)
   const [freeFridayError, setFreeFridayError] = useState<string | null>(null)
@@ -265,6 +270,9 @@ export function ApplicationDetailSidebar({
   const [funFridayConfirmSending, setFunFridayConfirmSending] = useState(false)
   const [funFridayConfirmSent, setFunFridayConfirmSent] = useState(false)
   const [funFridayConfirmError, setFunFridayConfirmError] = useState<string | null>(null)
+  const [schoolYearCommitmentSending, setSchoolYearCommitmentSending] = useState(false)
+  const [schoolYearCommitmentSent, setSchoolYearCommitmentSent] = useState(false)
+  const [schoolYearCommitmentError, setSchoolYearCommitmentError] = useState<string | null>(null)
   const [tagInput, setTagInput] = useState('')
   const [tagSaving, setTagSaving] = useState(false)
   const [tagError, setTagError] = useState<string | null>(null)
@@ -901,6 +909,25 @@ export function ApplicationDetailSidebar({
     }
   }
 
+  const handleSendSchoolYearCommitment = async () => {
+    if (schoolYearCommitmentSending || !application.g1_email) return
+    setSchoolYearCommitmentSending(true)
+    setSchoolYearCommitmentError(null)
+    const result = await sendSchoolYearCommitmentEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+    })
+    setSchoolYearCommitmentSending(false)
+    if (result.success) {
+      setSchoolYearCommitmentSent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setSchoolYearCommitmentSent(false), 3000)
+    } else {
+      setSchoolYearCommitmentError(result.error ?? 'Failed to send')
+    }
+  }
+
   const handleSendGoogleReviewIncentive = async () => {
     if (googleReviewSending || !application.g1_email) return
     setGoogleReviewSending(true)
@@ -1067,6 +1094,25 @@ export function ApplicationDetailSidebar({
       setTimeout(() => setWeekSixNewsletterSent(false), 3000)
     } else {
       setWeekSixNewsletterError(result.error ?? 'Failed to send')
+    }
+  }
+
+  const handleSendWeekSevenNewsletter = async () => {
+    if (weekSevenNewsletterSending || !application.g1_email) return
+    setWeekSevenNewsletterSending(true)
+    setWeekSevenNewsletterError(null)
+    const result = await sendSummerWeekSevenNewsletterEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+    })
+    setWeekSevenNewsletterSending(false)
+    if (result.success) {
+      setWeekSevenNewsletterSent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setWeekSevenNewsletterSent(false), 3000)
+    } else {
+      setWeekSevenNewsletterError(result.error ?? 'Failed to send')
     }
   }
 
@@ -1657,6 +1703,19 @@ export function ApplicationDetailSidebar({
               {outreachTab === 'summer' && <>
                 <div className="flex items-center gap-3">
                   <button
+                    onClick={handleSendSchoolYearCommitment}
+                    disabled={schoolYearCommitmentSending || schoolYearCommitmentSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {schoolYearCommitmentSending ? 'Sending…' : schoolYearCommitmentSent ? '✓ Sent!' : 'Send School Year Commitment Request'}
+                  </button>
+                  {schoolYearCommitmentError && (
+                    <span className="text-xs text-red-600">{schoolYearCommitmentError}</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
                     onClick={handleSendPaySummerTuition}
                     disabled={summerTuitionSending || summerTuitionSent}
                     className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1812,6 +1871,17 @@ export function ApplicationDetailSidebar({
                   </button>
                   {weekSixNewsletterError && <span className="text-xs text-red-600">{weekSixNewsletterError}</span>}
                 </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendWeekSevenNewsletter}
+                    disabled={weekSevenNewsletterSending || weekSevenNewsletterSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {weekSevenNewsletterSending ? 'Sending…' : weekSevenNewsletterSent ? '✓ Sent!' : 'Send Week Seven Newsletter'}
+                  </button>
+                  {weekSevenNewsletterError && <span className="text-xs text-red-600">{weekSevenNewsletterError}</span>}
+                </div>
               </>}
 
               {outreachTab === 'other' && <>
@@ -1869,6 +1939,17 @@ export function ApplicationDetailSidebar({
                     {meetJoyReminderSending ? 'Sending…' : meetJoyReminderSent ? '✓ Sent!' : 'Send Meet Miss Joy Reminder'}
                   </button>
                   {meetJoyReminderError && <span className="text-xs text-red-600">{meetJoyReminderError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <a
+                    href="https://sagefield.co/testimonial"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors"
+                    style={{ backgroundColor: '#d97706', border: 'none', borderRadius: '8px' }}
+                  >
+                    ☕ Share Testimonial (Earn $15 Gift Card)
+                  </a>
                 </div>
               </>}
             </div>

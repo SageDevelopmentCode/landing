@@ -475,11 +475,13 @@ export async function fetchEmailThread(
 
     const normalizedTarget = emailAddress.toLowerCase().trim();
     const relevantEmails = allEmails.filter((email) => {
-      const to = (email.toAddress || '').toLowerCase();
-      const from = (email.fromAddress || '').toLowerCase();
+      const to = (email.toAddress || "").toLowerCase();
+      const from = (email.fromAddress || "").toLowerCase();
       return to.includes(normalizedTarget) || from.includes(normalizedTarget);
     });
-    console.log(`[Zoho] Relevant emails after filter: ${relevantEmails.length}`);
+    console.log(
+      `[Zoho] Relevant emails after filter: ${relevantEmails.length}`,
+    );
 
     if (relevantEmails.length === 0) {
       console.log(`[Zoho] No emails found for ${emailAddress}`);
@@ -3710,11 +3712,80 @@ export async function buildSummerWeekSixNewsletterEmail(opts: {
   return { subject, content };
 }
 
+export async function buildSummerWeekSevenNewsletterEmail(opts: {
+  g1FullName: string;
+  childLegalName: string;
+}): Promise<{ subject: string; content: string }> {
+  const firstName = opts.g1FullName.split(" ")[0];
+  const subject = "Week Seven Newsletter 🌿";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+
+  <p style="margin-bottom: 24px;">Hi ${firstName}!</p>
+
+  <p style="margin-bottom: 20px;">What an incredible week it has been! We are so proud of the engagement, growth, and pride in progress we are seeing from every student. From hands-on math to Field Friday adventures, this week reminded us just how special our little community truly is.</p>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">🌿 What We've Been Up To</h2>
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px;">
+    <ul style="margin: 0; padding-left: 18px; line-height: 2.1; font-size: 14px; color: #2c2c2c;">
+      <li>📐 <strong>Fractions (Upper El)</strong> — LCM, reducing fractions, adding fractions, and converting improper fractions to mixed numbers</li>
+      <li>➕ <strong>Fractions (Lower El)</strong> — numerator/denominator basics, adding with common denominators, comparing fractions, and hands-on manipulatives</li>
+      <li>📖 <strong>ELA: Author's Purpose &amp; Theme</strong> — upper el tackled lengthy passages with comprehension questions; lower el worked on independent reading while finding theme and author's purpose</li>
+      <li>🦕 <strong>Field Friday: Dino Hunt!</strong> — fossil hunt in oobleck, salt dough fossil pressing, a dinosaur egg hunt, and water play; we also celebrated Ms. Joy's soft launch on campus!</li>
+      <li>🫧 <strong>Bubble Wands (Primary)</strong> — fine motor skills, multi-step directions, patience, grip strength, and perseverance all wrapped into one beautiful activity</li>
+      <li>👩‍🍳 <strong>Independent Cooking (Primary)</strong> — first week of fully independent cooking; students showed incredible peer leadership, collaboration, and measuring skills</li>
+    </ul>
+  </div>
+
+  <p style="margin-bottom: 20px; font-size: 14px; color: #444;">We've put together our seventh newsletter — a closer look at the week through photos and classroom moments.</p>
+
+  <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 8px; padding: 20px 24px; margin: 28px 0; text-align: center;">
+    <p style="margin: 0 0 6px 0; font-size: 15px; font-weight: bold; color: #2C5F2E;">📰 Our Seventh Newsletter is Live!</p>
+    <p style="margin: 0 0 18px 0; font-size: 13px; color: #555;">Photos, classroom moments, and a deeper look into our seventh week.</p>
+    <a href="https://sagefield.co/newsletter/6040970f-fb5a-4127-ab36-3c9fdcbc63a6" style="background: #2C5F2E; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-family: Georgia, serif; font-size: 15px; display: inline-block;">Read the Newsletter →</a>
+    <div style="margin-top: 14px;">
+      <span style="display: inline-block; background: #f7f4f0; border: 1px solid #a8c5a0; border-radius: 999px; padding: 5px 14px; font-size: 12px; color: #555;">🔑 Password: <strong>weekseven</strong></span>
+    </div>
+  </div>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">🎁 Referral Program</h2>
+  <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px; font-size: 14px; color: #2c2c2c;">
+    <p style="margin: 0 0 12px 0;">We're excited to share our <strong>referral program</strong> — and we'd love your help spreading the word about Sage Field!</p>
+    <p style="margin: 0 0 12px 0;">When a family you refer <strong>enrolls in our upcoming school program and pays their registration fee</strong>, you'll receive a <strong>$500 gift card of your choice</strong>. 🎉</p>
+    <p style="margin: 0 0 16px 0;">Simply share your unique referral link — you can find it on your home dashboard. If sharing the link isn't convenient, you can also just let the family know to <strong>mention your name when they apply</strong> and it will still count toward your referral.</p>
+    <p style="margin: 0; color: #888; font-size: 13px;">⏳ This offer is available through the end of our summer program.</p>
+  </div>
+
+  <h2 style="font-size: 17px; color: #b45309; margin-top: 32px; margin-bottom: 14px;">🌟 Share Your Story</h2>
+  <div style="background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px; font-size: 14px; color: #2c2c2c;">
+    <p style="margin: 0 0 12px 0;">Has Sage Field made a difference for your family? We'd love to hear about it — and so would other families looking for the right fit for their child.</p>
+    <p style="margin: 0 0 12px 0;">As a thank-you for sharing your experience, we'll send you a <strong>$15 Starbucks gift card ☕</strong>. It only takes a few minutes and means the world to us.</p>
+    <div style="text-align: center; margin-top: 16px;">
+      <a href="https://sagefield.co/testimonial" style="background: #d97706; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-family: Georgia, serif; font-size: 15px; display: inline-block;">Share a Testimonial →</a>
+    </div>
+  </div>
+
+  <p style="margin-bottom: 8px; font-size: 14px; color: #555;">We are so thankful for each of your families and for the beautiful community we are building together. 🌱</p>
+
+  <p style="margin-top: 32px; margin-bottom: 4px;">Warmly,</p>
+  <p style="margin-top: 4px;"><strong>Sage Field School</strong></p>
+
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
 export async function buildMeetTheTeacherJoyEmail(opts: {
   parentName: string;
 }): Promise<{ subject: string; content: string }> {
   const firstName = opts.parentName.split(" ")[0];
-  const subject = "You're invited — Meet Miss Joy! Monday, July 13 | 5:30–6:30pm";
+  const subject =
+    "You're invited — Meet Miss Joy! Monday, July 13 | 5:30–6:30pm";
   const content = `
 <!DOCTYPE html>
 <html>
@@ -3782,7 +3853,8 @@ export async function buildMeetTheTeacherJoyReminderEmail(opts: {
   parentName: string;
 }): Promise<{ subject: string; content: string }> {
   const firstName = opts.parentName.split(" ")[0];
-  const subject = "Reminder — Meet Miss Joy is TOMORROW! Monday, July 13 | 5:30–6:30pm";
+  const subject =
+    "Reminder — Meet Miss Joy is TOMORROW! Monday, July 13 | 5:30–6:30pm";
   const content = `
 <!DOCTYPE html>
 <html>
@@ -3924,6 +3996,63 @@ export async function buildSchoolYearCommitmentEmail(opts: {
 
   <p style="margin-top: 32px;">With warmth,</p>
   <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
+export async function buildSchoolYearCommitmentRequestEmail(opts: {
+  g1FullName?: string;
+  childLegalName?: string;
+  email: string;
+}): Promise<{ subject: string; content: string }> {
+  const firstName = opts.g1FullName?.split(" ")[0] ?? "there";
+  const childFirstName = opts.childLegalName?.split(" ")[0] ?? "your child";
+
+  const subject = `A spot is waiting for ${childFirstName} — school year starts August 17 🌿`;
+
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+
+  <p style="margin-bottom: 16px;">Hi ${firstName}!</p>
+
+  <p style="margin-bottom: 16px;">What a summer it's been — we are so grateful to have had ${childFirstName} with us this season. Watching your family become part of the Sage Field community has been a true joy.</p>
+
+  <p style="margin-bottom: 24px;">As summer draws to a close, we want to make sure <strong>${childFirstName}'s spot is ready for the 2026–2027 school year</strong> if your family plans to continue.</p>
+
+  <div style="background: #fef3c7; border-left: 4px solid #d97706; border-radius: 6px; padding: 14px 18px; margin: 0 0 28px 0;">
+    <p style="margin: 0; font-size: 15px; color: #92400e;"><strong>⏰ Deadline: July 17</strong> — one month before the August 17 school year start</p>
+  </div>
+
+  <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 10px; padding: 24px; margin: 0 0 28px 0; text-align: center;">
+    <p style="margin: 0 0 16px 0; font-size: 16px; color: #2c2c2c;">Ready to share your family's plans? It only takes a minute.</p>
+    <a href="https://sagefield.co/school-year-2026-commitment"
+       style="display: inline-block; background: #2C5F2E; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-size: 15px; font-weight: bold; letter-spacing: 0.3px;">
+      Let us know your plan →
+    </a>
+  </div>
+
+  <p style="margin-bottom: 10px; font-weight: bold; color: #2C5F2E;">Why let us know by July 17?</p>
+  <ul style="padding-left: 20px; margin: 0 0 28px 0;">
+    <li style="margin-bottom: 8px;">🏡 <strong>Secure ${childFirstName}'s spot</strong> before enrollment opens to new families</li>
+    <li style="margin-bottom: 8px;">📋 <strong>Help Sage Field plan staffing</strong> and classroom capacity for the year</li>
+    <li style="margin-bottom: 8px;">🎒 <strong>Get early access</strong> to program details and supply lists</li>
+  </ul>
+
+  <p style="margin-bottom: 24px; font-size: 14px; color: #555;">No commitment required — even a "not this year" is incredibly helpful. It lets us plan thoughtfully and ensures another family on the waitlist can get a spot in time.</p>
+
+  <p style="margin-top: 32px;">With so much warmth,</p>
+  <p style="margin-top: 4px;">
+    <strong>Sabrina</strong><br />
+    Sage Field School<br />
+    <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> · <a href="tel:5126775872" style="color: #5a7a5a;">(512) 677-5872</a>
+  </p>
+
 </body>
 </html>
   `.trim();
