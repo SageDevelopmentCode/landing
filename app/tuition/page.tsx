@@ -155,9 +155,9 @@ export default function TuitionPage() {
               className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col"
             >
               <h3 className="text-base font-bold text-black font-heading mb-1">
-                Explorer Day Pass
+                1 Day / Week
               </h3>
-              <p className="text-xs text-gray-400 font-body mb-4">Drop-In</p>
+              <p className="text-xs text-gray-400 font-body mb-4">Part-Time</p>
               {activePricingTab === "summer" ? (
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-sm font-body">
@@ -173,18 +173,18 @@ export default function TuitionPage() {
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-sm font-body">
                     <span className="text-gray-600">2nd–4th</span>
-                    <span className="font-semibold text-black">$110/day</span>
+                    <span className="font-semibold text-black">$440/mo</span>
                   </div>
                   <div className="flex justify-between text-sm font-body">
                     <span className="text-gray-600">Pre-K–1st</span>
-                    <span className="font-semibold text-black">$120/day</span>
+                    <span className="font-semibold text-black">$480/mo</span>
                   </div>
                 </div>
               )}
               <p className="text-xs text-gray-400 font-body mt-auto">
                 {activePricingTab === "summer"
                   ? "Perfect for trying it out or occasional days"
-                  : "Great for trying the program or occasional days"}
+                  : "Attend one consistent day each week, paid monthly"}
               </p>
             </motion.div>
 

@@ -17,6 +17,11 @@ const schema = z.object({
   siblingBundleStudentIds: z.array(z.string()).optional().default([]),
   siblingGrades: z.array(z.string()).optional().default([]),
   siblingBundleAmounts: z.array(z.number().int()).optional().default([]),
+  bundleHomeschoolTier: z.enum(["dropin", "2day", "3day"]).optional(),
+  bundleHomeschoolGradeTier: z.enum(["primary", "upper"]).optional(),
+  bundleHomeschoolApplicationId: z.string().optional(),
+  bundleHomeschoolSelectedDays: z.array(z.number().int()).optional().default([]),
+  bundleHomeschoolWeekSelectionsJson: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -36,6 +41,11 @@ export async function POST(request: NextRequest) {
       siblingBundleStudentIds,
       siblingGrades,
       siblingBundleAmounts,
+      bundleHomeschoolTier,
+      bundleHomeschoolGradeTier,
+      bundleHomeschoolApplicationId,
+      bundleHomeschoolSelectedDays,
+      bundleHomeschoolWeekSelectionsJson,
     } = validated;
 
     const supplyFeeCents = 30000;
@@ -162,6 +172,13 @@ export async function POST(request: NextRequest) {
           bundle_type: bundleType,
           bundle_amount_cents: String(primaryBundleCents),
           bundle_month_index: bundleMonthIndex != null ? String(bundleMonthIndex) : "",
+        } : {}),
+        ...(bundleType === "homeschool" && bundleHomeschoolTier ? {
+          bundle_homeschool_tier: bundleHomeschoolTier,
+          bundle_homeschool_grade_tier: bundleHomeschoolGradeTier ?? "",
+          bundle_homeschool_application_id: bundleHomeschoolApplicationId ?? "",
+          bundle_homeschool_selected_days: bundleHomeschoolSelectedDays.join(","),
+          bundle_homeschool_week_selections_json: bundleHomeschoolWeekSelectionsJson ?? "",
         } : {}),
         ...(siblingStudentIds.length > 0 ? {
           sibling_supply_student_ids: siblingStudentIds.join(","),
