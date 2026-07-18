@@ -121,11 +121,18 @@ export default async function ImpersonateBillingPage({
     }));
 
   const homeschoolDropInApps: HomeschoolDropInApp[] = allSummerApps
-    .filter((e) => e.program === "homeschool_drop_in" && e.status === "enrolled")
+    .filter(
+      (e) =>
+        e.status === "enrolled" &&
+        (e.program === "homeschool_drop_in" ||
+          e.program === "summer_26" ||
+          e.program === "both"),
+    )
     .map((e) => ({
       id: e.id,
       student_id: e.student_id!,
-      drop_in_program: e.drop_in_program,
+      drop_in_program:
+        e.program === "homeschool_drop_in" ? e.drop_in_program : e.program,
       child_grade: e.child_grade,
       name: e.child_legal_name,
     }));
