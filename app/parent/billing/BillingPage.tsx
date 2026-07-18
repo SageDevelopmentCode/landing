@@ -6329,6 +6329,12 @@ export default function BillingPage({
     siblings: Array<{ studentId: string; studentName: string | null; childGrade: string | null; programType: "school_year" | "homeschool" | null }>;
   } | null>(null);
   const [schoolYearTuitionTarget, setSchoolYearTuitionTarget] = useState<{ studentId: string; childGrade: string | null } | null>(null);
+  const [showCommitModal, setShowCommitModal] = useState<string | null>(null); // applicationId
+  const [commitModalType, setCommitModalType] = useState<"drop_in" | "full_time" | null>(null);
+  const [commitPaymentMethod, setCommitPaymentMethod] = useState<"card" | "ach">("card");
+  const [commitCoverFees, setCommitCoverFees] = useState(false);
+  const [commitLoading, setCommitLoading] = useState(false);
+  const [commitError, setCommitError] = useState<string | null>(null);
 
   const hasPaidAny = transactions.some((tx) => tx.status === "completed" && tx.payment_type !== "registration_fee");
 
@@ -6590,6 +6596,110 @@ export default function BillingPage({
             })()}
           </div>
 
+          {(() => {
+            const activeHomeschoolDropIn = homeschoolDropInApps.find(
+              (a) => a.student_id === activeStudentId,
+            );
+            if (!activeHomeschoolDropIn || activeHomeschoolDropIn.drop_in_program !== "summer_26") return null;
+            const childFirstName = (() => {
+              const full = studentMap[activeHomeschoolDropIn.student_id]?.name ?? null;
+              return full ? full.trim().split(/\s+/)[0] : null;
+            })();
+            return (
+              <div>
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, ease: "easeOut" as const }}
+                  className="bg-gradient-to-br from-[#f0f9f4] to-[#e8f5ec] border border-[#4a7c59]/20 rounded-2xl px-5 py-5 shadow-sm"
+                >
+                  <div className="flex flex-col items-start gap-3 md:flex-row md:items-center md:justify-between md:gap-4">
+                    <div>
+                      <p className="text-sm font-semibold font-heading text-gray-900 mb-0.5">
+                        Secure {childFirstName ? `${childFirstName}'s` : "your child's"} spot for 2026–2027
+                      </p>
+                      <p className="text-xs font-body text-gray-500">
+                        {childFirstName
+                          ? `Want to make sure ${childFirstName}'s spot is ready for the 2026–2027 school year?`
+                          : "Want to make sure your child's spot is ready for the 2026–2027 school year?"}{" "}
+                        If your family plans to continue, secure their place now.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setCommitPaymentMethod("card");
+                        setCommitCoverFees(false);
+                        setCommitError(null);
+                        setCommitModalType("drop_in");
+                        setShowCommitModal(activeHomeschoolDropIn.id);
+                      }}
+                      className="w-full md:w-auto flex-shrink-0 px-4 py-2 text-white text-xs font-semibold font-body rounded-xl transition-colors whitespace-nowrap cursor-pointer"
+                      style={{ backgroundColor: "#4a7c59" }}
+                    >
+                      Commit to School Year
+                    </button>
+                  </div>
+                </motion.div>
+              </div>
+            );
+          })()}
+
+          {(() => {
+            // Don't show if drop-in banner already showing (avoid duplicates)
+            const hasDropIn = homeschoolDropInApps.some(
+              (a) => a.student_id === activeStudentId && a.drop_in_program === "summer_26",
+            );
+            if (hasDropIn) return null;
+
+            const activeSummer = summerEnrollments.find(
+              (e) => e.student_id === activeStudentId && e.program === "summer_26",
+            );
+            if (!activeSummer) return null;
+
+            const childFirstName = (() => {
+              const full = studentMap[activeSummer.student_id]?.name ?? null;
+              return full ? full.trim().split(/\s+/)[0] : null;
+            })();
+
+            return (
+              <div>
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, ease: "easeOut" as const }}
+                  className="bg-gradient-to-br from-[#f0f9f4] to-[#e8f5ec] border border-[#4a7c59]/20 rounded-2xl px-5 py-5 shadow-sm"
+                >
+                  <div className="flex flex-col items-start gap-3 md:flex-row md:items-center md:justify-between md:gap-4">
+                    <div>
+                      <p className="text-sm font-semibold font-heading text-gray-900 mb-0.5">
+                        Secure {childFirstName ? `${childFirstName}'s` : "your child's"} spot for 2026–2027
+                      </p>
+                      <p className="text-xs font-body text-gray-500">
+                        {childFirstName
+                          ? `Want to make sure ${childFirstName}'s spot is ready for the 2026–2027 school year?`
+                          : "Want to make sure your child's spot is ready for the 2026–2027 school year?"}{" "}
+                        If your family plans to continue, secure their place now.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setCommitPaymentMethod("card");
+                        setCommitCoverFees(false);
+                        setCommitError(null);
+                        setCommitModalType("full_time");
+                        setShowCommitModal(activeSummer.id);
+                      }}
+                      className="w-full md:w-auto flex-shrink-0 px-4 py-2 text-white text-xs font-semibold font-body rounded-xl transition-colors whitespace-nowrap cursor-pointer"
+                      style={{ backgroundColor: "#4a7c59" }}
+                    >
+                      Commit to School Year
+                    </button>
+                  </div>
+                </motion.div>
+              </div>
+            );
+          })()}
+
           {hasPendingContent && (
             <div>
               <div className="flex items-center justify-between mb-4">
@@ -6659,23 +6769,6 @@ export default function BillingPage({
               </div>
             </div>
           )}
-
-          {(() => {
-            const activeHomeschoolDropIn = homeschoolDropInApps.find(
-              (a) => a.student_id === activeStudentId,
-            );
-            const eligible =
-              !!activeHomeschoolDropIn &&
-              (activeHomeschoolDropIn.drop_in_program === "summer_26" ||
-                activeHomeschoolDropIn.drop_in_program === "both");
-            if (!eligible) return null;
-            return (
-              <WantToGoFullTimeSection
-                applicationId={activeHomeschoolDropIn.id}
-                dropInProgram={activeHomeschoolDropIn.drop_in_program}
-              />
-            );
-          })()}
 
           <div>
             <h2 className="text-lg font-semibold font-heading text-gray-700 mb-4">
@@ -7197,6 +7290,143 @@ export default function BillingPage({
             paidMonthIndices={new Set(paidSchoolYearByStudent[schoolYearTuitionTarget.studentId] ?? [])}
           />
         )}
+        {showCommitModal && (() => {
+          const commitApp =
+            commitModalType === "full_time"
+              ? summerEnrollments.find((e) => e.id === showCommitModal) ?? null
+              : homeschoolDropInApps.find((a) => a.id === showCommitModal) ?? null;
+          if (!commitApp) return null;
+          const studentName = studentMap[commitApp.student_id]?.name ?? null;
+          const BASE_CENTS = 50000;
+          const cardFee = Math.round((BASE_CENTS + 30) / (1 - 0.029)) - BASE_CENTS;
+          const achFee = Math.min(Math.round(BASE_CENTS * 0.008), 500);
+          const feeAmount = commitPaymentMethod === "card" ? cardFee : achFee;
+          const totalWithFees = commitCoverFees ? BASE_CENTS + feeAmount : BASE_CENTS;
+
+          const handleCommitPay = async () => {
+            setCommitLoading(true);
+            setCommitError(null);
+            try {
+              const res = await fetch("/api/stripe/create-registration-checkout", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  parentId,
+                  parentEmail,
+                  studentId: commitApp.student_id,
+                  applicationId: commitApp.id,
+                  ...(commitModalType === "full_time"
+                    ? { program: "summer_26", dropInProgram: "school_year_26_27" }
+                    : { program: "homeschool_drop_in", dropInProgram: "school_year_26_27" }),
+                  coverFees: commitCoverFees,
+                  paymentMethod: commitPaymentMethod,
+                }),
+              });
+              const data = await res.json();
+              if (!res.ok || !data.url) throw new Error(data.error ?? "Failed to create checkout session");
+              window.location.href = data.url;
+            } catch (err) {
+              setCommitError(err instanceof Error ? err.message : "Something went wrong");
+              setCommitLoading(false);
+            }
+          };
+
+          return (
+            <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+              <motion.div
+                className="absolute inset-0 bg-black/40"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowCommitModal(null)}
+              />
+              <motion.div
+                className="relative bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden z-10"
+                initial={{ y: 60, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 60, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              >
+                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                  <div>
+                    <h2 className="text-base font-bold font-heading text-gray-800">School Year 2026–2027 Registration Fee</h2>
+                    {studentName && <p className="text-xs text-gray-400 mt-0.5">{studentName}</p>}
+                  </div>
+                  <button onClick={() => setShowCommitModal(null)} className="p-1.5 rounded-full hover:bg-gray-100 transition-colors cursor-pointer">
+                    <X className="w-4 h-4 text-gray-500" />
+                  </button>
+                </div>
+                <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
+                  <div className="rounded-xl px-4 py-3 flex items-center justify-between" style={{ backgroundColor: "#f0f9f4" }}>
+                    <span className="text-sm text-gray-500 font-body">Registration fee</span>
+                    <span className="text-base font-bold font-heading" style={{ color: "#4a7c59" }}>$500.00</span>
+                  </div>
+                  <div className="rounded-xl bg-gray-50 border border-gray-100 px-4 py-3 space-y-1">
+                    <p className="text-xs font-semibold font-heading text-gray-700">What this covers</p>
+                    <p className="text-xs font-body text-gray-500">
+                      {studentName ? `${studentName} will` : "Your child will"} remain enrolled as a{" "}
+                      <span className="font-semibold text-gray-700">
+                        {commitModalType === "full_time" ? "Full Time" : "Homeschool Drop-In"}
+                      </span>{" "}
+                      student and will also be secured for the{" "}
+                      <span className="font-semibold text-gray-700">2026–2027 School Year</span> program.
+                      This $500 registration fee holds their spot.
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">Payment method</p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setCommitPaymentMethod("card")}
+                        className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${commitPaymentMethod === "card" ? "border-primary bg-primary/5 text-primary" : "border-gray-200 text-gray-600 hover:bg-gray-50"}`}
+                      >
+                        Credit/Debit Card
+                      </button>
+                      <button
+                        onClick={() => setCommitPaymentMethod("ach")}
+                        className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${commitPaymentMethod === "ach" ? "border-primary bg-primary/5 text-primary" : "border-gray-200 text-gray-600 hover:bg-gray-50"}`}
+                      >
+                        ACH / US bank account
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-400 font-body mt-1.5">
+                      {commitPaymentMethod === "card"
+                        ? `Processing fee (est.): ~${formatCents(cardFee)}`
+                        : `Processing fee (est.): ~${formatCents(achFee)} (0.8%, max $5.00)`}
+                    </p>
+                  </div>
+                  <label className="flex items-start gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={commitCoverFees}
+                      onChange={(e) => setCommitCoverFees(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 rounded cursor-pointer"
+                      style={{ accentColor: "#4a7c59" }}
+                    />
+                    <span className="text-sm text-gray-600 font-body group-hover:text-gray-800 transition-colors">
+                      I agree to pay the processing fee
+                    </span>
+                  </label>
+                </div>
+                {commitError && (
+                  <div className="px-6 pb-2">
+                    <p className="text-xs text-red-500 font-body">{commitError}</p>
+                  </div>
+                )}
+                <div className="px-6 py-4 border-t border-gray-100">
+                  <button
+                    disabled={commitLoading || !commitCoverFees}
+                    className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: "#4a7c59" }}
+                    onClick={handleCommitPay}
+                  >
+                    {commitLoading ? "Processing…" : `Pay Now · ${formatCents(totalWithFees)}`}
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          );
+        })()}
         {payByCheckModalOpen && (
           <PayByCheckModal onClose={() => setPayByCheckModalOpen(false)} />
         )}

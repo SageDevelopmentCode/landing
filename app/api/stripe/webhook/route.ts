@@ -207,10 +207,26 @@ export async function POST(request: NextRequest) {
           }
         })();
       } else if (applicationId) {
+        const updatePayload: Record<string, unknown> = { registration_fee_paid: true };
+
+        // If a summer-only homeschool drop-in parent is committing to school year, update drop_in_program
+        const metaProgram = session.metadata?.program;
+        const metaDropInProgram = session.metadata?.drop_in_program;
+        if (metaProgram === "homeschool_drop_in" && metaDropInProgram === "school_year_26_27") {
+          updatePayload.drop_in_program = "both";
+          updatePayload.updated_at = new Date().toISOString();
+        }
+
+        // Full-time summer parent committing to school year
+        if (metaProgram === "summer_26" && metaDropInProgram === "school_year_26_27") {
+          updatePayload.program = "both";
+          updatePayload.updated_at = new Date().toISOString();
+        }
+
         const { error } = await supabase
           .schema("parent_app")
           .from("applications")
-          .update({ registration_fee_paid: true })
+          .update(updatePayload)
           .eq("id", applicationId);
 
         if (error) {

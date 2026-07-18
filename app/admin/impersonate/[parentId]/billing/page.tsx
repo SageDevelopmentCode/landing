@@ -124,9 +124,7 @@ export default async function ImpersonateBillingPage({
     .filter(
       (e) =>
         e.status === "enrolled" &&
-        (e.program === "homeschool_drop_in" ||
-          e.program === "summer_26" ||
-          e.program === "both"),
+        (e.program === "homeschool_drop_in" || e.program === "both"),
     )
     .map((e) => ({
       id: e.id,

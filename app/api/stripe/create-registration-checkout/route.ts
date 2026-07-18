@@ -192,6 +192,7 @@ export async function POST(request: NextRequest) {
       metadata: {
         payment_type: "registration_fee",
         program,
+        ...(dropInProgram ? { drop_in_program: dropInProgram } : {}),
         description,
         parent_id: parentId,
         student_id: studentId,
