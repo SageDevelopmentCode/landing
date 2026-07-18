@@ -2038,6 +2038,138 @@ function HomeschoolPaymentModal({
   );
 }
 
+function SupplyFeeSiblingModal({
+  primaryStudentName,
+  primaryGrade,
+  siblings,
+  onClose,
+  onContinue,
+}: {
+  primaryStudentId: string;
+  primaryStudentName: string | null;
+  primaryGrade: string | null;
+  primaryProgramType: "school_year" | "homeschool" | null;
+  siblings: Array<{ studentId: string; studentName: string | null; childGrade: string | null; programType: "school_year" | "homeschool" | null }>;
+  onClose: () => void;
+  onContinue: (selectedSiblingIds: string[]) => void;
+}) {
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(
+    () => new Set(siblings.map((s) => s.studentId)),
+  );
+
+  const toggle = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const totalChildren = 1 + selectedIds.size;
+  const totalCents = 30000 * totalChildren;
+
+  const gradeLabel = (grade: string | null) => {
+    if (!grade) return null;
+    const g = grade.trim();
+    const lower = g.toLowerCase();
+    if (lower === "k" || lower === "kindergarten") return "Kindergarten";
+    if (lower === "pre-k" || lower === "prek" || lower === "pre k") return "Pre-K";
+    return g.match(/^\d+$/) ? `${g}th grade` : g;
+  };
+
+  const primaryFirstName = primaryStudentName ? primaryStudentName.trim().split(/\s+/)[0] : null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+      <motion.div
+        className="absolute inset-0 bg-black/40"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+      />
+      <motion.div
+        className="relative bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden z-10"
+        initial={{ y: 60, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 60, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      >
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div>
+            <h2 className="text-base font-bold font-heading text-gray-800">Add siblings to this payment?</h2>
+            <p className="text-xs text-gray-400 mt-0.5">Pay for all children in one transaction and save on processing fees.</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-full hover:bg-gray-100 transition-colors cursor-pointer">
+            <X className="w-4 h-4 text-gray-500" />
+          </button>
+        </div>
+        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-3">
+          {/* Primary child — always included, shown as reference */}
+          <div className="rounded-xl border border-gray-100 px-4 py-3 flex items-center justify-between bg-gray-50">
+            <div className="flex items-center gap-3">
+              <div className="w-4 h-4 rounded flex items-center justify-center" style={{ backgroundColor: "#4a7c59" }}>
+                <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 10 8" fill="none">
+                  <path d="M1 4l2.5 2.5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <span className="text-sm font-semibold text-gray-800">
+                {primaryFirstName ?? "Child"}
+                {primaryGrade && (
+                  <span className="text-gray-400 font-normal"> · {gradeLabel(primaryGrade)}</span>
+                )}
+              </span>
+            </div>
+            <span className="text-sm font-bold" style={{ color: "#4a7c59" }}>$300.00</span>
+          </div>
+
+          {siblings.map((sib) => {
+            const firstName = sib.studentName ? sib.studentName.trim().split(/\s+/)[0] : "Child";
+            const checked = selectedIds.has(sib.studentId);
+            return (
+              <label key={sib.studentId} className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggle(sib.studentId)}
+                    className="w-4 h-4 rounded cursor-pointer"
+                    style={{ accentColor: "#4a7c59" }}
+                  />
+                  <span className="text-sm font-semibold text-gray-800">
+                    {firstName}
+                    {sib.childGrade && (
+                      <span className="text-gray-400 font-normal"> · {gradeLabel(sib.childGrade)}</span>
+                    )}
+                  </span>
+                </div>
+                <span className="text-sm font-bold" style={{ color: "#4a7c59" }}>$300.00</span>
+              </label>
+            );
+          })}
+
+          <div className="rounded-xl px-4 py-3 flex items-center justify-between" style={{ backgroundColor: "#f6faf7" }}>
+            <span className="text-sm text-gray-500 font-body">
+              Total · {totalChildren} {totalChildren === 1 ? "child" : "children"}
+            </span>
+            <span className="text-base font-bold font-heading" style={{ color: "#4a7c59" }}>{formatCents(totalCents)}</span>
+          </div>
+        </div>
+        <div className="px-6 py-4 border-t border-gray-100">
+          <button
+            onClick={() => onContinue(Array.from(selectedIds))}
+            className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all cursor-pointer"
+            style={{ backgroundColor: "#4a7c59" }}
+          >
+            Continue →
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 function SupplyFeeModal({
   studentId,
   studentName,
@@ -2047,6 +2179,7 @@ function SupplyFeeModal({
   programType,
   childGrade,
   paidSchoolYearMonths,
+  siblingStudents,
 }: {
   studentId: string;
   studentName: string | null;
@@ -2056,28 +2189,54 @@ function SupplyFeeModal({
   programType: "school_year" | "homeschool" | null;
   childGrade: string | null;
   paidSchoolYearMonths: number[];
+  siblingStudents?: Array<{
+    studentId: string;
+    studentName: string | null;
+    childGrade: string | null;
+    programType: "school_year" | "homeschool" | null;
+    paidSchoolYearMonths: number[];
+  }>;
 }) {
   const SUPPLY_FEE_CENTS = 30000;
-
-  // Bundle: August is month index 1
   const BUNDLE_MONTH_INDEX = 1;
-  const gradeTier = getGradeTier(childGrade);
-  const bundleTuitionCents = gradeTier === "primary" ? 119500 : 109500;
-  const bundleHomeschoolCents = 0; // homeschool drop-in is session-based, no fixed monthly
 
-  const showUpsell =
+  const hasSiblings = siblingStudents && siblingStudents.length > 0;
+  const allStudents = hasSiblings
+    ? [{ studentId, studentName, childGrade, programType, paidSchoolYearMonths }, ...siblingStudents!]
+    : null;
+
+  // Multi-child: track selected bundle per-student
+  const [selectedBundleIds, setSelectedBundleIds] = useState<Set<string>>(() => new Set());
+  // Single-child legacy
+  const primaryGradeTier = getGradeTier(childGrade);
+  const primaryBundleTuitionCents = primaryGradeTier === "primary" ? 119500 : 109500;
+  const primaryShowUpsell =
     programType === "school_year"
       ? !paidSchoolYearMonths.includes(BUNDLE_MONTH_INDEX)
       : programType === "homeschool";
-
   const [addBundle, setAddBundle] = useState(false);
+
   const [paymentMethod, setPaymentMethod] = useState<"card" | "ach">("card");
   const [coverFees, setCoverFees] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const bundleAmountCents = programType === "school_year" ? bundleTuitionCents : bundleHomeschoolCents;
-  const BASE_CENTS = SUPPLY_FEE_CENTS + (addBundle ? bundleAmountCents : 0);
+  const getStudentBundleCents = (grade: string | null, prog: "school_year" | "homeschool" | null) => {
+    if (prog !== "school_year") return 0;
+    return getGradeTier(grade) === "primary" ? 119500 : 109500;
+  };
+
+  let BASE_CENTS: number;
+  if (hasSiblings && allStudents) {
+    const supplyTotal = SUPPLY_FEE_CENTS * allStudents.length;
+    const bundleTotal = allStudents
+      .filter((s) => selectedBundleIds.has(s.studentId))
+      .reduce((sum, s) => sum + getStudentBundleCents(s.childGrade, s.programType), 0);
+    BASE_CENTS = supplyTotal + bundleTotal;
+  } else {
+    const bundleAmountCents = programType === "school_year" ? primaryBundleTuitionCents : 0;
+    BASE_CENTS = SUPPLY_FEE_CENTS + (addBundle ? bundleAmountCents : 0);
+  }
 
   const cardFee = Math.round((BASE_CENTS + 30) / (1 - 0.029)) - BASE_CENTS;
   const achFee = Math.min(Math.round(BASE_CENTS * 0.008), 500);
@@ -2089,11 +2248,31 @@ function SupplyFeeModal({
     setError(null);
     try {
       const body: Record<string, unknown> = { parentId, parentEmail, studentId, coverFees, paymentMethod };
-      if (addBundle && programType) {
-        body.bundleType = programType === "school_year" ? "school_year_tuition" : "homeschool";
-        body.bundleAmountCents = bundleAmountCents;
-        body.bundleMonthIndex = BUNDLE_MONTH_INDEX;
+
+      if (hasSiblings && allStudents) {
+        const primaryBundle = selectedBundleIds.has(studentId) && programType === "school_year";
+        if (primaryBundle) {
+          body.bundleType = "school_year_tuition";
+          body.bundleAmountCents = getStudentBundleCents(childGrade, programType);
+          body.bundleMonthIndex = BUNDLE_MONTH_INDEX;
+        }
+        const sibs = siblingStudents!;
+        body.siblingStudentIds = sibs.map((s) => s.studentId);
+        body.siblingBundleStudentIds = sibs
+          .filter((s) => selectedBundleIds.has(s.studentId))
+          .map((s) => s.studentId);
+        body.siblingGrades = sibs.map((s) => s.childGrade ?? "");
+        body.siblingBundleAmounts = sibs
+          .filter((s) => selectedBundleIds.has(s.studentId))
+          .map((s) => getStudentBundleCents(s.childGrade, s.programType));
+      } else {
+        if (addBundle && programType) {
+          body.bundleType = programType === "school_year" ? "school_year_tuition" : "homeschool";
+          body.bundleAmountCents = programType === "school_year" ? primaryBundleTuitionCents : 0;
+          body.bundleMonthIndex = BUNDLE_MONTH_INDEX;
+        }
       }
+
       const res = await fetch("/api/stripe/create-supply-fee-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -2107,6 +2286,10 @@ function SupplyFeeModal({
       setLoading(false);
     }
   };
+
+  const childNames = hasSiblings && allStudents
+    ? allStudents.map((s) => s.studentName ? s.studentName.trim().split(/\s+/)[0] : "Child").join(", ")
+    : null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
@@ -2127,7 +2310,11 @@ function SupplyFeeModal({
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div>
             <h2 className="text-base font-bold font-heading text-gray-800">Annual Supply Fee</h2>
-            {studentName && <p className="text-xs text-gray-400 mt-0.5">{studentName}</p>}
+            {hasSiblings ? (
+              <p className="text-xs text-gray-400 mt-0.5">{childNames}</p>
+            ) : (
+              studentName && <p className="text-xs text-gray-400 mt-0.5">{studentName}</p>
+            )}
           </div>
           <button onClick={onClose} className="p-1.5 rounded-full hover:bg-gray-100 transition-colors cursor-pointer">
             <X className="w-4 h-4 text-gray-500" />
@@ -2137,36 +2324,83 @@ function SupplyFeeModal({
           <div className="rounded-xl border border-gray-100 px-4 py-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-semibold text-gray-800">Annual Supply Fee</span>
-              <span className="text-sm font-bold" style={{ color: "#4a7c59" }}>$300.00</span>
+              <span className="text-sm font-bold" style={{ color: "#4a7c59" }}>
+                {hasSiblings && allStudents
+                  ? `${formatCents(SUPPLY_FEE_CENTS * allStudents.length)} · ${allStudents.length} children`
+                  : "$300.00"}
+              </span>
             </div>
             <p className="text-xs text-gray-400 mt-1">One-time fee · School Year 26–27</p>
           </div>
 
-          {showUpsell && (
-            <div className="rounded-xl border border-gray-200 px-4 py-4 space-y-3" style={{ backgroundColor: "#f6faf7" }}>
-              <div>
-                <p className="text-xs font-semibold text-gray-700 mb-0.5">Bundle &amp; save on processing fees</p>
-                <p className="text-xs text-gray-500 font-body">
-                  {programType === "school_year"
-                    ? `Add August tuition (${formatCents(bundleTuitionCents)}) to this payment — one Stripe checkout, one processing fee.`
-                    : "Add your first month of Homeschool Drop-In to this payment — one Stripe checkout, one processing fee."}
-                </p>
+          {hasSiblings && allStudents ? (
+            (() => {
+              const bundlableStudents = allStudents.filter(
+                (s) => s.programType === "school_year" && !s.paidSchoolYearMonths.includes(BUNDLE_MONTH_INDEX),
+              );
+              if (bundlableStudents.length === 0) return null;
+              return (
+                <div className="rounded-xl border border-gray-200 px-4 py-4 space-y-3" style={{ backgroundColor: "#f6faf7" }}>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-700 mb-0.5">Bundle &amp; save on processing fees</p>
+                    <p className="text-xs text-gray-500 font-body">Add August 2026 tuition for any child — one checkout, one processing fee.</p>
+                  </div>
+                  {bundlableStudents.map((s) => {
+                    const firstName = s.studentName ? s.studentName.trim().split(/\s+/)[0] : "Child";
+                    const amt = getStudentBundleCents(s.childGrade, s.programType);
+                    const checked = selectedBundleIds.has(s.studentId);
+                    return (
+                      <label key={s.studentId} className="flex items-start gap-3 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => {
+                            setSelectedBundleIds((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(s.studentId)) next.delete(s.studentId);
+                              else next.add(s.studentId);
+                              return next;
+                            });
+                          }}
+                          className="mt-0.5 w-4 h-4 rounded cursor-pointer"
+                          style={{ accentColor: "#4a7c59" }}
+                        />
+                        <span className="text-sm text-gray-700 font-body group-hover:text-gray-900 transition-colors">
+                          Add August 2026 tuition for {firstName}{s.childGrade ? ` · ${s.childGrade}` : ""} · {formatCents(amt)}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              );
+            })()
+          ) : (
+            primaryShowUpsell && (
+              <div className="rounded-xl border border-gray-200 px-4 py-4 space-y-3" style={{ backgroundColor: "#f6faf7" }}>
+                <div>
+                  <p className="text-xs font-semibold text-gray-700 mb-0.5">Bundle &amp; save on processing fees</p>
+                  <p className="text-xs text-gray-500 font-body">
+                    {programType === "school_year"
+                      ? `Add August tuition (${formatCents(primaryBundleTuitionCents)}) to this payment — one Stripe checkout, one processing fee.`
+                      : "Add your first month of Homeschool Drop-In to this payment — one Stripe checkout, one processing fee."}
+                  </p>
+                </div>
+                <label className="flex items-start gap-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={addBundle}
+                    onChange={(e) => setAddBundle(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded cursor-pointer"
+                    style={{ accentColor: "#4a7c59" }}
+                  />
+                  <span className="text-sm text-gray-700 font-body group-hover:text-gray-900 transition-colors">
+                    {programType === "school_year"
+                      ? `Add August 2026 tuition · ${formatCents(primaryBundleTuitionCents)}`
+                      : "Set up first month of Drop-In"}
+                  </span>
+                </label>
               </div>
-              <label className="flex items-start gap-3 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={addBundle}
-                  onChange={(e) => setAddBundle(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 rounded cursor-pointer"
-                  style={{ accentColor: "#4a7c59" }}
-                />
-                <span className="text-sm text-gray-700 font-body group-hover:text-gray-900 transition-colors">
-                  {programType === "school_year"
-                    ? `Add August 2026 tuition · ${formatCents(bundleTuitionCents)}`
-                    : "Set up first month of Drop-In"}
-                </span>
-              </label>
-            </div>
+            )
           )}
 
           <div>
@@ -6080,6 +6314,19 @@ export default function BillingPage({
     studentId: string;
     programType: "school_year" | "homeschool" | null;
     childGrade: string | null;
+    siblingStudents?: Array<{
+      studentId: string;
+      studentName: string | null;
+      childGrade: string | null;
+      programType: "school_year" | "homeschool" | null;
+      paidSchoolYearMonths: number[];
+    }>;
+  } | null>(null);
+  const [supplyFeeSiblingTarget, setSupplyFeeSiblingTarget] = useState<{
+    primaryStudentId: string;
+    primaryGrade: string | null;
+    primaryProgramType: "school_year" | "homeschool" | null;
+    siblings: Array<{ studentId: string; studentName: string | null; childGrade: string | null; programType: "school_year" | "homeschool" | null }>;
   } | null>(null);
   const [schoolYearTuitionTarget, setSchoolYearTuitionTarget] = useState<{ studentId: string; childGrade: string | null } | null>(null);
 
@@ -6138,9 +6385,14 @@ export default function BillingPage({
     nonEnrolledApps.map((a) => a.student_id),
   );
   const visibleTransactions = transactions.filter(
-    (tx) =>
-      (!tx.student_id || !nonEnrolledStudentIds.has(tx.student_id)) &&
-      (tx.metadata as Record<string, string> | null)?.is_sibling_split !== "true",
+    (tx) => {
+      const meta = (tx.metadata ?? {}) as Record<string, string>;
+      return (
+        (!tx.student_id || !nonEnrolledStudentIds.has(tx.student_id)) &&
+        meta.is_sibling_split !== "true" &&
+        meta.bundled_with_supply_fee !== "true"
+      );
+    }
   );
 
   const multiChildSummerEligible =
@@ -6155,6 +6407,23 @@ export default function BillingPage({
         .filter((e) => e.program === "both")
         .map((e) => e.student_id),
     ].length >= 2;
+
+  // School-year students with unpaid supply fees — used for sibling pre-step
+  const schoolYearStudentsForSupplyFee: Array<{
+    studentId: string;
+    childGrade: string | null;
+    programType: "school_year" | "homeschool" | null;
+  }> = [
+    ...schoolYearOnlyApps
+      .filter((a) => !paidSupplyFeeByStudent[a.student_id])
+      .map((a) => ({ studentId: a.student_id, childGrade: a.child_grade ?? null, programType: "school_year" as const })),
+    ...summerEnrollments
+      .filter((e) => e.program === "both" && !paidSupplyFeeByStudent[e.student_id])
+      .map((e) => ({ studentId: e.student_id, childGrade: e.child_grade ?? null, programType: "school_year" as const })),
+    ...homeschoolDropInApps
+      .filter((a) => (a.drop_in_program === "school_year_26_27" || a.drop_in_program === "both") && !paidSupplyFeeByStudent[a.student_id])
+      .map((a) => ({ studentId: a.student_id, childGrade: a.child_grade ?? null, programType: "homeschool" as const })),
+  ];
 
   const hasPendingContent =
     unpaidSummerEnrollments.length > 0 ||
@@ -6362,9 +6631,21 @@ export default function BillingPage({
                     ) ?? null,
                   )
                 }
-                onSelectSupplyFee={(studentId, programType, childGrade) =>
-                  setSupplyFeeTarget({ studentId, programType, childGrade })
-                }
+                onSelectSupplyFee={(studentId, programType, childGrade) => {
+                  const siblings = schoolYearStudentsForSupplyFee
+                    .filter((s) => s.studentId !== studentId)
+                    .map((s) => ({
+                      studentId: s.studentId,
+                      studentName: studentMap[s.studentId]?.name ?? null,
+                      childGrade: s.childGrade,
+                      programType: s.programType,
+                    }));
+                  if (siblings.length > 0) {
+                    setSupplyFeeSiblingTarget({ primaryStudentId: studentId, primaryGrade: childGrade, primaryProgramType: programType, siblings });
+                  } else {
+                    setSupplyFeeTarget({ studentId, programType, childGrade });
+                  }
+                }}
                 onSelectSchoolYearTuition={(id, grade) => setSchoolYearTuitionTarget({ studentId: id, childGrade: grade })}
                 paidSupplyFeeByStudent={paidSupplyFeeByStudent}
               />
@@ -6511,12 +6792,31 @@ export default function BillingPage({
       >
         {selectedTx && (() => {
           const meta = (selectedTx.metadata ?? {}) as Record<string, string>;
-          const sibIds = meta.sibling_student_ids?.split(",").filter(Boolean) ?? [];
-          const sibCentsArr = meta.sibling_intended_cents?.split(",").map(Number).filter(Boolean) ?? [];
+
+          // Determine if this is a supply fee + bundle transaction
+          const isSupplyFeeBundle = selectedTx.payment_type === "supply_fee" && !!meta.bundle_type;
+          const supplyFeeCents = 30000;
+
+          // Sibling IDs — supply fee uses sibling_supply_student_ids, others use sibling_student_ids
+          const sibIds = isSupplyFeeBundle
+            ? (meta.sibling_supply_student_ids?.split(",").filter(Boolean) ?? [])
+            : (meta.sibling_student_ids?.split(",").filter(Boolean) ?? []);
+
+          // Sibling amounts
+          const sibCentsArr = isSupplyFeeBundle
+            ? (meta.sibling_bundle_amounts?.split(",").map(Number) ?? []).map(
+                (bundleAmt) => supplyFeeCents + bundleAmt
+              )
+            : (meta.sibling_intended_cents?.split(",").map(Number).filter(Boolean) ?? []);
+
           const sibCentsTotal = sibCentsArr.reduce((a, b) => a + b, 0);
-          const primaryIntended = selectedTx.intended_amount_cents != null
-            ? selectedTx.intended_amount_cents - sibCentsTotal
-            : null;
+
+          // Primary student intended amount
+          const primaryIntended = isSupplyFeeBundle
+            ? supplyFeeCents + parseInt(meta.bundle_amount_cents ?? "0")
+            : (selectedTx.intended_amount_cents != null
+                ? selectedTx.intended_amount_cents - sibCentsTotal
+                : null);
           const primaryWeeks = meta.weeks?.split(",").filter(Boolean) ?? [];
           const primaryPlan = meta.plan_type === "full"
             ? "Full Summer"
@@ -6603,10 +6903,13 @@ export default function BillingPage({
                           <span className="text-gray-800 font-semibold">{formatCents(primaryIntended)}</span>
                         )}
                       </div>
-                      {primaryPlan && (
+                      {isSupplyFeeBundle && (
+                        <p className="text-xs text-gray-400 mt-0.5">Annual Supply Fee + August 2026 Tuition</p>
+                      )}
+                      {!isSupplyFeeBundle && primaryPlan && (
                         <p className="text-xs text-gray-400 mt-0.5">{primaryPlan}</p>
                       )}
-                      {nonSummerSubLine && (
+                      {!isSupplyFeeBundle && nonSummerSubLine && (
                         <p className="text-xs text-gray-400 mt-0.5">{nonSummerSubLine}</p>
                       )}
                     </div>
@@ -6630,7 +6933,10 @@ export default function BillingPage({
                             <span className="text-gray-800 font-semibold">{formatCents(sibCents)}</span>
                           )}
                         </div>
-                        {sibPlan && (
+                        {isSupplyFeeBundle && (
+                          <p className="text-xs text-gray-400 mt-0.5">Annual Supply Fee + August 2026 Tuition</p>
+                        )}
+                        {!isSupplyFeeBundle && sibPlan && (
                           <p className="text-xs text-gray-400 mt-0.5">{sibPlan}</p>
                         )}
                       </div>
@@ -6826,6 +7132,29 @@ export default function BillingPage({
               }}
             />
           )}
+        {supplyFeeSiblingTarget && (
+          <SupplyFeeSiblingModal
+            primaryStudentId={supplyFeeSiblingTarget.primaryStudentId}
+            primaryStudentName={studentMap[supplyFeeSiblingTarget.primaryStudentId]?.name ?? null}
+            primaryGrade={supplyFeeSiblingTarget.primaryGrade}
+            primaryProgramType={supplyFeeSiblingTarget.primaryProgramType}
+            siblings={supplyFeeSiblingTarget.siblings}
+            onClose={() => setSupplyFeeSiblingTarget(null)}
+            onContinue={(selectedSiblingIds) => {
+              const selectedSiblings = supplyFeeSiblingTarget.siblings.filter((s) => selectedSiblingIds.includes(s.studentId));
+              setSupplyFeeSiblingTarget(null);
+              setSupplyFeeTarget({
+                studentId: supplyFeeSiblingTarget.primaryStudentId,
+                programType: supplyFeeSiblingTarget.primaryProgramType,
+                childGrade: supplyFeeSiblingTarget.primaryGrade,
+                siblingStudents: selectedSiblings.map((s) => ({
+                  ...s,
+                  paidSchoolYearMonths: paidSchoolYearByStudent[s.studentId] ?? [],
+                })),
+              });
+            }}
+          />
+        )}
         {supplyFeeTarget && (
           <SupplyFeeModal
             studentId={supplyFeeTarget.studentId}
@@ -6836,6 +7165,7 @@ export default function BillingPage({
             programType={supplyFeeTarget.programType}
             childGrade={supplyFeeTarget.childGrade}
             paidSchoolYearMonths={paidSchoolYearByStudent[supplyFeeTarget.studentId] ?? []}
+            siblingStudents={supplyFeeTarget.siblingStudents}
           />
         )}
         {schoolYearTuitionTarget && (

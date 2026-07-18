@@ -13,20 +13,39 @@ const schema = z.object({
   bundleType: z.enum(["school_year_tuition", "homeschool"]).optional(),
   bundleAmountCents: z.number().int().positive().optional(),
   bundleMonthIndex: z.number().int().optional(),
+  siblingStudentIds: z.array(z.string()).optional().default([]),
+  siblingBundleStudentIds: z.array(z.string()).optional().default([]),
+  siblingGrades: z.array(z.string()).optional().default([]),
+  siblingBundleAmounts: z.array(z.number().int()).optional().default([]),
 });
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const validated = schema.parse(body);
-    const { parentId, parentEmail, studentId, coverFees, paymentMethod, bundleType, bundleAmountCents, bundleMonthIndex } = validated;
+    const {
+      parentId,
+      parentEmail,
+      studentId,
+      coverFees,
+      paymentMethod,
+      bundleType,
+      bundleAmountCents,
+      bundleMonthIndex,
+      siblingStudentIds,
+      siblingBundleStudentIds,
+      siblingGrades,
+      siblingBundleAmounts,
+    } = validated;
 
     const supplyFeeCents = 30000;
-    const bundleCents = bundleType && bundleAmountCents ? bundleAmountCents : 0;
-    const baseCents = supplyFeeCents + bundleCents;
+    const primaryBundleCents = bundleType && bundleAmountCents ? bundleAmountCents : 0;
+    const siblingSupplyTotal = supplyFeeCents * siblingStudentIds.length;
+    const siblingBundleTotal = siblingBundleAmounts.reduce((sum, a) => sum + a, 0);
+    const baseCents = supplyFeeCents + primaryBundleCents + siblingSupplyTotal + siblingBundleTotal;
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
 
-    const supplyFeeLineItem = {
+    const primarySupplyFeeLineItem = {
       quantity: 1,
       price_data: {
         currency: "usd",
@@ -38,11 +57,11 @@ export async function POST(request: NextRequest) {
       },
     };
 
-    const bundleLineItem = bundleCents > 0 ? {
+    const primaryBundleLineItem = primaryBundleCents > 0 ? {
       quantity: 1,
       price_data: {
         currency: "usd",
-        unit_amount: bundleCents,
+        unit_amount: primaryBundleCents,
         product_data: {
           name: bundleType === "school_year_tuition" ? "August 2026 Tuition" : "Homeschool Drop-In — First Month",
           description: "Sage Field Private School — School Year 2026–27",
@@ -50,12 +69,46 @@ export async function POST(request: NextRequest) {
       },
     } : null;
 
+    const siblingLineItems = siblingStudentIds.flatMap((sibId, i) => {
+      const items = [{
+        quantity: 1,
+        price_data: {
+          currency: "usd",
+          unit_amount: supplyFeeCents,
+          product_data: {
+            name: "Annual Supply Fee — Sibling",
+            description: `Sage Field Private School — School Year 2026–27${siblingGrades[i] ? ` · ${siblingGrades[i]}` : ""}`,
+          },
+        },
+      }];
+      const bundleIdx = siblingBundleStudentIds.indexOf(sibId);
+      if (bundleIdx >= 0 && siblingBundleAmounts[bundleIdx] > 0) {
+        items.push({
+          quantity: 1,
+          price_data: {
+            currency: "usd",
+            unit_amount: siblingBundleAmounts[bundleIdx],
+            product_data: {
+              name: "August 2026 Tuition — Sibling",
+              description: `Sage Field Private School — School Year 2026–27${siblingGrades[i] ? ` · ${siblingGrades[i]}` : ""}`,
+            },
+          },
+        });
+      }
+      return items;
+    });
+
+    const baseLineItems = [
+      primarySupplyFeeLineItem,
+      ...(primaryBundleLineItem ? [primaryBundleLineItem] : []),
+      ...siblingLineItems,
+    ];
+
     let lineItems;
     if (coverFees && paymentMethod === "ach") {
       const feeCents = Math.min(Math.round(baseCents * 0.008), 500);
       lineItems = [
-        supplyFeeLineItem,
-        ...(bundleLineItem ? [bundleLineItem] : []),
+        ...baseLineItems,
         {
           quantity: 1,
           price_data: {
@@ -68,8 +121,7 @@ export async function POST(request: NextRequest) {
     } else if (coverFees && paymentMethod === "card") {
       const feeCents = Math.round((baseCents + 30) / (1 - 0.029)) - baseCents;
       lineItems = [
-        supplyFeeLineItem,
-        ...(bundleLineItem ? [bundleLineItem] : []),
+        ...baseLineItems,
         {
           quantity: 1,
           price_data: {
@@ -80,10 +132,7 @@ export async function POST(request: NextRequest) {
         },
       ];
     } else {
-      lineItems = [
-        supplyFeeLineItem,
-        ...(bundleLineItem ? [bundleLineItem] : []),
-      ];
+      lineItems = baseLineItems;
     }
 
     const stripeCustomerId = await getOrCreateStripeCustomer(parentId, parentEmail);
@@ -111,8 +160,13 @@ export async function POST(request: NextRequest) {
         intended_amount_cents: String(baseCents),
         ...(bundleType ? {
           bundle_type: bundleType,
-          bundle_amount_cents: String(bundleCents),
+          bundle_amount_cents: String(primaryBundleCents),
           bundle_month_index: bundleMonthIndex != null ? String(bundleMonthIndex) : "",
+        } : {}),
+        ...(siblingStudentIds.length > 0 ? {
+          sibling_supply_student_ids: siblingStudentIds.join(","),
+          sibling_bundle_student_ids: siblingBundleStudentIds.join(","),
+          sibling_bundle_amounts: siblingBundleAmounts.join(","),
         } : {}),
       },
       success_url: `${baseUrl}/parent/billing`,

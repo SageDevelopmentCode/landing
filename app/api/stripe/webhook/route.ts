@@ -35,6 +35,7 @@ import {
 export async function POST(request: NextRequest) {
   const body = await request.text();
   const signature = request.headers.get("stripe-signature");
+  console.log("[webhook] Received POST, signature present:", !!signature);
 
   if (!signature) {
     return NextResponse.json({ error: "Missing signature" }, { status: 400 });
@@ -51,6 +52,8 @@ export async function POST(request: NextRequest) {
     console.error("Webhook signature verification failed:", err);
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
+
+  console.log("[webhook] Event constructed:", event.type, "| payment_type:", (event.data.object as any)?.metadata?.payment_type ?? "n/a");
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
@@ -1062,6 +1065,7 @@ export async function POST(request: NextRequest) {
       const studentId = session.metadata?.student_id;
       const parentEmailAddr = session.metadata?.parent_email ?? session.customer_email ?? "N/A";
       const amountCents = session.amount_total ?? 0;
+      console.log("[supply_fee] Handler entered | studentId:", studentId, "parentId:", parentId, "amountCents:", amountCents, "siblingIds:", session.metadata?.sibling_supply_student_ids ?? "none", "bundleType:", session.metadata?.bundle_type ?? "none");
 
       let parentName = "N/A";
       let childName = "N/A";
@@ -1085,28 +1089,78 @@ export async function POST(request: NextRequest) {
         if (student) childName = student.child_legal_name ?? "N/A";
       }
 
+      console.log("[supply_fee] Names resolved | parentName:", parentName, "childName:", childName);
+      let allChildNames = childName;
+      if (session.metadata?.sibling_supply_student_ids) {
+        const sibIds = session.metadata.sibling_supply_student_ids.split(",").filter(Boolean);
+        if (sibIds.length > 0) {
+          const { data: sibStudents } = await supabase
+            .schema("admin")
+            .from("students")
+            .select("child_legal_name")
+            .in("id", sibIds);
+          const sibNames = sibStudents?.map((s) => s.child_legal_name ?? "N/A") ?? [];
+          allChildNames = [childName, ...sibNames].join(", ");
+        }
+      }
+
+      console.log("[supply_fee] allChildNames:", allChildNames);
+
+      // Build bundle breakdown if this supply fee includes school year tuition
+      const bundleType = session.metadata?.bundle_type;
+      const bundleAmountCents = parseInt(session.metadata?.bundle_amount_cents ?? "0");
+      const sibBundleAmounts = session.metadata?.sibling_bundle_amounts?.split(",").map(Number) ?? [];
+      let studentBreakdown: Array<{ name: string; supplyFee: number; bundleAmount: number }> | undefined;
+      if (bundleType) {
+        const sibIds = session.metadata?.sibling_supply_student_ids?.split(",").filter(Boolean) ?? [];
+        const sibNames: string[] = [];
+        if (sibIds.length > 0) {
+          const { data: sibStudents } = await supabase
+            .schema("admin")
+            .from("students")
+            .select("child_legal_name")
+            .in("id", sibIds);
+          sibNames.push(...(sibStudents?.map((s) => s.child_legal_name ?? "N/A") ?? []));
+        }
+        studentBreakdown = [
+          { name: childName, supplyFee: 30000, bundleAmount: bundleAmountCents },
+          ...sibIds.map((_, i) => ({
+            name: sibNames[i] ?? "N/A",
+            supplyFee: 30000,
+            bundleAmount: sibBundleAmounts[i] ?? 0,
+          })),
+        ];
+      }
+
+      console.log("[supply_fee] Sending Discord notification...");
       sendDiscordNotification(
         createSupplyFeeEmbed({
           parentName,
           parentEmail: parentEmailAddr,
-          childName,
+          childName: allChildNames,
           amountCents,
+          bundleType,
+          studentBreakdown,
         }),
       ).catch((err) => console.error("Supply fee Discord notification failed:", err));
 
       (async () => {
         const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
         let subject: string | undefined;
+        console.log("[supply_fee] Starting email send to:", toAddress);
         try {
           if (!toAddress) return;
           const amountDollars = (amountCents / 100).toFixed(2);
           const built = await buildSupplyFeeConfirmationEmail({
             g1FullName: parentName !== "N/A" ? parentName : "Parent",
-            childName,
+            childName: allChildNames,
             amountDollars,
+            bundleType,
+            studentBreakdown,
           });
           subject = built.subject;
           const emailResult = await sendZohoEmail({ toAddress, subject: built.subject, content: built.content });
+          console.log("[supply_fee] Email result:", emailResult.success ? "success" : emailResult.error);
           if (emailResult.success) {
             await supabase.schema("email_logs").from("sends").insert({
               to_address: toAddress,
@@ -1358,6 +1412,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Shared write to billing.stripe_transactions for all payment types
+    console.log("[billing] Writing primary transaction | session:", session.id, "payment_type:", session.metadata?.payment_type, "amount:", session.amount_total);
     const { error: billingError } = await supabase
       .schema("billing")
       .from("stripe_transactions")
@@ -1388,6 +1443,7 @@ export async function POST(request: NextRequest) {
         { onConflict: "stripe_session_id" },
       );
 
+    console.log("[billing] Primary transaction result:", billingError ? `ERROR: ${JSON.stringify(billingError)}` : "OK");
     if (billingError) {
       console.error("Failed to record billing transaction:", billingError);
     }
@@ -1403,6 +1459,7 @@ export async function POST(request: NextRequest) {
           : (session.payment_intent?.id ?? null);
 
       if (bundleAmountCents > 0) {
+        console.log("[billing] Writing bundle row | bundleType:", bundleType, "bundleAmountCents:", bundleAmountCents, "bundleMonthIndex:", bundleMonthIndex);
         const { error: bundleError } = await supabase
           .schema("billing")
           .from("stripe_transactions")
@@ -1420,7 +1477,7 @@ export async function POST(request: NextRequest) {
               parent_id: session.metadata?.parent_id || null,
               metadata: {
                 payment_type: bundleType,
-                ...(bundleMonthIndex != null ? { month_indices: String(bundleMonthIndex) } : {}),
+                ...(bundleMonthIndex != null ? { selected_months: String(bundleMonthIndex) } : {}),
                 bundled_with_supply_fee: "true",
                 primary_session_id: session.id,
               },
@@ -1428,8 +1485,76 @@ export async function POST(request: NextRequest) {
             },
             { onConflict: "stripe_session_id" },
           );
+        console.log("[billing] Bundle row result:", bundleError ? `ERROR: ${JSON.stringify(bundleError)}` : "OK");
         if (bundleError) {
           console.error("Failed to record bundle billing transaction:", bundleError);
+        }
+      }
+    }
+
+    // Insert sibling rows for supply fee multi-child payment
+    if (session.metadata?.payment_type === "supply_fee" && session.metadata?.sibling_supply_student_ids) {
+      const sibIds = session.metadata.sibling_supply_student_ids.split(",").filter(Boolean);
+      const sibBundleIds = session.metadata.sibling_bundle_student_ids?.split(",").filter(Boolean) ?? [];
+      const sibBundleAmounts = session.metadata.sibling_bundle_amounts?.split(",").map(Number) ?? [];
+      const paymentIntentId =
+        typeof session.payment_intent === "string"
+          ? session.payment_intent
+          : (session.payment_intent?.id ?? null);
+
+      console.log("[billing] Writing sibling supply rows | count:", sibIds.length);
+      for (let i = 0; i < sibIds.length; i++) {
+        const { error: sibSupplyError } = await supabase
+          .schema("billing")
+          .from("stripe_transactions")
+          .upsert(
+            {
+              stripe_session_id: `${session.id}_supply_sib_${i}`,
+              stripe_payment_intent_id: paymentIntentId,
+              payment_type: "supply_fee",
+              amount_cents: 30000,
+              intended_amount_cents: 30000,
+              student_id: sibIds[i],
+              parent_id: session.metadata.parent_id,
+              payer_email: session.metadata.parent_email || session.customer_email || "",
+              metadata: { is_sibling_split: "true", primary_session_id: session.id },
+              status: "completed",
+            },
+            { onConflict: "stripe_session_id" },
+          );
+        console.log(`[billing] Sibling supply row ${i}:`, sibSupplyError ? `ERROR: ${JSON.stringify(sibSupplyError)}` : "OK");
+        if (sibSupplyError) {
+          console.error(`Failed to record supply fee sibling row ${i}:`, sibSupplyError);
+        }
+
+        const bundleIdx = sibBundleIds.indexOf(sibIds[i]);
+        if (bundleIdx >= 0 && sibBundleAmounts[bundleIdx] > 0) {
+          const { error: sibBundleError } = await supabase
+            .schema("billing")
+            .from("stripe_transactions")
+            .upsert(
+              {
+                stripe_session_id: `${session.id}_supply_sib_bundle_${i}`,
+                stripe_payment_intent_id: paymentIntentId,
+                payment_type: "school_year_tuition",
+                amount_cents: sibBundleAmounts[bundleIdx],
+                intended_amount_cents: sibBundleAmounts[bundleIdx],
+                student_id: sibIds[i],
+                parent_id: session.metadata.parent_id,
+                payer_email: session.metadata.parent_email || session.customer_email || "",
+                metadata: {
+                  selected_months: "1",
+                  bundled_with_supply_fee: "true",
+                  primary_session_id: session.id,
+                },
+                status: "completed",
+              },
+              { onConflict: "stripe_session_id" },
+            );
+          console.log(`[billing] Sibling bundle row ${i}:`, sibBundleError ? `ERROR: ${JSON.stringify(sibBundleError)}` : "OK");
+          if (sibBundleError) {
+            console.error(`Failed to record supply fee sibling bundle row ${i}:`, sibBundleError);
+          }
         }
       }
     }

@@ -1763,17 +1763,32 @@ export function createSupplyFeeEmbed(data: {
   parentEmail: string;
   childName: string;
   amountCents: number;
+  bundleType?: string;
+  studentBreakdown?: Array<{ name: string; supplyFee: number; bundleAmount: number }>;
 }): DiscordEmbed {
   const amountDollars = (data.amountCents / 100).toFixed(2);
+  const title = data.bundleType
+    ? "📦 Annual Supply Fee + August 2026 Tuition Paid"
+    : "📦 Annual Supply Fee Paid";
+  const fields: DiscordEmbedField[] = [
+    { name: "Parent", value: data.parentName || "N/A", inline: true },
+    { name: "Email", value: data.parentEmail || "N/A", inline: true },
+    { name: "Child(ren)", value: data.childName || "N/A", inline: true },
+    { name: "Total Paid", value: `$${amountDollars}`, inline: true },
+  ];
+  if (data.bundleType && data.studentBreakdown && data.studentBreakdown.length > 0) {
+    const breakdown = data.studentBreakdown
+      .map((s) => {
+        const total = (s.supplyFee + s.bundleAmount) / 100;
+        return `• ${s.name}: $${total.toFixed(2)} (Supply + Aug Tuition)`;
+      })
+      .join("\n");
+    fields.push({ name: "Breakdown", value: breakdown, inline: false });
+  }
   return {
-    title: "📦 Annual Supply Fee Paid",
+    title,
     color: 0x4a7c59,
-    fields: [
-      { name: "Parent", value: data.parentName || "N/A", inline: true },
-      { name: "Email", value: data.parentEmail || "N/A", inline: true },
-      { name: "Child", value: data.childName || "N/A", inline: true },
-      { name: "Amount Paid", value: `$${amountDollars}`, inline: true },
-    ],
+    fields,
     timestamp: new Date().toISOString(),
   };
 }

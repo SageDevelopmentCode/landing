@@ -2602,9 +2602,64 @@ export async function buildSupplyFeeConfirmationEmail(opts: {
   g1FullName: string;
   childName: string;
   amountDollars: string;
+  bundleType?: string;
+  studentBreakdown?: Array<{ name: string; supplyFee: number; bundleAmount: number }>;
 }): Promise<{ subject: string; content: string }> {
-  const subject = "Annual Supply Fee Received — You're All Set!";
-  const content = `
+  const hasBundle = !!opts.bundleType && !!opts.studentBreakdown && opts.studentBreakdown.length > 0;
+  const subject = hasBundle
+    ? "Annual Supply Fee + August Tuition Received — You're All Set!"
+    : "Annual Supply Fee Received — You're All Set!";
+
+  const breakdownRows = hasBundle
+    ? opts.studentBreakdown!.map((s) => {
+        const total = ((s.supplyFee + s.bundleAmount) / 100).toFixed(2);
+        const supplyFmtd = (s.supplyFee / 100).toFixed(2);
+        const bundleFmtd = (s.bundleAmount / 100).toFixed(2);
+        return `
+    <tr>
+      <td style="padding: 8px 12px; border-bottom: 1px solid #e8e4e0;">${s.name}</td>
+      <td style="padding: 8px 12px; border-bottom: 1px solid #e8e4e0;">$${supplyFmtd}</td>
+      <td style="padding: 8px 12px; border-bottom: 1px solid #e8e4e0;">$${bundleFmtd}</td>
+      <td style="padding: 8px 12px; border-bottom: 1px solid #e8e4e0; font-weight: bold;">$${total}</td>
+    </tr>`;
+      }).join("")
+    : "";
+
+  const content = hasBundle ? `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${opts.g1FullName},</p>
+
+  <p>We are pleased to confirm that your payment of <strong>$${opts.amountDollars}</strong> for the <strong>Annual Supply Fee and August 2026 Tuition</strong> for <strong>${opts.childName}</strong> has been received. You are all set for the 2026–27 school year!</p>
+
+  <table style="width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 14px;">
+    <thead>
+      <tr style="background-color: #f7f4f0;">
+        <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid #d4cfc9;">Student</th>
+        <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid #d4cfc9;">Supply Fee</th>
+        <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid #d4cfc9;">Aug Tuition</th>
+        <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid #d4cfc9;">Total</th>
+      </tr>
+    </thead>
+    <tbody>${breakdownRows}
+    </tbody>
+  </table>
+
+  <p>Your August tuition has been recorded and your supply fee covers all materials for the year. You can view your payment history anytime in your billing portal:</p>
+
+  <p style="margin: 24px 0;">
+    <a href="https://sagefield.co/parent/billing" style="display: inline-block; background-color: #4a7c59; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-size: 15px; font-weight: bold;">Go to Billing Portal</a>
+  </p>
+
+  <p>If you have any questions, please reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> or text <a href="sms:+15126775872" style="color: #5a7a5a;">(512) 677-5872</a>.</p>
+
+  <p style="margin-top: 32px;">With warmth,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim() : `
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8" /></head>
