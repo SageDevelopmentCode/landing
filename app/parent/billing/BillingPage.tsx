@@ -6744,7 +6744,10 @@ export default function BillingPage({
                           {(() => {
                             const primaryName = studentMap[tx.student_id ?? ""]?.name ?? "—";
                             const meta = (tx.metadata ?? {}) as Record<string, string>;
-                            const sibIds = meta.sibling_student_ids?.split(",").filter(Boolean) ?? [];
+                            const sibIds = (tx.payment_type === "supply_fee" && meta.bundle_type
+                              ? meta.sibling_supply_student_ids
+                              : meta.sibling_student_ids
+                            )?.split(",").filter(Boolean) ?? [];
                             if (sibIds.length === 0) return primaryName;
                             const sibNames = sibIds.map((id) => studentMap[id]?.name).filter(Boolean);
                             return sibNames.length > 0
@@ -6753,7 +6756,13 @@ export default function BillingPage({
                           })()}
                         </td>
                         <td className="px-4 py-3.5 text-gray-600 whitespace-nowrap">
-                          {formatPaymentType(tx.payment_type)}
+                          {(() => {
+                            const txMeta = (tx.metadata ?? {}) as Record<string, string>;
+                            if (tx.payment_type === "supply_fee" && txMeta.bundle_type) {
+                              return "Supply Fee + School Year Tuition";
+                            }
+                            return formatPaymentType(tx.payment_type);
+                          })()}
                         </td>
                         <td className="px-4 py-3.5 text-gray-800 text-right whitespace-nowrap font-semibold">
                           {formatCents(tx.amount_cents)}
@@ -6877,7 +6886,7 @@ export default function BillingPage({
 
               {/* Type + description */}
               <p className="text-base font-semibold text-gray-800 mt-3">
-                {formatPaymentType(selectedTx.payment_type)}
+                {isSupplyFeeBundle ? "Supply Fee + School Year Tuition" : formatPaymentType(selectedTx.payment_type)}
               </p>
               {selectedTx.description && (
                 <p className="text-sm text-gray-400 mt-0.5">{selectedTx.description}</p>
