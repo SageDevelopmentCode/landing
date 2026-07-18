@@ -6738,7 +6738,16 @@ export default function BillingPage({
                           {formatDate(tx.created_at)}
                         </td>
                         <td className="px-4 py-3.5 text-gray-800 max-w-[220px] truncate">
-                          {tx.description ?? "—"}
+                          {(() => {
+                            if (tx.description) return tx.description;
+                            const txMeta = (tx.metadata ?? {}) as Record<string, string>;
+                            if (tx.payment_type === "supply_fee") {
+                              return txMeta.bundle_type
+                                ? "Annual Supply Fee + August 2026 Tuition"
+                                : "Annual Supply Fee";
+                            }
+                            return "—";
+                          })()}
                         </td>
                         <td className="px-4 py-3.5 text-gray-600 max-w-[180px] truncate">
                           {(() => {
