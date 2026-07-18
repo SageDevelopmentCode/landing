@@ -2598,6 +2598,38 @@ export async function buildCustomTuitionConfirmationEmail(opts: {
   return { subject, content };
 }
 
+export async function buildSupplyFeeConfirmationEmail(opts: {
+  g1FullName: string;
+  childName: string;
+  amountDollars: string;
+}): Promise<{ subject: string; content: string }> {
+  const subject = "Annual Supply Fee Received — You're All Set!";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${opts.g1FullName},</p>
+
+  <p>We are pleased to confirm that your <strong>Annual Supply Fee of $${opts.amountDollars}</strong> for <strong>${opts.childName}</strong> has been received. You are all set for the 2026–27 school year!</p>
+
+  <p>Your next step is to pay your monthly tuition. You can do that anytime through your billing portal:</p>
+
+  <p style="margin: 24px 0;">
+    <a href="https://sagefield.co/parent/billing" style="display: inline-block; background-color: #4a7c59; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-size: 15px; font-weight: bold;">Go to Billing Portal</a>
+  </p>
+
+  <p>If you have any questions, please reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> or text <a href="sms:+15126775872" style="color: #5a7a5a;">(512) 677-5872</a>.</p>
+
+  <p style="margin-top: 32px;">With warmth,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
 export async function buildSummerWelcomeEmail(opts: {
   g1FullName: string;
   childLegalName: string;

@@ -1758,6 +1758,26 @@ export function createCustomTuitionEmbed(data: {
   };
 }
 
+export function createSupplyFeeEmbed(data: {
+  parentName: string;
+  parentEmail: string;
+  childName: string;
+  amountCents: number;
+}): DiscordEmbed {
+  const amountDollars = (data.amountCents / 100).toFixed(2);
+  return {
+    title: "📦 Annual Supply Fee Paid",
+    color: 0x4a7c59,
+    fields: [
+      { name: "Parent", value: data.parentName || "N/A", inline: true },
+      { name: "Email", value: data.parentEmail || "N/A", inline: true },
+      { name: "Child", value: data.childName || "N/A", inline: true },
+      { name: "Amount Paid", value: `$${amountDollars}`, inline: true },
+    ],
+    timestamp: new Date().toISOString(),
+  };
+}
+
 /**
  * Creates a Discord embed for tuition flow feedback submissions
  */

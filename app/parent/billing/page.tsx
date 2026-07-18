@@ -331,6 +331,14 @@ export default async function BillingRoute() {
     }
   }
 
+  // Build paid supply fee set per student
+  const paidSupplyFeeByStudent: Record<string, boolean> = {};
+  for (const tx of transactions) {
+    if (tx.payment_type === "supply_fee" && tx.status === "completed" && tx.student_id) {
+      paidSupplyFeeByStudent[tx.student_id] = true;
+    }
+  }
+
   // Build summer commitment notes map per student
   const summerNotesByStudent: SummerNotesByStudent = {};
   for (const row of notesData ?? []) {
@@ -404,7 +412,7 @@ export default async function BillingRoute() {
         <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={primaryOwnerName} />
 
         <main className="flex-1 flex overflow-hidden">
-          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} unpaidSummerEnrollments={unpaidSummerEnrollments} paidWeeksByStudent={paidWeeksByStudent} parentId={effectiveParentId} parentEmail={user.email ?? ""} nonEnrolledApps={nonEnrolledApps} homeschoolDropInApps={homeschoolDropInApps} paidHomeschoolByStudent={paidHomeschoolByStudent} paidAftercareByStudent={paidAftercareByStudent} paidFunFridayByStudent={paidFunFridayByStudent} summerNotesByStudent={summerNotesByStudent} homeschoolNotesByStudent={homeschoolNotesByStudent} schoolYearOnlyApps={schoolYearOnlyApps} hasSubmittedTuitionFeedback={hasSubmittedTuitionFeedback} paidSchoolYearByStudent={paidSchoolYearByStudent} />
+          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} unpaidSummerEnrollments={unpaidSummerEnrollments} paidWeeksByStudent={paidWeeksByStudent} parentId={effectiveParentId} parentEmail={user.email ?? ""} nonEnrolledApps={nonEnrolledApps} homeschoolDropInApps={homeschoolDropInApps} paidHomeschoolByStudent={paidHomeschoolByStudent} paidAftercareByStudent={paidAftercareByStudent} paidFunFridayByStudent={paidFunFridayByStudent} summerNotesByStudent={summerNotesByStudent} homeschoolNotesByStudent={homeschoolNotesByStudent} schoolYearOnlyApps={schoolYearOnlyApps} hasSubmittedTuitionFeedback={hasSubmittedTuitionFeedback} paidSchoolYearByStudent={paidSchoolYearByStudent} paidSupplyFeeByStudent={paidSupplyFeeByStudent} />
         </main>
       </div>
       <Footer />

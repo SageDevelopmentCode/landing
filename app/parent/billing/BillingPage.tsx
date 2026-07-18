@@ -13,6 +13,7 @@ import {
   PartyPopper,
   Sparkles,
   Tag,
+  Lock,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -100,6 +101,7 @@ interface Props {
   schoolYearOnlyApps: SchoolYearOnlyApp[];
   hasSubmittedTuitionFeedback: boolean;
   paidSchoolYearByStudent: PaidSchoolYearByStudent;
+  paidSupplyFeeByStudent: Record<string, boolean>;
 }
 
 // --- Summer pricing ---
@@ -550,15 +552,15 @@ function SummerTuitionCard({
   );
 }
 
-function SchoolYearTuitionCard({ onClick }: { onClick: () => void }) {
+function SchoolYearTuitionCard({ onClick, supplyFeePaid }: { onClick: () => void; supplyFeePaid: boolean }) {
   return (
     <div
-      className="rounded-2xl overflow-hidden cursor-pointer group bg-white border border-gray-100 flex flex-col"
-      onClick={onClick}
+      className={`rounded-2xl overflow-hidden bg-white border border-gray-100 flex flex-col ${supplyFeePaid ? "cursor-pointer group" : "cursor-not-allowed"}`}
+      onClick={supplyFeePaid ? onClick : undefined}
     >
       <div className="relative h-28 overflow-hidden bg-gray-200">
         <img src="/assets/ImageFive.jpg" alt=""
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className={`w-full h-full object-cover transition-transform duration-500 ${supplyFeePaid ? "group-hover:scale-105" : ""}`}
         />
         <div className="absolute inset-0 bg-black/10" />
       </div>
@@ -568,25 +570,31 @@ function SchoolYearTuitionCard({ onClick }: { onClick: () => void }) {
           <div className="text-sm font-semibold text-gray-800 leading-snug">School Year Tuition</div>
         </div>
         <div className="flex items-center justify-between mt-auto">
-          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white"
-            style={{ backgroundColor: "#4a7c59" }}>
-            Pay tuition <ChevronRight className="w-3 h-3" strokeWidth={2.5} />
-          </span>
+          {supplyFeePaid ? (
+            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white"
+              style={{ backgroundColor: "#4a7c59" }}>
+              Pay tuition <ChevronRight className="w-3 h-3" strokeWidth={2.5} />
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-200 text-gray-500">
+              <Lock className="w-3 h-3" strokeWidth={2.5} /> Pay supply fee first
+            </span>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-function SupplyFeeCard({ onClick }: { onClick: () => void }) {
+function SupplyFeeCard({ onClick, supplyFeePaid }: { onClick?: () => void; supplyFeePaid?: boolean }) {
   return (
     <div
-      className="rounded-2xl overflow-hidden cursor-pointer group bg-white border border-gray-100 flex flex-col"
-      onClick={onClick}
+      className={`rounded-2xl overflow-hidden bg-white border border-gray-100 flex flex-col ${supplyFeePaid ? "cursor-default opacity-80" : "cursor-pointer group"}`}
+      onClick={supplyFeePaid ? undefined : onClick}
     >
       <div className="relative h-28 overflow-hidden">
         <img src="/assets/ImageFive.jpg" alt=""
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className={`w-full h-full object-cover transition-transform duration-500 ${supplyFeePaid ? "" : "group-hover:scale-105"}`}
         />
         <div className="absolute inset-0 bg-black/10" />
         <span className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/80 text-gray-600 shadow-sm backdrop-blur-sm">
@@ -599,10 +607,17 @@ function SupplyFeeCard({ onClick }: { onClick: () => void }) {
           <div className="text-sm font-semibold text-gray-800 leading-snug">Annual Supply Fee</div>
         </div>
         <div className="flex items-center justify-between mt-auto">
-          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white"
-            style={{ backgroundColor: "#4a7c59" }}>
-            Pay now <ChevronRight className="w-3 h-3" strokeWidth={2.5} />
-          </span>
+          {supplyFeePaid ? (
+            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white"
+              style={{ backgroundColor: "#4a7c59" }}>
+              <CheckCircle2 className="w-3 h-3" strokeWidth={2.5} /> Paid
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white"
+              style={{ backgroundColor: "#4a7c59" }}>
+              Pay now <ChevronRight className="w-3 h-3" strokeWidth={2.5} />
+            </span>
+          )}
         </div>
       </div>
     </div>
@@ -912,12 +927,14 @@ function HomeschoolSchoolYearCard({
   paidData,
   onClick,
   onViewHistory,
+  supplyFeePaid,
 }: {
   app: HomeschoolDropInApp;
   studentName: string | null;
   paidData?: PaidHomeschoolByStudent[string];
   onClick: () => void;
   onViewHistory?: () => void;
+  supplyFeePaid: boolean;
 }) {
   const hasSchoolYear = (paidData?.schoolYear.length ?? 0) > 0;
 
@@ -931,14 +948,14 @@ function HomeschoolSchoolYearCard({
 
   return (
     <div
-      className="rounded-2xl overflow-hidden cursor-pointer group bg-white border border-gray-100 flex flex-col"
-      onClick={onClick}
+      className={`rounded-2xl overflow-hidden bg-white border border-gray-100 flex flex-col ${supplyFeePaid ? "cursor-pointer group" : "cursor-not-allowed"}`}
+      onClick={supplyFeePaid ? onClick : undefined}
     >
       <div className="relative h-28 overflow-hidden">
         <img
           src="/assets/Homeschool.jpg"
           alt=""
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className={`w-full h-full object-cover transition-transform duration-500 ${supplyFeePaid ? "group-hover:scale-105" : ""}`}
         />
         <div className="absolute inset-0 bg-black/10" />
         <span
@@ -957,14 +974,20 @@ function HomeschoolSchoolYearCard({
           <div className="text-sm font-semibold text-gray-800 leading-snug">Homeschool Drop-In</div>
         </div>
         <div className="flex items-center justify-between mt-auto">
-          <span
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white"
-            style={{ backgroundColor: "#4a7c59" }}
-          >
-            {ctaLabel}
-            <ChevronRight className="w-3 h-3" strokeWidth={2.5} />
-          </span>
-          {hasSchoolYear && onViewHistory && (
+          {supplyFeePaid ? (
+            <span
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white"
+              style={{ backgroundColor: "#4a7c59" }}
+            >
+              {ctaLabel}
+              <ChevronRight className="w-3 h-3" strokeWidth={2.5} />
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-200 text-gray-500">
+              <Lock className="w-3 h-3" strokeWidth={2.5} /> Pay supply fee first
+            </span>
+          )}
+          {supplyFeePaid && hasSchoolYear && onViewHistory && (
             <button
               onClick={(e) => { e.stopPropagation(); onViewHistory(); }}
               className="text-xs font-semibold text-gray-400 hover:text-gray-600 transition-colors cursor-pointer underline underline-offset-2"
@@ -2021,18 +2044,40 @@ function SupplyFeeModal({
   parentId,
   parentEmail,
   onClose,
+  programType,
+  childGrade,
+  paidSchoolYearMonths,
 }: {
   studentId: string;
   studentName: string | null;
   parentId: string;
   parentEmail: string;
   onClose: () => void;
+  programType: "school_year" | "homeschool" | null;
+  childGrade: string | null;
+  paidSchoolYearMonths: number[];
 }) {
-  const BASE_CENTS = 30000;
+  const SUPPLY_FEE_CENTS = 30000;
+
+  // Bundle: August is month index 1
+  const BUNDLE_MONTH_INDEX = 1;
+  const gradeTier = getGradeTier(childGrade);
+  const bundleTuitionCents = gradeTier === "primary" ? 119500 : 109500;
+  const bundleHomeschoolCents = 0; // homeschool drop-in is session-based, no fixed monthly
+
+  const showUpsell =
+    programType === "school_year"
+      ? !paidSchoolYearMonths.includes(BUNDLE_MONTH_INDEX)
+      : programType === "homeschool";
+
+  const [addBundle, setAddBundle] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"card" | "ach">("card");
   const [coverFees, setCoverFees] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const bundleAmountCents = programType === "school_year" ? bundleTuitionCents : bundleHomeschoolCents;
+  const BASE_CENTS = SUPPLY_FEE_CENTS + (addBundle ? bundleAmountCents : 0);
 
   const cardFee = Math.round((BASE_CENTS + 30) / (1 - 0.029)) - BASE_CENTS;
   const achFee = Math.min(Math.round(BASE_CENTS * 0.008), 500);
@@ -2043,10 +2088,16 @@ function SupplyFeeModal({
     setLoading(true);
     setError(null);
     try {
+      const body: Record<string, unknown> = { parentId, parentEmail, studentId, coverFees, paymentMethod };
+      if (addBundle && programType) {
+        body.bundleType = programType === "school_year" ? "school_year_tuition" : "homeschool";
+        body.bundleAmountCents = bundleAmountCents;
+        body.bundleMonthIndex = BUNDLE_MONTH_INDEX;
+      }
       const res = await fetch("/api/stripe/create-supply-fee-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ parentId, parentEmail, studentId, coverFees, paymentMethod }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok || !data.url) throw new Error(data.error ?? "Failed to create checkout session");
@@ -2090,6 +2141,34 @@ function SupplyFeeModal({
             </div>
             <p className="text-xs text-gray-400 mt-1">One-time fee · School Year 26–27</p>
           </div>
+
+          {showUpsell && (
+            <div className="rounded-xl border border-gray-200 px-4 py-4 space-y-3" style={{ backgroundColor: "#f6faf7" }}>
+              <div>
+                <p className="text-xs font-semibold text-gray-700 mb-0.5">Bundle &amp; save on processing fees</p>
+                <p className="text-xs text-gray-500 font-body">
+                  {programType === "school_year"
+                    ? `Add August tuition (${formatCents(bundleTuitionCents)}) to this payment — one Stripe checkout, one processing fee.`
+                    : "Add your first month of Homeschool Drop-In to this payment — one Stripe checkout, one processing fee."}
+                </p>
+              </div>
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={addBundle}
+                  onChange={(e) => setAddBundle(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded cursor-pointer"
+                  style={{ accentColor: "#4a7c59" }}
+                />
+                <span className="text-sm text-gray-700 font-body group-hover:text-gray-900 transition-colors">
+                  {programType === "school_year"
+                    ? `Add August 2026 tuition · ${formatCents(bundleTuitionCents)}`
+                    : "Set up first month of Drop-In"}
+                </span>
+              </label>
+            </div>
+          )}
+
           <div>
             <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">Payment method</p>
             <div className="flex gap-2">
@@ -4677,9 +4756,11 @@ function PendingPaymentsSection({
   activeStudentId,
   schoolYearOnlyApps,
   showMultiChildBanner,
+  showMultiChildSchoolYearBanner,
   onOpenFirstSummer,
   onSelectSupplyFee,
   onSelectSchoolYearTuition,
+  paidSupplyFeeByStudent,
 }: {
   summerEnrollments: SummerEnrollment[];
   unpaidSummerEnrollments: SummerEnrollment[];
@@ -4700,9 +4781,11 @@ function PendingPaymentsSection({
   activeStudentId: string | null;
   schoolYearOnlyApps: SchoolYearOnlyApp[];
   showMultiChildBanner: boolean;
+  showMultiChildSchoolYearBanner: boolean;
   onOpenFirstSummer: () => void;
-  onSelectSupplyFee: (studentId: string) => void;
+  onSelectSupplyFee: (studentId: string, programType: "school_year" | "homeschool" | null, childGrade: string | null) => void;
   onSelectSchoolYearTuition: (studentId: string, childGrade: string | null) => void;
+  paidSupplyFeeByStudent: Record<string, boolean>;
 }) {
   const [activeTermTab, setActiveTermTab] = useState<"summer" | "school_year">("summer");
 
@@ -4801,14 +4884,14 @@ function PendingPaymentsSection({
 
   return (
     <>
-      {showMultiChildBanner && (
+      {showMultiChildBanner && (activeTermTab === "summer" || !hasSchoolYearContent) && (
         <div className="mb-4 flex items-start gap-3 rounded-xl border border-[#4a7c59]/20 bg-[#4a7c59]/5 px-4 py-3">
           <svg className="mt-0.5 shrink-0 text-[#4a7c59]" width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
           </svg>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold font-body text-[#4a7c59]">
-              Pay for both children in one transaction
+              Pay for all children in one transaction
             </p>
             <p className="text-xs font-body text-gray-500 mt-0.5">
               Add siblings during checkout and pay only one processing fee.
@@ -4820,6 +4903,21 @@ function PendingPaymentsSection({
           >
             View tuition
           </button>
+        </div>
+      )}
+      {showMultiChildSchoolYearBanner && activeTermTab === "school_year" && (
+        <div className="mb-4 flex items-start gap-3 rounded-xl border border-[#3b6cb7]/20 bg-[#3b6cb7]/5 px-4 py-3">
+          <svg className="mt-0.5 shrink-0 text-[#3b6cb7]" width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+          </svg>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold font-body text-[#3b6cb7]">
+              Pay for all children in one transaction
+            </p>
+            <p className="text-xs font-body text-gray-500 mt-0.5">
+              Add siblings during checkout and pay only one processing fee.
+            </p>
+          </div>
         </div>
       )}
       {hasSchoolYearContent && !isOtherTab && (
@@ -4865,12 +4963,16 @@ function PendingPaymentsSection({
               summerEnrollments.some(e => e.student_id === activeStudentId && e.program === "both") ||
               schoolYearHomeschoolApps.length > 0) && (
               <>
-                {(isSchoolYearOnly || summerEnrollments.some(e => e.student_id === activeStudentId && e.program === "both")) && (
+                {(isSchoolYearOnly ||
+                  summerEnrollments.some(e => e.student_id === activeStudentId && e.program === "both") ||
+                  schoolYearHomeschoolApps.length > 0) && (
                   <SchoolYearTuitionCard
                     key="school-year-tuition"
+                    supplyFeePaid={paidSupplyFeeByStudent[activeStudentId!] ?? false}
                     onClick={() => {
                       const grade = schoolYearOnlyApps.find(a => a.student_id === activeStudentId)?.child_grade
                         ?? summerEnrollments.find(e => e.student_id === activeStudentId && e.program === "both")?.child_grade
+                        ?? schoolYearHomeschoolApps.find(a => a.student_id === activeStudentId)?.child_grade
                         ?? null;
                       onSelectSchoolYearTuition(activeStudentId!, grade);
                     }}
@@ -4882,13 +4984,26 @@ function PendingPaymentsSection({
                     app={app}
                     studentName={studentMap[app.student_id]?.name ?? null}
                     paidData={paidHomeschoolByStudent[app.student_id]}
+                    supplyFeePaid={paidSupplyFeeByStudent[app.student_id] ?? false}
                     onClick={() => onSelectSchoolYearHomeschool(app)}
                     onViewHistory={() => onViewSchoolYearHomeschoolHistory(app)}
                   />
                 ))}
                 <SupplyFeeCard
                   key="supply-fee"
-                  onClick={() => onSelectSupplyFee(activeStudentId!)}
+                  supplyFeePaid={paidSupplyFeeByStudent[activeStudentId!] ?? false}
+                  onClick={() => {
+                    const grade = schoolYearOnlyApps.find(a => a.student_id === activeStudentId)?.child_grade
+                      ?? summerEnrollments.find(e => e.student_id === activeStudentId && e.program === "both")?.child_grade
+                      ?? schoolYearHomeschoolApps.find(a => a.student_id === activeStudentId)?.child_grade
+                      ?? null;
+                    const programType: "school_year" | "homeschool" | null =
+                      isSchoolYearOnly ? "school_year"
+                      : schoolYearHomeschoolApps.length > 0 ? "homeschool"
+                      : summerEnrollments.some(e => e.student_id === activeStudentId && e.program === "both") ? "school_year"
+                      : null;
+                    onSelectSupplyFee(activeStudentId!, programType, grade);
+                  }}
                 />
                 {(() => {
                   // Resolve the active school-year enrollment from any of the three possible sources
@@ -5934,6 +6049,7 @@ export default function BillingPage({
   schoolYearOnlyApps,
   hasSubmittedTuitionFeedback,
   paidSchoolYearByStudent,
+  paidSupplyFeeByStudent,
 }: Props) {
   const [selectedTx, setSelectedTx] = useState<StripeTransaction | null>(null);
   const [selectedPending, setSelectedPending] =
@@ -5960,7 +6076,11 @@ export default function BillingPage({
     code: string;
   } | null>(null);
   const [feedbackPopupOpen, setFeedbackPopupOpen] = useState(false);
-  const [supplyFeeStudentId, setSupplyFeeStudentId] = useState<string | null>(null);
+  const [supplyFeeTarget, setSupplyFeeTarget] = useState<{
+    studentId: string;
+    programType: "school_year" | "homeschool" | null;
+    childGrade: string | null;
+  } | null>(null);
   const [schoolYearTuitionTarget, setSchoolYearTuitionTarget] = useState<{ studentId: string; childGrade: string | null } | null>(null);
 
   const hasPaidAny = transactions.some((tx) => tx.status === "completed" && tx.payment_type !== "registration_fee");
@@ -6027,6 +6147,14 @@ export default function BillingPage({
     unpaidSummerEnrollments.filter(
       (e) => e.program === "summer_26" || e.program === "both",
     ).length >= 2;
+
+  const multiChildSchoolYearEligible =
+    [
+      ...schoolYearOnlyApps.map((a) => a.student_id),
+      ...summerEnrollments
+        .filter((e) => e.program === "both")
+        .map((e) => e.student_id),
+    ].length >= 2;
 
   const hasPendingContent =
     unpaidSummerEnrollments.length > 0 ||
@@ -6226,6 +6354,7 @@ export default function BillingPage({
                 activeStudentId={activeStudentId}
                 schoolYearOnlyApps={schoolYearOnlyApps}
                 showMultiChildBanner={multiChildSummerEligible}
+                showMultiChildSchoolYearBanner={multiChildSchoolYearEligible}
                 onOpenFirstSummer={() =>
                   setSelectedSummerEnrollment(
                     unpaidSummerEnrollments.find(
@@ -6233,8 +6362,11 @@ export default function BillingPage({
                     ) ?? null,
                   )
                 }
-                onSelectSupplyFee={setSupplyFeeStudentId}
+                onSelectSupplyFee={(studentId, programType, childGrade) =>
+                  setSupplyFeeTarget({ studentId, programType, childGrade })
+                }
                 onSelectSchoolYearTuition={(id, grade) => setSchoolYearTuitionTarget({ studentId: id, childGrade: grade })}
+                paidSupplyFeeByStudent={paidSupplyFeeByStudent}
               />
               <div className="mt-3">
                 <button
@@ -6694,13 +6826,16 @@ export default function BillingPage({
               }}
             />
           )}
-        {supplyFeeStudentId && (
+        {supplyFeeTarget && (
           <SupplyFeeModal
-            studentId={supplyFeeStudentId}
-            studentName={studentMap[supplyFeeStudentId]?.name ?? null}
+            studentId={supplyFeeTarget.studentId}
+            studentName={studentMap[supplyFeeTarget.studentId]?.name ?? null}
             parentId={parentId}
             parentEmail={parentEmail}
-            onClose={() => setSupplyFeeStudentId(null)}
+            onClose={() => setSupplyFeeTarget(null)}
+            programType={supplyFeeTarget.programType}
+            childGrade={supplyFeeTarget.childGrade}
+            paidSchoolYearMonths={paidSchoolYearByStudent[supplyFeeTarget.studentId] ?? []}
           />
         )}
         {schoolYearTuitionTarget && (

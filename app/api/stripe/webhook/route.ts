@@ -12,6 +12,7 @@ import {
   createShadowDayPaymentEmbed,
   createBeachBashPaymentEmbed,
   createCustomTuitionEmbed,
+  createSupplyFeeEmbed,
   createOneTimePaymentEmbed,
   createErrorEmbed,
   sendDiscordNotification,
@@ -26,6 +27,7 @@ import {
   buildAftercareConfirmationEmail,
   buildFunFridayConfirmationEmail,
   buildCustomTuitionConfirmationEmail,
+  buildSupplyFeeConfirmationEmail,
   buildOneTimePaymentConfirmationEmail,
   sendZohoEmail,
 } from "@/app/lib/zoho";
@@ -1084,15 +1086,59 @@ export async function POST(request: NextRequest) {
       }
 
       sendDiscordNotification(
-        createCustomTuitionEmbed({
+        createSupplyFeeEmbed({
           parentName,
           parentEmail: parentEmailAddr,
           childName,
-          label: "Annual Supply Fee — School Year 26–27",
-          tuitionCode: "N/A",
           amountCents,
         }),
       ).catch((err) => console.error("Supply fee Discord notification failed:", err));
+
+      (async () => {
+        const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
+        let subject: string | undefined;
+        try {
+          if (!toAddress) return;
+          const amountDollars = (amountCents / 100).toFixed(2);
+          const built = await buildSupplyFeeConfirmationEmail({
+            g1FullName: parentName !== "N/A" ? parentName : "Parent",
+            childName,
+            amountDollars,
+          });
+          subject = built.subject;
+          const emailResult = await sendZohoEmail({ toAddress, subject: built.subject, content: built.content });
+          if (emailResult.success) {
+            await supabase.schema("email_logs").from("sends").insert({
+              to_address: toAddress,
+              subject: built.subject,
+              template: "supply_fee_confirmation",
+              application_id: null,
+              status: "success",
+            });
+          } else {
+            throw new Error(emailResult.error ?? "Unknown email error");
+          }
+        } catch (err) {
+          console.error("Supply fee confirmation email failed:", err);
+          if (toAddress) {
+            await supabase.schema("email_logs").from("sends").insert({
+              to_address: toAddress,
+              subject: subject ?? "supply_fee_confirmation (failed to build)",
+              template: "supply_fee_confirmation",
+              application_id: null,
+              status: "error",
+              error_message: String(err).slice(0, 500),
+            }).then(undefined, () => {});
+          }
+          sendDiscordNotification(
+            createErrorEmbed({
+              context: "Supply fee confirmation email",
+              error: String(err),
+              details: { parentId: parentId ?? "N/A", studentId: studentId ?? "N/A" },
+            }),
+          ).catch(() => {});
+        }
+      })();
 
     } else if (session.metadata?.payment_type === "school_year_tuition") {
       const parentId = session.metadata?.parent_id;
@@ -1344,6 +1390,48 @@ export async function POST(request: NextRequest) {
 
     if (billingError) {
       console.error("Failed to record billing transaction:", billingError);
+    }
+
+    // Insert a sibling row if this supply_fee checkout included a bundle
+    if (session.metadata?.payment_type === "supply_fee" && session.metadata?.bundle_type) {
+      const bundleType = session.metadata.bundle_type; // "school_year_tuition" | "homeschool"
+      const bundleAmountCents = parseInt(session.metadata.bundle_amount_cents ?? "0");
+      const bundleMonthIndex = session.metadata.bundle_month_index ? parseInt(session.metadata.bundle_month_index) : null;
+      const paymentIntentId =
+        typeof session.payment_intent === "string"
+          ? session.payment_intent
+          : (session.payment_intent?.id ?? null);
+
+      if (bundleAmountCents > 0) {
+        const { error: bundleError } = await supabase
+          .schema("billing")
+          .from("stripe_transactions")
+          .upsert(
+            {
+              stripe_session_id: `${session.id}_bundle`,
+              stripe_payment_intent_id: paymentIntentId,
+              payment_type: bundleType,
+              amount_cents: bundleAmountCents,
+              intended_amount_cents: bundleAmountCents,
+              currency: session.currency ?? "usd",
+              cover_fees: false,
+              payer_email: session.metadata?.parent_email || session.customer_email || "",
+              student_id: session.metadata?.student_id || null,
+              parent_id: session.metadata?.parent_id || null,
+              metadata: {
+                payment_type: bundleType,
+                ...(bundleMonthIndex != null ? { month_indices: String(bundleMonthIndex) } : {}),
+                bundled_with_supply_fee: "true",
+                primary_session_id: session.id,
+              },
+              status: "completed",
+            },
+            { onConflict: "stripe_session_id" },
+          );
+        if (bundleError) {
+          console.error("Failed to record bundle billing transaction:", bundleError);
+        }
+      }
     }
 
     // Insert sibling rows if this was a bundled multi-child summer payment

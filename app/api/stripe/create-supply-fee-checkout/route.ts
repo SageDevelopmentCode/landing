@@ -10,32 +10,52 @@ const schema = z.object({
   studentId: z.string(),
   coverFees: z.boolean().optional().default(false),
   paymentMethod: z.enum(["card", "ach"]).optional().default("card"),
+  bundleType: z.enum(["school_year_tuition", "homeschool"]).optional(),
+  bundleAmountCents: z.number().int().positive().optional(),
+  bundleMonthIndex: z.number().int().optional(),
 });
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const validated = schema.parse(body);
-    const { parentId, parentEmail, studentId, coverFees, paymentMethod } = validated;
+    const { parentId, parentEmail, studentId, coverFees, paymentMethod, bundleType, bundleAmountCents, bundleMonthIndex } = validated;
 
-    const baseCents = 30000;
+    const supplyFeeCents = 30000;
+    const bundleCents = bundleType && bundleAmountCents ? bundleAmountCents : 0;
+    const baseCents = supplyFeeCents + bundleCents;
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
+
+    const supplyFeeLineItem = {
+      quantity: 1,
+      price_data: {
+        currency: "usd",
+        unit_amount: supplyFeeCents,
+        product_data: {
+          name: "Annual Supply Fee",
+          description: "Sage Field Private School — School Year 2026–27 annual supply fee",
+        },
+      },
+    };
+
+    const bundleLineItem = bundleCents > 0 ? {
+      quantity: 1,
+      price_data: {
+        currency: "usd",
+        unit_amount: bundleCents,
+        product_data: {
+          name: bundleType === "school_year_tuition" ? "August 2026 Tuition" : "Homeschool Drop-In — First Month",
+          description: "Sage Field Private School — School Year 2026–27",
+        },
+      },
+    } : null;
 
     let lineItems;
     if (coverFees && paymentMethod === "ach") {
       const feeCents = Math.min(Math.round(baseCents * 0.008), 500);
       lineItems = [
-        {
-          quantity: 1,
-          price_data: {
-            currency: "usd",
-            unit_amount: baseCents,
-            product_data: {
-              name: "Annual Supply Fee",
-              description: "Sage Field Private School — School Year 2026–27 annual supply fee",
-            },
-          },
-        },
+        supplyFeeLineItem,
+        ...(bundleLineItem ? [bundleLineItem] : []),
         {
           quantity: 1,
           price_data: {
@@ -48,17 +68,8 @@ export async function POST(request: NextRequest) {
     } else if (coverFees && paymentMethod === "card") {
       const feeCents = Math.round((baseCents + 30) / (1 - 0.029)) - baseCents;
       lineItems = [
-        {
-          quantity: 1,
-          price_data: {
-            currency: "usd",
-            unit_amount: baseCents,
-            product_data: {
-              name: "Annual Supply Fee",
-              description: "Sage Field Private School — School Year 2026–27 annual supply fee",
-            },
-          },
-        },
+        supplyFeeLineItem,
+        ...(bundleLineItem ? [bundleLineItem] : []),
         {
           quantity: 1,
           price_data: {
@@ -70,17 +81,8 @@ export async function POST(request: NextRequest) {
       ];
     } else {
       lineItems = [
-        {
-          quantity: 1,
-          price_data: {
-            currency: "usd",
-            unit_amount: baseCents,
-            product_data: {
-              name: "Annual Supply Fee",
-              description: "Sage Field Private School — School Year 2026–27 annual supply fee",
-            },
-          },
-        },
+        supplyFeeLineItem,
+        ...(bundleLineItem ? [bundleLineItem] : []),
       ];
     }
 
@@ -107,6 +109,11 @@ export async function POST(request: NextRequest) {
         cover_fees: String(coverFees),
         payment_method: paymentMethod,
         intended_amount_cents: String(baseCents),
+        ...(bundleType ? {
+          bundle_type: bundleType,
+          bundle_amount_cents: String(bundleCents),
+          bundle_month_index: bundleMonthIndex != null ? String(bundleMonthIndex) : "",
+        } : {}),
       },
       success_url: `${baseUrl}/parent/billing`,
       cancel_url: `${baseUrl}/parent/billing`,
