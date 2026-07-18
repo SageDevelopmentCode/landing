@@ -217,7 +217,22 @@ export async function POST(request: NextRequest) {
           updatePayload.updated_at = new Date().toISOString();
         }
 
-        // Full-time summer parent committing to school year
+        // NEW: Full-time summer parent committing to school year (fixed client sends program="school_year_26_27" directly)
+        if (metaProgram === "school_year_26_27") {
+          const { data: currentApp } = await supabase
+            .schema("parent_app")
+            .from("applications")
+            .select("program")
+            .eq("id", applicationId)
+            .single();
+
+          if (currentApp?.program === "summer_26") {
+            updatePayload.program = "both";
+            updatePayload.updated_at = new Date().toISOString();
+          }
+        }
+
+        // KEEP existing: backwards compat for old client shape
         if (metaProgram === "summer_26" && metaDropInProgram === "school_year_26_27") {
           updatePayload.program = "both";
           updatePayload.updated_at = new Date().toISOString();

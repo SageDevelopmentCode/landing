@@ -7316,7 +7316,7 @@ export default function BillingPage({
                   studentId: commitApp.student_id,
                   applicationId: commitApp.id,
                   ...(commitModalType === "full_time"
-                    ? { program: "summer_26", dropInProgram: "school_year_26_27" }
+                    ? { program: "school_year_26_27" }
                     : { program: "homeschool_drop_in", dropInProgram: "school_year_26_27" }),
                   coverFees: commitCoverFees,
                   paymentMethod: commitPaymentMethod,
