@@ -894,9 +894,9 @@ function SchoolYearTuitionCard({
     >
       <div className="relative h-28 overflow-hidden bg-gray-200">
         <img
-          src="/assets/ImageFive.jpg"
+          src="/assets/Stock1.jpg"
           alt=""
-          className={`w-full h-full object-cover transition-transform duration-500 ${supplyFeePaid ? "group-hover:scale-105" : ""}`}
+          className={`w-full h-full object-cover object-center transition-transform duration-500 ${supplyFeePaid ? "group-hover:scale-105" : ""}`}
         />
         <div className="absolute inset-0 bg-black/10" />
       </div>
@@ -943,9 +943,10 @@ function SupplyFeeCard({
     >
       <div className="relative h-28 overflow-hidden">
         <img
-          src="/assets/ImageFive.jpg"
+          src="/assets/Stock2.jpg"
           alt=""
           className={`w-full h-full object-cover transition-transform duration-500 ${supplyFeePaid ? "" : "group-hover:scale-105"}`}
+          style={{ objectPosition: "center 65%" }}
         />
         <div className="absolute inset-0 bg-black/10" />
         <span className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/80 text-gray-600 shadow-sm backdrop-blur-sm">
@@ -1222,9 +1223,9 @@ function HomeschoolDropInCard({
     >
       <div className="relative h-28 overflow-hidden">
         <img
-          src="/assets/Homeschool.jpg"
+          src="/assets/Stock7.jpg"
           alt=""
-          className={`w-full h-full object-cover ${isDisabled ? "grayscale" : "transition-transform duration-500 group-hover:scale-105"}`}
+          className={`w-full h-full object-cover object-center ${isDisabled ? "grayscale" : "transition-transform duration-500 group-hover:scale-105"}`}
         />
         <div
           className={`absolute inset-0 ${isDisabled ? "bg-black/20" : "bg-black/10"}`}
@@ -1312,9 +1313,9 @@ function HomeschoolSchoolYearCard({
     >
       <div className="relative h-28 overflow-hidden">
         <img
-          src="/assets/Homeschool.jpg"
+          src="/assets/Stock11.jpg"
           alt=""
-          className={`w-full h-full object-cover transition-transform duration-500 ${supplyFeePaid ? "group-hover:scale-105" : ""}`}
+          className={`w-full h-full object-cover object-center transition-transform duration-500 ${supplyFeePaid ? "group-hover:scale-105" : ""}`}
         />
         <div className="absolute inset-0 bg-black/10" />
         <span
@@ -4753,9 +4754,9 @@ function SchoolYearAftercareCard({
     >
       <div className="relative h-28 overflow-hidden">
         <img
-          src="/assets/ImageNine.jpg"
+          src="/assets/Stock3.jpg"
           alt=""
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-black/10" />
         <span className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/80 text-gray-600 shadow-sm backdrop-blur-sm">
@@ -4799,9 +4800,9 @@ function SchoolYearFunFridayCard({
     >
       <div className="relative h-28 overflow-hidden">
         <img
-          src="/assets/ImageEleven.jpg"
+          src="/assets/Stock4.jpg"
           alt=""
-          className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+          className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-black/10" />
         <span className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/80 text-gray-600 shadow-sm backdrop-blur-sm">
