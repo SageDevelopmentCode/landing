@@ -341,6 +341,158 @@ function funFridayMonthCents(
     : month.fridays.length * FUN_FRIDAY_DROPIN_CENTS;
 }
 
+const SCHOOL_YEAR_AFTERCARE_MONTHS = [
+  { key: "aug_26", label: "August 2026", shortLabel: "Aug", days: [
+    { label: "Mon Aug 17", date: "2026-08-17" }, { label: "Tue Aug 18", date: "2026-08-18" },
+    { label: "Wed Aug 19", date: "2026-08-19" }, { label: "Thu Aug 20", date: "2026-08-20" },
+    { label: "Mon Aug 24", date: "2026-08-24" }, { label: "Tue Aug 25", date: "2026-08-25" },
+    { label: "Wed Aug 26", date: "2026-08-26" }, { label: "Thu Aug 27", date: "2026-08-27" },
+    { label: "Mon Aug 31", date: "2026-08-31" },
+  ]},
+  { key: "sep_26", label: "September 2026", shortLabel: "Sep", days: [
+    { label: "Tue Sep 1", date: "2026-09-01" }, { label: "Wed Sep 2", date: "2026-09-02" },
+    { label: "Thu Sep 3", date: "2026-09-03" }, { label: "Tue Sep 8", date: "2026-09-08" },
+    { label: "Wed Sep 9", date: "2026-09-09" }, { label: "Thu Sep 10", date: "2026-09-10" },
+    { label: "Mon Sep 14", date: "2026-09-14" }, { label: "Tue Sep 15", date: "2026-09-15" },
+    { label: "Wed Sep 16", date: "2026-09-16" }, { label: "Thu Sep 17", date: "2026-09-17" },
+    { label: "Mon Sep 21", date: "2026-09-21" }, { label: "Tue Sep 22", date: "2026-09-22" },
+    { label: "Wed Sep 23", date: "2026-09-23" }, { label: "Thu Sep 24", date: "2026-09-24" },
+    { label: "Mon Sep 28", date: "2026-09-28" }, { label: "Tue Sep 29", date: "2026-09-29" },
+    { label: "Wed Sep 30", date: "2026-09-30" },
+  ]},
+  { key: "oct_26", label: "October 2026", shortLabel: "Oct", days: [
+    { label: "Thu Oct 1", date: "2026-10-01" }, { label: "Mon Oct 5", date: "2026-10-05" },
+    { label: "Tue Oct 6", date: "2026-10-06" }, { label: "Wed Oct 7", date: "2026-10-07" },
+    { label: "Thu Oct 8", date: "2026-10-08" }, { label: "Mon Oct 12", date: "2026-10-12" },
+    { label: "Tue Oct 13", date: "2026-10-13" }, { label: "Wed Oct 14", date: "2026-10-14" },
+    { label: "Thu Oct 15", date: "2026-10-15" }, { label: "Mon Oct 19", date: "2026-10-19" },
+    { label: "Tue Oct 20", date: "2026-10-20" }, { label: "Wed Oct 21", date: "2026-10-21" },
+    { label: "Thu Oct 22", date: "2026-10-22" }, { label: "Mon Oct 26", date: "2026-10-26" },
+    { label: "Tue Oct 27", date: "2026-10-27" }, { label: "Wed Oct 28", date: "2026-10-28" },
+    { label: "Thu Oct 29", date: "2026-10-29" },
+  ]},
+  { key: "nov_26", label: "November 2026", shortLabel: "Nov", days: [
+    { label: "Mon Nov 2", date: "2026-11-02" }, { label: "Tue Nov 3", date: "2026-11-03" },
+    { label: "Wed Nov 4", date: "2026-11-04" }, { label: "Thu Nov 5", date: "2026-11-05" },
+    { label: "Mon Nov 9", date: "2026-11-09" }, { label: "Tue Nov 10", date: "2026-11-10" },
+    { label: "Wed Nov 11", date: "2026-11-11" }, { label: "Thu Nov 12", date: "2026-11-12" },
+    { label: "Mon Nov 16", date: "2026-11-16" }, { label: "Tue Nov 17", date: "2026-11-17" },
+    { label: "Wed Nov 18", date: "2026-11-18" }, { label: "Thu Nov 19", date: "2026-11-19" },
+    { label: "Mon Nov 30", date: "2026-11-30" },
+  ]},
+  { key: "dec_26", label: "December 2026", shortLabel: "Dec", days: [
+    { label: "Tue Dec 1", date: "2026-12-01" }, { label: "Wed Dec 2", date: "2026-12-02" },
+    { label: "Thu Dec 3", date: "2026-12-03" }, { label: "Mon Dec 7", date: "2026-12-07" },
+    { label: "Tue Dec 8", date: "2026-12-08" }, { label: "Wed Dec 9", date: "2026-12-09" },
+    { label: "Thu Dec 10", date: "2026-12-10" }, { label: "Mon Dec 14", date: "2026-12-14" },
+    { label: "Tue Dec 15", date: "2026-12-15" }, { label: "Wed Dec 16", date: "2026-12-16" },
+    { label: "Thu Dec 17", date: "2026-12-17" },
+  ]},
+  { key: "jan_27", label: "January 2027", shortLabel: "Jan", days: [
+    { label: "Mon Jan 4", date: "2027-01-04" }, { label: "Tue Jan 5", date: "2027-01-05" },
+    { label: "Wed Jan 6", date: "2027-01-06" }, { label: "Thu Jan 7", date: "2027-01-07" },
+    { label: "Mon Jan 11", date: "2027-01-11" }, { label: "Tue Jan 12", date: "2027-01-12" },
+    { label: "Wed Jan 13", date: "2027-01-13" }, { label: "Thu Jan 14", date: "2027-01-14" },
+    { label: "Tue Jan 19", date: "2027-01-19" }, { label: "Wed Jan 20", date: "2027-01-20" },
+    { label: "Thu Jan 21", date: "2027-01-21" }, { label: "Mon Jan 25", date: "2027-01-25" },
+    { label: "Tue Jan 26", date: "2027-01-26" }, { label: "Wed Jan 27", date: "2027-01-27" },
+    { label: "Thu Jan 28", date: "2027-01-28" },
+  ]},
+  { key: "feb_27", label: "February 2027", shortLabel: "Feb", days: [
+    { label: "Mon Feb 1", date: "2027-02-01" }, { label: "Tue Feb 2", date: "2027-02-02" },
+    { label: "Wed Feb 3", date: "2027-02-03" }, { label: "Thu Feb 4", date: "2027-02-04" },
+    { label: "Mon Feb 8", date: "2027-02-08" }, { label: "Tue Feb 9", date: "2027-02-09" },
+    { label: "Wed Feb 10", date: "2027-02-10" }, { label: "Thu Feb 11", date: "2027-02-11" },
+    { label: "Tue Feb 16", date: "2027-02-16" }, { label: "Wed Feb 17", date: "2027-02-17" },
+    { label: "Thu Feb 18", date: "2027-02-18" }, { label: "Mon Feb 22", date: "2027-02-22" },
+    { label: "Tue Feb 23", date: "2027-02-23" }, { label: "Wed Feb 24", date: "2027-02-24" },
+    { label: "Thu Feb 25", date: "2027-02-25" },
+  ]},
+  { key: "mar_27", label: "March 2027", shortLabel: "Mar", days: [
+    { label: "Mon Mar 1", date: "2027-03-01" }, { label: "Tue Mar 2", date: "2027-03-02" },
+    { label: "Wed Mar 3", date: "2027-03-03" }, { label: "Thu Mar 4", date: "2027-03-04" },
+    { label: "Mon Mar 8", date: "2027-03-08" }, { label: "Tue Mar 9", date: "2027-03-09" },
+    { label: "Wed Mar 10", date: "2027-03-10" }, { label: "Thu Mar 11", date: "2027-03-11" },
+    { label: "Mon Mar 22", date: "2027-03-22" }, { label: "Tue Mar 23", date: "2027-03-23" },
+    { label: "Wed Mar 24", date: "2027-03-24" }, { label: "Thu Mar 25", date: "2027-03-25" },
+    { label: "Mon Mar 29", date: "2027-03-29" }, { label: "Tue Mar 30", date: "2027-03-30" },
+    { label: "Wed Mar 31", date: "2027-03-31" },
+  ]},
+  { key: "apr_27", label: "April 2027", shortLabel: "Apr", days: [
+    { label: "Thu Apr 1", date: "2027-04-01" }, { label: "Mon Apr 5", date: "2027-04-05" },
+    { label: "Tue Apr 6", date: "2027-04-06" }, { label: "Wed Apr 7", date: "2027-04-07" },
+    { label: "Thu Apr 8", date: "2027-04-08" }, { label: "Mon Apr 12", date: "2027-04-12" },
+    { label: "Tue Apr 13", date: "2027-04-13" }, { label: "Wed Apr 14", date: "2027-04-14" },
+    { label: "Thu Apr 15", date: "2027-04-15" }, { label: "Mon Apr 19", date: "2027-04-19" },
+    { label: "Tue Apr 20", date: "2027-04-20" }, { label: "Wed Apr 21", date: "2027-04-21" },
+    { label: "Thu Apr 22", date: "2027-04-22" }, { label: "Mon Apr 26", date: "2027-04-26" },
+    { label: "Tue Apr 27", date: "2027-04-27" }, { label: "Wed Apr 28", date: "2027-04-28" },
+    { label: "Thu Apr 29", date: "2027-04-29" },
+  ]},
+  { key: "may_27", label: "May 2027", shortLabel: "May", days: [
+    { label: "Mon May 3", date: "2027-05-03" }, { label: "Tue May 4", date: "2027-05-04" },
+    { label: "Wed May 5", date: "2027-05-05" }, { label: "Thu May 6", date: "2027-05-06" },
+    { label: "Mon May 10", date: "2027-05-10" }, { label: "Tue May 11", date: "2027-05-11" },
+    { label: "Wed May 12", date: "2027-05-12" }, { label: "Thu May 13", date: "2027-05-13" },
+    { label: "Mon May 17", date: "2027-05-17" }, { label: "Tue May 18", date: "2027-05-18" },
+    { label: "Wed May 19", date: "2027-05-19" }, { label: "Thu May 20", date: "2027-05-20" },
+    { label: "Mon May 24", date: "2027-05-24" }, { label: "Tue May 25", date: "2027-05-25" },
+    { label: "Wed May 26", date: "2027-05-26" }, { label: "Thu May 27", date: "2027-05-27" },
+    { label: "Mon May 31", date: "2027-05-31" },
+  ]},
+];
+
+const SCHOOL_YEAR_FUN_FRIDAY_MONTHS = [
+  { key: "aug_26", label: "August 2026", fridays: [
+    { label: "Fri Aug 21", date: "2026-08-21" }, { label: "Fri Aug 28", date: "2026-08-28" },
+  ]},
+  { key: "sep_26", label: "September 2026", fridays: [
+    { label: "Fri Sep 4", date: "2026-09-04" }, { label: "Fri Sep 11", date: "2026-09-11" },
+    { label: "Fri Sep 18", date: "2026-09-18" }, { label: "Fri Sep 25", date: "2026-09-25" },
+  ]},
+  { key: "oct_26", label: "October 2026", fridays: [
+    { label: "Fri Oct 2", date: "2026-10-02" }, { label: "Fri Oct 9", date: "2026-10-09" },
+    { label: "Fri Oct 16", date: "2026-10-16" }, { label: "Fri Oct 23", date: "2026-10-23" },
+    { label: "Fri Oct 30", date: "2026-10-30" },
+  ]},
+  { key: "nov_26", label: "November 2026", fridays: [
+    { label: "Fri Nov 6", date: "2026-11-06" }, { label: "Fri Nov 13", date: "2026-11-13" },
+    { label: "Fri Nov 20", date: "2026-11-20" },
+  ]},
+  { key: "dec_26", label: "December 2026", fridays: [
+    { label: "Fri Dec 4", date: "2026-12-04" }, { label: "Fri Dec 11", date: "2026-12-11" },
+    { label: "Fri Dec 18", date: "2026-12-18" },
+  ]},
+  { key: "jan_27", label: "January 2027", fridays: [
+    { label: "Fri Jan 8", date: "2027-01-08" }, { label: "Fri Jan 15", date: "2027-01-15" },
+    { label: "Fri Jan 22", date: "2027-01-22" }, { label: "Fri Jan 29", date: "2027-01-29" },
+  ]},
+  { key: "feb_27", label: "February 2027", fridays: [
+    { label: "Fri Feb 5", date: "2027-02-05" }, { label: "Fri Feb 12", date: "2027-02-12" },
+    { label: "Fri Feb 19", date: "2027-02-19" }, { label: "Fri Feb 26", date: "2027-02-26" },
+  ]},
+  { key: "mar_27", label: "March 2027", fridays: [
+    { label: "Fri Mar 5", date: "2027-03-05" }, { label: "Fri Mar 12", date: "2027-03-12" },
+    { label: "Fri Mar 26", date: "2027-03-26" },
+  ]},
+  { key: "apr_27", label: "April 2027", fridays: [
+    { label: "Fri Apr 2", date: "2027-04-02" }, { label: "Fri Apr 9", date: "2027-04-09" },
+    { label: "Fri Apr 16", date: "2027-04-16" }, { label: "Fri Apr 23", date: "2027-04-23" },
+    { label: "Fri Apr 30", date: "2027-04-30" },
+  ]},
+  { key: "may_27", label: "May 2027", fridays: [
+    { label: "Fri May 7", date: "2027-05-07" }, { label: "Fri May 14", date: "2027-05-14" },
+    { label: "Fri May 21", date: "2027-05-21" }, { label: "Fri May 28", date: "2027-05-28" },
+  ]},
+];
+
+function schoolYearAftercareMonthCents(month: (typeof SCHOOL_YEAR_AFTERCARE_MONTHS)[number]): number {
+  const normalMonthDayThreshold = 15;
+  return month.days.length < normalMonthDayThreshold
+    ? Math.round(month.days.length * 1868.75)
+    : AFTERCARE_MONTHLY_CENTS;
+}
+
 // --- Homeschool Drop-In pricing ---
 // Summer: per-week rates
 const HOMESCHOOL_SUMMER_PRICING = {
@@ -3726,6 +3878,98 @@ function FunFridayCard({
   );
 }
 
+function SchoolYearAftercareCard({
+  studentName,
+  onClick,
+}: {
+  studentName: string | null;
+  onClick: () => void;
+}) {
+  return (
+    <div
+      className="rounded-2xl overflow-hidden cursor-pointer group bg-white border border-gray-100 flex flex-col"
+      onClick={onClick}
+    >
+      <div className="relative h-28 overflow-hidden">
+        <img
+          src="/assets/ImageNine.jpg"
+          alt=""
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-black/10" />
+        <span className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/80 text-gray-600 shadow-sm backdrop-blur-sm">
+          Optional
+        </span>
+      </div>
+      <div className="p-3.5 flex flex-col gap-2.5">
+        <div>
+          <div className="text-xs font-medium text-gray-400 mb-0.5">
+            School Year 26–27
+          </div>
+          <div className="text-sm font-semibold text-gray-800 leading-snug">
+            Extended Learning (3:00 – 5:00pm)
+          </div>
+        </div>
+        <div className="flex items-center justify-between mt-auto">
+          <span
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white"
+            style={{ backgroundColor: "#e07a3a" }}
+          >
+            Select plan
+            <ChevronRight className="w-3 h-3" strokeWidth={2.5} />
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SchoolYearFunFridayCard({
+  studentName,
+  onClick,
+}: {
+  studentName: string | null;
+  onClick: () => void;
+}) {
+  return (
+    <div
+      className="rounded-2xl overflow-hidden cursor-pointer group bg-white border border-gray-100 flex flex-col"
+      onClick={onClick}
+    >
+      <div className="relative h-28 overflow-hidden">
+        <img
+          src="/assets/ImageEleven.jpg"
+          alt=""
+          className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-black/10" />
+        <span className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/80 text-gray-600 shadow-sm backdrop-blur-sm">
+          Optional
+        </span>
+      </div>
+      <div className="p-3.5 flex flex-col gap-2.5">
+        <div>
+          <div className="text-xs font-medium text-gray-400 mb-0.5">
+            School Year 26–27
+          </div>
+          <div className="text-sm font-semibold text-gray-800 leading-snug">
+            Friday Enrichment Day
+          </div>
+        </div>
+        <div className="flex items-center justify-between mt-auto">
+          <span
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white"
+            style={{ backgroundColor: "#7c3aed" }}
+          >
+            Select plan
+            <ChevronRight className="w-3 h-3" strokeWidth={2.5} />
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AftercarePaymentModal({
   enrollment,
   studentName,
@@ -4902,6 +5146,1147 @@ function FunFridayPaymentModal({
   );
 }
 
+function SchoolYearAftercarePaymentModal({
+  enrollment,
+  studentName,
+  parentId,
+  parentEmail,
+  paidMonths,
+  paidDays,
+  onClose,
+}: {
+  enrollment: SummerEnrollment;
+  studentName: string | null;
+  parentId: string;
+  parentEmail: string;
+  paidMonths: Set<string>;
+  paidDays: Set<string>;
+  onClose: () => void;
+}) {
+  const [step, setStep] = useState<"plan" | "payment">("plan");
+  const [tab, setTab] = useState<"monthly" | "daily">("monthly");
+  const [selectedMonths, setSelectedMonths] = useState<Set<string>>(new Set());
+  const [selectedDays, setSelectedDays] = useState<Set<string>>(new Set());
+  const [expandedMonths, setExpandedMonths] = useState<Set<string>>(
+    new Set(SCHOOL_YEAR_AFTERCARE_MONTHS.map((m) => m.key)),
+  );
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "ach">("card");
+  const [coverFees, setCoverFees] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const monthlyTotal = SCHOOL_YEAR_AFTERCARE_MONTHS.filter((m) =>
+    selectedMonths.has(m.key),
+  ).reduce((sum, m) => sum + schoolYearAftercareMonthCents(m), 0);
+  const dailyTotal = selectedDays.size * AFTERCARE_DAILY_CENTS;
+  const intendedAmountCents = tab === "monthly" ? monthlyTotal : dailyTotal;
+  const canContinue =
+    tab === "monthly" ? selectedMonths.size > 0 : selectedDays.size > 0;
+
+  const feeCents = coverFees
+    ? paymentMethod === "ach"
+      ? Math.min(Math.round(intendedAmountCents * 0.008), 500)
+      : Math.round((intendedAmountCents + 30) / (1 - 0.029)) -
+        intendedAmountCents
+    : 0;
+  const totalWithFees = intendedAmountCents + feeCents;
+
+  const cardFeeDisplay =
+    Math.round(((intendedAmountCents / 100) * 0.029 + 0.3) * 100) / 100;
+  const achFeeDisplay = Math.min(
+    Math.round((intendedAmountCents / 100) * 0.008 * 100) / 100,
+    5.0,
+  );
+
+  function toggleMonth(key: string) {
+    if (paidMonths.has(key)) return;
+    setSelectedMonths((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  function toggleDay(date: string) {
+    if (paidDays.has(date)) return;
+    setSelectedDays((prev) => {
+      const next = new Set(prev);
+      if (next.has(date)) next.delete(date);
+      else next.add(date);
+      return next;
+    });
+  }
+
+  function toggleExpandedMonth(key: string) {
+    setExpandedMonths((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  const continueLabel =
+    tab === "monthly"
+      ? selectedMonths.size > 0
+        ? `Continue · ${formatCents(monthlyTotal)}`
+        : "Select months to continue"
+      : selectedDays.size > 0
+        ? `Continue · ${formatCents(dailyTotal)}`
+        : "Select days to continue";
+
+  async function handlePayNow() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/stripe/create-aftercare-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          parentId,
+          parentEmail,
+          studentId: enrollment.student_id,
+          applicationId: enrollment.id,
+          planType: tab,
+          selectedMonths: Array.from(selectedMonths),
+          selectedDays: Array.from(selectedDays).sort(),
+          intendedAmountCents,
+          coverFees,
+          paymentMethod,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Something went wrong. Please try again.");
+        return;
+      }
+      window.location.href = data.url;
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <motion.div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        onClick={onClose}
+      />
+      <motion.div
+        className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+        transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+      >
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 border-b border-gray-100">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <div
+                  className="flex items-center justify-center w-7 h-7 rounded-full"
+                  style={{ backgroundColor: "#fde8d8" }}
+                >
+                  <Clock
+                    className="w-3.5 h-3.5"
+                    style={{ color: "#e07a3a" }}
+                    strokeWidth={2}
+                  />
+                </div>
+                <h2 className="text-lg font-bold font-heading text-gray-800">
+                  Extended Learning — School Year 26–27
+                </h2>
+              </div>
+              {studentName && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500 font-body">
+                    {studentName}
+                  </span>
+                  {enrollment.child_grade && (
+                    <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
+                      {enrollment.child_grade}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+            <button
+              onClick={onClose}
+              className="flex-shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          {step === "plan" && (
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={() => setTab("monthly")}
+                className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
+                  tab === "monthly"
+                    ? "text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+                style={tab === "monthly" ? { backgroundColor: "#e07a3a" } : {}}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setTab("daily")}
+                className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
+                  tab === "daily"
+                    ? "text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+                style={tab === "daily" ? { backgroundColor: "#e07a3a" } : {}}
+              >
+                Daily
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto px-6 py-5">
+          <AnimatePresence mode="wait">
+            {step === "payment" ? (
+              <motion.div
+                key="payment"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2, ease: "easeInOut" as const }}
+                className="space-y-5"
+              >
+                <div className="mb-4">
+                  <p className="text-sm font-medium text-gray-700 font-body mb-2">
+                    How will you be paying?
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("card")}
+                      className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${
+                        paymentMethod === "card"
+                          ? "border-orange-400 bg-orange-50 text-orange-700"
+                          : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      Credit/Debit Card
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("ach")}
+                      className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${
+                        paymentMethod === "ach"
+                          ? "border-orange-400 bg-orange-50 text-orange-700"
+                          : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      ACH / US bank account
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-400 font-body mt-1.5">
+                    {paymentMethod === "card"
+                      ? `Processing fee (est.): ~$${cardFeeDisplay.toFixed(2)}`
+                      : `Processing fee (est.): ~$${achFeeDisplay.toFixed(2)} (0.8%, max $5.00)`}
+                  </p>
+                </div>
+                <label className="flex items-start gap-3 mb-5 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={coverFees}
+                    onChange={(e) => setCoverFees(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded cursor-pointer"
+                    style={{ accentColor: "#e07a3a" }}
+                  />
+                  <span className="text-sm text-gray-600 font-body group-hover:text-gray-800 transition-colors">
+                    I agree to pay the processing fee
+                  </span>
+                </label>
+                <p className="text-xs text-gray-400 font-body mb-5">
+                  Prefer to pay by check? Email us at{" "}
+                  <a
+                    href="mailto:sabrina@sagefield.co"
+                    className="underline hover:text-gray-600 transition-colors"
+                  >
+                    sabrina@sagefield.co
+                  </a>{" "}
+                  and we&apos;ll send you instructions.
+                </p>
+                {error && (
+                  <p className="text-sm text-red-600 font-body mb-4">{error}</p>
+                )}
+                <p className="text-xs text-gray-400 font-body mb-4">
+                  Extended Learning payments are non-refundable.
+                </p>
+              </motion.div>
+            ) : tab === "monthly" ? (
+              <motion.div
+                key="monthly"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.2, ease: "easeInOut" as const }}
+              >
+                <p className="text-sm text-gray-500 font-body mb-4">
+                  Select the months you&apos;d like Extended Learning coverage
+                  for.
+                </p>
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  {SCHOOL_YEAR_AFTERCARE_MONTHS.map((m) => {
+                    const selected = selectedMonths.has(m.key);
+                    const isPaid = paidMonths.has(m.key);
+                    const paidDaysInMonth = m.days.filter((d) =>
+                      paidDays.has(d.date),
+                    ).length;
+                    const individualPaidDaysInMonth = isPaid
+                      ? 0
+                      : paidDaysInMonth;
+                    return (
+                      <motion.button
+                        key={m.key}
+                        onClick={() => toggleMonth(m.key)}
+                        disabled={isPaid}
+                        className={`flex flex-col gap-1 rounded-xl px-4 py-4 text-left transition-colors ${isPaid ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
+                        animate={{
+                          backgroundColor: isPaid
+                            ? "#f0fdf4"
+                            : selected
+                              ? "#fff7f3"
+                              : "#f9fafb",
+                        }}
+                        whileTap={isPaid ? {} : { scale: 0.99 }}
+                        transition={{ duration: 0.15 }}
+                        style={
+                          isPaid
+                            ? { boxShadow: "inset 3px 0 0 #16a34a" }
+                            : selected
+                              ? { boxShadow: "inset 3px 0 0 #e07a3a" }
+                              : {}
+                        }
+                      >
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-colors"
+                            style={
+                              isPaid
+                                ? { backgroundColor: "#16a34a" }
+                                : selected
+                                  ? { backgroundColor: "#e07a3a" }
+                                  : {
+                                      backgroundColor: "transparent",
+                                      border: "2px solid #d1d5db",
+                                    }
+                            }
+                          >
+                            {(isPaid || selected) && (
+                              <Check
+                                className="w-3 h-3 text-white"
+                                strokeWidth={3}
+                              />
+                            )}
+                          </div>
+                          <span className="text-sm font-semibold font-heading text-gray-800">
+                            {m.label}
+                          </span>
+                          {isPaid && (
+                            <span className="ml-auto text-xs font-semibold text-green-600 bg-green-100 px-1.5 py-0.5 rounded-full">
+                              Paid
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-400 font-body mt-1 ml-7">
+                          {m.days.length} days ·{" "}
+                          {schoolYearAftercareMonthCents(m) === AFTERCARE_MONTHLY_CENTS
+                            ? `${formatCents(AFTERCARE_MONTHLY_CENTS)}/mo`
+                            : formatCents(schoolYearAftercareMonthCents(m))}
+                          {individualPaidDaysInMonth > 0 && (
+                            <span className="ml-1.5 text-green-600 font-semibold">
+                              · {individualPaidDaysInMonth} day
+                              {individualPaidDaysInMonth !== 1 ? "s" : ""} paid
+                            </span>
+                          )}
+                        </p>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+                <motion.div
+                  className="rounded-xl px-4 py-3 flex items-center justify-between"
+                  style={{
+                    backgroundColor:
+                      selectedMonths.size > 0 ? "#fff7f3" : "#f9fafb",
+                  }}
+                  layout
+                  transition={{ duration: 0.2 }}
+                >
+                  <span className="text-sm text-gray-500 font-body">
+                    {selectedMonths.size === 0
+                      ? "No months selected"
+                      : (() => {
+                          const sel = SCHOOL_YEAR_AFTERCARE_MONTHS.filter((m) =>
+                            selectedMonths.has(m.key),
+                          );
+                          const allNormal = sel.every(
+                            (m) =>
+                              schoolYearAftercareMonthCents(m) ===
+                              AFTERCARE_MONTHLY_CENTS,
+                          );
+                          return allNormal
+                            ? `${sel.length} month${sel.length !== 1 ? "s" : ""} × ${formatCents(AFTERCARE_MONTHLY_CENTS)}/mo`
+                            : `${sel.length} month${sel.length !== 1 ? "s" : ""} selected`;
+                        })()}
+                  </span>
+                  <span
+                    className="text-base font-bold font-heading"
+                    style={{ color: "#e07a3a" }}
+                  >
+                    {selectedMonths.size > 0 ? formatCents(monthlyTotal) : "—"}
+                  </span>
+                </motion.div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="daily"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2, ease: "easeInOut" as const }}
+              >
+                <p className="text-sm text-gray-500 font-body mb-4">
+                  Select individual days you&apos;d like Extended Learning.
+                  $35/day.
+                </p>
+                <div className="space-y-3 mb-4">
+                  {SCHOOL_YEAR_AFTERCARE_MONTHS.map((m) => {
+                    const isExpanded = expandedMonths.has(m.key);
+                    const selectedInMonth = m.days.filter((d) =>
+                      selectedDays.has(d.date),
+                    ).length;
+                    const paidInMonth = m.days.filter((d) =>
+                      paidDays.has(d.date),
+                    ).length;
+                    return (
+                      <div
+                        key={m.key}
+                        className="rounded-xl border border-gray-100 overflow-hidden"
+                      >
+                        <button
+                          onClick={() => toggleExpandedMonth(m.key)}
+                          className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold font-heading text-gray-700">
+                              {m.label}
+                            </span>
+                            {paidInMonth > 0 && (
+                              <span className="px-2 py-0.5 rounded-full text-xs font-semibold text-green-700 bg-green-100">
+                                {paidInMonth} paid
+                              </span>
+                            )}
+                            {selectedInMonth > 0 && (
+                              <span
+                                className="px-2 py-0.5 rounded-full text-xs font-semibold text-white"
+                                style={{ backgroundColor: "#e07a3a" }}
+                              >
+                                {selectedInMonth} selected
+                              </span>
+                            )}
+                          </div>
+                          <motion.span
+                            animate={{ rotate: isExpanded ? 90 : 0 }}
+                            transition={{ duration: 0.15 }}
+                            className="text-gray-400"
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </motion.span>
+                        </button>
+                        <AnimatePresence initial={false}>
+                          {isExpanded && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{
+                                duration: 0.2,
+                                ease: "easeInOut" as const,
+                              }}
+                              className="overflow-hidden"
+                            >
+                              <div className="px-4 py-3 flex flex-wrap gap-2">
+                                {m.days.map((d) => {
+                                  const sel = selectedDays.has(d.date);
+                                  const isPaidDay = paidDays.has(d.date);
+                                  return (
+                                    <button
+                                      key={d.date}
+                                      onClick={() => toggleDay(d.date)}
+                                      disabled={isPaidDay}
+                                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold font-body transition-colors border ${
+                                        isPaidDay
+                                          ? "bg-green-100 text-green-700 border-green-200 cursor-not-allowed"
+                                          : sel
+                                            ? "text-white border-transparent cursor-pointer"
+                                            : "bg-white text-gray-600 border-gray-200 hover:border-orange-300 hover:text-orange-600 cursor-pointer"
+                                      }`}
+                                      style={
+                                        !isPaidDay && sel
+                                          ? {
+                                              backgroundColor: "#e07a3a",
+                                              borderColor: "#e07a3a",
+                                            }
+                                          : {}
+                                      }
+                                    >
+                                      {d.label}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })}
+                </div>
+                <motion.div
+                  className="rounded-xl px-4 py-3 flex items-center justify-between"
+                  style={{
+                    backgroundColor:
+                      selectedDays.size > 0 ? "#fff7f3" : "#f9fafb",
+                  }}
+                  layout
+                  transition={{ duration: 0.2 }}
+                >
+                  <span className="text-sm text-gray-500 font-body">
+                    {selectedDays.size === 0
+                      ? "No days selected"
+                      : `${selectedDays.size} day${selectedDays.size !== 1 ? "s" : ""} × ${formatCents(AFTERCARE_DAILY_CENTS)}/day`}
+                  </span>
+                  <span
+                    className="text-base font-bold font-heading"
+                    style={{ color: "#e07a3a" }}
+                  >
+                    {selectedDays.size > 0 ? formatCents(dailyTotal) : "—"}
+                  </span>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
+          {step === "payment" && (
+            <button
+              onClick={() => setStep("plan")}
+              className="px-4 py-3 rounded-xl text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer"
+            >
+              Back
+            </button>
+          )}
+          <button
+            disabled={step === "plan" ? !canContinue : loading || !coverFees}
+            className="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ backgroundColor: "#e07a3a" }}
+            onClick={step === "plan" ? () => setStep("payment") : handlePayNow}
+          >
+            {step === "plan"
+              ? continueLabel
+              : loading
+                ? "Processing…"
+                : `Pay Now · ${formatCents(totalWithFees)}`}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function SchoolYearFunFridayPaymentModal({
+  enrollment,
+  studentName,
+  parentId,
+  parentEmail,
+  paidMonths,
+  paidFridays,
+  onClose,
+}: {
+  enrollment: SummerEnrollment;
+  studentName: string | null;
+  parentId: string;
+  parentEmail: string;
+  paidMonths: Set<string>;
+  paidFridays: Set<string>;
+  onClose: () => void;
+}) {
+  const [step, setStep] = useState<"plan" | "payment">("plan");
+  const [tab, setTab] = useState<"monthly" | "dropin">("monthly");
+  const [selectedMonths, setSelectedMonths] = useState<Set<string>>(new Set());
+  const [selectedFridays, setSelectedFridays] = useState<Set<string>>(
+    new Set(),
+  );
+  const [expandedMonths, setExpandedMonths] = useState<Set<string>>(
+    new Set(SCHOOL_YEAR_FUN_FRIDAY_MONTHS.map((m) => m.key)),
+  );
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "ach">("card");
+  const [coverFees, setCoverFees] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const monthlyTotal = SCHOOL_YEAR_FUN_FRIDAY_MONTHS.filter((m) =>
+    selectedMonths.has(m.key),
+  ).reduce((sum, m) => sum + funFridayMonthCents(m), 0);
+  const dropinTotal = selectedFridays.size * FUN_FRIDAY_DROPIN_CENTS;
+  const intendedAmountCents = tab === "monthly" ? monthlyTotal : dropinTotal;
+  const canContinue =
+    tab === "monthly" ? selectedMonths.size > 0 : selectedFridays.size > 0;
+
+  const feeCents = coverFees
+    ? paymentMethod === "ach"
+      ? Math.min(Math.round(intendedAmountCents * 0.008), 500)
+      : Math.round((intendedAmountCents + 30) / (1 - 0.029)) -
+        intendedAmountCents
+    : 0;
+  const totalWithFees = intendedAmountCents + feeCents;
+
+  const cardFeeDisplay =
+    Math.round(((intendedAmountCents / 100) * 0.029 + 0.3) * 100) / 100;
+  const achFeeDisplay = Math.min(
+    Math.round((intendedAmountCents / 100) * 0.008 * 100) / 100,
+    5.0,
+  );
+
+  function toggleMonth(key: string) {
+    if (paidMonths.has(key)) return;
+    setSelectedMonths((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  function toggleFriday(date: string) {
+    if (paidFridays.has(date)) return;
+    setSelectedFridays((prev) => {
+      const next = new Set(prev);
+      if (next.has(date)) next.delete(date);
+      else next.add(date);
+      return next;
+    });
+  }
+
+  function toggleExpandedMonth(key: string) {
+    setExpandedMonths((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  const continueLabel =
+    tab === "monthly"
+      ? selectedMonths.size > 0
+        ? `Continue · ${formatCents(monthlyTotal)}`
+        : "Select months to continue"
+      : selectedFridays.size > 0
+        ? `Continue · ${formatCents(dropinTotal)}`
+        : "Select Fridays to continue";
+
+  async function handlePayNow() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/stripe/create-fun-friday-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          parentId,
+          parentEmail,
+          studentId: enrollment.student_id,
+          applicationId: enrollment.id,
+          planType: tab,
+          selectedMonths: Array.from(selectedMonths),
+          selectedFridays: Array.from(selectedFridays).sort(),
+          intendedAmountCents,
+          coverFees,
+          paymentMethod,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Something went wrong. Please try again.");
+        return;
+      }
+      window.location.href = data.url;
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <motion.div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        onClick={onClose}
+      />
+      <motion.div
+        className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+        transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+      >
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 border-b border-gray-100">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <div
+                  className="flex items-center justify-center w-7 h-7 rounded-full"
+                  style={{ backgroundColor: "#ede9fe" }}
+                >
+                  <PartyPopper
+                    className="w-3.5 h-3.5"
+                    style={{ color: "#7c3aed" }}
+                    strokeWidth={2}
+                  />
+                </div>
+                <h2 className="text-lg font-bold font-heading text-gray-800">
+                  Friday Enrichment — School Year 26–27
+                </h2>
+              </div>
+              {studentName && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500 font-body">
+                    {studentName}
+                  </span>
+                  {enrollment.child_grade && (
+                    <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
+                      {enrollment.child_grade}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+            <button
+              onClick={onClose}
+              className="flex-shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          {step === "plan" && (
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={() => setTab("monthly")}
+                className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
+                  tab === "monthly"
+                    ? "text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+                style={tab === "monthly" ? { backgroundColor: "#7c3aed" } : {}}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setTab("dropin")}
+                className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
+                  tab === "dropin"
+                    ? "text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+                style={tab === "dropin" ? { backgroundColor: "#7c3aed" } : {}}
+              >
+                Drop-in
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto px-6 py-5">
+          <AnimatePresence mode="wait">
+            {step === "payment" ? (
+              <motion.div
+                key="payment"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2, ease: "easeInOut" as const }}
+                className="space-y-5"
+              >
+                <div className="mb-4">
+                  <p className="text-sm font-medium text-gray-700 font-body mb-2">
+                    How will you be paying?
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("card")}
+                      className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${
+                        paymentMethod === "card"
+                          ? "border-violet-400 bg-violet-50 text-violet-700"
+                          : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      Credit/Debit Card
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("ach")}
+                      className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${
+                        paymentMethod === "ach"
+                          ? "border-violet-400 bg-violet-50 text-violet-700"
+                          : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      ACH / US bank account
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-400 font-body mt-1.5">
+                    {paymentMethod === "card"
+                      ? `Processing fee (est.): ~$${cardFeeDisplay.toFixed(2)}`
+                      : `Processing fee (est.): ~$${achFeeDisplay.toFixed(2)} (0.8%, max $5.00)`}
+                  </p>
+                </div>
+                <label className="flex items-start gap-3 mb-5 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={coverFees}
+                    onChange={(e) => setCoverFees(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded cursor-pointer"
+                    style={{ accentColor: "#7c3aed" }}
+                  />
+                  <span className="text-sm text-gray-600 font-body group-hover:text-gray-800 transition-colors">
+                    I agree to pay the processing fee
+                  </span>
+                </label>
+                <p className="text-xs text-gray-400 font-body mb-5">
+                  Prefer to pay by check? Email us at{" "}
+                  <a
+                    href="mailto:sabrina@sagefield.co"
+                    className="underline hover:text-gray-600 transition-colors"
+                  >
+                    sabrina@sagefield.co
+                  </a>{" "}
+                  and we&apos;ll send you instructions.
+                </p>
+                {error && (
+                  <p className="text-sm text-red-600 font-body mb-4">{error}</p>
+                )}
+                <p className="text-xs text-gray-400 font-body mb-4">
+                  Friday Enrichment payments are non-refundable.
+                </p>
+              </motion.div>
+            ) : tab === "monthly" ? (
+              <motion.div
+                key="monthly"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.2, ease: "easeInOut" as const }}
+              >
+                <p className="text-sm text-gray-500 font-body mb-1">
+                  Select the months you&apos;d like Friday Enrichment coverage for.
+                </p>
+                <p className="text-xs text-gray-400 font-body mb-4">
+                  9:00am – 1:00pm · Package of 4 Fridays per month
+                </p>
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  {SCHOOL_YEAR_FUN_FRIDAY_MONTHS.map((m) => {
+                    const selected = selectedMonths.has(m.key);
+                    const isPaid = paidMonths.has(m.key);
+                    const paidFridaysInMonth = m.fridays.filter((d) =>
+                      paidFridays.has(d.date),
+                    ).length;
+                    const individualPaidFridaysInMonth = isPaid
+                      ? 0
+                      : paidFridaysInMonth;
+                    return (
+                      <motion.button
+                        key={m.key}
+                        onClick={() => toggleMonth(m.key)}
+                        disabled={isPaid}
+                        className={`flex flex-col gap-1 rounded-xl px-4 py-4 text-left transition-colors ${isPaid ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
+                        animate={{
+                          backgroundColor: isPaid
+                            ? "#f0fdf4"
+                            : selected
+                              ? "#f5f3ff"
+                              : "#f9fafb",
+                        }}
+                        whileTap={isPaid ? {} : { scale: 0.99 }}
+                        transition={{ duration: 0.15 }}
+                        style={
+                          isPaid
+                            ? { boxShadow: "inset 3px 0 0 #16a34a" }
+                            : selected
+                              ? { boxShadow: "inset 3px 0 0 #7c3aed" }
+                              : {}
+                        }
+                      >
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-colors"
+                            style={
+                              isPaid
+                                ? { backgroundColor: "#16a34a" }
+                                : selected
+                                  ? { backgroundColor: "#7c3aed" }
+                                  : {
+                                      backgroundColor: "transparent",
+                                      border: "2px solid #d1d5db",
+                                    }
+                            }
+                          >
+                            {(isPaid || selected) && (
+                              <Check
+                                className="w-3 h-3 text-white"
+                                strokeWidth={3}
+                              />
+                            )}
+                          </div>
+                          <span className="text-sm font-semibold font-heading text-gray-800">
+                            {m.label}
+                          </span>
+                          {isPaid && (
+                            <span className="ml-auto text-xs font-semibold text-green-600 bg-green-100 px-1.5 py-0.5 rounded-full">
+                              Paid
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-400 font-body mt-1 ml-7">
+                          {m.fridays.length} Friday
+                          {m.fridays.length !== 1 ? "s" : ""} ·{" "}
+                          {m.fridays.length >= 4
+                            ? `${formatCents(FUN_FRIDAY_MONTHLY_CENTS)}/mo`
+                            : formatCents(m.fridays.length * FUN_FRIDAY_DROPIN_CENTS)}
+                          {individualPaidFridaysInMonth > 0 && (
+                            <span className="ml-1.5 text-green-600 font-semibold">
+                              · {individualPaidFridaysInMonth} Friday
+                              {individualPaidFridaysInMonth !== 1
+                                ? "s"
+                                : ""}{" "}
+                              paid
+                            </span>
+                          )}
+                        </p>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+                <motion.div
+                  className="rounded-xl px-4 py-3 flex items-center justify-between"
+                  style={{
+                    backgroundColor:
+                      selectedMonths.size > 0 ? "#f5f3ff" : "#f9fafb",
+                  }}
+                  layout
+                  transition={{ duration: 0.2 }}
+                >
+                  <span className="text-sm text-gray-500 font-body">
+                    {selectedMonths.size === 0
+                      ? "No months selected"
+                      : (() => {
+                          const sel = SCHOOL_YEAR_FUN_FRIDAY_MONTHS.filter((m) =>
+                            selectedMonths.has(m.key),
+                          );
+                          const allNormal = sel.every(
+                            (m) => m.fridays.length >= 4,
+                          );
+                          return allNormal
+                            ? `${sel.length} month${sel.length !== 1 ? "s" : ""} × ${formatCents(FUN_FRIDAY_MONTHLY_CENTS)}/mo`
+                            : `${sel.length} month${sel.length !== 1 ? "s" : ""} selected`;
+                        })()}
+                  </span>
+                  <span
+                    className="text-base font-bold font-heading"
+                    style={{ color: "#7c3aed" }}
+                  >
+                    {selectedMonths.size > 0 ? formatCents(monthlyTotal) : "—"}
+                  </span>
+                </motion.div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="dropin"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2, ease: "easeInOut" as const }}
+              >
+                <p className="text-sm text-gray-500 font-body mb-1">
+                  Select individual Fridays you&apos;d like to attend.
+                  $60/session.
+                </p>
+                <p className="text-xs text-gray-400 font-body mb-4">
+                  9:00am – 1:00pm
+                </p>
+                <div className="space-y-3 mb-4">
+                  {SCHOOL_YEAR_FUN_FRIDAY_MONTHS.map((m) => {
+                    const isExpanded = expandedMonths.has(m.key);
+                    const selectedInMonth = m.fridays.filter((d) =>
+                      selectedFridays.has(d.date),
+                    ).length;
+                    const paidInMonth = m.fridays.filter((d) =>
+                      paidFridays.has(d.date),
+                    ).length;
+                    return (
+                      <div
+                        key={m.key}
+                        className="rounded-xl border border-gray-100 overflow-hidden"
+                      >
+                        <button
+                          onClick={() => toggleExpandedMonth(m.key)}
+                          className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold font-heading text-gray-700">
+                              {m.label}
+                            </span>
+                            {paidInMonth > 0 && (
+                              <span className="px-2 py-0.5 rounded-full text-xs font-semibold text-green-700 bg-green-100">
+                                {paidInMonth} paid
+                              </span>
+                            )}
+                            {selectedInMonth > 0 && (
+                              <span
+                                className="px-2 py-0.5 rounded-full text-xs font-semibold text-white"
+                                style={{ backgroundColor: "#7c3aed" }}
+                              >
+                                {selectedInMonth} selected
+                              </span>
+                            )}
+                          </div>
+                          <motion.span
+                            animate={{ rotate: isExpanded ? 90 : 0 }}
+                            transition={{ duration: 0.15 }}
+                            className="text-gray-400"
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </motion.span>
+                        </button>
+                        <AnimatePresence initial={false}>
+                          {isExpanded && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{
+                                duration: 0.2,
+                                ease: "easeInOut" as const,
+                              }}
+                              className="overflow-hidden"
+                            >
+                              <div className="px-4 py-3 flex flex-wrap gap-2">
+                                {m.fridays.map((d) => {
+                                  const sel = selectedFridays.has(d.date);
+                                  const isPaidFriday = paidFridays.has(d.date);
+                                  return (
+                                    <button
+                                      key={d.date}
+                                      onClick={() => toggleFriday(d.date)}
+                                      disabled={isPaidFriday}
+                                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold font-body transition-colors border ${
+                                        isPaidFriday
+                                          ? "bg-green-100 text-green-700 border-green-200 cursor-not-allowed"
+                                          : sel
+                                            ? "text-white border-transparent cursor-pointer"
+                                            : "bg-white text-gray-600 border-gray-200 hover:border-violet-300 hover:text-violet-600 cursor-pointer"
+                                      }`}
+                                      style={
+                                        !isPaidFriday && sel
+                                          ? {
+                                              backgroundColor: "#7c3aed",
+                                              borderColor: "#7c3aed",
+                                            }
+                                          : {}
+                                      }
+                                    >
+                                      {d.label}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })}
+                </div>
+                <motion.div
+                  className="rounded-xl px-4 py-3 flex items-center justify-between"
+                  style={{
+                    backgroundColor:
+                      selectedFridays.size > 0 ? "#f5f3ff" : "#f9fafb",
+                  }}
+                  layout
+                  transition={{ duration: 0.2 }}
+                >
+                  <span className="text-sm text-gray-500 font-body">
+                    {selectedFridays.size === 0
+                      ? "No Fridays selected"
+                      : `${selectedFridays.size} session${selectedFridays.size !== 1 ? "s" : ""} × ${formatCents(FUN_FRIDAY_DROPIN_CENTS)}/session`}
+                  </span>
+                  <span
+                    className="text-base font-bold font-heading"
+                    style={{ color: "#7c3aed" }}
+                  >
+                    {selectedFridays.size > 0 ? formatCents(dropinTotal) : "—"}
+                  </span>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
+          {step === "payment" && (
+            <button
+              onClick={() => setStep("plan")}
+              className="px-4 py-3 rounded-xl text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer"
+            >
+              Back
+            </button>
+          )}
+          <button
+            disabled={step === "plan" ? !canContinue : loading || !coverFees}
+            className="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ backgroundColor: "#7c3aed" }}
+            onClick={step === "plan" ? () => setStep("payment") : handlePayNow}
+          >
+            {step === "plan"
+              ? continueLabel
+              : loading
+                ? "Processing…"
+                : `Pay Now · ${formatCents(totalWithFees)}`}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 function AllCaughtUpCard() {
   return (
     <div className="col-span-2 flex flex-col items-center justify-center bg-white rounded-2xl border border-gray-100 p-8 text-center">
@@ -4980,6 +6365,8 @@ function PendingPaymentsSection({
   onSelectPending,
   onSelectAftercare,
   onSelectFunFriday,
+  onSelectSchoolYearAftercare,
+  onSelectSchoolYearFunFriday,
   onSelectHomeschool,
   onViewHomeschoolHistory,
   onSelectSchoolYearHomeschool,
@@ -5005,6 +6392,8 @@ function PendingPaymentsSection({
   onSelectPending: (r: PendingPaymentRequest) => void;
   onSelectAftercare: (e: SummerEnrollment) => void;
   onSelectFunFriday: (e: SummerEnrollment) => void;
+  onSelectSchoolYearAftercare: (e: SummerEnrollment) => void;
+  onSelectSchoolYearFunFriday: (e: SummerEnrollment) => void;
   onSelectHomeschool: (app: HomeschoolDropInApp) => void;
   onViewHomeschoolHistory: (app: HomeschoolDropInApp) => void;
   onSelectSchoolYearHomeschool: (app: HomeschoolDropInApp) => void;
@@ -5260,13 +6649,13 @@ function PendingPaymentsSection({
                   if (!enrollment) return null;
                   return (
                     <>
-                      <FunFridayCard
+                      <SchoolYearFunFridayCard
                         studentName={studentMap[enrollment.student_id]?.name ?? null}
-                        onClick={() => onSelectFunFriday(enrollment)}
+                        onClick={() => onSelectSchoolYearFunFriday(enrollment)}
                       />
-                      <AftercareCard
+                      <SchoolYearAftercareCard
                         studentName={studentMap[enrollment.student_id]?.name ?? null}
-                        onClick={() => onSelectAftercare(enrollment)}
+                        onClick={() => onSelectSchoolYearAftercare(enrollment)}
                       />
                     </>
                   );
@@ -6294,6 +7683,10 @@ export default function BillingPage({
     useState<SummerEnrollment | null>(null);
   const [selectedFunFridayEnrollment, setSelectedFunFridayEnrollment] =
     useState<SummerEnrollment | null>(null);
+  const [selectedSchoolYearAftercareEnrollment, setSelectedSchoolYearAftercareEnrollment] =
+    useState<SummerEnrollment | null>(null);
+  const [selectedSchoolYearFunFridayEnrollment, setSelectedSchoolYearFunFridayEnrollment] =
+    useState<SummerEnrollment | null>(null);
   const [selectedHomeschoolApp, setSelectedHomeschoolApp] =
     useState<HomeschoolDropInApp | null>(null);
   const [selectedHomeschoolHistoryApp, setSelectedHomeschoolHistoryApp] =
@@ -6723,6 +8116,8 @@ export default function BillingPage({
                 onSelectPending={setSelectedPending}
                 onSelectAftercare={setSelectedAftercareEnrollment}
                 onSelectFunFriday={setSelectedFunFridayEnrollment}
+                onSelectSchoolYearAftercare={setSelectedSchoolYearAftercareEnrollment}
+                onSelectSchoolYearFunFriday={setSelectedSchoolYearFunFridayEnrollment}
                 onSelectHomeschool={setSelectedHomeschoolApp}
                 onViewHomeschoolHistory={setSelectedHomeschoolHistoryApp}
                 onSelectSchoolYearHomeschool={setSelectedSchoolYearHomeschoolApp}
@@ -7181,6 +8576,72 @@ export default function BillingPage({
               ])
             }
             onClose={() => setSelectedFunFridayEnrollment(null)}
+          />
+        )}
+        {selectedSchoolYearAftercareEnrollment && (
+          <SchoolYearAftercarePaymentModal
+            enrollment={selectedSchoolYearAftercareEnrollment}
+            studentName={
+              studentMap[selectedSchoolYearAftercareEnrollment.student_id]?.name ?? null
+            }
+            parentId={parentId}
+            parentEmail={parentEmail}
+            paidMonths={
+              new Set(
+                paidAftercareByStudent[selectedSchoolYearAftercareEnrollment.student_id]
+                  ?.months ?? [],
+              )
+            }
+            paidDays={
+              new Set([
+                ...(paidAftercareByStudent[
+                  selectedSchoolYearAftercareEnrollment.student_id
+                ]?.days ?? []),
+                ...(
+                  paidAftercareByStudent[selectedSchoolYearAftercareEnrollment.student_id]
+                    ?.months ?? []
+                ).flatMap(
+                  (mk) =>
+                    SCHOOL_YEAR_AFTERCARE_MONTHS.find((m) => m.key === mk)?.days.map(
+                      (d) => d.date,
+                    ) ?? [],
+                ),
+              ])
+            }
+            onClose={() => setSelectedSchoolYearAftercareEnrollment(null)}
+          />
+        )}
+        {selectedSchoolYearFunFridayEnrollment && (
+          <SchoolYearFunFridayPaymentModal
+            enrollment={selectedSchoolYearFunFridayEnrollment}
+            studentName={
+              studentMap[selectedSchoolYearFunFridayEnrollment.student_id]?.name ?? null
+            }
+            parentId={parentId}
+            parentEmail={parentEmail}
+            paidMonths={
+              new Set(
+                paidFunFridayByStudent[selectedSchoolYearFunFridayEnrollment.student_id]
+                  ?.months ?? [],
+              )
+            }
+            paidFridays={
+              new Set([
+                ...(paidFunFridayByStudent[
+                  selectedSchoolYearFunFridayEnrollment.student_id
+                ]?.fridays ?? []),
+                ...(
+                  paidFunFridayByStudent[selectedSchoolYearFunFridayEnrollment.student_id]
+                    ?.months ?? []
+                ).flatMap(
+                  (mk) =>
+                    SCHOOL_YEAR_FUN_FRIDAY_MONTHS.find((m) => m.key === mk)?.fridays.map(
+                      (d) => d.date,
+                    ) ?? [],
+                ),
+              ])
+            }
+            onClose={() => setSelectedSchoolYearFunFridayEnrollment(null)}
           />
         )}
         {selectedHomeschoolApp && (
