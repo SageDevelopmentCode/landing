@@ -261,6 +261,13 @@ export default async function ImpersonateBillingPage({
     }
   }
 
+  const paidSupplyFeeByStudent: Record<string, boolean> = {};
+  for (const tx of transactions) {
+    if (tx.payment_type === "supply_fee" && tx.status === "completed" && tx.student_id) {
+      paidSupplyFeeByStudent[tx.student_id] = true;
+    }
+  }
+
   const summerNotesByStudent: SummerNotesByStudent = {};
   for (const row of notesData ?? []) {
     if (row.student_id && row.note) {
@@ -344,6 +351,7 @@ export default async function ImpersonateBillingPage({
           schoolYearOnlyApps={schoolYearOnlyApps}
           hasSubmittedTuitionFeedback={false}
           paidSchoolYearByStudent={paidSchoolYearByStudent}
+          paidSupplyFeeByStudent={paidSupplyFeeByStudent}
         />
       </main>
     </div>
