@@ -229,7 +229,7 @@ export default async function BillingRoute() {
       id: e.id,
       student_id: e.student_id!,
       drop_in_program:
-        e.program === "homeschool_drop_in" ? e.drop_in_program : e.program,
+        e.program === "homeschool_drop_in" ? e.drop_in_program : "summer_26",
       child_grade: e.child_grade,
       name: e.child_legal_name,
     }));
