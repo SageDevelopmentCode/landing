@@ -36,6 +36,7 @@ type TableRow =
 interface Props {
   transactions: StripeTransaction[]
   studentMap: Record<string, string>
+  gradeMap: Record<string, string>
   parentNameMap: Record<string, string>
 }
 
@@ -203,7 +204,7 @@ function MetadataAccordion({ metadata }: { metadata: Record<string, unknown> | n
   )
 }
 
-export function SchoolYearPaymentsClient({ transactions, studentMap, parentNameMap }: Props) {
+export function SchoolYearPaymentsClient({ transactions, studentMap, gradeMap, parentNameMap }: Props) {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<'all' | 'supply_fee' | 'school_year_tuition' | 'homeschool_dropin' | 'homeschool'>('all')
   const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending'>('all')
@@ -270,12 +271,8 @@ export function SchoolYearPaymentsClient({ transactions, studentMap, parentNameM
         return s + t.amount_cents
       }, 0)
 
-    // Tuition: exclude bundled children (their value is already inside the parent's bundle_amount_cents)
     const tuitionTotal = paidTxs
-      .filter(t => {
-        const meta = (t.metadata ?? {}) as Record<string, string>
-        return t.payment_type === 'school_year_tuition' && meta.bundled_with_supply_fee !== 'true'
-      })
+      .filter(t => t.payment_type === 'school_year_tuition')
       .reduce((s, t) => s + t.amount_cents, 0)
 
     // HS: include ALL HS rows (bundled children have amount_cents = the HS component)
@@ -678,6 +675,7 @@ export function SchoolYearPaymentsClient({ transactions, studentMap, parentNameM
             tx={selectedTx}
             child={selectedChild}
             studentMap={studentMap}
+            gradeMap={gradeMap}
             parentNameMap={parentNameMap}
           />
         )}
@@ -690,11 +688,13 @@ function SidebarReceipt({
   tx,
   child,
   studentMap,
+  gradeMap,
   parentNameMap,
 }: {
   tx: StripeTransaction
   child: StripeTransaction | null
   studentMap: Record<string, string>
+  gradeMap: Record<string, string>
   parentNameMap: Record<string, string>
 }) {
   const badge = getTypeBadge(tx)
@@ -782,6 +782,11 @@ function SidebarReceipt({
               ? (studentMap[tx.student_id] ?? tx.student_id.slice(0, 8))
               : <span style={{ color: colors.textTertiary }}>—</span>}
           </div>
+          {tx.student_id && gradeMap[tx.student_id] && (
+            <div style={{ fontSize: 11, color: colors.textTertiary, marginTop: 3 }}>
+              {gradeMap[tx.student_id]}
+            </div>
+          )}
         </div>
       </div>
 

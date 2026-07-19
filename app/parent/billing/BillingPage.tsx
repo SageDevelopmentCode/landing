@@ -7525,13 +7525,16 @@ function PendingPaymentsSection({
           )}
           <button
             onClick={() => setActiveTermTab("school_year")}
-            className={`px-4 py-1.5 rounded-full text-sm font-semibold font-body transition-colors ${
+            className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold font-body transition-colors ${
               activeTermTab === "school_year"
                 ? "bg-[#4a7c59] text-white"
                 : "bg-gray-100 text-gray-500 hover:bg-gray-200"
             }`}
           >
             🎒 School Year
+            <span className="inline-flex items-center px-1.5 py-1 rounded-full text-[10px] font-bold bg-[#4a7c59] text-white leading-none">
+              New!
+            </span>
           </button>
         </div>
       )}
@@ -7674,8 +7677,8 @@ function PendingPaymentsSection({
                             <span className="text-sm font-semibold text-gray-700 font-heading leading-tight">
                               Tuition
                             </span>
-                            <span className="hidden sm:block text-xs text-gray-400 font-body mt-0.5">
-                              School year enrollment
+                            <span className="hidden sm:block text-xs text-amber-600 font-medium font-body mt-0.5">
+                              August tuition due Aug 10
                             </span>
                           </div>
                         </div>

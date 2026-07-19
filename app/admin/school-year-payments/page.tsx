@@ -42,7 +42,7 @@ export default async function SchoolYearPaymentsPage() {
 
   const [studentsResult, parentsResult] = await Promise.all([
     studentIds.length > 0
-      ? client.schema('admin').from('students').select('id, child_legal_name').in('id', studentIds)
+      ? client.schema('admin').from('students').select('id, child_legal_name, child_grade').in('id', studentIds)
       : Promise.resolve({ data: [] }),
     parentIds.length > 0
       ? client.schema('admin').from('users').select('id, full_name').in('id', parentIds)
@@ -50,8 +50,10 @@ export default async function SchoolYearPaymentsPage() {
   ])
 
   const studentMap: Record<string, string> = {}
+  const gradeMap: Record<string, string> = {}
   for (const s of studentsResult.data ?? []) {
     if (s.child_legal_name) studentMap[s.id] = s.child_legal_name
+    if (s.child_grade) gradeMap[s.id] = s.child_grade
   }
 
   const parentNameMap: Record<string, string> = {}
@@ -63,6 +65,7 @@ export default async function SchoolYearPaymentsPage() {
     <SchoolYearPaymentsClient
       transactions={rows}
       studentMap={studentMap}
+      gradeMap={gradeMap}
       parentNameMap={parentNameMap}
     />
   )

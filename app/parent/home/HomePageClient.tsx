@@ -434,7 +434,9 @@ export default function HomePageClient({
   const [testimonialOpen, setTestimonialOpen] = useState(false);
   const [testimonialText, setTestimonialText] = useState("");
   const [testimonialSubmitting, setTestimonialSubmitting] = useState(false);
-  const [testimonialSubmitted, setTestimonialSubmitted] = useState(hasSubmittedTestimonial);
+  const [testimonialSubmitted, setTestimonialSubmitted] = useState(
+    hasSubmittedTestimonial,
+  );
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -457,8 +459,7 @@ export default function HomePageClient({
   async function handleSubmitTestimonial() {
     if (!testimonialText.trim() || testimonialSubmitting) return;
     setTestimonialSubmitting(true);
-    const childName =
-      students[0]?.child_legal_name ?? "your child";
+    const childName = students[0]?.child_legal_name ?? "your child";
     const res = await submitTestimonial({
       testimonial: testimonialText.trim(),
       childName,
@@ -724,7 +725,9 @@ export default function HomePageClient({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                onClick={() => !testimonialSubmitting && setTestimonialOpen(false)}
+                onClick={() =>
+                  !testimonialSubmitting && setTestimonialOpen(false)
+                }
               />
               <motion.div
                 className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl overflow-hidden"
@@ -737,7 +740,10 @@ export default function HomePageClient({
                 <div className="p-6 pb-10">
                   <div className="flex items-center gap-3 mb-1">
                     <div className="w-10 h-10 rounded-full bg-[#a0784a]/10 flex items-center justify-center shrink-0">
-                      <Coffee className="w-5 h-5 text-[#a0784a]" strokeWidth={1.5} />
+                      <Coffee
+                        className="w-5 h-5 text-[#a0784a]"
+                        strokeWidth={1.5}
+                      />
                     </div>
                     <div>
                       <h2 className="text-lg font-heading font-semibold text-gray-900 leading-tight">
@@ -750,7 +756,8 @@ export default function HomePageClient({
                   </div>
 
                   <p className="text-sm font-body text-gray-500 leading-relaxed mt-4 mb-4">
-                    A few honest sentences from the heart is more than enough. Here are some prompts to get you started:
+                    A few honest sentences from the heart is more than enough.
+                    Here are some prompts to get you started:
                   </p>
                   <ul className="space-y-1.5 mb-5">
                     {[
@@ -774,8 +781,12 @@ export default function HomePageClient({
                       <div className="w-12 h-12 rounded-full bg-[#a0784a]/10 flex items-center justify-center">
                         <Check className="w-6 h-6 text-[#a0784a]" />
                       </div>
-                      <p className="text-sm font-body font-medium text-gray-800">Thank you so much!</p>
-                      <p className="text-xs font-body text-gray-500 text-center">We&apos;ll be in touch about your gift card soon.</p>
+                      <p className="text-sm font-body font-medium text-gray-800">
+                        Thank you so much!
+                      </p>
+                      <p className="text-xs font-body text-gray-500 text-center">
+                        We&apos;ll be in touch about your gift card soon.
+                      </p>
                       <button
                         onClick={() => setTestimonialOpen(false)}
                         className="mt-3 text-xs font-body text-gray-400 hover:text-gray-600 transition-colors"
@@ -794,11 +805,15 @@ export default function HomePageClient({
                       />
                       <button
                         onClick={handleSubmitTestimonial}
-                        disabled={!testimonialText.trim() || testimonialSubmitting}
+                        disabled={
+                          !testimonialText.trim() || testimonialSubmitting
+                        }
                         className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold font-body bg-[#a0784a] text-white hover:bg-[#8a6640] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Coffee className="w-4 h-4" />
-                        {testimonialSubmitting ? "Submitting…" : "Submit testimonial"}
+                        {testimonialSubmitting
+                          ? "Submitting…"
+                          : "Submit testimonial"}
                       </button>
                       <button
                         onClick={() => setTestimonialOpen(false)}
@@ -818,7 +833,9 @@ export default function HomePageClient({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              onClick={() => !testimonialSubmitting && setTestimonialOpen(false)}
+              onClick={() =>
+                !testimonialSubmitting && setTestimonialOpen(false)
+              }
             >
               <motion.div
                 className="relative w-full max-w-lg rounded-2xl shadow-2xl bg-white overflow-hidden"
@@ -829,7 +846,9 @@ export default function HomePageClient({
                 onClick={(e) => e.stopPropagation()}
               >
                 <button
-                  onClick={() => !testimonialSubmitting && setTestimonialOpen(false)}
+                  onClick={() =>
+                    !testimonialSubmitting && setTestimonialOpen(false)
+                  }
                   className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer z-10"
                 >
                   <X className="w-4 h-4" />
@@ -838,7 +857,10 @@ export default function HomePageClient({
                 <div className="p-6">
                   <div className="flex items-center gap-3 mb-1">
                     <div className="w-10 h-10 rounded-full bg-[#a0784a]/10 flex items-center justify-center shrink-0">
-                      <Coffee className="w-5 h-5 text-[#a0784a]" strokeWidth={1.5} />
+                      <Coffee
+                        className="w-5 h-5 text-[#a0784a]"
+                        strokeWidth={1.5}
+                      />
                     </div>
                     <div>
                       <h2 className="text-lg font-heading font-semibold text-gray-900 leading-tight">
@@ -851,7 +873,8 @@ export default function HomePageClient({
                   </div>
 
                   <p className="text-sm font-body text-gray-500 leading-relaxed mt-4 mb-3">
-                    A few honest sentences from the heart is more than enough. Here are some prompts to get you started:
+                    A few honest sentences from the heart is more than enough.
+                    Here are some prompts to get you started:
                   </p>
                   <ul className="space-y-1.5 mb-5">
                     {[
@@ -875,8 +898,12 @@ export default function HomePageClient({
                       <div className="w-12 h-12 rounded-full bg-[#a0784a]/10 flex items-center justify-center">
                         <Check className="w-6 h-6 text-[#a0784a]" />
                       </div>
-                      <p className="text-sm font-body font-medium text-gray-800">Thank you so much!</p>
-                      <p className="text-xs font-body text-gray-500 text-center">We&apos;ll be in touch about your gift card soon.</p>
+                      <p className="text-sm font-body font-medium text-gray-800">
+                        Thank you so much!
+                      </p>
+                      <p className="text-xs font-body text-gray-500 text-center">
+                        We&apos;ll be in touch about your gift card soon.
+                      </p>
                       <button
                         onClick={() => setTestimonialOpen(false)}
                         className="mt-3 text-xs font-body text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
@@ -895,11 +922,15 @@ export default function HomePageClient({
                       />
                       <button
                         onClick={handleSubmitTestimonial}
-                        disabled={!testimonialText.trim() || testimonialSubmitting}
+                        disabled={
+                          !testimonialText.trim() || testimonialSubmitting
+                        }
                         className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold font-body bg-[#a0784a] text-white hover:bg-[#8a6640] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Coffee className="w-4 h-4" />
-                        {testimonialSubmitting ? "Submitting…" : "Submit testimonial"}
+                        {testimonialSubmitting
+                          ? "Submitting…"
+                          : "Submit testimonial"}
                       </button>
                       <button
                         onClick={() => setTestimonialOpen(false)}
@@ -967,24 +998,26 @@ export default function HomePageClient({
             </Link>
           )}
 
-          {/* Summer info + photos announcement cards side by side */}
-          <div className="grid grid-cols-2 gap-2">
-            <SummerInfoSheet />
+          <div className="flex flex-col gap-3">
+            {/* School Year Tuition Banner */}
             <Link
-              href="/parent/photos"
-              className="w-full h-full rounded-2xl bg-gradient-to-br from-[#4a7c59] to-[#2d5a2d] px-4 py-3 shadow-sm hover:shadow-md transition-shadow flex items-center gap-3"
+              href="/parent/billing"
+              className="w-full rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-100 border border-blue-200 px-4 py-4 shadow-sm hover:shadow-md transition-shadow flex items-center gap-3"
             >
-              <span className="text-xl shrink-0">📸</span>
+              <span className="text-xl shrink-0">🏫</span>
               <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                <span className="text-sm font-bold text-white leading-snug">
-                  Check out today&apos;s photos!
+                <span className="text-sm font-bold text-blue-900 leading-snug">
+                  School Year Tuition Available
                 </span>
-                <span className="text-xs text-white/70">
-                  ✨ New memories from school
+                <span className="text-xs text-blue-500">
+                  Due August 10 · Tap to pay now
                 </span>
               </div>
-              <span className="text-white/70 text-sm shrink-0">→</span>
+              <span className="text-blue-400 text-sm shrink-0">→</span>
             </Link>
+
+            {/* Summer info sheet */}
+            <SummerInfoSheet />
           </div>
 
           {/* Student Cards */}
@@ -1145,13 +1178,17 @@ export default function HomePageClient({
             <section
               className="rounded-2xl p-6 shadow-sm cursor-pointer hover:opacity-95 transition-opacity"
               style={{
-                background: "linear-gradient(135deg, #2e5940 0%, #3d6b4a 45%, #4a7c59 100%)",
+                background:
+                  "linear-gradient(135deg, #2e5940 0%, #3d6b4a 45%, #4a7c59 100%)",
               }}
             >
               {/* Top label */}
               <div className="flex items-center gap-1.5 mb-3">
                 <div className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center">
-                  <Sparkles className="w-3 h-3 text-[#a8d5b5]" strokeWidth={1.5} />
+                  <Sparkles
+                    className="w-3 h-3 text-[#a8d5b5]"
+                    strokeWidth={1.5}
+                  />
                 </div>
                 <span className="text-xs font-body font-semibold text-white/70 uppercase tracking-wide">
                   Rewards
@@ -1165,7 +1202,8 @@ export default function HomePageClient({
 
               {/* Subtext */}
               <p className="text-sm font-body text-white/70 leading-relaxed mb-4">
-                Refer a family and share your story — we&apos;ll reward you for both.
+                Refer a family and share your story — we&apos;ll reward you for
+                both.
                 {earnedDollars > 0 && (
                   <span className="ml-1 text-white/90 font-medium">
                     ${earnedDollars} earned so far.
@@ -1176,21 +1214,40 @@ export default function HomePageClient({
               {/* Reward pills */}
               <div className="flex flex-wrap gap-2 mb-5">
                 <div className="flex items-center gap-1.5 bg-white/15 border border-white/20 rounded-full px-3 py-1.5">
-                  <Gift className="w-3.5 h-3.5 text-[#a8d5b5]" strokeWidth={1.5} />
+                  <Gift
+                    className="w-3.5 h-3.5 text-[#a8d5b5]"
+                    strokeWidth={1.5}
+                  />
                   <span className="text-xs font-body font-medium text-white">
                     Refer a Family · <strong>$500 gift card</strong>
                   </span>
                 </div>
-                <div className={`flex items-center gap-1.5 border rounded-full px-3 py-1.5 ${testimonialSubmitted ? "bg-white/10 border-white/15" : "bg-white/15 border-white/20"}`}>
+                <div
+                  className={`flex items-center gap-1.5 border rounded-full px-3 py-1.5 ${testimonialSubmitted ? "bg-white/10 border-white/15" : "bg-white/15 border-white/20"}`}
+                >
                   {testimonialSubmitted ? (
-                    <Check className="w-3.5 h-3.5 text-white/60" strokeWidth={2} />
+                    <Check
+                      className="w-3.5 h-3.5 text-white/60"
+                      strokeWidth={2}
+                    />
                   ) : (
-                    <Coffee className="w-3.5 h-3.5 text-[#f0c080]" strokeWidth={1.5} />
+                    <Coffee
+                      className="w-3.5 h-3.5 text-[#f0c080]"
+                      strokeWidth={1.5}
+                    />
                   )}
-                  <span className={`text-xs font-body font-medium ${testimonialSubmitted ? "text-white/50" : "text-white"}`}>
+                  <span
+                    className={`text-xs font-body font-medium ${testimonialSubmitted ? "text-white/50" : "text-white"}`}
+                  >
                     Share Your Experience ·{" "}
-                    <strong className={testimonialSubmitted ? "line-through" : ""}>$15 Starbucks</strong>
-                    {testimonialSubmitted && <span className="ml-1 no-underline not-italic">✓</span>}
+                    <strong
+                      className={testimonialSubmitted ? "line-through" : ""}
+                    >
+                      $15 Starbucks
+                    </strong>
+                    {testimonialSubmitted && (
+                      <span className="ml-1 no-underline not-italic">✓</span>
+                    )}
                   </span>
                 </div>
               </div>
@@ -1201,6 +1258,23 @@ export default function HomePageClient({
                 <ChevronRight className="w-4 h-4" />
               </div>
             </section>
+          </Link>
+
+          {/* Today's Photos Banner */}
+          <Link
+            href="/parent/photos"
+            className="w-full rounded-2xl bg-gradient-to-br from-[#4a7c59] to-[#2d5a2d] px-4 py-3 shadow-sm hover:shadow-md transition-shadow flex items-center gap-3"
+          >
+            <span className="text-xl shrink-0">📸</span>
+            <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+              <span className="text-sm font-bold text-white leading-snug">
+                Check out today&apos;s photos!
+              </span>
+              <span className="text-xs text-white/70">
+                ✨ New memories from school
+              </span>
+            </div>
+            <span className="text-white/70 text-sm shrink-0">→</span>
           </Link>
 
           {/* Quick Actions */}
