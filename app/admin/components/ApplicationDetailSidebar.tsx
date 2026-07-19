@@ -46,6 +46,7 @@ import { sendMeetTheTeacherJoyEmail } from '../../actions/sendMeetTheTeacherJoyE
 import { sendMeetTheTeacherJoyReminderEmail } from '../../actions/sendMeetTheTeacherJoyReminderEmail'
 import { sendFunFridayConfirmationEmail } from '../../actions/sendFunFridayConfirmationEmail'
 import { sendSummerTuitionConfirmationEmail } from '../../actions/sendSummerTuitionConfirmationEmail'
+import { sendSchoolYearTuitionInfoEmail } from '../../actions/sendSchoolYearTuitionInfoEmail'
 import { enrollApplication } from '../../actions/enrollApplication'
 import { PaymentHistory } from './PaymentHistory'
 import { updateApplicationProgram } from '../../actions/updateApplicationProgram'
@@ -273,6 +274,9 @@ export function ApplicationDetailSidebar({
   const [schoolYearCommitmentSending, setSchoolYearCommitmentSending] = useState(false)
   const [schoolYearCommitmentSent, setSchoolYearCommitmentSent] = useState(false)
   const [schoolYearCommitmentError, setSchoolYearCommitmentError] = useState<string | null>(null)
+  const [schoolYearTuitionInfoSending, setSchoolYearTuitionInfoSending] = useState(false)
+  const [schoolYearTuitionInfoSent, setSchoolYearTuitionInfoSent] = useState(false)
+  const [schoolYearTuitionInfoError, setSchoolYearTuitionInfoError] = useState<string | null>(null)
   const [tagInput, setTagInput] = useState('')
   const [tagSaving, setTagSaving] = useState(false)
   const [tagError, setTagError] = useState<string | null>(null)
@@ -980,6 +984,24 @@ export function ApplicationDetailSidebar({
       setTimeout(() => setMeetJoyReminderSent(false), 3000)
     } else {
       setMeetJoyReminderError(result.error ?? 'Failed to send')
+    }
+  }
+
+  const handleSendSchoolYearTuitionInfo = async () => {
+    if (schoolYearTuitionInfoSending || !application.g1_email) return
+    setSchoolYearTuitionInfoSending(true)
+    setSchoolYearTuitionInfoError(null)
+    const result = await sendSchoolYearTuitionInfoEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+    })
+    setSchoolYearTuitionInfoSending(false)
+    if (result.success) {
+      setSchoolYearTuitionInfoSent(true)
+      setEmailThreadKey(k => k + 1)
+    } else {
+      setSchoolYearTuitionInfoError(result.error ?? 'Failed to send')
     }
   }
 
@@ -1939,6 +1961,17 @@ export function ApplicationDetailSidebar({
                     {meetJoyReminderSending ? 'Sending…' : meetJoyReminderSent ? '✓ Sent!' : 'Send Meet Miss Joy Reminder'}
                   </button>
                   {meetJoyReminderError && <span className="text-xs text-red-600">{meetJoyReminderError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendSchoolYearTuitionInfo}
+                    disabled={schoolYearTuitionInfoSending || schoolYearTuitionInfoSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {schoolYearTuitionInfoSending ? 'Sending…' : schoolYearTuitionInfoSent ? '✓ Sent!' : 'Send School Year Tuition Info'}
+                  </button>
+                  {schoolYearTuitionInfoError && <span className="text-xs text-red-600">{schoolYearTuitionInfoError}</span>}
                 </div>
                 <div className="flex items-center gap-3">
                   <a

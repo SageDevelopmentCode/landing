@@ -2603,29 +2603,39 @@ export async function buildSupplyFeeConfirmationEmail(opts: {
   childName: string;
   amountDollars: string;
   bundleType?: string;
-  studentBreakdown?: Array<{ name: string; supplyFee: number; bundleAmount: number }>;
+  studentBreakdown?: Array<{
+    name: string;
+    supplyFee: number;
+    bundleAmount: number;
+  }>;
 }): Promise<{ subject: string; content: string }> {
-  const hasBundle = !!opts.bundleType && !!opts.studentBreakdown && opts.studentBreakdown.length > 0;
+  const hasBundle =
+    !!opts.bundleType &&
+    !!opts.studentBreakdown &&
+    opts.studentBreakdown.length > 0;
   const subject = hasBundle
     ? "Annual Supply Fee + August Tuition Received — You're All Set!"
     : "Annual Supply Fee Received — You're All Set!";
 
   const breakdownRows = hasBundle
-    ? opts.studentBreakdown!.map((s) => {
-        const total = ((s.supplyFee + s.bundleAmount) / 100).toFixed(2);
-        const supplyFmtd = (s.supplyFee / 100).toFixed(2);
-        const bundleFmtd = (s.bundleAmount / 100).toFixed(2);
-        return `
+    ? opts
+        .studentBreakdown!.map((s) => {
+          const total = ((s.supplyFee + s.bundleAmount) / 100).toFixed(2);
+          const supplyFmtd = (s.supplyFee / 100).toFixed(2);
+          const bundleFmtd = (s.bundleAmount / 100).toFixed(2);
+          return `
     <tr>
       <td style="padding: 8px 12px; border-bottom: 1px solid #e8e4e0;">${s.name}</td>
       <td style="padding: 8px 12px; border-bottom: 1px solid #e8e4e0;">$${supplyFmtd}</td>
       <td style="padding: 8px 12px; border-bottom: 1px solid #e8e4e0;">$${bundleFmtd}</td>
       <td style="padding: 8px 12px; border-bottom: 1px solid #e8e4e0; font-weight: bold;">$${total}</td>
     </tr>`;
-      }).join("")
+        })
+        .join("")
     : "";
 
-  const content = hasBundle ? `
+  const content = hasBundle
+    ? `
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8" /></head>
@@ -2659,7 +2669,8 @@ export async function buildSupplyFeeConfirmationEmail(opts: {
   <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
 </body>
 </html>
-  `.trim() : `
+  `.trim()
+    : `
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8" /></head>
@@ -4134,6 +4145,126 @@ export async function buildSchoolYearCommitmentRequestEmail(opts: {
   <p style="margin-bottom: 24px; font-size: 14px; color: #555;">No commitment required — even a "not this year" is incredibly helpful. It lets us plan thoughtfully and ensures another family on the waitlist can get a spot in time.</p>
 
   <p style="margin-top: 32px;">With so much warmth,</p>
+  <p style="margin-top: 4px;">
+    <strong>Sabrina</strong><br />
+    Sage Field School<br />
+    <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> · <a href="tel:5126775872" style="color: #5a7a5a;">(512) 677-5872</a>
+  </p>
+
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
+export async function buildSchoolYearTuitionInfoEmail(opts: {
+  g1FullName?: string;
+  childLegalName?: string;
+  email: string;
+}): Promise<{ subject: string; content: string }> {
+  const firstName = opts.g1FullName?.split(" ")[0] || "there";
+
+  const subject = `School Year Tuition & Billing Info — 2026–2027`;
+
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+
+  <p style="margin-bottom: 12px;">Hi ${firstName}!</p>
+
+  <p style="margin-bottom: 16px;">
+    We are so excited to welcome your family for the 2026–2027 school year, starting <strong>August 17</strong>.
+    School year tuition for PreK–1st grade is <strong>$11,950 annually</strong>, billed in
+    <strong>10 equal monthly payments of $1,195</strong> — one per month from August through May.
+    Payments are due on the 1st of each month, with the exception of August (August tuition is due <strong>August 10</strong>, one week before school starts).
+    A <strong>$50 late fee</strong> applies to any payment not received by the 4th of the month (August payments not received by <strong>August 13</strong>).
+  </p>
+
+  <p style="margin-bottom: 16px;">
+    In replacement of a school supply list, we require a <strong>$300 annual supply fee</strong> (one-time per school year) that covers all classroom consumables —
+    art materials, learning manipulatives, science supplies, workbooks, and hands-on tools — so students are fully equipped from day one.
+    Below is everything you need to know about tuition and billing.
+  </p>
+
+  <p style="margin-bottom: 24px; font-size: 14px; color: #555;">
+    If you joined us for summer and are still deciding about the school year, you can commit and pay the registration fee directly through your
+    <a href="https://sagefield.co/parent/billing" style="color: #2C5F2E;">parent billing portal</a>.
+    And if you've already let us know you're not continuing for the school year, please disregard this email — no action needed!
+  </p>
+
+  <!-- Portal CTA -->
+  <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 10px; padding: 24px; margin: 0 0 28px 0; text-align: center;">
+    <p style="margin: 0 0 6px 0; font-size: 15px; color: #2c2c2c; font-weight: bold;">Tuition is now available to pay in the parent portal</p>
+    <p style="margin: 0 0 16px 0; font-size: 14px; color: #555;">Go to the <strong>Billing</strong> page and click the <strong>"School Year"</strong> tab.</p>
+    <a href="https://sagefield.co/parent/billing"
+       style="display: inline-block; background: #2C5F2E; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-size: 15px; font-weight: bold; letter-spacing: 0.3px;">
+      Open Parent Billing Portal →
+    </a>
+  </div>
+
+  <!-- Payment Schedule -->
+  <p style="margin-bottom: 10px; font-weight: bold; color: #2C5F2E; font-size: 16px;">Payment Schedule</p>
+  <table style="width: 100%; border-collapse: collapse; margin-bottom: 28px; font-size: 14px;">
+    <thead>
+      <tr style="background: #f7f4f0;">
+        <th style="text-align: left; padding: 10px 14px; border: 1px solid #d8d0c8; font-weight: bold;">Month</th>
+        <th style="text-align: left; padding: 10px 14px; border: 1px solid #d8d0c8; font-weight: bold;">Due Date</th>
+        <th style="text-align: right; padding: 10px 14px; border: 1px solid #d8d0c8; font-weight: bold;">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8;">August</td>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8;"><strong>August 10</strong> (one week before school starts)</td>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">$1,195</td>
+      </tr>
+      <tr style="background: #fafaf8;">
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8;">September</td>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8;">September 1</td>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">$1,195</td>
+      </tr>
+      <tr>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8;">October</td>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8;">October 1</td>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">$1,195</td>
+      </tr>
+      <tr style="background: #fafaf8;">
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8;">November</td>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8;">November 1</td>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">$1,195</td>
+      </tr>
+      <tr>
+        <td colspan="3" style="text-align: center; color: #888; padding: 8px 14px; border: 1px solid #d8d0c8; font-size: 18px; letter-spacing: 4px;">···</td>
+      </tr>
+      <tr style="background: #fafaf8;">
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8;">May</td>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8;">May 1</td>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">$1,195</td>
+      </tr>
+      <tr style="background: #f7f4f0; font-weight: bold;">
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8;" colspan="2">Annual Total</td>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">$11,950</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- No Proration -->
+  <div style="background: #fef3c7; border-left: 4px solid #d97706; border-radius: 6px; padding: 16px 18px; margin: 0 0 28px 0;">
+    <p style="margin: 0 0 8px 0; font-size: 15px; font-weight: bold; color: #92400e;">A note on August tuition</p>
+    <p style="margin: 0 0 8px 0; font-size: 14px; color: #3a3a3a;">The school year starts <strong>August 17</strong>, but monthly tuition is <strong>not</strong> prorated for partial months. Here is why:</p>
+    <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #3a3a3a;">
+      <li style="margin-bottom: 6px;">Annual tuition for PreK–1st grade is <strong>$11,950</strong></li>
+      <li style="margin-bottom: 6px;">This is divided into <strong>10 equal monthly payments of $1,195</strong></li>
+      <li style="margin-bottom: 0;">August tuition = <strong>$1,195</strong> (same as every month) — the total is simply divided for consistency and convenience, not calculated by days attended</li>
+    </ul>
+  </div>
+
+  <p style="margin-bottom: 24px; font-size: 14px; color: #555;">If you have any questions about billing, please don't hesitate to reach out. We are happy to help!</p>
+
+  <p style="margin-top: 32px;">With warmth,</p>
   <p style="margin-top: 4px;">
     <strong>Sabrina</strong><br />
     Sage Field School<br />
