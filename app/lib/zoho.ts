@@ -4360,3 +4360,79 @@ export async function buildSchoolYearTuitionClarificationEmail(opts: {
 
   return { subject, content };
 }
+
+export async function buildSchoolYearTuitionConfirmationEmail(opts: {
+  g1FullName: string;
+  childName: string;
+  amountDollars: string;
+  selectedMonths?: number[];
+}): Promise<{ subject: string; content: string }> {
+  const firstName = opts.g1FullName?.split(" ")[0] ?? "there";
+
+  const MONTH_NAMES: Record<number, string> = {
+    1: "January", 2: "February", 3: "March", 4: "April",
+    5: "May", 6: "June", 7: "July", 8: "August",
+    9: "September", 10: "October", 11: "November", 12: "December",
+  };
+
+  const monthList = opts.selectedMonths && opts.selectedMonths.length > 0
+    ? opts.selectedMonths.map((m) => MONTH_NAMES[m] ?? `Month ${m}`).join(", ")
+    : null;
+
+  const subject = `School Year Tuition Received — Sage Field School`;
+
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+
+  <p style="margin-bottom: 12px;">Hi ${firstName}!</p>
+
+  <p style="margin-bottom: 16px;">
+    We have received your school year tuition payment for <strong>${opts.childName}</strong>. Thank you!
+  </p>
+
+  <!-- Payment Summary -->
+  <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 10px; padding: 20px 24px; margin: 0 0 28px 0;">
+    <p style="margin: 0 0 10px 0; font-size: 15px; font-weight: bold; color: #2C5F2E;">Payment Summary</p>
+    <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
+      <tr>
+        <td style="padding: 4px 0; color: #555;">Student</td>
+        <td style="padding: 4px 0; text-align: right; font-weight: bold;">${opts.childName}</td>
+      </tr>
+      ${monthList ? `<tr>
+        <td style="padding: 4px 0; color: #555;">Months Covered</td>
+        <td style="padding: 4px 0; text-align: right; font-weight: bold;">${monthList}</td>
+      </tr>` : ""}
+      <tr>
+        <td style="padding: 4px 0; color: #555;">Amount Paid</td>
+        <td style="padding: 4px 0; text-align: right; font-weight: bold;">$${opts.amountDollars}</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Portal CTA -->
+  <div style="background: #f7f4f0; border: 1px solid #d8d0c8; border-radius: 10px; padding: 20px 24px; margin: 0 0 28px 0; text-align: center;">
+    <p style="margin: 0 0 14px 0; font-size: 14px; color: #555;">View your full payment history and upcoming balances in the parent billing portal.</p>
+    <a href="https://sagefield.co/parent/billing"
+       style="display: inline-block; background: #2C5F2E; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-size: 15px; font-weight: bold; letter-spacing: 0.3px;">
+      Open Billing Portal →
+    </a>
+  </div>
+
+  <p style="margin-bottom: 24px; font-size: 14px; color: #555;">If you have any questions about your billing, please don't hesitate to reach out. We are happy to help!</p>
+
+  <p style="margin-top: 32px;">With warmth,</p>
+  <p style="margin-top: 4px;">
+    <strong>Sabrina</strong><br />
+    Sage Field School<br />
+    <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> · <a href="tel:5126775872" style="color: #5a7a5a;">(512) 677-5872</a>
+  </p>
+
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}

@@ -13,6 +13,7 @@ import {
   buildShadowDayPaymentConfirmationEmail,
   buildBeachBashConfirmationEmail,
   buildCustomTuitionConfirmationEmail,
+  buildSchoolYearTuitionConfirmationEmail,
 } from '@/app/lib/zoho'
 
 export async function POST(request: NextRequest) {
@@ -366,6 +367,37 @@ export async function POST(request: NextRequest) {
       subject = result.subject
       content = result.content
       template = 'custom_tuition_confirmation'
+
+    } else if (paymentType === 'school_year_tuition') {
+      const parentId = tx.parent_id ?? meta.parent_id ?? null
+      const studentId = meta.student_id ?? null
+      let g1FullName = tx.payer_name ?? 'Parent'
+      let childName = 'your child'
+
+      if (parentId) {
+        const { data: userRow } = await supabase
+          .schema('admin').from('users').select('full_name').eq('id', parentId).single()
+        if (userRow) g1FullName = userRow.full_name ?? g1FullName
+      }
+      if (studentId) {
+        const { data: student } = await supabase
+          .schema('admin').from('students').select('child_legal_name').eq('id', studentId).single()
+        if (student) childName = student.child_legal_name ?? childName
+      }
+
+      const selectedMonths = meta.selected_months
+        ? meta.selected_months.split(',').map(Number).filter((n) => !isNaN(n) && n > 0)
+        : []
+
+      const result = await buildSchoolYearTuitionConfirmationEmail({
+        g1FullName,
+        childName,
+        amountDollars,
+        selectedMonths: selectedMonths.length > 0 ? selectedMonths : undefined,
+      })
+      subject = result.subject
+      content = result.content
+      template = 'school_year_tuition_confirmation'
 
     } else {
       return NextResponse.json({ error: `Unsupported payment type: ${paymentType}` }, { status: 400 })

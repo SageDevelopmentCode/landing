@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getStripe } from "@/app/lib/stripe";
 import { getOrCreateStripeCustomer } from "@/app/lib/stripe-customer";
+import { sendDiscordNotification, createAppErrorEmbed } from "@/app/lib/discord";
 
 const schema = z.object({
   parentId: z.string(),
@@ -121,6 +122,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.issues[0].message }, { status: 400 });
     }
     console.error("School year tuition checkout error:", error);
+    sendDiscordNotification(
+      createAppErrorEmbed({
+        error: String(error),
+        area: "create-school-year-tuition-checkout",
+      }),
+    ).catch(() => {});
     return NextResponse.json({ error: "Failed to create checkout session" }, { status: 500 });
   }
 }

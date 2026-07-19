@@ -43,6 +43,8 @@ const PAYMENT_TYPE_LABELS: Record<string, string> = {
   shadow_day_fee: 'Shadow Day',
   beach_bash_fee: 'Beach Bash',
   custom_tuition: 'Custom Tuition',
+  school_year_tuition: 'School Year Tuition',
+  supply_fee: 'Supply Fee',
   one_time_payment: 'One-Time Payment',
   donation: 'Donation',
 }
