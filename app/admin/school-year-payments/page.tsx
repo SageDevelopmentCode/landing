@@ -31,7 +31,7 @@ export default async function SchoolYearPaymentsPage() {
     .schema('billing')
     .from('stripe_transactions')
     .select('*')
-    .in('payment_type', ['supply_fee', 'school_year_tuition', 'homeschool_dropin'])
+    .in('payment_type', ['supply_fee', 'school_year_tuition', 'homeschool_dropin', 'homeschool'])
     .eq('is_deleted', false)
     .order('created_at', { ascending: false })
 

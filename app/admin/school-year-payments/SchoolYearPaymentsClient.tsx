@@ -92,6 +92,7 @@ function getTypeLabel(tx: StripeTransaction): string {
 function getTypeBadge(tx: StripeTransaction): { bg: string; text: string; label: string } {
   if (tx.payment_type === 'supply_fee') return { bg: colors.infoBg, text: colors.info, label: 'Supply Fee' }
   if (tx.payment_type === 'school_year_tuition') return { bg: colors.purpleBg, text: colors.accent, label: 'SY Tuition' }
+  if (tx.payment_type === 'homeschool') return { bg: colors.warningBg, text: colors.warning, label: 'HS Drop-In (SY)' }
   return { bg: colors.warningBg, text: colors.warning, label: 'HS Drop-In (SY)' }
 }
 
@@ -114,6 +115,12 @@ function getDetails(tx: StripeTransaction): string {
       .map(m => MONTH_LABELS[m.trim()] ?? m.trim())
       .filter(Boolean)
     return months?.length ? `Months: ${months.join(', ')}` : '—'
+  }
+
+  if (tx.payment_type === 'homeschool') {
+    const months = (meta.selected_months ?? '')
+      .split(',').map(m => MONTH_LABELS[m.trim()] ?? m.trim()).filter(Boolean)
+    return months.length ? `Months: ${months.join(', ')} · bundled` : 'Bundled plan'
   }
 
   // homeschool_dropin (school year)
@@ -198,7 +205,7 @@ function MetadataAccordion({ metadata }: { metadata: Record<string, unknown> | n
 
 export function SchoolYearPaymentsClient({ transactions, studentMap, parentNameMap }: Props) {
   const [search, setSearch] = useState('')
-  const [typeFilter, setTypeFilter] = useState<'all' | 'supply_fee' | 'school_year_tuition' | 'homeschool_dropin'>('all')
+  const [typeFilter, setTypeFilter] = useState<'all' | 'supply_fee' | 'school_year_tuition' | 'homeschool_dropin' | 'homeschool'>('all')
   const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending'>('all')
   const [dateRange, setDateRange] = useState<7 | 30 | 90 | 0>(0)
   const [selectedTx, setSelectedTx] = useState<StripeTransaction | null>(null)
@@ -252,7 +259,9 @@ export function SchoolYearPaymentsClient({ transactions, studentMap, parentNameM
     const paidTxs = baseTxs.filter(tx => isPaid(tx.status))
     const supplyTotal = paidTxs.filter(t => t.payment_type === 'supply_fee').reduce((s, t) => s + t.amount_cents, 0)
     const tuitionTotal = paidTxs.filter(t => t.payment_type === 'school_year_tuition').reduce((s, t) => s + t.amount_cents, 0)
-    const hsTotal = paidTxs.filter(t => t.payment_type === 'homeschool_dropin').reduce((s, t) => s + t.amount_cents, 0)
+    const hsTotal = paidTxs
+      .filter(t => t.payment_type === 'homeschool_dropin' || t.payment_type === 'homeschool')
+      .reduce((s, t) => s + t.amount_cents, 0)
     return { supplyTotal, tuitionTotal, hsTotal, combined: supplyTotal + tuitionTotal + hsTotal }
   }, [baseTxs])
 
@@ -385,6 +394,7 @@ export function SchoolYearPaymentsClient({ transactions, studentMap, parentNameM
           <option value="supply_fee">Supply Fee</option>
           <option value="school_year_tuition">SY Tuition</option>
           <option value="homeschool_dropin">HS Drop-In (SY)</option>
+          <option value="homeschool">HS Drop-In (SY Bundle)</option>
         </select>
 
         <select
@@ -778,9 +788,26 @@ function SidebarReceipt({
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: colors.textSecondary }}>
-                  {meta.bundle_month_index
-                    ? `${MONTH_LABELS[meta.bundle_month_index] ?? meta.bundle_month_index} tuition`
-                    : 'Bundled tuition'}
+                  {(() => {
+                    if (meta.bundle_type === 'homeschool') {
+                      const tier = meta.bundle_homeschool_tier === 'dropin' ? '1 Day/Wk'
+                        : meta.bundle_homeschool_tier === '2day' ? '2 Days/Wk'
+                        : meta.bundle_homeschool_tier === '3day' ? '3 Days/Wk'
+                        : meta.bundle_homeschool_tier ?? 'Drop-In'
+                      const monthLabel = MONTH_LABELS[meta.bundle_month_index ?? ''] ?? ''
+                      let dayStr = ''
+                      try {
+                        const ws: { week: number; days: string[] }[] =
+                          JSON.parse(meta.bundle_homeschool_week_selections_json ?? '[]')
+                        const day = ws[0]?.days?.[0]
+                        if (day) dayStr = ` · ${DAY_LABELS[day] ?? day}`
+                      } catch { /* ignore */ }
+                      return `HS Drop-In (${tier}${dayStr}) · ${monthLabel}`
+                    }
+                    return meta.bundle_month_index
+                      ? `${MONTH_LABELS[meta.bundle_month_index] ?? meta.bundle_month_index} tuition`
+                      : 'Bundled tuition'
+                  })()}
                 </span>
                 <span style={{ fontWeight: 500 }}>{formatCents(child.amount_cents)}</span>
               </div>
@@ -828,6 +855,38 @@ function SidebarReceipt({
             </div>
           ) : (
             <span style={{ fontSize: 13, color: colors.textTertiary }}>No months selected</span>
+          )
+        })()}
+
+        {/* Homeschool school year bundle row */}
+        {tx.payment_type === 'homeschool' && (() => {
+          const months = (meta.selected_months ?? '')
+            .split(',').map(m => MONTH_LABELS[m.trim()] ?? m.trim()).filter(Boolean)
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ fontSize: 13, fontWeight: 500 }}>Homeschool Drop-In Plan</div>
+              {months.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {months.map(m => (
+                    <span
+                      key={m}
+                      style={{
+                        padding: '4px 10px',
+                        borderRadius: 999,
+                        fontSize: 12,
+                        fontWeight: 600,
+                        backgroundColor: colors.warningBg,
+                        color: colors.warning,
+                      }}
+                    >
+                      {m}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div style={{ fontSize: 12, color: colors.textTertiary }}>Bundled with supply fee</div>
+              <div style={{ fontSize: 13, fontWeight: 600 }}>{formatCents(tx.amount_cents)}</div>
+            </div>
           )
         })()}
 

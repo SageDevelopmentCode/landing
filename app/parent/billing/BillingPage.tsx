@@ -1152,9 +1152,20 @@ function HomeschoolPlanHistoryModal({
                         {formatCents(entry.amountCents)}
                       </span>
                     </div>
+                    {entry.weeks.length > 0 && (
+                      <p className="text-xs text-gray-500">
+                        Months:{" "}
+                        {entry.weeks
+                          .sort((a, b) => a - b)
+                          .map((w) => SCHOOL_YEAR_MONTHS.find((m) => m.index === w)?.short ?? `Month ${w}`)
+                          .join(", ")}
+                      </p>
+                    )}
                     {entry.days.length > 0 && (
                       <p className="text-xs text-gray-500">
-                        Days: {entry.days.map(dayLabel).join(", ")}
+                        {entry.tier === "dropin"
+                          ? `Every ${dayLabel(entry.days[0])}`
+                          : `Days: ${entry.days.map(dayLabel).join(", ")}`}
                       </p>
                     )}
                     <p className="text-xs text-gray-400">
@@ -1206,6 +1217,9 @@ function HomeschoolDropInCard({
   const hasSchoolYear = (paidData?.schoolYear.length ?? 0) > 0;
   const hasPriorPayment = hasSummer || hasSchoolYear;
 
+  const paidSchoolYearMonthCount = (paidData?.schoolYear ?? [])
+    .reduce((sum, entry) => sum + entry.weeks.length, 0);
+
   let ctaLabel = "Set up plan";
   let badgeLabel = "Select schedule & days";
   let badgeColor = "bg-blue-50 text-blue-600";
@@ -1239,11 +1253,20 @@ function HomeschoolDropInCard({
           className={`absolute inset-0 ${isDisabled ? "bg-black/20" : "bg-black/10"}`}
         />
         {!isDisabled && (
-          <span
-            className={`absolute top-2.5 right-2.5 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold shadow-sm ${hasPriorPayment ? "bg-emerald-500 text-white" : "bg-white/80 backdrop-blur-sm text-gray-600"}`}
-          >
-            {badgeLabel}
-          </span>
+          <>
+            {paidSchoolYearMonthCount > 0 ? (
+              <div className="absolute top-2 right-2 flex items-center gap-1 bg-green-500 text-white text-[11px] font-semibold px-2 py-0.5 rounded-full shadow-sm">
+                <CheckCircle2 className="w-3 h-3" strokeWidth={2.5} />
+                {paidSchoolYearMonthCount} mo. paid
+              </div>
+            ) : (
+              <span
+                className={`absolute top-2.5 right-2.5 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold shadow-sm ${hasPriorPayment ? "bg-emerald-500 text-white" : "bg-white/80 backdrop-blur-sm text-gray-600"}`}
+              >
+                {badgeLabel}
+              </span>
+            )}
+          </>
         )}
       </div>
       <div className="p-3.5 flex flex-col gap-2.5">
@@ -1470,6 +1493,14 @@ function HomeschoolSchoolYearModal({
     (paidData?.schoolYear ?? []).flatMap((entry) => entry.weeks),
   );
 
+  const paidMonthsByTier = (paidData?.schoolYear ?? []).reduce<
+    Record<string, Set<number>>
+  >((acc, entry) => {
+    if (!acc[entry.tier]) acc[entry.tier] = new Set();
+    entry.weeks.forEach((w) => acc[entry.tier].add(w));
+    return acc;
+  }, {});
+
   const unitCount = selectedMonthIndices.size;
   const pricePerUnit = selectedTier
     ? HOMESCHOOL_SCHOOL_YEAR_PRICING[selectedTier][gradeTier]
@@ -1639,6 +1670,29 @@ function HomeschoolSchoolYearModal({
                             <div className="text-xs text-gray-400">/mo</div>
                           </div>
                         </div>
+                        {(() => {
+                          const paidSet = paidMonthsByTier[tier.key];
+                          if (!paidSet || paidSet.size === 0) return null;
+                          const months = SCHOOL_YEAR_MONTHS.filter((m) =>
+                            paidSet.has(m.index),
+                          ).map((m) => m.short);
+                          return (
+                            <div className="mt-2 flex flex-wrap gap-1">
+                              {months.map((m) => (
+                                <span
+                                  key={m}
+                                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700"
+                                >
+                                  <Check
+                                    className="w-2.5 h-2.5"
+                                    strokeWidth={2.5}
+                                  />
+                                  {m}
+                                </span>
+                              ))}
+                            </div>
+                          );
+                        })()}
                       </button>
                     );
                   })}
@@ -2688,20 +2742,21 @@ function SupplyFeeModal({
   const [dropinExpandedMonths, setDropinExpandedMonths] = useState<Set<number>>(
     new Set([1]),
   );
+  const [dropinWeekday, setDropinWeekday] = useState<string | null>(null);
 
   const homeschoolGradeTier = getGradeTier(childGrade);
   const dropinPricePerDay = selectedTier
     ? HOMESCHOOL_SCHOOL_YEAR_PRICING[selectedTier][homeschoolGradeTier]
     : 0;
-  const dropinUnitCount =
-    selectedTier === "dropin"
-      ? dropinSelectedDates.size
-      : selectedMonthIndices.size;
+  const dropinUnitCount = selectedMonthIndices.size;
   const homeschoolBundleCents =
     addBundle && programType === "homeschool"
       ? dropinPricePerDay * dropinUnitCount
       : 0;
-  const canContinueDropin = selectedTier !== null && dropinUnitCount >= 1;
+  const canContinueDropin =
+    selectedTier !== null &&
+    dropinUnitCount >= 1 &&
+    (selectedTier !== "dropin" || dropinWeekday !== null);
 
   const [paymentMethod, setPaymentMethod] = useState<"card" | "ach">("card");
   const [coverFees, setCoverFees] = useState(false);
@@ -2787,16 +2842,18 @@ function SupplyFeeModal({
             body.bundleHomeschoolTier = selectedTier;
             body.bundleHomeschoolGradeTier = homeschoolGradeTier;
             body.bundleHomeschoolApplicationId = applicationId;
-            const selectedItems = Array.from(
-              selectedTier === "dropin"
-                ? dropinSelectedDates
-                : selectedMonthIndices,
-            ).sort((a, b) => a - b);
+            const selectedItems = Array.from(selectedMonthIndices).sort((a, b) => a - b);
             body.bundleHomeschoolSelectedDays = selectedItems;
+            if (selectedTier === "dropin" && dropinWeekday) {
+              body.bundleHomeschoolDropinWeekday = dropinWeekday;
+            }
             body.bundleHomeschoolWeekSelectionsJson = JSON.stringify(
               selectedItems.map((w) => ({
                 week: w,
-                days: tierToDays(selectedTier!),
+                days:
+                  selectedTier === "dropin" && dropinWeekday
+                    ? [dropinWeekday]
+                    : tierToDays(selectedTier!),
               })),
             );
           }
@@ -2891,7 +2948,7 @@ function SupplyFeeModal({
                         homeschoolGradeTier
                       ];
                     const isSelected = selectedTier === tier.key;
-                    const unitSuffix = tier.key === "dropin" ? "/day" : "/mo";
+                    const unitSuffix = "/mo";
                     return (
                       <button
                         key={tier.key}
@@ -2900,6 +2957,7 @@ function SupplyFeeModal({
                           setSelectedMonthIndices(new Set());
                           setDropinSelectedDates(new Set());
                           setDropinExpandedMonths(new Set([1]));
+                          setDropinWeekday(null);
                         }}
                         className={`w-full rounded-xl border px-4 py-3 text-left transition-all cursor-pointer ${
                           isSelected
@@ -2935,8 +2993,36 @@ function SupplyFeeModal({
                 </div>
               </div>
 
-              {/* Month grid for 2day/3day */}
-              {selectedTier && selectedTier !== "dropin" && (
+              {/* Weekday selector — dropin only */}
+              {selectedTier === "dropin" && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">
+                    Choose your 1 day (Mon–Thu)
+                  </p>
+                  <div className="flex gap-2">
+                    {WEEKDAYS.map(({ key, label }) => {
+                      const isChosen = dropinWeekday === key;
+                      return (
+                        <button
+                          key={key}
+                          onClick={() => setDropinWeekday(key)}
+                          className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
+                            isChosen
+                              ? "text-white border-transparent"
+                              : "bg-white text-gray-600 border-gray-200 hover:border-primary hover:text-primary"
+                          }`}
+                          style={isChosen ? { backgroundColor: "#4a7c59", borderColor: "#4a7c59" } : undefined}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Month grid — all tiers */}
+              {selectedTier !== null && (
                 <div>
                   <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">
                     Select months to pay
@@ -2950,8 +3036,7 @@ function SupplyFeeModal({
                           onClick={() => {
                             setSelectedMonthIndices((prev) => {
                               const next = new Set(prev);
-                              if (next.has(month.index))
-                                next.delete(month.index);
+                              if (next.has(month.index)) next.delete(month.index);
                               else next.add(month.index);
                               return next;
                             });
@@ -2962,11 +3047,7 @@ function SupplyFeeModal({
                               ? "border-2 border-primary text-white"
                               : "border border-gray-200 text-gray-600 hover:border-gray-300 bg-white"
                           }`}
-                          style={
-                            isSelected
-                              ? { backgroundColor: "#4a7c59" }
-                              : undefined
-                          }
+                          style={isSelected ? { backgroundColor: "#4a7c59" } : undefined}
                         >
                           {month.short}
                         </button>
@@ -2975,8 +3056,7 @@ function SupplyFeeModal({
                   </div>
                   {selectedMonthIndices.size > 0 && (
                     <p className="text-xs text-gray-500 mt-2">
-                      {selectedMonthIndices.size} month
-                      {selectedMonthIndices.size !== 1 ? "s" : ""} ·{" "}
+                      {selectedMonthIndices.size} month{selectedMonthIndices.size !== 1 ? "s" : ""} ·{" "}
                       <span className="font-bold" style={{ color: "#4a7c59" }}>
                         {formatCents(homeschoolBundleCents)}
                       </span>
@@ -2984,127 +3064,6 @@ function SupplyFeeModal({
                   )}
                 </div>
               )}
-
-              {/* Day picker for drop-in tier */}
-              {selectedTier === "dropin" &&
-                (() => {
-                  const augustDays = getWeekdaysForMonth(1);
-                  const isExpanded = dropinExpandedMonths.has(1);
-                  const selectedInMonth = augustDays.filter((d) =>
-                    dropinSelectedDates.has(d.encoded),
-                  ).length;
-                  return (
-                    <div className="space-y-2">
-                      <div className="rounded-xl border border-gray-100 overflow-hidden">
-                        <button
-                          onClick={() => {
-                            setDropinExpandedMonths((prev) => {
-                              const next = new Set(prev);
-                              if (next.has(1)) next.delete(1);
-                              else next.add(1);
-                              return next;
-                            });
-                          }}
-                          className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold font-heading text-gray-700">
-                              August 2026
-                            </span>
-                            {selectedInMonth > 0 && (
-                              <span
-                                className="px-2 py-0.5 rounded-full text-xs font-semibold text-white"
-                                style={{ backgroundColor: "#4a7c59" }}
-                              >
-                                {selectedInMonth} selected
-                              </span>
-                            )}
-                          </div>
-                          <motion.span
-                            animate={{ rotate: isExpanded ? 90 : 0 }}
-                            transition={{ duration: 0.15 }}
-                            className="text-gray-400"
-                          >
-                            <ChevronRight className="w-4 h-4" />
-                          </motion.span>
-                        </button>
-                        <AnimatePresence initial={false}>
-                          {isExpanded && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: "auto", opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.2, ease: "easeInOut" }}
-                              className="overflow-hidden"
-                            >
-                              <div className="px-4 py-3 flex flex-wrap gap-2">
-                                {augustDays.map(({ encoded, label }) => {
-                                  const isSelected =
-                                    dropinSelectedDates.has(encoded);
-                                  return (
-                                    <button
-                                      key={encoded}
-                                      onClick={() =>
-                                        setDropinSelectedDates((prev) => {
-                                          const next = new Set(prev);
-                                          if (next.has(encoded))
-                                            next.delete(encoded);
-                                          else next.add(encoded);
-                                          return next;
-                                        })
-                                      }
-                                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold font-body transition-colors border cursor-pointer ${
-                                        isSelected
-                                          ? "text-white border-transparent"
-                                          : "bg-white text-gray-600 border-gray-200 hover:border-primary hover:text-primary"
-                                      }`}
-                                      style={
-                                        isSelected
-                                          ? {
-                                              backgroundColor: "#4a7c59",
-                                              borderColor: "#4a7c59",
-                                            }
-                                          : undefined
-                                      }
-                                    >
-                                      {label}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                      {/* Running total bar */}
-                      <motion.div
-                        className="rounded-xl px-4 py-3 flex items-center justify-between"
-                        style={{
-                          backgroundColor:
-                            dropinSelectedDates.size > 0
-                              ? "#f0f9f4"
-                              : "#f9fafb",
-                        }}
-                        layout
-                        transition={{ duration: 0.2 }}
-                      >
-                        <span className="text-sm text-gray-500 font-body">
-                          {dropinSelectedDates.size === 0
-                            ? "No days selected"
-                            : `${dropinSelectedDates.size} day${dropinSelectedDates.size !== 1 ? "s" : ""} × ${formatCents(dropinPricePerDay)}/day`}
-                        </span>
-                        <span
-                          className="text-base font-bold font-heading"
-                          style={{ color: "#4a7c59" }}
-                        >
-                          {dropinSelectedDates.size > 0
-                            ? formatCents(homeschoolBundleCents)
-                            : "—"}
-                        </span>
-                      </motion.div>
-                    </div>
-                  );
-                })()}
             </div>
             {error && (
               <div className="px-6 pb-2">

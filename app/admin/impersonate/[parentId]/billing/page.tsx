@@ -213,6 +213,56 @@ export default async function ImpersonateBillingPage({
     }
   }
 
+  for (const tx of transactions) {
+    if (
+      tx.payment_type === "supply_fee" &&
+      tx.status === "completed" &&
+      tx.student_id
+    ) {
+      const meta = (tx.metadata ?? {}) as Record<string, string>;
+      if (meta.bundle_type === "homeschool" && meta.bundle_homeschool_tier) {
+        const tier = meta.bundle_homeschool_tier;
+        const weeks = (meta.bundle_homeschool_selected_days ?? "")
+          .split(",")
+          .map(Number)
+          .filter(Boolean);
+        let weekDays: Record<number, string[]> = {};
+        if (meta.bundle_homeschool_week_selections_json) {
+          try {
+            const parsed: { week: number; days: string[] }[] = JSON.parse(
+              meta.bundle_homeschool_week_selections_json
+            );
+            parsed.forEach(({ week, days: d }) => {
+              weekDays[week] = d;
+            });
+          } catch {
+            /* ignore */
+          }
+        }
+        if (Object.keys(weekDays).length === 0) {
+          weeks.forEach((w) => {
+            weekDays[w] = [];
+          });
+        }
+        const days = [...new Set(Object.values(weekDays).flat())];
+        const amountCents = meta.bundle_amount_cents
+          ? parseInt(meta.bundle_amount_cents)
+          : tx.amount_cents;
+        if (!paidHomeschoolByStudent[tx.student_id]) {
+          paidHomeschoolByStudent[tx.student_id] = { summer: [], schoolYear: [] };
+        }
+        paidHomeschoolByStudent[tx.student_id].schoolYear.push({
+          weeks,
+          tier,
+          days,
+          weekDays,
+          amountCents,
+          createdAt: tx.created_at,
+        });
+      }
+    }
+  }
+
   const paidAftercareByStudent: PaidAftercareByStudent = {};
   for (const tx of transactions) {
     if (
