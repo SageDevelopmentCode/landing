@@ -293,7 +293,7 @@ function aftercareMonthCents(month: (typeof AFTERCARE_MONTHS)[number]): number {
 }
 
 // --- Fun Friday pricing ---
-const FUN_FRIDAY_MONTHLY_CENTS = 20000; // $200/month (4 sessions)
+const FUN_FRIDAY_MONTHLY_CENTS = 16000; // $160/month (4 sessions × $40)
 const FUN_FRIDAY_DROPIN_CENTS = 6000; // $60/session
 
 const FUN_FRIDAY_MONTHS = [
@@ -883,9 +883,11 @@ function SummerTuitionCard({
 function SchoolYearTuitionCard({
   onClick,
   supplyFeePaid,
+  paidMonthsCount,
 }: {
   onClick: () => void;
   supplyFeePaid: boolean;
+  paidMonthsCount: number;
 }) {
   return (
     <div
@@ -899,6 +901,12 @@ function SchoolYearTuitionCard({
           className={`w-full h-full object-cover object-center transition-transform duration-500 ${supplyFeePaid ? "group-hover:scale-105" : ""}`}
         />
         <div className="absolute inset-0 bg-black/10" />
+        {paidMonthsCount > 0 && (
+          <div className="absolute top-2 right-2 flex items-center gap-1 bg-green-500 text-white text-[11px] font-semibold px-2 py-0.5 rounded-full shadow-sm">
+            <CheckCircle2 className="w-3 h-3" strokeWidth={2.5} />
+            {paidMonthsCount} mo. paid
+          </div>
+        )}
       </div>
       <div className="p-3.5 flex flex-col gap-2.5">
         <div>
@@ -4697,9 +4705,11 @@ function AftercareCard({
 function FunFridayCard({
   studentName,
   onClick,
+  paidMonthsCount,
 }: {
   studentName: string | null;
   onClick: () => void;
+  paidMonthsCount: number;
 }) {
   return (
     <div
@@ -4713,9 +4723,16 @@ function FunFridayCard({
           className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-black/10" />
-        <span className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/80 text-gray-600 shadow-sm backdrop-blur-sm">
-          Optional
-        </span>
+        {paidMonthsCount > 0 ? (
+          <div className="absolute top-2 right-2 flex items-center gap-1 bg-green-500 text-white text-[11px] font-semibold px-2 py-0.5 rounded-full shadow-sm">
+            <CheckCircle2 className="w-3 h-3" strokeWidth={2.5} />
+            {paidMonthsCount} mo. paid
+          </div>
+        ) : (
+          <span className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/80 text-gray-600 shadow-sm backdrop-blur-sm">
+            Optional
+          </span>
+        )}
       </div>
       <div className="p-3.5 flex flex-col gap-2.5">
         <div>
@@ -4789,9 +4806,11 @@ function SchoolYearAftercareCard({
 function SchoolYearFunFridayCard({
   studentName,
   onClick,
+  paidMonthsCount,
 }: {
   studentName: string | null;
   onClick: () => void;
+  paidMonthsCount: number;
 }) {
   return (
     <div
@@ -4805,9 +4824,16 @@ function SchoolYearFunFridayCard({
           className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-black/10" />
-        <span className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/80 text-gray-600 shadow-sm backdrop-blur-sm">
-          Optional
-        </span>
+        {paidMonthsCount > 0 ? (
+          <div className="absolute top-2 right-2 flex items-center gap-1 bg-green-500 text-white text-[11px] font-semibold px-2 py-0.5 rounded-full shadow-sm">
+            <CheckCircle2 className="w-3 h-3" strokeWidth={2.5} />
+            {paidMonthsCount} mo. paid
+          </div>
+        ) : (
+          <span className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/80 text-gray-600 shadow-sm backdrop-blur-sm">
+            Optional
+          </span>
+        )}
       </div>
       <div className="p-3.5 flex flex-col gap-2.5">
         <div>
@@ -5613,7 +5639,7 @@ function FunFridayPaymentModal({
                 }`}
                 style={tab === "monthly" ? { backgroundColor: "#7c3aed" } : {}}
               >
-                Monthly
+                Monthly · Save 33% 🎉
               </button>
               <button
                 onClick={() => setTab("dropin")}
@@ -6769,7 +6795,7 @@ function SchoolYearFunFridayPaymentModal({
                 }`}
                 style={tab === "monthly" ? { backgroundColor: "#7c3aed" } : {}}
               >
-                Monthly
+                Monthly · Save 33% 🎉
               </button>
               <button
                 onClick={() => setTab("dropin")}
@@ -7242,6 +7268,7 @@ function PendingPaymentsSection({
   nonEnrolledApps,
   homeschoolDropInApps,
   paidHomeschoolByStudent,
+  paidFunFridayByStudent,
   activeStudentId,
   schoolYearOnlyApps,
   showMultiChildBanner,
@@ -7250,6 +7277,7 @@ function PendingPaymentsSection({
   onSelectSupplyFee,
   onSelectSchoolYearTuition,
   paidSupplyFeeByStudent,
+  paidSchoolYearByStudent,
   onTuitionCodeClick,
 }: {
   summerEnrollments: SummerEnrollment[];
@@ -7270,6 +7298,7 @@ function PendingPaymentsSection({
   nonEnrolledApps: NonEnrolledApp[];
   homeschoolDropInApps: HomeschoolDropInApp[];
   paidHomeschoolByStudent: PaidHomeschoolByStudent;
+  paidFunFridayByStudent: PaidFunFridayByStudent;
   activeStudentId: string | null;
   schoolYearOnlyApps: SchoolYearOnlyApp[];
   showMultiChildBanner: boolean;
@@ -7285,6 +7314,7 @@ function PendingPaymentsSection({
     childGrade: string | null,
   ) => void;
   paidSupplyFeeByStudent: Record<string, boolean>;
+  paidSchoolYearByStudent: PaidSchoolYearByStudent;
   onTuitionCodeClick: () => void;
 }) {
   const [activeTermTab, setActiveTermTab] = useState<"summer" | "school_year">(
@@ -7651,6 +7681,9 @@ function PendingPaymentsSection({
                             <SchoolYearTuitionCard
                               key="school-year-tuition"
                               supplyFeePaid={supplyFeePaid}
+                              paidMonthsCount={
+                                (paidSchoolYearByStudent[activeStudentId!] ?? []).length
+                              }
                               onClick={() => {
                                 const grade =
                                   schoolYearOnlyApps.find(
@@ -7717,6 +7750,10 @@ function PendingPaymentsSection({
                             <SchoolYearFunFridayCard
                               studentName={
                                 studentMap[enrollment.student_id]?.name ?? null
+                              }
+                              paidMonthsCount={
+                                (paidFunFridayByStudent[enrollment.student_id]?.months ?? [])
+                                  .filter((k) => ["aug_26","sep_26","oct_26","nov_26","dec_26","jan_27","feb_27","mar_27","apr_27","may_27"].includes(k)).length
                               }
                               onClick={() =>
                                 onSelectSchoolYearFunFriday(enrollment)
@@ -7801,6 +7838,10 @@ function PendingPaymentsSection({
                 <FunFridayCard
                   key={`funfriday-${enrollment.student_id}`}
                   studentName={studentMap[enrollment.student_id]?.name ?? null}
+                  paidMonthsCount={
+                    (paidFunFridayByStudent[enrollment.student_id]?.months ?? [])
+                      .filter((k) => ["may", "jun", "jul", "aug"].includes(k)).length
+                  }
                   onClick={() => onSelectFunFriday(enrollment)}
                 />
               ))}
@@ -9308,6 +9349,7 @@ export default function BillingPage({
                   nonEnrolledApps={nonEnrolledApps}
                   homeschoolDropInApps={homeschoolDropInApps}
                   paidHomeschoolByStudent={paidHomeschoolByStudent}
+                  paidFunFridayByStudent={paidFunFridayByStudent}
                   activeStudentId={activeStudentId}
                   schoolYearOnlyApps={schoolYearOnlyApps}
                   showMultiChildBanner={multiChildSummerEligible}
@@ -9355,6 +9397,7 @@ export default function BillingPage({
                     })
                   }
                   paidSupplyFeeByStudent={paidSupplyFeeByStudent}
+                  paidSchoolYearByStudent={paidSchoolYearByStudent}
                   onTuitionCodeClick={() => setTuitionCodeModalOpen(true)}
                 />
               </div>

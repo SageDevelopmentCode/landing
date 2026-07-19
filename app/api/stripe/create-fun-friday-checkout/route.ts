@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getStripe } from "@/app/lib/stripe";
 import { getOrCreateStripeCustomer } from "@/app/lib/stripe-customer";
 
-const FUN_FRIDAY_MONTHLY_CENTS = 20000; // $200/month (4 sessions)
+const FUN_FRIDAY_MONTHLY_CENTS = 16000; // $160/month (4 sessions × $40)
 const FUN_FRIDAY_DROPIN_CENTS = 6000; // $60/session
 
 const FUN_FRIDAY_MONTHS = [
@@ -11,6 +11,16 @@ const FUN_FRIDAY_MONTHS = [
   { key: "jun", label: "June 2026", fridayCount: 4 },
   { key: "jul", label: "July 2026", fridayCount: 5 },
   { key: "aug", label: "August 2026", fridayCount: 2 },
+  { key: "aug_26", label: "August 2026",    fridayCount: 2 },
+  { key: "sep_26", label: "September 2026", fridayCount: 4 },
+  { key: "oct_26", label: "October 2026",   fridayCount: 5 },
+  { key: "nov_26", label: "November 2026",  fridayCount: 3 },
+  { key: "dec_26", label: "December 2026",  fridayCount: 3 },
+  { key: "jan_27", label: "January 2027",   fridayCount: 4 },
+  { key: "feb_27", label: "February 2027",  fridayCount: 4 },
+  { key: "mar_27", label: "March 2027",     fridayCount: 3 },
+  { key: "apr_27", label: "April 2027",     fridayCount: 5 },
+  { key: "may_27", label: "May 2027",       fridayCount: 4 },
 ];
 
 const MONTH_LABELS: Record<string, string> = {
@@ -18,6 +28,16 @@ const MONTH_LABELS: Record<string, string> = {
   jun: "June 2026",
   jul: "July 2026",
   aug: "August 2026",
+  aug_26: "August 2026",
+  sep_26: "September 2026",
+  oct_26: "October 2026",
+  nov_26: "November 2026",
+  dec_26: "December 2026",
+  jan_27: "January 2027",
+  feb_27: "February 2027",
+  mar_27: "March 2027",
+  apr_27: "April 2027",
+  may_27: "May 2027",
 };
 
 const schema = z.object({
