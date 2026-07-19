@@ -257,11 +257,32 @@ export function SchoolYearPaymentsClient({ transactions, studentMap, parentNameM
   // Stat cards - from all SY transactions (not filtered)
   const stats = useMemo(() => {
     const paidTxs = baseTxs.filter(tx => isPaid(tx.status))
-    const supplyTotal = paidTxs.filter(t => t.payment_type === 'supply_fee').reduce((s, t) => s + t.amount_cents, 0)
-    const tuitionTotal = paidTxs.filter(t => t.payment_type === 'school_year_tuition').reduce((s, t) => s + t.amount_cents, 0)
+
+    // Supply: for bundled rows use only the supply component; non-bundled use full amount_cents
+    const supplyTotal = paidTxs
+      .filter(t => t.payment_type === 'supply_fee')
+      .reduce((s, t) => {
+        const meta = (t.metadata ?? {}) as Record<string, string>
+        const bundleAmt = parseInt(meta.bundle_amount_cents ?? '0')
+        if (bundleAmt > 0) {
+          return s + (t.intended_amount_cents ?? t.amount_cents) - bundleAmt
+        }
+        return s + t.amount_cents
+      }, 0)
+
+    // Tuition: exclude bundled children (their value is already inside the parent's bundle_amount_cents)
+    const tuitionTotal = paidTxs
+      .filter(t => {
+        const meta = (t.metadata ?? {}) as Record<string, string>
+        return t.payment_type === 'school_year_tuition' && meta.bundled_with_supply_fee !== 'true'
+      })
+      .reduce((s, t) => s + t.amount_cents, 0)
+
+    // HS: include ALL HS rows (bundled children have amount_cents = the HS component)
     const hsTotal = paidTxs
       .filter(t => t.payment_type === 'homeschool_dropin' || t.payment_type === 'homeschool')
       .reduce((s, t) => s + t.amount_cents, 0)
+
     return { supplyTotal, tuitionTotal, hsTotal, combined: supplyTotal + tuitionTotal + hsTotal }
   }, [baseTxs])
 
@@ -513,10 +534,7 @@ export function SchoolYearPaymentsClient({ transactions, studentMap, parentNameM
                   const stripeLink = stripeUrl(tx)
                   const isHovered = hoveredRow === tx.id
 
-                  let displayAmount = tx.amount_cents
-                  if (row.kind === 'parent') {
-                    displayAmount = tx.amount_cents + row.child.amount_cents
-                  }
+                  const displayAmount = tx.amount_cents
 
                   const details = isParent ? getParentBundleDetails(tx) : getDetails(tx)
 
@@ -784,7 +802,9 @@ function SidebarReceipt({
             <div style={{ display: 'flex', flexDirection: 'column', gap: 7, fontSize: 13 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: colors.textSecondary }}>Supply fee</span>
-                <span style={{ fontWeight: 500 }}>{formatCents(tx.amount_cents)}</span>
+                <span style={{ fontWeight: 500 }}>
+                  {formatCents((tx.intended_amount_cents ?? tx.amount_cents) - parseInt(meta.bundle_amount_cents ?? '0'))}
+                </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: colors.textSecondary }}>
@@ -811,6 +831,12 @@ function SidebarReceipt({
                 </span>
                 <span style={{ fontWeight: 500 }}>{formatCents(child.amount_cents)}</span>
               </div>
+              {tx.cover_fees && tx.intended_amount_cents != null && tx.amount_cents > tx.intended_amount_cents && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: colors.textSecondary }}>Card fee</span>
+                  <span style={{ fontWeight: 500 }}>{formatCents(tx.amount_cents - tx.intended_amount_cents)}</span>
+                </div>
+              )}
               <div
                 style={{
                   borderTop: `1px solid ${colors.border}`,
@@ -821,7 +847,7 @@ function SidebarReceipt({
                 }}
               >
                 <span>Total</span>
-                <span>{formatCents(tx.amount_cents + child.amount_cents)}</span>
+                <span>{formatCents(tx.amount_cents)}</span>
               </div>
             </div>
           ) : (

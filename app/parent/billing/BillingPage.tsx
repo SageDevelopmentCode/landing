@@ -2767,7 +2767,7 @@ function SupplyFeeModal({
   const [dropinExpandedMonths, setDropinExpandedMonths] = useState<Set<number>>(
     new Set([1]),
   );
-  const [dropinWeekday, setDropinWeekday] = useState<string | null>(null);
+  const [selectedWeekdays, setSelectedWeekdays] = useState<Set<string>>(new Set());
 
   const homeschoolGradeTier = getGradeTier(childGrade);
   const dropinPricePerDay = selectedTier
@@ -2778,10 +2778,11 @@ function SupplyFeeModal({
     addBundle && programType === "homeschool"
       ? dropinPricePerDay * dropinUnitCount
       : 0;
+  const requiredDays = selectedTier === "dropin" ? 1 : selectedTier === "2day" ? 2 : 3;
   const canContinueDropin =
     selectedTier !== null &&
     dropinUnitCount >= 1 &&
-    (selectedTier !== "dropin" || dropinWeekday !== null);
+    selectedWeekdays.size === requiredDays;
 
   const [paymentMethod, setPaymentMethod] = useState<"card" | "ach">("card");
   const [coverFees, setCoverFees] = useState(false);
@@ -2869,16 +2870,14 @@ function SupplyFeeModal({
             body.bundleHomeschoolApplicationId = applicationId;
             const selectedItems = Array.from(selectedMonthIndices).sort((a, b) => a - b);
             body.bundleHomeschoolSelectedDays = selectedItems;
-            if (selectedTier === "dropin" && dropinWeekday) {
-              body.bundleHomeschoolDropinWeekday = dropinWeekday;
+            const weekdayArray = Array.from(selectedWeekdays);
+            if (selectedTier === "dropin" && weekdayArray.length > 0) {
+              body.bundleHomeschoolDropinWeekday = weekdayArray[0];
             }
             body.bundleHomeschoolWeekSelectionsJson = JSON.stringify(
               selectedItems.map((w) => ({
                 week: w,
-                days:
-                  selectedTier === "dropin" && dropinWeekday
-                    ? [dropinWeekday]
-                    : tierToDays(selectedTier!),
+                days: weekdayArray,
               })),
             );
           }
@@ -2987,7 +2986,7 @@ function SupplyFeeModal({
                           setSelectedMonthIndices(new Set());
                           setDropinSelectedDates(new Set());
                           setDropinExpandedMonths(new Set([1]));
-                          setDropinWeekday(null);
+                          setSelectedWeekdays(new Set());
                         }}
                         className={`w-full rounded-xl border px-4 py-3 text-left transition-all cursor-pointer ${
                           isSelected
@@ -3023,28 +3022,41 @@ function SupplyFeeModal({
                 </div>
               </div>
 
-              {/* Weekday selector — dropin only */}
-              {selectedTier === "dropin" && (
+              {/* Weekday selector — all tiers */}
+              {selectedTier !== null && (
                 <div className="pt-5 border-t border-gray-100">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">
                       2
                     </span>
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                      Choose your 1 day (Mon–Thu)
+                      Choose your{" "}
+                      {requiredDays === 1 ? "1 day" : requiredDays === 2 ? "2 days" : "3 days"}{" "}
+                      (Mon–Thu)
                     </p>
                   </div>
                   <div className="flex gap-2">
                     {WEEKDAYS.map(({ key, label }) => {
-                      const isChosen = dropinWeekday === key;
+                      const isChosen = selectedWeekdays.has(key);
+                      const atLimit = selectedWeekdays.size === requiredDays && !isChosen;
                       return (
                         <button
                           key={key}
-                          onClick={() => setDropinWeekday(key)}
+                          disabled={atLimit}
+                          onClick={() =>
+                            setSelectedWeekdays((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(key)) next.delete(key);
+                              else next.add(key);
+                              return next;
+                            })
+                          }
                           className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
                             isChosen
                               ? "text-white border-transparent"
-                              : "bg-white text-gray-600 border-gray-200 hover:border-primary hover:text-primary"
+                              : atLimit
+                                ? "border-gray-100 text-gray-300 cursor-not-allowed bg-gray-50"
+                                : "bg-white text-gray-600 border-gray-200 hover:border-primary hover:text-primary"
                           }`}
                           style={isChosen ? { backgroundColor: "#4a7c59", borderColor: "#4a7c59" } : undefined}
                         >
@@ -3053,6 +3065,12 @@ function SupplyFeeModal({
                       );
                     })}
                   </div>
+                  {selectedWeekdays.size > 0 && selectedWeekdays.size < requiredDays && (
+                    <p className="text-xs text-gray-400 mt-2">
+                      Select {requiredDays - selectedWeekdays.size} more day
+                      {requiredDays - selectedWeekdays.size !== 1 ? "s" : ""}
+                    </p>
+                  )}
                 </div>
               )}
 
