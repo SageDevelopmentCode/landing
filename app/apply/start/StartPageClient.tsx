@@ -19,9 +19,9 @@ type Mode = "choose" | "create" | "login";
 const slides = [
   "/assets/Hero.jpg",
   "/assets/ImageOne.jpg",
-  "/assets/After1.png",
-  "/assets/Interior.png",
-  "/assets/After2.png",
+  "/assets/Stock1.jpg",
+  "/assets/Stock3.jpg",
+  "/assets/Stock4.jpg",
   "/assets/ImageTwo.jpg",
 ];
 

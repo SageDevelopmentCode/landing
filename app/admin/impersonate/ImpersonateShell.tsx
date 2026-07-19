@@ -5,7 +5,19 @@ import { useRouter, usePathname } from "next/navigation";
 import { DollarSign, Users } from "lucide-react";
 import { cssColors as colors } from "../design-system";
 
-type StudentEntry = { id: string; name: string; profileImageUrl: string | null };
+type StudentEntry = { id: string; name: string; profileImageUrl: string | null; program: string | null };
+
+const PROGRAM_BADGE_CONFIG: Record<string, { label: string; bg: string; color: string }> = {
+  summer_26:          { label: "Summer '26",  bg: "#FEF3C7", color: "#92400E" },
+  school_year_26_27:  { label: "SY 26–27",    bg: "#DBEAFE", color: "#1E40AF" },
+  both:               { label: "Summer & SY", bg: "#EDE9FE", color: "#5B21B6" },
+  homeschool_drop_in: { label: "Drop-In",     bg: "#D1FAE5", color: "#065F46" },
+};
+
+function programBadge(program: string | null | undefined) {
+  if (!program) return null;
+  return PROGRAM_BADGE_CONFIG[program] ?? null;
+}
 
 type ParentRow = {
   id: string;
@@ -189,6 +201,23 @@ export default function ImpersonateShell({
                         <span style={{ color: colors.textTertiary, fontSize: "12px" }}>
                           {child.name}
                         </span>
+                        {programBadge(child.program) && (() => {
+                          const cfg = programBadge(child.program)!;
+                          return (
+                            <span
+                              className="flex-shrink-0 font-medium rounded-full"
+                              style={{
+                                backgroundColor: cfg.bg,
+                                color: cfg.color,
+                                fontSize: "9px",
+                                padding: "1px 5px",
+                                lineHeight: "1.4",
+                              }}
+                            >
+                              {cfg.label}
+                            </span>
+                          );
+                        })()}
                       </div>
                     ))}
                   </div>

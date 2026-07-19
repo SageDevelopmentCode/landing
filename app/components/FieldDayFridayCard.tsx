@@ -39,13 +39,13 @@ export default function FieldDayFridayCard() {
               Package of 4
             </p>
             <p className="text-2xl font-bold text-primary font-heading">
-              $200
+              $160
               <span className="text-base text-text-gray font-normal">
                 /month
               </span>
             </p>
             <p className="text-xs text-text-gray mt-1 font-body">
-              $50 per session • Expires monthly
+              $40 per session • Expires monthly
             </p>
           </div>
           <div className="p-4 bg-welcome-bg rounded-lg border-l-4 border-primary">

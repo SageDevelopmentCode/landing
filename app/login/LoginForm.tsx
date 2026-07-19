@@ -17,9 +17,9 @@ import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 const slides = [
   "/assets/Hero.jpg",
   "/assets/ImageOne.jpg",
-  "/assets/After1.png",
-  "/assets/Interior.png",
-  "/assets/After2.png",
+  "/assets/Stock1.jpg",
+  "/assets/Stock3.jpg",
+  "/assets/Stock4.jpg",
   "/assets/ImageTwo.jpg",
 ];
 

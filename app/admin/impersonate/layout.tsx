@@ -20,7 +20,7 @@ export default async function ImpersonateLayout({
       adminClient
         .schema("parent_app")
         .from("applications")
-        .select("user_id, status, approved, denied"),
+        .select("user_id, status, approved, denied, student_id, program, drop_in_program"),
       adminClient.auth.admin.listUsers({ perPage: 1000 }),
       adminClient
         .schema("billing")
@@ -67,6 +67,14 @@ export default async function ImpersonateLayout({
     }
   }
 
+  const programByStudent: Record<string, string> = {};
+  for (const app of appRows ?? []) {
+    const prog = app.program ?? app.drop_in_program;
+    if (app.student_id && prog && !programByStudent[app.student_id]) {
+      programByStudent[app.student_id] = prog;
+    }
+  }
+
   const lastSignInMap: Record<string, string | null> = {};
   for (const u of authData?.users ?? []) {
     lastSignInMap[u.id] = u.updated_at ?? null;
@@ -83,7 +91,7 @@ export default async function ImpersonateLayout({
     if (g.grantee_id && g.owner_id) grantByGrantee[g.grantee_id] = g.owner_id;
   }
 
-  type StudentEntry = { id: string; name: string; profileImageUrl: string | null };
+  type StudentEntry = { id: string; name: string; profileImageUrl: string | null; program: string | null };
 
   const parentIds = (parents ?? []).map((p) => p.id);
   const { data: studentRows } = parentIds.length > 0
@@ -104,6 +112,7 @@ export default async function ImpersonateLayout({
       id: s.id,
       name: s.child_legal_name,
       profileImageUrl: s.profile_image_url ?? null,
+      program: programByStudent[s.id] ?? null,
     });
   }
 

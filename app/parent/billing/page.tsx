@@ -82,6 +82,8 @@ export type PaidFunFridayByStudent = Record<string, {
 export type SummerNotesByStudent = Record<string, string>; // studentId → note text
 export type HomeschoolNotesByStudent = Record<string, string>; // studentId → note text
 
+export type PaidSchoolYearByStudent = Record<string, number[]>; // studentId → paid monthIndices (1–10)
+
 export type StudentInfo = {
   name: string;
   profileImageUrl: string | null;
@@ -218,11 +220,16 @@ export default async function BillingRoute() {
     .map((e) => ({ id: e.id, student_id: e.student_id!, name: e.child_legal_name, program: e.program ?? null }));
 
   const homeschoolDropInApps: HomeschoolDropInApp[] = allSummerApps
-    .filter((e) => e.program === "homeschool_drop_in" && e.status === "enrolled")
+    .filter(
+      (e) =>
+        e.status === "enrolled" &&
+        (e.program === "homeschool_drop_in" || e.program === "both"),
+    )
     .map((e) => ({
       id: e.id,
       student_id: e.student_id!,
-      drop_in_program: e.drop_in_program,
+      drop_in_program:
+        e.program === "homeschool_drop_in" ? e.drop_in_program : "summer_26",
       child_grade: e.child_grade,
       name: e.child_legal_name,
     }));
@@ -252,6 +259,34 @@ export default async function BillingRoute() {
   // Build paid homeschool drop-in map per student
   const paidHomeschoolByStudent: PaidHomeschoolByStudent = {};
   for (const tx of transactions) {
+    if (tx.payment_type === "supply_fee" && tx.status === "completed" && tx.student_id) {
+      const meta = (tx.metadata ?? {}) as Record<string, string>;
+      if (meta.bundle_type === "homeschool" && meta.bundle_homeschool_tier) {
+        const tier = meta.bundle_homeschool_tier;
+        const weeks = (meta.bundle_homeschool_selected_days ?? "")
+          .split(",").map(Number).filter(Boolean);
+
+        let weekDays: Record<number, string[]> = {};
+        if (meta.bundle_homeschool_week_selections_json) {
+          try {
+            const parsed: { week: number; days: string[] }[] =
+              JSON.parse(meta.bundle_homeschool_week_selections_json);
+            parsed.forEach(({ week, days: d }) => { weekDays[week] = d; });
+          } catch { /* ignore */ }
+        }
+        if (Object.keys(weekDays).length === 0) weeks.forEach((w) => { weekDays[w] = []; });
+
+        const days = [...new Set(Object.values(weekDays).flat())];
+        const amountCents = meta.bundle_amount_cents
+          ? parseInt(meta.bundle_amount_cents) : tx.amount_cents;
+
+        if (!paidHomeschoolByStudent[tx.student_id])
+          paidHomeschoolByStudent[tx.student_id] = { summer: [], schoolYear: [] };
+        paidHomeschoolByStudent[tx.student_id].schoolYear.push({
+          weeks, tier, days, weekDays, amountCents, createdAt: tx.created_at,
+        });
+      }
+    }
     if (tx.payment_type === "homeschool_dropin" && tx.status === "completed" && tx.student_id) {
       const meta = (tx.metadata ?? {}) as Record<string, string>;
       const program = meta.program ?? "summer_26";
@@ -313,6 +348,27 @@ export default async function BillingRoute() {
       }
       paidFunFridayByStudent[tx.student_id].months.push(...months);
       paidFunFridayByStudent[tx.student_id].fridays.push(...fridays);
+    }
+  }
+
+  // Build paid school-year tuition months per student
+  const paidSchoolYearByStudent: PaidSchoolYearByStudent = {};
+  for (const tx of transactions) {
+    if (tx.payment_type === "school_year_tuition" && tx.status === "completed" && tx.student_id) {
+      const meta = (tx.metadata ?? {}) as Record<string, string>;
+      const months = meta.selected_months?.split(",").map(Number).filter(Boolean) ?? [];
+      if (!paidSchoolYearByStudent[tx.student_id]) {
+        paidSchoolYearByStudent[tx.student_id] = [];
+      }
+      paidSchoolYearByStudent[tx.student_id].push(...months);
+    }
+  }
+
+  // Build paid supply fee set per student
+  const paidSupplyFeeByStudent: Record<string, boolean> = {};
+  for (const tx of transactions) {
+    if (tx.payment_type === "supply_fee" && tx.status === "completed" && tx.student_id) {
+      paidSupplyFeeByStudent[tx.student_id] = true;
     }
   }
 
@@ -389,7 +445,7 @@ export default async function BillingRoute() {
         <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={primaryOwnerName} />
 
         <main className="flex-1 flex overflow-hidden">
-          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} unpaidSummerEnrollments={unpaidSummerEnrollments} paidWeeksByStudent={paidWeeksByStudent} parentId={effectiveParentId} parentEmail={user.email ?? ""} nonEnrolledApps={nonEnrolledApps} homeschoolDropInApps={homeschoolDropInApps} paidHomeschoolByStudent={paidHomeschoolByStudent} paidAftercareByStudent={paidAftercareByStudent} paidFunFridayByStudent={paidFunFridayByStudent} summerNotesByStudent={summerNotesByStudent} homeschoolNotesByStudent={homeschoolNotesByStudent} schoolYearOnlyApps={schoolYearOnlyApps} hasSubmittedTuitionFeedback={hasSubmittedTuitionFeedback} />
+          <BillingPage transactions={transactions} studentMap={studentMap} pendingRequests={pendingRequests} summerEnrollments={summerEnrollments} unpaidSummerEnrollments={unpaidSummerEnrollments} paidWeeksByStudent={paidWeeksByStudent} parentId={effectiveParentId} parentEmail={user.email ?? ""} nonEnrolledApps={nonEnrolledApps} homeschoolDropInApps={homeschoolDropInApps} paidHomeschoolByStudent={paidHomeschoolByStudent} paidAftercareByStudent={paidAftercareByStudent} paidFunFridayByStudent={paidFunFridayByStudent} summerNotesByStudent={summerNotesByStudent} homeschoolNotesByStudent={homeschoolNotesByStudent} schoolYearOnlyApps={schoolYearOnlyApps} hasSubmittedTuitionFeedback={hasSubmittedTuitionFeedback} paidSchoolYearByStudent={paidSchoolYearByStudent} paidSupplyFeeByStudent={paidSupplyFeeByStudent} />
         </main>
       </div>
       <Footer />
