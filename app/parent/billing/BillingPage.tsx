@@ -1624,9 +1624,14 @@ function HomeschoolSchoolYearModal({
 
               {/* Tier selection */}
               <div>
-                <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">
-                  Choose your schedule
-                </p>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">
+                    1
+                  </span>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    Choose your schedule
+                  </p>
+                </div>
                 <div className="space-y-2">
                   {HOMESCHOOL_TIERS.map((tier) => {
                     const price =
@@ -1701,16 +1706,21 @@ function HomeschoolSchoolYearModal({
 
               {/* Day-of-week picker */}
               {selectedTier !== null && (
-                <div>
-                  <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">
-                    Choose your{" "}
-                    {requiredDays === 1
-                      ? "1 day"
-                      : requiredDays === 2
-                        ? "2 days"
-                        : "3 days"}{" "}
-                    (Mon–Thu)
-                  </p>
+                <div className="pt-5 border-t border-gray-100">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">
+                      2
+                    </span>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      Choose your{" "}
+                      {requiredDays === 1
+                        ? "1 day"
+                        : requiredDays === 2
+                          ? "2 days"
+                          : "3 days"}{" "}
+                      (Mon–Thu)
+                    </p>
+                  </div>
                   <div className="flex gap-2">
                     {WEEKDAYS.map(({ key, label }) => {
                       const isChosen = selectedWeekdays.has(key);
@@ -1761,10 +1771,15 @@ function HomeschoolSchoolYearModal({
 
               {/* Month grid */}
               {selectedTier !== null && (
-                <div>
-                  <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">
-                    Select months to pay
-                  </p>
+                <div className="pt-5 border-t border-gray-100">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">
+                      3
+                    </span>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      Select months to pay
+                    </p>
+                  </div>
                   <div className="grid grid-cols-5 gap-2">
                     {SCHOOL_YEAR_MONTHS.map((month) => {
                       const isPaid = paidMonthIndices.has(month.index);
@@ -1812,6 +1827,16 @@ function HomeschoolSchoolYearModal({
                       </span>
                     </p>
                   )}
+                  <p className="text-xs text-gray-400 mt-3 leading-relaxed">
+                    Need a different number of days for a specific week?{" "}
+                    <a
+                      href="mailto:sabrina@sagefield.co"
+                      className="text-primary underline underline-offset-2 hover:opacity-80"
+                    >
+                      Email us
+                    </a>{" "}
+                    and we'll get it sorted.
+                  </p>
                 </div>
               )}
             </>
@@ -2938,9 +2963,14 @@ function SupplyFeeModal({
 
               {/* Tier selection */}
               <div>
-                <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">
-                  Choose your schedule
-                </p>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">
+                    1
+                  </span>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    Choose your schedule
+                  </p>
+                </div>
                 <div className="space-y-2">
                   {HOMESCHOOL_TIERS.map((tier) => {
                     const price =
@@ -2995,10 +3025,15 @@ function SupplyFeeModal({
 
               {/* Weekday selector — dropin only */}
               {selectedTier === "dropin" && (
-                <div>
-                  <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">
-                    Choose your 1 day (Mon–Thu)
-                  </p>
+                <div className="pt-5 border-t border-gray-100">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">
+                      2
+                    </span>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      Choose your 1 day (Mon–Thu)
+                    </p>
+                  </div>
                   <div className="flex gap-2">
                     {WEEKDAYS.map(({ key, label }) => {
                       const isChosen = dropinWeekday === key;
@@ -3023,10 +3058,15 @@ function SupplyFeeModal({
 
               {/* Month grid — all tiers */}
               {selectedTier !== null && (
-                <div>
-                  <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">
-                    Select months to pay
-                  </p>
+                <div className="pt-5 border-t border-gray-100">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">
+                      3
+                    </span>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      Select months to pay
+                    </p>
+                  </div>
                   <div className="grid grid-cols-5 gap-2">
                     {SCHOOL_YEAR_MONTHS.map((month) => {
                       const isSelected = selectedMonthIndices.has(month.index);
@@ -3062,6 +3102,16 @@ function SupplyFeeModal({
                       </span>
                     </p>
                   )}
+                  <p className="text-xs text-gray-400 mt-3 leading-relaxed">
+                    Need a different number of days for a specific week?{" "}
+                    <a
+                      href="mailto:sabrina@sagefield.co"
+                      className="text-primary underline underline-offset-2 hover:opacity-80"
+                    >
+                      Email us
+                    </a>{" "}
+                    and we'll get it sorted.
+                  </p>
                 </div>
               )}
             </div>
