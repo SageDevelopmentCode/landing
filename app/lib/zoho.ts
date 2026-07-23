@@ -3878,6 +3878,86 @@ export async function buildSummerWeekSevenNewsletterEmail(opts: {
   return { subject, content };
 }
 
+export async function buildSummerWeekEightNewsletterEmail(opts: {
+  g1FullName: string;
+  childLegalName: string;
+}): Promise<{ subject: string; content: string }> {
+  const firstName = opts.g1FullName.split(" ")[0];
+  const subject = "Week Eight Newsletter 🌿";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+
+  <p style="margin-bottom: 24px;">Hi ${firstName}!</p>
+
+  <p style="margin-bottom: 20px;">We have loved every moment of spending these weeks with our community — soaking up sunshine, heading out on adventures, and watching your children grow in the most beautiful ways. Week Eight was no exception.</p>
+
+  <p style="margin-bottom: 20px;">In Miss Sabrina's Primary class, students dove into National Geographic books and were especially fascinated by weird sea creatures, and continued building foundational reading and math skills through hands-on play.</p>
+
+  <p style="margin-bottom: 20px;">In Ms. Zelinda's Elementary class, students are in the final stretch — only 3 weeks left! Upper El tackled multiplying mixed numbers and fractions, worked on ELA paragraph writing and text organization using description diagrams, and completed their natural disaster models on Wednesday using incredibly creative materials. Lower El has officially mastered fractions and is now joining Upper El for math. And Field Friday brought Pirate Adventures — complete with an obstacle course, water slide, hat and eye patch making, and a backyard scavenger hunt!</p>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">🌿 What We've Been Up To</h2>
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px;">
+    <ul style="margin: 0; padding-left: 18px; line-height: 2.1; font-size: 14px; color: #2c2c2c;">
+      <li>📚 <strong>National Geographic Exploration (Primary)</strong> — fascinating discoveries all week; this week's favorite: weird sea creatures!</li>
+      <li>🔢 <strong>Fractions: Mixed Numbers → Improper Fractions (Upper El)</strong> — multiplying mixed numbers and continuing fraction mastery</li>
+      <li>➗ <strong>Fraction Mastery (Lower El)</strong> — officially mastered fractions and now joining Upper El for math!</li>
+      <li>✏️ <strong>ELA: Paragraph Writing &amp; Text Organization (Upper El)</strong> — description diagrams, 6–7 sentence paragraphs, and a focus on spelling and grammar</li>
+      <li>🌋 <strong>Natural Disasters Models</strong> — completed Wednesday using creative and inventive materials</li>
+      <li>🏴‍☠️ <strong>Field Friday: Pirate Adventures</strong> — obstacle course → water slide → hat &amp; eye patch making → backyard scavenger hunt</li>
+    </ul>
+  </div>
+
+  <p style="margin-bottom: 20px; font-size: 14px; color: #444;">We've put together our eighth newsletter — a closer look at the week through photos and classroom moments.</p>
+
+  <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 8px; padding: 20px 24px; margin: 28px 0; text-align: center;">
+    <p style="margin: 0 0 6px 0; font-size: 15px; font-weight: bold; color: #2C5F2E;">📰 Our Eighth Newsletter is Live!</p>
+    <p style="margin: 0 0 18px 0; font-size: 13px; color: #555;">Photos, classroom moments, and a deeper look into our eighth week.</p>
+    <a href="https://sagefield.co/newsletter/da88077b-926f-4f87-886a-78a72d18fb92" style="background: #2C5F2E; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-family: Georgia, serif; font-size: 15px; display: inline-block;">Read the Newsletter →</a>
+    <div style="margin-top: 14px;">
+      <span style="display: inline-block; background: #f7f4f0; border: 1px solid #a8c5a0; border-radius: 999px; padding: 5px 14px; font-size: 12px; color: #555;">🔑 Password: <strong>weekeight</strong></span>
+    </div>
+  </div>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">📣 Upcoming Announcements</h2>
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px;">
+    <ul style="margin: 0; padding-left: 18px; line-height: 2.1; font-size: 14px; color: #2c2c2c;">
+      <li>🌿 <strong>Community Garden Day</strong> — Thursday, August 27 | 5:30–7:00 PM; join us for planting, painting, snacks, and community! More details + RSVP link coming your way by email.</li>
+      <li>🏫 <strong>School starts Monday, August 17</strong> — August tuition is due August 10. Visit your billing page: <a href="https://www.sagefield.co/parent/billing" style="color: #2C5F2E;">sagefield.co/parent/billing</a></li>
+    </ul>
+  </div>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">🎁 Referral Program</h2>
+  <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px; font-size: 14px; color: #2c2c2c;">
+    <p style="margin: 0 0 12px 0;">We're excited to share our <strong>referral program</strong> — and we'd love your help spreading the word about Sage Field!</p>
+    <p style="margin: 0 0 12px 0;">When a family you refer <strong>enrolls in our upcoming school program and pays their registration fee</strong>, you'll receive a <strong>$500 gift card of your choice</strong>. 🎉</p>
+    <p style="margin: 0 0 16px 0;">Simply share your unique referral link — you can find it on your home dashboard. If sharing the link isn't convenient, you can also just let the family know to <strong>mention your name when they apply</strong> and it will still count toward your referral.</p>
+    <p style="margin: 0; color: #888; font-size: 13px;">⏳ This offer is available through the end of our summer program.</p>
+  </div>
+
+  <h2 style="font-size: 17px; color: #b45309; margin-top: 32px; margin-bottom: 14px;">🌟 Share Your Story</h2>
+  <div style="background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px; font-size: 14px; color: #2c2c2c;">
+    <p style="margin: 0 0 12px 0;">Has Sage Field made a difference for your family? We'd love to hear about it — and so would other families looking for the right fit for their child.</p>
+    <p style="margin: 0 0 12px 0;">As a thank-you for sharing your experience, we'll send you a <strong>$15 Starbucks gift card ☕</strong>. It only takes a few minutes and means the world to us.</p>
+    <div style="text-align: center; margin-top: 16px;">
+      <a href="https://sagefield.co/testimonial" style="background: #d97706; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-family: Georgia, serif; font-size: 15px; display: inline-block;">Share a Testimonial →</a>
+    </div>
+  </div>
+
+  <p style="margin-bottom: 8px; font-size: 14px; color: #555;">We are so thankful for each of your families and for the beautiful community we are building together. 🌱</p>
+
+  <p style="margin-top: 32px; margin-bottom: 4px;">Warmly,</p>
+  <p style="margin-top: 4px;"><strong>Sage Field School</strong></p>
+
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
 export async function buildMeetTheTeacherJoyEmail(opts: {
   parentName: string;
 }): Promise<{ subject: string; content: string }> {
@@ -4346,6 +4426,90 @@ export async function buildSchoolYearTuitionClarificationEmail(opts: {
   </div>
 
   <p style="margin-bottom: 24px; font-size: 14px; color: #555;">If you have any questions about your specific tuition or billing, please don't hesitate to reach out. We are happy to help!</p>
+
+  <p style="margin-top: 32px;">With warmth,</p>
+  <p style="margin-top: 4px;">
+    <strong>Sabrina</strong><br />
+    Sage Field School<br />
+    <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> · <a href="tel:5126775872" style="color: #5a7a5a;">(512) 677-5872</a>
+  </p>
+
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
+export async function buildHomeschoolDropInClarificationEmail(opts: {
+  g1FullName?: string;
+  childLegalName?: string;
+  email: string;
+}): Promise<{ subject: string; content: string }> {
+  const firstName = opts.g1FullName?.split(" ")[0] || "there";
+
+  const subject = `A Follow-Up on Your Homeschool Drop-In Info — 2026–2027`;
+
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+
+  <p style="margin-bottom: 12px;">Hi ${firstName}!</p>
+
+  <p style="margin-bottom: 16px;">
+    We wanted to follow up on the homeschool drop-in information we shared recently to make sure everything is crystal clear.
+    Pricing for the 2026–2027 school year varies by grade level and the number of days per week you select, and we want to make sure you have the full picture.
+  </p>
+
+  <!-- Pricing Table -->
+  <p style="margin-bottom: 10px; font-weight: bold; color: #2C5F2E; font-size: 16px;">Monthly Drop-In Pricing by Schedule</p>
+  <table style="width: 100%; border-collapse: collapse; margin-bottom: 28px; font-size: 14px;">
+    <thead>
+      <tr style="background: #f7f4f0;">
+        <th style="text-align: left; padding: 10px 14px; border: 1px solid #d8d0c8; font-weight: bold;">Schedule</th>
+        <th style="text-align: right; padding: 10px 14px; border: 1px solid #d8d0c8; font-weight: bold;">Primary (PreK–1st)</th>
+        <th style="text-align: right; padding: 10px 14px; border: 1px solid #d8d0c8; font-weight: bold;">Upper (2nd–4th)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8;">1 day/week</td>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">$480 / month</td>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">$440 / month</td>
+      </tr>
+      <tr style="background: #fafaf8;">
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8;">2 days/week</td>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">$560 / month</td>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">$520 / month</td>
+      </tr>
+      <tr>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8;">3 days/week</td>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">$780 / month</td>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">$720 / month</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p style="margin-bottom: 10px; font-weight: bold; color: #2C5F2E; font-size: 16px;">How It Works</p>
+  <ul style="margin: 0 0 24px 0; padding-left: 20px; font-size: 15px;">
+    <li style="margin-bottom: 8px;"><strong>Month-by-month billing</strong> — pay only for the months you enroll.</li>
+    <li style="margin-bottom: 8px;"><strong>Choose your days each month</strong> — select which days work best for your family from our available schedule (Monday–Thursday).</li>
+    <li style="margin-bottom: 8px;"><strong>Supply fee</strong> — a one-time <strong>$300 annual supply fee</strong> must be paid before your first drop-in day. This covers all classroom consumables so your child is fully equipped from day one.</li>
+  </ul>
+
+  <!-- Portal CTA -->
+  <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 10px; padding: 24px; margin: 0 0 28px 0; text-align: center;">
+    <p style="margin: 0 0 6px 0; font-size: 15px; color: #2c2c2c; font-weight: bold;">Ready to enroll? Your parent billing portal has everything you need.</p>
+    <p style="margin: 0 0 16px 0; font-size: 14px; color: #555;">Go to the <strong>Billing</strong> page → <strong>"School Year"</strong> tab → <strong>"Homeschool Drop-In"</strong> to select your schedule and get started.</p>
+    <a href="https://sagefield.co/parent/billing"
+       style="display: inline-block; background: #2C5F2E; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-size: 15px; font-weight: bold; letter-spacing: 0.3px;">
+      Open Parent Billing Portal →
+    </a>
+  </div>
+
+  <p style="margin-bottom: 24px; font-size: 14px; color: #555;">If you have any questions about homeschool drop-in pricing or scheduling, please don't hesitate to reach out. We are happy to help!</p>
 
   <p style="margin-top: 32px;">With warmth,</p>
   <p style="margin-top: 4px;">

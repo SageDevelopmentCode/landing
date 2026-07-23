@@ -5124,7 +5124,8 @@ function RevenueTab({
   const visibleTx = transactions.filter(
     (tx) =>
       !tx.exclude_from_revenue &&
-      (tx.metadata as Record<string, string> | null)?.is_sibling_split !== "true",
+      (tx.metadata as Record<string, string> | null)?.is_sibling_split !== "true" &&
+      (tx.metadata as Record<string, string> | null)?.bundled_with_supply_fee !== "true",
   );
 
   const byMonth = visibleTx.reduce<Record<string, StripeTransaction[]>>(

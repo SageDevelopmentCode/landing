@@ -39,6 +39,7 @@ import { sendSummerWeekFourNewsletterEmail } from '../../actions/sendSummerWeekF
 import { sendSummerWeekFiveNewsletterEmail } from '../../actions/sendSummerWeekFiveNewsletterEmail'
 import { sendSummerWeekSixNewsletterEmail } from '../../actions/sendSummerWeekSixNewsletterEmail'
 import { sendSummerWeekSevenNewsletterEmail } from '../../actions/sendSummerWeekSevenNewsletterEmail'
+import { sendSummerWeekEightNewsletterEmail } from '../../actions/sendSummerWeekEightNewsletterEmail'
 import { sendSchoolYearCommitmentEmail } from '../../actions/sendSchoolYearCommitmentEmail'
 import { sendFreeFridayAnnouncementEmail } from '../../actions/sendFreeFridayAnnouncementEmail'
 import { sendGoogleReviewIncentiveEmail } from '../../actions/sendGoogleReviewIncentiveEmail'
@@ -48,6 +49,7 @@ import { sendFunFridayConfirmationEmail } from '../../actions/sendFunFridayConfi
 import { sendSummerTuitionConfirmationEmail } from '../../actions/sendSummerTuitionConfirmationEmail'
 import { sendSchoolYearTuitionInfoEmail } from '../../actions/sendSchoolYearTuitionInfoEmail'
 import { sendSchoolYearTuitionClarificationEmail } from '../../actions/sendSchoolYearTuitionClarificationEmail'
+import { sendHomeschoolDropInClarificationEmail } from '../../actions/sendHomeschoolDropInClarificationEmail'
 import { enrollApplication } from '../../actions/enrollApplication'
 import { PaymentHistory } from './PaymentHistory'
 import { updateApplicationProgram } from '../../actions/updateApplicationProgram'
@@ -254,6 +256,9 @@ export function ApplicationDetailSidebar({
   const [weekSevenNewsletterSending, setWeekSevenNewsletterSending] = useState(false)
   const [weekSevenNewsletterSent, setWeekSevenNewsletterSent] = useState(false)
   const [weekSevenNewsletterError, setWeekSevenNewsletterError] = useState<string | null>(null)
+  const [weekEightNewsletterSending, setWeekEightNewsletterSending] = useState(false)
+  const [weekEightNewsletterSent, setWeekEightNewsletterSent] = useState(false)
+  const [weekEightNewsletterError, setWeekEightNewsletterError] = useState<string | null>(null)
   const [freeFridaySending, setFreeFridaySending] = useState(false)
   const [freeFridaySent, setFreeFridaySent] = useState(false)
   const [freeFridayError, setFreeFridayError] = useState<string | null>(null)
@@ -281,6 +286,9 @@ export function ApplicationDetailSidebar({
   const [schoolYearTuitionClarificationSending, setSchoolYearTuitionClarificationSending] = useState(false)
   const [schoolYearTuitionClarificationSent, setSchoolYearTuitionClarificationSent] = useState(false)
   const [schoolYearTuitionClarificationError, setSchoolYearTuitionClarificationError] = useState<string | null>(null)
+  const [homeschoolDropInClarificationSending, setHomeschoolDropInClarificationSending] = useState(false)
+  const [homeschoolDropInClarificationSent, setHomeschoolDropInClarificationSent] = useState(false)
+  const [homeschoolDropInClarificationError, setHomeschoolDropInClarificationError] = useState<string | null>(null)
   const [tagInput, setTagInput] = useState('')
   const [tagSaving, setTagSaving] = useState(false)
   const [tagError, setTagError] = useState<string | null>(null)
@@ -1009,6 +1017,24 @@ export function ApplicationDetailSidebar({
     }
   }
 
+  const handleSendHomeschoolDropInClarification = async () => {
+    if (homeschoolDropInClarificationSending || !application.g1_email) return
+    setHomeschoolDropInClarificationSending(true)
+    setHomeschoolDropInClarificationError(null)
+    const result = await sendHomeschoolDropInClarificationEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+    })
+    setHomeschoolDropInClarificationSending(false)
+    if (result.success) {
+      setHomeschoolDropInClarificationSent(true)
+      setEmailThreadKey(k => k + 1)
+    } else {
+      setHomeschoolDropInClarificationError(result.error ?? 'Failed to send')
+    }
+  }
+
   const handleSendSchoolYearTuitionClarification = async () => {
     if (schoolYearTuitionClarificationSending || !application.g1_email) return
     setSchoolYearTuitionClarificationSending(true)
@@ -1157,6 +1183,25 @@ export function ApplicationDetailSidebar({
       setTimeout(() => setWeekSevenNewsletterSent(false), 3000)
     } else {
       setWeekSevenNewsletterError(result.error ?? 'Failed to send')
+    }
+  }
+
+  const handleSendWeekEightNewsletter = async () => {
+    if (weekEightNewsletterSending || !application.g1_email) return
+    setWeekEightNewsletterSending(true)
+    setWeekEightNewsletterError(null)
+    const result = await sendSummerWeekEightNewsletterEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+    })
+    setWeekEightNewsletterSending(false)
+    if (result.success) {
+      setWeekEightNewsletterSent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setWeekEightNewsletterSent(false), 3000)
+    } else {
+      setWeekEightNewsletterError(result.error ?? 'Failed to send')
     }
   }
 
@@ -1729,7 +1774,7 @@ export function ApplicationDetailSidebar({
                   </button>
                   {openHouseError && <span className="text-xs text-red-600">{openHouseError}</span>}
                 </div>
-                {application.program === 'homeschool_drop_in' && (
+                {application.program === 'homeschool_drop_in' && (<>
                   <div className="flex items-center gap-3">
                     <button
                       onClick={handleSendDropInConfirmation}
@@ -1741,7 +1786,18 @@ export function ApplicationDetailSidebar({
                     </button>
                     {dropInConfirmError && <span className="text-xs text-red-600">{dropInConfirmError}</span>}
                   </div>
-                )}
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleSendHomeschoolDropInClarification}
+                      disabled={homeschoolDropInClarificationSending || homeschoolDropInClarificationSent}
+                      className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                    >
+                      {homeschoolDropInClarificationSending ? 'Sending…' : homeschoolDropInClarificationSent ? '✓ Sent!' : 'Send Drop-In Clarification'}
+                    </button>
+                    {homeschoolDropInClarificationError && <span className="text-xs text-red-600">{homeschoolDropInClarificationError}</span>}
+                  </div>
+                </>)}
               </>}
 
               {outreachTab === 'summer' && <>
@@ -1925,6 +1981,17 @@ export function ApplicationDetailSidebar({
                     {weekSevenNewsletterSending ? 'Sending…' : weekSevenNewsletterSent ? '✓ Sent!' : 'Send Week Seven Newsletter'}
                   </button>
                   {weekSevenNewsletterError && <span className="text-xs text-red-600">{weekSevenNewsletterError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendWeekEightNewsletter}
+                    disabled={weekEightNewsletterSending || weekEightNewsletterSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {weekEightNewsletterSending ? 'Sending…' : weekEightNewsletterSent ? '✓ Sent!' : 'Send Week Eight Newsletter'}
+                  </button>
+                  {weekEightNewsletterError && <span className="text-xs text-red-600">{weekEightNewsletterError}</span>}
                 </div>
               </>}
 
