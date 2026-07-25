@@ -7903,6 +7903,16 @@ function PendingPaymentsSection({
                 />
               ))}
 
+              {/* Tuition code */}
+              <div className="col-span-1 sm:col-span-2 flex mt-1">
+                <button
+                  onClick={onTuitionCodeClick}
+                  className="text-sm font-body text-gray-400 hover:text-gray-500 transition-colors cursor-pointer"
+                >
+                  Have a tuition code?
+                </button>
+              </div>
+
               {/* Total bar */}
               {(hasSchoolYearContent ? summerTotalCents : totalCents) > 0 && (
                 <div
