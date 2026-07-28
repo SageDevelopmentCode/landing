@@ -14,6 +14,7 @@ import {
   Sparkles,
   Tag,
   Lock,
+  Info,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -8927,6 +8928,7 @@ export default function BillingPage({
   const [commitCoverFees, setCommitCoverFees] = useState(false);
   const [commitLoading, setCommitLoading] = useState(false);
   const [commitError, setCommitError] = useState<string | null>(null);
+  const [tuitionBannerDismissed, setTuitionBannerDismissed] = useState(false);
 
   const hasPaidAny = transactions.some(
     (tx) => tx.status === "completed" && tx.payment_type !== "registration_fee",
@@ -9166,6 +9168,23 @@ export default function BillingPage({
           )}
         </div>
         <div className="flex-1 overflow-y-auto">
+          {!tuitionBannerDismissed && (
+            <div className="max-w-5xl mx-auto px-6 pt-6">
+              <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                <Info size={16} className="text-amber-500 shrink-0" />
+                <p className="flex-1 text-sm font-semibold text-amber-800">
+                  August tuition is due <span className="font-bold">August 10</span> — one week before school starts.
+                </p>
+                <button
+                  onClick={() => setTuitionBannerDismissed(true)}
+                  className="text-amber-400 hover:text-amber-600 transition-colors"
+                  aria-label="Dismiss"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+          )}
           <div className="max-w-5xl mx-auto px-6 py-10 space-y-8">
             <div>
               <h1 className="text-3xl font-bold font-heading text-gray-800 mb-2">
