@@ -324,25 +324,32 @@ export default function PayPage() {
                 </p>
               )}
 
-              <label className="flex items-start gap-3 cursor-pointer">
-                <div
-                  className={`w-5 h-5 shrink-0 rounded border-2 mt-0.5 flex items-center justify-center transition-colors ${
-                    coverFees ? "bg-primary border-primary" : "border-gray-300 bg-white"
+              <div className="my-4">
+                <label
+                  className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-colors ${
+                    coverFees
+                      ? "border-primary bg-primary/5"
+                      : "border-gray-200 bg-white hover:bg-gray-50"
                   }`}
-                  onClick={() => setCoverFees((v) => !v)}
                 >
-                  {coverFees && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
-                </div>
-                <input
-                  type="checkbox"
-                  checked={coverFees}
-                  onChange={(e) => setCoverFees(e.target.checked)}
-                  className="sr-only"
-                />
-                <span className="text-sm text-gray-600 font-body leading-snug">
-                  I agree to pay the processing fee so Sage Field receives the full amount
-                </span>
-              </label>
+                  <div
+                    className={`w-5 h-5 shrink-0 rounded border-2 flex items-center justify-center transition-colors ${
+                      coverFees ? "bg-primary border-primary" : "border-gray-300 bg-white"
+                    }`}
+                  >
+                    {coverFees && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={coverFees}
+                    onChange={(e) => setCoverFees(e.target.checked)}
+                    className="sr-only"
+                  />
+                  <span className="text-sm text-gray-600 font-body leading-snug">
+                    I agree to pay the processing fee so Sage Field receives the full amount
+                  </span>
+                </label>
+              </div>
             </div>
 
             {/* Submit */}
