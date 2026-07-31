@@ -67,11 +67,16 @@ function formatCents(cents: number): string {
 }
 
 function stripeUrl(tx: { stripe_payment_intent_id: string | null; stripe_session_id: string | null }): string | null {
+  if (tx.stripe_session_id?.startsWith('check_')) return null
   const isTest = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.startsWith('pk_test_')
   const base = `https://dashboard.stripe.com${isTest ? '/test' : ''}`
   if (tx.stripe_payment_intent_id) return `${base}/payments/${tx.stripe_payment_intent_id}`
   if (tx.stripe_session_id) return `${base}/checkout/sessions/${tx.stripe_session_id}`
   return null
+}
+
+function isManualCheckPayment(tx: { stripe_session_id: string | null }): boolean {
+  return tx.stripe_session_id?.startsWith('check_') ?? false
 }
 
 function isPaid(status: string): boolean {
@@ -593,19 +598,36 @@ export function SchoolYearPaymentsClient({ transactions, studentMap, gradeMap, p
 
                       {/* Type badge */}
                       <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
-                        <span
-                          style={{
-                            display: 'inline-block',
-                            padding: '3px 10px',
-                            borderRadius: 999,
-                            fontSize: 12,
-                            fontWeight: 600,
-                            backgroundColor: badge.bg,
-                            color: badge.text,
-                          }}
-                        >
-                          {badge.label}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span
+                            style={{
+                              display: 'inline-block',
+                              padding: '3px 10px',
+                              borderRadius: 999,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              backgroundColor: badge.bg,
+                              color: badge.text,
+                            }}
+                          >
+                            {badge.label}
+                          </span>
+                          {isManualCheckPayment(tx) && (
+                            <span
+                              style={{
+                                display: 'inline-block',
+                                padding: '2px 8px',
+                                borderRadius: 999,
+                                fontSize: 11,
+                                fontWeight: 600,
+                                backgroundColor: '#FEF3C7',
+                                color: '#92400E',
+                              }}
+                            >
+                              Check
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Details */}

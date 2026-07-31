@@ -17,7 +17,7 @@ export type EnrolledStudentOption = {
 
 export type StudentProgram = {
   applicationId: string
-  paymentType: 'summer_tuition' | 'aftercare_tuition' | 'fun_friday_tuition' | 'homeschool_dropin'
+  paymentType: 'summer_tuition' | 'aftercare_tuition' | 'fun_friday_tuition' | 'homeschool_dropin' | 'school_year'
   programLabel: string
   program: string
   dropInProgram: string | null
@@ -31,6 +31,8 @@ export type ExistingPayments = {
   paidFunFridayMonths: string[]
   paidFridays: string[]
   paidHomeschoolWeekDays: Record<number, string[]>
+  paidSupplyFee: boolean
+  paidSchoolYearMonths: number[]
 }
 
 export default async function ManualPaymentsPage() {
@@ -64,7 +66,7 @@ export default async function ManualPaymentsPage() {
           .in('student_id', studentIds)
           .eq('status', 'completed')
           .eq('is_deleted', false)
-          .in('payment_type', ['summer_tuition', 'aftercare_tuition', 'fun_friday_tuition', 'homeschool_dropin'])
+          .in('payment_type', ['summer_tuition', 'aftercare_tuition', 'fun_friday_tuition', 'homeschool_dropin', 'supply_fee', 'school_year_tuition'])
       : Promise.resolve({ data: [] }),
   ])
 
@@ -109,6 +111,16 @@ export default async function ManualPaymentsPage() {
         paymentType: 'summer_tuition',
         programLabel: 'Summer 2026',
         program: prog,
+        dropInProgram: null,
+        childGrade: app.child_grade ?? null,
+      })
+    }
+    if (prog === 'school_year_26_27' || prog === 'both') {
+      programsToAdd.push({
+        applicationId: app.id,
+        paymentType: 'school_year',
+        programLabel: 'School Year 26–27',
+        program: 'school_year_26_27',
         dropInProgram: null,
         childGrade: app.child_grade ?? null,
       })
@@ -181,6 +193,8 @@ export default async function ManualPaymentsPage() {
         paidFunFridayMonths: [],
         paidFridays: [],
         paidHomeschoolWeekDays: {},
+        paidSupplyFee: false,
+        paidSchoolYearMonths: [],
       }
     }
     return existingPaymentsByStudent[sid]
@@ -231,6 +245,15 @@ export default async function ManualPaymentsPage() {
           entry.paidHomeschoolWeekDays[w] = [...new Set([...existing, ...days])]
         }
       }
+    }
+
+    if (tx.payment_type === 'supply_fee') {
+      entry.paidSupplyFee = true
+    }
+
+    if (tx.payment_type === 'school_year_tuition') {
+      const months = (meta.selected_months ?? '').split(',').map(Number).filter(Boolean)
+      entry.paidSchoolYearMonths = [...new Set([...entry.paidSchoolYearMonths, ...months])]
     }
   }
 

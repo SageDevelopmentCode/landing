@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useTransition, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { Search, Check, ChevronDown, CheckCircle2, Loader2 } from 'lucide-react'
-import { createManualPayment } from '@/app/actions/createManualPayment'
+import { createManualPayment, createManualSchoolYearPayment } from '@/app/actions/createManualPayment'
 import { cssColors as colors, radius, cssShadows as shadows } from '../design-system'
 import type { EnrolledStudentOption, ExistingPayments, StudentProgram } from './page'
 
@@ -125,7 +126,37 @@ const WEEKDAYS = [
   { key: 'thu', label: 'Thu' },
 ]
 
+const SCHOOL_YEAR_MONTHS = [
+  { index: 1, label: 'August 2026', short: 'Aug' },
+  { index: 2, label: 'September 2026', short: 'Sep' },
+  { index: 3, label: 'October 2026', short: 'Oct' },
+  { index: 4, label: 'November 2026', short: 'Nov' },
+  { index: 5, label: 'December 2026', short: 'Dec' },
+  { index: 6, label: 'January 2027', short: 'Jan' },
+  { index: 7, label: 'February 2027', short: 'Feb' },
+  { index: 8, label: 'March 2027', short: 'Mar' },
+  { index: 9, label: 'April 2027', short: 'Apr' },
+  { index: 10, label: 'May 2027', short: 'May' },
+]
+
+const SUPPLY_FEE_CENTS = 30000
+const PRIMARY_TUITION_CENTS = 119500
+const UPPER_TUITION_CENTS = 109500
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+function getGradeTier(grade: string | null): 'primary' | 'upper' {
+  if (!grade) return 'upper'
+  const g = grade.toLowerCase().trim()
+  if (['pre-k', 'prek', 'pre k', 'kindergarten', 'k', '1st', '1', '1st grade'].includes(g)) {
+    return 'primary'
+  }
+  return 'upper'
+}
+
+function formatCents(cents: number): string {
+  return (cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' })
+}
 
 function getInitials(name: string): string {
   return name.trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase()
@@ -534,6 +565,140 @@ function HomeschoolPicker({
   )
 }
 
+// ── School Year Picker ────────────────────────────────────────────────────────
+
+function SchoolYearPicker({
+  paidSupplyFee,
+  paidMonths,
+  includeSupplyFee,
+  selectedMonths,
+  gradeTier,
+  onToggleSupplyFee,
+  onToggleMonth,
+}: {
+  paidSupplyFee: boolean
+  paidMonths: number[]
+  includeSupplyFee: boolean
+  selectedMonths: Set<number>
+  gradeTier: 'primary' | 'upper'
+  onToggleSupplyFee: () => void
+  onToggleMonth: (index: number) => void
+}) {
+  const paidMonthSet = new Set(paidMonths)
+  const tuitionRate = gradeTier === 'primary' ? PRIMARY_TUITION_CENTS : UPPER_TUITION_CENTS
+  const unpaidMonths = SCHOOL_YEAR_MONTHS.filter((m) => !paidMonthSet.has(m.index))
+  const allUnpaidSelected = unpaidMonths.length > 0 && unpaidMonths.every((m) => selectedMonths.has(m.index))
+
+  function toggleAllMonths() {
+    if (allUnpaidSelected) {
+      unpaidMonths.forEach((m) => selectedMonths.has(m.index) && onToggleMonth(m.index))
+    } else {
+      unpaidMonths.forEach((m) => !selectedMonths.has(m.index) && onToggleMonth(m.index))
+    }
+  }
+
+  const supplyPart = includeSupplyFee && !paidSupplyFee ? SUPPLY_FEE_CENTS : 0
+  const tuitionPart = tuitionRate * selectedMonths.size
+  const totalCents = supplyPart + tuitionPart
+
+  return (
+    <div className="space-y-5">
+      {/* Supply fee */}
+      <div>
+        <span className="text-xs font-medium block mb-2" style={{ color: colors.textTertiary }}>
+          Supply Fee ({formatCents(SUPPLY_FEE_CENTS)})
+        </span>
+        <div
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
+          style={{
+            border: `1px solid ${colors.border}`,
+            backgroundColor: paidSupplyFee ? colors.pastelSage : colors.surface,
+            opacity: paidSupplyFee ? 0.8 : 1,
+          }}
+        >
+          {paidSupplyFee ? (
+            <>
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: colors.mistyForest }} />
+              <span className="text-sm" style={{ color: colors.mistyForest }}>Supply fee paid</span>
+              <PaidChip />
+            </>
+          ) : (
+            <>
+              <Checkbox checked={includeSupplyFee} onChange={onToggleSupplyFee} />
+              <span className="text-sm" style={{ color: colors.textPrimary }}>Mark supply fee as paid</span>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Tuition months */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-medium" style={{ color: colors.textTertiary }}>
+            Tuition months ({formatCents(tuitionRate)}/mo)
+          </span>
+          {unpaidMonths.length > 0 && (
+            <button
+              type="button"
+              onClick={toggleAllMonths}
+              className="text-xs px-2 py-1 rounded-lg transition-colors"
+              style={{ color: colors.accent, border: `1px solid ${colors.accent}40` }}
+            >
+              {allUnpaidSelected ? 'Deselect all' : 'Select all unpaid'}
+            </button>
+          )}
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {SCHOOL_YEAR_MONTHS.map((m) => {
+            const isPaid = paidMonthSet.has(m.index)
+            const isSelected = selectedMonths.has(m.index)
+            return (
+              <div
+                key={m.index}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl"
+                style={{
+                  border: `1px solid ${isPaid ? colors.mistyForest + '40' : isSelected ? colors.accent + '40' : colors.border}`,
+                  backgroundColor: isPaid ? colors.pastelSage : isSelected ? colors.accentLight : colors.surface,
+                  opacity: isPaid ? 0.8 : 1,
+                }}
+              >
+                {isPaid ? (
+                  <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: colors.mistyForest }} />
+                ) : (
+                  <Checkbox checked={isSelected} onChange={() => onToggleMonth(m.index)} />
+                )}
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm block" style={{ color: isPaid ? colors.mistyForest : colors.textPrimary }}>
+                    {m.short}
+                  </span>
+                  <span className="text-xs" style={{ color: colors.textTertiary }}>{m.label}</span>
+                </div>
+                {isPaid && <PaidChip />}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {totalCents > 0 && (
+        <div
+          className="px-4 py-3 rounded-xl text-sm"
+          style={{ backgroundColor: colors.elevated, border: `1px solid ${colors.border}` }}
+        >
+          <span className="font-semibold" style={{ color: colors.textPrimary }}>
+            Total: {formatCents(totalCents)}
+          </span>
+          <div className="text-xs mt-1" style={{ color: colors.textTertiary }}>
+            {includeSupplyFee && !paidSupplyFee && `Supply fee ${formatCents(SUPPLY_FEE_CENTS)}`}
+            {includeSupplyFee && !paidSupplyFee && selectedMonths.size > 0 && ' + '}
+            {selectedMonths.size > 0 && `${selectedMonths.size} month${selectedMonths.size > 1 ? 's' : ''} ${formatCents(tuitionPart)}`}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Main Component ────────────────────────────────────────────────────────────
 
 interface Props {
@@ -541,9 +706,10 @@ interface Props {
   existingPaymentsByStudent: Record<string, ExistingPayments>
 }
 
-type PaymentTypeKey = 'summer_tuition' | 'aftercare_tuition' | 'fun_friday_tuition' | 'homeschool_dropin'
+type PaymentTypeKey = 'summer_tuition' | 'aftercare_tuition' | 'fun_friday_tuition' | 'homeschool_dropin' | 'school_year'
 
 export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStudent }: Props) {
+  const router = useRouter()
   const [search, setSearch] = useState('')
   const [showDropdown, setShowDropdown] = useState(false)
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
@@ -562,6 +728,10 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
 
   // Homeschool state
   const [selectedWeekDays, setSelectedWeekDays] = useState<Record<number, Set<string>>>({})
+
+  // School year state
+  const [includeSupplyFee, setIncludeSupplyFee] = useState(false)
+  const [selectedSchoolYearMonths, setSelectedSchoolYearMonths] = useState<Set<number>>(new Set())
 
   // Form state
   const [amountDollars, setAmountDollars] = useState('')
@@ -583,6 +753,8 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
         paidFunFridayMonths: [],
         paidFridays: [],
         paidHomeschoolWeekDays: {},
+        paidSupplyFee: false,
+        paidSchoolYearMonths: [],
       })
     : {
         paidWeeks: [],
@@ -591,6 +763,8 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
         paidFunFridayMonths: [],
         paidFridays: [],
         paidHomeschoolWeekDays: {},
+        paidSupplyFee: false,
+        paidSchoolYearMonths: [],
       }
 
   const filteredStudents = useMemo(() => {
@@ -613,6 +787,8 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
     setSelectedFunFridayMonths(new Set())
     setSelectedFridays(new Set())
     setSelectedWeekDays({})
+    setIncludeSupplyFee(false)
+    setSelectedSchoolYearMonths(new Set())
     setSuccessMsg('')
     setErrorMsg('')
     // Default to first available program
@@ -627,6 +803,8 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
     setSelectedFunFridayMonths(new Set())
     setSelectedFridays(new Set())
     setSelectedWeekDays({})
+    setIncludeSupplyFee(false)
+    setSelectedSchoolYearMonths(new Set())
     setAmountDollars('')
     setNotes('')
   }
@@ -704,6 +882,21 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
     })
   }
 
+  function toggleSchoolYearMonth(index: number) {
+    setSelectedSchoolYearMonths((prev) => {
+      const next = new Set(prev)
+      next.has(index) ? next.delete(index) : next.add(index)
+      return next
+    })
+  }
+
+  const schoolYearProgram = useMemo(
+    () => selectedStudent?.programs.find((p) => p.paymentType === 'school_year') ?? null,
+    [selectedStudent]
+  )
+
+  const schoolYearGradeTier = getGradeTier(schoolYearProgram?.childGrade ?? null)
+
   function buildMetadata(program: StudentProgram): Record<string, string> | null {
     if (activeProgram === 'summer_tuition') {
       if (selectedWeeks.size === 0) return null
@@ -755,11 +948,50 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
     if (activeProgram === 'aftercare_tuition') return selectedAftercareMonths.size > 0 || selectedAftercareDays.size > 0
     if (activeProgram === 'fun_friday_tuition') return selectedFunFridayMonths.size > 0 || selectedFridays.size > 0
     if (activeProgram === 'homeschool_dropin') return Object.values(selectedWeekDays).some((s) => s.size > 0)
+    if (activeProgram === 'school_year') {
+      const supplySelected = includeSupplyFee && !existingPayments.paidSupplyFee
+      return supplySelected || selectedSchoolYearMonths.size > 0
+    }
     return false
   }
 
   function handleSubmit() {
     if (!selectedStudent) return
+
+    if (activeProgram === 'school_year') {
+      if (!schoolYearProgram) return
+      if (!hasAnySelection()) {
+        setErrorMsg('Please select supply fee and/or at least one tuition month to mark as paid.')
+        return
+      }
+
+      setErrorMsg('')
+      startTransition(async () => {
+        const result = await createManualSchoolYearPayment({
+          studentId: selectedStudent.studentId,
+          parentId: selectedStudent.parentId,
+          applicationId: schoolYearProgram.applicationId || undefined,
+          includeSupplyFee,
+          tuitionMonthIndices: Array.from(selectedSchoolYearMonths).sort((a, b) => a - b),
+          gradeTier: schoolYearGradeTier,
+          notes,
+        })
+
+        if (result.success) {
+          setSuccessMsg(
+            result.createdCount && result.createdCount > 1
+              ? `${result.createdCount} payments recorded successfully.`
+              : 'Payment recorded successfully.'
+          )
+          resetSelections()
+          router.refresh()
+        } else {
+          setErrorMsg(result.error ?? 'Failed to record payment.')
+        }
+      })
+      return
+    }
+
     const program = selectedStudent.programs.find((p) => p.paymentType === activeProgram)
     if (!program) return
 
@@ -785,6 +1017,7 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
       if (result.success) {
         setSuccessMsg('Payment recorded successfully.')
         resetSelections()
+        router.refresh()
       } else {
         setErrorMsg(result.error ?? 'Failed to record payment.')
       }
@@ -964,10 +1197,22 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
                 onToggleDay={toggleHomeschoolDay}
               />
             )}
+            {activeProgram === 'school_year' && (
+              <SchoolYearPicker
+                paidSupplyFee={existingPayments.paidSupplyFee}
+                paidMonths={existingPayments.paidSchoolYearMonths}
+                includeSupplyFee={includeSupplyFee}
+                selectedMonths={selectedSchoolYearMonths}
+                gradeTier={schoolYearGradeTier}
+                onToggleSupplyFee={() => setIncludeSupplyFee((v) => !v)}
+                onToggleMonth={toggleSchoolYearMonth}
+              />
+            )}
           </div>
 
           {/* Amount + notes */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className={activeProgram === 'school_year' ? 'space-y-4' : 'grid grid-cols-2 gap-4'}>
+            {activeProgram !== 'school_year' && (
             <div>
               <label className="block text-sm font-semibold mb-1.5" style={{ color: colors.textPrimary }}>
                 Amount (optional)
@@ -989,7 +1234,8 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
                 />
               </div>
             </div>
-            <div>
+            )}
+            <div className={activeProgram === 'school_year' ? '' : ''}>
               <label className="block text-sm font-semibold mb-1.5" style={{ color: colors.textPrimary }}>
                 Notes / Check #
               </label>
