@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Poppins } from 'next/font/google'
 import { cssColors as colors, radius, cssShadows as shadows } from '../../design-system'
 import { Table, TableRow, TableCell } from '../../components/Table'
-import type { ParentFeedback } from './page'
+import type { ParentFeedback } from '../../marketing/page'
 
 const poppins = Poppins({ weight: ['300', '400', '700', '900'], subsets: ['latin'] })
 

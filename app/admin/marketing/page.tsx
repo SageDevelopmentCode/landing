@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/app/lib/supabase-server'
 import { MarketingClient } from './MarketingClient'
+import { updateReferralStatus } from './actions'
 import type { TourUnavailability } from '@/app/actions/tourUnavailability'
 
 export type OpenHouseRsvp = {
@@ -95,10 +96,71 @@ export type MeetMissJoyRsvp = {
   updated_at: string
 }
 
-export default async function MarketingPage() {
+export type AdminReferral = {
+  id: string
+  referrer_id: string
+  referred_email: string | null
+  referred_user_id: string | null
+  application_id: string | null
+  status: string
+  created_at: string
+  updated_at: string
+  referrer_name: string | null
+  referrer_email: string | null
+  referred_name: string | null
+}
+
+export type ParentFeedback = {
+  id: string
+  parent_id: string
+  parent_name: string | null
+  parent_email: string | null
+  rating: number
+  categories: string[]
+  message: string | null
+  allow_follow_up: boolean
+  created_at: string
+}
+
+const VALID_TABS = [
+  'open-house',
+  'tour-unavailability',
+  'shadow-day',
+  'referrals',
+  'parent-feedback',
+  'info-session',
+  'meet-miss-joy',
+  'info-session-faq',
+  'testimonials',
+  'emails',
+] as const
+
+export type MarketingTab = (typeof VALID_TABS)[number]
+
+export default async function MarketingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>
+}) {
+  const { tab } = await searchParams
+  const initialTab: MarketingTab = VALID_TABS.includes(tab as MarketingTab)
+    ? (tab as MarketingTab)
+    : 'open-house'
+
   const supabase = createAdminClient()
 
-  const [{ data: rsvps }, { data: tourUnavailability }, { data: tourBookings }, { data: enrolledApps }, { data: infoSessionRsvps }, { data: shadowDayBookings }, { data: testimonials }, { data: meetMissJoyRsvps }] = await Promise.all([
+  const [
+    { data: rsvps },
+    { data: tourUnavailability },
+    { data: tourBookings },
+    { data: enrolledApps },
+    { data: infoSessionRsvps },
+    { data: shadowDayBookings },
+    { data: testimonials },
+    { data: meetMissJoyRsvps },
+    { data: referrals },
+    { data: feedbackRows },
+  ] = await Promise.all([
     supabase
       .schema('marketing')
       .from('open_house_rsvps')
@@ -143,6 +205,28 @@ export default async function MarketingPage() {
       .select('*')
       .eq('is_deleted', false)
       .order('created_at', { ascending: false }),
+    supabase
+      .schema('parent_app')
+      .from('referrals')
+      .select('*')
+      .order('created_at', { ascending: false }),
+    supabase
+      .schema('admin')
+      .from('parent_feedback')
+      .select(`
+        id,
+        parent_id,
+        rating,
+        categories,
+        message,
+        allow_follow_up,
+        created_at,
+        users!parent_id (
+          full_name,
+          email
+        )
+      `)
+      .order('created_at', { ascending: false }),
   ])
 
   const enrolledEmailsArr: { email: string; status: string }[] = (enrolledApps ?? []).flatMap((app) => {
@@ -152,8 +236,58 @@ export default async function MarketingPage() {
     return entries
   })
 
+  const referralRows = referrals ?? []
+  const referrerIds = [...new Set(referralRows.map((r) => r.referrer_id).filter(Boolean))]
+  const referredIds = [...new Set(referralRows.map((r) => r.referred_user_id).filter(Boolean))]
+  const allIds = [...new Set([...referrerIds, ...referredIds])]
+
+  const { data: users } = allIds.length > 0
+    ? await supabase
+        .schema('admin')
+        .from('users')
+        .select('id, full_name, email')
+        .in('id', allIds)
+    : { data: [] }
+
+  const userMap: Record<string, { full_name: string | null; email: string | null }> = {}
+  for (const u of users ?? []) {
+    userMap[u.id] = { full_name: u.full_name, email: u.email }
+  }
+
+  const enrichedReferrals: AdminReferral[] = referralRows.map((r) => ({
+    ...r,
+    referrer_name: userMap[r.referrer_id]?.full_name ?? null,
+    referrer_email: userMap[r.referrer_id]?.email ?? null,
+    referred_name: r.referred_user_id ? (userMap[r.referred_user_id]?.full_name ?? null) : null,
+  }))
+
+  const feedback: ParentFeedback[] = (feedbackRows ?? []).map((row: {
+    id: string
+    parent_id: string
+    rating: number
+    categories: string[] | null
+    message: string | null
+    allow_follow_up: boolean
+    created_at: string
+    users: { full_name: string | null; email: string | null } | { full_name: string | null; email: string | null }[] | null
+  }) => {
+    const user = Array.isArray(row.users) ? row.users[0] : row.users
+    return {
+      id: row.id,
+      parent_id: row.parent_id,
+      parent_name: user?.full_name ?? null,
+      parent_email: user?.email ?? null,
+      rating: row.rating,
+      categories: row.categories ?? [],
+      message: row.message,
+      allow_follow_up: row.allow_follow_up,
+      created_at: row.created_at,
+    }
+  })
+
   return (
     <MarketingClient
+      initialTab={initialTab}
       rsvps={(rsvps as OpenHouseRsvp[]) ?? []}
       tourUnavailability={(tourUnavailability as TourUnavailability[]) ?? []}
       tourBookings={(tourBookings as TourBooking[]) ?? []}
@@ -162,6 +296,9 @@ export default async function MarketingPage() {
       shadowDayBookings={(shadowDayBookings as ShadowDayBooking[]) ?? []}
       testimonials={(testimonials as Testimonial[]) ?? []}
       meetMissJoyRsvps={(meetMissJoyRsvps as MeetMissJoyRsvp[]) ?? []}
+      referrals={enrichedReferrals}
+      feedback={feedback}
+      updateReferralStatus={updateReferralStatus}
     />
   )
 }

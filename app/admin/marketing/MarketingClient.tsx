@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Poppins } from 'next/font/google'
-import { cssColors as colors, radius, cssShadows as shadows, spacing } from '../design-system'
+import { cssColors as colors, radius, cssShadows as shadows } from '../design-system'
 import { OpenHouseTable } from './OpenHouseTable'
 import { TourUnavailabilityView } from './TourUnavailabilityView'
 import { InfoSessionTable } from './InfoSessionTable'
@@ -12,7 +13,19 @@ import { TestimonialsView } from './TestimonialsView'
 import { MeetMissJoyRSVPsView } from './MeetMissJoyRSVPsView'
 import { EmailDetailSidebar } from '../components/EmailDetailSidebar'
 import { Table, TableRow, TableCell } from '../components/Table'
-import type { OpenHouseRsvp, TourBooking, InfoSessionRsvp, ShadowDayBooking, Testimonial, MeetMissJoyRsvp } from './page'
+import { ReferralsClient } from '../referrals/ReferralsClient'
+import { FeedbackView } from '../parents/feedback/FeedbackView'
+import type {
+  OpenHouseRsvp,
+  TourBooking,
+  InfoSessionRsvp,
+  ShadowDayBooking,
+  Testimonial,
+  MeetMissJoyRsvp,
+  AdminReferral,
+  ParentFeedback,
+  MarketingTab,
+} from './page'
 import type { TourUnavailability } from '@/app/actions/tourUnavailability'
 
 type ZohoEmailContent = {
@@ -150,12 +163,12 @@ const merriweather = Poppins({
   subsets: ['latin'],
 })
 
-type SubMenuItem = 'open-house' | 'tour-unavailability' | 'info-session' | 'info-session-faq' | 'shadow-day' | 'emails' | 'testimonials' | 'meet-miss-joy'
-
-const subMenuItems: { id: SubMenuItem; label: string; sublabel: string }[] = [
+const subMenuItems: { id: MarketingTab; label: string; sublabel: string }[] = [
   { id: 'open-house', label: 'Open House', sublabel: 'April 25' },
   { id: 'tour-unavailability', label: 'Campus Tours', sublabel: 'Manage availability' },
-  { id: 'shadow-day', label: 'Shadow Day', sublabel: 'Bookings & payments' },
+  { id: 'shadow-day', label: 'Shadow Days', sublabel: 'Bookings & payments' },
+  { id: 'referrals', label: 'Referrals', sublabel: 'Referral program' },
+  { id: 'parent-feedback', label: 'Parent Feedback', sublabel: 'Parent submissions' },
   { id: 'info-session', label: 'Info Session', sublabel: 'April 18 RSVPs' },
   { id: 'meet-miss-joy', label: 'Meet Miss Joy', sublabel: 'July 13 RSVPs' },
   { id: 'info-session-faq', label: 'Session FAQ', sublabel: 'April 18 prep' },
@@ -164,6 +177,7 @@ const subMenuItems: { id: SubMenuItem; label: string; sublabel: string }[] = [
 ]
 
 export function MarketingClient({
+  initialTab,
   rsvps,
   tourUnavailability,
   tourBookings,
@@ -172,7 +186,11 @@ export function MarketingClient({
   shadowDayBookings,
   testimonials,
   meetMissJoyRsvps,
+  referrals,
+  feedback,
+  updateReferralStatus,
 }: {
+  initialTab: MarketingTab
   rsvps: OpenHouseRsvp[]
   tourUnavailability: TourUnavailability[]
   tourBookings: TourBooking[]
@@ -181,8 +199,21 @@ export function MarketingClient({
   shadowDayBookings: ShadowDayBooking[]
   testimonials: Testimonial[]
   meetMissJoyRsvps: MeetMissJoyRsvp[]
+  referrals: AdminReferral[]
+  feedback: ParentFeedback[]
+  updateReferralStatus: (id: string, status: string) => Promise<void>
 }) {
-  const [active, setActive] = useState<SubMenuItem>('open-house')
+  const router = useRouter()
+  const [active, setActive] = useState<MarketingTab>(initialTab)
+
+  useEffect(() => {
+    setActive(initialTab)
+  }, [initialTab])
+
+  function selectTab(tab: MarketingTab) {
+    setActive(tab)
+    router.replace(`/admin/marketing?tab=${tab}`, { scroll: false })
+  }
 
   return (
     <div
@@ -223,7 +254,7 @@ export function MarketingClient({
             return (
               <button
                 key={item.id}
-                onClick={() => setActive(item.id)}
+                onClick={() => selectTab(item.id)}
                 style={{
                   textAlign: 'left',
                   padding: '10px 12px',
@@ -293,6 +324,50 @@ export function MarketingClient({
 
         {active === 'shadow-day' && (
           <ShadowDayBookingsView bookings={shadowDayBookings} />
+        )}
+
+        {active === 'referrals' && (
+          <div>
+            <div style={{ marginBottom: '28px' }}>
+              <h1
+                className={merriweather.className}
+                style={{
+                  fontSize: '22px',
+                  fontWeight: 900,
+                  color: colors.textPrimary,
+                  marginBottom: '6px',
+                }}
+              >
+                Referrals
+              </h1>
+              <p style={{ fontSize: '13px', color: colors.textSecondary }}>
+                {referrals.length} total · {referrals.filter((r) => r.status === 'applied').length} pending review
+              </p>
+            </div>
+            <ReferralsClient referrals={referrals} updateReferralStatus={updateReferralStatus} />
+          </div>
+        )}
+
+        {active === 'parent-feedback' && (
+          <div>
+            <div style={{ marginBottom: '28px' }}>
+              <h1
+                className={merriweather.className}
+                style={{
+                  fontSize: '22px',
+                  fontWeight: 900,
+                  color: colors.textPrimary,
+                  marginBottom: '6px',
+                }}
+              >
+                Parent Feedback
+              </h1>
+              <p style={{ fontSize: '13px', color: colors.textSecondary }}>
+                {feedback.length} submission{feedback.length !== 1 ? 's' : ''}
+              </p>
+            </div>
+            <FeedbackView feedback={feedback} />
+          </div>
         )}
 
         {active === 'info-session' && (

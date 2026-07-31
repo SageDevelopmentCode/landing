@@ -49,6 +49,7 @@ import { sendFunFridayConfirmationEmail } from '../../actions/sendFunFridayConfi
 import { sendSummerTuitionConfirmationEmail } from '../../actions/sendSummerTuitionConfirmationEmail'
 import { sendSchoolYearTuitionInfoEmail } from '../../actions/sendSchoolYearTuitionInfoEmail'
 import { sendSchoolYearTuitionClarificationEmail } from '../../actions/sendSchoolYearTuitionClarificationEmail'
+import { sendSchoolYearTuitionReminderEmail } from '../../actions/sendSchoolYearTuitionReminderEmail'
 import { sendHomeschoolDropInClarificationEmail } from '../../actions/sendHomeschoolDropInClarificationEmail'
 import { enrollApplication } from '../../actions/enrollApplication'
 import { PaymentHistory } from './PaymentHistory'
@@ -286,6 +287,9 @@ export function ApplicationDetailSidebar({
   const [schoolYearTuitionClarificationSending, setSchoolYearTuitionClarificationSending] = useState(false)
   const [schoolYearTuitionClarificationSent, setSchoolYearTuitionClarificationSent] = useState(false)
   const [schoolYearTuitionClarificationError, setSchoolYearTuitionClarificationError] = useState<string | null>(null)
+  const [schoolYearTuitionReminderSending, setSchoolYearTuitionReminderSending] = useState(false)
+  const [schoolYearTuitionReminderSent, setSchoolYearTuitionReminderSent] = useState(false)
+  const [schoolYearTuitionReminderError, setSchoolYearTuitionReminderError] = useState<string | null>(null)
   const [homeschoolDropInClarificationSending, setHomeschoolDropInClarificationSending] = useState(false)
   const [homeschoolDropInClarificationSent, setHomeschoolDropInClarificationSent] = useState(false)
   const [homeschoolDropInClarificationError, setHomeschoolDropInClarificationError] = useState<string | null>(null)
@@ -1050,6 +1054,24 @@ export function ApplicationDetailSidebar({
       setEmailThreadKey(k => k + 1)
     } else {
       setSchoolYearTuitionClarificationError(result.error ?? 'Failed to send')
+    }
+  }
+
+  const handleSendSchoolYearTuitionReminder = async () => {
+    if (schoolYearTuitionReminderSending || !application.g1_email) return
+    setSchoolYearTuitionReminderSending(true)
+    setSchoolYearTuitionReminderError(null)
+    const result = await sendSchoolYearTuitionReminderEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+    })
+    setSchoolYearTuitionReminderSending(false)
+    if (result.success) {
+      setSchoolYearTuitionReminderSent(true)
+      setEmailThreadKey(k => k + 1)
+    } else {
+      setSchoolYearTuitionReminderError(result.error ?? 'Failed to send')
     }
   }
 
@@ -2072,6 +2094,17 @@ export function ApplicationDetailSidebar({
                     {schoolYearTuitionClarificationSending ? 'Sending…' : schoolYearTuitionClarificationSent ? '✓ Sent!' : 'Send Tuition Clarification (2nd–4th Grade)'}
                   </button>
                   {schoolYearTuitionClarificationError && <span className="text-xs text-red-600">{schoolYearTuitionClarificationError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendSchoolYearTuitionReminder}
+                    disabled={schoolYearTuitionReminderSending || schoolYearTuitionReminderSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {schoolYearTuitionReminderSending ? 'Sending…' : schoolYearTuitionReminderSent ? '✓ Sent!' : 'Send August Tuition Reminder'}
+                  </button>
+                  {schoolYearTuitionReminderError && <span className="text-xs text-red-600">{schoolYearTuitionReminderError}</span>}
                 </div>
                 <div className="flex items-center gap-3">
                   <a

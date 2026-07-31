@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { ArrowLeftRight, CheckCircle2, Loader2, AlertCircle } from 'lucide-react'
 import { swapHomeschoolDay } from '@/app/actions/swapHomeschoolDay'
 import { cssColors as colors, radius } from '../design-system'
-import type { DaySwapStudent, DaySwapTransaction, WeekDayEntry } from './page'
+import type { DaySwapStudent, DaySwapTransaction, WeekDayEntry } from './types'
 
 const AVATAR_COLORS = [
   { bg: '#4f7c5e', text: '#ffffff' },

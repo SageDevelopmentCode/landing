@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { Table, TableRow, TableCell } from '../components/Table'
 import { cssColors as colors, radius } from '../design-system'
-import type { AdminReferral } from './page'
+import type { AdminReferral } from '../marketing/page'
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
   pending:  { label: 'Pending',  color: '#A3A3A3', bg: 'rgba(163,163,163,0.1)',  border: 'rgba(163,163,163,0.25)' },

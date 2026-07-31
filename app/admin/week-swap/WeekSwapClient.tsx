@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { ArrowLeftRight, CheckCircle2, Loader2, AlertCircle } from 'lucide-react'
 import { swapSummerWeek } from '@/app/actions/swapSummerWeek'
 import { cssColors as colors, radius } from '../design-system'
-import type { WeekSwapStudent, WeekSwapTransaction } from './page'
+import type { WeekSwapStudent, WeekSwapTransaction } from './types'
 
 const SUMMER_WEEKS = [
   { week: 1, dates: 'May 26–28' },
