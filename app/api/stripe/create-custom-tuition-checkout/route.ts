@@ -54,7 +54,8 @@ export async function POST(request: NextRequest) {
       const feeCents =
         paymentMethod === "ach"
           ? Math.min(Math.round(intendedAmountCents * 0.008), 500)
-          : Math.round((intendedAmountCents + 30) / (1 - 0.029)) - intendedAmountCents;
+          : Math.round((intendedAmountCents + 30) / (1 - 0.029)) -
+            intendedAmountCents;
 
       lineItems.push({
         quantity: 1,
@@ -62,13 +63,19 @@ export async function POST(request: NextRequest) {
           currency: "usd",
           unit_amount: feeCents,
           product_data: {
-            name: paymentMethod === "ach" ? "ACH processing fee" : "Card processing fee",
+            name:
+              paymentMethod === "ach"
+                ? "ACH processing fee"
+                : "Card processing fee",
           },
         },
       });
     }
 
-    const stripeCustomerId = await getOrCreateStripeCustomer(parentId, parentEmail);
+    const stripeCustomerId = await getOrCreateStripeCustomer(
+      parentId,
+      parentEmail,
+    );
 
     const session = await getStripe().checkout.sessions.create({
       mode: "payment",
@@ -102,7 +109,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url: session.url });
   } catch (error) {
     if (error instanceof ZodError) {
-      return NextResponse.json({ error: error.issues[0].message }, { status: 400 });
+      return NextResponse.json(
+        { error: error.issues[0].message },
+        { status: 400 },
+      );
     }
     console.error("Custom tuition checkout error:", error);
     return NextResponse.json(

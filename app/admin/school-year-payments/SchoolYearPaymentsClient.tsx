@@ -4,6 +4,12 @@ import { useState, useMemo } from 'react'
 import { ExternalLink, ChevronRight, ChevronDown } from 'lucide-react'
 import { cssColors as colors, radius, cssShadows as shadows } from '../design-system'
 import { DetailSidebar } from '../components/DetailSidebar'
+import {
+  buildSupplyFeeStudentLines,
+  getSupplyFeeCheckoutStudentIds,
+  homeschoolBundleShortLabel,
+  type SupplyFeeBreakdownLine,
+} from '@/app/lib/supply-fee-breakdown'
 
 type StripeTransaction = {
   id: string
@@ -81,6 +87,10 @@ function isManualCheckPayment(tx: { stripe_session_id: string | null }): boolean
 
 function isPaid(status: string): boolean {
   return status === 'completed' || status === 'succeeded' || status === 'paid'
+}
+
+function isSiblingSplit(tx: StripeTransaction): boolean {
+  return (tx.metadata as Record<string, string> | null)?.is_sibling_split === 'true'
 }
 
 function isSchoolYearHomeschool(tx: StripeTransaction): boolean {
@@ -266,7 +276,7 @@ export function SchoolYearPaymentsClient({ transactions, studentMap, gradeMap, p
 
     // Supply: for bundled rows use only the supply component; non-bundled use full amount_cents
     const supplyTotal = paidTxs
-      .filter(t => t.payment_type === 'supply_fee')
+      .filter(t => t.payment_type === 'supply_fee' && !isSiblingSplit(t))
       .reduce((s, t) => {
         const meta = (t.metadata ?? {}) as Record<string, string>
         const bundleAmt = parseInt(meta.bundle_amount_cents ?? '0')
@@ -302,10 +312,21 @@ export function SchoolYearPaymentsClient({ transactions, studentMap, gradeMap, p
     return { childMap, childIdSet }
   }, [baseTxs])
 
+  // Exclude per-student attribution splits from the table (not separate Stripe charges)
+  const tableSource = useMemo(
+    () => filtered.filter(tx => !isSiblingSplit(tx)),
+    [filtered],
+  )
+
+  const visibleResultCount = useMemo(
+    () => tableSource.filter(tx => !childIdSet.has(tx.id)).length,
+    [tableSource, childIdSet],
+  )
+
   // Build flat array of table rows, injecting expanded children after their parents
   const tableRows = useMemo((): TableRow[] => {
     const rows: TableRow[] = []
-    for (const tx of filtered) {
+    for (const tx of tableSource) {
       if (childIdSet.has(tx.id)) continue
       if (
         tx.payment_type === 'supply_fee' &&
@@ -322,13 +343,7 @@ export function SchoolYearPaymentsClient({ transactions, studentMap, gradeMap, p
       }
     }
     return rows
-  }, [filtered, childMap, childIdSet, expandedGroups])
-
-  // For sidebar: look up bundled child of selected supply fee
-  const selectedChild = useMemo(() => {
-    if (!selectedTx || selectedTx.payment_type !== 'supply_fee' || !selectedTx.stripe_session_id) return null
-    return childMap.get(selectedTx.stripe_session_id) ?? null
-  }, [selectedTx, childMap])
+  }, [tableSource, childMap, childIdSet, expandedGroups])
 
   function toggleGroup(id: string) {
     setExpandedGroups(prev => {
@@ -476,7 +491,7 @@ export function SchoolYearPaymentsClient({ transactions, studentMap, gradeMap, p
         </button>
 
         <span style={{ fontSize: 12, color: colors.textTertiary, marginLeft: 4 }}>
-          {filtered.length} result{filtered.length !== 1 ? 's' : ''}
+          {visibleResultCount} result{visibleResultCount !== 1 ? 's' : ''}
         </span>
       </div>
 
@@ -695,7 +710,6 @@ export function SchoolYearPaymentsClient({ transactions, studentMap, gradeMap, p
         {selectedTx && (
           <SidebarReceipt
             tx={selectedTx}
-            child={selectedChild}
             studentMap={studentMap}
             gradeMap={gradeMap}
             parentNameMap={parentNameMap}
@@ -706,15 +720,32 @@ export function SchoolYearPaymentsClient({ transactions, studentMap, gradeMap, p
   )
 }
 
+function formatSupplyLineLabel(
+  line: SupplyFeeBreakdownLine,
+  meta: Record<string, string>,
+): string {
+  if (line.label === 'Annual Supply Fee') return 'Supply fee'
+  if (
+    line.label.startsWith('Homeschool Drop-In') &&
+    meta.bundle_type === 'homeschool'
+  ) {
+    return homeschoolBundleShortLabel(meta, MONTH_LABELS, DAY_LABELS)
+  }
+  if (line.label === 'August 2026 Tuition') {
+    const monthLabel =
+      MONTH_LABELS[meta.bundle_month_index ?? ''] ?? meta.bundle_month_index
+    return monthLabel ? `${monthLabel} tuition` : line.label
+  }
+  return line.label
+}
+
 function SidebarReceipt({
   tx,
-  child,
   studentMap,
   gradeMap,
   parentNameMap,
 }: {
   tx: StripeTransaction
-  child: StripeTransaction | null
   studentMap: Record<string, string>
   gradeMap: Record<string, string>
   parentNameMap: Record<string, string>
@@ -724,6 +755,12 @@ function SidebarReceipt({
   const payerName = tx.payer_name ?? (tx.parent_id ? parentNameMap[tx.parent_id] : null) ?? '—'
   const meta = (tx.metadata ?? {}) as Record<string, string>
   const stripeLink = stripeUrl(tx)
+  const checkoutStudentIds =
+    tx.payment_type === 'supply_fee'
+      ? getSupplyFeeCheckoutStudentIds(meta, tx.student_id)
+      : tx.student_id
+        ? [tx.student_id]
+        : []
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -798,16 +835,32 @@ function SidebarReceipt({
             padding: '12px 14px',
           }}
         >
-          <div style={sectionLabelStyle}>Student</div>
-          <div style={{ fontWeight: 500, fontSize: 13 }}>
-            {tx.student_id
-              ? (studentMap[tx.student_id] ?? tx.student_id.slice(0, 8))
-              : <span style={{ color: colors.textTertiary }}>—</span>}
+          <div style={sectionLabelStyle}>
+            {checkoutStudentIds.length > 1 ? 'Students' : 'Student'}
           </div>
-          {tx.student_id && gradeMap[tx.student_id] && (
-            <div style={{ fontSize: 11, color: colors.textTertiary, marginTop: 3 }}>
-              {gradeMap[tx.student_id]}
+          {checkoutStudentIds.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {checkoutStudentIds.map((id) => (
+                <div key={id}>
+                  <div style={{ fontWeight: 500, fontSize: 13 }}>
+                    {studentMap[id] ?? id.slice(0, 8)}
+                  </div>
+                  {gradeMap[id] && (
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: colors.textTertiary,
+                        marginTop: 3,
+                      }}
+                    >
+                      {gradeMap[id]}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
+          ) : (
+            <span style={{ color: colors.textTertiary }}>—</span>
           )}
         </div>
       </div>
@@ -824,62 +877,71 @@ function SidebarReceipt({
         <div style={sectionLabelStyle}>Payment Details</div>
 
         {/* Supply fee */}
-        {tx.payment_type === 'supply_fee' && (
-          child ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 7, fontSize: 13 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: colors.textSecondary }}>Supply fee</span>
-                <span style={{ fontWeight: 500 }}>
-                  {formatCents((tx.intended_amount_cents ?? tx.amount_cents) - parseInt(meta.bundle_amount_cents ?? '0'))}
-                </span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: colors.textSecondary }}>
-                  {(() => {
-                    if (meta.bundle_type === 'homeschool') {
-                      const tier = meta.bundle_homeschool_tier === 'dropin' ? '1 Day/Wk'
-                        : meta.bundle_homeschool_tier === '2day' ? '2 Days/Wk'
-                        : meta.bundle_homeschool_tier === '3day' ? '3 Days/Wk'
-                        : meta.bundle_homeschool_tier ?? 'Drop-In'
-                      const monthLabel = MONTH_LABELS[meta.bundle_month_index ?? ''] ?? ''
-                      let dayStr = ''
-                      try {
-                        const ws: { week: number; days: string[] }[] =
-                          JSON.parse(meta.bundle_homeschool_week_selections_json ?? '[]')
-                        const day = ws[0]?.days?.[0]
-                        if (day) dayStr = ` · ${DAY_LABELS[day] ?? day}`
-                      } catch { /* ignore */ }
-                      return `HS Drop-In (${tier}${dayStr}) · ${monthLabel}`
-                    }
-                    return meta.bundle_month_index
-                      ? `${MONTH_LABELS[meta.bundle_month_index] ?? meta.bundle_month_index} tuition`
-                      : 'Bundled tuition'
-                  })()}
-                </span>
-                <span style={{ fontWeight: 500 }}>{formatCents(child.amount_cents)}</span>
-              </div>
-              {tx.cover_fees && tx.intended_amount_cents != null && tx.amount_cents > tx.intended_amount_cents && (
+        {tx.payment_type === 'supply_fee' && meta.bundle_type && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, fontSize: 13 }}>
+            {checkoutStudentIds.map((studentId) => {
+              const isPrimary = studentId === tx.student_id
+              const lines = buildSupplyFeeStudentLines(meta, studentId, isPrimary)
+              return (
+                <div key={studentId}>
+                  <div
+                    style={{
+                      fontWeight: 600,
+                      fontSize: 12,
+                      marginBottom: 6,
+                      color: colors.textPrimary,
+                    }}
+                  >
+                    {studentMap[studentId] ?? studentId.slice(0, 8)}
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                    {lines.map((line) => (
+                      <div
+                        key={`${studentId}-${line.label}`}
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          gap: 12,
+                        }}
+                      >
+                        <span style={{ color: colors.textSecondary }}>
+                          {formatSupplyLineLabel(line, meta)}
+                        </span>
+                        <span style={{ fontWeight: 500 }}>
+                          {formatCents(line.amountCents)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+            {tx.cover_fees &&
+              tx.intended_amount_cents != null &&
+              tx.amount_cents > tx.intended_amount_cents && (
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: colors.textSecondary }}>Card fee</span>
-                  <span style={{ fontWeight: 500 }}>{formatCents(tx.amount_cents - tx.intended_amount_cents)}</span>
+                  <span style={{ fontWeight: 500 }}>
+                    {formatCents(tx.amount_cents - tx.intended_amount_cents)}
+                  </span>
                 </div>
               )}
-              <div
-                style={{
-                  borderTop: `1px solid ${colors.border}`,
-                  paddingTop: 7,
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  fontWeight: 600,
-                }}
-              >
-                <span>Total</span>
-                <span>{formatCents(tx.amount_cents)}</span>
-              </div>
+            <div
+              style={{
+                borderTop: `1px solid ${colors.border}`,
+                paddingTop: 7,
+                display: 'flex',
+                justifyContent: 'space-between',
+                fontWeight: 600,
+              }}
+            >
+              <span>Total</span>
+              <span>{formatCents(tx.amount_cents)}</span>
             </div>
-          ) : (
-            <div style={{ fontSize: 13, color: colors.textSecondary }}>Base fee</div>
-          )
+          </div>
+        )}
+        {tx.payment_type === 'supply_fee' && !meta.bundle_type && (
+          <div style={{ fontSize: 13, color: colors.textSecondary }}>Base fee</div>
         )}
 
         {/* SY Tuition — month pills */}

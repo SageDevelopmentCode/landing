@@ -3,30 +3,23 @@ import { z } from "zod";
 import { getStripe } from "@/app/lib/stripe";
 import { getOrCreateStripeCustomer } from "@/app/lib/stripe-customer";
 
-// Summer: per-week rates in cents
-const SUMMER_PRICING: Record<string, Record<string, number>> = {
-  dropin: { primary: 10000, upper: 9500 },
-  "2day": { primary: 18000, upper: 17000 },
-  "3day": { primary: 25500, upper: 24000 },
-};
-
-// School Year: per-month rates in cents
-const SCHOOL_YEAR_PRICING: Record<string, Record<string, number>> = {
-  dropin: { primary: 12000, upper: 11000 },
-  "2day": { primary: 56000, upper: 52000 },
-  "3day": { primary: 78000, upper: 72000 },
-};
-
-const TIER_LABELS: Record<string, string> = {
-  dropin: "Explorer Day Pass (Drop-In)",
-  "2day": "2 Days / Week",
-  "3day": "3 Days / Week",
-};
-
+// School Year: per-month rates in cents (used for validation reference in client)
 const PROGRAM_LABELS: Record<string, string> = {
   summer_26: "Summer 2026",
   school_year_26_27: "School Year 2026–2027",
 };
+
+const siblingSchema = z.object({
+  studentId: z.string(),
+  applicationId: z.string(),
+  tier: z.enum(["dropin", "2day", "3day"]),
+  gradeTier: z.enum(["primary", "upper"]),
+  selectedDays: z.array(z.string()).default([]),
+  selectedWeeks: z.array(z.number()).default([]),
+  weekSelectionsJson: z.string().optional(),
+  intendedAmountCents: z.number().int().positive(),
+  studentName: z.string().optional(),
+});
 
 const schema = z.object({
   parentId: z.string(),
@@ -43,7 +36,19 @@ const schema = z.object({
   coverFees: z.boolean().optional().default(false),
   paymentMethod: z.enum(["card", "ach"]).optional().default("card"),
   mobile: z.boolean().optional().default(false),
+  siblings: z.array(siblingSchema).optional().default([]),
 });
+
+function homeschoolLineItemName(
+  program: string,
+  weeksCount: number,
+  suffix?: string,
+) {
+  const programLabel = PROGRAM_LABELS[program as keyof typeof PROGRAM_LABELS];
+  const unit = program === "school_year_26_27" ? "mo" : "wk";
+  const base = `Homeschool Drop-In — ${programLabel} (${weeksCount} ${unit}${weeksCount !== 1 ? "s" : ""})`;
+  return suffix ? `${base} — ${suffix}` : base;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -65,6 +70,7 @@ export async function POST(request: NextRequest) {
       coverFees,
       paymentMethod,
       mobile,
+      siblings,
     } = validated;
 
     const programLabel = PROGRAM_LABELS[program];
@@ -88,18 +94,42 @@ export async function POST(request: NextRequest) {
           currency: "usd",
           unit_amount: intendedAmountCents,
           product_data: {
-            name: `Homeschool Drop-In — ${programLabel} (${weeksCount} wk${weeksCount !== 1 ? "s" : ""})`,
+            name: homeschoolLineItemName(program, weeksCount),
             description: productDesc,
           },
         },
       },
     ];
 
+    for (const sib of siblings) {
+      const sibWeeksCount = sib.selectedWeeks.length;
+      lineItems.push({
+        quantity: 1,
+        price_data: {
+          currency: "usd",
+          unit_amount: sib.intendedAmountCents,
+          product_data: {
+            name: homeschoolLineItemName(
+              program,
+              sibWeeksCount,
+              sib.studentName ?? "Sibling",
+            ),
+            description: productDesc,
+          },
+        },
+      });
+    }
+
+    const totalIntendedCents =
+      intendedAmountCents +
+      siblings.reduce((sum, s) => sum + s.intendedAmountCents, 0);
+
     if (coverFees) {
       const feeCents =
         paymentMethod === "ach"
-          ? Math.min(Math.round(intendedAmountCents * 0.008), 500)
-          : Math.round((intendedAmountCents + 30) / (1 - 0.029)) - intendedAmountCents;
+          ? Math.min(Math.round(totalIntendedCents * 0.008), 500)
+          : Math.round((totalIntendedCents + 30) / (1 - 0.029)) -
+            totalIntendedCents;
 
       lineItems.push({
         quantity: 1,
@@ -115,36 +145,65 @@ export async function POST(request: NextRequest) {
 
     const stripeCustomerId = await getOrCreateStripeCustomer(parentId, parentEmail);
 
+    const baseMetadata = {
+      payment_type: "homeschool_dropin",
+      parent_id: parentId,
+      parent_email: parentEmail,
+      student_id: studentId,
+      application_id: applicationId,
+      program,
+      tier,
+      grade_tier: gradeTier,
+      selected_days: selectedDays.join(","),
+      selected_weeks: selectedWeeks.join(","),
+      week_selections: weekSelectionsJson ?? "",
+      cover_fees: String(coverFees),
+      payment_method: paymentMethod,
+      intended_amount_cents: String(totalIntendedCents),
+      description,
+    };
+
+    const sessionMetadata: Record<string, string> = { ...baseMetadata };
+    if (siblings.length > 0) {
+      sessionMetadata.sibling_student_ids = siblings
+        .map((s) => s.studentId)
+        .join(",");
+      sessionMetadata.sibling_application_ids = siblings
+        .map((s) => s.applicationId)
+        .join(",");
+      sessionMetadata.sibling_tiers = siblings.map((s) => s.tier).join(",");
+      sessionMetadata.sibling_grade_tiers = siblings
+        .map((s) => s.gradeTier)
+        .join(",");
+      sessionMetadata.sibling_weeks = siblings
+        .map((s) => s.selectedWeeks.join(";"))
+        .join(",");
+      sessionMetadata.sibling_selected_days = siblings
+        .map((s) => s.selectedDays.join(","))
+        .join(";");
+      sessionMetadata.sibling_week_selections = siblings
+        .map((s) => s.weekSelectionsJson ?? "")
+        .join("|");
+      sessionMetadata.sibling_intended_cents = siblings
+        .map((s) => String(s.intendedAmountCents))
+        .join(",");
+    }
+
     if (mobile) {
       const mobileFee = coverFees
         ? paymentMethod === "ach"
-          ? Math.min(Math.round(intendedAmountCents * 0.008), 500)
-          : Math.round((intendedAmountCents + 30) / (1 - 0.029)) - intendedAmountCents
+          ? Math.min(Math.round(totalIntendedCents * 0.008), 500)
+          : Math.round((totalIntendedCents + 30) / (1 - 0.029)) -
+            totalIntendedCents
         : 0;
       const paymentIntent = await getStripe().paymentIntents.create({
-        amount: intendedAmountCents + mobileFee,
+        amount: totalIntendedCents + mobileFee,
         currency: "usd",
         customer: stripeCustomerId,
         payment_method_types: ["card", "us_bank_account"],
         receipt_email: parentEmail,
         setup_future_usage: "off_session",
-        metadata: {
-          payment_type: "homeschool_dropin",
-          parent_id: parentId,
-          parent_email: parentEmail,
-          student_id: studentId,
-          application_id: applicationId,
-          program,
-          tier,
-          grade_tier: gradeTier,
-          selected_days: selectedDays.join(","),
-          selected_weeks: selectedWeeks.join(","),
-          week_selections: weekSelectionsJson ?? "",
-          cover_fees: String(coverFees),
-          payment_method: paymentMethod,
-          intended_amount_cents: String(intendedAmountCents),
-          description,
-        },
+        metadata: sessionMetadata,
       });
       const ephemeralKey = await getStripe().ephemeralKeys.create(
         { customer: stripeCustomerId },
@@ -171,23 +230,7 @@ export async function POST(request: NextRequest) {
         setup_future_usage: "off_session",
       },
       line_items: lineItems,
-      metadata: {
-        payment_type: "homeschool_dropin",
-        parent_id: parentId,
-        parent_email: parentEmail,
-        student_id: studentId,
-        application_id: applicationId,
-        program,
-        tier,
-        grade_tier: gradeTier,
-        selected_days: selectedDays.join(","),
-        selected_weeks: selectedWeeks.join(","),
-        week_selections: weekSelectionsJson ?? "",
-        cover_fees: String(coverFees),
-        payment_method: paymentMethod,
-        intended_amount_cents: String(intendedAmountCents),
-        description,
-      },
+      metadata: sessionMetadata,
       success_url: `${baseUrl}/parent/billing/homeschool-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/parent/billing`,
     });

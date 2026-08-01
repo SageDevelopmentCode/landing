@@ -1649,8 +1649,94 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Insert sibling homeschool drop-in bundle rows from supply fee checkout
+    if (
+      session.metadata?.payment_type === "supply_fee" &&
+      session.metadata?.sibling_homeschool_bundle_student_ids
+    ) {
+      const hsSibIds = session.metadata.sibling_homeschool_bundle_student_ids
+        .split(",")
+        .filter(Boolean);
+      const hsSibAmounts =
+        session.metadata.sibling_homeschool_bundle_amounts
+          ?.split(",")
+          .map(Number) ?? [];
+      const hsSibAppIds =
+        session.metadata.sibling_homeschool_application_ids?.split(",") ?? [];
+      const hsSibGradeTiers =
+        session.metadata.sibling_homeschool_grade_tiers?.split(",") ?? [];
+      const tier = session.metadata.bundle_homeschool_tier ?? "dropin";
+      const weekSelectionsJson =
+        session.metadata.bundle_homeschool_week_selections_json ?? "";
+      const paymentIntentId =
+        typeof session.payment_intent === "string"
+          ? session.payment_intent
+          : (session.payment_intent?.id ?? null);
+
+      let selectedWeeksCsv = "";
+      let selectedDaysCsv = "";
+      if (weekSelectionsJson) {
+        try {
+          const parsed: { week: number; days: string[] }[] =
+            JSON.parse(weekSelectionsJson);
+          selectedWeeksCsv = parsed.map((p) => p.week).join(",");
+          selectedDaysCsv = [
+            ...new Set(parsed.flatMap((p) => p.days ?? [])),
+          ].join(",");
+        } catch {
+          selectedWeeksCsv =
+            session.metadata.bundle_homeschool_selected_days ?? "";
+        }
+      } else {
+        selectedWeeksCsv = session.metadata.bundle_homeschool_selected_days ?? "";
+      }
+
+      for (let i = 0; i < hsSibIds.length; i++) {
+        const { error: hsSibBundleError } = await supabase
+          .schema("billing")
+          .from("stripe_transactions")
+          .upsert(
+            {
+              stripe_session_id: `${session.id}_supply_sib_hs_bundle_${i}`,
+              stripe_payment_intent_id: paymentIntentId,
+              payment_type: "homeschool_dropin",
+              amount_cents: hsSibAmounts[i] ?? 0,
+              intended_amount_cents: hsSibAmounts[i] ?? null,
+              student_id: hsSibIds[i],
+              application_id: hsSibAppIds[i] ?? null,
+              parent_id: session.metadata.parent_id,
+              payer_email:
+                session.metadata.parent_email || session.customer_email || "",
+              metadata: {
+                payment_type: "homeschool_dropin",
+                program: "school_year_26_27",
+                tier,
+                grade_tier: hsSibGradeTiers[i] ?? "primary",
+                selected_days: selectedDaysCsv,
+                selected_weeks: selectedWeeksCsv,
+                week_selections: weekSelectionsJson,
+                bundled_with_supply_fee: "true",
+                is_sibling_split: "true",
+                primary_session_id: session.id,
+              },
+              status: "completed",
+            },
+            { onConflict: "stripe_session_id" },
+          );
+        if (hsSibBundleError) {
+          console.error(
+            `Failed to record supply fee homeschool sibling bundle row ${i}:`,
+            hsSibBundleError,
+          );
+        }
+      }
+    }
+
     // Insert sibling rows if this was a bundled multi-child summer payment
-    if (session.metadata?.sibling_student_ids) {
+    if (
+      session.metadata?.payment_type === "summer_tuition" &&
+      session.metadata?.sibling_student_ids
+    ) {
       const sibStudentIds = session.metadata.sibling_student_ids.split(",").filter(Boolean);
       const sibAppIds = session.metadata.sibling_application_ids?.split(",") ?? [];
       const sibPlanTypes = session.metadata.sibling_plan_types?.split(",") ?? [];
@@ -1693,6 +1779,83 @@ export async function POST(request: NextRequest) {
           );
         if (sibError) {
           console.error(`Failed to record sibling[${i}] billing transaction:`, sibError);
+        }
+      }
+    }
+
+    // Insert sibling rows for bundled multi-child homeschool drop-in payment
+    if (
+      session.metadata?.payment_type === "homeschool_dropin" &&
+      session.metadata?.sibling_student_ids
+    ) {
+      const sibStudentIds = session.metadata.sibling_student_ids
+        .split(",")
+        .filter(Boolean);
+      const sibAppIds =
+        session.metadata.sibling_application_ids?.split(",") ?? [];
+      const sibTiers = session.metadata.sibling_tiers?.split(",") ?? [];
+      const sibGradeTiers =
+        session.metadata.sibling_grade_tiers?.split(",") ?? [];
+      const sibWeeksArr = session.metadata.sibling_weeks?.split(",") ?? [];
+      const sibDaysArr =
+        session.metadata.sibling_selected_days?.split(";") ?? [];
+      const sibWeekSelectionsArr =
+        session.metadata.sibling_week_selections?.split("|") ?? [];
+      const sibCents =
+        session.metadata.sibling_intended_cents?.split(",").map(Number) ?? [];
+      const program = session.metadata.program ?? "school_year_26_27";
+      const paymentIntentId =
+        typeof session.payment_intent === "string"
+          ? session.payment_intent
+          : (session.payment_intent?.id ?? null);
+
+      for (let i = 0; i < sibStudentIds.length; i++) {
+        const selectedWeeks = (sibWeeksArr[i] ?? "")
+          .replace(/;/g, ",")
+          .split(",")
+          .filter(Boolean);
+        const selectedDays = (sibDaysArr[i] ?? "")
+          .split(",")
+          .filter(Boolean);
+        const weekSelections = sibWeekSelectionsArr[i] ?? "";
+
+        const { error: sibError } = await supabase
+          .schema("billing")
+          .from("stripe_transactions")
+          .upsert(
+            {
+              stripe_session_id: `${session.id}_sib_${i}`,
+              stripe_payment_intent_id: paymentIntentId,
+              payment_type: "homeschool_dropin",
+              amount_cents: sibCents[i] ?? 0,
+              intended_amount_cents: sibCents[i] ?? null,
+              currency: session.currency ?? "usd",
+              cover_fees: false,
+              payer_email:
+                session.metadata?.parent_email || session.customer_email || "",
+              student_id: sibStudentIds[i],
+              application_id: sibAppIds[i] ?? null,
+              parent_id: session.metadata?.parent_id ?? null,
+              metadata: {
+                payment_type: "homeschool_dropin",
+                program,
+                tier: sibTiers[i] ?? "dropin",
+                grade_tier: sibGradeTiers[i] ?? "primary",
+                selected_days: selectedDays.join(","),
+                selected_weeks: selectedWeeks.join(","),
+                week_selections: weekSelections,
+                is_sibling_split: "true",
+                primary_session_id: session.id,
+              },
+              status: "completed",
+            },
+            { onConflict: "stripe_session_id" },
+          );
+        if (sibError) {
+          console.error(
+            `Failed to record homeschool sibling[${i}] billing transaction:`,
+            sibError,
+          );
         }
       }
     }

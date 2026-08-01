@@ -49,3 +49,12 @@ SUPABASE_MOBILE_GUIDE.md
 guides
 
 .mcp.json
+
+# Expo mobile app (apps/mobile)
+apps/mobile/node_modules
+apps/mobile/.expo
+apps/mobile/dist
+apps/mobile/expo-env.d.ts
+apps/mobile/google-service-account.json
+apps/mobile/ios
+apps/mobile/android
