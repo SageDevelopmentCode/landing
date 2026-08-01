@@ -56,8 +56,11 @@ npm run test:e2e
 - Public page smoke tests (home, programs, contact, apply)
 - Auth boundaries (redirects, role-based admin access)
 - Password login flows (parent, teacher, admin)
-- Apply flow navigation for in-progress parent
-- Parent dashboard and billing page loads (no Stripe checkout)
+- **Enrollment smoke tests** (`e2e/enrollment-smoke.spec.ts`):
+  - **Apply** — dashboard shows in-progress app, step 1 form loads, start page loads
+  - **Parent billing** — billing page shows enrolled child + tuition section (no Stripe checkout)
+  - **Parent children** — enrolled student appears on children page
+  - **Admin applications** — seeded apps visible, table/board/pipeline view switching
 
 ## Schema updates
 

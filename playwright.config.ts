@@ -32,7 +32,7 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
       dependencies: ['setup'],
       testIgnore: /auth\.setup\.ts/,
-      testMatch: /(smoke|login|auth-boundaries)\.spec\.ts/,
+      testMatch: /^(smoke|login|auth-boundaries)\.spec\.ts/,
       grepInvert: /@parent-apply|@teacher|@admin/,
     },
     {
@@ -42,7 +42,8 @@ export default defineConfig({
         storageState: path.join(AUTH_DIR, 'parent-apply.json'),
       },
       dependencies: ['setup'],
-      testMatch: /apply-flow\.spec\.ts/,
+      testMatch: /enrollment-smoke\.spec\.ts/,
+      grepInvert: /@parent-enrolled|@admin/,
     },
     {
       name: 'parent-apply-auth',
@@ -61,7 +62,8 @@ export default defineConfig({
         storageState: path.join(AUTH_DIR, 'parent-enrolled.json'),
       },
       dependencies: ['setup'],
-      testMatch: /parent-dashboard\.spec\.ts/,
+      testMatch: /enrollment-smoke\.spec\.ts/,
+      grep: /@parent-enrolled/,
     },
     {
       name: 'teacher',
@@ -80,7 +82,7 @@ export default defineConfig({
         storageState: path.join(AUTH_DIR, 'admin.json'),
       },
       dependencies: ['setup'],
-      testMatch: /auth-boundaries\.spec\.ts/,
+      testMatch: /(auth-boundaries|enrollment-smoke)\.spec\.ts/,
       grep: /@admin/,
     },
   ],
