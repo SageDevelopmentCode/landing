@@ -102,7 +102,7 @@ export function FreeFridayAnnouncement({ recipientCount }: { recipientCount: num
         >
           <p className="font-semibold" style={{ color: colors.textTertiary }}>Subject: This Friday: Bring a Friend to Sage Field for Free 🌿</p>
           <p>Hi [Parent Name],</p>
-          <p>This Friday, June 5th — we'd love for <strong>[Child Name]</strong> to bring a friend along for the day. Completely free, no strings attached.</p>
+          <p>This Friday, June 5th — we&apos;d love for <strong>[Child Name]</strong> to bring a friend along for the day. Completely free, no strings attached.</p>
           <div style={{ borderLeft: `2px solid ${colors.accent}`, paddingLeft: "12px", color: colors.textTertiary }}>
             <p>📅 Friday, June 5, 2026</p>
             <p>🕗 Drop-off: 8:15 – 9:00 AM · 🕒 Pick-up: 1:00 PM</p>

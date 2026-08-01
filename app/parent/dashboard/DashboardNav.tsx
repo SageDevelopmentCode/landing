@@ -76,18 +76,6 @@ export default function DashboardNav({
   const moreRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
-  if (!hasEnrolledStudent) return null;
-
-  const impersonateBase = parentId ? `/admin/impersonate/${parentId}` : null;
-
-  function navHref(parentPath: string) {
-    if (!impersonateBase) return parentPath;
-    const [path, query] = parentPath.split("?");
-    const slug = path.replace("/parent/", "");
-    const base = `${impersonateBase}/${slug}`;
-    return query ? `${base}?${query}` : base;
-  }
-
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
@@ -99,6 +87,18 @@ export default function DashboardNav({
     }
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [moreOpen]);
+
+  if (!hasEnrolledStudent) return null;
+
+  const impersonateBase = parentId ? `/admin/impersonate/${parentId}` : null;
+
+  function navHref(parentPath: string) {
+    if (!impersonateBase) return parentPath;
+    const [path, query] = parentPath.split("?");
+    const slug = path.replace("/parent/", "");
+    const base = `${impersonateBase}/${slug}`;
+    return query ? `${base}?${query}` : base;
+  }
 
   return (
     <>

@@ -32,20 +32,28 @@ export default function ManageAccessModal({ isOpen, onClose }: ManageAccessModal
   const [isPending, startTransition] = useTransition()
   const [isRevoking, setIsRevoking] = useState<string | null>(null)
 
+  async function loadGrants() {
+    const result = await listDashboardGrants()
+    if ('grants' in result) setGrants(result.grants as Grant[])
+  }
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
-      loadGrants()
     } else {
       document.body.style.overflow = ''
     }
     return () => { document.body.style.overflow = '' }
   }, [isOpen])
 
-  async function loadGrants() {
-    const result = await listDashboardGrants()
-    if ('grants' in result) setGrants(result.grants as Grant[])
-  }
+  useEffect(() => {
+    if (!isOpen) return
+    let active = true
+    void listDashboardGrants().then((result) => {
+      if (active && 'grants' in result) setGrants(result.grants as Grant[])
+    })
+    return () => { active = false }
+  }, [isOpen])
 
   function handleInvite() {
     setInviteError(null)
@@ -125,7 +133,7 @@ export default function ManageAccessModal({ isOpen, onClose }: ManageAccessModal
               <div>
                 <h3 className="text-sm font-medium text-gray-700 mb-3">Invite someone</h3>
                 <p className="text-sm text-gray-500 mb-4">
-                  They'll receive an email with a link to access your child's dashboard.
+                  They&apos;ll receive an email with a link to access your child&apos;s dashboard.
                 </p>
                 <div className="flex gap-2">
                   <input

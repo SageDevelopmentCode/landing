@@ -153,7 +153,7 @@ export default async function PreferencesPage() {
 
         <main className="flex-1 flex overflow-hidden">
           <PreferencesPageClient
-            children={children}
+            students={children}
             activities={activities}
             paidDatesByStudent={paidDatesByStudent}
             savedPreferences={savedPreferences}

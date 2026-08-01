@@ -4,6 +4,18 @@ import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabas
 
 export type AttendanceProgram = "summer" | "aftercare" | "field_friday";
 
+type AttendanceRecordSelect = {
+  id: string
+  date: string
+  recorded_by: string
+  notes: string | null
+  paid_for_day: boolean
+  pickup_time: string | null
+  picked_up_by_name: string | null
+  picked_up_by_relationship: string | null
+  pickup_recorded_by: string | null
+}
+
 export type UnifiedAttendanceRecord = {
   id: string;
   program: AttendanceProgram;
@@ -65,9 +77,9 @@ export async function getParentStudentAttendance(studentId: string): Promise<Att
   ]);
 
   const merged: UnifiedAttendanceRecord[] = [
-    ...((summerRes.data ?? []) as any[]).map((r) => ({ ...r, program: "summer" as const })),
-    ...((aftercareRes.data ?? []) as any[]).map((r) => ({ ...r, program: "aftercare" as const })),
-    ...((fridayRes.data ?? []) as any[]).map((r) => ({ ...r, program: "field_friday" as const })),
+    ...((summerRes.data ?? []) as AttendanceRecordSelect[]).map((r) => ({ ...r, program: "summer" as const })),
+    ...((aftercareRes.data ?? []) as AttendanceRecordSelect[]).map((r) => ({ ...r, program: "aftercare" as const })),
+    ...((fridayRes.data ?? []) as AttendanceRecordSelect[]).map((r) => ({ ...r, program: "field_friday" as const })),
   ].sort((a, b) => b.date.localeCompare(a.date));
 
   const staffIds = [

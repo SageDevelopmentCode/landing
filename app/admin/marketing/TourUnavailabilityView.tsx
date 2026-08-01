@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useEffect } from 'react'
+import { useState, useTransition } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Poppins } from 'next/font/google'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -105,25 +105,20 @@ interface AddBlockSidebarProps {
   prefillTime?: string
 }
 
-function AddBlockSidebar({ isOpen, onClose, onAdded, prefillDate, prefillTime }: AddBlockSidebarProps) {
-  const [form, setForm] = useState(defaultForm)
+function AddBlockForm({
+  onClose,
+  onAdded,
+  prefillDate,
+  prefillTime,
+}: Omit<AddBlockSidebarProps, 'isOpen'>) {
+  const [form, setForm] = useState(() => ({
+    ...defaultForm,
+    unavailable_date: prefillDate ?? '',
+    unavailable_time: prefillTime ?? '',
+  }))
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [serverError, setServerError] = useState('')
   const [isPending, startTransition] = useTransition()
-
-  useEffect(() => {
-    if (!isOpen) {
-      setForm(defaultForm)
-      setErrors({})
-      setServerError('')
-    } else {
-      setForm({
-        ...defaultForm,
-        unavailable_date: prefillDate ?? '',
-        unavailable_time: prefillTime ?? '',
-      })
-    }
-  }, [isOpen, prefillDate, prefillTime])
 
   const validate = () => {
     const newErrors: Record<string, string> = {}
@@ -160,7 +155,7 @@ function AddBlockSidebar({ isOpen, onClose, onAdded, prefillDate, prefillTime }:
   }
 
   return (
-    <DetailSidebar isOpen={isOpen} onClose={onClose} title="Block Date / Time">
+    <DetailSidebar isOpen onClose={onClose} title="Block Date / Time">
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
           <label style={labelStyle}>Date *</label>
@@ -256,6 +251,20 @@ function AddBlockSidebar({ isOpen, onClose, onAdded, prefillDate, prefillTime }:
   )
 }
 
+function AddBlockSidebar({ isOpen, onClose, onAdded, prefillDate, prefillTime }: AddBlockSidebarProps) {
+  if (!isOpen) return null
+
+  return (
+    <AddBlockForm
+      key={`${prefillDate ?? ''}-${prefillTime ?? ''}`}
+      onClose={onClose}
+      onAdded={onAdded}
+      prefillDate={prefillDate}
+      prefillTime={prefillTime}
+    />
+  )
+}
+
 // ─── AddTourSidebar ───────────────────────────────────────────────────────────
 
 const GRADES = [
@@ -292,19 +301,11 @@ interface AddTourSidebarProps {
   onAdded: (booking: TourBooking) => void
 }
 
-function AddTourSidebar({ isOpen, onClose, onAdded }: AddTourSidebarProps) {
+function AddTourForm({ onClose, onAdded }: Omit<AddTourSidebarProps, 'isOpen'>) {
   const [form, setForm] = useState(defaultTourForm)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [serverError, setServerError] = useState('')
   const [isPending, startTransition] = useTransition()
-
-  useEffect(() => {
-    if (!isOpen) {
-      setForm(defaultTourForm)
-      setErrors({})
-      setServerError('')
-    }
-  }, [isOpen])
 
   const validate = () => {
     const newErrors: Record<string, string> = {}
@@ -368,7 +369,7 @@ function AddTourSidebar({ isOpen, onClose, onAdded }: AddTourSidebarProps) {
   )
 
   return (
-    <DetailSidebar isOpen={isOpen} onClose={onClose} title="Add Tour Booking">
+    <DetailSidebar isOpen onClose={onClose} title="Add Tour Booking">
       <form onSubmit={handleSubmit} className="space-y-5">
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           {field('first_name', 'First Name *', (
@@ -480,6 +481,11 @@ function AddTourSidebar({ isOpen, onClose, onAdded }: AddTourSidebarProps) {
       </form>
     </DetailSidebar>
   )
+}
+
+function AddTourSidebar({ isOpen, onClose, onAdded }: AddTourSidebarProps) {
+  if (!isOpen) return null
+  return <AddTourForm onClose={onClose} onAdded={onAdded} />
 }
 
 // ─── AdminCalendarGrid ────────────────────────────────────────────────────────
@@ -667,10 +673,6 @@ interface BlockDetailSidebarProps {
 function BlockDetailSidebar({ record, booking, onClose, onDeleted }: BlockDetailSidebarProps) {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
-
-  useEffect(() => {
-    if (!record) setConfirmOpen(false)
-  }, [record])
 
   const handleDelete = () => {
     if (!record) return
@@ -1578,6 +1580,7 @@ export function TourUnavailabilityView({ initial, tourBookings }: { initial: Tou
       />
 
       <BlockDetailSidebar
+        key={selectedBlock?.id ?? 'none'}
         record={selectedBlock}
         booking={selectedBlock?.booking_id
           ? (bookings.find(b => b.id === selectedBlock.booking_id) ?? null)

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useTransition } from "react";
+import { useState, useRef, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, HelpCircle, Paperclip, Send, Loader2 } from "lucide-react";
@@ -13,7 +13,7 @@ interface HelpWidgetProps {
 }
 
 export default function HelpWidget({ hideFloatingButton, open, onOpenChange }: HelpWidgetProps = {}) {
-  const [mounted, setMounted] = useState(false);
+  const [mounted] = useState(() => typeof window !== "undefined");
   const [internalOpen, setInternalOpen] = useState(false);
 
   const isOpen = open !== undefined ? open : internalOpen;
@@ -27,10 +27,6 @@ export default function HelpWidget({ hideFloatingButton, open, onOpenChange }: H
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const handleClose = () => {
     setIsOpen(false);

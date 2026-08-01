@@ -474,20 +474,20 @@ export default function HomeDemoPage() {
               <em className="text-primary not-italic">feels like living.</em>
             </h2>
             <p className="text-base text-gray-600 leading-relaxed font-body mb-5">
-              We believe children thrive when they're trusted, known, and given
+              We believe children thrive when they&apos;re trusted, known, and given
               room to wonder. Greenbrook Academy is built on the idea that the
-              best education doesn't separate curiosity from content — it weaves
+              best education doesn&apos;t separate curiosity from content — it weaves
               them together.
             </p>
             <p className="text-base text-gray-600 leading-relaxed font-body mb-8">
-              Every child here is more than a grade level. They're a whole
+              Every child here is more than a grade level. They&apos;re a whole
               person with a unique rhythm — and our role is to meet them exactly
               where they are.
             </p>
             <div className="p-6 bg-sage-50 rounded-2xl border-l-4 border-sage-400">
               <p className="text-sm font-medium text-sage-800 font-body leading-relaxed">
                 &ldquo;Wisdom is knowledge transformed by experience — and that
-                transformation is what we're here to nurture.&rdquo;
+                transformation is what we&apos;re here to nurture.&rdquo;
               </p>
               <p className="text-xs text-sage-400 font-body mt-3 uppercase tracking-wider">
                 — School Founder

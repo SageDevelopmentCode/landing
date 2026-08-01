@@ -70,13 +70,12 @@ function PhotoLightbox({
   const [displayUrl, setDisplayUrl] = useState<string | null>(photo.signed_url);
 
   useEffect(() => {
-    setDisplayUrl(photo.signed_url);
     let cancelled = false;
     getFullResSignedUrl(photo.storage_path).then((url) => {
       if (!cancelled && url) setDisplayUrl(url);
     });
     return () => { cancelled = true; };
-  }, [photo.storage_path, photo.signed_url]);
+  }, [photo.storage_path]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -202,11 +201,10 @@ export default function ParentPhotosClient({ initialPhotos }: Props) {
 
   // Fetch all signed URLs in parallel chunks on mount.
   // Earlier chunks resolve first, so photos near the top appear quickly.
+  // Fetch all signed URLs in parallel chunks on mount.
+  // Earlier chunks resolve first, so photos near the top appear quickly.
   useEffect(() => {
-    if (initialPhotos.length === 0) {
-      setPhotos([]);
-      return;
-    }
+    if (initialPhotos.length === 0) return;
 
     const chunks: string[][] = [];
     for (let i = 0; i < initialPhotos.length; i += CHUNK_SIZE) {
@@ -335,6 +333,7 @@ export default function ParentPhotosClient({ initialPhotos }: Props) {
       <AnimatePresence>
         {lightboxPhoto && (
           <PhotoLightbox
+            key={`${lightboxPhoto.id}-${photos.findIndex((p) => p.id === lightboxPhoto.id)}`}
             photos={photos}
             initialIndex={photos.findIndex((p) => p.id === lightboxPhoto.id)}
             onClose={() => setLightboxPhoto(null)}

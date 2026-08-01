@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  console.log("[webhook] Event constructed:", event.type, "| payment_type:", (event.data.object as any)?.metadata?.payment_type ?? "n/a");
+  console.log("[webhook] Event constructed:", event.type, "| payment_type:", (event.data.object as Stripe.Checkout.Session | Stripe.PaymentIntent).metadata?.payment_type ?? "n/a");
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;

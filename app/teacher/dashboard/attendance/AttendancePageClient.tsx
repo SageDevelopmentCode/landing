@@ -230,6 +230,7 @@ export default function AttendancePageClient({ initialAftercareStudents, initial
           {/* Calendar view */}
           {viewMode.view === "calendar" && (
             <AttendanceCalendarView
+              key={weekOffset}
               weekOffset={weekOffset}
               onWeekOffsetChange={setWeekOffset}
               onBlockClick={handleCalendarBlockClick}

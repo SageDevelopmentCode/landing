@@ -479,11 +479,20 @@ function TeacherNotesTab({ studentId }: { studentId: string }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setLoadingNotes(true);
+    let cancelled = false;
     getTeacherNotes(studentId)
-      .then(setNotes)
-      .catch(() => setNotes([]))
-      .finally(() => setLoadingNotes(false));
+      .then((notes) => {
+        if (!cancelled) setNotes(notes);
+      })
+      .catch(() => {
+        if (!cancelled) setNotes([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingNotes(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [studentId]);
 
   const closeDrawer = () => {
@@ -1276,11 +1285,20 @@ function AttendanceTab({ studentId }: { studentId: string }) {
   const [sidebarLoading, setSidebarLoading] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
+    let cancelled = false;
     getStudentAttendance(studentId)
-      .then(setRecords)
-      .catch(() => setRecords([]))
-      .finally(() => setLoading(false));
+      .then((records) => {
+        if (!cancelled) setRecords(records);
+      })
+      .catch(() => {
+        if (!cancelled) setRecords([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [studentId]);
 
   const formatDate = (iso: string) =>
@@ -1553,10 +1571,7 @@ function ParentCommunicationTab({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!detail) {
-      setLoading(false);
-      return;
-    }
+    if (!detail) return;
 
     const rawParents: { email: string; nameFromApp: string }[] = [];
     if (detail.g1_email)
@@ -1571,15 +1586,15 @@ function ParentCommunicationTab({
       });
 
     if (!rawParents.length) {
-      setLoading(false);
       return;
     }
 
-    setLoading(true);
+    let cancelled = false;
     const emails = rawParents.map((p) => p.email);
 
     Promise.all([getParentUsersByEmails(emails), getConversations(teacherId)])
       .then(([userMap, allConvos]) => {
+        if (cancelled) return;
         setParents(
           rawParents.map((p) => {
             const userInfo = userMap[p.email] ?? null;
@@ -1590,8 +1605,15 @@ function ParentCommunicationTab({
           }),
         );
       })
-      .catch(() => setParents([]))
-      .finally(() => setLoading(false));
+      .catch(() => {
+        if (!cancelled) setParents([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [teacherId, detail]);
 
   const openMessaging = (parentId: string, parentName: string) => {
@@ -1761,22 +1783,22 @@ export default function StudentsPageClient({
   const [activeTab, setActiveTab] = useState("student-info");
 
   useEffect(() => {
-    if (!selectedStudent) {
-      setDetail(null);
-      return;
-    }
-    setActiveTab("student-info");
-    setLoading(true);
+    if (!selectedStudent) return;
+
+    let cancelled = false;
     getTeacherStudentDetail(selectedStudent.student_id)
       .then((d) => {
-        setDetail(d);
+        if (!cancelled) setDetail(d);
       })
       .catch(() => {
-        setDetail(null);
+        if (!cancelled) setDetail(null);
       })
       .finally(() => {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       });
+    return () => {
+      cancelled = true;
+    };
   }, [selectedStudent?.student_id]);
 
   const filtered = students.filter((s) => s.program === activeProgram);
@@ -1805,6 +1827,8 @@ export default function StudentsPageClient({
                   onClick={() => {
                     setActiveProgram(p);
                     setSelectedStudent(null);
+                    setDetail(null);
+                    setLoading(false);
                   }}
                   className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     activeProgram === p
@@ -1832,7 +1856,12 @@ export default function StudentsPageClient({
                 return (
                   <div
                     key={s.id}
-                    onClick={() => setSelectedStudent(s)}
+                    onClick={() => {
+                      setSelectedStudent(s);
+                      setActiveTab("student-info");
+                      setDetail(null);
+                      setLoading(true);
+                    }}
                     className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border cursor-pointer transition-all ${
                       isSelected
                         ? "bg-sage-700/10 border-sage-700"
@@ -2057,15 +2086,19 @@ export default function StudentsPageClient({
                 />
               )}
               {activeTab === "teacher-notes" && (
-                <TeacherNotesTab studentId={selectedStudent.student_id} />
+                <TeacherNotesTab key={selectedStudent.student_id} studentId={selectedStudent.student_id} />
               )}
               {activeTab === "attendance" && (
-                <AttendanceTab studentId={selectedStudent.student_id} />
+                <AttendanceTab key={selectedStudent.student_id} studentId={selectedStudent.student_id} />
               )}
               {activeTab === "portfolio" && <PortfolioTab />}
               {activeTab === "progress" && <ProgressTab />}
               {activeTab === "parent-communication" && (
-                <ParentCommunicationTab teacherId={teacherId} detail={detail} />
+                <ParentCommunicationTab
+                  key={`${teacherId}-${selectedStudent.student_id}`}
+                  teacherId={teacherId}
+                  detail={detail}
+                />
               )}
               {activeTab === "pickup" && <PickupTab />}
             </div>

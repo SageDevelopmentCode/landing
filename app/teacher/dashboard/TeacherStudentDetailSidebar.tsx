@@ -41,15 +41,17 @@ export function TeacherStudentDetailSidebar({
   onClose: () => void
 }) {
   const [detail, setDetail] = useState<Awaited<ReturnType<typeof getTeacherStudentDetail>>>(null)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(!!student)
 
   useEffect(() => {
-    if (!student) { setDetail(null); return }
-    setLoading(true)
+    if (!student) return
+    let cancelled = false
     getTeacherStudentDetail(student.student_id).then((d) => {
+      if (cancelled) return
       setDetail(d)
       setLoading(false)
     })
+    return () => { cancelled = true }
   }, [student?.student_id])
 
   const dob =

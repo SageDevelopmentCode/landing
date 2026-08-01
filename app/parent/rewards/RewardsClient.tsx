@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Gift, Coffee, Check, Copy, X, ChevronRight } from "lucide-react";
 import { submitTestimonial } from "@/app/actions/submitTestimonial";
@@ -25,11 +25,9 @@ export default function RewardsClient({
   const [testimonialText, setTestimonialText] = useState("");
   const [testimonialSubmitting, setTestimonialSubmitting] = useState(false);
   const [testimonialSubmitted, setTestimonialSubmitted] = useState(hasSubmittedTestimonial);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    setIsMobile(window.innerWidth < 1024);
-  }, []);
+  const [isMobile] = useState(
+    () => typeof window !== "undefined" && window.innerWidth < 1024,
+  );
 
   const refCode = userId.replace(/-/g, "").slice(0, 8).toUpperCase();
   const referralLink = `https://sagefield.co/apply?ref=${refCode}`;

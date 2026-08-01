@@ -118,7 +118,7 @@ export function WaitlistDetailSidebar({
           </h3>
           <div className="flex flex-col gap-3">
             <div className="flex flex-col gap-0.5">
-              <span className="text-xs text-gray-400 font-body">Child's Name</span>
+              <span className="text-xs text-gray-400 font-body">Child&apos;s Name</span>
               <span className="text-sm text-gray-800 font-body">{currentSubmission.child_name}</span>
             </div>
             <div className="flex flex-col gap-0.5">

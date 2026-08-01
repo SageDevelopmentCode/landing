@@ -380,14 +380,15 @@ export default function ApplicationsPage() {
   const [tableAgeRanges, setTableAgeRanges] = useState<Set<string>>(new Set())
   const pendingApp = useRef<Application | null>(null)
 
-  useEffect(() => {
-    if (view !== 'table') {
+  const handleViewChange = (nextView: typeof view) => {
+    setView(nextView)
+    if (nextView !== 'table') {
       setTableStatusFilter(new Set())
       setTableIncludeTags(new Set())
       setTableExcludeTags(new Set())
       setTableAgeRanges(new Set())
     }
-  }, [view])
+  }
 
   useEffect(() => {
     const supabase = createBrowserClient(
@@ -631,7 +632,7 @@ export default function ApplicationsPage() {
             {(['table', 'kanban', 'pipeline'] as const).map(v => (
               <button
                 key={v}
-                onClick={() => setView(v)}
+                onClick={() => handleViewChange(v)}
                 className="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all"
                 style={view === v
                   ? { backgroundColor: '#fff', color: colors.mistyForest, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }
@@ -843,7 +844,7 @@ export default function ApplicationsPage() {
                         <div className="min-w-0">
                           <div className="text-xs truncate" style={{ color: colors.textSecondary }}>{app.child_legal_name ?? '—'}</div>
                           {app.preferred_name && (
-                            <div className="text-xs truncate" style={{ color: colors.textTertiary }}>"{app.preferred_name}"</div>
+                            <div className="text-xs truncate" style={{ color: colors.textTertiary }}>&ldquo;{app.preferred_name}&rdquo;</div>
                           )}
                         </div>
                         <div className="min-w-0">

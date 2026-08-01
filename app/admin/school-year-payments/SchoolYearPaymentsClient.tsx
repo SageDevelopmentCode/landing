@@ -224,6 +224,7 @@ export function SchoolYearPaymentsClient({ transactions, studentMap, gradeMap, p
   const [typeFilter, setTypeFilter] = useState<'all' | 'supply_fee' | 'school_year_tuition' | 'homeschool_dropin' | 'homeschool'>('all')
   const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending'>('all')
   const [dateRange, setDateRange] = useState<7 | 30 | 90 | 0>(0)
+  const [filterEpoch, setFilterEpoch] = useState(() => Date.now())
   const [selectedTx, setSelectedTx] = useState<StripeTransaction | null>(null)
   const [hoveredRow, setHoveredRow] = useState<string | null>(null)
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
@@ -243,8 +244,7 @@ export function SchoolYearPaymentsClient({ transactions, studentMap, gradeMap, p
   }, [syTransactions, excludeTest])
 
   const filtered = useMemo(() => {
-    const now = Date.now()
-    const cutoff = dateRange > 0 ? now - dateRange * 24 * 60 * 60 * 1000 : 0
+    const cutoff = dateRange > 0 ? filterEpoch - dateRange * 24 * 60 * 60 * 1000 : 0
 
     return baseTxs.filter(tx => {
       if (cutoff && new Date(tx.created_at).getTime() < cutoff) return false
@@ -268,7 +268,7 @@ export function SchoolYearPaymentsClient({ transactions, studentMap, gradeMap, p
 
       return true
     })
-  }, [baseTxs, typeFilter, statusFilter, dateRange, search, studentMap, parentNameMap])
+  }, [baseTxs, typeFilter, statusFilter, dateRange, search, studentMap, parentNameMap, filterEpoch])
 
   // Stat cards - from all SY transactions (not filtered)
   const stats = useMemo(() => {
@@ -457,7 +457,7 @@ export function SchoolYearPaymentsClient({ transactions, studentMap, gradeMap, p
           {([7, 30, 90, 0] as const).map(d => (
             <button
               key={d}
-              onClick={() => setDateRange(d)}
+              onClick={() => { setDateRange(d); setFilterEpoch(Date.now()); }}
               style={{
                 padding: '6px 12px',
                 fontSize: 12,

@@ -132,8 +132,6 @@ export function PaymentHistory({ parentId }: PaymentHistoryProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
-    setLoading(true)
-    setError(null)
     getParentTransactions(parentId)
       .then((data) => setTransactions(data as Transaction[]))
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load transactions'))

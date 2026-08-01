@@ -868,7 +868,7 @@ export function TransactionsClient({
         (selectedGroup?.email && tx.payer_email === selectedGroup.email && !tx.parent_id)
       )
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-  }, [localTransactions, selectedParentKey, selectedGroup?.email])
+  }, [localTransactions, selectedParentKey, selectedGroup])
 
   const childGroups = useMemo((): ChildGroup[] => {
     if (!selectedGroup) return [];

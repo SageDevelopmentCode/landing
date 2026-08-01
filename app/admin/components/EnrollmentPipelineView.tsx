@@ -118,7 +118,7 @@ function PipelineCard({
         {app.child_legal_name ?? '—'}
       </div>
       {app.preferred_name && (
-        <div className="text-xs text-gray-400 italic mt-0.5">"{app.preferred_name}"</div>
+        <div className="text-xs text-gray-400 italic mt-0.5">&ldquo;{app.preferred_name}&rdquo;</div>
       )}
 
       {(programBadge || (isLoaded && registrationFeePaid)) && (

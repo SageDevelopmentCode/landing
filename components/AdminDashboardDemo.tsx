@@ -984,7 +984,7 @@ function AppDetailPanel({ app, onClose }: { app: typeof DEMO_APPLICATIONS[0]; on
       <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
         <div>
           <h3 className="text-sm font-semibold" style={{ color: C.textPrimary }}>{app.childName}</h3>
-          {app.preferredName && <p className="text-xs" style={{ color: C.textTertiary }}>Goes by "{app.preferredName}"</p>}
+          {app.preferredName && <p className="text-xs" style={{ color: C.textTertiary }}>Goes by &ldquo;{app.preferredName}&rdquo;</p>}
         </div>
         <button onClick={onClose} className="p-1 rounded" style={{ color: C.textTertiary }}>
           <X className="w-4 h-4" />
@@ -1102,7 +1102,7 @@ function ApplicationsPage() {
                         onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}>
                         <td className="px-4 py-3">
                           <p className="font-medium" style={{ color: C.textPrimary }}>{app.childName}</p>
-                          {app.preferredName && <p className="text-xs" style={{ color: C.textTertiary }}>"{app.preferredName}"</p>}
+                          {app.preferredName && <p className="text-xs" style={{ color: C.textTertiary }}>&ldquo;{app.preferredName}&rdquo;</p>}
                         </td>
                         <td className="px-4 py-3">
                           <p style={{ color: C.textSecondary }}>{app.parent}</p>

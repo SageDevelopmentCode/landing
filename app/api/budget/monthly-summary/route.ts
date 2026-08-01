@@ -196,7 +196,7 @@ export async function GET(request: NextRequest) {
       }
 
       const teacherIds = Object.keys(employeeHoursMap);
-      let nameMap: Record<string, string> = {};
+      const nameMap: Record<string, string> = {};
       if (teacherIds.length > 0) {
         const { data: users } = await db
           .schema("admin")

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useEffect } from 'react'
+import { useState, useTransition } from 'react'
 import { DetailSidebar } from '../components/DetailSidebar'
 import { cssColors as colors, radius, cssShadows as shadows } from '../design-system'
 import { addAdminRsvp } from '../../actions/addAdminRsvp'
@@ -46,13 +46,16 @@ export function AddRsvpSidebar({ isOpen, onClose, onRsvpAdded }: AddRsvpSidebarP
   const [serverError, setServerError] = useState('')
   const [isPending, startTransition] = useTransition()
 
-  useEffect(() => {
-    if (!isOpen) {
-      setForm(defaultForm)
-      setErrors({})
-      setServerError('')
-    }
-  }, [isOpen])
+  const resetForm = () => {
+    setForm(defaultForm)
+    setErrors({})
+    setServerError('')
+  }
+
+  const handleClose = () => {
+    resetForm()
+    onClose()
+  }
 
   const validate = () => {
     const newErrors: Record<string, string> = {}
@@ -94,7 +97,7 @@ export function AddRsvpSidebar({ isOpen, onClose, onRsvpAdded }: AddRsvpSidebarP
       }
 
       onRsvpAdded(result.rsvp)
-      onClose()
+      handleClose()
     })
   }
 
@@ -115,7 +118,7 @@ export function AddRsvpSidebar({ isOpen, onClose, onRsvpAdded }: AddRsvpSidebarP
   )
 
   return (
-    <DetailSidebar isOpen={isOpen} onClose={onClose} title="Add RSVP">
+    <DetailSidebar isOpen={isOpen} onClose={handleClose} title="Add RSVP">
       <form onSubmit={handleSubmit} className="space-y-5">
         {field('name', 'Name *', (
           <input
@@ -191,7 +194,7 @@ export function AddRsvpSidebar({ isOpen, onClose, onRsvpAdded }: AddRsvpSidebarP
         <div className="flex gap-3 pt-2">
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             disabled={isPending}
             className="flex-1 py-3 text-sm font-medium transition-all duration-200"
             style={{

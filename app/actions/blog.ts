@@ -1,8 +1,28 @@
 'use server'
 
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
+import type { Database } from '@/app/types/database.types'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+
+type BlogPostRow = {
+  id: string
+  title: string
+  slug: string
+  body: string
+  excerpt: string | null
+  meta_description: string | null
+  cover_image_path: string | null
+  cover_image_bucket: 'blog-images' | 'teacher-photos' | null
+  status: string
+  created_by: string
+  published_at: string | null
+  is_deleted: boolean
+  created_at: string
+  updated_at: string
+}
+
+type AdminUserName = Pick<Database['admin']['Tables']['users']['Row'], 'id' | 'full_name'>
 
 export interface BlogPost {
   id: string
@@ -32,7 +52,7 @@ function toSlug(title: string): string {
     .replace(/(^-|-$)/g, '')
 }
 
-async function resolvePostRows(rows: any[], adminClient: ReturnType<typeof createAdminClient>): Promise<BlogPost[]> {
+async function resolvePostRows(rows: BlogPostRow[], adminClient: ReturnType<typeof createAdminClient>): Promise<BlogPost[]> {
   const authorIds = [...new Set(rows.map((r) => r.created_by).filter(Boolean))]
 
   let nameMap = new Map<string, string | null>()
@@ -42,7 +62,7 @@ async function resolvePostRows(rows: any[], adminClient: ReturnType<typeof creat
       .from('users')
       .select('id, full_name')
       .in('id', authorIds)
-    nameMap = new Map((users ?? []).map((u: any) => [u.id, u.full_name ?? null]))
+    nameMap = new Map((users ?? []).map((u: AdminUserName) => [u.id, u.full_name ?? null]))
   }
 
   const pathsByBucket = new Map<string, string[]>()
@@ -100,7 +120,7 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
     return []
   }
 
-  return resolvePostRows(rows, adminClient)
+  return resolvePostRows(rows as BlogPostRow[], adminClient)
 }
 
 export async function getBlogPostById(id: string): Promise<BlogPost | null> {
@@ -119,7 +139,7 @@ export async function getBlogPostById(id: string): Promise<BlogPost | null> {
     return null
   }
 
-  const results = await resolvePostRows([row], adminClient)
+  const results = await resolvePostRows([row as BlogPostRow], adminClient)
   return results[0] ?? null
 }
 
@@ -139,7 +159,7 @@ export async function getPublishedPosts(): Promise<BlogPost[]> {
     return []
   }
 
-  return resolvePostRows(rows, adminClient)
+  return resolvePostRows(rows as BlogPostRow[], adminClient)
 }
 
 export async function getOtherPublishedPosts(excludeSlug: string): Promise<BlogPost[]> {
@@ -161,7 +181,7 @@ export async function getPublishedPostBySlug(slug: string): Promise<BlogPost | n
 
   if (error || !row) return null
 
-  const results = await resolvePostRows([row], adminClient)
+  const results = await resolvePostRows([row as BlogPostRow], adminClient)
   return results[0] ?? null
 }
 
@@ -187,7 +207,7 @@ export async function createBlogPost(
     .eq('is_deleted', false)
 
   if (existing && existing.length > 0) {
-    const existingSlugs = new Set(existing.map((r: any) => r.slug))
+    const existingSlugs = new Set(existing.map((r: Pick<BlogPostRow, 'slug'>) => r.slug))
     if (existingSlugs.has(slug)) {
       let counter = 2
       while (existingSlugs.has(`${slug}-${counter}`)) counter++
@@ -207,7 +227,7 @@ export async function createBlogPost(
     return { error: error?.message ?? 'Failed to create post' }
   }
 
-  const results = await resolvePostRows([row], adminClient)
+  const results = await resolvePostRows([row as BlogPostRow], adminClient)
   return { data: results[0] }
 }
 

@@ -192,26 +192,30 @@ interface AttendanceSidebarProps {
 function AttendanceSidebar({ student, onClose }: AttendanceSidebarProps) {
   const [records, setRecords] = useState<UnifiedAttendanceRecord[]>([]);
   const [userMap, setUserMap] = useState<UserMap>({});
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [selectedRecord, setSelectedRecord] =
     useState<UnifiedAttendanceRecord | null>(null);
 
   useEffect(() => {
     if (!student) return;
-    setLoading(true);
-    setRecords([]);
-    setUserMap({});
-    setSelectedRecord(null);
+    let cancelled = false;
     getParentStudentAttendance(student.id)
       .then(({ records: r, userMap: m }) => {
+        if (cancelled) return;
         setRecords(r);
         setUserMap(m);
       })
       .catch(() => {
+        if (cancelled) return;
         setRecords([]);
         setUserMap({});
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [student?.id]);
 
   const firstName = student?.child_legal_name.split(" ")[0] ?? "";
@@ -417,8 +421,10 @@ export default function HomePageClient({
   hasSubmittedTestimonial,
 }: Props) {
   const [checklistOpen, setChecklistOpen] = useState(false);
-  const [bannerIdx, setBannerIdx] = useState(0);
-  const [greeting, setGreeting] = useState("");
+  const [bannerIdx, setBannerIdx] = useState(() =>
+    Math.floor(Math.random() * BANNER_IMAGES.length),
+  );
+  const [greeting] = useState(() => getGreeting());
   const [attendanceStudent, setAttendanceStudent] =
     useState<HomeStudent | null>(null);
   const [copied, setCopied] = useState(false);
@@ -437,11 +443,9 @@ export default function HomePageClient({
   const [testimonialSubmitted, setTestimonialSubmitted] = useState(
     hasSubmittedTestimonial,
   );
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    setIsMobile(window.innerWidth < 1024);
-  }, []);
+  const [isMobile] = useState(
+    () => typeof window !== "undefined" && window.innerWidth < 1024,
+  );
 
   useEffect(() => {
     if (suppressReferralPopup) return;
@@ -494,7 +498,6 @@ export default function HomePageClient({
     referrals.filter((r) => r.status === "rewarded").length * 500;
 
   useEffect(() => {
-    setGreeting(getGreeting());
     const id = setInterval(() => {
       setBannerIdx((i) => (i + 1) % BANNER_IMAGES.length);
     }, 4000);
@@ -1801,6 +1804,7 @@ export default function HomePageClient({
 
       {/* Attendance sidebar */}
       <AttendanceSidebar
+        key={attendanceStudent?.id ?? "none"}
         student={attendanceStudent}
         onClose={() => setAttendanceStudent(null)}
       />

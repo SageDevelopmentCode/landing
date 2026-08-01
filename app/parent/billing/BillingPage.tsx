@@ -1554,7 +1554,7 @@ function HomeschoolSchoolYearModal({
                     >
                       Email us
                     </a>{" "}
-                    and we'll get it sorted.
+                    and we&apos;ll get it sorted.
                   </p>
                 </div>
               )}
@@ -3202,7 +3202,7 @@ function SupplyFeeModal({
                     >
                       Email us
                     </a>{" "}
-                    and we'll get it sorted.
+                    and we&apos;ll get it sorted.
                   </p>
                 </div>
               )}
@@ -7516,10 +7516,6 @@ function PendingPaymentsSection({
   paidSchoolYearByStudent: PaidSchoolYearByStudent;
   onTuitionCodeClick: () => void;
 }) {
-  const [activeTermTab, setActiveTermTab] = useState<"summer" | "school_year">(
-    "summer",
-  );
-
   const nonEnrolledMap = new Map(nonEnrolledApps.map((a) => [a.student_id, a]));
 
   const isSchoolYearOnly = schoolYearOnlyApps.some(
@@ -7546,9 +7542,19 @@ function PendingPaymentsSection({
         a.drop_in_program === "school_year_26_27",
     );
 
-  useEffect(() => {
-    setActiveTermTab(isSchoolYearOnlyStudent ? "school_year" : "summer");
-  }, [activeStudentId, isSchoolYearOnlyStudent]);
+  const studentTermKey = `${activeStudentId}-${isSchoolYearOnlyStudent ? "school_year" : "summer"}`;
+  const [userTermTab, setUserTermTab] = useState<{
+    studentKey: string;
+    tab: "summer" | "school_year";
+  } | null>(null);
+  const defaultTermTab: "summer" | "school_year" = isSchoolYearOnlyStudent
+    ? "school_year"
+    : "summer";
+  const activeTermTab =
+    userTermTab?.studentKey === studentTermKey ? userTermTab.tab : defaultTermTab;
+  const setActiveTermTab = (tab: "summer" | "school_year") => {
+    setUserTermTab({ studentKey: studentTermKey, tab });
+  };
 
   if (
     !isSchoolYearOnly &&

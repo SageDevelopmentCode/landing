@@ -851,7 +851,7 @@ const inputClass =
 export default function ShadowTourPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<ShadowStep>(1);
-  const stepDirection = useRef<1 | -1>(1);
+  const [stepDirection, setStepDirection] = useState<1 | -1>(1);
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [calendarMonth, setCalendarMonth] = useState(5); // June
@@ -921,7 +921,7 @@ export default function ShadowTourPage() {
   });
 
   function goToStep(step: ShadowStep) {
-    stepDirection.current = step > currentStep ? 1 : -1;
+    setStepDirection(step > currentStep ? 1 : -1);
     setCurrentStep(step);
   }
 
@@ -1191,10 +1191,10 @@ export default function ShadowTourPage() {
               <p className="text-sm text-gray-500 font-body">{heading.sub}</p>
             </div>
 
-            <AnimatePresence mode="wait" custom={stepDirection.current}>
+            <AnimatePresence mode="wait" custom={stepDirection}>
               <motion.div
                 key={currentStep}
-                custom={stepDirection.current}
+                custom={stepDirection}
                 variants={stepVariants}
                 initial="initial"
                 animate="animate"

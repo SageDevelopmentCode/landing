@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import { createContext, useContext, useState, useCallback } from 'react'
 
 type Theme = 'dark' | 'light'
 
@@ -18,15 +18,15 @@ export const useTheme = () => useContext(ThemeContext)
 
 const STORAGE_KEY = 'admin-theme'
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('light')
-  const [mounted, setMounted] = useState(false)
+function getStoredTheme(): Theme {
+  if (typeof window === 'undefined') return 'light'
+  const stored = localStorage.getItem(STORAGE_KEY) as Theme | null
+  return stored === 'light' || stored === 'dark' ? stored : 'light'
+}
 
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) as Theme | null
-    if (stored === 'light' || stored === 'dark') setTheme(stored)
-    setMounted(true)
-  }, [])
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [theme, setTheme] = useState<Theme>(getStoredTheme)
+  const mounted = typeof window !== 'undefined'
 
   const toggleTheme = useCallback(() => {
     setTheme(prev => {
