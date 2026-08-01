@@ -18,15 +18,14 @@ jobs:
           node-version: 24
           cache: npm
 
+      - run: npm ci
+
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.75.0
 
       - name: Start Supabase
-        run: supabase start -x studio,imgproxy,edge-runtime,logflare
-
-      - name: Reset database
-        run: npm run db:reset
+        run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector
 
       - name: Export Supabase env
         run: |
@@ -37,7 +36,8 @@ jobs:
           echo "STRIPE_SECRET_KEY=sk_test_e2e_placeholder" >> "$GITHUB_ENV"
           echo "CI=true" >> "$GITHUB_ENV"
 
-      - run: npm ci
+      - name: Reset database
+        run: npm run db:reset
 
       - name: Build Next.js (local Supabase env)
         run: bash scripts/build-e2e.sh

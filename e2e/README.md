@@ -75,6 +75,8 @@ Going forward, add new schema changes only under `supabase/migrations/` (not the
 - **`.github/workflows/ci.yml`** — lint + build on every PR
 - **`.github/workflows/e2e.yml`** — full e2e suite with `supabase start` + Playwright
 
+CI excludes the Vector analytics container (`-x vector`) because it is not needed for tests and often fails health checks on GitHub Actions runners. Local dev can keep analytics enabled in `supabase/config.toml` if Vector starts successfully on your machine.
+
 ## Troubleshooting
 
 **Port 54322 already in use** — another Supabase project is running. Stop it:
