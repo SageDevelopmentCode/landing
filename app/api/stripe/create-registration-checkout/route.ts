@@ -35,7 +35,10 @@ export async function POST(request: NextRequest) {
       dropInProgram,
     } = validated;
 
-    const billingProgram = program === "homeschool_drop_in" ? (dropInProgram ?? "summer_26") : program;
+    const billingProgram =
+      program === "homeschool_drop_in"
+        ? (dropInProgram ?? "summer_26")
+        : program;
 
     const summerCents = 7500;
     const schoolCents = 50000;
@@ -124,7 +127,10 @@ export async function POST(request: NextRequest) {
             price_data: {
               currency: "usd",
               unit_amount: totalBaseCents,
-              product_data: { name: productName, description: productDescription },
+              product_data: {
+                name: productName,
+                description: productDescription,
+              },
             },
           },
           {
@@ -145,7 +151,10 @@ export async function POST(request: NextRequest) {
             price_data: {
               currency: "usd",
               unit_amount: totalBaseCents,
-              product_data: { name: productName, description: productDescription },
+              product_data: {
+                name: productName,
+                description: productDescription,
+              },
             },
           },
           {
@@ -174,7 +183,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const stripeCustomerId = await getOrCreateStripeCustomer(parentId, parentEmail);
+    const stripeCustomerId = await getOrCreateStripeCustomer(
+      parentId,
+      parentEmail,
+    );
 
     const session = await getStripe().checkout.sessions.create({
       mode: "payment",

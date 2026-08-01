@@ -839,7 +839,9 @@ function CheckMockup() {
           <Text style={styles.checkMockupMicrText}>⑆ 0000 ⑆ 0000 0000 ⑆</Text>
         </View>
       </View>
-      <Text style={styles.checkMockupCaption}>Example — your check should look like this</Text>
+      <Text style={styles.checkMockupCaption}>
+        Example — your check should look like this
+      </Text>
     </View>
   );
 }
@@ -1400,7 +1402,9 @@ export default function TuitionScreen() {
             (a) =>
               a.student_id === selectionStudentId &&
               a.status === "enrolled" &&
-              (a.program === "summer_26" || a.program === "both" || a.program === "homeschool_drop_in"),
+              (a.program === "summer_26" ||
+                a.program === "both" ||
+                a.program === "homeschool_drop_in"),
           ) ?? null
         }
         paidAftercare={paidAftercareByStudent[selectionStudentId ?? ""]}
@@ -1417,7 +1421,9 @@ export default function TuitionScreen() {
             (a) =>
               a.student_id === selectionStudentId &&
               a.status === "enrolled" &&
-              (a.program === "summer_26" || a.program === "both" || a.program === "homeschool_drop_in"),
+              (a.program === "summer_26" ||
+                a.program === "both" ||
+                a.program === "homeschool_drop_in"),
           ) ?? null
         }
         paidFunFriday={paidFunFridayByStudent[selectionStudentId ?? ""]}

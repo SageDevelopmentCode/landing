@@ -7,7 +7,10 @@ import {
 } from "@gorhom/bottom-sheet";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { openBrowserAsync, WebBrowserPresentationStyle } from "expo-web-browser";
+import {
+  openBrowserAsync,
+  WebBrowserPresentationStyle,
+} from "expo-web-browser";
 import { Brand } from "@/constants/theme";
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
@@ -20,22 +23,42 @@ interface MenuItem {
 }
 
 const MENU_ITEMS: MenuItem[] = [
-  { label: "Calendar",      icon: "calendar-outline",           route: "/(tabs)/calendar" },
-  { label: "Attendance",    icon: "checkmark-done-outline",     route: "/(tabs)/attendance" },
+  { label: "Calendar", icon: "calendar-outline", route: "/(tabs)/calendar" },
+  {
+    label: "Attendance",
+    icon: "checkmark-done-outline",
+    route: "/(tabs)/attendance",
+  },
   // { label: "Enrollment",    icon: "school-outline",           route: "/(tabs)/enrollment" },
-  { label: "Forms & Docs",  icon: "document-text-outline",      route: "/(tabs)/forms" },
+  {
+    label: "Forms & Docs",
+    icon: "document-text-outline",
+    route: "/(tabs)/forms",
+  },
   // { label: "Resources",     icon: "library-outline",          route: "/(tabs)/resources" },
-  { label: "Photos",        icon: "images-outline",             route: "/(tabs)/photos" },
-  { label: "Newsletters",   icon: "newspaper-outline",          route: "/(tabs)/newsletters" },
-  { label: "Volunteer",     icon: "heart-outline",              route: "/(tabs)/volunteer" },
-// { label: "Reimbursement", icon: "cash-outline",             route: "/(tabs)/reimbursement" },
-  { label: "Activities",    icon: "ribbon-outline",             route: "/(tabs)/preferences" },
-  { label: "Rewards",       icon: "gift-outline",               route: "/(tabs)/rewards" },
-  { label: "Tuition",       icon: "card-outline",               route: "/(tabs)/tuition" },
-  { label: "Privacy",       icon: "shield-checkmark-outline",   url: "https://sagefield.co/privacy" },
-  { label: "Terms",         icon: "document-outline",           url: "https://sagefield.co/terms" },
-  { label: "Help",          icon: "help-circle-outline",        route: "/(tabs)/help" },
-  { label: "Settings",      icon: "settings-outline",           route: "/(tabs)/settings" },
+  { label: "Photos", icon: "images-outline", route: "/(tabs)/photos" },
+  {
+    label: "Newsletters",
+    icon: "newspaper-outline",
+    route: "/(tabs)/newsletters",
+  },
+  { label: "Volunteer", icon: "heart-outline", route: "/(tabs)/volunteer" },
+  // { label: "Reimbursement", icon: "cash-outline",             route: "/(tabs)/reimbursement" },
+  { label: "Activities", icon: "ribbon-outline", route: "/(tabs)/preferences" },
+  { label: "Rewards", icon: "gift-outline", route: "/(tabs)/rewards" },
+  { label: "Tuition", icon: "card-outline", route: "/(tabs)/tuition" },
+  {
+    label: "Privacy",
+    icon: "shield-checkmark-outline",
+    url: "https://sagefield.co/privacy",
+  },
+  {
+    label: "Terms",
+    icon: "document-outline",
+    url: "https://sagefield.co/terms",
+  },
+  { label: "Help", icon: "help-circle-outline", route: "/(tabs)/help" },
+  { label: "Settings", icon: "settings-outline", route: "/(tabs)/settings" },
 ];
 
 export const MoreMenuSheet = forwardRef<BottomSheetModal>((_, ref) => {
@@ -59,7 +82,7 @@ export const MoreMenuSheet = forwardRef<BottomSheetModal>((_, ref) => {
         router.push(item.route as any);
       }
     },
-    [ref, router]
+    [ref, router],
   );
 
   // Pad to a multiple of 3 so the last row always fills evenly
@@ -72,97 +95,106 @@ export const MoreMenuSheet = forwardRef<BottomSheetModal>((_, ref) => {
 
   return (
     <>
-    <BottomSheetModal
-      ref={ref}
-      snapPoints={["60%"]}
-      enablePanDownToClose
-      backdropComponent={(props) => (
-        <BottomSheetBackdrop
-          {...props}
-          disappearsOnIndex={-1}
-          appearsOnIndex={0}
-          pressBehavior="close"
-        />
-      )}
-    >
-      <BottomSheetView style={styles.container}>
-        <Text style={styles.title}>More</Text>
-        <View style={styles.grid}>
-          {rows.map((row, rowIdx) => (
-            <View key={rowIdx} style={styles.row}>
-              {row.map((item, cellIdx) =>
-                item === null ? (
-                  <View key={`spacer-${cellIdx}`} style={{ flex: 1 }} />
-                ) : (
-                  <Pressable
-                    key={item.label}
-                    style={({ pressed }) => [
-                      styles.cell,
-                      pressed && styles.cellPressed,
-                    ]}
-                    onPress={() => handleItemPress(item)}
-                  >
-                    <View style={styles.iconWrap}>
-                      <Ionicons name={item.icon} size={28} color={Brand.sage700} />
-                    </View>
-                    <Text style={styles.label}>{item.label}</Text>
-                  </Pressable>
-                )
-              )}
-            </View>
-          ))}
-        </View>
-      </BottomSheetView>
-    </BottomSheetModal>
+      <BottomSheetModal
+        ref={ref}
+        snapPoints={["60%"]}
+        enablePanDownToClose
+        backdropComponent={(props) => (
+          <BottomSheetBackdrop
+            {...props}
+            disappearsOnIndex={-1}
+            appearsOnIndex={0}
+            pressBehavior="close"
+          />
+        )}
+      >
+        <BottomSheetView style={styles.container}>
+          <Text style={styles.title}>More</Text>
+          <View style={styles.grid}>
+            {rows.map((row, rowIdx) => (
+              <View key={rowIdx} style={styles.row}>
+                {row.map((item, cellIdx) =>
+                  item === null ? (
+                    <View key={`spacer-${cellIdx}`} style={{ flex: 1 }} />
+                  ) : (
+                    <Pressable
+                      key={item.label}
+                      style={({ pressed }) => [
+                        styles.cell,
+                        pressed && styles.cellPressed,
+                      ]}
+                      onPress={() => handleItemPress(item)}
+                    >
+                      <View style={styles.iconWrap}>
+                        <Ionicons
+                          name={item.icon}
+                          size={28}
+                          color={Brand.sage700}
+                        />
+                      </View>
+                      <Text style={styles.label}>{item.label}</Text>
+                    </Pressable>
+                  ),
+                )}
+              </View>
+            ))}
+          </View>
+        </BottomSheetView>
+      </BottomSheetModal>
 
-    <BottomSheetModal
-      ref={tuitionSheetRef}
-      snapPoints={["40%"]}
-      enablePanDownToClose
-      backdropComponent={(props) => (
-        <BottomSheetBackdrop
-          {...props}
-          disappearsOnIndex={-1}
-          appearsOnIndex={0}
-          pressBehavior="close"
-        />
-      )}
-    >
-      <BottomSheetView style={styles.tuitionContainer}>
-        <Text style={styles.tuitionTitle}>Tuition</Text>
-        <Text style={styles.tuitionBody}>
-          We're still working on the mobile version of tuition — it's coming soon! In the meantime, please use the parent portal to make payments or view your billing history.
-        </Text>
-        <Pressable
-          style={({ pressed }) => [styles.tuitionBtn, pressed && { opacity: 0.75 }]}
-          onPress={() =>
-            openBrowserAsync("https://www.sagefield.co/parent/billing", {
-              presentationStyle: WebBrowserPresentationStyle.AUTOMATIC,
-            })
-          }
-        >
-          <Ionicons name="open-outline" size={14} color="#fff" />
-          <Text style={styles.tuitionBtnText}>Open Parent Portal</Text>
-        </Pressable>
-        <TextInput
-          style={styles.secretInput}
-          value={secretCode}
-          onChangeText={(val) => {
-            setSecretCode(val);
-            if (val === "julius") {
-              tuitionSheetRef.current?.dismiss();
-              setSecretCode("");
-              router.push("/(tabs)/tuition" as any);
+      <BottomSheetModal
+        ref={tuitionSheetRef}
+        snapPoints={["40%"]}
+        enablePanDownToClose
+        backdropComponent={(props) => (
+          <BottomSheetBackdrop
+            {...props}
+            disappearsOnIndex={-1}
+            appearsOnIndex={0}
+            pressBehavior="close"
+          />
+        )}
+      >
+        <BottomSheetView style={styles.tuitionContainer}>
+          <Text style={styles.tuitionTitle}>Tuition</Text>
+          <Text style={styles.tuitionBody}>
+            We're still working on the mobile version of tuition — it's coming
+            soon! In the meantime, please use the parent portal to make payments
+            or view your billing history.
+          </Text>
+          <Pressable
+            style={({ pressed }) => [
+              styles.tuitionBtn,
+              pressed && { opacity: 0.75 },
+            ]}
+            onPress={() =>
+              openBrowserAsync("https://www.sagefield.co/parent/billing", {
+                presentationStyle: WebBrowserPresentationStyle.AUTOMATIC,
+              })
             }
-          }}
-          secureTextEntry
-          placeholder="·"
-          placeholderTextColor="#ccc"
-          autoCorrect={false}
-          autoCapitalize="none"
-        />
-      </BottomSheetView>
-    </BottomSheetModal>
+          >
+            <Ionicons name="open-outline" size={14} color="#fff" />
+            <Text style={styles.tuitionBtnText}>Open Parent Portal</Text>
+          </Pressable>
+          <TextInput
+            style={styles.secretInput}
+            value={secretCode}
+            onChangeText={(val) => {
+              setSecretCode(val);
+              if (val === "julius") {
+                tuitionSheetRef.current?.dismiss();
+                setSecretCode("");
+                router.push("/(tabs)/tuition" as any);
+              }
+            }}
+            secureTextEntry
+            placeholder="·"
+            placeholderTextColor="#ccc"
+            autoCorrect={false}
+            autoCapitalize="none"
+          />
+        </BottomSheetView>
+      </BottomSheetModal>
     </>
   );
 });

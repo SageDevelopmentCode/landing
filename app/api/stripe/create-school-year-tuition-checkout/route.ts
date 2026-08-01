@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getStripe } from "@/app/lib/stripe";
 import { getOrCreateStripeCustomer } from "@/app/lib/stripe-customer";
-import { sendDiscordNotification, createAppErrorEmbed } from "@/app/lib/discord";
+import {
+  sendDiscordNotification,
+  createAppErrorEmbed,
+} from "@/app/lib/discord";
 
 const schema = z.object({
   parentId: z.string(),
@@ -18,11 +21,22 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const validated = schema.parse(body);
-    const { parentId, parentEmail, studentId, intendedAmountCents, coverFees, paymentMethod, selectedMonths } = validated;
+    const {
+      parentId,
+      parentEmail,
+      studentId,
+      intendedAmountCents,
+      coverFees,
+      paymentMethod,
+      selectedMonths,
+    } = validated;
 
     const baseCents = intendedAmountCents;
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
-    const productName = selectedMonths.length === 1 ? "School Year Tuition (1 month)" : `School Year Tuition (${selectedMonths.length} months)`;
+    const productName =
+      selectedMonths.length === 1
+        ? "School Year Tuition (1 month)"
+        : `School Year Tuition (${selectedMonths.length} months)`;
 
     let lineItems;
     if (coverFees && paymentMethod === "ach") {
@@ -35,7 +49,8 @@ export async function POST(request: NextRequest) {
             unit_amount: baseCents,
             product_data: {
               name: productName,
-              description: "Sage Field Private School — School Year 2026–27 monthly tuition",
+              description:
+                "Sage Field Private School — School Year 2026–27 monthly tuition",
             },
           },
         },
@@ -58,7 +73,8 @@ export async function POST(request: NextRequest) {
             unit_amount: baseCents,
             product_data: {
               name: productName,
-              description: "Sage Field Private School — School Year 2026–27 monthly tuition",
+              description:
+                "Sage Field Private School — School Year 2026–27 monthly tuition",
             },
           },
         },
@@ -80,14 +96,18 @@ export async function POST(request: NextRequest) {
             unit_amount: baseCents,
             product_data: {
               name: productName,
-              description: "Sage Field Private School — School Year 2026–27 monthly tuition",
+              description:
+                "Sage Field Private School — School Year 2026–27 monthly tuition",
             },
           },
         },
       ];
     }
 
-    const stripeCustomerId = await getOrCreateStripeCustomer(parentId, parentEmail);
+    const stripeCustomerId = await getOrCreateStripeCustomer(
+      parentId,
+      parentEmail,
+    );
 
     const session = await getStripe().checkout.sessions.create({
       mode: "payment",
@@ -119,7 +139,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url: session.url });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues[0].message }, { status: 400 });
+      return NextResponse.json(
+        { error: error.issues[0].message },
+        { status: 400 },
+      );
     }
     console.error("School year tuition checkout error:", error);
     sendDiscordNotification(
@@ -128,6 +151,9 @@ export async function POST(request: NextRequest) {
         area: "create-school-year-tuition-checkout",
       }),
     ).catch(() => {});
-    return NextResponse.json({ error: "Failed to create checkout session" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to create checkout session" },
+      { status: 500 },
+    );
   }
 }

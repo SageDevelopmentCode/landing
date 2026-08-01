@@ -17,10 +17,23 @@ const schema = z.object({
   siblingBundleStudentIds: z.array(z.string()).optional().default([]),
   siblingGrades: z.array(z.string()).optional().default([]),
   siblingBundleAmounts: z.array(z.number().int()).optional().default([]),
+  siblingHomeschoolBundleStudentIds: z.array(z.string()).optional().default([]),
+  siblingHomeschoolBundleAmounts: z
+    .array(z.number().int())
+    .optional()
+    .default([]),
+  siblingHomeschoolApplicationIds: z.array(z.string()).optional().default([]),
+  siblingHomeschoolGradeTiers: z
+    .array(z.enum(["primary", "upper"]))
+    .optional()
+    .default([]),
   bundleHomeschoolTier: z.enum(["dropin", "2day", "3day"]).optional(),
   bundleHomeschoolGradeTier: z.enum(["primary", "upper"]).optional(),
   bundleHomeschoolApplicationId: z.string().optional(),
-  bundleHomeschoolSelectedDays: z.array(z.number().int()).optional().default([]),
+  bundleHomeschoolSelectedDays: z
+    .array(z.number().int())
+    .optional()
+    .default([]),
   bundleHomeschoolWeekSelectionsJson: z.string().optional(),
 });
 
@@ -41,6 +54,10 @@ export async function POST(request: NextRequest) {
       siblingBundleStudentIds,
       siblingGrades,
       siblingBundleAmounts,
+      siblingHomeschoolBundleStudentIds,
+      siblingHomeschoolBundleAmounts,
+      siblingHomeschoolApplicationIds,
+      siblingHomeschoolGradeTiers,
       bundleHomeschoolTier,
       bundleHomeschoolGradeTier,
       bundleHomeschoolApplicationId,
@@ -49,10 +66,23 @@ export async function POST(request: NextRequest) {
     } = validated;
 
     const supplyFeeCents = 30000;
-    const primaryBundleCents = bundleType && bundleAmountCents ? bundleAmountCents : 0;
+    const primaryBundleCents =
+      bundleType && bundleAmountCents ? bundleAmountCents : 0;
     const siblingSupplyTotal = supplyFeeCents * siblingStudentIds.length;
-    const siblingBundleTotal = siblingBundleAmounts.reduce((sum, a) => sum + a, 0);
-    const baseCents = supplyFeeCents + primaryBundleCents + siblingSupplyTotal + siblingBundleTotal;
+    const siblingSchoolYearBundleTotal = siblingBundleAmounts.reduce(
+      (sum, a) => sum + a,
+      0,
+    );
+    const siblingHomeschoolBundleTotal = siblingHomeschoolBundleAmounts.reduce(
+      (sum, a) => sum + a,
+      0,
+    );
+    const baseCents =
+      supplyFeeCents +
+      primaryBundleCents +
+      siblingSupplyTotal +
+      siblingSchoolYearBundleTotal +
+      siblingHomeschoolBundleTotal;
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
 
     const primarySupplyFeeLineItem = {
@@ -62,44 +92,81 @@ export async function POST(request: NextRequest) {
         unit_amount: supplyFeeCents,
         product_data: {
           name: "Annual Supply Fee",
-          description: "Sage Field Private School — School Year 2026–27 annual supply fee",
+          description:
+            "Sage Field Private School — School Year 2026–27 annual supply fee",
         },
       },
     };
 
-    const primaryBundleLineItem = primaryBundleCents > 0 ? {
-      quantity: 1,
-      price_data: {
-        currency: "usd",
-        unit_amount: primaryBundleCents,
-        product_data: {
-          name: bundleType === "school_year_tuition" ? "August 2026 Tuition" : "Homeschool Drop-In — First Month",
-          description: "Sage Field Private School — School Year 2026–27",
-        },
-      },
-    } : null;
+    const primaryBundleLineItem =
+      primaryBundleCents > 0
+        ? {
+            quantity: 1,
+            price_data: {
+              currency: "usd",
+              unit_amount: primaryBundleCents,
+              product_data: {
+                name:
+                  bundleType === "school_year_tuition"
+                    ? "August 2026 Tuition"
+                    : "Homeschool Drop-In — First Month",
+                description: "Sage Field Private School — School Year 2026–27",
+              },
+            },
+          }
+        : null;
 
     const siblingLineItems = siblingStudentIds.flatMap((sibId, i) => {
-      const items = [{
-        quantity: 1,
+      const items: {
+        quantity: number;
         price_data: {
-          currency: "usd",
-          unit_amount: supplyFeeCents,
-          product_data: {
-            name: "Annual Supply Fee — Sibling",
-            description: `Sage Field Private School — School Year 2026–27${siblingGrades[i] ? ` · ${siblingGrades[i]}` : ""}`,
+          currency: string;
+          unit_amount: number;
+          product_data: { name: string; description?: string };
+        };
+      }[] = [
+        {
+          quantity: 1,
+          price_data: {
+            currency: "usd",
+            unit_amount: supplyFeeCents,
+            product_data: {
+              name: "Annual Supply Fee — Sibling",
+              description: `Sage Field Private School — School Year 2026–27${siblingGrades[i] ? ` · ${siblingGrades[i]}` : ""}`,
+            },
           },
         },
-      }];
-      const bundleIdx = siblingBundleStudentIds.indexOf(sibId);
-      if (bundleIdx >= 0 && siblingBundleAmounts[bundleIdx] > 0) {
+      ];
+      const schoolYearBundleIdx = siblingBundleStudentIds.indexOf(sibId);
+      if (
+        schoolYearBundleIdx >= 0 &&
+        siblingBundleAmounts[schoolYearBundleIdx] > 0
+      ) {
         items.push({
           quantity: 1,
           price_data: {
             currency: "usd",
-            unit_amount: siblingBundleAmounts[bundleIdx],
+            unit_amount: siblingBundleAmounts[schoolYearBundleIdx],
             product_data: {
               name: "August 2026 Tuition — Sibling",
+              description: `Sage Field Private School — School Year 2026–27${siblingGrades[i] ? ` · ${siblingGrades[i]}` : ""}`,
+            },
+          },
+        });
+      }
+      const homeschoolBundleIdx =
+        siblingHomeschoolBundleStudentIds.indexOf(sibId);
+      if (
+        homeschoolBundleIdx >= 0 &&
+        siblingHomeschoolBundleAmounts[homeschoolBundleIdx] > 0
+      ) {
+        items.push({
+          quantity: 1,
+          price_data: {
+            currency: "usd",
+            unit_amount: siblingHomeschoolBundleAmounts[homeschoolBundleIdx],
+            product_data: {
+              name: "Homeschool Drop-In — First Month — Sibling",
               description: `Sage Field Private School — School Year 2026–27${siblingGrades[i] ? ` · ${siblingGrades[i]}` : ""}`,
             },
           },
@@ -145,7 +212,14 @@ export async function POST(request: NextRequest) {
       lineItems = baseLineItems;
     }
 
-    const stripeCustomerId = await getOrCreateStripeCustomer(parentId, parentEmail);
+    const stripeCustomerId = await getOrCreateStripeCustomer(
+      parentId,
+      parentEmail,
+    );
+
+    const hasHomeschoolBundleMeta =
+      bundleHomeschoolTier != null ||
+      siblingHomeschoolBundleStudentIds.length > 0;
 
     const session = await getStripe().checkout.sessions.create({
       mode: "payment",
@@ -168,23 +242,45 @@ export async function POST(request: NextRequest) {
         cover_fees: String(coverFees),
         payment_method: paymentMethod,
         intended_amount_cents: String(baseCents),
-        ...(bundleType ? {
-          bundle_type: bundleType,
-          bundle_amount_cents: String(primaryBundleCents),
-          bundle_month_index: bundleMonthIndex != null ? String(bundleMonthIndex) : "",
-        } : {}),
-        ...(bundleType === "homeschool" && bundleHomeschoolTier ? {
-          bundle_homeschool_tier: bundleHomeschoolTier,
-          bundle_homeschool_grade_tier: bundleHomeschoolGradeTier ?? "",
-          bundle_homeschool_application_id: bundleHomeschoolApplicationId ?? "",
-          bundle_homeschool_selected_days: bundleHomeschoolSelectedDays.join(","),
-          bundle_homeschool_week_selections_json: bundleHomeschoolWeekSelectionsJson ?? "",
-        } : {}),
-        ...(siblingStudentIds.length > 0 ? {
-          sibling_supply_student_ids: siblingStudentIds.join(","),
-          sibling_bundle_student_ids: siblingBundleStudentIds.join(","),
-          sibling_bundle_amounts: siblingBundleAmounts.join(","),
-        } : {}),
+        ...(bundleType
+          ? {
+              bundle_type: bundleType,
+              bundle_amount_cents: String(primaryBundleCents),
+              bundle_month_index:
+                bundleMonthIndex != null ? String(bundleMonthIndex) : "",
+            }
+          : {}),
+        ...(hasHomeschoolBundleMeta && bundleHomeschoolTier
+          ? {
+              bundle_homeschool_tier: bundleHomeschoolTier,
+              bundle_homeschool_grade_tier: bundleHomeschoolGradeTier ?? "",
+              bundle_homeschool_application_id:
+                bundleHomeschoolApplicationId ?? "",
+              bundle_homeschool_selected_days:
+                bundleHomeschoolSelectedDays.join(","),
+              bundle_homeschool_week_selections_json:
+                bundleHomeschoolWeekSelectionsJson ?? "",
+            }
+          : {}),
+        ...(siblingStudentIds.length > 0
+          ? {
+              sibling_supply_student_ids: siblingStudentIds.join(","),
+              sibling_bundle_student_ids: siblingBundleStudentIds.join(","),
+              sibling_bundle_amounts: siblingBundleAmounts.join(","),
+            }
+          : {}),
+        ...(siblingHomeschoolBundleStudentIds.length > 0
+          ? {
+              sibling_homeschool_bundle_student_ids:
+                siblingHomeschoolBundleStudentIds.join(","),
+              sibling_homeschool_bundle_amounts:
+                siblingHomeschoolBundleAmounts.join(","),
+              sibling_homeschool_application_ids:
+                siblingHomeschoolApplicationIds.join(","),
+              sibling_homeschool_grade_tiers:
+                siblingHomeschoolGradeTiers.join(","),
+            }
+          : {}),
       },
       success_url: `${baseUrl}/parent/billing`,
       cancel_url: `${baseUrl}/parent/billing`,
@@ -193,9 +289,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url: session.url });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues[0].message }, { status: 400 });
+      return NextResponse.json(
+        { error: error.issues[0].message },
+        { status: 400 },
+      );
     }
     console.error("Supply fee checkout error:", error);
-    return NextResponse.json({ error: "Failed to create checkout session" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to create checkout session" },
+      { status: 500 },
+    );
   }
 }
