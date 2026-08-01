@@ -11,6 +11,55 @@ import type {
   HistoryActionType,
 } from '@/app/teacher/dashboard/inventory/inventoryData'
 
+type InventoryPhotoSelect = {
+  id: string
+  storage_path: string
+  caption: string | null
+  is_primary: boolean
+  uploaded_by: string
+  created_at: string
+  is_deleted?: boolean
+}
+
+type InventoryHistoryEventSelect = {
+  id: string
+  action_type: string
+  performed_by: string
+  count_before: number | null
+  count_after: number | null
+  note: string | null
+  created_at: string
+}
+
+type InventoryShoppingRequestSelect = {
+  id: string
+  item_id: string
+  requested_by: string
+  note: string | null
+  status: string
+  created_at: string
+  resolved_by: string | null
+  resolved_at: string | null
+  resolution_note: string | null
+  is_deleted?: boolean
+}
+
+type InventoryItemRow = {
+  id: string
+  title: string
+  category: string
+  status: string | null
+  count: number | null
+  notes: string | null
+  classroom: string | null
+  added_by: string
+  created_at: string
+  updated_at: string
+  photos: InventoryPhotoSelect[] | null
+  history_log: InventoryHistoryEventSelect[] | null
+  shopping_requests: InventoryShoppingRequestSelect[] | null
+}
+
 // ─── Read ──────────────────────────────────────────────────────────────────────
 
 export async function getInventoryItems(): Promise<InventoryItem[]> {
@@ -35,13 +84,15 @@ export async function getInventoryItems(): Promise<InventoryItem[]> {
 
   if (!rows || rows.length === 0) return []
 
+  const typedRows = rows as InventoryItemRow[]
+
   // Collect all user UUIDs to resolve to display names in one batch query
   const userIds = new Set<string>()
-  for (const row of rows) {
+  for (const row of typedRows) {
     userIds.add(row.added_by)
-    for (const p of (row.photos as any[]) ?? []) userIds.add(p.uploaded_by)
-    for (const h of (row.history_log as any[]) ?? []) userIds.add(h.performed_by)
-    for (const s of (row.shopping_requests as any[]) ?? []) {
+    for (const p of row.photos ?? []) userIds.add(p.uploaded_by)
+    for (const h of row.history_log ?? []) userIds.add(h.performed_by)
+    for (const s of row.shopping_requests ?? []) {
       userIds.add(s.requested_by)
       if (s.resolved_by) userIds.add(s.resolved_by)
     }
@@ -57,7 +108,7 @@ export async function getInventoryItems(): Promise<InventoryItem[]> {
 
   // Generate signed URLs for all photos in parallel
   const signedUrlCache = new Map<string, string | null>()
-  const allPaths = rows.flatMap((r) => (r.photos as any[]).map((p: any) => p.storage_path))
+  const allPaths = typedRows.flatMap((r) => (r.photos ?? []).map((p) => p.storage_path))
   await Promise.all(
     allPaths.map(async (path) => {
       const { data } = await adminClient.storage
@@ -67,11 +118,11 @@ export async function getInventoryItems(): Promise<InventoryItem[]> {
     })
   )
 
-  return rows.map((row): InventoryItem => {
-    const photos: InventoryPhoto[] = ((row.photos as any[]) ?? [])
-      .filter((p: any) => !p.is_deleted)
-      .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-      .map((p: any) => ({
+  return typedRows.map((row): InventoryItem => {
+    const photos: InventoryPhoto[] = (row.photos ?? [])
+      .filter((p) => !p.is_deleted)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .map((p) => ({
         id: p.id,
         url: signedUrlCache.get(p.storage_path) ?? null,
         uploaded_at: p.created_at,
@@ -79,9 +130,9 @@ export async function getInventoryItems(): Promise<InventoryItem[]> {
         is_primary: p.is_primary,
       }))
 
-    const history_log: HistoryEvent[] = ((row.history_log as any[]) ?? [])
-      .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-      .map((h: any) => ({
+    const history_log: HistoryEvent[] = (row.history_log ?? [])
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .map((h) => ({
         id: h.id,
         action_type: h.action_type as HistoryActionType,
         teacher_name: nameMap.get(h.performed_by) ?? 'Unknown',
@@ -91,15 +142,15 @@ export async function getInventoryItems(): Promise<InventoryItem[]> {
         note: h.note,
       }))
 
-    const shopping_requests: ShoppingRequest[] = ((row.shopping_requests as any[]) ?? [])
-      .filter((s: any) => !s.is_deleted)
-      .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-      .map((s: any) => ({
+    const shopping_requests: ShoppingRequest[] = (row.shopping_requests ?? [])
+      .filter((s) => !s.is_deleted)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .map((s) => ({
         id: s.id,
         item_id: s.item_id,
         requested_by: nameMap.get(s.requested_by) ?? 'Unknown',
-        note: s.note,
-        status: s.status,
+        note: s.note ?? '',
+        status: s.status as ShoppingRequest['status'],
         created_at: s.created_at,
         resolved_by: s.resolved_by ? (nameMap.get(s.resolved_by) ?? 'Unknown') : null,
         resolved_at: s.resolved_at,

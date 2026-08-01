@@ -1085,21 +1085,20 @@ export default function ParentFeedClient({
   teachers: Teacher[];
 }) {
   const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
   const [posts, setPosts] = useState<FeedPost[]>(initialPosts);
   const [reelPosts, setReelPosts] = useState<ReelPost[]>(initialReelPosts);
-  const [feedMode, setFeedMode] = useState<"feed" | "reel">("feed");
+  const [feedMode, setFeedMode] = useState<"feed" | "reel">(() => {
+    if (tabParam === "feed" || tabParam === "reel") return tabParam;
+    if (typeof window !== "undefined") {
+      const saved = sessionStorage.getItem("parentFeedMode");
+      if (saved === "feed" || saved === "reel") return saved;
+    }
+    return "feed";
+  });
   const [selectedPost, setSelectedPost] = useState<FeedPost | null>(null);
   const [selectedTeacherId, setSelectedTeacherId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const param = searchParams.get("tab");
-    if (param === "feed" || param === "reel") {
-      setFeedMode(param);
-    } else {
-      const saved = sessionStorage.getItem("parentFeedMode");
-      if (saved === "feed" || saved === "reel") setFeedMode(saved);
-    }
-  }, []);
   useEffect(() => { sessionStorage.setItem("parentFeedMode", feedMode); }, [feedMode]);
 
   const displayedPosts = feedMode === "feed"

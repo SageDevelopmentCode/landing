@@ -164,34 +164,28 @@ function NavLink({
   );
 }
 
-export function Sidebar({
-  pendingApplications = 0,
+function AdminSidebarContent({
+  expanded,
+  onLinkClick,
+  onToggleExpand,
+  isActive,
+  pendingApplications,
   userEmail,
+  avatarLetter,
+  theme,
+  toggleTheme,
 }: {
-  pendingApplications?: number;
+  expanded: boolean;
+  onLinkClick?: () => void;
+  onToggleExpand?: () => void;
+  isActive: (href: string) => boolean;
+  pendingApplications: number;
   userEmail?: string;
+  avatarLetter: string;
+  theme: string;
+  toggleTheme: () => void;
 }) {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const pathname = usePathname();
-  const { theme, toggleTheme } = useTheme();
-
-  const isActive = (href: string) => {
-    if (href === "/admin") return pathname === "/admin";
-    return pathname?.startsWith(href);
-  };
-
-  const avatarLetter = userEmail ? userEmail.charAt(0).toUpperCase() : "A";
-
-  const SidebarContent = ({
-    expanded,
-    onLinkClick,
-    onToggleExpand,
-  }: {
-    expanded: boolean;
-    onLinkClick?: () => void;
-    onToggleExpand?: () => void;
-  }) => (
+  return (
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div
@@ -362,6 +356,35 @@ export function Sidebar({
       </div>
     </div>
   );
+}
+
+export function Sidebar({
+  pendingApplications = 0,
+  userEmail,
+}: {
+  pendingApplications?: number;
+  userEmail?: string;
+}) {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const pathname = usePathname();
+  const { theme, toggleTheme } = useTheme();
+
+  const isActive = (href: string) => {
+    if (href === "/admin") return pathname === "/admin";
+    return pathname?.startsWith(href);
+  };
+
+  const avatarLetter = userEmail ? userEmail.charAt(0).toUpperCase() : "A";
+
+  const sidebarContentProps = {
+    isActive,
+    pendingApplications,
+    userEmail,
+    avatarLetter,
+    theme,
+    toggleTheme,
+  };
 
   return (
     <>
@@ -406,7 +429,8 @@ export function Sidebar({
           borderRight: `1px solid ${colors.border}`,
         }}
       >
-        <SidebarContent
+        <AdminSidebarContent
+          {...sidebarContentProps}
           expanded={isExpanded}
           onToggleExpand={() => setIsExpanded((v) => !v)}
         />
@@ -428,7 +452,8 @@ export function Sidebar({
             }}
           >
             <div className="pt-16">
-              <SidebarContent
+              <AdminSidebarContent
+                {...sidebarContentProps}
                 expanded={true}
                 onLinkClick={() => setIsMobileMenuOpen(false)}
                 onToggleExpand={() => setIsMobileMenuOpen(false)}

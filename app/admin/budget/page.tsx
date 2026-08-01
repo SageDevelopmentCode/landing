@@ -1453,21 +1453,38 @@ function BudgetPieChart({
     cy = 110;
   const entries = Object.entries(byCategory).sort(([, a], [, b]) => b - a);
 
-  let cumulative = 0;
-  const slices = entries.map(([cat, val], i) => {
-    const pct = total > 0 ? val / total : 0;
-    const dashLen = pct * CIRC;
-    const offset = CIRC - cumulative - CIRC / 4;
-    cumulative += dashLen;
-    return {
-      cat,
-      val,
-      pct,
-      dashLen,
-      offset,
-      color: SLICE_COLORS[i % SLICE_COLORS.length],
-    };
-  });
+  const slices = entries.reduce<{
+    slices: Array<{
+      cat: string;
+      val: number;
+      pct: number;
+      dashLen: number;
+      offset: number;
+      color: string;
+    }>;
+    cumulative: number;
+  }>(
+    (acc, [cat, val], i) => {
+      const pct = total > 0 ? val / total : 0;
+      const dashLen = pct * CIRC;
+      const offset = CIRC - acc.cumulative - CIRC / 4;
+      return {
+        cumulative: acc.cumulative + dashLen,
+        slices: [
+          ...acc.slices,
+          {
+            cat,
+            val,
+            pct,
+            dashLen,
+            offset,
+            color: SLICE_COLORS[i % SLICE_COLORS.length],
+          },
+        ],
+      };
+    },
+    { slices: [], cumulative: 0 },
+  ).slices;
 
   if (total === 0) return null;
 
@@ -7196,9 +7213,11 @@ export default function BudgetPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchAll = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const fetchAll = useCallback(async (options?: { showLoading?: boolean }) => {
+    if (options?.showLoading) {
+      setLoading(true);
+      setError(null);
+    }
     const [liRes, expRes, incRes] = await Promise.all([
       db.schema("budget").from("line_items").select("*").order("sort_order"),
       db
@@ -7228,8 +7247,44 @@ export default function BudgetPage() {
   }, []);
 
   useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
+    let cancelled = false;
+
+    async function loadInitialBudget() {
+      const [liRes, expRes, incRes] = await Promise.all([
+        db.schema("budget").from("line_items").select("*").order("sort_order"),
+        db
+          .schema("budget")
+          .from("expenses")
+          .select("*")
+          .eq("is_deleted", false)
+          .order("expense_date", { ascending: false }),
+        db
+          .schema("budget")
+          .from("income")
+          .select("*")
+          .order("income_date", { ascending: false }),
+      ]);
+      if (cancelled) return;
+      if (liRes.error || expRes.error || incRes.error) {
+        setError(
+          "Failed to load budget data. Make sure you have super_admin access.",
+        );
+      } else {
+        setLineItems((liRes.data as BudgetLineItem[]) ?? []);
+        setExpenses((expRes.data as BudgetExpense[]) ?? []);
+        setIncome((incRes.data as BudgetIncome[]) ?? []);
+      }
+      const txData = await getStripeTransactions();
+      if (cancelled) return;
+      setStripeTransactions(txData as StripeTransaction[]);
+      setLoading(false);
+    }
+
+    void loadInitialBudget();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div
@@ -7329,20 +7384,20 @@ export default function BudgetPage() {
                 <BudgetTab
                   lineItems={lineItems}
                   expenses={expenses}
-                  onRefresh={fetchAll}
+                  onRefresh={() => fetchAll({ showLoading: true })}
                 />
               )}
               {activeTab === "Expenses" && (
                 <ExpensesTab
                   expenses={expenses}
                   lineItems={lineItems}
-                  onRefresh={fetchAll}
+                  onRefresh={() => fetchAll({ showLoading: true })}
                 />
               )}
               {activeTab === "Revenue" && (
                 <RevenueTab
                   transactions={stripeTransactions}
-                  onRefresh={fetchAll}
+                  onRefresh={() => fetchAll({ showLoading: true })}
                 />
               )}
               {activeTab === "Taxes" && (

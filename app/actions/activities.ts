@@ -341,7 +341,7 @@ export async function getActivities(): Promise<Activity[]> {
     return []
   }
 
-  return resolveAndAttach(adminClient, rows as any)
+  return resolveAndAttach(adminClient, rows as RawActivityRow[])
 }
 
 export async function getPublishedActivities(): Promise<Activity[]> {
@@ -361,7 +361,7 @@ export async function getPublishedActivities(): Promise<Activity[]> {
     return []
   }
 
-  return resolveAndAttach(adminClient, rows as any)
+  return resolveAndAttach(adminClient, rows as RawActivityRow[])
 }
 
 // ─── Create Activity ──────────────────────────────────────────────────────────
@@ -482,7 +482,7 @@ export async function createActivity(
     .eq('id', activityId)
     .single()
 
-  const [withUrls] = await resolveAndAttach(adminClient, [(final ?? refetched) as any])
+  const [withUrls] = await resolveAndAttach(adminClient, [(final ?? refetched) as RawActivityRow])
 
   if (status === 'published') {
     applyDefaultPreferencesForActivity(activityId).catch(() => {})
@@ -601,7 +601,7 @@ export async function updateActivity(
     return { error: 'Activity saved but could not reload it' }
   }
 
-  const [withUrls] = await resolveAndAttach(adminClient, [refetched as any])
+  const [withUrls] = await resolveAndAttach(adminClient, [refetched as RawActivityRow])
   return { data: withUrls }
 }
 

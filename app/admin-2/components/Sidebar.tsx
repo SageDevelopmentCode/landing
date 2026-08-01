@@ -37,14 +37,14 @@ const NAV_GROUPS = [
   },
 ]
 
-export function Sidebar() {
-  const pathname = usePathname()
-  const [mobileOpen, setMobileOpen] = useState(false)
-
-  const isActive = (href: string) =>
-    href === '/admin-2' ? pathname === '/admin-2' : pathname?.startsWith(href)
-
-  const SidebarContent = () => (
+function Admin2SidebarContent({
+  isActive,
+  onNavigate,
+}: {
+  isActive: (href: string) => boolean
+  onNavigate: () => void
+}) {
+  return (
     <div className="flex flex-col h-full">
       {/* Header */}
       <div
@@ -92,7 +92,7 @@ export function Sidebar() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    onClick={() => setMobileOpen(false)}
+                    onClick={onNavigate}
                     className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-150 group"
                     style={{
                       backgroundColor: active ? colors.elevated : 'transparent',
@@ -141,6 +141,14 @@ export function Sidebar() {
       </div>
     </div>
   )
+}
+
+export function Sidebar() {
+  const pathname = usePathname()
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  const isActive = (href: string) =>
+    href === '/admin-2' ? pathname === '/admin-2' : pathname?.startsWith(href)
 
   return (
     <>
@@ -184,7 +192,7 @@ export function Sidebar() {
             >
               <X className="w-4 h-4" />
             </button>
-            <SidebarContent />
+            <Admin2SidebarContent isActive={isActive} onNavigate={() => setMobileOpen(false)} />
           </motion.aside>
         )}
       </AnimatePresence>
@@ -194,7 +202,7 @@ export function Sidebar() {
         className="hidden lg:flex flex-col w-60 flex-shrink-0 h-screen sticky top-0 overflow-hidden"
         style={{ backgroundColor: colors.surface, borderRight: `1px solid ${colors.border}` }}
       >
-        <SidebarContent />
+        <Admin2SidebarContent isActive={isActive} onNavigate={() => setMobileOpen(false)} />
       </aside>
     </>
   )

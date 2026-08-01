@@ -308,6 +308,7 @@ export function StudentsClient({ students: initialStudents, fetchStudentDetail, 
       </div>
 
       <StudentDetailSidebar
+        key={(studentDetail ?? selectedStudent)?.id ?? 'none'}
         student={studentDetail ?? selectedStudent}
         loading={detailLoading}
         onClose={handleClose}
@@ -315,6 +316,7 @@ export function StudentsClient({ students: initialStudents, fetchStudentDetail, 
       />
 
       <TeacherAssignSidebar
+        key={assignStudent?.id ?? 'none'}
         student={assignStudent}
         onClose={() => setAssignStudent(null)}
         onAssigned={handleAssigned}

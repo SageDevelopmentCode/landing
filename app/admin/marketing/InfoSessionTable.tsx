@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { sendInfoSessionReminderEmail } from '../../actions/sendInfoSessionReminderEmail'
 import { cssColors as colors, radius, cssShadows as shadows } from '../design-system'
@@ -28,24 +28,16 @@ function formatPrograms(programs: string[] | null) {
   return programs.map((p) => PROGRAM_LABELS[p] ?? p).join(' · ')
 }
 
-export function InfoSessionTable({ rsvps }: { rsvps: InfoSessionRsvp[] }) {
-  const [showSubmitted, setShowSubmitted] = useState(false)
-  const [selectedRsvp, setSelectedRsvp] = useState<InfoSessionRsvp | null>(null)
+function InfoSessionReminderControls({ rsvp }: { rsvp: InfoSessionRsvp }) {
   const [reminderSending, setReminderSending] = useState(false)
   const [reminderSent, setReminderSent] = useState(false)
   const [reminderError, setReminderError] = useState<string | null>(null)
 
-  useEffect(() => {
-    setReminderSending(false)
-    setReminderSent(false)
-    setReminderError(null)
-  }, [selectedRsvp?.id])
-
   const handleSendReminder = async () => {
-    if (!selectedRsvp || reminderSending || reminderSent) return
+    if (reminderSending || reminderSent) return
     setReminderSending(true)
     setReminderError(null)
-    const result = await sendInfoSessionReminderEmail({ firstName: selectedRsvp.first_name, email: selectedRsvp.email })
+    const result = await sendInfoSessionReminderEmail({ firstName: rsvp.first_name, email: rsvp.email })
     setReminderSending(false)
     if (result.success) {
       setReminderSent(true)
@@ -54,6 +46,37 @@ export function InfoSessionTable({ rsvps }: { rsvps: InfoSessionRsvp[] }) {
       setReminderError(result.error ?? 'Failed to send email')
     }
   }
+
+  return (
+    <div style={{ borderBottom: `1px solid ${colors.divider}`, paddingBottom: '14px', marginBottom: '14px' }}>
+      <p style={{ fontSize: '11px', color: colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Outreach</p>
+      <button
+        onClick={handleSendReminder}
+        disabled={reminderSending || reminderSent}
+        style={{
+          backgroundColor: reminderSent ? '#2C5F2E' : '#2C5F2E',
+          color: 'white',
+          border: 'none',
+          borderRadius: '8px',
+          padding: '6px 12px',
+          fontSize: '13px',
+          fontWeight: 600,
+          cursor: reminderSending || reminderSent ? 'not-allowed' : 'pointer',
+          opacity: reminderSending || reminderSent ? 0.6 : 1,
+        }}
+      >
+        {reminderSending ? 'Sending…' : reminderSent ? '✓ Sent!' : 'Send Reminder Email'}
+      </button>
+      {reminderError && (
+        <p style={{ fontSize: '12px', color: '#DC2626', marginTop: '6px' }}>{reminderError}</p>
+      )}
+    </div>
+  )
+}
+
+export function InfoSessionTable({ rsvps }: { rsvps: InfoSessionRsvp[] }) {
+  const [showSubmitted, setShowSubmitted] = useState(false)
+  const [selectedRsvp, setSelectedRsvp] = useState<InfoSessionRsvp | null>(null)
 
   const totalChildren = rsvps.reduce((sum, r) => sum + (r.children?.length ?? 0), 0)
 
@@ -295,30 +318,7 @@ export function InfoSessionTable({ rsvps }: { rsvps: InfoSessionRsvp[] }) {
                 )}
               </div>
 
-              {/* Outreach */}
-              <div style={{ borderBottom: `1px solid ${colors.divider}`, paddingBottom: '14px', marginBottom: '14px' }}>
-                <p style={{ fontSize: '11px', color: colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Outreach</p>
-                <button
-                  onClick={handleSendReminder}
-                  disabled={reminderSending || reminderSent}
-                  style={{
-                    backgroundColor: reminderSent ? '#2C5F2E' : '#2C5F2E',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    padding: '6px 12px',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    cursor: reminderSending || reminderSent ? 'not-allowed' : 'pointer',
-                    opacity: reminderSending || reminderSent ? 0.6 : 1,
-                  }}
-                >
-                  {reminderSending ? 'Sending…' : reminderSent ? '✓ Sent!' : 'Send Reminder Email'}
-                </button>
-                {reminderError && (
-                  <p style={{ fontSize: '12px', color: '#DC2626', marginTop: '6px' }}>{reminderError}</p>
-                )}
-              </div>
+              <InfoSessionReminderControls key={selectedRsvp.id} rsvp={selectedRsvp} />
 
               {/* Questions */}
               <div style={{ borderBottom: `1px solid ${colors.divider}`, paddingBottom: '14px', marginBottom: '14px' }}>

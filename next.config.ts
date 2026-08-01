@@ -25,6 +25,11 @@ const nextConfig: NextConfig = {
         hostname: 'vonuwpzepwrbdlectspd.supabase.co',
         pathname: '/storage/v1/object/sign/**',
       },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
+        pathname: '/storage/v1/object/**',
+      },
     ],
   },
 };

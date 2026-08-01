@@ -209,7 +209,16 @@ function ImmunizationPanel({ student }: { student: Student }) {
     setLoadingFiles(false)
   }
 
-  useEffect(() => { load() }, [student.id])
+  useEffect(() => {
+    let cancelled = false
+    getAdminImmunizationFiles(student.parent_id, student.id).then((res) => {
+      if (cancelled) return
+      if (res.error) setError(res.error)
+      else setFiles(res.files as FileObject[])
+      setLoadingFiles(false)
+    })
+    return () => { cancelled = true }
+  }, [student.id, student.parent_id])
 
   const handleUpload = async (file: File) => {
     setError(null)
@@ -344,7 +353,16 @@ function HealthInfoFormsPanel({ student }: { student: Student }) {
     setIsLoadingHealthForms(false)
   }
 
-  useEffect(() => { loadHealthForms() }, [student.id])
+  useEffect(() => {
+    let cancelled = false
+    listHealthInfoForms(student.id).then((res) => {
+      if (cancelled) return
+      if ('error' in res) setHealthFormError(res.error ?? 'Failed to load files')
+      else setHealthForms(res.files as FileObject[])
+      setIsLoadingHealthForms(false)
+    })
+    return () => { cancelled = true }
+  }, [student.id])
 
   const handleHealthFormUpload = async (file: File) => {
     setHealthFormError(null)
@@ -550,7 +568,7 @@ export function StudentDetailSidebar({ student, loading, onClose, onStudentDelet
   const [activePanel, setActivePanel] = useState<ActivePanel>(null)
 
   // Enrollment data
-  const [enrollmentLoading, setEnrollmentLoading] = useState(false)
+  const [enrollmentLoading, setEnrollmentLoading] = useState(true)
   const [medications, setMedications] = useState<{ name: string; condition: string; dosage: string; physician: string; physicianPhone: string; expiration: string; isDaily: boolean; isEmergencyOnly: boolean }[]>([])
   const [medicationPlan, setMedicationPlan] = useState<{ emergency_procedure?: string | null; special_instructions?: string | null } | null>(null)
   const [pickupPersons, setPickupPersons] = useState<StudentAuthorizedPickupPerson[]>([])
@@ -558,17 +576,11 @@ export function StudentDetailSidebar({ student, loading, onClose, onStudentDelet
   const [immunizationCount, setImmunizationCount] = useState<number | null>(null)
 
   useEffect(() => {
-    setActivePanel(null)
-    setMedications([])
-    setMedicationPlan(null)
-    setPickupPersons([])
-    setPickupEffectiveUntil(null)
-    setImmunizationCount(null)
-
     if (!student) return
 
-    setEnrollmentLoading(true)
+    let cancelled = false
     getAdminEnrollmentData(student.parent_id, [student.id]).then((data) => {
+      if (cancelled) return
       const medData = data.medicationPlanByStudent[student.id]
       if (medData) {
         setMedicationPlan(medData.plan)
@@ -592,8 +604,11 @@ export function StudentDetailSidebar({ student, loading, onClose, onStudentDelet
       }
       setImmunizationCount(data.immunizationFileCountByStudent[student.id] ?? 0)
       setEnrollmentLoading(false)
-    }).catch(() => setEnrollmentLoading(false))
-  }, [student?.id])
+    }).catch(() => {
+      if (!cancelled) setEnrollmentLoading(false)
+    })
+    return () => { cancelled = true }
+  }, [student?.id, student?.parent_id])
 
   const handleDelete = async () => {
     if (!student || isDeleting) return
@@ -858,7 +873,7 @@ export function StudentDetailSidebar({ student, loading, onClose, onStudentDelet
                 <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#4A6354', marginBottom: 10 }}>
                   Immunization Records
                 </p>
-                <ImmunizationPanel student={student} />
+                <ImmunizationPanel key={student.id} student={student} />
               </div>
             )}
 
@@ -868,7 +883,7 @@ export function StudentDetailSidebar({ student, loading, onClose, onStudentDelet
                 <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#4A6354', marginBottom: 10 }}>
                   Health Information Forms
                 </p>
-                <HealthInfoFormsPanel student={student} />
+                <HealthInfoFormsPanel key={student.id} student={student} />
               </div>
             )}
 

@@ -86,7 +86,7 @@ export default async function ImpersonatePreferencesPage({
       </header>
       <main className="flex-1 flex overflow-hidden pointer-events-none select-none">
         <PreferencesPageClient
-          children={children}
+          students={children}
           activities={activities}
           paidDatesByStudent={paidDatesByStudent}
           savedPreferences={savedPreferences}

@@ -208,7 +208,7 @@ export default async function ImpersonateHomePage({
       const tier = meta.tier ?? "dropin";
       const days = meta.selected_days?.split(",").filter(Boolean) ?? [];
       const weeks = meta.selected_weeks?.split(",").map(Number).filter(Boolean) ?? [];
-      let weekDays: Record<number, string[]> = {};
+      const weekDays: Record<number, string[]> = {};
       if (meta.week_selections) {
         try {
           const parsed: { week: number; days: string[] }[] = JSON.parse(meta.week_selections);

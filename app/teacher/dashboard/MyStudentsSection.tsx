@@ -127,6 +127,7 @@ export default function MyStudentsSection({ students }: { students: StudentRow[]
       )}
 
       <TeacherStudentDetailSidebar
+        key={selectedStudent?.student_id ?? "none"}
         student={selectedStudent}
         onClose={() => setSelectedStudent(null)}
       />

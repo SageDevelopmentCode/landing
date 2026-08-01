@@ -694,6 +694,7 @@ export default function LeadsPage() {
       )}
 
       <LeadsDetailSidebar
+        key={selectedLead?.id ?? 'none'}
         submission={selectedLead}
         onClose={() => setSelectedLead(null)}
         onLeadUpdate={handleLeadUpdate}

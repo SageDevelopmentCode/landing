@@ -2157,7 +2157,7 @@ export function ApplicationDetailSidebar({
         </SidebarSection>
 
         <SidebarSection title="Payment History">
-          <PaymentHistory parentId={application.user_id} />
+          <PaymentHistory key={application.user_id} parentId={application.user_id} />
         </SidebarSection>
 
         {application.g1_email && (

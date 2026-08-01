@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { SlidersHorizontal, Users, ChevronDown } from "lucide-react";
 import Image from "next/image";
 import type { Activity } from "@/app/actions/activities";
@@ -38,15 +38,15 @@ function getInitials(name: string): string {
 }
 
 interface Props {
-  children: PreferenceChild[];
+  students: PreferenceChild[];
   activities: Activity[];
   paidDatesByStudent: Record<string, string[]>;
   savedPreferences: SavedPreference[];
   studentDefaults: StudentDefaultPreference[];
 }
 
-export default function PreferencesPageClient({ children, activities, paidDatesByStudent, savedPreferences, studentDefaults: initialStudentDefaults }: Props) {
-  const [selectedChildId, setSelectedChildId] = useState(children[0]?.id ?? "");
+export default function PreferencesPageClient({ students, activities, paidDatesByStudent, savedPreferences, studentDefaults: initialStudentDefaults }: Props) {
+  const [selectedChildId, setSelectedChildId] = useState(students[0]?.id ?? "");
   const [expandedFoods, setExpandedFoods] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
@@ -55,7 +55,7 @@ export default function PreferencesPageClient({ children, activities, paidDatesB
   const [savingDefault, setSavingDefault] = useState(false);
   const [preferences, setPreferences] = useState<AllPreferences>(() => {
     const init: AllPreferences = {};
-    for (const child of children) {
+    for (const child of students) {
       init[child.id] = {};
       const defaultLevel = initialStudentDefaults.find(d => d.student_id === child.id)?.participation_level ?? null;
       for (const activity of activities) {
@@ -70,7 +70,11 @@ export default function PreferencesPageClient({ children, activities, paidDatesB
     return init;
   });
 
-  useEffect(() => { setSaveStatus("idle"); setAcknowledged(false); }, [selectedChildId]);
+  const handleSelectChild = (childId: string) => {
+    setSelectedChildId(childId);
+    setSaveStatus("idle");
+    setAcknowledged(false);
+  };
 
   function updatePreference(
     childId: string,
@@ -142,7 +146,7 @@ export default function PreferencesPageClient({ children, activities, paidDatesB
     setSaveStatus(result.error ? "error" : "success");
   }
 
-  if (children.length === 0) {
+  if (students.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center p-12">
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 flex flex-col items-center text-center max-w-md w-full">
@@ -167,12 +171,12 @@ export default function PreferencesPageClient({ children, activities, paidDatesB
         <p className="text-xs font-semibold font-body text-gray-400 uppercase tracking-wider px-2 pb-2">
           Children
         </p>
-        {children.map((child) => {
+        {students.map((child) => {
           const isActive = child.id === selectedChildId;
           return (
             <button
               key={child.id}
-              onClick={() => setSelectedChildId(child.id)}
+              onClick={() => handleSelectChild(child.id)}
               className={`relative w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-colors cursor-pointer ${
                 isActive
                   ? "bg-[#4a7c59]/10 text-gray-800"
@@ -205,12 +209,12 @@ export default function PreferencesPageClient({ children, activities, paidDatesB
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Mobile: horizontal scrollable tab bar */}
         <div className="md:hidden flex gap-2 overflow-x-auto px-4 py-2 border-b border-gray-100 bg-white shrink-0">
-          {children.map((child) => {
+          {students.map((child) => {
             const isActive = child.id === selectedChildId;
             return (
               <button
                 key={child.id}
-                onClick={() => setSelectedChildId(child.id)}
+                onClick={() => handleSelectChild(child.id)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-body font-medium whitespace-nowrap transition-colors shrink-0 cursor-pointer ${
                   isActive
                     ? "bg-[#4a7c59]/10 text-gray-800"
@@ -274,7 +278,7 @@ export default function PreferencesPageClient({ children, activities, paidDatesB
               <div className="flex flex-col gap-4">
                 {visibleActivities.length > 0 && (() => {
                   const currentDefault = defaults.find(d => d.student_id === selectedChildId);
-                  const selectedChild = children.find(c => c.id === selectedChildId);
+                  const selectedChild = students.find(c => c.id === selectedChildId);
                   return (
                     <div className="bg-white border border-gray-100 rounded-2xl shadow-sm px-5 py-4">
                       <div className="flex flex-wrap items-start gap-4">

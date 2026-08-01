@@ -384,7 +384,7 @@ function ImmunizationModal({ count, onUpload, onClose }: { count: number; onUplo
   return (
     <ModalShell title="Proof of Immunizations" onClose={onClose}>
       <div className="space-y-4">
-        <p className="text-sm text-gray-500">Upload your child's immunization records or approved exemption documents (PDF, JPG, PNG — max 10MB each).</p>
+        <p className="text-sm text-gray-500">Upload your child&apos;s immunization records or approved exemption documents (PDF, JPG, PNG — max 10MB each).</p>
         <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center">
           <Upload className="w-8 h-8 text-gray-300 mx-auto mb-2" />
           <p className="text-sm text-gray-400 mb-3">Drag & drop files here</p>
@@ -581,7 +581,7 @@ function RegistrationFeeModal({ onPay, onClose }: { onPay: () => void; onClose: 
               <p className="text-2xl font-semibold text-gray-800">$75.00</p>
               <p className="text-sm text-gray-400 mt-1">One-time registration fee</p>
             </div>
-            <p className="text-sm text-gray-500">This fee secures your child's spot for the upcoming program. Payment is processed securely.</p>
+            <p className="text-sm text-gray-500">This fee secures your child&apos;s spot for the upcoming program. Payment is processed securely.</p>
             <button onClick={() => { setPaid(true); setTimeout(onPay, 800); }} className="w-full py-3 rounded-xl bg-[#4a7c59] text-white font-medium cursor-pointer hover:bg-[#3d6b4f] transition-colors">Pay $75.00</button>
           </>
         ) : (
@@ -629,7 +629,7 @@ function ChecklistView({ completions, onOpen, enrolled }: {
           <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
           <div>
             <p className="font-semibold text-emerald-800">Enrollment Confirmed!</p>
-            <p className="text-sm text-emerald-600">All required steps are complete. We'll see you soon!</p>
+            <p className="text-sm text-emerald-600">All required steps are complete. We&apos;ll see you soon!</p>
           </div>
         </div>
       )}
@@ -1029,7 +1029,7 @@ function VolunteerPage() {
         <Heart className="w-7 h-7 text-[#4a7c59]" />
       </div>
       <h3 className="font-semibold text-gray-700 text-lg mb-2">No openings right now</h3>
-      <p className="text-sm text-gray-400 text-center max-w-xs">We'll notify you when volunteer opportunities become available. Thank you for your willingness to support our community!</p>
+      <p className="text-sm text-gray-400 text-center max-w-xs">We&apos;ll notify you when volunteer opportunities become available. Thank you for your willingness to support our community!</p>
       <button className="mt-6 px-5 py-2.5 rounded-xl bg-[#4a7c59] text-white text-sm font-medium cursor-pointer hover:bg-[#3d6b4f] transition-colors">Notify Me</button>
     </div>
   );
@@ -1241,7 +1241,7 @@ export default function ParentDashboardDemo() {
           {/* Page heading */}
           <div className="mb-5">
             <h1 className="text-xl font-semibold text-gray-800">{pageTitle[activeNavTab]}</h1>
-            {activeNavTab === "enrollment" && <p className="text-sm text-gray-400 mt-0.5">Welcome back, Sarah — here's your enrollment progress.</p>}
+            {activeNavTab === "enrollment" && <p className="text-sm text-gray-400 mt-0.5">Welcome back, Sarah — here&apos;s your enrollment progress.</p>}
           </div>
 
           {/* Child tab strip (shown on most pages) */}
@@ -1256,7 +1256,7 @@ export default function ParentDashboardDemo() {
                 <Clock className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-amber-800">Application Under Review</p>
-                  <p className="text-sm text-amber-600 mt-1">Jake's application has been received and is currently being reviewed by the admissions team. You'll be notified by email once a decision has been made.</p>
+                  <p className="text-sm text-amber-600 mt-1">Jake&apos;s application has been received and is currently being reviewed by the admissions team. You&apos;ll be notified by email once a decision has been made.</p>
                   <p className="text-xs text-amber-500 mt-3">Submitted: April 10, 2026</p>
                 </div>
               </div>

@@ -14,7 +14,7 @@ import { sendInfoSessionReminderEmail } from '../../actions/sendInfoSessionRemin
 import { sendSummerUrgencyEmail } from '../../actions/sendSummerUrgencyEmail'
 import { sendEnrollmentReminder3Email } from '../../actions/sendEnrollmentReminder3Email'
 import { TagEditor } from './TagEditor'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
@@ -157,29 +157,7 @@ export function LeadsDetailSidebar({
     },
   })
 
-  // Reset draft when a different lead is selected
-  useEffect(() => {
-    if (submission?.id !== currentSubmission?.id) {
-      setCurrentSubmission(submission)
-      setDraft(submission ? buildDraft(submission) : {})
-      setIsDirty(false)
-      setSaveError(null)
-      setSaveSuccess(false)
-      callNotesEditor?.commands.setContent(submission?.call_notes ?? '')
-      setCallNotesSaved(false)
-      setCallNotesDirty(false)
-      setFbEmailSent(false)
-      setFbEmailError(null)
-      setInfoEmailSent(false)
-      setInfoEmailError(null)
-      setReminderSent(false)
-      setReminderError(null)
-      setUrgencySent(false)
-      setUrgencyError(null)
-      setEnrollReminder3Sent(false)
-      setEnrollReminder3Error(null)
-    }
-  }, [submission?.id])
+  // Reset draft when a different lead is selected via key on parent component
 
   if (!currentSubmission) return null
 

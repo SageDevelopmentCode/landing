@@ -137,7 +137,7 @@ export default async function ImpersonateChildrenPage({
       <main className="flex-1 flex overflow-hidden">
         <Suspense>
           <ChildrenPage
-            children={children}
+            students={children}
             teachersByStudent={teachersByStudent}
             nonEnrolledAppByStudent={nonEnrolledAppByStudent}
             studentProgramMap={studentProgramMap}

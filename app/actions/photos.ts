@@ -32,6 +32,31 @@ export type TeacherPhoto = {
   publication_labels: string[]
 }
 
+type TeacherPhotoRpcRow = {
+  id: string
+  teacher_id: string
+  storage_path: string
+  caption: string | null
+  taken_on: string | null
+  created_at: string
+  tags: PhotoStudentTag[] | null
+  publication_labels: string[] | null
+}
+
+function mapRpcPhoto(p: TeacherPhotoRpcRow): TeacherPhoto {
+  return {
+    id: p.id,
+    teacher_id: p.teacher_id,
+    storage_path: p.storage_path,
+    signed_url: null,
+    caption: p.caption ?? null,
+    taken_on: p.taken_on ?? null,
+    created_at: p.created_at,
+    tags: p.tags ?? [],
+    publication_labels: p.publication_labels ?? [],
+  }
+}
+
 export async function getPhotos(): Promise<TeacherPhoto[]> {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -47,17 +72,7 @@ export async function getPhotos(): Promise<TeacherPhoto[]> {
 
   if (!data) return []
 
-  return (data as any[]).map((p: any) => ({
-    id: p.id,
-    teacher_id: p.teacher_id,
-    storage_path: p.storage_path,
-    signed_url: null,
-    caption: p.caption ?? null,
-    taken_on: p.taken_on ?? null,
-    created_at: p.created_at,
-    tags: (p.tags ?? []) as PhotoStudentTag[],
-    publication_labels: (p.publication_labels ?? []) as string[],
-  }))
+  return (data as TeacherPhotoRpcRow[]).map(mapRpcPhoto)
 }
 
 export async function getSignedUrls(storagePaths: string[]): Promise<Record<string, string>> {
@@ -96,17 +111,7 @@ export async function getAllSchoolPhotos(): Promise<TeacherPhoto[]> {
   const adminClient = createAdminClient()
   const { data, error } = await adminClient.rpc('get_all_school_photos')
   if (error || !data) return []
-  return (data as any[]).map((p: any) => ({
-    id: p.id,
-    teacher_id: p.teacher_id,
-    storage_path: p.storage_path,
-    signed_url: null,
-    caption: p.caption ?? null,
-    taken_on: p.taken_on ?? null,
-    created_at: p.created_at,
-    tags: (p.tags ?? []) as PhotoStudentTag[],
-    publication_labels: (p.publication_labels ?? []) as string[],
-  }))
+  return (data as TeacherPhotoRpcRow[]).map(mapRpcPhoto)
 }
 
 export async function getEnrolledStudentsWithConsent(): Promise<StudentWithConsent[]> {

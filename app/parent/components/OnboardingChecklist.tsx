@@ -266,7 +266,7 @@ export default function OnboardingChecklist({ open, onClose, initialCompleted }:
             {completedCount === total && (
               <div className="px-5 py-4 border-t border-gray-100 bg-[#d4e6d0]/30">
                 <p className="text-sm font-body font-semibold text-[#4a7c59] text-center">
-                  You're all set! Welcome to Sage Field.
+                  You&apos;re all set! Welcome to Sage Field.
                 </p>
               </div>
             )}

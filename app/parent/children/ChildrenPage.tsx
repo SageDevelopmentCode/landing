@@ -73,7 +73,7 @@ const PROGRAM_CONFIG: Record<
 };
 
 interface Props {
-  children: Student[];
+  students: Student[];
   teachersByStudent: Record<string, TeacherAssignment[]>;
   nonEnrolledAppByStudent: Record<string, string>;
   studentProgramMap: Record<string, string>;
@@ -1328,6 +1328,76 @@ const SECTION_FIELDS: Record<SectionKey, string[]> = {
   ],
 };
 
+function ProfileSectionEditBtn({
+  section,
+  isSharedAccess,
+  editingSection,
+  onEdit,
+}: {
+  section: SectionKey;
+  isSharedAccess?: boolean;
+  editingSection: SectionKey | null;
+  onEdit: (section: SectionKey) => void;
+}) {
+  if (isSharedAccess) return null;
+  return (
+    <button
+      onClick={() => onEdit(section)}
+      disabled={editingSection !== null}
+      className="p-1 text-gray-300 hover:text-[#4a7c59] rounded-lg hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-40"
+      aria-label={`Edit ${section}`}
+    >
+      <Pencil className="w-3.5 h-3.5" />
+    </button>
+  );
+}
+
+function ProfileSectionActionRow({
+  section,
+  sectionError,
+  editingSection,
+  saving,
+  onSave,
+  onCancel,
+}: {
+  section: SectionKey;
+  sectionError: string | null;
+  editingSection: SectionKey | null;
+  saving: boolean;
+  onSave: (section: SectionKey) => void;
+  onCancel: () => void;
+}) {
+  return (
+    <>
+      {sectionError && editingSection === section && (
+        <p className="text-xs text-red-500 mt-2">{sectionError}</p>
+      )}
+      <div className="flex gap-2 mt-3">
+        <button
+          onClick={() => onSave(section)}
+          disabled={saving}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#4a7c59] text-white hover:bg-[#3d6b4a] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {saving ? (
+            <Loader2 className="w-3 h-3 animate-spin" />
+          ) : (
+            <Check className="w-3 h-3" />
+          )}
+          Save
+        </button>
+        <button
+          onClick={onCancel}
+          disabled={saving}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer"
+        >
+          <X className="w-3 h-3" />
+          Cancel
+        </button>
+      </div>
+    </>
+  );
+}
+
 function ProfileTab({
   child,
   onSave,
@@ -1384,52 +1454,6 @@ function ProfileTab({
     setDraft({});
   }
 
-  function EditBtn({ section }: { section: SectionKey }) {
-    if (isSharedAccess) return null;
-    return (
-      <button
-        onClick={() => enterEdit(section)}
-        disabled={editingSection !== null}
-        className="p-1 text-gray-300 hover:text-[#4a7c59] rounded-lg hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-40"
-        aria-label={`Edit ${section}`}
-      >
-        <Pencil className="w-3.5 h-3.5" />
-      </button>
-    );
-  }
-
-  function ActionRow({ section }: { section: SectionKey }) {
-    return (
-      <>
-        {sectionError && editingSection === section && (
-          <p className="text-xs text-red-500 mt-2">{sectionError}</p>
-        )}
-        <div className="flex gap-2 mt-3">
-          <button
-            onClick={() => handleSave(section)}
-            disabled={saving}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#4a7c59] text-white hover:bg-[#3d6b4a] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {saving ? (
-              <Loader2 className="w-3 h-3 animate-spin" />
-            ) : (
-              <Check className="w-3 h-3" />
-            )}
-            Save
-          </button>
-          <button
-            onClick={cancelEdit}
-            disabled={saving}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer"
-          >
-            <X className="w-3 h-3" />
-            Cancel
-          </button>
-        </div>
-      </>
-    );
-  }
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
       {/* Medical Info */}
@@ -1437,7 +1461,12 @@ function ProfileTab({
         title="Medical Info"
         headerAction={
           editingSection !== "medical" ? (
-            <EditBtn section="medical" />
+            <ProfileSectionEditBtn
+              section="medical"
+              isSharedAccess={isSharedAccess}
+              editingSection={editingSection}
+              onEdit={enterEdit}
+            />
           ) : undefined
         }
       >
@@ -1543,7 +1572,14 @@ function ProfileTab({
                 />
               </div>
             )}
-            <ActionRow section="medical" />
+            <ProfileSectionActionRow
+              section="medical"
+              sectionError={sectionError}
+              editingSection={editingSection}
+              saving={saving}
+              onSave={handleSave}
+              onCancel={cancelEdit}
+            />
           </>
         ) : (
           <>
@@ -1580,7 +1616,12 @@ function ProfileTab({
         title="Learning Profile"
         headerAction={
           editingSection !== "learning" ? (
-            <EditBtn section="learning" />
+            <ProfileSectionEditBtn
+              section="learning"
+              isSharedAccess={isSharedAccess}
+              editingSection={editingSection}
+              onEdit={enterEdit}
+            />
           ) : undefined
         }
       >
@@ -1625,7 +1666,14 @@ function ProfileTab({
                 }
               />
             </div>
-            <ActionRow section="learning" />
+            <ProfileSectionActionRow
+              section="learning"
+              sectionError={sectionError}
+              editingSection={editingSection}
+              saving={saving}
+              onSave={handleSave}
+              onCancel={cancelEdit}
+            />
           </>
         ) : (
           <>
@@ -1647,7 +1695,12 @@ function ProfileTab({
         title="Regulation & Support"
         headerAction={
           editingSection !== "regulation" ? (
-            <EditBtn section="regulation" />
+            <ProfileSectionEditBtn
+              section="regulation"
+              isSharedAccess={isSharedAccess}
+              editingSection={editingSection}
+              onEdit={enterEdit}
+            />
           ) : undefined
         }
       >
@@ -1695,7 +1748,14 @@ function ProfileTab({
                 }
               />
             </div>
-            <ActionRow section="regulation" />
+            <ProfileSectionActionRow
+              section="regulation"
+              sectionError={sectionError}
+              editingSection={editingSection}
+              saving={saving}
+              onSave={handleSave}
+              onCancel={cancelEdit}
+            />
           </>
         ) : (
           <>
@@ -1720,7 +1780,12 @@ function ProfileTab({
         title="Additional Support"
         headerAction={
           editingSection !== "support" ? (
-            <EditBtn section="support" />
+            <ProfileSectionEditBtn
+              section="support"
+              isSharedAccess={isSharedAccess}
+              editingSection={editingSection}
+              onEdit={enterEdit}
+            />
           ) : undefined
         }
       >
@@ -1786,7 +1851,14 @@ function ProfileTab({
                 />
               </div>
             )}
-            <ActionRow section="support" />
+            <ProfileSectionActionRow
+              section="support"
+              sectionError={sectionError}
+              editingSection={editingSection}
+              saving={saving}
+              onSave={handleSave}
+              onCancel={cancelEdit}
+            />
           </>
         ) : (
           <>
@@ -1850,17 +1922,24 @@ function ChildProfile({
   const router = useRouter();
 
   useEffect(() => {
-    setAttendanceLoading(true);
+    let cancelled = false;
     getParentStudentAttendance(child.id)
       .then(({ records, userMap }) => {
+        if (cancelled) return;
         setAttendanceRecords(records);
         setAttendanceUserMap(userMap);
       })
       .catch(() => {
+        if (cancelled) return;
         setAttendanceRecords([]);
         setAttendanceUserMap({});
       })
-      .finally(() => setAttendanceLoading(false));
+      .finally(() => {
+        if (!cancelled) setAttendanceLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [child.id]);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -2064,7 +2143,7 @@ function ChildProfile({
 }
 
 export default function ChildrenPage({
-  children,
+  students,
   teachersByStudent,
   nonEnrolledAppByStudent,
   studentProgramMap,
@@ -2073,7 +2152,7 @@ export default function ChildrenPage({
   isSharedAccess,
 }: Props) {
   // Sort: enrolled children first, non-enrolled last
-  const sortedChildren = [...children].sort((a, b) => {
+  const sortedChildren = [...students].sort((a, b) => {
     const aEnrolled = !nonEnrolledAppByStudent[a.id];
     const bEnrolled = !nonEnrolledAppByStudent[b.id];
     if (aEnrolled === bEnrolled) return 0;
@@ -2082,7 +2161,7 @@ export default function ChildrenPage({
 
   const [activeIndex, setActiveIndex] = useState(0);
 
-  if (children.length === 0) {
+  if (students.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center text-center py-24">
         <div>

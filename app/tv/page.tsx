@@ -880,10 +880,16 @@ export default function TVPage() {
   const [paused, setPaused] = useState(false);
 
   const currentRef = useRef(current);
-  currentRef.current = current;
   const pausedRef = useRef(paused);
-  pausedRef.current = paused;
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    currentRef.current = current;
+  }, [current]);
+
+  useEffect(() => {
+    pausedRef.current = paused;
+  }, [paused]);
 
   const goTo = useCallback((index: number, dir: number) => {
     setDirection(dir);

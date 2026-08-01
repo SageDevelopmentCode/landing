@@ -684,6 +684,7 @@ export function TransactionDetailSidebar({ transaction, onClose, onDeleted, onEx
 
       {(openStudent || studentDetailLoading) && (
         <StudentDetailSidebar
+          key={openStudent?.id ?? 'none'}
           student={openStudent}
           loading={studentDetailLoading}
           onClose={() => { setOpenStudent(null); setShowTransactionSidebar(true) }}

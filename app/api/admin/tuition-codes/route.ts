@@ -33,7 +33,7 @@ export async function GET() {
 
   const parentIds = [...new Set((data ?? []).map((r) => r.parent_id).filter(Boolean))] as string[];
 
-  let parentMap: Record<string, { full_name: string | null; email: string | null }> = {};
+  const parentMap: Record<string, { full_name: string | null; email: string | null }> = {};
   if (parentIds.length > 0) {
     const { data: parents } = await client
       .schema("admin")

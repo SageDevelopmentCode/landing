@@ -266,7 +266,7 @@ export default async function BillingRoute() {
         const weeks = (meta.bundle_homeschool_selected_days ?? "")
           .split(",").map(Number).filter(Boolean);
 
-        let weekDays: Record<number, string[]> = {};
+        const weekDays: Record<number, string[]> = {};
         if (meta.bundle_homeschool_week_selections_json) {
           try {
             const parsed: { week: number; days: string[] }[] =
@@ -295,7 +295,7 @@ export default async function BillingRoute() {
       const weeks = meta.selected_weeks?.split(",").map(Number).filter(Boolean) ?? [];
 
       // Build per-week day map: prefer new week_selections JSON, fall back to same days for every week
-      let weekDays: Record<number, string[]> = {};
+      const weekDays: Record<number, string[]> = {};
       if (meta.week_selections) {
         try {
           const parsed: { week: number; days: string[] }[] = JSON.parse(meta.week_selections);
@@ -404,7 +404,7 @@ export default async function BillingRoute() {
     ].filter(Boolean)),
   ] as string[];
 
-  let studentMap: Record<string, StudentInfo> = {};
+  const studentMap: Record<string, StudentInfo> = {};
   if (studentIds.length > 0) {
     const { data: students } = await adminClient
       .schema("admin")

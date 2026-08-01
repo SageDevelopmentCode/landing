@@ -62,7 +62,7 @@ export function TeacherAssignSidebar({
   onAssigned,
 }: TeacherAssignSidebarProps) {
   const [assignments, setAssignments] = useState<TeacherAssignment[]>([]);
-  const [assignmentsLoading, setAssignmentsLoading] = useState(false);
+  const [assignmentsLoading, setAssignmentsLoading] = useState(!!student?.id);
   const [showAssignForm, setShowAssignForm] = useState(false);
   const [teachers, setTeachers] = useState<TeacherOption[]>([]);
   const [teachersLoading, setTeachersLoading] = useState(false);
@@ -77,29 +77,29 @@ export function TeacherAssignSidebar({
     useState<TeacherAssignment | null>(null);
 
   useEffect(() => {
-    if (!student?.id) {
-      setAssignments([]);
-      setShowAssignForm(false);
-      return;
-    }
-    setAssignmentsLoading(true);
+    if (!student?.id) return
+
+    let cancelled = false
     getStudentAssignments(student.id).then((data) => {
-      setAssignments(data);
-      setAssignmentsLoading(false);
+      if (cancelled) return
+      setAssignments(data)
+      setAssignmentsLoading(false)
       if (data.length === 0) {
-        setShowAssignForm(true);
-        setSelectedTeacherIds(new Set());
-        setSelectedProgram("");
-        setSelectedClassroom("");
-        setAssignError(null);
-        setTeachersLoading(true);
+        setShowAssignForm(true)
+        setSelectedTeacherIds(new Set())
+        setSelectedProgram("")
+        setSelectedClassroom("")
+        setAssignError(null)
+        setTeachersLoading(true)
         getTeachersForAssignment().then((t) => {
-          setTeachers(t);
-          setTeachersLoading(false);
-        });
+          if (cancelled) return
+          setTeachers(t)
+          setTeachersLoading(false)
+        })
       }
-    });
-  }, [student?.id]);
+    })
+    return () => { cancelled = true }
+  }, [student?.id])
 
   const handleShowAssignForm = async (editTarget?: TeacherAssignment) => {
     setShowAssignForm(true);

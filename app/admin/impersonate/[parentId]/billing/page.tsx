@@ -176,7 +176,7 @@ export default async function ImpersonateBillingPage({
       const days = meta.selected_days?.split(",").filter(Boolean) ?? [];
       const weeks =
         meta.selected_weeks?.split(",").map(Number).filter(Boolean) ?? [];
-      let weekDays: Record<number, string[]> = {};
+      const weekDays: Record<number, string[]> = {};
       if (meta.week_selections) {
         try {
           const parsed: { week: number; days: string[] }[] = JSON.parse(
@@ -226,7 +226,7 @@ export default async function ImpersonateBillingPage({
           .split(",")
           .map(Number)
           .filter(Boolean);
-        let weekDays: Record<number, string[]> = {};
+        const weekDays: Record<number, string[]> = {};
         if (meta.bundle_homeschool_week_selections_json) {
           try {
             const parsed: { week: number; days: string[] }[] = JSON.parse(
@@ -359,7 +359,7 @@ export default async function ImpersonateBillingPage({
     ),
   ] as string[];
 
-  let studentMap: Record<string, StudentInfo> = {};
+  const studentMap: Record<string, StudentInfo> = {};
   if (studentIds.length > 0) {
     const { data: students } = await adminClient
       .schema("admin")

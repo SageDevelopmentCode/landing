@@ -197,12 +197,15 @@ export default function AttendanceCalendarView({ onBlockClick, weekOffset, onWee
   const todayStr = getTodayStr();
 
   useEffect(() => {
-    setIsLoading(true);
-    setHeadcounts(null);
+    let cancelled = false;
     getWeekHeadcounts(weekMonday).then((data) => {
+      if (cancelled) return;
       setHeadcounts(data);
       setIsLoading(false);
     });
+    return () => {
+      cancelled = true;
+    };
   }, [weekMonday]);
 
   useEffect(() => {

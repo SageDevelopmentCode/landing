@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Clock, Users, DollarSign, MapPin, ChevronRight, RefreshCw, CalendarDays, Smartphone } from "lucide-react";
 import { cssColors as colors } from "../design-system";
@@ -102,13 +102,8 @@ function EmptyState({ label }: { label: string }) {
 // --- Countdown cell (no card chrome) ---
 
 function CountdownCell({ program }: { program: ProgramConfig }) {
-  const [days, setDays] = useState<number | null>(null);
-
-  useEffect(() => {
-    setDays(getDaysRemaining(program.date));
-  }, [program.date]);
-
-  const started = days !== null && days <= 0;
+  const days = getDaysRemaining(program.date);
+  const started = days <= 0;
 
   return (
     <div className="flex flex-col gap-3">

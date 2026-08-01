@@ -2936,10 +2936,11 @@ export default function TeacherDashboardDemo() {
     buildInitialSessions
   );
   const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
-  const [bannerIndex, setBannerIndex] = useState(0);
+  const [bannerIndex, setBannerIndex] = useState(() =>
+    Math.floor(Math.random() * BANNER_IMAGES.length),
+  );
 
   useEffect(() => {
-    setBannerIndex(Math.floor(Math.random() * BANNER_IMAGES.length));
     const timer = setInterval(() => {
       setBannerIndex((i) => (i + 1) % BANNER_IMAGES.length);
     }, 4000);

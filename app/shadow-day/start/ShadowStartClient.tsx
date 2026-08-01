@@ -145,7 +145,7 @@ export default function ShadowStartClient({ initialData }: { initialData: Bookin
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.65, duration: 0.5 }}
           >
-            Create your account to hold your child's shadow day at Sage Field.
+            Create your account to hold your child&apos;s shadow day at Sage Field.
             Takes under a minute.
           </motion.p>
           <motion.div

@@ -183,6 +183,35 @@ function StudentCard({
   )
 }
 
+function toSidebarStudent(student: StudentInfo): FullStudent {
+  return {
+    id: student.id,
+    parent_id: '',
+    child_legal_name: student.child_legal_name,
+    dob_month: student.dob_month,
+    dob_day: student.dob_day,
+    dob_year: student.dob_year,
+    special_interests: null,
+    has_medical_conditions: null,
+    medical_conditions_description: null,
+    has_allergies: null,
+    allergies_description: null,
+    has_emergency_medications: null,
+    emergency_medications_description: null,
+    history_flags: null,
+    history_explanation: null,
+    needs_aide: null,
+    needs_aide_description: null,
+    learning_style: null,
+    strengths_interests: null,
+    current_challenges: null,
+    dysregulation_response: null,
+    regulation_strategies: null,
+    activities_to_avoid: null,
+    child_grade: student.child_grade,
+  }
+}
+
 const SUB_NAV = [
   { label: 'Summer 2026', href: '/admin/programs/summer_26' },
   { label: 'School Year 2026–2027', href: '/admin/programs/school_year_26_27' },
@@ -510,7 +539,8 @@ export function ProgramClient({
         )}
       </div>
       <StudentDetailSidebar
-        student={studentDetail ?? (selectedStudent as any)}
+        key={(studentDetail ?? selectedStudent)?.id ?? 'none'}
+        student={studentDetail ?? (selectedStudent ? toSidebarStudent(selectedStudent) : null)}
         loading={detailLoading}
         onClose={() => { setSelectedStudent(null); setStudentDetail(null) }}
       />

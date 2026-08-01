@@ -5,6 +5,60 @@ import { sendDiscordNotification, createNewsletterViewedEmbed } from '@/app/lib/
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+type NewsletterTeacherUpdateSelect = {
+  id: string
+  section_id: string
+  teacher_id: string
+  body: string
+  updated_at: string
+}
+
+type NewsletterSectionImageSelect = {
+  id: string
+  storage_path: string
+  sort_order: number
+  is_deleted: boolean
+  source_bucket: string | null
+}
+
+type NewsletterSectionSelect = {
+  id: string
+  newsletter_id: string
+  label: string
+  body: string
+  visible: boolean
+  sort_order: number
+  is_class_updates: boolean
+  created_at: string
+  updated_at: string
+  teacher_updates: NewsletterTeacherUpdateSelect[] | null
+  section_images: NewsletterSectionImageSelect[] | null
+}
+
+type NewsletterChangeLogSelect = {
+  id: string
+  newsletter_id: string
+  teacher_id: string
+  summary: string[]
+  created_at: string
+}
+
+type NewsletterRowSelect = {
+  id: string
+  title: string
+  week_range: string
+  status: string
+  view_mode: string
+  created_by: string
+  published_at: string | null
+  access_password: string | null
+  cover_image_path: string | null
+  created_at: string
+  updated_at: string
+  sections: NewsletterSectionSelect[] | null
+  change_log: NewsletterChangeLogSelect[] | null
+}
+
 export interface DBTeacherUpdate {
   id: string
   section_id: string
@@ -77,14 +131,14 @@ export interface DBNewsletter {
 // ─── Read ──────────────────────────────────────────────────────────────────────
 
 
-async function resolveNewsletterRows(rows: any[], adminClient: ReturnType<typeof createAdminClient>): Promise<DBNewsletter[]> {
+async function resolveNewsletterRows(rows: NewsletterRowSelect[], adminClient: ReturnType<typeof createAdminClient>): Promise<DBNewsletter[]> {
   const teacherIds = new Set<string>()
   for (const row of rows) {
-    for (const entry of (row.change_log as any[]) ?? []) {
+    for (const entry of row.change_log ?? []) {
       teacherIds.add(entry.teacher_id)
     }
-    for (const s of (row.sections as any[]) ?? []) {
-      for (const tu of (s.teacher_updates as any[]) ?? []) {
+    for (const s of row.sections ?? []) {
+      for (const tu of s.teacher_updates ?? []) {
         teacherIds.add(tu.teacher_id)
       }
     }
@@ -108,8 +162,8 @@ async function resolveNewsletterRows(rows: any[], adminClient: ReturnType<typeof
       if (!pathsByBucket.has(coverBucket)) pathsByBucket.set(coverBucket, [])
       pathsByBucket.get(coverBucket)!.push(row.cover_image_path)
     }
-    for (const s of (row.sections as any[]) ?? []) {
-      for (const img of (s.section_images as any[]) ?? []) {
+    for (const s of row.sections ?? []) {
+      for (const img of s.section_images ?? []) {
         if (img.is_deleted) continue
         const bucket: string = img.source_bucket ?? 'newsletter-images'
         if (!pathsByBucket.has(bucket)) pathsByBucket.set(bucket, [])
@@ -138,11 +192,11 @@ async function resolveNewsletterRows(rows: any[], adminClient: ReturnType<typeof
     cover_image_signed_url: row.cover_image_path
       ? (signedUrlMap.get(row.cover_image_path) ?? null)
       : null,
-    sections: ((row.sections as any[]) ?? [])
+    sections: (row.sections ?? [])
       .sort((a, b) => a.sort_order - b.sort_order)
       .map((s) => ({
         ...s,
-        teacher_updates: ((s.teacher_updates as any[]) ?? []).map((tu) => {
+        teacher_updates: (s.teacher_updates ?? []).map((tu) => {
           const user = nameMap.get(tu.teacher_id)
           return {
             ...tu,
@@ -150,10 +204,10 @@ async function resolveNewsletterRows(rows: any[], adminClient: ReturnType<typeof
             teacher_avatar: user?.profile_image_url ?? null,
           } as DBTeacherUpdate
         }),
-        images: ((s.section_images as any[]) ?? [])
-          .filter((img: any) => !img.is_deleted)
-          .sort((a: any, b: any) => a.sort_order - b.sort_order)
-          .map((img: any) => ({
+        images: (s.section_images ?? [])
+          .filter((img) => !img.is_deleted)
+          .sort((a, b) => a.sort_order - b.sort_order)
+          .map((img) => ({
             id: img.id,
             storage_path: img.storage_path,
             signed_url: signedUrlMap.get(img.storage_path) ?? null,
@@ -161,7 +215,7 @@ async function resolveNewsletterRows(rows: any[], adminClient: ReturnType<typeof
             source_bucket: img.source_bucket ?? 'newsletter-images',
           })) as DBSectionImage[],
       })),
-    change_log: ((row.change_log as any[]) ?? [])
+    change_log: (row.change_log ?? [])
       .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
       .map((entry) => {
         const user = nameMap.get(entry.teacher_id)
@@ -201,7 +255,7 @@ export async function getNewsletters(): Promise<DBNewsletter[]> {
 
   if (!rows || rows.length === 0) return []
 
-  return resolveNewsletterRows(rows, adminClient)
+  return resolveNewsletterRows(rows as NewsletterRowSelect[], adminClient)
 }
 
 export async function getNewsletterById(id: string): Promise<DBNewsletter | null> {
@@ -220,7 +274,7 @@ export async function getNewsletterById(id: string): Promise<DBNewsletter | null
     return null
   }
 
-  const results = await resolveNewsletterRows([row], adminClient)
+  const results = await resolveNewsletterRows([row as NewsletterRowSelect], adminClient)
   return results[0] ?? null
 }
 
@@ -564,7 +618,7 @@ export async function verifyNewsletterPassword(
   if (error || !row) return { error: 'Newsletter not found' }
   if (!row.access_password || row.access_password.toLowerCase() !== password.toLowerCase()) return { error: 'Incorrect password' }
 
-  const results = await resolveNewsletterRows([row], adminClient)
+  const results = await resolveNewsletterRows([row as NewsletterRowSelect], adminClient)
 
   void sendDiscordNotification(
     createNewsletterViewedEmbed({

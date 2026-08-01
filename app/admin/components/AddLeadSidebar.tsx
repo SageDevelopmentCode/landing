@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useEffect } from 'react'
+import { useState, useTransition } from 'react'
 import { DetailSidebar } from './DetailSidebar'
 import { cssColors as colors, radius, cssShadows as shadows } from '../design-system'
 import { allLeadStatuses, leadStatusLabels, LeadStatus } from '../../types/lead-status'
@@ -62,13 +62,16 @@ export function AddLeadSidebar({ isOpen, onClose, onLeadAdded }: AddLeadSidebarP
   const [serverError, setServerError] = useState('')
   const [isPending, startTransition] = useTransition()
 
-  useEffect(() => {
-    if (!isOpen) {
-      setForm(defaultForm)
-      setErrors({})
-      setServerError('')
-    }
-  }, [isOpen])
+  const resetForm = () => {
+    setForm(defaultForm)
+    setErrors({})
+    setServerError('')
+  }
+
+  const handleClose = () => {
+    resetForm()
+    onClose()
+  }
 
   const validate = () => {
     const newErrors: Record<string, string> = {}
@@ -125,7 +128,7 @@ export function AddLeadSidebar({ isOpen, onClose, onLeadAdded }: AddLeadSidebarP
       }
 
       onLeadAdded(newLead)
-      onClose()
+      handleClose()
     })
   }
 
@@ -146,7 +149,7 @@ export function AddLeadSidebar({ isOpen, onClose, onLeadAdded }: AddLeadSidebarP
   )
 
   return (
-    <DetailSidebar isOpen={isOpen} onClose={onClose} title="Add Lead">
+    <DetailSidebar isOpen={isOpen} onClose={handleClose} title="Add Lead">
       <form onSubmit={handleSubmit} className="space-y-5">
         {field('parentName', 'Parent / Guardian Name *', (
           <input
@@ -250,7 +253,7 @@ export function AddLeadSidebar({ isOpen, onClose, onLeadAdded }: AddLeadSidebarP
         <div className="flex gap-3 pt-2">
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             disabled={isPending}
             className="flex-1 py-3 text-sm font-medium transition-all duration-200"
             style={{

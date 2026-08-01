@@ -1267,53 +1267,73 @@ function StatusBadge({ status }: { status: NewsletterStatus }) {
   );
 }
 
+function NewsletterSidebarItem({
+  newsletter,
+  selectedId,
+  onSelect,
+}: {
+  newsletter: Newsletter;
+  selectedId: string;
+  onSelect: (id: string) => void;
+}) {
+  const isSelected = newsletter.id === selectedId;
+  return (
+    <button
+      onClick={() => onSelect(newsletter.id)}
+      className={`w-full text-left px-3 py-2.5 rounded-xl transition-colors border ${
+        isSelected
+          ? "bg-[#4a7c59]/8 border-[#4a7c59]/20 text-gray-900"
+          : "border-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+      }`}
+    >
+      <p className={`text-sm font-body truncate mb-0.5 ${isSelected ? "font-semibold" : "font-medium"}`}>
+        {newsletter.title}
+      </p>
+      <p className="text-xs text-gray-400 font-body truncate mb-1">{newsletter.weekRange}</p>
+      <StatusBadge status={newsletter.status} />
+      {newsletter.status === "published" && (
+        <a
+          href={`/newsletter/${newsletter.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="mt-1.5 flex items-center gap-1 text-xs font-body text-[#4a7c59] hover:underline"
+        >
+          <ExternalLink className="w-3 h-3" />
+          View public link
+        </a>
+      )}
+    </button>
+  );
+}
+
+function NewsletterSidebarGroup({
+  label,
+  items,
+  selectedId,
+  onSelect,
+}: {
+  label: string;
+  items: Newsletter[];
+  selectedId: string;
+  onSelect: (id: string) => void;
+}) {
+  if (items.length === 0) return null;
+  return (
+    <div className="mb-3">
+      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-3 mb-1">{label}</p>
+      <div className="space-y-0.5">
+        {items.map((n) => (
+          <NewsletterSidebarItem key={n.id} newsletter={n} selectedId={selectedId} onSelect={onSelect} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function NewsletterSidebar({ newsletters, selectedId, onSelect, onNew, isCreating }: NewsletterSidebarProps) {
   const drafts = newsletters.filter((n) => n.status === "draft");
   const published = newsletters.filter((n) => n.status === "published");
-
-  function SidebarItem({ newsletter }: { newsletter: Newsletter }) {
-    const isSelected = newsletter.id === selectedId;
-    return (
-      <button
-        onClick={() => onSelect(newsletter.id)}
-        className={`w-full text-left px-3 py-2.5 rounded-xl transition-colors border ${
-          isSelected
-            ? "bg-[#4a7c59]/8 border-[#4a7c59]/20 text-gray-900"
-            : "border-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-        }`}
-      >
-        <p className={`text-sm font-body truncate mb-0.5 ${isSelected ? "font-semibold" : "font-medium"}`}>
-          {newsletter.title}
-        </p>
-        <p className="text-xs text-gray-400 font-body truncate mb-1">{newsletter.weekRange}</p>
-        <StatusBadge status={newsletter.status} />
-        {newsletter.status === "published" && (
-          <a
-            href={`/newsletter/${newsletter.id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="mt-1.5 flex items-center gap-1 text-xs font-body text-[#4a7c59] hover:underline"
-          >
-            <ExternalLink className="w-3 h-3" />
-            View public link
-          </a>
-        )}
-      </button>
-    );
-  }
-
-  function SidebarGroup({ label, items }: { label: string; items: Newsletter[] }) {
-    if (items.length === 0) return null;
-    return (
-      <div className="mb-3">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-3 mb-1">{label}</p>
-        <div className="space-y-0.5">
-          {items.map((n) => <SidebarItem key={n.id} newsletter={n} />)}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <aside className="w-64 border-r border-gray-100 bg-gray-50 flex flex-col flex-shrink-0">
@@ -1340,8 +1360,8 @@ function NewsletterSidebar({ newsletters, selectedId, onSelect, onNew, isCreatin
           </div>
         ) : (
           <>
-            <SidebarGroup label="Drafts" items={drafts} />
-            <SidebarGroup label="Published" items={published} />
+            <NewsletterSidebarGroup label="Drafts" items={drafts} selectedId={selectedId} onSelect={onSelect} />
+            <NewsletterSidebarGroup label="Published" items={published} selectedId={selectedId} onSelect={onSelect} />
           </>
         )}
       </div>

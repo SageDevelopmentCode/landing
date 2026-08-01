@@ -113,6 +113,77 @@ const markdownComponents = {
   ),
 }
 
+const MARKDOWN_TOOLBAR_ITEMS = [
+  { label: "B", title: "Bold", kind: "format" as const, prefix: "**", suffix: "**", placeholder: "bold text" },
+  { label: "I", title: "Italic", kind: "format" as const, prefix: "_", suffix: "_", placeholder: "italic text" },
+  { label: "H", title: "Heading", kind: "line" as const, linePrefix: "## " },
+  { label: "•", title: "Bullet list", kind: "line" as const, linePrefix: "- " },
+  { label: "1.", title: "Numbered list", kind: "line" as const, linePrefix: "1. " },
+  { label: "`", title: "Inline code", kind: "format" as const, prefix: "`", suffix: "`", placeholder: "code" },
+  { label: "🔗", title: "Link", kind: "format" as const, prefix: "[", suffix: "](url)", placeholder: "link text" },
+];
+
+function MarkdownToolbar({
+  onFormat,
+  onLinePrefix,
+  preview,
+  onTogglePreview,
+  expandedInput,
+  onToggleExpanded,
+}: {
+  onFormat: (prefix: string, suffix: string, placeholder: string) => void;
+  onLinePrefix: (prefix: string) => void;
+  preview: boolean;
+  onTogglePreview: () => void;
+  expandedInput: boolean;
+  onToggleExpanded: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-0.5 px-1">
+      {MARKDOWN_TOOLBAR_ITEMS.map((item) => (
+        <button
+          key={item.title}
+          type="button"
+          title={item.title}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            if (item.kind === "format") {
+              onFormat(item.prefix, item.suffix, item.placeholder);
+            } else {
+              onLinePrefix(item.linePrefix);
+            }
+          }}
+          className="px-2 py-0.5 text-xs font-mono text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+        >
+          {item.label}
+        </button>
+      ))}
+      <div className="ml-auto flex items-center gap-1">
+        <button
+          type="button"
+          onMouseDown={(e) => { e.preventDefault(); onTogglePreview(); }}
+          className={`px-2 py-0.5 text-xs font-body rounded transition-colors ${
+            preview
+              ? "bg-[#4a7c59] text-white"
+              : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+          }`}
+        >
+          {preview ? "Edit" : "Preview"}
+        </button>
+        <button
+          type="button"
+          title={expandedInput ? "Collapse" : "Expand"}
+          onMouseDown={(e) => { e.preventDefault(); onToggleExpanded(); }}
+          className="px-2 py-0.5 text-xs text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+        >
+          {expandedInput ? "↙" : "↗"}
+        </button>
+        <span className="text-[10px] text-gray-300 font-mono select-none pl-1">markdown</span>
+      </div>
+    </div>
+  );
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatTimestamp(iso: string): string {
@@ -1420,49 +1491,14 @@ function ComposeBar({
             ) : (
               <div key="textarea" className="flex flex-col gap-1">
                 {/* Markdown toolbar */}
-                <div className="flex items-center gap-0.5 px-1">
-                  {([
-                    { label: 'B',  title: 'Bold',           action: () => applyFormat('**', '**', 'bold text') },
-                    { label: 'I',  title: 'Italic',         action: () => applyFormat('_', '_', 'italic text') },
-                    { label: 'H',  title: 'Heading',        action: () => applyLinePrefix('## ') },
-                    { label: '•',  title: 'Bullet list',    action: () => applyLinePrefix('- ') },
-                    { label: '1.', title: 'Numbered list',  action: () => applyLinePrefix('1. ') },
-                    { label: '`',  title: 'Inline code',    action: () => applyFormat('`', '`', 'code') },
-                    { label: '🔗', title: 'Link',           action: () => applyFormat('[', '](url)', 'link text') },
-                  ] as { label: string; title: string; action: () => void }[]).map(({ label, title, action }) => (
-                    <button
-                      key={title}
-                      type="button"
-                      title={title}
-                      onMouseDown={(e) => { e.preventDefault(); action() }}
-                      className="px-2 py-0.5 text-xs font-mono text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
-                    >
-                      {label}
-                    </button>
-                  ))}
-                  <div className="ml-auto flex items-center gap-1">
-                    <button
-                      type="button"
-                      onMouseDown={(e) => { e.preventDefault(); setPreview(p => !p) }}
-                      className={`px-2 py-0.5 text-xs font-body rounded transition-colors ${
-                        preview
-                          ? 'bg-[#4a7c59] text-white'
-                          : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      {preview ? 'Edit' : 'Preview'}
-                    </button>
-                    <button
-                      type="button"
-                      title={expandedInput ? 'Collapse' : 'Expand'}
-                      onMouseDown={(e) => { e.preventDefault(); setExpandedInput(x => !x) }}
-                      className="px-2 py-0.5 text-xs text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
-                    >
-                      {expandedInput ? '↙' : '↗'}
-                    </button>
-                    <span className="text-[10px] text-gray-300 font-mono select-none pl-1">markdown</span>
-                  </div>
-                </div>
+                <MarkdownToolbar
+                  onFormat={applyFormat}
+                  onLinePrefix={applyLinePrefix}
+                  preview={preview}
+                  onTogglePreview={() => setPreview((p) => !p)}
+                  expandedInput={expandedInput}
+                  onToggleExpanded={() => setExpandedInput((x) => !x)}
+                />
                 {preview ? (
                   <div
                     className="w-full min-h-[80px] bg-gray-50 rounded-2xl px-4 py-3 border border-gray-200 overflow-y-auto text-sm font-body text-gray-700 leading-relaxed [&>*:last-child]:mb-0"
@@ -1861,33 +1897,14 @@ function EditPostCard({
     <div className="bg-white rounded-2xl border border-[#4a7c59]/30 shadow-sm overflow-hidden">
       <div className="px-5 pt-4 pb-3 flex flex-col gap-3">
         {/* Toolbar */}
-        <div className="flex items-center gap-0.5 px-1">
-          {([
-            { label: 'B',  title: 'Bold',          action: () => applyFormat('**', '**', 'bold text') },
-            { label: 'I',  title: 'Italic',         action: () => applyFormat('_', '_', 'italic text') },
-            { label: 'H',  title: 'Heading',        action: () => applyLinePrefix('## ') },
-            { label: '•',  title: 'Bullet list',    action: () => applyLinePrefix('- ') },
-            { label: '1.', title: 'Numbered list',  action: () => applyLinePrefix('1. ') },
-            { label: '`',  title: 'Inline code',    action: () => applyFormat('`', '`', 'code') },
-            { label: '🔗', title: 'Link',           action: () => applyFormat('[', '](url)', 'link text') },
-          ] as { label: string; title: string; action: () => void }[]).map(({ label, title, action }) => (
-            <button key={title} type="button" title={title}
-              onMouseDown={(e) => { e.preventDefault(); action() }}
-              className="px-2 py-0.5 text-xs font-mono text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
-            >{label}</button>
-          ))}
-          <div className="ml-auto flex items-center gap-1">
-            <button type="button"
-              onMouseDown={(e) => { e.preventDefault(); setPreview(p => !p) }}
-              className={`px-2 py-0.5 text-xs font-body rounded transition-colors ${preview ? 'bg-[#4a7c59] text-white' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'}`}
-            >{preview ? 'Edit' : 'Preview'}</button>
-            <button type="button" title={expandedInput ? 'Collapse' : 'Expand'}
-              onMouseDown={(e) => { e.preventDefault(); setExpandedInput(x => !x) }}
-              className="px-2 py-0.5 text-xs text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
-            >{expandedInput ? '↙' : '↗'}</button>
-            <span className="text-[10px] text-gray-300 font-mono select-none pl-1">markdown</span>
-          </div>
-        </div>
+        <MarkdownToolbar
+          onFormat={applyFormat}
+          onLinePrefix={applyLinePrefix}
+          preview={preview}
+          onTogglePreview={() => setPreview((p) => !p)}
+          expandedInput={expandedInput}
+          onToggleExpanded={() => setExpandedInput((x) => !x)}
+        />
 
         {/* Textarea or preview */}
         {preview ? (
@@ -2028,7 +2045,17 @@ export default function TeacherFeedClient({
   const router = useRouter();
   const [posts, setPosts] = useState<FeedPost[]>(initialPosts);
   const [reelPosts, setReelPosts] = useState<ReelPost[]>(initialReelPosts);
-  const [feedMode, setFeedMode] = useState<"feed" | "reel">("feed");
+  const [feedMode, setFeedMode] = useState<"feed" | "reel">(() => {
+    if (typeof window === "undefined") return "feed";
+    const saved = sessionStorage.getItem("teacherFeedMode");
+    return saved === "feed" || saved === "reel" ? saved : "feed";
+  });
+  const [selectedPost, setSelectedPost] = useState<FeedPost | null>(null);
+  const [selectedTeacherId, setSelectedTeacherId] = useState<string | null>(null);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const displayedPosts = feedMode === "feed"
+    ? (selectedTeacherId ? posts.filter(p => p.teacher_id === selectedTeacherId) : posts)
+    : (selectedTeacherId ? reelPosts.filter(p => p.teacher_id === selectedTeacherId) : reelPosts);
 
   useEffect(() => {
     console.log("[FeedClient] mount —", {
@@ -2044,17 +2071,7 @@ export default function TeacherFeedClient({
       displayedCount: displayedPosts.length,
     });
   });
-  useEffect(() => {
-    const saved = sessionStorage.getItem("teacherFeedMode");
-    if (saved === "feed" || saved === "reel") setFeedMode(saved);
-  }, []);
   useEffect(() => { sessionStorage.setItem("teacherFeedMode", feedMode); }, [feedMode]);
-  const [selectedPost, setSelectedPost] = useState<FeedPost | null>(null);
-  const [selectedTeacherId, setSelectedTeacherId] = useState<string | null>(null);
-  const [editingPostId, setEditingPostId] = useState<string | null>(null);
-  const displayedPosts = feedMode === "feed"
-    ? (selectedTeacherId ? posts.filter(p => p.teacher_id === selectedTeacherId) : posts)
-    : (selectedTeacherId ? reelPosts.filter(p => p.teacher_id === selectedTeacherId) : reelPosts);
 
   const initials = currentUser?.full_name
     ? currentUser.full_name

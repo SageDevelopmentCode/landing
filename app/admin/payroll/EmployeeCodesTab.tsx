@@ -9,6 +9,10 @@ import type { TeacherRate } from './PayrollClient'
 
 export type TeacherWithCode = TeacherRate & { employee_code: string | null }
 
+function randomFiveDigitCode(): string {
+  return String(Math.floor(Math.random() * 90000) + 10000)
+}
+
 export function EmployeeCodesTab({ teachers: initial }: { teachers: TeacherWithCode[] }) {
   const [teachers, setTeachers] = useState(initial)
   const [codes, setCodes] = useState<Record<string, string>>(
@@ -22,7 +26,7 @@ export function EmployeeCodesTab({ teachers: initial }: { teachers: TeacherWithC
     const used = new Set(Object.values(codes).filter((c) => c.length === 5))
     let code: string
     do {
-      code = String(Math.floor(Math.random() * 90000) + 10000)
+      code = randomFiveDigitCode()
     } while (used.has(code))
     setCodes((c) => ({ ...c, [teacherId]: code }))
     setErrors((e) => ({ ...e, [teacherId]: '' }))

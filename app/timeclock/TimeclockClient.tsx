@@ -591,41 +591,38 @@ function PinEntry({ onSuccess }: { onSuccess: (teacher: TimeclockTeacher) => voi
   const [failCount, setFailCount] = useState(0);
   const [lockedUntil, setLockedUntil] = useState(0);
   const [lockCountdown, setLockCountdown] = useState(0);
+  const isLocked = lockCountdown > 0;
 
   useEffect(() => {
-    if (lockedUntil <= Date.now()) { setLockCountdown(0); return; }
-    const interval = setInterval(() => {
+    if (lockedUntil <= Date.now()) return;
+
+    const update = () => {
       const remaining = Math.ceil((lockedUntil - Date.now()) / 1000);
-      if (remaining <= 0) { setLockCountdown(0); clearInterval(interval); } else { setLockCountdown(remaining); }
-    }, 200);
+      if (remaining <= 0) {
+        setLockCountdown(0);
+        setLockedUntil(0);
+      } else {
+        setLockCountdown(remaining);
+      }
+    };
+    const interval = setInterval(update, 200);
     return () => clearInterval(interval);
   }, [lockedUntil]);
 
-  // Keyboard input support
-  useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      if (e.key >= "0" && e.key <= "9") appendDigit(e.key);
-      else if (e.key === "Backspace") removeDigit();
-      else if (e.key === "Enter") void submit();
-    }
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  });
-
   function appendDigit(d: string) {
-    if (pin.length >= 5 || loading || Date.now() < lockedUntil) return;
+    if (pin.length >= 5 || loading || isLocked) return;
     setError("");
     setPin((p) => (p + d).slice(0, 5));
   }
 
   function removeDigit() {
-    if (loading || Date.now() < lockedUntil) return;
+    if (loading || isLocked) return;
     setPin((p) => p.slice(0, -1));
     setError("");
   }
 
   async function submit() {
-    if (pin.length !== 5 || loading || Date.now() < lockedUntil) return;
+    if (pin.length !== 5 || loading || isLocked) return;
     setLoading(true);
     const teacher = await lookupEmployeeByCode(pin);
     setLoading(false);
@@ -638,7 +635,11 @@ function PinEntry({ onSuccess }: { onSuccess: (teacher: TimeclockTeacher) => voi
       const nextFail = failCount + 1;
       setFailCount(nextFail);
       const delayMs = LOCKOUT_DELAYS[Math.min(nextFail, LOCKOUT_DELAYS.length - 1)];
-      if (delayMs > 0) setLockedUntil(Date.now() + delayMs);
+      if (delayMs > 0) {
+        const until = Date.now() + delayMs;
+        setLockedUntil(until);
+        setLockCountdown(Math.ceil(delayMs / 1000));
+      }
       setPin("");
       setError("Invalid code. Please try again.");
       setShake(true);
@@ -646,7 +647,16 @@ function PinEntry({ onSuccess }: { onSuccess: (teacher: TimeclockTeacher) => voi
     }
   }
 
-  const isLocked = Date.now() < lockedUntil;
+  // Keyboard input support
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key >= "0" && e.key <= "9") appendDigit(e.key);
+      else if (e.key === "Backspace") removeDigit();
+      else if (e.key === "Enter") void submit();
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  });
 
   const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "backspace", "0", "enter"] as const;
 
