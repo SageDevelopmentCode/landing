@@ -28,9 +28,11 @@ Keys are loaded automatically from `supabase status` when you run tests. You do 
 | Email | Role | Password |
 |-------|------|----------|
 | `parent-apply@e2e.sagefield.test` | parent (in-progress application) | `E2eTestPassword123!` |
-| `parent-enrolled@e2e.sagefield.test` | parent (approved/enrolled) | `E2eTestPassword123!` |
+| `parent-enrolled@e2e.sagefield.test` | parent (approved + `status: enrolled`) | `E2eTestPassword123!` |
 | `teacher@e2e.sagefield.test` | teacher | `E2eTestPassword123!` |
 | `admin@e2e.sagefield.test` | super_admin | `E2eTestPassword123!` |
+
+The enrolled parent seed uses `status: "enrolled"` so routes like `/parent/billing` and `/parent/children` are accessible (those pages redirect to `/parent/dashboard` when no enrolled application exists).
 
 ## Run tests
 

@@ -81,6 +81,14 @@ const BANNER_IMAGES = [
   "/assets/Stock10.jpg",
 ];
 
+function bannerIndexForUser(userId: string, length: number): number {
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) {
+    hash = (hash * 31 + userId.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash) % length;
+}
+
 function getGreeting(): string {
   const hour = new Date().getHours();
   if (hour >= 5 && hour < 12) return "Good morning";
@@ -422,7 +430,7 @@ export default function HomePageClient({
 }: Props) {
   const [checklistOpen, setChecklistOpen] = useState(false);
   const [bannerIdx, setBannerIdx] = useState(() =>
-    Math.floor(Math.random() * BANNER_IMAGES.length),
+    bannerIndexForUser(userId, BANNER_IMAGES.length),
   );
   const [greeting] = useState(() => getGreeting());
   const [attendanceStudent, setAttendanceStudent] =

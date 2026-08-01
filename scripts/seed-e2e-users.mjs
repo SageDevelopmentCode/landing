@@ -36,7 +36,7 @@ const USERS = [
     applications: [
       {
         id: '33333333-3333-3333-3333-333333333002',
-        status: 'submitted',
+        status: 'enrolled',
         program: 'summer_26',
         child_legal_name: 'E2E Test Child',
         approved: true,
