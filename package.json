@@ -8,6 +8,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "db:start": "supabase start",
+    "db:reset": "supabase db reset && npm run db:seed-e2e",
+    "db:seed-e2e": "node scripts/seed-e2e-users.mjs",
+    "db:stop": "supabase stop",
+    "build:e2e": "bash scripts/build-e2e.sh",
+    "test:e2e": "bash scripts/run-e2e.sh",
+    "test:e2e:ui": "bash scripts/run-e2e.sh --ui",
     "types:generate:token": "node scripts/generate-types-with-token.js",
     "mobile": "npm --prefix apps/mobile start",
     "mobile:ios": "npm --prefix apps/mobile run ios",
@@ -48,6 +55,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@types/diff": "^7.0.2",
     "@types/node": "^20",
