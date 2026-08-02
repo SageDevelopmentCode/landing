@@ -22,7 +22,7 @@ export async function updateEmergencyContacts(payload: UpdateEmergencyContactsPa
 
   const actingParentId = await resolveActingParentId(user.id)
   const ownershipError = await assertStudentBelongsToParent(payload.studentId, actingParentId)
-  if (ownershipError.error) return ownershipError
+  if (ownershipError.error) return { error: ownershipError.error }
 
   const adminClient = createAdminClient()
   const { data, error } = await adminClient

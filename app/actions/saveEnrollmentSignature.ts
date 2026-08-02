@@ -27,7 +27,7 @@ export async function saveEnrollmentSignature({
 
   const actingParentId = await resolveActingParentId(user.id)
   const ownershipError = await assertStudentBelongsToParent(studentId, actingParentId)
-  if (ownershipError.error) return ownershipError
+  if (ownershipError.error) return { error: ownershipError.error }
 
   const adminClient = createAdminClient()
   const { data, error } = await adminClient

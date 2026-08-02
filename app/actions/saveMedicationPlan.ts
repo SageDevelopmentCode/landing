@@ -30,7 +30,7 @@ export async function saveMedicationPlan(payload: MedicationPlanPayload) {
 
   const actingParentId = await resolveActingParentId(user.id)
   const ownershipError = await assertStudentBelongsToParent(payload.studentId, actingParentId)
-  if (ownershipError.error) return ownershipError
+  if (ownershipError.error) return { error: ownershipError.error }
 
   const adminClient = createAdminClient()
 
