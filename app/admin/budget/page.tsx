@@ -58,6 +58,24 @@ type StripeTransaction = {
   exclude_from_revenue: boolean;
 };
 
+function isRevenueAttributionRow(tx: StripeTransaction): boolean {
+  const meta = (tx.metadata ?? {}) as Record<string, string>;
+  return (
+    meta.is_sibling_split === "true" || meta.bundled_with_supply_fee === "true"
+  );
+}
+
+function filterRevenueTransactions(
+  transactions: StripeTransaction[],
+  { hideExcluded = true } = {},
+): StripeTransaction[] {
+  return transactions.filter(
+    (tx) =>
+      !isRevenueAttributionRow(tx) &&
+      (!hideExcluded || !tx.exclude_from_revenue),
+  );
+}
+
 const merriweather = Poppins({
   weight: ["300", "400", "700", "900"],
   subsets: ["latin"],
@@ -453,10 +471,8 @@ function RevenueExpensesLineChart({
   if (allMonths.length < 2) return null;
 
   const data = allMonths.map((m) => {
-    const revenue = stripeTransactions
-      .filter(
-        (tx) => !tx.exclude_from_revenue && tx.created_at.slice(0, 7) === m,
-      )
+    const revenue = filterRevenueTransactions(stripeTransactions)
+      .filter((tx) => tx.created_at.slice(0, 7) === m)
       .reduce((s, tx) => {
         const net = tx.cover_fees
           ? (tx.intended_amount_cents ?? tx.amount_cents)
@@ -660,10 +676,8 @@ function RevenueTrend({
   }
 
   const data = months.map((m) => {
-    const total = stripeTransactions
-      .filter(
-        (tx) => !tx.exclude_from_revenue && tx.created_at.slice(0, 7) === m,
-      )
+    const total = filterRevenueTransactions(stripeTransactions)
+      .filter((tx) => tx.created_at.slice(0, 7) === m)
       .reduce((s, tx) => {
         const net = tx.cover_fees
           ? (tx.intended_amount_cents ?? tx.amount_cents)
@@ -1211,12 +1225,10 @@ function OverviewTab({
   );
   const totalExpenses = monthExpenses.reduce((s, e) => s + Number(e.amount), 0);
 
-  const monthTransactions = stripeTransactions.filter(
+  const monthTransactions = filterRevenueTransactions(stripeTransactions).filter(
     (tx) => tx.created_at.slice(0, 7) === selectedMonth,
   );
-  const totalRevenue = monthTransactions
-    .filter((tx) => !tx.exclude_from_revenue)
-    .reduce((s, tx) => {
+  const totalRevenue = monthTransactions.reduce((s, tx) => {
       const net = tx.cover_fees
         ? (tx.intended_amount_cents ?? tx.amount_cents)
         : tx.amount_cents;
@@ -1226,9 +1238,7 @@ function OverviewTab({
   const profitColor = netProfit >= 0 ? colors.success : colors.error;
 
   // All-time totals (unfiltered)
-  const allTimeRevenue = stripeTransactions
-    .filter((tx) => !tx.exclude_from_revenue)
-    .reduce((s, tx) => {
+  const allTimeRevenue = filterRevenueTransactions(stripeTransactions).reduce((s, tx) => {
       const net = tx.cover_fees
         ? (tx.intended_amount_cents ?? tx.amount_cents)
         : tx.amount_cents;
@@ -5114,9 +5124,7 @@ function RevenueTab({
     fetchLists();
   }, []);
 
-  const totalActual = transactions
-    .filter((tx) => !tx.exclude_from_revenue)
-    .reduce((s, tx) => {
+  const totalActual = filterRevenueTransactions(transactions).reduce((s, tx) => {
       const net = tx.cover_fees
         ? (tx.intended_amount_cents ?? tx.amount_cents)
         : tx.amount_cents;
@@ -5138,12 +5146,7 @@ function RevenueTab({
     );
   }
 
-  const visibleTx = transactions.filter(
-    (tx) =>
-      !tx.exclude_from_revenue &&
-      (tx.metadata as Record<string, string> | null)?.is_sibling_split !== "true" &&
-      (tx.metadata as Record<string, string> | null)?.bundled_with_supply_fee !== "true",
-  );
+  const visibleTx = filterRevenueTransactions(transactions);
 
   const byMonth = visibleTx.reduce<Record<string, StripeTransaction[]>>(
     (acc, tx) => {
@@ -5253,9 +5256,9 @@ function RevenueTab({
           ]}
         >
           {(() => {
-            const displayTx = hideExcluded
-              ? transactions.filter((tx) => !tx.exclude_from_revenue)
-              : transactions;
+            const displayTx = filterRevenueTransactions(transactions, {
+              hideExcluded,
+            });
             const displayByMonth = displayTx.reduce<
               Record<string, StripeTransaction[]>
             >((acc, tx) => {

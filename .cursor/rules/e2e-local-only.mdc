@@ -1,0 +1,30 @@
+---
+description: E2E and local Supabase safety — never use production keys or hosted DB
+globs: e2e/**,playwright.config.ts,scripts/*e2e*,scripts/load-local-supabase-env.sh,scripts/start-e2e.sh,scripts/build-e2e.sh,scripts/run-e2e.sh,.github/workflows/e2e.yml
+alwaysApply: false
+---
+
+# E2E: local Supabase only (no production)
+
+## Never
+
+- Read or export production/staging keys from `.env.local`, the Supabase dashboard, or `supabase link` for running tests.
+- Point `NEXT_PUBLIC_SUPABASE_URL` at `supabase.co` or any non-localhost URL for E2E.
+- Start `next dev` or `next start` manually with `.env.local` and expect Playwright to pass — `playwright.config.ts` uses `reuseExistingServer: false` and `scripts/start-e2e.sh` with local keys only.
+- Seed or mutate production via `scripts/seed-e2e-users.mjs` — it refuses non-local URLs.
+- Add schema changes under legacy `migrations/` for test DB — use `supabase/migrations/` only.
+
+## Always
+
+- Run E2E via npm scripts that load keys from local Docker:
+  - `npm run test:e2e` → `scripts/run-e2e.sh` → `scripts/load-local-supabase-env.sh`
+  - `npm run build:e2e` for a production Next build with local keys only
+- Reset test data with `npm run db:reset` (local Docker only).
+- If local Supabase is down, run `npm run db:start` first — do not substitute production.
+
+## Guards in repo
+
+- `scripts/load-local-supabase-env.sh` — blocks URLs that are not `127.0.0.1` / `localhost` or contain `supabase.co`.
+- `scripts/seed-e2e-users.mjs` — refuses non-local Supabase URLs.
+
+For full workflow, read `.cursor/skills/e2e-local-testing/SKILL.md` or `e2e/README.md`.
