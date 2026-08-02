@@ -2,6 +2,7 @@
 
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
 import { sendDiscordNotification, createErrorEmbed } from '@/app/lib/discord'
+import { assertStudentBelongsToParent, resolveActingParentId } from '@/app/lib/parent-access'
 
 export async function saveEnrollmentSignature({
   studentId,
@@ -24,13 +25,17 @@ export async function saveEnrollmentSignature({
   if (!printedName?.trim()) return { error: 'Printed name is required' }
   if (!signature?.trim()) return { error: 'Signature is required' }
 
+  const actingParentId = await resolveActingParentId(user.id)
+  const ownershipError = await assertStudentBelongsToParent(studentId, actingParentId)
+  if (ownershipError.error) return ownershipError
+
   const adminClient = createAdminClient()
   const { data, error } = await adminClient
     .schema('parent_app')
     .from('enrollment_signatures')
     .upsert(
       {
-        parent_id: user.id,
+        parent_id: actingParentId,
         student_id: studentId,
         contract_id: contractId,
         section_id: sectionId,

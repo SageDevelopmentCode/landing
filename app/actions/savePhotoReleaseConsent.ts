@@ -2,6 +2,7 @@
 
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
 import { sendDiscordNotification, createErrorEmbed } from '@/app/lib/discord'
+import { assertStudentBelongsToParent, resolveActingParentId } from '@/app/lib/parent-access'
 
 export async function savePhotoReleaseConsent({
   studentId,
@@ -15,6 +16,10 @@ export async function savePhotoReleaseConsent({
   if (!user) return { error: 'Not authenticated' }
   if (!studentId?.trim()) return { error: 'Missing student ID' }
 
+  const actingParentId = await resolveActingParentId(user.id)
+  const ownershipError = await assertStudentBelongsToParent(studentId, actingParentId)
+  if (ownershipError.error) return ownershipError
+
   const adminClient = createAdminClient()
 
   const { data, error } = await adminClient
@@ -22,7 +27,7 @@ export async function savePhotoReleaseConsent({
     .from('student_photo_release_consent')
     .upsert(
       {
-        parent_id: user.id,
+        parent_id: actingParentId,
         student_id: studentId,
         consent_level: consentLevel,
         updated_at: new Date().toISOString(),

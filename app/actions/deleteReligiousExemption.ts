@@ -1,17 +1,21 @@
 'use server'
 
-import { createServerSupabaseClient } from '@/app/lib/supabase-server'
+import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
 import { sendDiscordNotification, createErrorEmbed } from '@/app/lib/discord'
+import { assertCanActAsParent } from '@/app/lib/parent-access'
 
 export async function deleteReligiousExemption(path: string, parentId: string) {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
-  if (parentId !== user.id) return { error: 'Unauthorized' }
+
+  const authError = await assertCanActAsParent(user.id, parentId)
+  if (authError.error) return authError
 
   if (!path.startsWith(`${parentId}/`)) return { error: 'Unauthorized' }
 
-  const { error } = await supabase.storage
+  const adminClient = createAdminClient()
+  const { error } = await adminClient.storage
     .from('religious-exemption-affidavits')
     .remove([path])
 

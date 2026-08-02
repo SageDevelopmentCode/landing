@@ -2,6 +2,7 @@
 
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
 import { sendDiscordNotification, createErrorEmbed } from '@/app/lib/discord'
+import { assertStudentBelongsToParent, resolveActingParentId } from '@/app/lib/parent-access'
 
 export interface UpdateGuardianPayload {
   studentId: string
@@ -19,6 +20,10 @@ export async function updateEmergencyContactsGuardian(payload: UpdateGuardianPay
   if (!user) return { error: 'Not authenticated' }
   if (!payload.studentId?.trim()) return { error: 'Missing student ID' }
 
+  const actingParentId = await resolveActingParentId(user.id)
+  const ownershipError = await assertStudentBelongsToParent(payload.studentId, actingParentId)
+  if (ownershipError.error) return ownershipError
+
   const adminClient = createAdminClient()
 
   const { data: appRow, error: fetchError } = await adminClient
@@ -26,6 +31,7 @@ export async function updateEmergencyContactsGuardian(payload: UpdateGuardianPay
     .from('applications')
     .select('id')
     .eq('student_id', payload.studentId)
+    .eq('user_id', actingParentId)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
