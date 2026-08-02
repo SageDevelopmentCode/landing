@@ -121,8 +121,12 @@ export async function GET(request: NextRequest) {
 
     const stripeTransactions = txRes.data ?? [];
     const visibleTx = stripeTransactions.filter(
-      (tx) => !tx.exclude_from_revenue &&
-        (tx.metadata as Record<string, string> | null)?.is_sibling_split !== "true",
+      (tx) =>
+        !tx.exclude_from_revenue &&
+        (tx.metadata as Record<string, string> | null)?.is_sibling_split !==
+          "true" &&
+        (tx.metadata as Record<string, string> | null)
+          ?.bundled_with_supply_fee !== "true",
     );
     const txNet = (tx: typeof visibleTx[number]) =>
       ((tx.cover_fees ? (tx.intended_amount_cents ?? tx.amount_cents) : tx.amount_cents)) / 100;

@@ -33,7 +33,11 @@ import {
   BarChart2,
   SlidersHorizontal,
 } from "lucide-react";
-import { cssColors as colors, radius, cssShadows as shadows } from "../design-system";
+import {
+  cssColors as colors,
+  radius,
+  cssShadows as shadows,
+} from "../design-system";
 import { useTheme } from "./ThemeProvider";
 import { signOut } from "@/app/actions/auth";
 
@@ -48,43 +52,132 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   {
     label: "Main",
     items: [
-      { name: "Dashboard",    href: "/admin",               icon: <LayoutDashboard className="w-4 h-4" /> },
-      { name: "Leads",        href: "/admin/leads",         icon: <TrendingUp className="w-4 h-4" /> },
-      { name: "People",       href: "/admin/people",        icon: <Users className="w-4 h-4" /> },
-      { name: "Programs",     href: "/admin/programs",      icon: <BookOpen className="w-4 h-4" /> },
-      { name: "Applications", href: "/admin/applications",  icon: <ClipboardList className="w-4 h-4" /> },
-      { name: "Transactions", href: "/admin/transactions",  icon: <CreditCard className="w-4 h-4" /> },
-      { name: "Manual Payments", href: "/admin/payments",  icon: <PenLine className="w-4 h-4" /> },
-      { name: "Tuition Codes", href: "/admin/payments/tuition-codes", icon: <Ticket className="w-4 h-4" /> },
-      { name: "SY Payments", href: "/admin/school-year-payments", icon: <School className="w-4 h-4" /> },
-      { name: "Oversight",    href: "/admin/oversight",     icon: <BarChart2 className="w-4 h-4" /> },
-      { name: "SY Commitments", href: "/admin/school-year-commitments", icon: <ClipboardList className="w-4 h-4" /> },
+      {
+        name: "Dashboard",
+        href: "/admin",
+        icon: <LayoutDashboard className="w-4 h-4" />,
+      },
+      {
+        name: "Leads",
+        href: "/admin/leads",
+        icon: <TrendingUp className="w-4 h-4" />,
+      },
+      {
+        name: "People",
+        href: "/admin/people",
+        icon: <Users className="w-4 h-4" />,
+      },
+      {
+        name: "Programs",
+        href: "/admin/programs",
+        icon: <BookOpen className="w-4 h-4" />,
+      },
+      {
+        name: "Applications",
+        href: "/admin/applications",
+        icon: <ClipboardList className="w-4 h-4" />,
+      },
+      {
+        name: "Transactions",
+        href: "/admin/transactions",
+        icon: <CreditCard className="w-4 h-4" />,
+      },
+      {
+        name: "Manual Payments",
+        href: "/admin/payments",
+        icon: <PenLine className="w-4 h-4" />,
+      },
+      {
+        name: "Tuition Codes",
+        href: "/admin/payments/tuition-codes",
+        icon: <Ticket className="w-4 h-4" />,
+      },
+      {
+        name: "SY Payments",
+        href: "/admin/school-year-payments",
+        icon: <School className="w-4 h-4" />,
+      },
+      {
+        name: "Oversight",
+        href: "/admin/oversight",
+        icon: <BarChart2 className="w-4 h-4" />,
+      },
+      {
+        name: "SY Commitments",
+        href: "/admin/school-year-commitments",
+        icon: <ClipboardList className="w-4 h-4" />,
+      },
     ],
   },
   {
     label: "Tools",
     items: [
-      { name: "Budget",    href: "/admin/budget",    icon: <DollarSign className="w-4 h-4" /> },
-      { name: "Payroll",   href: "/admin/payroll",   icon: <CreditCard className="w-4 h-4" /> },
-      { name: "Messages",  href: "/admin/messages",  icon: <MessageSquare className="w-4 h-4" /> },
-      { name: "Pipeline", href: "/admin/pipeline", icon: <Activity className="w-4 h-4" /> },
-      { name: "DM Monitor", href: "/admin/moderation", icon: <Shield className="w-4 h-4" /> },
-      { name: "Photo Permissions", href: "/admin/photo-permissions", icon: <Camera className="w-4 h-4" /> },
-      { name: "Preferences", href: "/admin/preferences", icon: <SlidersHorizontal className="w-4 h-4" /> },
-      { name: "Marketing", href: "/admin/marketing", icon: <Megaphone className="w-4 h-4" /> },
-      { name: "Impersonate", href: "/admin/impersonate", icon: <Eye className="w-4 h-4" /> },
+      {
+        name: "Budget",
+        href: "/admin/budget",
+        icon: <DollarSign className="w-4 h-4" />,
+      },
+      {
+        name: "Payroll",
+        href: "/admin/payroll",
+        icon: <CreditCard className="w-4 h-4" />,
+      },
+      {
+        name: "Messages",
+        href: "/admin/messages",
+        icon: <MessageSquare className="w-4 h-4" />,
+      },
+      {
+        name: "Pipeline",
+        href: "/admin/pipeline",
+        icon: <Activity className="w-4 h-4" />,
+      },
+      {
+        name: "DM Monitor",
+        href: "/admin/moderation",
+        icon: <Shield className="w-4 h-4" />,
+      },
+      {
+        name: "Photo Permissions",
+        href: "/admin/photo-permissions",
+        icon: <Camera className="w-4 h-4" />,
+      },
+      {
+        name: "Preferences",
+        href: "/admin/preferences",
+        icon: <SlidersHorizontal className="w-4 h-4" />,
+      },
+      {
+        name: "Marketing",
+        href: "/admin/marketing",
+        icon: <Megaphone className="w-4 h-4" />,
+      },
+      {
+        name: "Impersonate",
+        href: "/admin/impersonate",
+        icon: <Eye className="w-4 h-4" />,
+      },
     ],
   },
   {
     label: "Archive",
     items: [
-      { name: "Archive", href: "/admin/archive", icon: <Archive className="w-4 h-4" /> },
+      {
+        name: "Archive",
+        href: "/admin/archive",
+        icon: <Archive className="w-4 h-4" />,
+      },
     ],
   },
   {
     label: "External",
     items: [
-      { name: "Teacher View", href: "/teacher/dashboard", icon: <School className="w-4 h-4" />, newTab: true },
+      {
+        name: "Teacher View",
+        href: "/teacher/dashboard",
+        icon: <School className="w-4 h-4" />,
+        newTab: true,
+      },
     ],
   },
 ];
@@ -102,7 +195,8 @@ function NavLink({
   pendingApplications: number;
   onClick?: () => void;
 }) {
-  const showBadge = item.href === "/admin/applications" && pendingApplications > 0 && !active;
+  const showBadge =
+    item.href === "/admin/applications" && pendingApplications > 0 && !active;
 
   return (
     <Link
@@ -117,10 +211,20 @@ function NavLink({
         justifyContent: expanded ? "flex-start" : "center",
         backgroundColor: active ? colors.accentLight : "transparent",
         color: active ? colors.accent : colors.textTertiary,
-        borderLeft: expanded ? (active ? `2px solid ${colors.accent}` : "2px solid transparent") : "none",
+        borderLeft: expanded
+          ? active
+            ? `2px solid ${colors.accent}`
+            : "2px solid transparent"
+          : "none",
       }}
     >
-      <span style={{ color: active ? colors.accent : colors.textTertiary, flexShrink: 0, position: "relative" }}>
+      <span
+        style={{
+          color: active ? colors.accent : colors.textTertiary,
+          flexShrink: 0,
+          position: "relative",
+        }}
+      >
         {item.icon}
         {/* Badge dot when collapsed */}
         {!expanded && showBadge && (
@@ -207,7 +311,10 @@ function AdminSidebarContent({
         />
         {expanded && (
           <div>
-            <div className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
+            <div
+              className="text-sm font-semibold"
+              style={{ color: colors.textPrimary }}
+            >
               Sage Field
             </div>
             <div className="text-xs" style={{ color: colors.textTertiary }}>
@@ -218,7 +325,10 @@ function AdminSidebarContent({
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 py-4 space-y-5 overflow-y-auto" style={{ padding: expanded ? "16px 12px" : "16px 6px" }}>
+      <nav
+        className="flex-1 py-4 space-y-5 overflow-y-auto"
+        style={{ padding: expanded ? "16px 12px" : "16px 6px" }}
+      >
         {NAV_GROUPS.map((group) => (
           <div key={group.label}>
             {expanded && (
@@ -265,75 +375,86 @@ function AdminSidebarContent({
         {/* Expand/collapse toggle */}
         <button
           onClick={onToggleExpand}
-          title={expanded ? 'Collapse sidebar' : 'Expand sidebar'}
+          title={expanded ? "Collapse sidebar" : "Expand sidebar"}
           className="transition-colors duration-150"
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: expanded ? 'flex-start' : 'center',
-            gap: expanded ? '10px' : 0,
-            width: '100%',
-            padding: expanded ? '6px 8px' : '6px',
+            display: "flex",
+            alignItems: "center",
+            justifyContent: expanded ? "flex-start" : "center",
+            gap: expanded ? "10px" : 0,
+            width: "100%",
+            padding: expanded ? "6px 8px" : "6px",
             borderRadius: radius.md,
-            border: 'none',
-            backgroundColor: 'transparent',
+            border: "none",
+            backgroundColor: "transparent",
             color: colors.textTertiary,
-            cursor: 'pointer',
-            marginBottom: '4px',
+            cursor: "pointer",
+            marginBottom: "4px",
           }}
         >
-          {expanded
-            ? <PanelLeftClose className="w-4 h-4" style={{ flexShrink: 0 }} />
-            : <PanelLeftOpen className="w-4 h-4" style={{ flexShrink: 0 }} />
-          }
-          {expanded && (
-            <span className="text-xs font-medium">Collapse</span>
+          {expanded ? (
+            <PanelLeftClose className="w-4 h-4" style={{ flexShrink: 0 }} />
+          ) : (
+            <PanelLeftOpen className="w-4 h-4" style={{ flexShrink: 0 }} />
           )}
+          {expanded && <span className="text-xs font-medium">Collapse</span>}
         </button>
 
         {/* Theme toggle */}
         <button
           onClick={toggleTheme}
-          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          title={
+            theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
+          }
           className="transition-colors duration-150"
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: expanded ? 'flex-start' : 'center',
-            gap: expanded ? '10px' : 0,
-            width: '100%',
-            padding: expanded ? '6px 8px' : '6px',
+            display: "flex",
+            alignItems: "center",
+            justifyContent: expanded ? "flex-start" : "center",
+            gap: expanded ? "10px" : 0,
+            width: "100%",
+            padding: expanded ? "6px 8px" : "6px",
             borderRadius: radius.md,
-            border: 'none',
-            backgroundColor: 'transparent',
+            border: "none",
+            backgroundColor: "transparent",
             color: colors.textTertiary,
-            cursor: 'pointer',
-            marginBottom: '8px',
+            cursor: "pointer",
+            marginBottom: "8px",
           }}
         >
-          {theme === 'dark'
-            ? <Sun className="w-4 h-4" style={{ flexShrink: 0 }} />
-            : <Moon className="w-4 h-4" style={{ flexShrink: 0 }} />
-          }
+          {theme === "dark" ? (
+            <Sun className="w-4 h-4" style={{ flexShrink: 0 }} />
+          ) : (
+            <Moon className="w-4 h-4" style={{ flexShrink: 0 }} />
+          )}
           {expanded && (
             <span className="text-xs font-medium">
-              {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+              {theme === "dark" ? "Light mode" : "Dark mode"}
             </span>
           )}
         </button>
 
         <div
           className="flex items-center mb-3"
-          style={{ justifyContent: expanded ? "flex-start" : "center", gap: expanded ? "12px" : 0 }}
+          style={{
+            justifyContent: expanded ? "flex-start" : "center",
+            gap: expanded ? "12px" : 0,
+          }}
         >
           <div
             className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0"
-            style={{ backgroundColor: colors.accentLight, color: colors.accent }}
+            style={{
+              backgroundColor: colors.accentLight,
+              color: colors.accent,
+            }}
           >
             {avatarLetter}
           </div>
           {expanded && userEmail && (
-            <span className="text-xs truncate flex-1" style={{ color: colors.textTertiary }}>
+            <span
+              className="text-xs truncate flex-1"
+              style={{ color: colors.textTertiary }}
+            >
               {userEmail}
             </span>
           )}
@@ -399,10 +520,11 @@ export function Sidebar({
         }}
         aria-label="Toggle menu"
       >
-        {isMobileMenuOpen
-          ? <X className="w-5 h-5" style={{ color: colors.textSecondary }} />
-          : <Menu className="w-5 h-5" style={{ color: colors.textSecondary }} />
-        }
+        {isMobileMenuOpen ? (
+          <X className="w-5 h-5" style={{ color: colors.textSecondary }} />
+        ) : (
+          <Menu className="w-5 h-5" style={{ color: colors.textSecondary }} />
+        )}
       </button>
 
       {/* Mobile Overlay */}

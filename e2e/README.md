@@ -2,6 +2,10 @@
 
 End-to-end tests run against a **local Supabase stack** (Docker via `supabase start`). **Production Supabase keys are never used** — not from `.env.local`, not from the dashboard.
 
+## Agent / Cursor
+
+Agents: see `.cursor/skills/e2e-local-testing/SKILL.md` and rule `.cursor/rules/e2e-local-only.mdc`.
+
 ## Prerequisites
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (running)
