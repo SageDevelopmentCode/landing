@@ -163,10 +163,9 @@ type EditingCard = 'g1' | 'g2' | 'in_state' | 'out_of_state' | null;
 
 interface Props {
   contacts: ParentEmergencyContactsRecord[];
-  isSharedAccess?: boolean;
 }
 
-export default function EmergencyContactsPage({ contacts, isSharedAccess }: Props) {
+export default function EmergencyContactsPage({ contacts }: Props) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [localContacts, setLocalContacts] = useState(contacts);
   const [editing, setEditing] = useState<EditingCard>(null);
@@ -371,7 +370,7 @@ export default function EmergencyContactsPage({ contacts, isSharedAccess }: Prop
             { icon: phoneIcon, label: "Cell Phone", value: c.g1_cell_phone ?? "", href: c.g1_cell_phone ? `tel:${c.g1_cell_phone}` : undefined },
             { icon: workPhoneIcon, label: "Work Phone", value: c.g1_work_phone ?? "", href: c.g1_work_phone ? `tel:${c.g1_work_phone}` : undefined },
           ]}
-          onEdit={isSharedAccess ? undefined : () => openEdit('g1')}
+          onEdit={() => openEdit('g1')}
           editContent={editing === 'g1' ? guardianEditForm('g1') : undefined}
         />
         <ContactCard
@@ -384,7 +383,7 @@ export default function EmergencyContactsPage({ contacts, isSharedAccess }: Prop
             { icon: phoneIcon, label: "Cell Phone", value: c.g2_cell_phone ?? "", href: c.g2_cell_phone ? `tel:${c.g2_cell_phone}` : undefined },
             { icon: workPhoneIcon, label: "Work Phone", value: c.g2_work_phone ?? "", href: c.g2_work_phone ? `tel:${c.g2_work_phone}` : undefined },
           ]}
-          onEdit={isSharedAccess ? undefined : () => openEdit('g2')}
+          onEdit={() => openEdit('g2')}
           editContent={editing === 'g2' ? guardianEditForm('g2') : undefined}
         />
         <ContactCard
@@ -395,7 +394,7 @@ export default function EmergencyContactsPage({ contacts, isSharedAccess }: Prop
           rows={[
             { icon: phoneIcon, label: "Phone", value: c.in_state_contact_phone ?? "", href: c.in_state_contact_phone ? `tel:${c.in_state_contact_phone}` : undefined },
           ]}
-          onEdit={isSharedAccess ? undefined : () => openEdit('in_state')}
+          onEdit={() => openEdit('in_state')}
           editContent={editing === 'in_state' ? emergencyContactEditForm('in_state') : undefined}
         />
         <ContactCard
@@ -406,7 +405,7 @@ export default function EmergencyContactsPage({ contacts, isSharedAccess }: Prop
           rows={[
             { icon: phoneIcon, label: "Phone", value: c.out_of_state_contact_phone ?? "", href: c.out_of_state_contact_phone ? `tel:${c.out_of_state_contact_phone}` : undefined },
           ]}
-          onEdit={isSharedAccess ? undefined : () => openEdit('out_of_state')}
+          onEdit={() => openEdit('out_of_state')}
           editContent={editing === 'out_of_state' ? emergencyContactEditForm('out_of_state') : undefined}
         />
       </div>

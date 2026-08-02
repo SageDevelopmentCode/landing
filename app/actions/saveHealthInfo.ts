@@ -2,6 +2,7 @@
 
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
 import { sendDiscordNotification, createErrorEmbed } from '@/app/lib/discord'
+import { assertStudentBelongsToParent, resolveActingParentId } from '@/app/lib/parent-access'
 
 export interface HealthInfoPayload {
   studentId: string
@@ -32,13 +33,17 @@ export async function saveHealthInfo(payload: HealthInfoPayload) {
   if (!user) return { error: 'Not authenticated' }
   if (!payload.studentId?.trim()) return { error: 'Missing student ID' }
 
+  const actingParentId = await resolveActingParentId(user.id)
+  const ownershipError = await assertStudentBelongsToParent(payload.studentId, actingParentId)
+  if (ownershipError.error) return { error: ownershipError.error }
+
   const adminClient = createAdminClient()
   const { data, error } = await adminClient
     .schema('parent_app')
     .from('student_health_info')
     .upsert(
       {
-        parent_id: user.id,
+        parent_id: actingParentId,
         student_id: payload.studentId,
         in_state_contact_name: payload.inStateContactName || null,
         in_state_contact_relation: payload.inStateContactRelation || null,

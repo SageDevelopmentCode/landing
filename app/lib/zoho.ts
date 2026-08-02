@@ -1050,6 +1050,65 @@ export async function buildEnrollmentReminderEmail(opts: {
 }
 
 /**
+ * Build HTML reminder for enrolled families with incomplete checklist items before school year start
+ */
+export async function buildEnrollmentChecklistDeadlineReminderEmail(opts: {
+  g1FullName: string;
+  childLegalName: string;
+}): Promise<{ subject: string; content: string }> {
+  const subject = `Please complete ${opts.childLegalName}'s enrollment checklist before August 17`;
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${opts.g1FullName},</p>
+
+  <p>We are so excited to welcome <strong>${opts.childLegalName}</strong> to Sage Field for the <strong>2026–2027 school year</strong>, which begins <strong>Monday, August 17</strong>!</p>
+
+  <p>Our records show that a few items on your enrollment checklist are still outstanding. To make sure everything is in order before the first day, please take a moment to complete the remaining steps through your parent dashboard.</p>
+
+  <div style="text-align: center; margin: 28px 0;">
+    <a href="https://www.sagefield.co/parent/dashboard"
+       style="display: inline-block; background-color: #2C5F2E; color: #ffffff; text-decoration: none; font-weight: bold; padding: 12px 28px; border-radius: 8px; font-size: 15px;">
+      Complete Your Enrollment Checklist →
+    </a>
+  </div>
+
+  <p style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 12px 16px; margin: 20px 0; font-size: 14px;">
+    <strong>Tip:</strong> We highly recommend completing your enrollment on a laptop or desktop computer for the best experience. Some steps (document signing, file uploads) may be difficult on a mobile device.
+  </p>
+
+  <p style="margin-top: 24px;"><strong>Required steps:</strong></p>
+  <ol style="padding-left: 20px;">
+    <li style="margin-bottom: 8px;"><strong>Program Description, Parent Responsibilities, and Key Policies</strong> — review and sign</li>
+    <li style="margin-bottom: 8px;"><strong>Community Agreement for Families and Staff</strong> — review and sign</li>
+    <li style="margin-bottom: 8px;"><strong>Emergency Contact, Health, and Immunization Form</strong> — complete and sign</li>
+    <li style="margin-bottom: 8px;"><strong>Submit Proof of Immunizations</strong> — upload your child's current immunization records</li>
+    <li style="margin-bottom: 8px;"><strong>Photo Release Form</strong> — review and sign</li>
+    <li style="margin-bottom: 8px;"><strong>Assumption of Risk and Liability Release</strong> — review and sign</li>
+    <li style="margin-bottom: 8px;"><strong>Health Information Form</strong> — complete and sign</li>
+    <li style="margin-bottom: 8px;"><strong>Pay Registration Fee</strong> — submit if not yet paid</li>
+  </ol>
+
+  <p style="margin-top: 24px;"><strong>Optional steps (if applicable):</strong></p>
+  <ul style="padding-left: 20px;">
+    <li style="margin-bottom: 8px;"><strong>Emergency Medication Plan on File</strong> — if your child requires emergency medication at school</li>
+    <li style="margin-bottom: 8px;"><strong>Additional Authorized Pickup Person</strong> — if someone other than a guardian will pick up your child</li>
+  </ul>
+
+  <p>We look forward to seeing <strong>${opts.childLegalName}</strong> on August 17. If you have any questions or need help completing any of the steps, please don't hesitate to reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a>.</p>
+
+  <p style="margin-top: 32px;">With warmth,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
+/**
  * Build HTML confirmation email for a completed enrollment
  */
 export async function buildEnrollmentConfirmationEmail(opts: {

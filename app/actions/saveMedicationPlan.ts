@@ -2,6 +2,7 @@
 
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
 import { sendDiscordNotification, createErrorEmbed } from '@/app/lib/discord'
+import { assertStudentBelongsToParent, resolveActingParentId } from '@/app/lib/parent-access'
 
 export interface MedicationEntry {
   medicationName: string
@@ -27,6 +28,10 @@ export async function saveMedicationPlan(payload: MedicationPlanPayload) {
   if (!user) return { error: 'Not authenticated' }
   if (!payload.studentId?.trim()) return { error: 'Missing student ID' }
 
+  const actingParentId = await resolveActingParentId(user.id)
+  const ownershipError = await assertStudentBelongsToParent(payload.studentId, actingParentId)
+  if (ownershipError.error) return { error: ownershipError.error }
+
   const adminClient = createAdminClient()
 
   // 1. Upsert the plan row
@@ -35,7 +40,7 @@ export async function saveMedicationPlan(payload: MedicationPlanPayload) {
     .from('student_medication_plan')
     .upsert(
       {
-        parent_id: user.id,
+        parent_id: actingParentId,
         student_id: payload.studentId,
         emergency_procedure: payload.emergencyProcedure || null,
         special_instructions: payload.specialInstructions || null,
@@ -71,7 +76,7 @@ export async function saveMedicationPlan(payload: MedicationPlanPayload) {
     .schema('parent_app')
     .from('student_medications')
     .delete()
-    .eq('parent_id', user.id)
+    .eq('parent_id', actingParentId)
     .eq('student_id', payload.studentId)
 
   if (deleteError) {
@@ -97,7 +102,7 @@ export async function saveMedicationPlan(payload: MedicationPlanPayload) {
   // 3. Insert new medication rows
   if (payload.medications.length > 0) {
     const rows = payload.medications.map((m, i) => ({
-      parent_id: user.id,
+      parent_id: actingParentId,
       student_id: payload.studentId,
       medication_name: m.medicationName,
       condition_reason: m.conditionReason || null,

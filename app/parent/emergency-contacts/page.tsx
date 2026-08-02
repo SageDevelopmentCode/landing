@@ -90,7 +90,7 @@ export default async function EmergencyContactsRoute() {
               Emergency Contacts
             </h1>
           </div>
-          <EmergencyContactsPage contacts={contacts} isSharedAccess={isSharedAccess} />
+          <EmergencyContactsPage contacts={contacts} />
         </main>
       </div>
       <Footer />

@@ -2,6 +2,7 @@
 
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
 import { sendDiscordNotification, createErrorEmbed } from '@/app/lib/discord'
+import { assertStudentBelongsToParent, resolveActingParentId } from '@/app/lib/parent-access'
 
 export interface PickupPersonEntry {
   fullName: string
@@ -26,6 +27,10 @@ export async function saveAuthorizedPickup(payload: AuthorizedPickupPayload) {
   if (!user) return { error: 'Not authenticated' }
   if (!payload.studentId?.trim()) return { error: 'Missing student ID' }
 
+  const actingParentId = await resolveActingParentId(user.id)
+  const ownershipError = await assertStudentBelongsToParent(payload.studentId, actingParentId)
+  if (ownershipError.error) return { error: ownershipError.error }
+
   const adminClient = createAdminClient()
 
   // 1. Upsert the plan row
@@ -34,7 +39,7 @@ export async function saveAuthorizedPickup(payload: AuthorizedPickupPayload) {
     .from('student_authorized_pickup_plan')
     .upsert(
       {
-        parent_id: user.id,
+        parent_id: actingParentId,
         student_id: payload.studentId,
         date_of_request: payload.dateOfRequest || null,
         effective_until: payload.effectiveUntil || null,
@@ -70,7 +75,7 @@ export async function saveAuthorizedPickup(payload: AuthorizedPickupPayload) {
     .schema('parent_app')
     .from('student_authorized_pickup_persons')
     .delete()
-    .eq('parent_id', user.id)
+    .eq('parent_id', actingParentId)
     .eq('student_id', payload.studentId)
 
   if (deleteError) {
@@ -96,7 +101,7 @@ export async function saveAuthorizedPickup(payload: AuthorizedPickupPayload) {
   // 3. Insert new persons rows
   if (payload.persons.length > 0) {
     const rows = payload.persons.map((p, i) => ({
-      parent_id: user.id,
+      parent_id: actingParentId,
       student_id: payload.studentId,
       sort_order: i,
       full_name: p.fullName,

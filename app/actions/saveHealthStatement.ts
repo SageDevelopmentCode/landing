@@ -2,11 +2,16 @@
 
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
 import { sendDiscordNotification, createErrorEmbed } from '@/app/lib/discord'
+import { assertStudentBelongsToParent, resolveActingParentId } from '@/app/lib/parent-access'
 
 export async function saveHealthStatement(studentId: string, optionType: 'professional' | 'religious') {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
+
+  const actingParentId = await resolveActingParentId(user.id)
+  const ownershipError = await assertStudentBelongsToParent(studentId, actingParentId)
+  if (ownershipError.error) return { error: ownershipError.error }
 
   const adminClient = createAdminClient()
   const { data, error } = await adminClient
@@ -14,7 +19,7 @@ export async function saveHealthStatement(studentId: string, optionType: 'profes
     .from('student_health_statement')
     .upsert(
       {
-        parent_id: user.id,
+        parent_id: actingParentId,
         student_id: studentId,
         option_type: optionType,
         updated_at: new Date().toISOString(),
