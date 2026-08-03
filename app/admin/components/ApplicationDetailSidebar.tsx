@@ -1574,6 +1574,17 @@ export function ApplicationDetailSidebar({
           ) : null
         )}
 
+        {application.status === 'enrolled' && application.student_id && (
+          <a
+            href={`/admin/enrollment-summary/${application.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#2C5F2E] border border-[#2C5F2E]/30 rounded-lg px-3 py-2 hover:bg-[#2C5F2E]/5 transition-colors w-fit"
+          >
+            Download Enrollment Summary
+          </a>
+        )}
+
         {application.approved && application.status !== 'enrolled' && (
           <div className="flex items-center gap-2">
             <button
