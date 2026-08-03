@@ -2234,8 +2234,6 @@ export async function buildShadowDayPaymentConfirmationEmail(opts: {
     <tr><td style="padding: 5px 0;">🥪</td><td style="padding: 5px 0;">Snack + lunch from home</td></tr>
   </table>
 
-  <p style="margin-top: 28px;"><strong>A quick reminder:</strong> If you decide to enroll within 5 days of your child&apos;s shadow day visit, the $500 enrollment fee is fully waived — so it&apos;s a great time to take the next step if Sage Field feels like the right fit!</p>
-
   <p>If you have any questions before the visit, feel free to reach out at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> or text <a href="sms:+15126775872" style="color: #5a7a5a;">(512) 677-5872</a>.</p>
 
   <p style="margin-top: 32px;">See you soon!</p>

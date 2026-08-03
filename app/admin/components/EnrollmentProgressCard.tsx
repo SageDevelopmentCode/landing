@@ -15,26 +15,13 @@ import {
   PenLine,
   ClipboardList,
 } from 'lucide-react'
-import {
-  CONTRACT_1_ID,
-  CONTRACT_1_TOTAL_SECTIONS,
-  CONTRACT_2_ID,
-  CONTRACT_2_TOTAL_SECTIONS,
-  CONTRACT_3_ID,
-  CONTRACT_3_TOTAL_SECTIONS,
-  CONTRACT_4_ID,
-  CONTRACT_4_TOTAL_SECTIONS,
-  CONTRACT_5_ID,
-  CONTRACT_5_TOTAL_SECTIONS,
-  CONTRACT_6_ID,
-  CONTRACT_6_TOTAL_SECTIONS,
-  CONTRACT_7_ID,
-  CONTRACT_7_TOTAL_SECTIONS,
-  CONTRACT_8_ID,
-  CONTRACT_8_TOTAL_SECTIONS,
-  isContractComplete,
-} from '@/app/types/enrollment-signatures'
 import type { StudentSignatureMap, SignatureMap } from '@/app/types/enrollment-signatures'
+import {
+  ENROLLMENT_CHECKLIST_ITEMS,
+  ENROLLMENT_CHECKLIST_TOTAL_COUNT,
+  computeIsEnrollmentComplete,
+  isChecklistItemComplete,
+} from '@/app/lib/enrollment-checklist'
 import { useState } from 'react'
 
 export type ApprovedApplication = {
@@ -55,154 +42,24 @@ export interface EnrollmentProgressCardProps {
   onItemClick?: (itemId: number, studentId: string) => void
 }
 
-interface ChecklistItem {
-  id: number
-  title: string
-  subtitle: string
-  icon: React.ReactNode
-  iconBg: string
-  iconColor: string
-  required: boolean
-  isContract: boolean
-  contractId?: number
-  contractSections?: number
+const CHECKLIST_ICONS: Record<
+  number,
+  { icon: React.ReactNode; iconBg: string; iconColor: string }
+> = {
+  1: { icon: <FileText className="w-4 h-4" />, iconBg: 'bg-blue-50', iconColor: 'text-blue-500' },
+  2: { icon: <Users className="w-4 h-4" />, iconBg: 'bg-purple-50', iconColor: 'text-purple-500' },
+  3: { icon: <Heart className="w-4 h-4" />, iconBg: 'bg-rose-50', iconColor: 'text-rose-500' },
+  4: { icon: <Pill className="w-4 h-4" />, iconBg: 'bg-orange-50', iconColor: 'text-orange-500' },
+  5: { icon: <ShieldCheck className="w-4 h-4" />, iconBg: 'bg-green-50', iconColor: 'text-green-600' },
+  6: { icon: <Camera className="w-4 h-4" />, iconBg: 'bg-sky-50', iconColor: 'text-sky-500' },
+  7: { icon: <AlertTriangle className="w-4 h-4" />, iconBg: 'bg-amber-50', iconColor: 'text-amber-500' },
+  8: { icon: <UserPlus className="w-4 h-4" />, iconBg: 'bg-indigo-50', iconColor: 'text-indigo-500' },
+  9: { icon: <CreditCard className="w-4 h-4" />, iconBg: 'bg-emerald-50', iconColor: 'text-emerald-600' },
+  10: { icon: <ClipboardList className="w-4 h-4" />, iconBg: 'bg-teal-50', iconColor: 'text-teal-500' },
 }
 
-const checklistItems: ChecklistItem[] = [
-  {
-    id: 1,
-    title: 'Program Description, Parent Responsibilities, and Key Policies',
-    subtitle: 'Review and sign the program contract',
-    icon: <FileText className="w-4 h-4" />,
-    iconBg: 'bg-blue-50',
-    iconColor: 'text-blue-500',
-    required: true,
-    isContract: true,
-    contractId: CONTRACT_1_ID,
-    contractSections: CONTRACT_1_TOTAL_SECTIONS,
-  },
-  {
-    id: 2,
-    title: 'Community Agreement for Families and Staff',
-    subtitle: 'Review and sign the community agreement',
-    icon: <Users className="w-4 h-4" />,
-    iconBg: 'bg-purple-50',
-    iconColor: 'text-purple-500',
-    required: true,
-    isContract: true,
-    contractId: CONTRACT_2_ID,
-    contractSections: CONTRACT_2_TOTAL_SECTIONS,
-  },
-  {
-    id: 3,
-    title: 'Emergency Contact, Health, and Immunization Form',
-    subtitle: 'Complete and sign the health and emergency form',
-    icon: <Heart className="w-4 h-4" />,
-    iconBg: 'bg-rose-50',
-    iconColor: 'text-rose-500',
-    required: true,
-    isContract: true,
-    contractId: CONTRACT_3_ID,
-    contractSections: CONTRACT_3_TOTAL_SECTIONS,
-  },
-  {
-    id: 4,
-    title: 'Emergency Medication Plan on File',
-    subtitle: 'Submit if your child requires emergency medication',
-    icon: <Pill className="w-4 h-4" />,
-    iconBg: 'bg-orange-50',
-    iconColor: 'text-orange-500',
-    required: false,
-    isContract: true,
-    contractId: CONTRACT_4_ID,
-    contractSections: CONTRACT_4_TOTAL_SECTIONS,
-  },
-  {
-    id: 5,
-    title: 'Submit Proof of Immunizations',
-    subtitle: 'Upload current immunization records',
-    icon: <ShieldCheck className="w-4 h-4" />,
-    iconBg: 'bg-green-50',
-    iconColor: 'text-green-600',
-    required: true,
-    isContract: false,
-  },
-  {
-    id: 10,
-    title: 'Health Information Form',
-    subtitle: 'Complete and sign the health information statement',
-    icon: <ClipboardList className="w-4 h-4" />,
-    iconBg: 'bg-teal-50',
-    iconColor: 'text-teal-500',
-    required: true,
-    isContract: true,
-    contractId: CONTRACT_8_ID,
-    contractSections: CONTRACT_8_TOTAL_SECTIONS,
-  },
-  {
-    id: 6,
-    title: 'Photo Release Form',
-    subtitle: 'Review and sign the photo and media release',
-    icon: <Camera className="w-4 h-4" />,
-    iconBg: 'bg-sky-50',
-    iconColor: 'text-sky-500',
-    required: true,
-    isContract: true,
-    contractId: CONTRACT_5_ID,
-    contractSections: CONTRACT_5_TOTAL_SECTIONS,
-  },
-  {
-    id: 7,
-    title: 'Assumption of Risk and Liability Release',
-    subtitle: 'Review and sign the liability release',
-    icon: <AlertTriangle className="w-4 h-4" />,
-    iconBg: 'bg-amber-50',
-    iconColor: 'text-amber-500',
-    required: true,
-    isContract: true,
-    contractId: CONTRACT_6_ID,
-    contractSections: CONTRACT_6_TOTAL_SECTIONS,
-  },
-  {
-    id: 8,
-    title: 'Additional Authorized Pickup Person',
-    subtitle: 'Add authorized pickup contacts and sign',
-    icon: <UserPlus className="w-4 h-4" />,
-    iconBg: 'bg-indigo-50',
-    iconColor: 'text-indigo-500',
-    required: false,
-    isContract: true,
-    contractId: CONTRACT_7_ID,
-    contractSections: CONTRACT_7_TOTAL_SECTIONS,
-  },
-  {
-    id: 9,
-    title: 'Pay Registration Fee',
-    subtitle: 'Submit the registration fee to complete enrollment',
-    icon: <CreditCard className="w-4 h-4" />,
-    iconBg: 'bg-emerald-50',
-    iconColor: 'text-emerald-600',
-    required: true,
-    isContract: false,
-  },
-]
-
-const totalCount = checklistItems.length
-
-function computeIsEnrollmentComplete(
-  signatureMap: SignatureMap,
-  immunizationFileCount: number,
-  registrationFeePaid: boolean
-): boolean {
-  const requiredItems = checklistItems.filter((i) => i.required)
-  return requiredItems.every((item) => {
-    if (item.id === 5) return immunizationFileCount > 0
-    if (item.id === 9) return registrationFeePaid
-    if (item.contractId && item.contractSections)
-      return isContractComplete(signatureMap, item.contractId, item.contractSections)
-    return false
-  })
-}
+const checklistItems = ENROLLMENT_CHECKLIST_ITEMS
+const totalCount = ENROLLMENT_CHECKLIST_TOTAL_COUNT
 
 function StudentChecklist({
   signatureMap,
@@ -217,14 +74,9 @@ function StudentChecklist({
   studentId: string
   onItemClick?: (itemId: number, studentId: string) => void
 }) {
-  const completedCount = checklistItems.filter((item) => {
-    if (item.id === 5) return immunizationFileCount > 0
-    if (item.id === 9) return registrationFeePaid
-    if (item.contractId && item.contractSections) {
-      return isContractComplete(signatureMap, item.contractId, item.contractSections)
-    }
-    return false
-  }).length
+  const completedCount = checklistItems.filter((item) =>
+    isChecklistItemComplete(item, signatureMap, immunizationFileCount, registrationFeePaid)
+  ).length
 
   const isEnrollmentComplete = computeIsEnrollmentComplete(
     signatureMap,
@@ -278,13 +130,13 @@ function StudentChecklist({
         {checklistItems.map((item) => {
           const isImmunization = item.id === 5
           const isRegistrationFee = item.id === 9
-          const isComplete = isImmunization
-            ? immunizationFileCount > 0
-            : isRegistrationFee
-              ? registrationFeePaid
-              : item.contractId && item.contractSections
-                ? isContractComplete(signatureMap, item.contractId, item.contractSections)
-                : false
+          const isComplete = isChecklistItemComplete(
+            item,
+            signatureMap,
+            immunizationFileCount,
+            registrationFeePaid
+          )
+          const iconMeta = CHECKLIST_ICONS[item.id]
 
           const signedCount =
             item.contractId && item.contractSections
@@ -314,10 +166,10 @@ function StudentChecklist({
                 className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                   isComplete
                     ? 'bg-emerald-100 text-emerald-600'
-                    : `${item.iconBg} ${item.iconColor}`
+                    : `${iconMeta.iconBg} ${iconMeta.iconColor}`
                 }`}
               >
-                {isComplete ? <CheckCircle className="w-4 h-4" /> : item.icon}
+                {isComplete ? <CheckCircle className="w-4 h-4" /> : iconMeta.icon}
               </div>
               <div className="flex-1 min-w-0">
                 <p

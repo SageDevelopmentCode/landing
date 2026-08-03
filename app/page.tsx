@@ -559,49 +559,29 @@ export default function Home() {
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <div className="grid grid-cols-1 md:grid-cols-5">
-              {/* Left panel: value bullets */}
-              <div className="md:col-span-3 p-8 md:p-10">
-                <ul className="space-y-5 mb-8">
-                  {[
-                    { emoji: "🕗", label: "Full School Day", desc: "9:00 AM – 3:00 PM, Monday through Thursday" },
-                    { emoji: "👧", label: "Ages 4–11", desc: "Mixed-age groups, individualized learning pace" },
-                    { emoji: "💰", label: "$20 Shadow Day Fee", desc: "Holds your child's spot for the day" },
-                    { emoji: "🌿", label: "Real Learning", desc: "Academics, outdoor time, cooking, and community" },
-                  ].map((item) => (
-                    <li key={item.label} className="flex items-start gap-4">
-                      <span className="text-2xl flex-shrink-0">{item.emoji}</span>
-                      <div>
-                        <p className="text-sm font-bold text-gray-800 font-body">{item.label}</p>
-                        <p className="text-xs text-gray-500 font-body mt-0.5">{item.desc}</p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href="/shadow"
-                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white font-semibold font-body px-7 py-3.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
-                >
-                  Book a Shadow Day — $20 →
-                </Link>
-              </div>
-
-              {/* Right panel: early-bird offer */}
-              <div className="md:col-span-2 bg-amber-50 border-t-2 md:border-t-0 md:border-l-2 border-amber-200 p-8 md:p-10 flex flex-col justify-center">
-                <span className="text-3xl mb-4">🎁</span>
-                <h4 className="text-lg font-bold font-heading text-amber-900 mb-2 leading-snug">
-                  Enroll within 5 days — your $500 enrollment fee is waived
-                </h4>
-                <p className="text-sm text-amber-800 font-body leading-relaxed mb-5">
-                  Shadow families who enroll in the school year program within 5 days of their shadow day have the full $500 enrollment fee waived. No codes, no forms. Offer ends August 14, 2026.
-                </p>
-                <div className="flex items-baseline gap-3">
-                  <span className="text-2xl font-bold font-heading text-gray-300 line-through decoration-red-300">$500</span>
-                  <span className="text-amber-500 text-xl">→</span>
-                  <span className="text-3xl font-bold font-heading text-emerald-600">$0</span>
-                </div>
-                <p className="text-xs text-amber-700 font-body mt-1">enrollment fee, if you enroll within 5 days</p>
-              </div>
+            <div className="p-8 md:p-10">
+              <ul className="space-y-5 mb-8">
+                {[
+                  { emoji: "🕗", label: "Full School Day", desc: "9:00 AM – 3:00 PM, Monday through Thursday" },
+                  { emoji: "👧", label: "Ages 4–11", desc: "Mixed-age groups, individualized learning pace" },
+                  { emoji: "💰", label: "$20 Shadow Day Fee", desc: "Holds your child's spot for the day" },
+                  { emoji: "🌿", label: "Real Learning", desc: "Academics, outdoor time, cooking, and community" },
+                ].map((item) => (
+                  <li key={item.label} className="flex items-start gap-4">
+                    <span className="text-2xl flex-shrink-0">{item.emoji}</span>
+                    <div>
+                      <p className="text-sm font-bold text-gray-800 font-body">{item.label}</p>
+                      <p className="text-xs text-gray-500 font-body mt-0.5">{item.desc}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/shadow"
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white font-semibold font-body px-7 py-3.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
+              >
+                Book a Shadow Day — $20 →
+              </Link>
             </div>
           </motion.div>
         </div>
