@@ -1725,6 +1725,54 @@ export type Database = {
           },
         ];
       };
+      parent_teacher_conference_bookings: {
+        Row: {
+          accommodation_note: string | null;
+          conference_date: string;
+          created_at: string;
+          format: string;
+          id: string;
+          parent_id: string;
+          season: string;
+          status: string;
+          student_id: string;
+          teacher_id: string;
+          time_slot: string;
+          updated_at: string;
+          week_start: string;
+        };
+        Insert: {
+          accommodation_note?: string | null;
+          conference_date: string;
+          created_at?: string;
+          format: string;
+          id?: string;
+          parent_id: string;
+          season?: string;
+          status?: string;
+          student_id: string;
+          teacher_id: string;
+          time_slot: string;
+          updated_at?: string;
+          week_start: string;
+        };
+        Update: {
+          accommodation_note?: string | null;
+          conference_date?: string;
+          created_at?: string;
+          format?: string;
+          id?: string;
+          parent_id?: string;
+          season?: string;
+          status?: string;
+          student_id?: string;
+          teacher_id?: string;
+          time_slot?: string;
+          updated_at?: string;
+          week_start?: string;
+        };
+        Relationships: [];
+      };
       teacher_students: {
         Row: {
           classroom: string | null;

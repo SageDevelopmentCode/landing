@@ -27,7 +27,10 @@ import {
   Lock,
 } from "lucide-react";
 import OnboardingChecklist from "@/app/parent/components/OnboardingChecklist";
-import type { ConferenceTeacherDisplay } from "@/app/lib/parent-teacher-conference";
+import type {
+  ConferenceTeacherDisplay,
+  ConferenceBookingRecord,
+} from "@/app/lib/parent-teacher-conference";
 import type { ConferenceStudentContext } from "@/app/lib/get-conference-teacher-assignments";
 import ParentTeacherConferenceSection from "./ParentTeacherConferenceSheet";
 import HelpWidget from "@/app/parent/components/HelpWidget";
@@ -421,6 +424,8 @@ interface Props {
   hasSubmittedTestimonial: boolean;
   conferenceTeachers: ConferenceTeacherDisplay[];
   conferenceStudents: ConferenceStudentContext[];
+  conferenceBookingsByStudent: Record<string, ConferenceBookingRecord>;
+  conferenceTakenSlotKeys: string[];
 }
 
 export default function HomePageClient({
@@ -448,6 +453,8 @@ export default function HomePageClient({
   hasSubmittedTestimonial,
   conferenceTeachers,
   conferenceStudents,
+  conferenceBookingsByStudent,
+  conferenceTakenSlotKeys,
 }: Props) {
   const [checklistOpen, setChecklistOpen] = useState(false);
   const [bannerIdx, setBannerIdx] = useState(() =>
@@ -1049,8 +1056,11 @@ export default function HomePageClient({
             </Link>
 
             <ParentTeacherConferenceSection
+              parentId={userId}
               conferenceTeachers={conferenceTeachers}
               conferenceStudents={conferenceStudents}
+              initialBookingsByStudent={conferenceBookingsByStudent}
+              initialTakenSlotKeys={conferenceTakenSlotKeys}
             />
           </div>
 

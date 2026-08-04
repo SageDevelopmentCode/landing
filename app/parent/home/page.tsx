@@ -6,6 +6,7 @@ import { getOnboardingProgress } from "@/app/actions/getOnboardingProgress";
 import { getPublishedActivities } from "@/app/actions/activities";
 import { computePaidDates } from "@/app/lib/compute-paid-dates";
 import { getConferenceTeacherAssignments } from "@/app/lib/get-conference-teacher-assignments";
+import { getConferenceBookings } from "@/app/lib/get-conference-bookings";
 import ParentHeaderRight from "@/app/parent/components/ParentHeaderRight";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -364,6 +365,10 @@ export default async function ParentHomePage() {
   const { conferenceTeachers, conferenceStudents } =
     await getConferenceTeacherAssignments(students);
 
+  const { bookingsByStudentId, takenSlotKeys } = await getConferenceBookings(
+    user.id,
+  );
+
   return (
     <div className="bg-welcome-bg min-h-screen flex flex-col overflow-x-hidden">
       <DashboardHeader sticky>
@@ -411,6 +416,8 @@ export default async function ParentHomePage() {
           hasSubmittedTestimonial={hasSubmittedTestimonial}
           conferenceTeachers={conferenceTeachers}
           conferenceStudents={conferenceStudents}
+          conferenceBookingsByStudent={bookingsByStudentId}
+          conferenceTakenSlotKeys={takenSlotKeys}
         />
       </main>
 

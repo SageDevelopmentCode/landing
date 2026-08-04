@@ -32,6 +32,7 @@ import {
   Activity,
   BarChart2,
   SlidersHorizontal,
+  CalendarDays,
 } from "lucide-react";
 import {
   cssColors as colors,
@@ -106,6 +107,11 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
         name: "SY Commitments",
         href: "/admin/school-year-commitments",
         icon: <ClipboardList className="w-4 h-4" />,
+      },
+      {
+        name: "PTC Schedule",
+        href: "/admin/parent-teacher-conferences",
+        icon: <CalendarDays className="w-4 h-4" />,
       },
     ],
   },

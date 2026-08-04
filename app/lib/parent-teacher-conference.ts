@@ -43,6 +43,8 @@ export const CONFERENCE_TEACHERS: ConferenceTeacher[] = [
   },
 ];
 
+export const CONFERENCE_SEASON = "school_year_26_27";
+
 export const CONFERENCE_WEEKS: ConferenceWeek[] = [
   { start: "2026-08-24", label: "Aug 24 – 28" },
   { start: "2026-08-31", label: "Aug 31 – Sep 4" },
@@ -105,3 +107,58 @@ export function mergeConferenceTeachersWithProfiles(
     profileImageUrl: profileMap[t.id] ?? null,
   }));
 }
+
+export function getAllConferenceDates(): string[] {
+  const dates: string[] = [];
+  for (const week of CONFERENCE_WEEKS) {
+    for (const day of getDaysForWeek(week.start)) {
+      dates.push(day.date);
+    }
+  }
+  return dates;
+}
+
+export function takenSlotKey(
+  teacherId: string,
+  conferenceDate: string,
+  timeSlot: string,
+): string {
+  return `${teacherId}:${conferenceDate}:${timeSlot}`;
+}
+
+export function formatConferenceDateForDisplay(date: string): string {
+  const d = new Date(`${date}T12:00:00`);
+  return d.toLocaleDateString("en-US", {
+    timeZone: "America/Chicago",
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+export function isValidConferenceBooking(opts: {
+  weekStart: string;
+  conferenceDate: string;
+  timeSlot: string;
+}): boolean {
+  const validWeek = CONFERENCE_WEEKS.some((w) => w.start === opts.weekStart);
+  if (!validWeek) return false;
+
+  const weekDays = getDaysForWeek(opts.weekStart);
+  const day = weekDays.find((d) => d.date === opts.conferenceDate);
+  if (!day) return false;
+
+  if (day.isFriday) {
+    return FRIDAY_SLOTS.includes(opts.timeSlot);
+  }
+  return (MON_THU_SLOTS as readonly string[]).includes(opts.timeSlot);
+}
+
+export type ConferenceBookingRecord = {
+  teacherId: string;
+  conferenceDate: string;
+  timeSlot: string;
+  format: "in_person" | "virtual";
+  accommodationNote: string | null;
+};

@@ -2223,3 +2223,48 @@ export function createMeetMissJoyRSVPEmbed(data: {
     timestamp: new Date().toISOString(),
   };
 }
+
+/**
+ * Creates a Discord embed for parent-teacher conference bookings
+ */
+export function createParentTeacherConferenceEmbed(data: {
+  parentName: string;
+  email: string;
+  childName: string;
+  teacherName: string;
+  conferenceDate: string;
+  timeSlot: string;
+  format: "in_person" | "virtual";
+  accommodationNote?: string | null;
+}): DiscordEmbed {
+  const formatLabel =
+    data.format === "in_person" ? "In person at Sage Field" : "Virtual";
+
+  const fields: DiscordEmbedField[] = [
+    { name: "Parent", value: data.parentName, inline: true },
+    { name: "Email", value: data.email, inline: true },
+    { name: "Child", value: data.childName, inline: true },
+    { name: "Teacher", value: data.teacherName, inline: true },
+    { name: "Date", value: data.conferenceDate, inline: true },
+    { name: "Time", value: data.timeSlot, inline: true },
+    { name: "Format", value: formatLabel, inline: true },
+  ];
+
+  if (data.accommodationNote?.trim()) {
+    fields.push({
+      name: "Accommodation / alternate time",
+      value:
+        data.accommodationNote.length > 1024
+          ? data.accommodationNote.substring(0, 1021) + "..."
+          : data.accommodationNote,
+      inline: false,
+    });
+  }
+
+  return {
+    title: "📅 Parent-Teacher Conference Booked",
+    color: 0xa8c5a0,
+    fields,
+    timestamp: new Date().toISOString(),
+  };
+}

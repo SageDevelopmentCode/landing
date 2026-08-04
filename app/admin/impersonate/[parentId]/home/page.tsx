@@ -8,6 +8,7 @@ import AdminPreviewBanner from "../../AdminPreviewBanner";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import ImpersonateNotificationBell from "../../ImpersonateNotificationBell";
 import { getConferenceTeacherAssignments } from "@/app/lib/get-conference-teacher-assignments";
+import { getConferenceBookings } from "@/app/lib/get-conference-bookings";
 import HomePageClient from "@/app/parent/home/HomePageClient";
 import { getOnboardingProgressForParent } from "@/app/actions/getOnboardingProgress";
 import type {
@@ -282,6 +283,10 @@ export default async function ImpersonateHomePage({
   const { conferenceTeachers, conferenceStudents } =
     await getConferenceTeacherAssignments(students);
 
+  const { bookingsByStudentId, takenSlotKeys } = await getConferenceBookings(
+    parentId,
+  );
+
   return (
     <div className="bg-welcome-bg min-h-screen flex flex-col">
       <AdminPreviewBanner parentName={fullName} parentEmail={email} />
@@ -320,6 +325,8 @@ export default async function ImpersonateHomePage({
           hasSubmittedTestimonial={hasSubmittedTestimonial}
           conferenceTeachers={conferenceTeachers}
           conferenceStudents={conferenceStudents}
+          conferenceBookingsByStudent={bookingsByStudentId}
+          conferenceTakenSlotKeys={takenSlotKeys}
         />
       </main>
     </div>
