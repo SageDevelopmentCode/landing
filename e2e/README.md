@@ -67,6 +67,10 @@ npm run test:e2e
   - **Parent billing** — billing page shows enrolled child + tuition section (no Stripe checkout)
   - **Parent children** — enrolled student appears on children page
   - **Admin applications** — seeded apps visible, table/board/pipeline view switching
+- **Parent-teacher conference** (`e2e/parent-teacher-conference.spec.ts`):
+  - **Parent home** — conference banner and drawer UI
+  - **Parent booking** — enrolled parent books a Mon–Thu slot (local DB only)
+  - **Admin PTC Schedule** — `/admin/parent-teacher-conferences` loads and lists booked child after parent test
 
 ## Schema updates
 

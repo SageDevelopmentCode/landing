@@ -1,9 +1,38 @@
 import { execSync } from 'node:child_process'
+import { writeFileSync, unlinkSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 
 const E2E_PASSWORD = 'E2eTestPassword123!'
+
+/** Real conference teacher IDs — admin.users rows for FK on PTC bookings */
+const CONFERENCE_TEACHERS_SEED = [
+  {
+    id: '6db16988-f41e-4249-b3fa-7b6720d11ac0',
+    email: 'e2e-conference-sabrina@sagefield.test',
+    full_name: 'Sabrina Obnamia',
+    role: 'teacher',
+  },
+  {
+    id: 'bd562de1-18c2-4b47-91d7-5f0b93fee107',
+    email: 'e2e-conference-zelinda@sagefield.test',
+    full_name: 'Zelinda Melo',
+    role: 'teacher',
+  },
+  {
+    id: '68709384-b054-4f38-a4ee-81554dad2eb8',
+    email: 'e2e-conference-joy@sagefield.test',
+    full_name: 'Joy Paige',
+    role: 'teacher',
+  },
+]
+
+const E2E_ENROLLED_STUDENT_ID = '22222222-2222-4222-8222-222222222001'
+const E2E_CONFERENCE_TEACHER_ID = 'bd562de1-18c2-4b47-91d7-5f0b93fee107'
+const E2E_TEACHER_STUDENT_ID = '44444444-4444-4444-8444-444444444001'
 
 const USERS = [
   {
@@ -12,7 +41,7 @@ const USERS = [
     full_name: 'E2E Parent Apply',
     applications: [
       {
-        id: '33333333-3333-3333-3333-333333333001',
+        id: '33333333-3333-4333-8333-333333333001',
         status: 'in_progress',
         program: 'summer_26',
         child_legal_name: 'E2E Apply Child',
@@ -26,7 +55,7 @@ const USERS = [
     role: 'parent',
     full_name: 'E2E Parent Enrolled',
     student: {
-      id: '22222222-2222-2222-2222-222222222001',
+      id: '22222222-2222-4222-8222-222222222001',
       child_legal_name: 'E2E Test Child',
       dob_month: '06',
       dob_day: '15',
@@ -35,12 +64,12 @@ const USERS = [
     },
     applications: [
       {
-        id: '33333333-3333-3333-3333-333333333002',
+        id: '33333333-3333-4333-8333-333333333002',
         status: 'enrolled',
         program: 'summer_26',
         child_legal_name: 'E2E Test Child',
         approved: true,
-        student_id: '22222222-2222-2222-2222-222222222001',
+        student_id: '22222222-2222-4222-8222-222222222001',
       },
     ],
   },
@@ -98,6 +127,45 @@ if (!anonKey || !secretKey?.startsWith('sb_secret_')) {
 const db = createClient(url, secretKey, {
   auth: { autoRefreshToken: false, persistSession: false },
 })
+
+const dbUrl = statusEnv.DB_URL ?? 'postgresql://postgres:postgres@127.0.0.1:54322/postgres'
+
+function runPsql(sql) {
+  const file = join(tmpdir(), `e2e-seed-${process.pid}.sql`)
+  writeFileSync(file, sql)
+  try {
+    execSync(`psql "${dbUrl}" -v ON_ERROR_STOP=1 -f "${file}"`, {
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    })
+  } finally {
+    unlinkSync(file)
+  }
+}
+
+function seedAuthUserForConference(teacher) {
+  const escapedEmail = teacher.email.replace(/'/g, "''")
+  runPsql(`
+INSERT INTO auth.users (
+  instance_id, id, aud, role, email,
+  encrypted_password, email_confirmed_at,
+  created_at, updated_at,
+  raw_app_meta_data, raw_user_meta_data,
+  is_sso_user, is_anonymous
+) VALUES (
+  '00000000-0000-0000-0000-000000000000',
+  '${teacher.id}',
+  'authenticated',
+  'authenticated',
+  '${escapedEmail}',
+  crypt('${E2E_PASSWORD}', gen_salt('bf')),
+  now(), now(), now(),
+  '{"provider":"email","providers":["email"]}'::jsonb,
+  '{}'::jsonb,
+  false, false
+) ON CONFLICT (id) DO NOTHING;
+`)
+}
 
 async function signupLocalUser(email) {
   const response = await fetch(`${url}/auth/v1/signup`, {
@@ -168,12 +236,44 @@ async function seedUser(user) {
     const { error } = await db.schema('parent_app').from('applications').upsert(rows)
     if (error) throw new Error(`applications seed failed: ${error.message}`)
   }
+
+  return userId
+}
+
+async function seedConferenceTeachers() {
+  for (const teacher of CONFERENCE_TEACHERS_SEED) {
+    seedAuthUserForConference(teacher)
+    const { error } = await db.schema('admin').from('users').upsert({
+      id: teacher.id,
+      email: teacher.email,
+      role: teacher.role,
+      full_name: teacher.full_name,
+    })
+    if (error) {
+      throw new Error(`conference teacher seed failed for ${teacher.email}: ${error.message}`)
+    }
+  }
+}
+
+async function seedConferenceTeacherAssignment() {
+  const { error } = await db.schema('teachers').from('teacher_students').upsert({
+    id: E2E_TEACHER_STUDENT_ID,
+    teacher_id: E2E_CONFERENCE_TEACHER_ID,
+    student_id: E2E_ENROLLED_STUDENT_ID,
+    program: 'school_year_26_27',
+    is_deleted: false,
+  })
+  if (error) {
+    throw new Error(`teacher_students seed failed: ${error.message}`)
+  }
 }
 
 async function main() {
   for (const user of USERS) {
     await seedUser(user)
   }
+  await seedConferenceTeachers()
+  await seedConferenceTeacherAssignment()
   console.log('E2E seed complete (local Supabase only)')
 }
 
