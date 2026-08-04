@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronRight, CalendarDays, Users, Check } from "lucide-react";
 import type {
@@ -34,7 +34,40 @@ type Props = {
   conferenceStudents: ConferenceStudentContext[];
   initialBookingsByStudent: Record<string, ConferenceBookingRecord>;
   initialTakenSlotKeys: string[];
+  hideBanner?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
+
+export function getPtcBannerSubtext(
+  conferenceStudents: ConferenceStudentContext[],
+  bookingsByStudent: Record<string, ConferenceBookingRecord>,
+): string {
+  const hasMultipleChildren = conferenceStudents.length > 1;
+  const distinctAssignedTeachers =
+    new Set(
+      conferenceStudents
+        .map((s) => s.assignedTeacherId)
+        .filter(Boolean) as string[],
+    ).size > 1;
+  const allChildrenBooked = conferenceStudents.every(
+    (s) => bookingsByStudent[s.studentId],
+  );
+
+  if (allChildrenBooked) {
+    return "All conferences scheduled · Tap to view details";
+  }
+  if (hasMultipleChildren && distinctAssignedTeachers) {
+    return "Schedule for each child · Aug 24, Aug 31 & Sep 7";
+  }
+  if (hasMultipleChildren) {
+    return "Schedule for each child · Tap to book";
+  }
+  if (bookingsByStudent[conferenceStudents[0]?.studentId ?? ""]) {
+    return "Conference scheduled · Tap to view";
+  }
+  return "Aug 24, Aug 31 & Sep 7 weeks · Tap to book";
+}
 
 function defaultSelectionForChild(child: ConferenceStudentContext): ChildSelection {
   const weekStart = CONFERENCE_WEEKS[0].start;
@@ -55,8 +88,13 @@ export default function ParentTeacherConferenceSection({
   conferenceStudents,
   initialBookingsByStudent,
   initialTakenSlotKeys,
+  hideBanner = false,
+  open: controlledOpen,
+  onOpenChange,
 }: Props) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
   const [activeStudentId, setActiveStudentId] = useState<string | null>(null);
   const [selectionsByStudent, setSelectionsByStudent] = useState<
     Record<string, ChildSelection>
@@ -79,10 +117,6 @@ export default function ParentTeacherConferenceSection({
       .filter(Boolean) as string[];
     return new Set(ids).size > 1;
   }, [conferenceStudents]);
-
-  const allChildrenBooked = conferenceStudents.every(
-    (s) => bookingsByStudent[s.studentId],
-  );
 
   const activeChild =
     conferenceStudents.find((s) => s.studentId === activeStudentId) ??
@@ -138,7 +172,7 @@ export default function ParentTeacherConferenceSection({
     setSuccessMessage(null);
   }
 
-  function handleOpen() {
+  function prepareOpen() {
     const initial: Record<string, ChildSelection> = {};
     for (const child of conferenceStudents) {
       initial[child.studentId] = defaultSelectionForChild(child);
@@ -150,8 +184,20 @@ export default function ParentTeacherConferenceSection({
     setActiveStudentId(firstUnbooked?.studentId ?? null);
     setSubmitError(null);
     setSuccessMessage(null);
+  }
+
+  function handleOpen() {
+    prepareOpen();
     setOpen(true);
   }
+
+  const prevOpenRef = useRef(open);
+  useEffect(() => {
+    if (open && !prevOpenRef.current && hideBanner) {
+      prepareOpen();
+    }
+    prevOpenRef.current = open;
+  });
 
   function handleWeekChange(start: string) {
     const days = getDaysForWeek(start);
@@ -233,15 +279,10 @@ export default function ParentTeacherConferenceSection({
     }
   }
 
-  const bannerSubtext = allChildrenBooked
-    ? "All conferences scheduled · Tap to view details"
-    : hasMultipleChildren && distinctAssignedTeachers
-      ? "Schedule for each child · Aug 24, Aug 31 & Sep 7"
-      : hasMultipleChildren
-        ? "Schedule for each child · Tap to book"
-        : bookingsByStudent[conferenceStudents[0]?.studentId ?? ""]
-          ? "Conference scheduled · Tap to view"
-          : "Aug 24, Aug 31 & Sep 7 weeks · Tap to book";
+  const bannerSubtext = getPtcBannerSubtext(
+    conferenceStudents,
+    bookingsByStudent,
+  );
 
   if (conferenceStudents.length === 0) {
     return null;
@@ -255,20 +296,22 @@ export default function ParentTeacherConferenceSection({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={handleOpen}
-        className="w-full text-left rounded-2xl bg-gradient-to-br from-[#4a7c59] to-[#5b4d8a] px-4 py-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer flex items-center gap-3 border border-[#4a7c59]/20"
-      >
-        <span className="text-xl shrink-0">📅</span>
-        <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-          <span className="text-sm font-bold text-white leading-snug">
-            Schedule your parent-teacher conference
-          </span>
-          <span className="text-xs text-white/80">{bannerSubtext}</span>
-        </div>
-        <ChevronRight size={16} className="text-white/70 shrink-0" />
-      </button>
+      {!hideBanner && (
+        <button
+          type="button"
+          onClick={handleOpen}
+          className="w-full text-left rounded-2xl bg-gradient-to-br from-[#4a7c59] to-[#5b4d8a] px-4 py-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer flex items-center gap-3 border border-[#4a7c59]/20"
+        >
+          <span className="text-xl shrink-0">📅</span>
+          <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+            <span className="text-sm font-bold text-white leading-snug">
+              Schedule your parent-teacher conference
+            </span>
+            <span className="text-xs text-white/80">{bannerSubtext}</span>
+          </div>
+          <ChevronRight size={16} className="text-white/70 shrink-0" />
+        </button>
+      )}
 
       <AnimatePresence>
         {open && activeChild && activeSelection && (

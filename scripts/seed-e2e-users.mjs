@@ -256,6 +256,15 @@ async function seedConferenceTeachers() {
 }
 
 async function seedConferenceTeacherAssignment() {
+  const { error: clearError } = await db
+    .schema('teachers')
+    .from('parent_teacher_conference_bookings')
+    .delete()
+    .eq('student_id', E2E_ENROLLED_STUDENT_ID)
+  if (clearError) {
+    throw new Error(`conference booking clear failed: ${clearError.message}`)
+  }
+
   const { error } = await db.schema('teachers').from('teacher_students').upsert({
     id: E2E_TEACHER_STUDENT_ID,
     teacher_id: E2E_CONFERENCE_TEACHER_ID,

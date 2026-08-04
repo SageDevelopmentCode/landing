@@ -25,7 +25,8 @@ export NEXT_PUBLIC_SUPABASE_ANON_KEY="${ANON_KEY:-}"
 export SUPABASE_SERVICE_ROLE_KEY="${SECRET_KEY:-${SERVICE_ROLE_KEY:-}}"
 export SECRET_KEY="${SECRET_KEY:-}"
 export STRIPE_SECRET_KEY="${STRIPE_SECRET_KEY:-sk_test_e2e_placeholder}"
-export PLAYWRIGHT_BASE_URL="${PLAYWRIGHT_BASE_URL:-http://127.0.0.1:3000}"
+export E2E_PORT="${E2E_PORT:-3100}"
+export PLAYWRIGHT_BASE_URL="${PLAYWRIGHT_BASE_URL:-http://127.0.0.1:${E2E_PORT}}"
 
 if [[ -z "$NEXT_PUBLIC_SUPABASE_ANON_KEY" || -z "$SUPABASE_SERVICE_ROLE_KEY" ]]; then
   echo "Missing local Supabase keys from supabase status."

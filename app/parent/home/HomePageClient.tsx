@@ -32,7 +32,7 @@ import type {
   ConferenceBookingRecord,
 } from "@/app/lib/parent-teacher-conference";
 import type { ConferenceStudentContext } from "@/app/lib/get-conference-teacher-assignments";
-import ParentTeacherConferenceSection from "./ParentTeacherConferenceSheet";
+import ActionNeededCard from "./ActionNeededCard";
 import HelpWidget from "@/app/parent/components/HelpWidget";
 import {
   getParentStudentAttendance,
@@ -1012,57 +1012,18 @@ export default function HomePageClient({
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8 items-start lg:items-stretch">
         {/* Left column: Students + Drop-Off + Referral */}
         <div className="flex flex-col gap-8">
-          {/* Activity Preferences Banner */}
-          {hasActivityForPaidDay && (
-            <Link
-              href="/parent/preferences"
-              className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-4 flex flex-col gap-3 shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold bg-amber-500 text-white px-2 py-0.5 rounded-full font-body">
-                  Action Needed
-                </span>
-                <span className="text-sm font-semibold text-amber-900 font-heading">
-                  Activity Preferences
-                </span>
-              </div>
-              <p className="text-xs text-amber-800 font-body leading-relaxed">
-                Your child has upcoming activities at Sage Field. Let us know
-                how they&apos;d like to participate — cooking, watching, or full
-                involvement.
-              </p>
-              <div className="self-start inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-3 py-1.5 rounded-full transition-colors font-body">
-                Set Preferences <ChevronRight size={13} />
-              </div>
-            </Link>
-          )}
-
-          <div className="flex flex-col gap-3">
-            {/* School Year Tuition Banner */}
-            <Link
-              href="/parent/billing"
-              className="w-full rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-100 border border-blue-200 px-4 py-4 shadow-sm hover:shadow-md transition-shadow flex items-center gap-3"
-            >
-              <span className="text-xl shrink-0">🏫</span>
-              <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                <span className="text-sm font-bold text-blue-900 leading-snug">
-                  School Year Tuition Available
-                </span>
-                <span className="text-xs text-blue-500">
-                  Due August 10 · Tap to pay now
-                </span>
-              </div>
-              <span className="text-blue-400 text-sm shrink-0">→</span>
-            </Link>
-
-            <ParentTeacherConferenceSection
-              parentId={userId}
-              conferenceTeachers={conferenceTeachers}
-              conferenceStudents={conferenceStudents}
-              initialBookingsByStudent={conferenceBookingsByStudent}
-              initialTakenSlotKeys={conferenceTakenSlotKeys}
-            />
-          </div>
+          <ActionNeededCard
+            userId={userId}
+            hasActivityForPaidDay={hasActivityForPaidDay}
+            schoolYearOnlyApps={schoolYearOnlyApps}
+            summerEnrollments={summerEnrollments}
+            paidSchoolYearByStudent={paidSchoolYearByStudent}
+            paidSupplyFeeByStudent={paidSupplyFeeByStudent}
+            conferenceTeachers={conferenceTeachers}
+            conferenceStudents={conferenceStudents}
+            conferenceBookingsByStudent={conferenceBookingsByStudent}
+            conferenceTakenSlotKeys={conferenceTakenSlotKeys}
+          />
 
           {/* Student Cards */}
           <section>

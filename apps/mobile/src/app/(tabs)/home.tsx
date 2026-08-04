@@ -36,6 +36,13 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  getSchoolYearTuitionStudentIds,
+  getTuitionActionSubtext,
+  needsConferenceScheduling,
+  needsSchoolYearTuitionAction,
+  type PaidSchoolYearByStudent,
+} from "../../../../../shared/action-needed";
 
 const HEADER_IMAGES = [
   require("../../../assets/images/stock/Stock1.webp"),
@@ -1656,13 +1663,13 @@ const homeProgramStyles = StyleSheet.create({
 const actPrefStyles = StyleSheet.create({
   card: {
     marginHorizontal: 24,
-    marginBottom: 24,
+    marginBottom: 16,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: "#fde68a",
     overflow: "hidden",
     padding: 16,
-    gap: 6,
+    gap: 10,
   },
   badge: {
     alignSelf: "flex-start",
@@ -1670,33 +1677,91 @@ const actPrefStyles = StyleSheet.create({
     borderRadius: 9999,
     paddingHorizontal: 10,
     paddingVertical: 3,
-    marginBottom: 2,
   },
   badgeText: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 11,
     color: "#fff",
   },
-  title: {
+  rows: {
+    gap: 8,
+  },
+  row: {
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  rowTuition: {
+    backgroundColor: "rgba(239, 246, 255, 0.9)",
+    borderWidth: 1,
+    borderColor: "#dbeafe",
+  },
+  rowPtc: {
+    backgroundColor: "rgba(236, 253, 245, 0.9)",
+    borderWidth: 1,
+    borderColor: "#d1fae5",
+  },
+  rowActivity: {
+    backgroundColor: "rgba(254, 243, 199, 0.7)",
+    borderWidth: 1,
+    borderColor: "rgba(253, 230, 138, 0.6)",
+    flexDirection: "column",
+    alignItems: "stretch",
+    gap: 8,
+  },
+  rowActivityTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  rowEmoji: {
+    fontSize: 22,
+  },
+  rowTitle: {
     fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 15,
+    fontSize: 14,
+    color: "#1e3a8a",
+  },
+  rowTitlePtc: {
+    color: "#065f46",
+  },
+  rowTitleActivity: {
     color: "#78350f",
   },
-  body: {
+  rowSub: {
     fontFamily: FontFamilies.body,
-    fontSize: 13,
+    fontSize: 12,
+    color: "#1e40af",
+    marginTop: 2,
+  },
+  rowSubPtc: {
+    color: "#047857",
+  },
+  rowSubActivity: {
     color: "#92400e",
-    lineHeight: 19,
+    lineHeight: 17,
+  },
+  rowBody: {
+    flex: 1,
   },
   cta: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 4,
+    alignSelf: "flex-start",
+    backgroundColor: "#f59e0b",
+    borderRadius: 9999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginLeft: 32,
+    gap: 2,
   },
   ctaText: {
     fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 13,
-    color: "#92400e",
+    fontSize: 12,
+    color: "#fff",
   },
 });
 
@@ -2006,6 +2071,14 @@ export default function HomeScreen() {
   const [homeNewsletters, setHomeNewsletters] = useState<ParentNewsletterListItem[]>([]);
   const [newslettersLoading, setNewslettersLoading] = useState(true);
   const [hasActivityForPaidDay, setHasActivityForPaidDay] = useState(false);
+  const [paidSchoolYearByStudent, setPaidSchoolYearByStudent] =
+    useState<PaidSchoolYearByStudent>({});
+  const [paidSupplyFeeByStudent, setPaidSupplyFeeByStudent] = useState<
+    Record<string, boolean>
+  >({});
+  const [conferenceBookingsByStudent, setConferenceBookingsByStudent] = useState<
+    Record<string, boolean>
+  >({});
 
   const profileSheetRef = useRef<BottomSheetModal>(null);
   const eventSheetRef = useRef<BottomSheetModal>(null);
@@ -2115,12 +2188,13 @@ export default function HomeScreen() {
           for (const [sid, dates] of Object.entries(paidDatesMap)) {
             paidSets[sid] = new Set(dates);
           }
-          const [activitiesResult, activityPrefsResult, defaultPrefsResult, teachersResult] =
+          const [activitiesResult, activityPrefsResult, defaultPrefsResult, teachersResult, conferenceBookingsResult] =
             await Promise.all([
               supabase.schema("teachers").from("activities").select("id, activity_date").eq("status", "published").eq("visibility", "public").eq("is_deleted", false),
               supabase.schema("parent_app").from("activity_preferences").select("student_id, activity_id").eq("parent_id", effectiveParentId),
               supabase.schema("parent_app").from("student_default_preferences").select("student_id").eq("parent_id", effectiveParentId),
               supabase.schema("admin").from("users").select("id, full_name, profile_image_url").in("role", ["teacher", "super_admin"]).order("full_name", { ascending: true }),
+              supabase.schema("teachers").from("parent_teacher_conference_bookings").select("student_id").eq("parent_id", effectiveParentId),
             ]);
 
           const SHOWN_TEACHERS = new Set(["Sabrina Obnamia", "Zelinda Melo"]);
@@ -2128,6 +2202,7 @@ export default function HomeScreen() {
           setTeachersLoading(false);
 
           applyActivityBanner(activitiesResult, activityPrefsResult, defaultPrefsResult, studentsForActivity, paidSets);
+          applyConferenceBookings(conferenceBookingsResult);
 
         } else {
           // ── Fallback: original individual queries (unchanged logic) ──────
@@ -2167,6 +2242,7 @@ export default function HomeScreen() {
             activityPrefsResult,
             defaultPrefsResult,
             teachersResult,
+            conferenceBookingsResult,
           ] = await Promise.all([
             supabase
               .schema("calendar")
@@ -2240,6 +2316,11 @@ export default function HomeScreen() {
               .select("id, full_name, profile_image_url")
               .in("role", ["teacher", "super_admin"])
               .order("full_name", { ascending: true }),
+            supabase
+              .schema("teachers")
+              .from("parent_teacher_conference_bookings")
+              .select("student_id")
+              .eq("parent_id", effectiveParentId),
           ]);
 
           if (eventsResult.data) setUpcomingEvents(eventsResult.data);
@@ -2284,6 +2365,7 @@ export default function HomeScreen() {
           }
 
           applyActivityBanner(activitiesResult, activityPrefsResult, defaultPrefsResult, studentsForActivity, paidSets);
+          applyConferenceBookings(conferenceBookingsResult);
         }
 
         // ─── DM + channels (parallel, always runs after core) ────────────────
@@ -2375,6 +2457,8 @@ export default function HomeScreen() {
       const paidWeeks: Record<string, number[]> = {};
       const aftercareMap: Record<string, { months: string[]; days: string[] }> = {};
       const funFridayMap: Record<string, { months: string[]; fridays: string[] }> = {};
+      const schoolYearMap: PaidSchoolYearByStudent = {};
+      const supplyFeeMap: Record<string, boolean> = {};
 
       for (const tx of txData) {
         if (!tx.student_id) continue;
@@ -2398,12 +2482,35 @@ export default function HomeScreen() {
           const fridays = (meta?.selected_fridays ?? "").split(",").filter(Boolean);
           const prev = funFridayMap[tx.student_id] ?? { months: [], fridays: [] };
           funFridayMap[tx.student_id] = { months: [...prev.months, ...months], fridays: [...prev.fridays, ...fridays] };
+        } else if (tx.payment_type === "school_year_tuition") {
+          const months = (meta?.selected_months ?? "")
+            .split(",")
+            .map(Number)
+            .filter(Boolean);
+          if (!schoolYearMap[tx.student_id]) {
+            schoolYearMap[tx.student_id] = [];
+          }
+          schoolYearMap[tx.student_id].push(...months);
+        } else if (tx.payment_type === "supply_fee") {
+          supplyFeeMap[tx.student_id] = true;
         }
       }
 
       setPaidWeeksByStudent(paidWeeks);
       setPaidAftercareByStudent(aftercareMap);
       setPaidFunFridayByStudent(funFridayMap);
+      setPaidSchoolYearByStudent(schoolYearMap);
+      setPaidSupplyFeeByStudent(supplyFeeMap);
+    }
+
+    function applyConferenceBookings(
+      result: { data: { student_id: string }[] | null },
+    ) {
+      const map: Record<string, boolean> = {};
+      for (const row of result.data ?? []) {
+        map[row.student_id] = true;
+      }
+      setConferenceBookingsByStudent(map);
     }
 
     function applyActivityBanner(
@@ -2701,6 +2808,29 @@ export default function HomeScreen() {
     onboardingCompleted.has(t.id),
   ).length;
 
+  const enrolledApps = applications.filter((a) => a.status === "enrolled");
+  const schoolYearTuitionStudentIds = getSchoolYearTuitionStudentIds(
+    enrolledApps
+      .filter((a) => a.program === "school_year_26_27")
+      .map((a) => a.student_id),
+    enrolledApps.filter((a) => a.program === "both").map((a) => a.student_id),
+  );
+  const showActionTuition = needsSchoolYearTuitionAction(
+    schoolYearTuitionStudentIds,
+    paidSchoolYearByStudent,
+  );
+  const showActionPtc = needsConferenceScheduling(
+    students.map((s) => s.id),
+    conferenceBookingsByStudent,
+  );
+  const showActionActivity = hasActivityForPaidDay;
+  const showActionNeededCard =
+    showActionTuition || showActionPtc || showActionActivity;
+  const tuitionActionSubtext = getTuitionActionSubtext(
+    schoolYearTuitionStudentIds,
+    paidSupplyFeeByStudent,
+  );
+
   return (
     <View style={styles.container}>
       <Image
@@ -2804,41 +2934,149 @@ export default function HomeScreen() {
             </>
           ) : (
             <>
-              {/* Tuition Banner */}
-              <Pressable
-                onPress={() =>
-                  openBrowserAsync("https://www.sagefield.co/parent/billing", {
-                    presentationStyle: WebBrowserPresentationStyle.AUTOMATIC,
-                  })
-                }
-                style={({ pressed }) => [
-                  styles.tuitionBanner,
-                  pressed && { opacity: 0.85 },
-                ]}
-              >
-                <LinearGradient
-                  colors={["#DBEAFE", "#BFDBFE"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.tuitionBannerGradient}
-                >
-                  <View style={styles.tuitionBannerLeft}>
-                    <Text style={styles.tuitionBannerEmoji}>🎒</Text>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.tuitionBannerTitle}>
-                        School Year Tuition Available
-                      </Text>
-                      <Text style={styles.tuitionBannerSub}>
-                        Due August 10 · Tap to pay
-                      </Text>
-                      <Text style={styles.tuitionBannerDesc}>
-                        Visit sagefield.co/parent/billing — works on computer & mobile
-                      </Text>
-                    </View>
+              {showActionNeededCard && (
+                <View style={actPrefStyles.card}>
+                  <LinearGradient
+                    colors={["#fffbeb", "#fff7ed"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  <View style={actPrefStyles.badge}>
+                    <Text style={actPrefStyles.badgeText}>Action Needed</Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={16} color="#1e40af" />
-                </LinearGradient>
-              </Pressable>
+                  <View style={actPrefStyles.rows}>
+                    {showActionTuition && (
+                      <Pressable
+                        onPress={() =>
+                          openBrowserAsync(
+                            "https://www.sagefield.co/parent/billing",
+                            {
+                              presentationStyle:
+                                WebBrowserPresentationStyle.AUTOMATIC,
+                            },
+                          )
+                        }
+                        style={({ pressed }) => [
+                          actPrefStyles.row,
+                          actPrefStyles.rowTuition,
+                          pressed && { opacity: 0.85 },
+                        ]}
+                      >
+                        <Text style={actPrefStyles.rowEmoji}>🏫</Text>
+                        <View style={actPrefStyles.rowBody}>
+                          <Text style={actPrefStyles.rowTitle}>
+                            School Year Tuition Available
+                          </Text>
+                          <Text style={actPrefStyles.rowSub}>
+                            {tuitionActionSubtext}
+                          </Text>
+                        </View>
+                        <Ionicons
+                          name="chevron-forward"
+                          size={16}
+                          color="#1e40af"
+                        />
+                      </Pressable>
+                    )}
+
+                    {showActionPtc && (
+                      <Pressable
+                        onPress={() =>
+                          openBrowserAsync(
+                            "https://www.sagefield.co/parent/home",
+                            {
+                              presentationStyle:
+                                WebBrowserPresentationStyle.AUTOMATIC,
+                            },
+                          )
+                        }
+                        style={({ pressed }) => [
+                          actPrefStyles.row,
+                          actPrefStyles.rowPtc,
+                          pressed && { opacity: 0.85 },
+                        ]}
+                      >
+                        <Text style={actPrefStyles.rowEmoji}>📅</Text>
+                        <View style={actPrefStyles.rowBody}>
+                          <Text
+                            style={[
+                              actPrefStyles.rowTitle,
+                              actPrefStyles.rowTitlePtc,
+                            ]}
+                          >
+                            Schedule your parent-teacher conference
+                          </Text>
+                          <Text
+                            style={[
+                              actPrefStyles.rowSub,
+                              actPrefStyles.rowSubPtc,
+                            ]}
+                          >
+                            Schedule on sagefield.co · Tap to book
+                          </Text>
+                        </View>
+                        <Ionicons
+                          name="chevron-forward"
+                          size={16}
+                          color="#047857"
+                        />
+                      </Pressable>
+                    )}
+
+                    {showActionActivity && (
+                      <Pressable
+                        onPress={() =>
+                          router.push("/(tabs)/preferences" as any)
+                        }
+                        style={({ pressed }) => [
+                          actPrefStyles.row,
+                          actPrefStyles.rowActivity,
+                          pressed && { opacity: 0.85 },
+                        ]}
+                      >
+                        <View style={actPrefStyles.rowActivityTop}>
+                          <Text style={actPrefStyles.rowEmoji}>🍳</Text>
+                          <View style={actPrefStyles.rowBody}>
+                            <Text
+                              style={[
+                                actPrefStyles.rowTitle,
+                                actPrefStyles.rowTitleActivity,
+                              ]}
+                            >
+                              Activity Preferences
+                            </Text>
+                            <Text
+                              style={[
+                                actPrefStyles.rowSub,
+                                actPrefStyles.rowSubActivity,
+                              ]}
+                            >
+                              Your child has upcoming activities — let us know how
+                              they'd like to participate.
+                            </Text>
+                          </View>
+                          <Ionicons
+                            name="chevron-forward"
+                            size={16}
+                            color="#92400e"
+                          />
+                        </View>
+                        <View style={actPrefStyles.cta}>
+                          <Text style={actPrefStyles.ctaText}>
+                            Set Preferences
+                          </Text>
+                          <Ionicons
+                            name="chevron-forward"
+                            size={13}
+                            color="#fff"
+                          />
+                        </View>
+                      </Pressable>
+                    )}
+                  </View>
+                </View>
+              )}
 
               {/* Summer Info Banner */}
               <Pressable
@@ -2868,39 +3106,6 @@ export default function HomeScreen() {
                   <Ionicons name="chevron-forward" size={16} color="#92400e" />
                 </LinearGradient>
               </Pressable>
-
-              {hasActivityForPaidDay && (
-                <Pressable
-                  style={({ pressed }) => [
-                    actPrefStyles.card,
-                    pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] },
-                  ]}
-                  onPress={() => router.push("/(tabs)/preferences" as any)}
-                >
-                  <LinearGradient
-                    colors={["#fffbeb", "#fff7ed"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={StyleSheet.absoluteFill}
-                  />
-                  <View style={actPrefStyles.badge}>
-                    <Text style={actPrefStyles.badgeText}>Action Needed</Text>
-                  </View>
-                  <Text style={actPrefStyles.title}>Activity Preferences</Text>
-                  <Text style={actPrefStyles.body}>
-                    Your child has upcoming activities — let us know how they'd
-                    like to participate.
-                  </Text>
-                  <View style={actPrefStyles.cta}>
-                    <Text style={actPrefStyles.ctaText}>Set Preferences</Text>
-                    <Ionicons
-                      name="chevron-forward"
-                      size={13}
-                      color="#92400e"
-                    />
-                  </View>
-                </Pressable>
-              )}
 
               <View style={styles.childrenSection}>
                 <View style={styles.tuitionSectionHeader}>

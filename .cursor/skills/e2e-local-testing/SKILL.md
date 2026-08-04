@@ -33,6 +33,8 @@ npm run db:reset && npm run test:e2e
 
 Keys come from `supabase status` automatically — do not copy production keys from `.env.local`.
 
+E2E serves the app on **port 3100** by default (`E2E_PORT`) so `next dev` can stay on 3000. Override: `E2E_PORT=3200 npm run test:e2e`.
+
 ## Test users (seeded by `npm run db:reset`)
 
 Password for all users: `E2eTestPassword123!` (see `e2e/helpers/constants.ts`).
@@ -52,13 +54,13 @@ Use `TEST_USERS`, `E2E_PASSWORD`, and ID constants from `e2e/helpers/constants.t
 |--------|---------|
 | `scripts/load-local-supabase-env.sh` | Export keys from `supabase status`; hard-blocks non-local URLs |
 | `scripts/build-e2e.sh` | `npm run build` with local Supabase env |
-| `scripts/start-e2e.sh` | `next start` for Playwright `webServer` |
+| `scripts/start-e2e.sh` | `next start` on `E2E_PORT` (default 3100) for Playwright `webServer` |
 | `scripts/run-e2e.sh` | Build (optional) + `npx playwright test` |
 | `scripts/seed-e2e-users.mjs` | Signup + upsert admin/parent_app rows (local only) |
 
 ## Playwright layout
 
-- Config: `playwright.config.ts` — `webServer` uses `start-e2e.sh`, `reuseExistingServer: false`
+- Config: `playwright.config.ts` — `webServer` uses `start-e2e.sh` on port 3100; `reuseExistingServer` locally when not CI
 - Auth setup: `e2e/auth.setup.ts` writes storage state to `e2e/.auth/`
 - Projects: `setup`, `chromium`, `parent-apply`, `parent-apply-auth`, `parent-enrolled`, `teacher`, `admin`
 
@@ -66,6 +68,7 @@ Use `TEST_USERS`, `E2E_PASSWORD`, and ID constants from `e2e/helpers/constants.t
 
 | Issue | Fix |
 |-------|-----|
+| Port 3000 in use | E2E uses 3100 by default; keep `next dev` on 3000 |
 | Port 54322 in use | `supabase stop` or stop another Supabase project |
 | Vector container unhealthy | `supabase start -x studio,imgproxy,edge-runtime,logflare,vector` |
 | Invalid login credentials | Re-run `db:reset`; ensure app not started with `.env.local` prod keys |
