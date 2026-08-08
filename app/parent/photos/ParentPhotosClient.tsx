@@ -3,12 +3,20 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Camera, X, ChevronLeft, ChevronRight } from "lucide-react";
-import { getPhotoSignedUrlsBatch, getFullResSignedUrl } from "@/app/actions/photos";
+import {
+  getPhotoSignedUrlsBatch,
+  getFullResSignedUrl,
+} from "@/app/actions/photos";
 import type { TeacherPhoto } from "@/app/actions/photos";
 
 // ─── Date Grouping ────────────────────────────────────────────────────────────
 
-type DateGroup = { date: string; label: string; shortLabel: string; photos: TeacherPhoto[] };
+type DateGroup = {
+  date: string;
+  label: string;
+  shortLabel: string;
+  photos: TeacherPhoto[];
+};
 
 function groupPhotosByDate(photos: TeacherPhoto[]): DateGroup[] {
   const map = new Map<string, TeacherPhoto[]>();
@@ -51,7 +59,11 @@ function groupPhotosByDate(photos: TeacherPhoto[]): DateGroup[] {
 function formatDate(iso: string | null): string | null {
   if (!iso) return null;
   const d = new Date(iso + "T00:00:00");
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 // ─── Photo Lightbox ───────────────────────────────────────────────────────────
@@ -74,14 +86,17 @@ function PhotoLightbox({
     getFullResSignedUrl(photo.storage_path).then((url) => {
       if (!cancelled && url) setDisplayUrl(url);
     });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [photo.storage_path]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
       if (e.key === "ArrowLeft") setIdx((i) => Math.max(0, i - 1));
-      if (e.key === "ArrowRight") setIdx((i) => Math.min(photos.length - 1, i + 1));
+      if (e.key === "ArrowRight")
+        setIdx((i) => Math.min(photos.length - 1, i + 1));
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
@@ -93,7 +108,9 @@ function PhotoLightbox({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[70] bg-black/90 flex items-center justify-center p-4"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <button
         onClick={onClose}
@@ -132,8 +149,14 @@ function PhotoLightbox({
 
       {(photo.caption || photo.taken_on) && (
         <div className="absolute bottom-6 left-0 right-0 text-center px-4 space-y-0.5 pointer-events-none">
-          {photo.caption && <p className="text-sm text-white/80 font-body">{photo.caption}</p>}
-          {photo.taken_on && <p className="text-xs text-white/50 font-body">{formatDate(photo.taken_on)}</p>}
+          {photo.caption && (
+            <p className="text-sm text-white/80 font-body">{photo.caption}</p>
+          )}
+          {photo.taken_on && (
+            <p className="text-xs text-white/50 font-body">
+              {formatDate(photo.taken_on)}
+            </p>
+          )}
         </div>
       )}
     </motion.div>
@@ -193,7 +216,7 @@ export default function ParentPhotosClient({ initialPhotos }: Props) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
   const [activeDate, setActiveDate] = useState<string | null>(() =>
-    initialPhotos.length > 0 ? (initialPhotos[0].taken_on ?? "no-date") : null
+    initialPhotos.length > 0 ? (initialPhotos[0].taken_on ?? "no-date") : null,
   );
 
   // ─── Signed-URL loading ───────────────────────────────────────────────────
@@ -208,7 +231,9 @@ export default function ParentPhotosClient({ initialPhotos }: Props) {
 
     const chunks: string[][] = [];
     for (let i = 0; i < initialPhotos.length; i += CHUNK_SIZE) {
-      chunks.push(initialPhotos.slice(i, i + CHUNK_SIZE).map((p) => p.storage_path));
+      chunks.push(
+        initialPhotos.slice(i, i + CHUNK_SIZE).map((p) => p.storage_path),
+      );
     }
 
     let cancelled = false;
@@ -216,11 +241,17 @@ export default function ParentPhotosClient({ initialPhotos }: Props) {
       getPhotoSignedUrlsBatch(chunkPaths).then((urlMap) => {
         if (cancelled) return;
         setPhotos((prev) =>
-          prev.map((p) => (urlMap[p.storage_path] ? { ...p, signed_url: urlMap[p.storage_path] } : p))
+          prev.map((p) =>
+            urlMap[p.storage_path]
+              ? { ...p, signed_url: urlMap[p.storage_path] }
+              : p,
+          ),
         );
       });
     });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [initialPhotos]);
 
   // ─── TOC scroll tracking ──────────────────────────────────────────────────
@@ -240,12 +271,12 @@ export default function ParentPhotosClient({ initialPhotos }: Props) {
         const visible = entries.filter((e) => e.isIntersecting);
         if (visible.length > 0) {
           const topmost = visible.reduce((a, b) =>
-            a.boundingClientRect.top <= b.boundingClientRect.top ? a : b
+            a.boundingClientRect.top <= b.boundingClientRect.top ? a : b,
           );
           setActiveDate((topmost.target as HTMLElement).dataset.date ?? null);
         }
       },
-      { root: container, threshold: 0, rootMargin: "-60px 0px -60% 0px" }
+      { root: container, threshold: 0, rootMargin: "-60px 0px -60% 0px" },
     );
     sectionRefs.current.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
@@ -256,7 +287,9 @@ export default function ParentPhotosClient({ initialPhotos }: Props) {
       {/* TOC sidebar */}
       {photos.length > 0 && (
         <aside className="w-44 flex-shrink-0 border-r border-gray-100 overflow-y-auto py-4 hidden md:flex flex-col">
-          <p className="px-4 mb-2 text-xs font-medium text-gray-400 font-body uppercase tracking-wide">Dates</p>
+          <p className="px-4 mb-2 text-xs font-medium text-gray-400 font-body uppercase tracking-wide">
+            Dates
+          </p>
           {dateGroups.map(({ date, shortLabel, photos: groupPhotos }) => (
             <button
               key={date}
@@ -267,7 +300,9 @@ export default function ParentPhotosClient({ initialPhotos }: Props) {
                   : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
               }`}
             >
-              <span className="text-xs font-body block leading-tight">{shortLabel}</span>
+              <span className="text-xs font-body block leading-tight">
+                {shortLabel}
+              </span>
               <span className="text-xs text-gray-400 font-body">
                 {groupPhotos.length} photo{groupPhotos.length !== 1 ? "s" : ""}
               </span>
@@ -279,12 +314,13 @@ export default function ParentPhotosClient({ initialPhotos }: Props) {
       {/* Main content */}
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
         <div className="px-6 pt-6 pb-4">
-          <h1 className="text-xl font-semibold font-body text-gray-900">Photos</h1>
+          <h1 className="text-xl font-semibold font-body text-gray-900">
+            Photos
+          </h1>
           <p className="text-sm text-gray-400 font-body mt-0.5">
             {photos.length > 0
               ? `${photos.length} photo${photos.length !== 1 ? "s" : ""}`
-              : "No photos have been shared yet"
-            }
+              : "No photos have been shared yet"}
           </p>
         </div>
 
@@ -293,7 +329,9 @@ export default function ParentPhotosClient({ initialPhotos }: Props) {
             <div className="w-16 h-16 rounded-2xl bg-[#4a7c59]/10 flex items-center justify-center mb-4">
               <Camera className="w-8 h-8 text-[#4a7c59]" />
             </div>
-            <h2 className="text-base font-semibold font-body text-gray-800 mb-1">No photos yet</h2>
+            <h2 className="text-base font-semibold font-body text-gray-800 mb-1">
+              No photos yet
+            </h2>
             <p className="text-sm text-gray-400 font-body">
               Photos shared by the school will appear here.
             </p>
@@ -310,9 +348,12 @@ export default function ParentPhotosClient({ initialPhotos }: Props) {
                 }}
               >
                 <div className="px-6 pt-5 pb-2 flex items-baseline gap-2">
-                  <h2 className="text-sm font-semibold font-body text-gray-500">{group.label}</h2>
+                  <h2 className="text-sm font-semibold font-body text-gray-500">
+                    {group.label}
+                  </h2>
                   <span className="text-xs text-gray-400 font-body">
-                    {group.photos.length} photo{group.photos.length !== 1 ? "s" : ""}
+                    {group.photos.length} photo
+                    {group.photos.length !== 1 ? "s" : ""}
                   </span>
                 </div>
                 <div className="grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-6 gap-0.5">

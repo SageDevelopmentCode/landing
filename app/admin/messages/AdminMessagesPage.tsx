@@ -574,6 +574,9 @@ export default function AdminMessagesPage({ userId }: { userId: string }) {
               onMessageSent={(channelId, lastMsg) => {
                 setChannels((prev) => prev.map((c) => c.id === channelId ? { ...c, lastMessage: lastMsg, unreadCount: 0 } : c));
               }}
+              onMemberRemoved={(channelId) => {
+                setChannels((prev) => prev.map((c) => c.id === channelId ? { ...c, memberCount: Math.max(0, c.memberCount - 1) } : c));
+              }}
               adminStyle
             />
           ) : !active ? (

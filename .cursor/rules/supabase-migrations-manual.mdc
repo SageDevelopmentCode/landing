@@ -1,0 +1,31 @@
+---
+description: Production Supabase migrations are manual — never apply via MCP or remote execute_sql
+globs: supabase/migrations/**,supabase/rpcs/**
+alwaysApply: false
+---
+
+# Supabase migrations: manual on production
+
+## Never
+
+- Call Supabase MCP `apply_migration` against the hosted Sage Field project (`vonuwpzepwrbdlectspd` or any production/staging project).
+- Run write queries via MCP `execute_sql` on production (INSERT, UPDATE, DELETE, DDL, GRANT, CREATE POLICY, etc.).
+- Assume a migration file in the repo has already been applied to production.
+
+## Always
+
+- Add or edit SQL under `supabase/migrations/` (or `supabase/rpcs/` for RPC definitions).
+- Tell the user to copy the migration SQL into the **Supabase SQL editor** and run it themselves.
+- Point to the exact file path when handing off SQL (e.g. `supabase/migrations/20260808142000_fix_general_channel_membership_scope.sql`).
+- For verification, read-only `execute_sql` SELECT queries are acceptable if needed to diagnose — but prefer describing verification SQL for the user to run.
+
+## Local development only
+
+- `supabase db reset`, `supabase db start`, and applying migrations to **local Docker** Supabase are fine.
+- E2E and local stack rules still apply — see `.cursor/rules/e2e-local-only.mdc`.
+
+## When fixing production data
+
+1. Write the migration file in the repo.
+2. Summarize what it does in plain language.
+3. Explicitly say: **Run this in the Supabase SQL editor** — do not run it for the user on production.
