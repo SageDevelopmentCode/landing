@@ -40,12 +40,17 @@ The enrolled parent seed uses `status: "enrolled"` so routes like `/parent/billi
 
 ## Run tests
 
+E2E serves the production build on **port 3100** by default so `next dev` can stay on 3000. Override with `E2E_PORT` if needed.
+
 ```bash
 # Reset DB and run all e2e tests (builds with local keys, not .env.local)
 npm run db:reset && npm run test:e2e
 
 # Interactive UI mode
 npm run test:e2e:ui
+
+# Custom port
+E2E_PORT=3200 npm run test:e2e
 ```
 
 Export env vars before running (or use `.env.e2e.local` with `dotenv`):
@@ -67,6 +72,10 @@ npm run test:e2e
   - **Parent billing** — billing page shows enrolled child + tuition section (no Stripe checkout)
   - **Parent children** — enrolled student appears on children page
   - **Admin applications** — seeded apps visible, table/board/pipeline view switching
+- **Parent-teacher conference** (`e2e/parent-teacher-conference.spec.ts`):
+  - **Parent home** — conference banner and drawer UI
+  - **Parent booking** — enrolled parent books a Mon–Thu slot (local DB only)
+  - **Admin PTC Schedule** — `/admin/parent-teacher-conferences` loads and lists booked child after parent test
 
 ## Schema updates
 
@@ -87,6 +96,8 @@ Going forward, add new schema changes only under `supabase/migrations/` (not the
 CI excludes the Vector analytics container (`-x vector`) because it is not needed for tests and often fails health checks on GitHub Actions runners. Local dev can keep analytics enabled in `supabase/config.toml` if Vector starts successfully on your machine.
 
 ## Troubleshooting
+
+**Port 3000 in use** — E2E uses port **3100** by default (`E2E_PORT`). You can run `npm run dev` on 3000 and `npm run test:e2e` at the same time.
 
 **Port 54322 already in use** — another Supabase project is running. Stop it:
 

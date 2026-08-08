@@ -5,6 +5,8 @@ import {
 import { getOnboardingProgress } from "@/app/actions/getOnboardingProgress";
 import { getPublishedActivities } from "@/app/actions/activities";
 import { computePaidDates } from "@/app/lib/compute-paid-dates";
+import { getConferenceTeacherAssignments } from "@/app/lib/get-conference-teacher-assignments";
+import { getConferenceBookings } from "@/app/lib/get-conference-bookings";
 import ParentHeaderRight from "@/app/parent/components/ParentHeaderRight";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -15,12 +17,13 @@ import DashboardHeader from "@/app/parent/dashboard/DashboardHeader";
 import SharedAccessBanner from "@/app/parent/dashboard/SharedAccessBanner";
 import HomePageClient from "./HomePageClient";
 import type {
-  PaidWeeksByStudent,
   PaidHomeschoolByStudent,
   PaidAftercareByStudent,
   PaidFunFridayByStudent,
   SummerEnrollment,
   HomeschoolDropInApp,
+  SchoolYearOnlyApp,
+  PaidSchoolYearByStudent,
   StripeTransaction,
 } from "@/app/parent/billing/page";
 
@@ -67,12 +70,13 @@ export type HomeReferral = {
 export type StudentMap = Record<string, { name: string; profileImageUrl: string | null }>;
 
 export type {
-  PaidWeeksByStudent,
   PaidHomeschoolByStudent,
   PaidAftercareByStudent,
   PaidFunFridayByStudent,
   SummerEnrollment,
   HomeschoolDropInApp,
+  SchoolYearOnlyApp,
+  PaidSchoolYearByStudent,
 };
 
 export default async function ParentHomePage() {
@@ -189,7 +193,7 @@ export default async function ParentHomePage() {
         .select("id, student_id, child_grade, status, child_legal_name, program, drop_in_program")
         .eq("user_id", effectiveParentId)
         .eq("approved", true)
-        .in("program", ["summer_26", "both", "homeschool_drop_in"]),
+        .in("program", ["summer_26", "both", "homeschool_drop_in", "school_year_26_27"]),
       adminClient
         .schema("parent_app")
         .from("activity_preferences")
@@ -240,31 +244,28 @@ export default async function ParentHomePage() {
     .map((e) => ({ id: e.id, student_id: e.student_id!, child_grade: e.child_grade, program: e.program ?? null }));
 
   const homeschoolDropInApps: HomeschoolDropInApp[] = allSummerApps
-    .filter((e) => e.program === "homeschool_drop_in" && e.status === "enrolled")
+    .filter(
+      (e) =>
+        e.status === "enrolled" &&
+        (e.program === "homeschool_drop_in" || e.program === "both"),
+    )
     .map((e) => ({
       id: e.id,
       student_id: e.student_id!,
-      drop_in_program: e.drop_in_program,
+      drop_in_program:
+        e.program === "homeschool_drop_in" ? e.drop_in_program : "summer_26",
       child_grade: e.child_grade,
       name: e.child_legal_name,
     }));
 
-  const paidWeeksByStudent: PaidWeeksByStudent = {};
-  for (const tx of transactions) {
-    if (tx.payment_type === "summer_tuition" && tx.status === "completed" && tx.student_id) {
-      const planType = (tx.metadata as Record<string, string>)?.plan_type;
-      const weeksStr = (tx.metadata as Record<string, string>)?.weeks ?? "";
-      if (planType === "full") {
-        paidWeeksByStudent[tx.student_id] = Array.from({ length: 12 }, (_, i) => i + 1);
-      } else {
-        const weeks = weeksStr.split(",").map(Number).filter(Boolean);
-        paidWeeksByStudent[tx.student_id] = [
-          ...(paidWeeksByStudent[tx.student_id] ?? []),
-          ...weeks,
-        ];
-      }
-    }
-  }
+  const schoolYearOnlyApps: SchoolYearOnlyApp[] = allSummerApps
+    .filter((e) => e.program === "school_year_26_27" && e.status === "enrolled")
+    .map((e) => ({
+      id: e.id,
+      student_id: e.student_id!,
+      child_grade: e.child_grade,
+      name: e.child_legal_name,
+    }));
 
   const paidHomeschoolByStudent: PaidHomeschoolByStudent = {};
   for (const tx of transactions) {
@@ -324,6 +325,25 @@ export default async function ParentHomePage() {
     }
   }
 
+  const paidSchoolYearByStudent: PaidSchoolYearByStudent = {};
+  for (const tx of transactions) {
+    if (tx.payment_type === "school_year_tuition" && tx.status === "completed" && tx.student_id) {
+      const meta = (tx.metadata ?? {}) as Record<string, string>;
+      const months = meta.selected_months?.split(",").map(Number).filter(Boolean) ?? [];
+      if (!paidSchoolYearByStudent[tx.student_id]) {
+        paidSchoolYearByStudent[tx.student_id] = [];
+      }
+      paidSchoolYearByStudent[tx.student_id].push(...months);
+    }
+  }
+
+  const paidSupplyFeeByStudent: Record<string, boolean> = {};
+  for (const tx of transactions) {
+    if (tx.payment_type === "supply_fee" && tx.status === "completed" && tx.student_id) {
+      paidSupplyFeeByStudent[tx.student_id] = true;
+    }
+  }
+
   const checklistComplete = onboardingCompletedIds.length >= 8;
 
   const paidSets = computePaidDates(transactions);
@@ -340,11 +360,14 @@ export default async function ParentHomePage() {
       )
   );
 
-  const unpaidSummerEnrollments = summerEnrollments.filter(
-    (e) => e.program !== "homeschool_drop_in" && (paidWeeksByStudent[e.student_id]?.length ?? 0) < 12
-  );
-
   const hasSubmittedTestimonial = !!testimonialData;
+
+  const { conferenceTeachers, conferenceStudents } =
+    await getConferenceTeacherAssignments(students);
+
+  const { bookingsByStudentId, takenSlotKeys } = await getConferenceBookings(
+    user.id,
+  );
 
   return (
     <div className="bg-welcome-bg min-h-screen flex flex-col overflow-x-hidden">
@@ -381,15 +404,20 @@ export default async function ParentHomePage() {
           referrals={referrals}
           savedDropOffSlot={savedDropOffSlot}
           summerEnrollments={summerEnrollments}
-          unpaidSummerEnrollments={unpaidSummerEnrollments}
-          paidWeeksByStudent={paidWeeksByStudent}
+          schoolYearOnlyApps={schoolYearOnlyApps}
           homeschoolDropInApps={homeschoolDropInApps}
           paidHomeschoolByStudent={paidHomeschoolByStudent}
           paidAftercareByStudent={paidAftercareByStudent}
           paidFunFridayByStudent={paidFunFridayByStudent}
+          paidSchoolYearByStudent={paidSchoolYearByStudent}
+          paidSupplyFeeByStudent={paidSupplyFeeByStudent}
           checklistComplete={checklistComplete}
           hasActivityForPaidDay={hasActivityForPaidDay}
           hasSubmittedTestimonial={hasSubmittedTestimonial}
+          conferenceTeachers={conferenceTeachers}
+          conferenceStudents={conferenceStudents}
+          conferenceBookingsByStudent={bookingsByStudentId}
+          conferenceTakenSlotKeys={takenSlotKeys}
         />
       </main>
 

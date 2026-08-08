@@ -3,6 +3,10 @@ import path from 'path'
 
 const AUTH_DIR = path.join(__dirname, 'e2e/.auth')
 
+const e2eBaseUrl =
+  process.env.PLAYWRIGHT_BASE_URL ??
+  `http://127.0.0.1:${process.env.E2E_PORT ?? '3100'}`
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -12,14 +16,14 @@ export default defineConfig({
   reporter: process.env.CI ? 'github' : 'html',
   timeout: 60_000,
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:3000',
+    baseURL: e2eBaseUrl,
     trace: 'on-first-retry',
   },
   webServer: {
     // scripts/start-e2e.sh loads local Supabase keys (never .env.local production)
     command: 'bash scripts/start-e2e.sh',
-    url: 'http://127.0.0.1:3000',
-    reuseExistingServer: false,
+    url: e2eBaseUrl,
+    reuseExistingServer: !process.env.CI,
     timeout: 180_000,
   },
   projects: [
@@ -62,7 +66,7 @@ export default defineConfig({
         storageState: path.join(AUTH_DIR, 'parent-enrolled.json'),
       },
       dependencies: ['setup'],
-      testMatch: /enrollment-smoke\.spec\.ts/,
+      testMatch: /(enrollment-smoke|parent-teacher-conference)\.spec\.ts/,
       grep: /@parent-enrolled/,
     },
     {
@@ -81,8 +85,8 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         storageState: path.join(AUTH_DIR, 'admin.json'),
       },
-      dependencies: ['setup'],
-      testMatch: /(auth-boundaries|enrollment-smoke)\.spec\.ts/,
+      dependencies: ['setup', 'parent-enrolled'],
+      testMatch: /(auth-boundaries|enrollment-smoke|parent-teacher-conference)\.spec\.ts/,
       grep: /@admin/,
     },
   ],

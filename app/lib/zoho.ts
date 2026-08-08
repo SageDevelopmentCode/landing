@@ -1,5 +1,12 @@
 "use server";
 
+import {
+  formatCents,
+  HOMESCHOOL_SCHOOL_YEAR_PRICING,
+  HOMESCHOOL_TIERS,
+  SCHOOL_YEAR_TUITION_PRIMARY_CENTS,
+  SCHOOL_YEAR_TUITION_UPPER_CENTS,
+} from "@/shared/billing/school-year";
 import { createServerSupabaseClient } from "./supabase-server";
 
 // Zoho API Types
@@ -1785,6 +1792,51 @@ export async function buildTourConfirmationEmail(opts: {
 
   <p style="margin-top: 32px;">With warmth,</p>
   <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
+export async function buildParentTeacherConferenceConfirmationEmail(opts: {
+  parentFirstName: string;
+  childName: string;
+  teacherName: string;
+  conferenceDate: string;
+  timeSlot: string;
+  format: "in_person" | "virtual";
+}): Promise<{ subject: string; content: string }> {
+  const subject = "Your parent-teacher conference is confirmed — Sage Field School";
+  const formatLine =
+    opts.format === "in_person"
+      ? `<p style="margin: 4px 0;"><strong>Format:</strong> In person at Sage Field</p>
+    <p style="margin: 4px 0;"><strong>Location:</strong> <a href="https://maps.google.com/?q=2760+Gattis+School+Rd,+Round+Rock,+TX+78664" style="color: #5a7a5a;">2760 Gattis School Rd, Round Rock, TX 78664</a></p>`
+      : `<p style="margin: 4px 0;"><strong>Format:</strong> Virtual</p>
+    <p style="margin: 4px 0;">We'll send you a video call link before your conference.</p>`;
+
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${opts.parentFirstName},</p>
+
+  <p>Your parent-teacher conference for <strong>${opts.childName}</strong> with <strong>${opts.teacherName}</strong> is confirmed. We're looking forward to connecting with you about your child's year ahead.</p>
+
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; margin: 28px 0;">
+    <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 15px;">Conference Details</p>
+    <p style="margin: 4px 0;"><strong>Child:</strong> ${opts.childName}</p>
+    <p style="margin: 4px 0;"><strong>Teacher:</strong> ${opts.teacherName}</p>
+    <p style="margin: 4px 0;"><strong>Date:</strong> ${opts.conferenceDate}</p>
+    <p style="margin: 4px 0;"><strong>Time:</strong> ${opts.timeSlot}</p>
+    ${formatLine}
+  </div>
+
+  <p>If you need to make a change, please reach out to us at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> or call/text <a href="tel:5126775872" style="color: #5a7a5a;">(512) 677-5872</a>.</p>
+
+  <p style="margin-top: 32px;">With warmth,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina Obnamia</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
 </body>
 </html>
   `.trim();
@@ -4295,6 +4347,64 @@ export async function buildSchoolYearCommitmentRequestEmail(opts: {
   return { subject, content };
 }
 
+function schoolYearTuitionByGradeTableHtml(marginBottom = "28px"): string {
+  const primaryMonthly = formatCents(SCHOOL_YEAR_TUITION_PRIMARY_CENTS);
+  const primaryAnnual = formatCents(SCHOOL_YEAR_TUITION_PRIMARY_CENTS * 10);
+  const upperMonthly = formatCents(SCHOOL_YEAR_TUITION_UPPER_CENTS);
+  const upperAnnual = formatCents(SCHOOL_YEAR_TUITION_UPPER_CENTS * 10);
+
+  return `
+  <p style="margin-bottom: 10px; font-weight: bold; color: #2C5F2E; font-size: 16px;">Tuition by Grade Level</p>
+  <table style="width: 100%; border-collapse: collapse; margin-bottom: ${marginBottom}; font-size: 14px;">
+    <thead>
+      <tr style="background: #f7f4f0;">
+        <th style="text-align: left; padding: 10px 14px; border: 1px solid #d8d0c8; font-weight: bold;">Grade</th>
+        <th style="text-align: right; padding: 10px 14px; border: 1px solid #d8d0c8; font-weight: bold;">Monthly Payment</th>
+        <th style="text-align: right; padding: 10px 14px; border: 1px solid #d8d0c8; font-weight: bold;">Annual Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8;">PreK – 1st Grade</td>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">${primaryMonthly} / month</td>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">${primaryAnnual}</td>
+      </tr>
+      <tr style="background: #fafaf8;">
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8;">2nd – 4th Grade</td>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">${upperMonthly} / month</td>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">${upperAnnual}</td>
+      </tr>
+    </tbody>
+  </table>`;
+}
+
+function homeschoolDropInPricingTableHtml(marginBottom = "28px"): string {
+  const rows = HOMESCHOOL_TIERS.map((tier, i) => {
+    const pricing = HOMESCHOOL_SCHOOL_YEAR_PRICING[tier.key];
+    const rowStyle = i % 2 === 1 ? ' style="background: #fafaf8;"' : "";
+    return `
+      <tr${rowStyle}>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8;">${tier.label}</td>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">${formatCents(pricing.primary)} / month</td>
+        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">${formatCents(pricing.upper)} / month</td>
+      </tr>`;
+  }).join("");
+
+  return `
+  <p style="margin-bottom: 10px; font-weight: bold; color: #2C5F2E; font-size: 16px;">Monthly Drop-In Pricing by Schedule</p>
+  <table style="width: 100%; border-collapse: collapse; margin-bottom: ${marginBottom}; font-size: 14px;">
+    <thead>
+      <tr style="background: #f7f4f0;">
+        <th style="text-align: left; padding: 10px 14px; border: 1px solid #d8d0c8; font-weight: bold;">Schedule</th>
+        <th style="text-align: right; padding: 10px 14px; border: 1px solid #d8d0c8; font-weight: bold;">Primary (PreK–1st)</th>
+        <th style="text-align: right; padding: 10px 14px; border: 1px solid #d8d0c8; font-weight: bold;">Upper (2nd–4th)</th>
+      </tr>
+    </thead>
+    <tbody>${rows}
+    </tbody>
+  </table>`;
+}
+
 export async function buildSchoolYearTuitionInfoEmail(opts: {
   g1FullName?: string;
   childLegalName?: string;
@@ -4399,6 +4509,9 @@ export async function buildSchoolYearTuitionInfoEmail(opts: {
     </ul>
   </div>
 
+  <p style="margin-bottom: 10px; font-size: 14px; color: #555;">For homeschool drop-in families, monthly pricing varies by schedule:</p>
+  ${homeschoolDropInPricingTableHtml()}
+
   <p style="margin-bottom: 24px; font-size: 14px; color: #555;">If you have any questions about billing, please don't hesitate to reach out. We are happy to help!</p>
 
   <p style="margin-top: 32px;">With warmth,</p>
@@ -4438,28 +4551,8 @@ export async function buildSchoolYearTuitionClarificationEmail(opts: {
   </p>
 
   <!-- Grade Comparison Table -->
-  <p style="margin-bottom: 10px; font-weight: bold; color: #2C5F2E; font-size: 16px;">Tuition by Grade Level</p>
-  <table style="width: 100%; border-collapse: collapse; margin-bottom: 28px; font-size: 14px;">
-    <thead>
-      <tr style="background: #f7f4f0;">
-        <th style="text-align: left; padding: 10px 14px; border: 1px solid #d8d0c8; font-weight: bold;">Grade</th>
-        <th style="text-align: right; padding: 10px 14px; border: 1px solid #d8d0c8; font-weight: bold;">Monthly Payment</th>
-        <th style="text-align: right; padding: 10px 14px; border: 1px solid #d8d0c8; font-weight: bold;">Annual Total</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td style="padding: 10px 14px; border: 1px solid #d8d0c8;">PreK – 1st Grade</td>
-        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">$1,195 / month</td>
-        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">$11,950</td>
-      </tr>
-      <tr style="background: #fafaf8;">
-        <td style="padding: 10px 14px; border: 1px solid #d8d0c8;">2nd – 4th Grade</td>
-        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">$1,095 / month</td>
-        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">$10,950</td>
-      </tr>
-    </tbody>
-  </table>
+  ${schoolYearTuitionByGradeTableHtml()}
+  ${homeschoolDropInPricingTableHtml()}
 
   <p style="margin-bottom: 16px;">
     Both grade bands are billed in <strong>10 equal monthly payments</strong> — one per month from August through May.
@@ -4525,28 +4618,7 @@ export async function buildSchoolYearTuitionReminderEmail(opts: {
   </p>
 
   <!-- Grade Comparison Table -->
-  <p style="margin-bottom: 10px; font-weight: bold; color: #2C5F2E; font-size: 16px;">Tuition by Grade Level</p>
-  <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 14px;">
-    <thead>
-      <tr style="background: #f7f4f0;">
-        <th style="text-align: left; padding: 10px 14px; border: 1px solid #d8d0c8; font-weight: bold;">Grade</th>
-        <th style="text-align: right; padding: 10px 14px; border: 1px solid #d8d0c8; font-weight: bold;">Monthly Payment</th>
-        <th style="text-align: right; padding: 10px 14px; border: 1px solid #d8d0c8; font-weight: bold;">Annual Total</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td style="padding: 10px 14px; border: 1px solid #d8d0c8;">PreK – 1st Grade</td>
-        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">$1,195 / month</td>
-        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">$11,950</td>
-      </tr>
-      <tr style="background: #fafaf8;">
-        <td style="padding: 10px 14px; border: 1px solid #d8d0c8;">2nd – 4th Grade</td>
-        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">$1,095 / month</td>
-        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">$10,950</td>
-      </tr>
-    </tbody>
-  </table>
+  ${schoolYearTuitionByGradeTableHtml("24px")}
 
   <p style="margin-bottom: 16px; font-size: 14px; color: #3a3a3a;">
     Both grade bands are billed in <strong>10 equal monthly payments</strong> (August through May).
@@ -4586,6 +4658,68 @@ export async function buildSchoolYearTuitionReminderEmail(opts: {
   return { subject, content };
 }
 
+export async function buildHomeschoolDropInTuitionReminderEmail(opts: {
+  g1FullName?: string;
+  childLegalName?: string;
+  email: string;
+}): Promise<{ subject: string; content: string }> {
+  const firstName = opts.g1FullName?.split(" ")[0] || "there";
+
+  const subject = `Reminder: August Homeschool Drop-In Due August 10 — 2026–2027`;
+
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+
+  <p style="margin-bottom: 12px;">Hi ${firstName}!</p>
+
+  <p style="margin-bottom: 16px;">
+    If you've already paid your August homeschool drop-in — thank you, you're all set! 🎉
+  </p>
+
+  <p style="margin-bottom: 16px;">
+    If you haven't yet — a quick reminder that <strong>August homeschool drop-in is due August 10</strong>, one week before the school year begins on <strong>August 17</strong>.
+    You can pay through your parent billing portal under the <strong>"School Year"</strong> tab.
+  </p>
+
+  <!-- Pricing Table -->
+  ${homeschoolDropInPricingTableHtml("24px")}
+
+  <p style="margin-bottom: 10px; font-weight: bold; color: #2C5F2E; font-size: 16px;">How It Works</p>
+  <ul style="margin: 0 0 24px 0; padding-left: 20px; font-size: 15px;">
+    <li style="margin-bottom: 8px;"><strong>Month-by-month billing</strong> — pay only for the months you enroll.</li>
+    <li style="margin-bottom: 8px;"><strong>Choose your days each month</strong> — select which days work best for your family from our available schedule (Monday–Thursday).</li>
+    <li style="margin-bottom: 8px;"><strong>Supply fee</strong> — a one-time <strong>$300 annual supply fee</strong> must be paid before your first drop-in day. This covers all classroom consumables so your child is fully equipped from day one.</li>
+  </ul>
+
+  <!-- Portal CTA -->
+  <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 10px; padding: 24px; margin: 0 0 28px 0; text-align: center;">
+    <p style="margin: 0 0 6px 0; font-size: 15px; color: #2c2c2c; font-weight: bold;">Your parent billing portal has everything you need.</p>
+    <p style="margin: 0 0 16px 0; font-size: 14px; color: #555;">Go to the <strong>Billing</strong> page → <strong>"School Year"</strong> tab → <strong>"Homeschool Drop-In"</strong> to select your schedule and pay.</p>
+    <a href="https://sagefield.co/parent/billing"
+       style="display: inline-block; background: #2C5F2E; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-size: 15px; font-weight: bold; letter-spacing: 0.3px;">
+      Open Parent Billing Portal →
+    </a>
+  </div>
+
+  <p style="margin-bottom: 24px; font-size: 14px; color: #555;">If you have any questions about homeschool drop-in pricing or scheduling, please don't hesitate to reach out. We are happy to help!</p>
+
+  <p style="margin-top: 32px;">With warmth,</p>
+  <p style="margin-top: 4px;">
+    <strong>Sabrina</strong><br />
+    Sage Field School<br />
+    <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> · <a href="tel:5126775872" style="color: #5a7a5a;">(512) 677-5872</a>
+  </p>
+
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
 export async function buildHomeschoolDropInClarificationEmail(opts: {
   g1FullName?: string;
   childLegalName?: string;
@@ -4609,33 +4743,7 @@ export async function buildHomeschoolDropInClarificationEmail(opts: {
   </p>
 
   <!-- Pricing Table -->
-  <p style="margin-bottom: 10px; font-weight: bold; color: #2C5F2E; font-size: 16px;">Monthly Drop-In Pricing by Schedule</p>
-  <table style="width: 100%; border-collapse: collapse; margin-bottom: 28px; font-size: 14px;">
-    <thead>
-      <tr style="background: #f7f4f0;">
-        <th style="text-align: left; padding: 10px 14px; border: 1px solid #d8d0c8; font-weight: bold;">Schedule</th>
-        <th style="text-align: right; padding: 10px 14px; border: 1px solid #d8d0c8; font-weight: bold;">Primary (PreK–1st)</th>
-        <th style="text-align: right; padding: 10px 14px; border: 1px solid #d8d0c8; font-weight: bold;">Upper (2nd–4th)</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td style="padding: 10px 14px; border: 1px solid #d8d0c8;">1 day/week</td>
-        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">$480 / month</td>
-        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">$440 / month</td>
-      </tr>
-      <tr style="background: #fafaf8;">
-        <td style="padding: 10px 14px; border: 1px solid #d8d0c8;">2 days/week</td>
-        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">$560 / month</td>
-        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">$520 / month</td>
-      </tr>
-      <tr>
-        <td style="padding: 10px 14px; border: 1px solid #d8d0c8;">3 days/week</td>
-        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">$780 / month</td>
-        <td style="padding: 10px 14px; border: 1px solid #d8d0c8; text-align: right;">$720 / month</td>
-      </tr>
-    </tbody>
-  </table>
+  ${homeschoolDropInPricingTableHtml()}
 
   <p style="margin-bottom: 10px; font-weight: bold; color: #2C5F2E; font-size: 16px;">How It Works</p>
   <ul style="margin: 0 0 24px 0; padding-left: 20px; font-size: 15px;">

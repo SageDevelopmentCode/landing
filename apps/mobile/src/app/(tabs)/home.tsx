@@ -1,4 +1,5 @@
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
+import { ParentTeacherConferenceSheet } from "@/components/ParentTeacherConferenceSheet";
 import { BottomTabInset, Brand, FontFamilies } from "@/constants/theme";
 import { API_BASE_URL } from "@/constants/config";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,7 +21,7 @@ import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { openBrowserAsync, WebBrowserPresentationStyle } from "expo-web-browser";
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
@@ -36,6 +37,20 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  getSchoolYearTuitionStudentIds,
+  getTuitionActionSubtext,
+  needsConferenceScheduling,
+  needsSchoolYearTuitionAction,
+  type PaidSchoolYearByStudent,
+} from "@/lib/action-needed";
+import { fetchConferenceContext } from "@/lib/conference-actions";
+import {
+  getPtcBannerSubtext,
+  type ConferenceBookingRecord,
+  type ConferenceStudentContext,
+  type ConferenceTeacherDisplay,
+} from "@/lib/parent-teacher-conference";
 
 const HEADER_IMAGES = [
   require("../../../assets/images/stock/Stock1.webp"),
@@ -1656,13 +1671,13 @@ const homeProgramStyles = StyleSheet.create({
 const actPrefStyles = StyleSheet.create({
   card: {
     marginHorizontal: 24,
-    marginBottom: 24,
+    marginBottom: 16,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: "#fde68a",
     overflow: "hidden",
     padding: 16,
-    gap: 6,
+    gap: 10,
   },
   badge: {
     alignSelf: "flex-start",
@@ -1670,33 +1685,91 @@ const actPrefStyles = StyleSheet.create({
     borderRadius: 9999,
     paddingHorizontal: 10,
     paddingVertical: 3,
-    marginBottom: 2,
   },
   badgeText: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 11,
     color: "#fff",
   },
-  title: {
+  rows: {
+    gap: 8,
+  },
+  row: {
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  rowTuition: {
+    backgroundColor: "rgba(239, 246, 255, 0.9)",
+    borderWidth: 1,
+    borderColor: "#dbeafe",
+  },
+  rowPtc: {
+    backgroundColor: "rgba(236, 253, 245, 0.9)",
+    borderWidth: 1,
+    borderColor: "#d1fae5",
+  },
+  rowActivity: {
+    backgroundColor: "rgba(254, 243, 199, 0.7)",
+    borderWidth: 1,
+    borderColor: "rgba(253, 230, 138, 0.6)",
+    flexDirection: "column",
+    alignItems: "stretch",
+    gap: 8,
+  },
+  rowActivityTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  rowEmoji: {
+    fontSize: 22,
+  },
+  rowTitle: {
     fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 15,
+    fontSize: 14,
+    color: "#1e3a8a",
+  },
+  rowTitlePtc: {
+    color: "#065f46",
+  },
+  rowTitleActivity: {
     color: "#78350f",
   },
-  body: {
+  rowSub: {
     fontFamily: FontFamilies.body,
-    fontSize: 13,
+    fontSize: 12,
+    color: "#1e40af",
+    marginTop: 2,
+  },
+  rowSubPtc: {
+    color: "#047857",
+  },
+  rowSubActivity: {
     color: "#92400e",
-    lineHeight: 19,
+    lineHeight: 17,
+  },
+  rowBody: {
+    flex: 1,
   },
   cta: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 4,
+    alignSelf: "flex-start",
+    backgroundColor: "#f59e0b",
+    borderRadius: 9999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginLeft: 32,
+    gap: 2,
   },
   ctaText: {
     fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 13,
-    color: "#92400e",
+    fontSize: 12,
+    color: "#fff",
   },
 });
 
@@ -2006,12 +2079,110 @@ export default function HomeScreen() {
   const [homeNewsletters, setHomeNewsletters] = useState<ParentNewsletterListItem[]>([]);
   const [newslettersLoading, setNewslettersLoading] = useState(true);
   const [hasActivityForPaidDay, setHasActivityForPaidDay] = useState(false);
+  const [paidSchoolYearByStudent, setPaidSchoolYearByStudent] =
+    useState<PaidSchoolYearByStudent>({});
+  const [paidSupplyFeeByStudent, setPaidSupplyFeeByStudent] = useState<
+    Record<string, boolean>
+  >({});
+  const [conferenceBookingsByStudent, setConferenceBookingsByStudent] =
+    useState<Record<string, ConferenceBookingRecord>>({});
+  const [conferenceStudents, setConferenceStudents] = useState<
+    ConferenceStudentContext[]
+  >([]);
+  const [conferenceTeachers, setConferenceTeachers] = useState<
+    ConferenceTeacherDisplay[]
+  >([]);
+  const [conferenceTakenSlotKeys, setConferenceTakenSlotKeys] = useState<
+    string[]
+  >([]);
+  const [conferenceContextLoading, setConferenceContextLoading] =
+    useState(false);
+  const [conferenceContextError, setConferenceContextError] = useState<
+    string | null
+  >(null);
+
+  const applyConferenceBookingsFromRows = useCallback(
+    (
+      rows: Array<{
+        student_id: string;
+        teacher_id: string;
+        conference_date: string;
+        time_slot: string;
+        format: string;
+        accommodation_note: string | null;
+      }> | null,
+    ) => {
+      const map: Record<string, ConferenceBookingRecord> = {};
+      for (const row of rows ?? []) {
+        map[row.student_id] = {
+          teacherId: row.teacher_id,
+          conferenceDate: row.conference_date,
+          timeSlot: row.time_slot,
+          format: row.format as "in_person" | "virtual",
+          accommodationNote: row.accommodation_note ?? null,
+        };
+      }
+      setConferenceBookingsByStudent(map);
+    },
+    [],
+  );
+
+  const loadConferenceBookingsFromSupabase = useCallback(async () => {
+    if (!effectiveParentId) return;
+    const { data } = await supabase
+      .schema("teachers")
+      .from("parent_teacher_conference_bookings")
+      .select(
+        "student_id, teacher_id, conference_date, time_slot, format, accommodation_note",
+      )
+      .eq("parent_id", effectiveParentId);
+    applyConferenceBookingsFromRows(data);
+  }, [effectiveParentId, applyConferenceBookingsFromRows]);
+
+  const loadConferenceContext = useCallback(async (): Promise<boolean> => {
+    if (!effectiveParentId) return false;
+    setConferenceContextLoading(true);
+    setConferenceContextError(null);
+    try {
+      const ctx = await fetchConferenceContext(effectiveParentId);
+      setConferenceTeachers(ctx.conferenceTeachers);
+      setConferenceStudents(ctx.conferenceStudents);
+      setConferenceBookingsByStudent(ctx.bookingsByStudent);
+      setConferenceTakenSlotKeys(ctx.takenSlotKeys);
+      return true;
+    } catch (err) {
+      console.warn("[home] conference context load failed:", err);
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to load conference data";
+      setConferenceContextError(message);
+      await loadConferenceBookingsFromSupabase();
+      return false;
+    } finally {
+      setConferenceContextLoading(false);
+    }
+  }, [effectiveParentId, loadConferenceBookingsFromSupabase]);
+
+  const openPtcSheet = useCallback(() => {
+    ptcSheetRef.current?.present();
+    if (
+      conferenceTeachers.length === 0 ||
+      conferenceStudents.length === 0
+    ) {
+      void loadConferenceContext();
+    }
+  }, [
+    conferenceTeachers.length,
+    conferenceStudents.length,
+    loadConferenceContext,
+  ]);
 
   const profileSheetRef = useRef<BottomSheetModal>(null);
   const eventSheetRef = useRef<BottomSheetModal>(null);
   const checklistSheetRef = useRef<BottomSheetModal>(null);
   const notifSheetRef = useRef<BottomSheetModal>(null);
-  const summerInfoSheetRef = useRef<BottomSheetModal>(null);
+  const ptcSheetRef = useRef<BottomSheetModal>(null);
   const tuitionSheetRef = useRef<BottomSheetModal>(null);
   const [tuitionSecretCode, setTuitionSecretCode] = useState("");
   const [introVisible, setIntroVisible] = useState(false);
@@ -2128,6 +2299,8 @@ export default function HomeScreen() {
           setTeachersLoading(false);
 
           applyActivityBanner(activitiesResult, activityPrefsResult, defaultPrefsResult, studentsForActivity, paidSets);
+          void loadConferenceBookingsFromSupabase();
+          void loadConferenceContext();
 
         } else {
           // ── Fallback: original individual queries (unchanged logic) ──────
@@ -2284,6 +2457,8 @@ export default function HomeScreen() {
           }
 
           applyActivityBanner(activitiesResult, activityPrefsResult, defaultPrefsResult, studentsForActivity, paidSets);
+          void loadConferenceBookingsFromSupabase();
+          void loadConferenceContext();
         }
 
         // ─── DM + channels (parallel, always runs after core) ────────────────
@@ -2375,6 +2550,8 @@ export default function HomeScreen() {
       const paidWeeks: Record<string, number[]> = {};
       const aftercareMap: Record<string, { months: string[]; days: string[] }> = {};
       const funFridayMap: Record<string, { months: string[]; fridays: string[] }> = {};
+      const schoolYearMap: PaidSchoolYearByStudent = {};
+      const supplyFeeMap: Record<string, boolean> = {};
 
       for (const tx of txData) {
         if (!tx.student_id) continue;
@@ -2398,12 +2575,25 @@ export default function HomeScreen() {
           const fridays = (meta?.selected_fridays ?? "").split(",").filter(Boolean);
           const prev = funFridayMap[tx.student_id] ?? { months: [], fridays: [] };
           funFridayMap[tx.student_id] = { months: [...prev.months, ...months], fridays: [...prev.fridays, ...fridays] };
+        } else if (tx.payment_type === "school_year_tuition") {
+          const months = (meta?.selected_months ?? "")
+            .split(",")
+            .map(Number)
+            .filter(Boolean);
+          if (!schoolYearMap[tx.student_id]) {
+            schoolYearMap[tx.student_id] = [];
+          }
+          schoolYearMap[tx.student_id].push(...months);
+        } else if (tx.payment_type === "supply_fee") {
+          supplyFeeMap[tx.student_id] = true;
         }
       }
 
       setPaidWeeksByStudent(paidWeeks);
       setPaidAftercareByStudent(aftercareMap);
       setPaidFunFridayByStudent(funFridayMap);
+      setPaidSchoolYearByStudent(schoolYearMap);
+      setPaidSupplyFeeByStudent(supplyFeeMap);
     }
 
     function applyActivityBanner(
@@ -2436,7 +2626,12 @@ export default function HomeScreen() {
     }
 
     loadUser();
-  }, [effectiveParentId, userId]);
+  }, [
+    effectiveParentId,
+    userId,
+    loadConferenceBookingsFromSupabase,
+    loadConferenceContext,
+  ]);
 
   useEffect(() => {
     if (communityMsgs.length <= 1) return;
@@ -2701,6 +2896,44 @@ export default function HomeScreen() {
     onboardingCompleted.has(t.id),
   ).length;
 
+  const enrolledApps = applications.filter((a) => a.status === "enrolled");
+  const schoolYearTuitionStudentIds = getSchoolYearTuitionStudentIds(
+    enrolledApps
+      .filter((a) => a.program === "school_year_26_27")
+      .map((a) => a.student_id),
+    enrolledApps.filter((a) => a.program === "both").map((a) => a.student_id),
+  );
+  const showActionTuition = needsSchoolYearTuitionAction(
+    schoolYearTuitionStudentIds,
+    paidSchoolYearByStudent,
+  );
+  const ptcStudentsForBanner = useMemo((): ConferenceStudentContext[] => {
+    if (conferenceStudents.length > 0) return conferenceStudents;
+    return students.map((s) => ({
+      studentId: s.id,
+      name: s.child_legal_name.trim().split(/\s+/)[0] ?? s.child_legal_name,
+      assignedTeacherId: null,
+    }));
+  }, [conferenceStudents, students]);
+
+  const showActionPtc =
+    ptcStudentsForBanner.length > 0 &&
+    needsConferenceScheduling(
+      ptcStudentsForBanner.map((s) => s.studentId),
+      conferenceBookingsByStudent,
+    );
+  const showActionActivity = hasActivityForPaidDay;
+  const showActionNeededCard =
+    showActionTuition || showActionPtc || showActionActivity;
+  const tuitionActionSubtext = getTuitionActionSubtext(
+    schoolYearTuitionStudentIds,
+    paidSupplyFeeByStudent,
+  );
+  const ptcActionSubtext = getPtcBannerSubtext(
+    ptcStudentsForBanner,
+    conferenceBookingsByStudent,
+  );
+
   return (
     <View style={styles.container}>
       <Image
@@ -2804,79 +3037,8 @@ export default function HomeScreen() {
             </>
           ) : (
             <>
-              {/* Tuition Banner */}
-              <Pressable
-                onPress={() =>
-                  openBrowserAsync("https://www.sagefield.co/parent/billing", {
-                    presentationStyle: WebBrowserPresentationStyle.AUTOMATIC,
-                  })
-                }
-                style={({ pressed }) => [
-                  styles.tuitionBanner,
-                  pressed && { opacity: 0.85 },
-                ]}
-              >
-                <LinearGradient
-                  colors={["#DBEAFE", "#BFDBFE"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.tuitionBannerGradient}
-                >
-                  <View style={styles.tuitionBannerLeft}>
-                    <Text style={styles.tuitionBannerEmoji}>🎒</Text>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.tuitionBannerTitle}>
-                        School Year Tuition Available
-                      </Text>
-                      <Text style={styles.tuitionBannerSub}>
-                        Due August 10 · Tap to pay
-                      </Text>
-                      <Text style={styles.tuitionBannerDesc}>
-                        Visit sagefield.co/parent/billing — works on computer & mobile
-                      </Text>
-                    </View>
-                  </View>
-                  <Ionicons name="chevron-forward" size={16} color="#1e40af" />
-                </LinearGradient>
-              </Pressable>
-
-              {/* Summer Info Banner */}
-              <Pressable
-                onPress={() => summerInfoSheetRef.current?.present()}
-                style={({ pressed }) => [
-                  styles.summerBanner,
-                  pressed && { opacity: 0.85 },
-                ]}
-              >
-                <LinearGradient
-                  colors={["#FFF3C4", "#FFE0A0"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.summerBannerGradient}
-                >
-                  <View style={styles.summerBannerLeft}>
-                    <Text style={styles.summerBannerEmoji}>☀️</Text>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.summerBannerTitle}>
-                        Summer 2026 — Important Info
-                      </Text>
-                      <Text style={styles.summerBannerSub}>
-                        Packing checklist & tuition deadlines
-                      </Text>
-                    </View>
-                  </View>
-                  <Ionicons name="chevron-forward" size={16} color="#92400e" />
-                </LinearGradient>
-              </Pressable>
-
-              {hasActivityForPaidDay && (
-                <Pressable
-                  style={({ pressed }) => [
-                    actPrefStyles.card,
-                    pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] },
-                  ]}
-                  onPress={() => router.push("/(tabs)/preferences" as any)}
-                >
+              {showActionNeededCard && (
+                <View style={actPrefStyles.card}>
                   <LinearGradient
                     colors={["#fffbeb", "#fff7ed"]}
                     start={{ x: 0, y: 0 }}
@@ -2886,20 +3048,129 @@ export default function HomeScreen() {
                   <View style={actPrefStyles.badge}>
                     <Text style={actPrefStyles.badgeText}>Action Needed</Text>
                   </View>
-                  <Text style={actPrefStyles.title}>Activity Preferences</Text>
-                  <Text style={actPrefStyles.body}>
-                    Your child has upcoming activities — let us know how they'd
-                    like to participate.
-                  </Text>
-                  <View style={actPrefStyles.cta}>
-                    <Text style={actPrefStyles.ctaText}>Set Preferences</Text>
-                    <Ionicons
-                      name="chevron-forward"
-                      size={13}
-                      color="#92400e"
-                    />
+                  <View style={actPrefStyles.rows}>
+                    {showActionTuition && (
+                      <Pressable
+                        onPress={() =>
+                          openBrowserAsync(
+                            "https://www.sagefield.co/parent/billing",
+                            {
+                              presentationStyle:
+                                WebBrowserPresentationStyle.AUTOMATIC,
+                            },
+                          )
+                        }
+                        style={({ pressed }) => [
+                          actPrefStyles.row,
+                          actPrefStyles.rowTuition,
+                          pressed && { opacity: 0.85 },
+                        ]}
+                      >
+                        <Text style={actPrefStyles.rowEmoji}>🏫</Text>
+                        <View style={actPrefStyles.rowBody}>
+                          <Text style={actPrefStyles.rowTitle}>
+                            School Year Tuition Available
+                          </Text>
+                          <Text style={actPrefStyles.rowSub}>
+                            {tuitionActionSubtext}
+                          </Text>
+                        </View>
+                        <Ionicons
+                          name="chevron-forward"
+                          size={16}
+                          color="#1e40af"
+                        />
+                      </Pressable>
+                    )}
+
+                    {showActionPtc && (
+                      <Pressable
+                        onPress={openPtcSheet}
+                        style={({ pressed }) => [
+                          actPrefStyles.row,
+                          actPrefStyles.rowPtc,
+                          pressed && { opacity: 0.85 },
+                        ]}
+                      >
+                        <Text style={actPrefStyles.rowEmoji}>📅</Text>
+                        <View style={actPrefStyles.rowBody}>
+                          <Text
+                            style={[
+                              actPrefStyles.rowTitle,
+                              actPrefStyles.rowTitlePtc,
+                            ]}
+                          >
+                            Schedule your parent-teacher conference
+                          </Text>
+                          <Text
+                            style={[
+                              actPrefStyles.rowSub,
+                              actPrefStyles.rowSubPtc,
+                            ]}
+                          >
+                            {ptcActionSubtext}
+                          </Text>
+                        </View>
+                        <Ionicons
+                          name="chevron-forward"
+                          size={16}
+                          color="#047857"
+                        />
+                      </Pressable>
+                    )}
+
+                    {showActionActivity && (
+                      <Pressable
+                        onPress={() =>
+                          router.push("/(tabs)/preferences" as any)
+                        }
+                        style={({ pressed }) => [
+                          actPrefStyles.row,
+                          actPrefStyles.rowActivity,
+                          pressed && { opacity: 0.85 },
+                        ]}
+                      >
+                        <View style={actPrefStyles.rowActivityTop}>
+                          <Text style={actPrefStyles.rowEmoji}>🍳</Text>
+                          <View style={actPrefStyles.rowBody}>
+                            <Text
+                              style={[
+                                actPrefStyles.rowTitle,
+                                actPrefStyles.rowTitleActivity,
+                              ]}
+                            >
+                              Activity Preferences
+                            </Text>
+                            <Text
+                              style={[
+                                actPrefStyles.rowSub,
+                                actPrefStyles.rowSubActivity,
+                              ]}
+                            >
+                              Your child has upcoming activities — let us know how
+                              they'd like to participate.
+                            </Text>
+                          </View>
+                          <Ionicons
+                            name="chevron-forward"
+                            size={16}
+                            color="#92400e"
+                          />
+                        </View>
+                        <View style={actPrefStyles.cta}>
+                          <Text style={actPrefStyles.ctaText}>
+                            Set Preferences
+                          </Text>
+                          <Ionicons
+                            name="chevron-forward"
+                            size={13}
+                            color="#fff"
+                          />
+                        </View>
+                      </Pressable>
+                    )}
                   </View>
-                </Pressable>
+                </View>
               )}
 
               <View style={styles.childrenSection}>
@@ -4138,88 +4409,27 @@ export default function HomeScreen() {
           </BottomSheetScrollView>
         </BottomSheetModal>
 
-        {/* Summer Info Sheet */}
-        <BottomSheetModal
-          ref={summerInfoSheetRef}
-          snapPoints={["70%", "95%"]}
-          enablePanDownToClose
-          backdropComponent={(props) => (
-            <BottomSheetBackdrop
-              {...props}
-              disappearsOnIndex={-1}
-              appearsOnIndex={0}
-              pressBehavior="close"
-            />
-          )}
-        >
-          <BottomSheetScrollView
-            contentContainerStyle={styles.summerSheetContent}
-          >
-            <Text style={styles.summerSheetTitle}>☀️ Summer 2026</Text>
-
-            {/* Pack list */}
-            <Text style={styles.summerSheetSectionLabel}>What to Send</Text>
-            <View style={styles.summerChipGrid}>
-              {[
-                { emoji: "🍱", label: "Snack & lunch" },
-                { emoji: "💧", label: "Water bottle" },
-                { emoji: "👕", label: "Change of clothes" },
-                { emoji: "👟", label: "Closed-toe shoes" },
-                { emoji: "🩴", label: "Open-toe shoes" },
-                { emoji: "☀️", label: "Sunscreen" },
-                { emoji: "🏊", label: "Swimsuit" },
-                { emoji: "🏖️", label: "Towel" },
-                { emoji: "🥾", label: "Boots" },
-              ].map(({ emoji, label }) => (
-                <View key={label} style={styles.summerChip}>
-                  <Text>{emoji}</Text>
-                  <Text style={styles.summerChipText}>{label}</Text>
-                </View>
-              ))}
-            </View>
-            <Text style={styles.summerShoeNote}>
-              Shoes may be left at Sage Field — pick up on your last day.
-            </Text>
-
-            {/* Tuition deadlines */}
-            <Text style={[styles.summerSheetSectionLabel, { marginTop: 28 }]}>
-              💳 Tuition Deadlines
-            </Text>
-            <Text style={styles.summerDeadlineIntro}>
-              Due by the Friday before each week starts.
-            </Text>
-            {[
-              { week: "Week 1  ·  May 26", due: "Due May 22" },
-              { week: "Week 2  ·  June 1", due: "Due May 29" },
-            ].map(({ week, due }) => (
-              <View key={week} style={styles.summerDeadlineCard}>
-                <Text style={styles.summerDeadlineWeek}>{week}</Text>
-                <Text style={styles.summerDeadlineDate}>{due}</Text>
-              </View>
-            ))}
-            <View style={styles.summerLateFeeBlock}>
-              <Text style={{ fontSize: 16 }}>⚠️</Text>
-              <Text style={styles.summerLateFeeText}>
-                $30 late fee if not received by Friday at 11:59 PM
-              </Text>
-            </View>
-
-            <Pressable
-              style={({ pressed }) => [
-                styles.summerSheetBtn,
-                pressed && { opacity: 0.85 },
-              ]}
-              onPress={() => {
-                summerInfoSheetRef.current?.dismiss();
-                router.push("/(tabs)/tuition" as any);
-              }}
-            >
-              <Text style={styles.summerSheetBtnText}>
-                View Tuition & Billing
-              </Text>
-            </Pressable>
-          </BottomSheetScrollView>
-        </BottomSheetModal>
+        {students.length > 0 && effectiveParentId && (
+          <ParentTeacherConferenceSheet
+            ref={ptcSheetRef}
+            parentId={effectiveParentId}
+            conferenceTeachers={conferenceTeachers}
+            conferenceStudents={
+              conferenceStudents.length > 0
+                ? conferenceStudents
+                : ptcStudentsForBanner
+            }
+            initialBookingsByStudent={conferenceBookingsByStudent}
+            initialTakenSlotKeys={conferenceTakenSlotKeys}
+            contextLoading={conferenceContextLoading}
+            contextError={conferenceContextError}
+            onRetryLoad={() => void loadConferenceContext()}
+            onBookingsChange={(bookings, takenKeys) => {
+              setConferenceBookingsByStudent(bookings);
+              setConferenceTakenSlotKeys(takenKeys);
+            }}
+          />
+        )}
       </SafeAreaView>
 
       {/* Intro slideshow */}
@@ -5533,19 +5743,6 @@ const styles = StyleSheet.create({
     lineHeight: 17,
   },
 
-  // Summer info banner
-  summerBanner: {
-    marginHorizontal: 24,
-    marginBottom: 16,
-  },
-  summerBannerGradient: {
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
   summerBannerLeft: {
     flex: 1,
     flexDirection: "row",
@@ -5554,17 +5751,6 @@ const styles = StyleSheet.create({
   },
   summerBannerEmoji: {
     fontSize: 28,
-  },
-  summerBannerTitle: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 14,
-    color: "#78350f",
-  },
-  summerBannerSub: {
-    fontFamily: FontFamilies.body,
-    fontSize: 12,
-    color: "#92400e",
-    marginTop: 2,
   },
 
   tuitionBanner: {
@@ -5667,109 +5853,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // Summer info sheet
-  summerSheetContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 48,
-    paddingTop: 24,
-  },
-  summerSheetTitle: {
-    fontFamily: FontFamilies.heading,
-    fontSize: 20,
-    color: "#111827",
-    marginBottom: 14,
-  },
-  summerSheetSectionLabel: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 14,
-    color: "#374151",
-    marginBottom: 10,
-  },
-  summerChipGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-    marginTop: 4,
-  },
-  summerChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    backgroundColor: "#F3F4F6",
-    borderRadius: 9999,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-  },
-  summerChipText: {
-    fontFamily: FontFamilies.body,
-    fontSize: 13,
-    color: "#374151",
-  },
-  summerShoeNote: {
-    fontFamily: FontFamilies.body,
-    fontSize: 12,
-    color: "#9CA3AF",
-    marginTop: 14,
-    fontStyle: "italic",
-  },
-  summerDeadlineIntro: {
-    fontFamily: FontFamilies.body,
-    fontSize: 13,
-    color: "#6B7280",
-    marginBottom: 12,
-  },
-  summerDeadlineCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#F9FAFB",
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    marginBottom: 8,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#E5E7EB",
-  },
-  summerDeadlineWeek: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 13,
-    color: "#374151",
-  },
-  summerDeadlineDate: {
-    fontFamily: FontFamilies.body,
-    fontSize: 12,
-    color: "#6B7280",
-  },
-  summerLateFeeBlock: {
-    backgroundColor: "#FEF3C7",
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginTop: 10,
-    marginBottom: 8,
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 8,
-  },
-  summerLateFeeText: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 13,
-    color: "#92400e",
-    flex: 1,
-    lineHeight: 19,
-  },
-  summerSheetBtn: {
-    marginTop: 20,
-    backgroundColor: Brand.sage700,
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  summerSheetBtnText: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 15,
-    color: "#ffffff",
-  },
   tuitionSheetContainer: { flex: 1, paddingHorizontal: 20, paddingTop: 8, paddingBottom: 24 },
   tuitionSheetTitle: { fontFamily: FontFamilies.heading, fontSize: 16, color: "#1f2937", marginBottom: 10 },
   tuitionSheetBody: { fontFamily: FontFamilies.body, fontSize: 13, color: "#6b7280", lineHeight: 20, marginBottom: 10 },

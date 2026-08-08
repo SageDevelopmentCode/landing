@@ -10,6 +10,7 @@ import {
   markChannelRead,
   joinChannel,
   leaveChannel,
+  removeChannelMember,
   uploadChannelImage,
   uploadChannelFile,
   getSenderProfile,
@@ -183,6 +184,7 @@ interface ChannelChatAreaProps {
   onBack: () => void;
   onMembershipChange: (channelId: string, isMember: boolean) => void;
   onMessageSent: (channelId: string, lastMsg: { body: string; created_at: string; sender_id: string }) => void;
+  onMemberRemoved?: (channelId: string) => void;
   // Design system: pass true for admin styling, false for the green-theme parent/teacher styling
   adminStyle?: boolean;
 }
@@ -190,9 +192,11 @@ interface ChannelChatAreaProps {
 export default function ChannelChatArea({
   channel,
   userId,
+  userRole,
   onBack,
   onMembershipChange,
   onMessageSent,
+  onMemberRemoved,
   adminStyle = false,
 }: ChannelChatAreaProps) {
   const [messages, setMessages] = useState<ChannelMessageRow[]>([]);
@@ -217,6 +221,7 @@ export default function ChannelChatArea({
   const [membersDrawerOpen, setMembersDrawerOpen] = useState(false);
   const [membersList, setMembersList] = useState<ChannelMember[] | null>(null);
   const [loadingMembers, setLoadingMembers] = useState(false);
+  const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
   const membersLoadedForChannel = useRef<string | null>(null);
 
   const handleOpenMembers = useCallback(() => {
@@ -374,6 +379,20 @@ export default function ChannelChatArea({
       onMembershipChange(channel.id, false);
     }
     setLeaving(false);
+  };
+
+  const handleRemoveMember = async (member: ChannelMember) => {
+    if (userRole !== "super_admin" || member.role !== "parent") return;
+    const confirmed = window.confirm(`Remove ${member.full_name} from #${channel.name}?`);
+    if (!confirmed) return;
+
+    setRemovingMemberId(member.id);
+    const ok = await removeChannelMember(channel.id, member.id);
+    if (ok) {
+      setMembersList((prev) => prev?.filter((m) => m.id !== member.id) ?? []);
+      onMemberRemoved?.(channel.id);
+    }
+    setRemovingMemberId(null);
   };
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1016,6 +1035,16 @@ export default function ChannelChatArea({
                             </p>
                           )}
                         </div>
+                        {userRole === "super_admin" && member.role === "parent" && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveMember(member)}
+                            disabled={removingMemberId === member.id}
+                            className="text-[11px] font-body text-red-500 hover:text-red-700 disabled:opacity-50 shrink-0 cursor-pointer"
+                          >
+                            {removingMemberId === member.id ? "Removing…" : "Remove"}
+                          </button>
+                        )}
                       </div>
                       {member.children.length > 0 && (
                         <ul className="mt-2 ml-12 space-y-1.5">

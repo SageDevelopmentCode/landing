@@ -4,8 +4,21 @@ import { useState, useTransition, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, Check, ChevronDown, CheckCircle2, Loader2 } from 'lucide-react'
 import { createManualPayment, createManualSchoolYearPayment } from '@/app/actions/createManualPayment'
+import {
+  SCHOOL_YEAR_FUN_FRIDAY_MONTHS,
+  FUN_FRIDAY_DROPIN_CENTS,
+  FUN_FRIDAY_MONTHLY_CENTS,
+  schoolYearFunFridayMonthCents,
+} from '@/shared/billing/school-year'
 import { cssColors as colors, radius, cssShadows as shadows } from '../design-system'
 import type { EnrolledStudentOption, ExistingPayments, StudentProgram } from './page'
+
+type FunFridayMonth = {
+  key: string
+  label: string
+  shortLabel: string
+  fridays: { label: string; date: string }[]
+}
 
 // ── Program data ──────────────────────────────────────────────────────────────
 
@@ -117,6 +130,16 @@ const FUN_FRIDAY_MONTHS = [
     ],
   },
   { key: 'aug', label: 'August 2026', shortLabel: 'Aug', fridays: [{ label: 'Fri Aug 7', date: '2026-08-07' }, { label: 'Fri Aug 14', date: '2026-08-14' }] },
+] satisfies FunFridayMonth[]
+
+const SCHOOL_YEAR_FUN_FRIDAY_MONTHS_MAPPED: FunFridayMonth[] = SCHOOL_YEAR_FUN_FRIDAY_MONTHS.map((m) => ({
+  ...m,
+  shortLabel: m.label.split(' ')[0].slice(0, 3),
+}))
+
+const ALL_FUN_FRIDAY_MONTHS: FunFridayMonth[] = [
+  ...FUN_FRIDAY_MONTHS,
+  ...SCHOOL_YEAR_FUN_FRIDAY_MONTHS_MAPPED,
 ]
 
 const WEEKDAYS = [
@@ -156,6 +179,36 @@ function getGradeTier(grade: string | null): 'primary' | 'upper' {
 
 function formatCents(cents: number): string {
   return (cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' })
+}
+
+function summerFunFridayMonthCents(month: FunFridayMonth): number {
+  return month.fridays.length >= 4
+    ? FUN_FRIDAY_MONTHLY_CENTS
+    : month.fridays.length * FUN_FRIDAY_DROPIN_CENTS
+}
+
+function findFunFridayMonth(key: string): FunFridayMonth | undefined {
+  return ALL_FUN_FRIDAY_MONTHS.find((m) => m.key === key)
+}
+
+function estimateFunFridayTotalCents(
+  months: FunFridayMonth[],
+  selectedMonths: Set<string>,
+  selectedFridays: Set<string>,
+  isSchoolYear: boolean,
+): number {
+  const monthTotal = months
+    .filter((m) => selectedMonths.has(m.key))
+    .reduce(
+      (sum, m) =>
+        sum +
+        (isSchoolYear
+          ? schoolYearFunFridayMonthCents(m)
+          : summerFunFridayMonthCents(m)),
+      0,
+    )
+  const fridayTotal = selectedFridays.size * FUN_FRIDAY_DROPIN_CENTS
+  return monthTotal + fridayTotal
 }
 
 function getInitials(name: string): string {
@@ -384,6 +437,8 @@ function AftercarePicker({
 // ── Fun Friday Picker ─────────────────────────────────────────────────────────
 
 function FunFridayPicker({
+  season,
+  onSeasonChange,
   paidMonths,
   paidFridays,
   selectedMonths,
@@ -391,6 +446,8 @@ function FunFridayPicker({
   onToggleMonth,
   onToggleFriday,
 }: {
+  season: 'summer' | 'school_year'
+  onSeasonChange: (season: 'summer' | 'school_year') => void
   paidMonths: string[]
   paidFridays: string[]
   selectedMonths: Set<string>
@@ -398,15 +455,47 @@ function FunFridayPicker({
   onToggleMonth: (key: string) => void
   onToggleFriday: (date: string) => void
 }) {
-  const [activeMonthKey, setActiveMonthKey] = useState(FUN_FRIDAY_MONTHS[0].key)
+  const months = season === 'summer' ? FUN_FRIDAY_MONTHS : SCHOOL_YEAR_FUN_FRIDAY_MONTHS_MAPPED
+  const [activeMonthKey, setActiveMonthKey] = useState(months[0].key)
   const paidMonthSet = new Set(paidMonths)
   const paidFridaySet = new Set(paidFridays)
-  const activeMonth = FUN_FRIDAY_MONTHS.find((m) => m.key === activeMonthKey)!
+  const activeMonth = months.find((m) => m.key === activeMonthKey) ?? months[0]
+
+  const estimatedTotal = estimateFunFridayTotalCents(
+    months,
+    selectedMonths,
+    selectedFridays,
+    season === 'school_year',
+  )
+
+  function handleSeasonChange(next: 'summer' | 'school_year') {
+    onSeasonChange(next)
+    const nextMonths = next === 'summer' ? FUN_FRIDAY_MONTHS : SCHOOL_YEAR_FUN_FRIDAY_MONTHS_MAPPED
+    setActiveMonthKey(nextMonths[0].key)
+  }
 
   return (
     <div className="space-y-4">
+      <div className="flex gap-2">
+        {(['summer', 'school_year'] as const).map((s) => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => handleSeasonChange(s)}
+            className="px-3 py-1.5 rounded-full text-sm font-medium transition-colors"
+            style={{
+              backgroundColor: season === s ? colors.mistyForest : colors.elevated,
+              color: season === s ? '#fff' : colors.textSecondary,
+              border: `1px solid ${season === s ? colors.mistyForest : colors.border}`,
+            }}
+          >
+            {s === 'summer' ? 'Summer 2026' : 'School Year 26–27'}
+          </button>
+        ))}
+      </div>
+
       <div className="flex gap-2 flex-wrap">
-        {FUN_FRIDAY_MONTHS.map((m) => {
+        {months.map((m) => {
           const isPaid = paidMonthSet.has(m.key)
           const isSelected = selectedMonths.has(m.key)
           const isActive = m.key === activeMonthKey
@@ -489,6 +578,20 @@ function FunFridayPicker({
           </p>
         )}
       </div>
+
+      {estimatedTotal > 0 && (
+        <div
+          className="px-4 py-3 rounded-xl text-sm"
+          style={{ backgroundColor: colors.elevated, border: `1px solid ${colors.border}` }}
+        >
+          <span className="font-semibold" style={{ color: colors.textPrimary }}>
+            Estimated total: {formatCents(estimatedTotal)}
+          </span>
+          <p className="text-xs mt-1" style={{ color: colors.textTertiary }}>
+            Override with the optional Amount field below if needed.
+          </p>
+        </div>
+      )}
     </div>
   )
 }
@@ -573,21 +676,36 @@ function SchoolYearPicker({
   includeSupplyFee,
   selectedMonths,
   gradeTier,
+  useCustomTuitionAmount,
+  customTuitionDollars,
   onToggleSupplyFee,
   onToggleMonth,
+  onToggleCustomTuition,
+  onCustomTuitionChange,
 }: {
   paidSupplyFee: boolean
   paidMonths: number[]
   includeSupplyFee: boolean
   selectedMonths: Set<number>
   gradeTier: 'primary' | 'upper'
+  useCustomTuitionAmount: boolean
+  customTuitionDollars: string
   onToggleSupplyFee: () => void
   onToggleMonth: (index: number) => void
+  onToggleCustomTuition: () => void
+  onCustomTuitionChange: (value: string) => void
 }) {
   const paidMonthSet = new Set(paidMonths)
   const tuitionRate = gradeTier === 'primary' ? PRIMARY_TUITION_CENTS : UPPER_TUITION_CENTS
   const unpaidMonths = SCHOOL_YEAR_MONTHS.filter((m) => !paidMonthSet.has(m.index))
   const allUnpaidSelected = unpaidMonths.length > 0 && unpaidMonths.every((m) => selectedMonths.has(m.index))
+  const defaultTuitionPart = tuitionRate * selectedMonths.size
+  const customTuitionPart =
+    useCustomTuitionAmount && customTuitionDollars
+      ? Math.round(parseFloat(customTuitionDollars) * 100) || 0
+      : defaultTuitionPart
+  const tuitionPart =
+    useCustomTuitionAmount && customTuitionDollars ? customTuitionPart : defaultTuitionPart
 
   function toggleAllMonths() {
     if (allUnpaidSelected) {
@@ -598,7 +716,6 @@ function SchoolYearPicker({
   }
 
   const supplyPart = includeSupplyFee && !paidSupplyFee ? SUPPLY_FEE_CENTS : 0
-  const tuitionPart = tuitionRate * selectedMonths.size
   const totalCents = supplyPart + tuitionPart
 
   return (
@@ -680,6 +797,36 @@ function SchoolYearPicker({
         </div>
       </div>
 
+      {selectedMonths.size > 0 && (
+        <div className="space-y-2">
+          <div
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
+            style={{ border: `1px solid ${colors.border}`, backgroundColor: colors.surface }}
+          >
+            <Checkbox checked={useCustomTuitionAmount} onChange={onToggleCustomTuition} />
+            <span className="text-sm" style={{ color: colors.textPrimary }}>Use custom tuition amount</span>
+          </div>
+          {useCustomTuitionAmount && (
+            <div
+              className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl"
+              style={{ border: `1px solid ${colors.border}`, backgroundColor: colors.elevated }}
+            >
+              <span className="text-sm" style={{ color: colors.textTertiary }}>$</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder={(defaultTuitionPart / 100).toFixed(2)}
+                value={customTuitionDollars}
+                onChange={(e) => onCustomTuitionChange(e.target.value)}
+                className="flex-1 bg-transparent outline-none text-sm"
+                style={{ color: colors.textPrimary }}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
       {totalCents > 0 && (
         <div
           className="px-4 py-3 rounded-xl text-sm"
@@ -691,7 +838,11 @@ function SchoolYearPicker({
           <div className="text-xs mt-1" style={{ color: colors.textTertiary }}>
             {includeSupplyFee && !paidSupplyFee && `Supply fee ${formatCents(SUPPLY_FEE_CENTS)}`}
             {includeSupplyFee && !paidSupplyFee && selectedMonths.size > 0 && ' + '}
-            {selectedMonths.size > 0 && `${selectedMonths.size} month${selectedMonths.size > 1 ? 's' : ''} ${formatCents(tuitionPart)}`}
+            {selectedMonths.size > 0 && (
+              useCustomTuitionAmount && customTuitionDollars
+                ? `Custom tuition ${formatCents(tuitionPart)}`
+                : `${selectedMonths.size} month${selectedMonths.size > 1 ? 's' : ''} ${formatCents(tuitionPart)}`
+            )}
           </div>
         </div>
       )}
@@ -723,6 +874,7 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
   const [selectedAftercareDays, setSelectedAftercareDays] = useState<Set<string>>(new Set())
 
   // Fun friday state
+  const [funFridaySeason, setFunFridaySeason] = useState<'summer' | 'school_year'>('school_year')
   const [selectedFunFridayMonths, setSelectedFunFridayMonths] = useState<Set<string>>(new Set())
   const [selectedFridays, setSelectedFridays] = useState<Set<string>>(new Set())
 
@@ -732,6 +884,8 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
   // School year state
   const [includeSupplyFee, setIncludeSupplyFee] = useState(false)
   const [selectedSchoolYearMonths, setSelectedSchoolYearMonths] = useState<Set<number>>(new Set())
+  const [useCustomTuitionAmount, setUseCustomTuitionAmount] = useState(false)
+  const [customTuitionDollars, setCustomTuitionDollars] = useState('')
 
   // Form state
   const [amountDollars, setAmountDollars] = useState('')
@@ -789,6 +943,11 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
     setSelectedWeekDays({})
     setIncludeSupplyFee(false)
     setSelectedSchoolYearMonths(new Set())
+    setUseCustomTuitionAmount(false)
+    setCustomTuitionDollars('')
+    setFunFridaySeason(
+      s.programs.some((p) => p.paymentType === 'school_year') ? 'school_year' : 'summer',
+    )
     setSuccessMsg('')
     setErrorMsg('')
     // Default to first available program
@@ -805,6 +964,8 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
     setSelectedWeekDays({})
     setIncludeSupplyFee(false)
     setSelectedSchoolYearMonths(new Set())
+    setUseCustomTuitionAmount(false)
+    setCustomTuitionDollars('')
     setAmountDollars('')
     setNotes('')
   }
@@ -853,7 +1014,7 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
         next.delete(key)
       } else {
         next.add(key)
-        const month = FUN_FRIDAY_MONTHS.find((m) => m.key === key)
+        const month = findFunFridayMonth(key)
         if (month) {
           setSelectedFridays((fridays) => {
             const nf = new Set(fridays)
@@ -965,6 +1126,20 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
         return
       }
 
+      let customTuitionAmountCents: number | undefined
+      if (useCustomTuitionAmount && selectedSchoolYearMonths.size > 0) {
+        if (customTuitionDollars.trim() === '') {
+          setErrorMsg('Please enter a custom tuition amount.')
+          return
+        }
+        const cents = Math.round(parseFloat(customTuitionDollars) * 100)
+        if (Number.isNaN(cents) || cents < 0) {
+          setErrorMsg('Please enter a valid custom tuition amount.')
+          return
+        }
+        customTuitionAmountCents = cents
+      }
+
       setErrorMsg('')
       startTransition(async () => {
         const result = await createManualSchoolYearPayment({
@@ -975,6 +1150,7 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
           tuitionMonthIndices: Array.from(selectedSchoolYearMonths).sort((a, b) => a - b),
           gradeTier: schoolYearGradeTier,
           notes,
+          customTuitionAmountCents,
         })
 
         if (result.success) {
@@ -1182,6 +1358,8 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
             )}
             {activeProgram === 'fun_friday_tuition' && (
               <FunFridayPicker
+                season={funFridaySeason}
+                onSeasonChange={setFunFridaySeason}
                 paidMonths={existingPayments.paidFunFridayMonths}
                 paidFridays={existingPayments.paidFridays}
                 selectedMonths={selectedFunFridayMonths}
@@ -1204,8 +1382,12 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
                 includeSupplyFee={includeSupplyFee}
                 selectedMonths={selectedSchoolYearMonths}
                 gradeTier={schoolYearGradeTier}
+                useCustomTuitionAmount={useCustomTuitionAmount}
+                customTuitionDollars={customTuitionDollars}
                 onToggleSupplyFee={() => setIncludeSupplyFee((v) => !v)}
                 onToggleMonth={toggleSchoolYearMonth}
+                onToggleCustomTuition={() => setUseCustomTuitionAmount((v) => !v)}
+                onCustomTuitionChange={setCustomTuitionDollars}
               />
             )}
           </div>

@@ -31,6 +31,32 @@ export type ChannelMessageRow = {
   reactions: ReactionSummary[];
 };
 
+const DONT_INCLUDE_TAG = "Don't Include";
+
+async function isEligibleForDefaultChannel(
+  adminClient: ReturnType<typeof createAdminClient>,
+  userId: string
+): Promise<boolean> {
+  const { data: profile } = await adminClient
+    .schema("admin")
+    .from("users")
+    .select("role")
+    .eq("id", userId)
+    .single();
+
+  if (profile?.role !== "parent") return true;
+
+  const { data: enrolled } = await adminClient
+    .schema("parent_app")
+    .from("applications")
+    .select("admin_tags")
+    .eq("user_id", userId)
+    .eq("status", "enrolled");
+
+  if (!enrolled?.length) return false;
+  return enrolled.some((a) => !(a.admin_tags ?? []).includes(DONT_INCLUDE_TAG));
+}
+
 export async function getChannels(userId: string): Promise<ChannelWithMeta[]> {
   const adminClient = createAdminClient();
 
@@ -84,6 +110,8 @@ export async function getChannels(userId: string): Promise<ChannelWithMeta[]> {
 export async function ensureDefaultChannelMembership(userId: string): Promise<void> {
   const adminClient = createAdminClient();
 
+  if (!(await isEligibleForDefaultChannel(adminClient, userId))) return;
+
   const { data: defaultChannels } = await adminClient
     .schema("messaging")
     .from("channels")
@@ -104,6 +132,18 @@ export async function ensureDefaultChannelMembership(userId: string): Promise<vo
 
 export async function joinChannel(channelId: string, userId: string): Promise<boolean> {
   const adminClient = createAdminClient();
+
+  const { data: ch } = await adminClient
+    .schema("messaging")
+    .from("channels")
+    .select("is_default")
+    .eq("id", channelId)
+    .single();
+
+  if (ch?.is_default && !(await isEligibleForDefaultChannel(adminClient, userId))) {
+    return false;
+  }
+
   const { error } = await adminClient
     .schema("messaging")
     .from("channel_members")
@@ -131,6 +171,48 @@ export async function leaveChannel(channelId: string, userId: string): Promise<b
     .eq("channel_id", channelId)
     .eq("user_id", userId);
   if (error) console.error("[leaveChannel] error:", error);
+  return !error;
+}
+
+export async function removeChannelMember(channelId: string, targetUserId: string): Promise<boolean> {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  const adminClient = createAdminClient();
+
+  const { data: caller } = await adminClient
+    .schema("admin")
+    .from("users")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (caller?.role !== "super_admin") {
+    console.error("[removeChannelMember] unauthorized role:", caller?.role);
+    return false;
+  }
+
+  const { data: target } = await adminClient
+    .schema("admin")
+    .from("users")
+    .select("role")
+    .eq("id", targetUserId)
+    .single();
+
+  if (target?.role !== "parent") {
+    console.error("[removeChannelMember] target is not a parent:", target?.role);
+    return false;
+  }
+
+  const { error } = await adminClient
+    .schema("messaging")
+    .from("channel_members")
+    .delete()
+    .eq("channel_id", channelId)
+    .eq("user_id", targetUserId);
+
+  if (error) console.error("[removeChannelMember] error:", error);
   return !error;
 }
 

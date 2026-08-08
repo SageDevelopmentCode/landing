@@ -24,9 +24,15 @@ import {
   ChevronRight,
   Coffee,
   Sparkles,
+  Lock,
 } from "lucide-react";
 import OnboardingChecklist from "@/app/parent/components/OnboardingChecklist";
-import SummerInfoSheet from "./SummerInfoSheet";
+import type {
+  ConferenceTeacherDisplay,
+  ConferenceBookingRecord,
+} from "@/app/lib/parent-teacher-conference";
+import type { ConferenceStudentContext } from "@/app/lib/get-conference-teacher-assignments";
+import ActionNeededCard from "./ActionNeededCard";
 import HelpWidget from "@/app/parent/components/HelpWidget";
 import {
   getParentStudentAttendance,
@@ -41,6 +47,10 @@ import {
   SidebarField,
   SidebarSection,
 } from "@/app/components/SidebarPrimitives";
+import {
+  SCHOOL_YEAR_AFTERCARE_MONTHS,
+  SCHOOL_YEAR_FUN_FRIDAY_MONTHS,
+} from "@/shared/billing/school-year";
 import type {
   HomeStudent,
   HomeCheckIn,
@@ -48,13 +58,21 @@ import type {
   HomePendingPayment,
   HomeReferral,
   StudentMap,
-  PaidWeeksByStudent,
   PaidHomeschoolByStudent,
   PaidAftercareByStudent,
   PaidFunFridayByStudent,
   SummerEnrollment,
   HomeschoolDropInApp,
+  SchoolYearOnlyApp,
+  PaidSchoolYearByStudent,
 } from "./page";
+
+const SCHOOL_YEAR_AFTERCARE_KEYS = new Set(
+  SCHOOL_YEAR_AFTERCARE_MONTHS.map((m) => m.key),
+);
+const SCHOOL_YEAR_FUN_FRIDAY_KEYS = new Set(
+  SCHOOL_YEAR_FUN_FRIDAY_MONTHS.map((m) => m.key),
+);
 
 // Update each year to match the first school week
 const DROPOFF_WEEK_START = new Date("2026-04-28T00:00:00");
@@ -391,18 +409,23 @@ interface Props {
   referrals: HomeReferral[];
   savedDropOffSlot: string | null;
   summerEnrollments: SummerEnrollment[];
-  unpaidSummerEnrollments: SummerEnrollment[];
-  paidWeeksByStudent: PaidWeeksByStudent;
+  schoolYearOnlyApps: SchoolYearOnlyApp[];
   homeschoolDropInApps: HomeschoolDropInApp[];
   paidHomeschoolByStudent: PaidHomeschoolByStudent;
   paidAftercareByStudent: PaidAftercareByStudent;
   paidFunFridayByStudent: PaidFunFridayByStudent;
+  paidSchoolYearByStudent: PaidSchoolYearByStudent;
+  paidSupplyFeeByStudent: Record<string, boolean>;
   checklistComplete: boolean;
   initialCompletedIds?: string[];
   checklistInteractive?: boolean;
   suppressReferralPopup?: boolean;
   hasActivityForPaidDay: boolean;
   hasSubmittedTestimonial: boolean;
+  conferenceTeachers: ConferenceTeacherDisplay[];
+  conferenceStudents: ConferenceStudentContext[];
+  conferenceBookingsByStudent: Record<string, ConferenceBookingRecord>;
+  conferenceTakenSlotKeys: string[];
 }
 
 export default function HomePageClient({
@@ -415,18 +438,23 @@ export default function HomePageClient({
   referrals,
   savedDropOffSlot,
   summerEnrollments,
-  unpaidSummerEnrollments,
-  paidWeeksByStudent,
+  schoolYearOnlyApps,
   homeschoolDropInApps,
   paidHomeschoolByStudent,
   paidAftercareByStudent,
   paidFunFridayByStudent,
+  paidSchoolYearByStudent,
+  paidSupplyFeeByStudent,
   checklistComplete,
   initialCompletedIds,
   checklistInteractive,
   suppressReferralPopup,
   hasActivityForPaidDay,
   hasSubmittedTestimonial,
+  conferenceTeachers,
+  conferenceStudents,
+  conferenceBookingsByStudent,
+  conferenceTakenSlotKeys,
 }: Props) {
   const [checklistOpen, setChecklistOpen] = useState(false);
   const [bannerIdx, setBannerIdx] = useState(() =>
@@ -984,52 +1012,18 @@ export default function HomePageClient({
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8 items-start lg:items-stretch">
         {/* Left column: Students + Drop-Off + Referral */}
         <div className="flex flex-col gap-8">
-          {/* Activity Preferences Banner */}
-          {hasActivityForPaidDay && (
-            <Link
-              href="/parent/preferences"
-              className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-4 flex flex-col gap-3 shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold bg-amber-500 text-white px-2 py-0.5 rounded-full font-body">
-                  Action Needed
-                </span>
-                <span className="text-sm font-semibold text-amber-900 font-heading">
-                  Activity Preferences
-                </span>
-              </div>
-              <p className="text-xs text-amber-800 font-body leading-relaxed">
-                Your child has upcoming activities at Sage Field. Let us know
-                how they&apos;d like to participate — cooking, watching, or full
-                involvement.
-              </p>
-              <div className="self-start inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-3 py-1.5 rounded-full transition-colors font-body">
-                Set Preferences <ChevronRight size={13} />
-              </div>
-            </Link>
-          )}
-
-          <div className="flex flex-col gap-3">
-            {/* School Year Tuition Banner */}
-            <Link
-              href="/parent/billing"
-              className="w-full rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-100 border border-blue-200 px-4 py-4 shadow-sm hover:shadow-md transition-shadow flex items-center gap-3"
-            >
-              <span className="text-xl shrink-0">🏫</span>
-              <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                <span className="text-sm font-bold text-blue-900 leading-snug">
-                  School Year Tuition Available
-                </span>
-                <span className="text-xs text-blue-500">
-                  Due August 10 · Tap to pay now
-                </span>
-              </div>
-              <span className="text-blue-400 text-sm shrink-0">→</span>
-            </Link>
-
-            {/* Summer info sheet */}
-            <SummerInfoSheet />
-          </div>
+          <ActionNeededCard
+            userId={userId}
+            hasActivityForPaidDay={hasActivityForPaidDay}
+            schoolYearOnlyApps={schoolYearOnlyApps}
+            summerEnrollments={summerEnrollments}
+            paidSchoolYearByStudent={paidSchoolYearByStudent}
+            paidSupplyFeeByStudent={paidSupplyFeeByStudent}
+            conferenceTeachers={conferenceTeachers}
+            conferenceStudents={conferenceStudents}
+            conferenceBookingsByStudent={conferenceBookingsByStudent}
+            conferenceTakenSlotKeys={conferenceTakenSlotKeys}
+          />
 
           {/* Student Cards */}
           <section>
@@ -1514,39 +1508,75 @@ export default function HomePageClient({
               </Link>
             </div>
             {(() => {
-              const nonHomeschoolEnrollments = summerEnrollments.filter(
-                (e) => e.program !== "homeschool_drop_in",
+              const schoolYearHomeschoolApps = homeschoolDropInApps.filter(
+                (a) =>
+                  a.drop_in_program === "school_year_26_27" ||
+                  a.drop_in_program === "both",
               );
 
-              // Consolidate: one card per program type, listing all kids
-              const unpaidSummerNames = unpaidSummerEnrollments
-                .map((e) => studentMap[e.student_id]?.name)
+              const bothEnrollments = summerEnrollments.filter(
+                (e) => e.program === "both",
+              );
+
+              const schoolYearTuitionStudentIds = new Set([
+                ...schoolYearOnlyApps.map((a) => a.student_id),
+                ...bothEnrollments.map((e) => e.student_id),
+              ]);
+
+              const schoolYearStudentIds = new Set([
+                ...schoolYearOnlyApps.map((a) => a.student_id),
+                ...bothEnrollments.map((e) => e.student_id),
+                ...schoolYearHomeschoolApps.map((a) => a.student_id),
+              ]);
+
+              const schoolYearNames = [...schoolYearStudentIds]
+                .map((id) => studentMap[id]?.name)
                 .filter(Boolean) as string[];
-              // For aftercare/fun friday, build per-program summaries across all kids
-              const aftercareNames = nonHomeschoolEnrollments
-                .map((e) => studentMap[e.student_id]?.name)
+
+              const tuitionNames = [...schoolYearTuitionStudentIds]
+                .map((id) => studentMap[id]?.name)
                 .filter(Boolean) as string[];
-              const totalAftercareMonths = nonHomeschoolEnrollments.reduce(
-                (acc, e) =>
-                  acc +
-                  (paidAftercareByStudent[e.student_id]?.months?.length ?? 0),
+
+              const allSupplyFeesPaid =
+                schoolYearStudentIds.size > 0 &&
+                [...schoolYearStudentIds].every(
+                  (id) => paidSupplyFeeByStudent[id],
+                );
+
+              const anyTuitionSupplyFeeUnpaid = [...schoolYearTuitionStudentIds].some(
+                (id) => !paidSupplyFeeByStudent[id],
+              );
+
+              const totalTuitionMonthsPaid = [...schoolYearTuitionStudentIds].reduce(
+                (acc, id) =>
+                  acc + (paidSchoolYearByStudent[id]?.length ?? 0),
                 0,
               );
-              const funFridayNames = nonHomeschoolEnrollments
-                .map((e) => studentMap[e.student_id]?.name)
-                .filter(Boolean) as string[];
-              const totalFunFridayDays = nonHomeschoolEnrollments.reduce(
-                (acc, e) =>
-                  acc +
-                  (paidFunFridayByStudent[e.student_id]?.fridays?.length ?? 0),
+
+              const totalAftercareMonths = [...schoolYearStudentIds].reduce(
+                (acc, id) => {
+                  const months =
+                    paidAftercareByStudent[id]?.months?.filter((k) =>
+                      SCHOOL_YEAR_AFTERCARE_KEYS.has(k),
+                    ) ?? [];
+                  return acc + months.length;
+                },
+                0,
+              );
+
+              const totalFunFridayMonths = [...schoolYearStudentIds].reduce(
+                (acc, id) => {
+                  const months =
+                    paidFunFridayByStudent[id]?.months?.filter((k) =>
+                      SCHOOL_YEAR_FUN_FRIDAY_KEYS.has(k),
+                    ) ?? [];
+                  return acc + months.length;
+                },
                 0,
               );
 
               const hasAnything =
-                pendingPayments.length > 0 ||
-                unpaidSummerEnrollments.length > 0 ||
-                homeschoolDropInApps.length > 0 ||
-                nonHomeschoolEnrollments.length > 0;
+                pendingPayments.length > 0 || schoolYearStudentIds.size > 0;
 
               if (!hasAnything) {
                 return (
@@ -1569,158 +1599,122 @@ export default function HomePageClient({
 
               return (
                 <div className="flex flex-col gap-3">
-                  {/* Summer Tuition — one card for all unpaid kids */}
-                  {unpaidSummerNames.length > 0 &&
-                    (() => {
-                      const totalPaid = unpaidSummerEnrollments.reduce(
-                        (acc, e) =>
-                          acc + (paidWeeksByStudent[e.student_id]?.length ?? 0),
-                        0,
-                      );
-                      return (
-                        <Link
-                          href="/parent/billing"
-                          className="rounded-2xl overflow-hidden bg-white border border-gray-100 flex flex-col group"
-                        >
-                          <div className="relative h-28 overflow-hidden">
-                            <img
-                              src="/assets/ImageFive.jpg"
-                              alt=""
-                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                            />
-                            <div className="absolute inset-0 bg-black/10" />
-                            {totalPaid > 0 && (
-                              <span className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500 text-white shadow-sm">
-                                {totalPaid}w paid
-                              </span>
-                            )}
-                          </div>
-                          <div className="p-3.5 flex flex-col gap-2">
-                            <div>
-                              <p className="text-xs font-medium text-gray-400 mb-0.5 truncate">
-                                {unpaidSummerNames.join(", ")}
-                              </p>
-                              <p className="text-sm font-semibold text-gray-800 leading-snug">
-                                Summer Tuition
-                              </p>
-                            </div>
-                            <span
-                              className="inline-flex items-center gap-1 self-start px-3 py-1.5 rounded-full text-xs font-semibold text-white"
-                              style={{ backgroundColor: "#e07a3a" }}
-                            >
-                              {totalPaid > 0 ? "Add weeks" : "Select plan"}{" "}
-                              <ArrowRight className="w-3 h-3" />
-                            </span>
-                          </div>
-                        </Link>
-                      );
-                    })()}
-
-                  {/* Extended Learning — one card for all enrolled kids */}
-                  {aftercareNames.length > 0 && (
+                  {/* Annual Supply Fee */}
+                  {schoolYearNames.length > 0 && (
                     <Link
                       href="/parent/billing"
                       className="rounded-2xl overflow-hidden bg-white border border-gray-100 flex flex-col group"
                     >
                       <div className="relative h-28 overflow-hidden">
                         <img
-                          src="/assets/ImageNine.jpg"
+                          src="/assets/Stock2.jpg"
                           alt=""
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          style={{ objectPosition: "center 65%" }}
                         />
                         <div className="absolute inset-0 bg-black/10" />
-                        <span className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/80 text-gray-600 shadow-sm backdrop-blur-sm">
-                          Optional
+                        <span className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/80 text-gray-600 shadow-sm backdrop-blur-sm">
+                          $300
                         </span>
-                        {totalAftercareMonths > 0 && (
-                          <span className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500 text-white shadow-sm">
-                            {totalAftercareMonths}mo paid
-                          </span>
-                        )}
                       </div>
                       <div className="p-3.5 flex flex-col gap-2">
                         <div>
                           <p className="text-xs font-medium text-gray-400 mb-0.5 truncate">
-                            {aftercareNames.join(", ")}
+                            {schoolYearNames.join(", ")}
+                          </p>
+                          <p className="text-xs font-medium text-gray-400 mb-0.5">
+                            School Year 26–27
                           </p>
                           <p className="text-sm font-semibold text-gray-800 leading-snug">
-                            Extended Learning (3:00 – 5pm)
+                            Annual Supply Fee
                           </p>
                         </div>
                         <span
                           className="inline-flex items-center gap-1 self-start px-3 py-1.5 rounded-full text-xs font-semibold text-white"
-                          style={{ backgroundColor: "#e07a3a" }}
+                          style={{ backgroundColor: "#4a7c59" }}
                         >
-                          {totalAftercareMonths > 0
-                            ? "Add months"
-                            : "Select plan"}{" "}
-                          <ArrowRight className="w-3 h-3" />
+                          {allSupplyFeesPaid ? (
+                            <>
+                              <Check className="w-3 h-3" /> Paid
+                            </>
+                          ) : (
+                            <>
+                              Pay now <ArrowRight className="w-3 h-3" />
+                            </>
+                          )}
                         </span>
                       </div>
                     </Link>
                   )}
 
-                  {/* Friday Enrichment — one card for all enrolled kids */}
-                  {funFridayNames.length > 0 && (
+                  {/* School Year Tuition */}
+                  {tuitionNames.length > 0 && (
                     <Link
                       href="/parent/billing"
-                      className="rounded-2xl overflow-hidden bg-white border border-gray-100 flex flex-col group"
+                      className={`rounded-2xl overflow-hidden bg-white border border-gray-100 flex flex-col group ${anyTuitionSupplyFeeUnpaid ? "pointer-events-none" : ""}`}
+                      aria-disabled={anyTuitionSupplyFeeUnpaid}
+                      onClick={
+                        anyTuitionSupplyFeeUnpaid
+                          ? (e) => e.preventDefault()
+                          : undefined
+                      }
                     >
-                      <div className="relative h-28 overflow-hidden">
+                      <div className="relative h-28 overflow-hidden bg-gray-200">
                         <img
-                          src="/assets/ImageEleven.jpg"
+                          src="/assets/Stock1.jpg"
                           alt=""
-                          className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                          className={`w-full h-full object-cover object-center transition-transform duration-500 ${anyTuitionSupplyFeeUnpaid ? "" : "group-hover:scale-105"}`}
                         />
                         <div className="absolute inset-0 bg-black/10" />
-                        <span className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/80 text-gray-600 shadow-sm backdrop-blur-sm">
-                          Optional
-                        </span>
-                        {totalFunFridayDays > 0 && (
+                        {totalTuitionMonthsPaid > 0 && (
                           <span className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500 text-white shadow-sm">
-                            {totalFunFridayDays} paid
+                            {totalTuitionMonthsPaid} mo. paid
                           </span>
                         )}
                       </div>
                       <div className="p-3.5 flex flex-col gap-2">
                         <div>
                           <p className="text-xs font-medium text-gray-400 mb-0.5 truncate">
-                            {funFridayNames.join(", ")}
+                            {tuitionNames.join(", ")}
+                          </p>
+                          <p className="text-xs font-medium text-gray-400 mb-0.5">
+                            School Year 26–27
                           </p>
                           <p className="text-sm font-semibold text-gray-800 leading-snug">
-                            Friday Enrichment Day
+                            School Year Tuition
                           </p>
                         </div>
-                        <span
-                          className="inline-flex items-center gap-1 self-start px-3 py-1.5 rounded-full text-xs font-semibold text-white"
-                          style={{ backgroundColor: "#7c3aed" }}
-                        >
-                          {totalFunFridayDays > 0 ? "Add days" : "Select plan"}{" "}
-                          <ArrowRight className="w-3 h-3" />
-                        </span>
+                        {anyTuitionSupplyFeeUnpaid ? (
+                          <span
+                            className="inline-flex items-center gap-1 self-start px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-200 text-gray-500"
+                          >
+                            <Lock className="w-3 h-3" /> Pay supply fee first
+                          </span>
+                        ) : (
+                          <span
+                            className="inline-flex items-center gap-1 self-start px-3 py-1.5 rounded-full text-xs font-semibold text-white"
+                            style={{ backgroundColor: "#4a7c59" }}
+                          >
+                            Pay tuition <ArrowRight className="w-3 h-3" />
+                          </span>
+                        )}
                       </div>
                     </Link>
                   )}
 
-                  {/* Homeschool Drop-In — one card per student (each has distinct schedule) */}
-                  {homeschoolDropInApps.map((app) => {
+                  {/* Homeschool Drop-In — school year, one card per student */}
+                  {schoolYearHomeschoolApps.map((app) => {
                     const studentName =
                       studentMap[app.student_id]?.name ?? null;
                     const paidData = paidHomeschoolByStudent[app.student_id];
-                    const hasSummer = (paidData?.summer?.length ?? 0) > 0;
                     const hasSchoolYear =
                       (paidData?.schoolYear?.length ?? 0) > 0;
-                    const badgeLabel =
-                      hasSummer && hasSchoolYear
-                        ? "Plans active"
-                        : hasSummer
-                          ? "Summer active"
-                          : hasSchoolYear
-                            ? "School year active"
-                            : null;
+                    const badgeLabel = hasSchoolYear
+                      ? "School year active"
+                      : null;
                     return (
                       <Link
-                        key={`homeschool-${app.id}`}
+                        key={`homeschool-sy-${app.id}`}
                         href="/parent/billing"
                         className="rounded-2xl overflow-hidden bg-white border border-gray-100 flex flex-col group"
                       >
@@ -1744,6 +1738,9 @@ export default function HomePageClient({
                                 {studentName}
                               </p>
                             )}
+                            <p className="text-xs font-medium text-gray-400 mb-0.5">
+                              School Year 26–27
+                            </p>
                             <p className="text-sm font-semibold text-gray-800 leading-snug">
                               Homeschool Drop-In
                             </p>
@@ -1759,6 +1756,101 @@ export default function HomePageClient({
                       </Link>
                     );
                   })}
+
+                  {/* Extended Learning — school year */}
+                  {schoolYearNames.length > 0 && (
+                    <Link
+                      href="/parent/billing"
+                      className="rounded-2xl overflow-hidden bg-white border border-gray-100 flex flex-col group"
+                    >
+                      <div className="relative h-28 overflow-hidden">
+                        <img
+                          src="/assets/Stock3.jpg"
+                          alt=""
+                          className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-black/10" />
+                        <span className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/80 text-gray-600 shadow-sm backdrop-blur-sm">
+                          Optional
+                        </span>
+                        {totalAftercareMonths > 0 && (
+                          <span className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500 text-white shadow-sm">
+                            {totalAftercareMonths}mo paid
+                          </span>
+                        )}
+                      </div>
+                      <div className="p-3.5 flex flex-col gap-2">
+                        <div>
+                          <p className="text-xs font-medium text-gray-400 mb-0.5 truncate">
+                            {schoolYearNames.join(", ")}
+                          </p>
+                          <p className="text-xs font-medium text-gray-400 mb-0.5">
+                            School Year 26–27
+                          </p>
+                          <p className="text-sm font-semibold text-gray-800 leading-snug">
+                            Extended Learning (3:00 – 5:00pm)
+                          </p>
+                        </div>
+                        <span
+                          className="inline-flex items-center gap-1 self-start px-3 py-1.5 rounded-full text-xs font-semibold text-white"
+                          style={{ backgroundColor: "#e07a3a" }}
+                        >
+                          {totalAftercareMonths > 0
+                            ? "Add months"
+                            : "Select plan"}{" "}
+                          <ArrowRight className="w-3 h-3" />
+                        </span>
+                      </div>
+                    </Link>
+                  )}
+
+                  {/* Friday Enrichment — school year */}
+                  {schoolYearNames.length > 0 && (
+                    <Link
+                      href="/parent/billing"
+                      className="rounded-2xl overflow-hidden bg-white border border-gray-100 flex flex-col group"
+                    >
+                      <div className="relative h-28 overflow-hidden">
+                        <img
+                          src="/assets/Stock4.jpg"
+                          alt=""
+                          className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-black/10" />
+                        {totalFunFridayMonths > 0 ? (
+                          <span className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500 text-white shadow-sm">
+                            {totalFunFridayMonths} mo. paid
+                          </span>
+                        ) : (
+                          <span className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/80 text-gray-600 shadow-sm backdrop-blur-sm">
+                            Optional
+                          </span>
+                        )}
+                      </div>
+                      <div className="p-3.5 flex flex-col gap-2">
+                        <div>
+                          <p className="text-xs font-medium text-gray-400 mb-0.5 truncate">
+                            {schoolYearNames.join(", ")}
+                          </p>
+                          <p className="text-xs font-medium text-gray-400 mb-0.5">
+                            School Year 26–27
+                          </p>
+                          <p className="text-sm font-semibold text-gray-800 leading-snug">
+                            Friday Enrichment Day
+                          </p>
+                        </div>
+                        <span
+                          className="inline-flex items-center gap-1 self-start px-3 py-1.5 rounded-full text-xs font-semibold text-white"
+                          style={{ backgroundColor: "#7c3aed" }}
+                        >
+                          {totalFunFridayMonths > 0
+                            ? "Add months"
+                            : "Select plan"}{" "}
+                          <ArrowRight className="w-3 h-3" />
+                        </span>
+                      </div>
+                    </Link>
+                  )}
 
                   {/* Pending payment requests */}
                   {pendingPayments.map((payment) => {

@@ -2223,3 +2223,98 @@ export function createMeetMissJoyRSVPEmbed(data: {
     timestamp: new Date().toISOString(),
   };
 }
+
+/**
+ * Creates a Discord embed for parent-teacher conference bookings
+ */
+export function createParentTeacherConferenceEmbed(data: {
+  parentName: string;
+  email: string;
+  childName: string;
+  teacherName: string;
+  conferenceDate: string;
+  timeSlot: string;
+  format: "in_person" | "virtual";
+  accommodationNote?: string | null;
+}): DiscordEmbed {
+  const formatLabel =
+    data.format === "in_person" ? "In person at Sage Field" : "Virtual";
+
+  const fields: DiscordEmbedField[] = [
+    { name: "Parent", value: data.parentName, inline: true },
+    { name: "Email", value: data.email, inline: true },
+    { name: "Child", value: data.childName, inline: true },
+    { name: "Teacher", value: data.teacherName, inline: true },
+    { name: "Date", value: data.conferenceDate, inline: true },
+    { name: "Time", value: data.timeSlot, inline: true },
+    { name: "Format", value: formatLabel, inline: true },
+  ];
+
+  if (data.accommodationNote?.trim()) {
+    fields.push({
+      name: "Accommodation / alternate time",
+      value:
+        data.accommodationNote.length > 1024
+          ? data.accommodationNote.substring(0, 1021) + "..."
+          : data.accommodationNote,
+      inline: false,
+    });
+  }
+
+  return {
+    title: "📅 Parent-Teacher Conference Booked",
+    color: 0xa8c5a0,
+    fields,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * Creates a Discord embed for parent DM or community channel messages
+ */
+export function createParentMessageEmbed(data: {
+  parentName: string;
+  parentEmail: string;
+  body: string;
+  messageType: "dm" | "channel";
+  channelName?: string | null;
+  hasImage?: boolean;
+  hasFile?: boolean;
+}): DiscordEmbed {
+  const preview =
+    data.body.trim().length > 0
+      ? data.body.length > 1024
+        ? data.body.substring(0, 1021) + "..."
+        : data.body
+      : data.hasImage
+        ? "Sent an image"
+        : data.hasFile
+          ? "Sent a file"
+          : "Sent an attachment";
+
+  const fields: DiscordEmbedField[] = [
+    { name: "Parent", value: data.parentName || "N/A", inline: true },
+    { name: "Email", value: data.parentEmail || "N/A", inline: true },
+  ];
+
+  if (data.messageType === "channel" && data.channelName) {
+    fields.push({ name: "Channel", value: `#${data.channelName}`, inline: true });
+  }
+
+  fields.push({ name: "Message", value: preview, inline: false });
+  fields.push({
+    name: "Open",
+    value: "https://sagefield.co/admin/messages",
+    inline: false,
+  });
+
+  return {
+    title:
+      data.messageType === "channel"
+        ? "💬 New channel post from parent"
+        : "💬 New message from parent",
+    color: 0x5865f2,
+    fields,
+    timestamp: new Date().toISOString(),
+  };
+}

@@ -37,6 +37,31 @@ export type ChannelMessageRow = {
 type RawProfile = { id: string; full_name: string; profile_image_url: string | null };
 type RawReaction = { message_id: string; user_id: string; emoji: string };
 
+const DONT_INCLUDE_TAG = "Don't Include";
+
+async function isEligibleForDefaultChannel(userId: string): Promise<boolean> {
+  const { data: profile } = await supabase
+    .schema("admin")
+    .from("users")
+    .select("role")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if ((profile as { role?: string } | null)?.role !== "parent") return true;
+
+  const { data: enrolled } = await supabase
+    .schema("parent_app")
+    .from("applications")
+    .select("admin_tags")
+    .eq("user_id", userId)
+    .eq("status", "enrolled");
+
+  if (!enrolled?.length) return false;
+  return enrolled.some((a: { admin_tags: string[] | null }) =>
+    !(a.admin_tags ?? []).includes(DONT_INCLUDE_TAG)
+  );
+}
+
 export async function getChannels(userId: string): Promise<ChannelWithMeta[]> {
   const { data: channels } = await supabase
     .schema("messaging")
@@ -142,6 +167,8 @@ export async function createChannel(
 }
 
 export async function ensureDefaultChannelMembership(userId: string): Promise<void> {
+  if (!(await isEligibleForDefaultChannel(userId))) return;
+
   const { data: defaultChannels } = await supabase
     .schema("messaging")
     .from("channels")
@@ -150,20 +177,36 @@ export async function ensureDefaultChannelMembership(userId: string): Promise<vo
 
   if (!defaultChannels?.length) return;
 
-  await supabase
+  const { error } = await supabase
     .schema("messaging")
     .from("channel_members")
     .upsert(
       defaultChannels.map((ch: { id: string }) => ({ channel_id: ch.id, user_id: userId })),
-      { onConflict: "channel_id,user_id" }
+      { onConflict: "channel_id,user_id", ignoreDuplicates: true }
     );
+  if (error) console.error("[ensureDefaultChannelMembership] error:", error);
 }
 
 export async function joinChannel(channelId: string, userId: string): Promise<boolean> {
+  const { data: ch } = await supabase
+    .schema("messaging")
+    .from("channels")
+    .select("is_default")
+    .eq("id", channelId)
+    .single();
+
+  if ((ch as { is_default?: boolean } | null)?.is_default && !(await isEligibleForDefaultChannel(userId))) {
+    return false;
+  }
+
   const { error } = await supabase
     .schema("messaging")
     .from("channel_members")
-    .upsert({ channel_id: channelId, user_id: userId }, { onConflict: "channel_id,user_id" });
+    .upsert(
+      { channel_id: channelId, user_id: userId },
+      { onConflict: "channel_id,user_id", ignoreDuplicates: true }
+    );
+  if (error) console.error("[joinChannel] error:", error);
   return !error;
 }
 

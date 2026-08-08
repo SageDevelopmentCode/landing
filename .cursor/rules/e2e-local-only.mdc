@@ -10,7 +10,7 @@ alwaysApply: false
 
 - Read or export production/staging keys from `.env.local`, the Supabase dashboard, or `supabase link` for running tests.
 - Point `NEXT_PUBLIC_SUPABASE_URL` at `supabase.co` or any non-localhost URL for E2E.
-- Start `next dev` or `next start` manually with `.env.local` and expect Playwright to pass — `playwright.config.ts` uses `reuseExistingServer: false` and `scripts/start-e2e.sh` with local keys only.
+- Start `next dev` or `next start` manually with `.env.local` and expect Playwright to pass — e2e uses port **3100** by default (`E2E_PORT`); `scripts/start-e2e.sh` loads local keys only.
 - Seed or mutate production via `scripts/seed-e2e-users.mjs` — it refuses non-local URLs.
 - Add schema changes under legacy `migrations/` for test DB — use `supabase/migrations/` only.
 
