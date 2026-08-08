@@ -26,6 +26,7 @@ export type CreateManualSchoolYearPaymentInput = {
   tuitionMonthIndices: number[]
   gradeTier: 'primary' | 'upper'
   notes: string
+  customTuitionAmountCents?: number
 }
 
 const SUPPLY_FEE_CENTS = 30000
@@ -136,6 +137,14 @@ export async function createManualSchoolYearPayment(
       return { success: false, error: 'Nothing new to record — supply fee and selected months are already paid.' }
     }
 
+    if (
+      input.customTuitionAmountCents !== undefined &&
+      tuitionMonths.length > 0 &&
+      (!Number.isInteger(input.customTuitionAmountCents) || input.customTuitionAmountCents < 0)
+    ) {
+      return { success: false, error: 'Custom tuition amount must be a non-negative whole number of cents.' }
+    }
+
     const tuitionRate = input.gradeTier === 'primary' ? PRIMARY_TUITION_CENTS : UPPER_TUITION_CENTS
     const rows: Array<{
       stripe_session_id: string
@@ -154,14 +163,20 @@ export async function createManualSchoolYearPayment(
     }
 
     if (tuitionMonths.length > 0) {
+      const tuitionAmountCents =
+        input.customTuitionAmountCents ?? tuitionRate * tuitionMonths.length
+      const tuitionMetadata: Record<string, string> = {
+        payment_type: 'school_year_tuition',
+        selected_months: tuitionMonths.join(','),
+      }
+      if (input.customTuitionAmountCents !== undefined) {
+        tuitionMetadata.custom_amount = 'true'
+      }
       rows.push({
         stripe_session_id: 'check_' + crypto.randomUUID(),
         payment_type: 'school_year_tuition',
-        amount_cents: tuitionRate * tuitionMonths.length,
-        metadata: {
-          payment_type: 'school_year_tuition',
-          selected_months: tuitionMonths.join(','),
-        },
+        amount_cents: tuitionAmountCents,
+        metadata: tuitionMetadata,
       })
     }
 

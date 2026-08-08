@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { createAdminClient } from "@/app/lib/supabase-server";
 import {
-  createServerSupabaseClient,
-  createAdminClient,
-} from "@/app/lib/supabase-server";
+  authenticateApiRequest,
+  canAccessParentDashboard,
+} from "@/app/lib/authenticate-api-request";
 import {
   sendDiscordNotification,
   createParentTeacherConferenceEmbed,
@@ -37,10 +38,7 @@ function firstName(name: string): string {
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await authenticateApiRequest(request);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -55,7 +53,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  if (validated.parentId !== user.id) {
+  const allowed = await canAccessParentDashboard(user.id, validated.parentId);
+  if (!allowed) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -159,7 +158,7 @@ export async function POST(request: NextRequest) {
   const { data: parentUser } = await adminClient
     .schema("admin")
     .from("users")
-    .select("full_name")
+    .select("full_name, email")
     .eq("id", validated.parentId)
     .maybeSingle();
 
@@ -180,7 +179,7 @@ export async function POST(request: NextRequest) {
   const conferenceDateDisplay = formatConferenceDateForDisplay(
     validated.conferenceDate,
   );
-  const parentEmail = user.email ?? "";
+  const parentEmail = parentUser?.email ?? user.email ?? "";
 
   try {
     const { subject, content } = await buildParentTeacherConferenceConfirmationEmail({

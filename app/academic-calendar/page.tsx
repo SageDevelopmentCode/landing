@@ -40,6 +40,12 @@ const holidays = [
     note: "School closed",
   },
   {
+    name: "Student Holiday",
+    dates: "October 12, 2026",
+    season: "fall" as const,
+    note: "School closed",
+  },
+  {
     name: "Thanksgiving Break",
     dates: "November 23–27, 2026",
     season: "fall" as const,
@@ -47,7 +53,7 @@ const holidays = [
   },
   {
     name: "Winter Break",
-    dates: "December 21, 2026 – January 1, 2027",
+    dates: "December 18, 2026 – January 1, 2027",
     season: "winter" as const,
     note: "School closed",
   },
@@ -66,6 +72,12 @@ const holidays = [
   {
     name: "Spring Break",
     dates: "March 15–19, 2027",
+    season: "spring" as const,
+    note: "School closed",
+  },
+  {
+    name: "Good Friday",
+    dates: "March 26, 2027",
     season: "spring" as const,
     note: "School closed",
   },
@@ -163,7 +175,7 @@ export default function AcademicCalendarPage() {
                 Last Day of School
               </p>
               <p className="text-3xl font-bold text-gray-800 font-heading leading-tight">
-                May 31,
+                May 27,
                 <br />
                 2027
               </p>

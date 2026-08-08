@@ -1,4 +1,5 @@
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
+import { ParentTeacherConferenceSheet } from "@/components/ParentTeacherConferenceSheet";
 import { BottomTabInset, Brand, FontFamilies } from "@/constants/theme";
 import { API_BASE_URL } from "@/constants/config";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,7 +21,7 @@ import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { openBrowserAsync, WebBrowserPresentationStyle } from "expo-web-browser";
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
@@ -42,7 +43,14 @@ import {
   needsConferenceScheduling,
   needsSchoolYearTuitionAction,
   type PaidSchoolYearByStudent,
-} from "../../../../../shared/action-needed";
+} from "@/lib/action-needed";
+import { fetchConferenceContext } from "@/lib/conference-actions";
+import {
+  getPtcBannerSubtext,
+  type ConferenceBookingRecord,
+  type ConferenceStudentContext,
+  type ConferenceTeacherDisplay,
+} from "@/lib/parent-teacher-conference";
 
 const HEADER_IMAGES = [
   require("../../../assets/images/stock/Stock1.webp"),
@@ -2076,15 +2084,105 @@ export default function HomeScreen() {
   const [paidSupplyFeeByStudent, setPaidSupplyFeeByStudent] = useState<
     Record<string, boolean>
   >({});
-  const [conferenceBookingsByStudent, setConferenceBookingsByStudent] = useState<
-    Record<string, boolean>
-  >({});
+  const [conferenceBookingsByStudent, setConferenceBookingsByStudent] =
+    useState<Record<string, ConferenceBookingRecord>>({});
+  const [conferenceStudents, setConferenceStudents] = useState<
+    ConferenceStudentContext[]
+  >([]);
+  const [conferenceTeachers, setConferenceTeachers] = useState<
+    ConferenceTeacherDisplay[]
+  >([]);
+  const [conferenceTakenSlotKeys, setConferenceTakenSlotKeys] = useState<
+    string[]
+  >([]);
+  const [conferenceContextLoading, setConferenceContextLoading] =
+    useState(false);
+  const [conferenceContextError, setConferenceContextError] = useState<
+    string | null
+  >(null);
+
+  const applyConferenceBookingsFromRows = useCallback(
+    (
+      rows: Array<{
+        student_id: string;
+        teacher_id: string;
+        conference_date: string;
+        time_slot: string;
+        format: string;
+        accommodation_note: string | null;
+      }> | null,
+    ) => {
+      const map: Record<string, ConferenceBookingRecord> = {};
+      for (const row of rows ?? []) {
+        map[row.student_id] = {
+          teacherId: row.teacher_id,
+          conferenceDate: row.conference_date,
+          timeSlot: row.time_slot,
+          format: row.format as "in_person" | "virtual",
+          accommodationNote: row.accommodation_note ?? null,
+        };
+      }
+      setConferenceBookingsByStudent(map);
+    },
+    [],
+  );
+
+  const loadConferenceBookingsFromSupabase = useCallback(async () => {
+    if (!effectiveParentId) return;
+    const { data } = await supabase
+      .schema("teachers")
+      .from("parent_teacher_conference_bookings")
+      .select(
+        "student_id, teacher_id, conference_date, time_slot, format, accommodation_note",
+      )
+      .eq("parent_id", effectiveParentId);
+    applyConferenceBookingsFromRows(data);
+  }, [effectiveParentId, applyConferenceBookingsFromRows]);
+
+  const loadConferenceContext = useCallback(async (): Promise<boolean> => {
+    if (!effectiveParentId) return false;
+    setConferenceContextLoading(true);
+    setConferenceContextError(null);
+    try {
+      const ctx = await fetchConferenceContext(effectiveParentId);
+      setConferenceTeachers(ctx.conferenceTeachers);
+      setConferenceStudents(ctx.conferenceStudents);
+      setConferenceBookingsByStudent(ctx.bookingsByStudent);
+      setConferenceTakenSlotKeys(ctx.takenSlotKeys);
+      return true;
+    } catch (err) {
+      console.warn("[home] conference context load failed:", err);
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to load conference data";
+      setConferenceContextError(message);
+      await loadConferenceBookingsFromSupabase();
+      return false;
+    } finally {
+      setConferenceContextLoading(false);
+    }
+  }, [effectiveParentId, loadConferenceBookingsFromSupabase]);
+
+  const openPtcSheet = useCallback(() => {
+    ptcSheetRef.current?.present();
+    if (
+      conferenceTeachers.length === 0 ||
+      conferenceStudents.length === 0
+    ) {
+      void loadConferenceContext();
+    }
+  }, [
+    conferenceTeachers.length,
+    conferenceStudents.length,
+    loadConferenceContext,
+  ]);
 
   const profileSheetRef = useRef<BottomSheetModal>(null);
   const eventSheetRef = useRef<BottomSheetModal>(null);
   const checklistSheetRef = useRef<BottomSheetModal>(null);
   const notifSheetRef = useRef<BottomSheetModal>(null);
-  const summerInfoSheetRef = useRef<BottomSheetModal>(null);
+  const ptcSheetRef = useRef<BottomSheetModal>(null);
   const tuitionSheetRef = useRef<BottomSheetModal>(null);
   const [tuitionSecretCode, setTuitionSecretCode] = useState("");
   const [introVisible, setIntroVisible] = useState(false);
@@ -2188,13 +2286,12 @@ export default function HomeScreen() {
           for (const [sid, dates] of Object.entries(paidDatesMap)) {
             paidSets[sid] = new Set(dates);
           }
-          const [activitiesResult, activityPrefsResult, defaultPrefsResult, teachersResult, conferenceBookingsResult] =
+          const [activitiesResult, activityPrefsResult, defaultPrefsResult, teachersResult] =
             await Promise.all([
               supabase.schema("teachers").from("activities").select("id, activity_date").eq("status", "published").eq("visibility", "public").eq("is_deleted", false),
               supabase.schema("parent_app").from("activity_preferences").select("student_id, activity_id").eq("parent_id", effectiveParentId),
               supabase.schema("parent_app").from("student_default_preferences").select("student_id").eq("parent_id", effectiveParentId),
               supabase.schema("admin").from("users").select("id, full_name, profile_image_url").in("role", ["teacher", "super_admin"]).order("full_name", { ascending: true }),
-              supabase.schema("teachers").from("parent_teacher_conference_bookings").select("student_id").eq("parent_id", effectiveParentId),
             ]);
 
           const SHOWN_TEACHERS = new Set(["Sabrina Obnamia", "Zelinda Melo"]);
@@ -2202,7 +2299,8 @@ export default function HomeScreen() {
           setTeachersLoading(false);
 
           applyActivityBanner(activitiesResult, activityPrefsResult, defaultPrefsResult, studentsForActivity, paidSets);
-          applyConferenceBookings(conferenceBookingsResult);
+          void loadConferenceBookingsFromSupabase();
+          void loadConferenceContext();
 
         } else {
           // ── Fallback: original individual queries (unchanged logic) ──────
@@ -2242,7 +2340,6 @@ export default function HomeScreen() {
             activityPrefsResult,
             defaultPrefsResult,
             teachersResult,
-            conferenceBookingsResult,
           ] = await Promise.all([
             supabase
               .schema("calendar")
@@ -2316,11 +2413,6 @@ export default function HomeScreen() {
               .select("id, full_name, profile_image_url")
               .in("role", ["teacher", "super_admin"])
               .order("full_name", { ascending: true }),
-            supabase
-              .schema("teachers")
-              .from("parent_teacher_conference_bookings")
-              .select("student_id")
-              .eq("parent_id", effectiveParentId),
           ]);
 
           if (eventsResult.data) setUpcomingEvents(eventsResult.data);
@@ -2365,7 +2457,8 @@ export default function HomeScreen() {
           }
 
           applyActivityBanner(activitiesResult, activityPrefsResult, defaultPrefsResult, studentsForActivity, paidSets);
-          applyConferenceBookings(conferenceBookingsResult);
+          void loadConferenceBookingsFromSupabase();
+          void loadConferenceContext();
         }
 
         // ─── DM + channels (parallel, always runs after core) ────────────────
@@ -2503,16 +2596,6 @@ export default function HomeScreen() {
       setPaidSupplyFeeByStudent(supplyFeeMap);
     }
 
-    function applyConferenceBookings(
-      result: { data: { student_id: string }[] | null },
-    ) {
-      const map: Record<string, boolean> = {};
-      for (const row of result.data ?? []) {
-        map[row.student_id] = true;
-      }
-      setConferenceBookingsByStudent(map);
-    }
-
     function applyActivityBanner(
       activitiesResult: { data: { id: string; activity_date: string | null }[] | null },
       activityPrefsResult: { data: { student_id: string; activity_id: string }[] | null },
@@ -2543,7 +2626,12 @@ export default function HomeScreen() {
     }
 
     loadUser();
-  }, [effectiveParentId, userId]);
+  }, [
+    effectiveParentId,
+    userId,
+    loadConferenceBookingsFromSupabase,
+    loadConferenceContext,
+  ]);
 
   useEffect(() => {
     if (communityMsgs.length <= 1) return;
@@ -2819,16 +2907,31 @@ export default function HomeScreen() {
     schoolYearTuitionStudentIds,
     paidSchoolYearByStudent,
   );
-  const showActionPtc = needsConferenceScheduling(
-    students.map((s) => s.id),
-    conferenceBookingsByStudent,
-  );
+  const ptcStudentsForBanner = useMemo((): ConferenceStudentContext[] => {
+    if (conferenceStudents.length > 0) return conferenceStudents;
+    return students.map((s) => ({
+      studentId: s.id,
+      name: s.child_legal_name.trim().split(/\s+/)[0] ?? s.child_legal_name,
+      assignedTeacherId: null,
+    }));
+  }, [conferenceStudents, students]);
+
+  const showActionPtc =
+    ptcStudentsForBanner.length > 0 &&
+    needsConferenceScheduling(
+      ptcStudentsForBanner.map((s) => s.studentId),
+      conferenceBookingsByStudent,
+    );
   const showActionActivity = hasActivityForPaidDay;
   const showActionNeededCard =
     showActionTuition || showActionPtc || showActionActivity;
   const tuitionActionSubtext = getTuitionActionSubtext(
     schoolYearTuitionStudentIds,
     paidSupplyFeeByStudent,
+  );
+  const ptcActionSubtext = getPtcBannerSubtext(
+    ptcStudentsForBanner,
+    conferenceBookingsByStudent,
   );
 
   return (
@@ -2982,15 +3085,7 @@ export default function HomeScreen() {
 
                     {showActionPtc && (
                       <Pressable
-                        onPress={() =>
-                          openBrowserAsync(
-                            "https://www.sagefield.co/parent/home",
-                            {
-                              presentationStyle:
-                                WebBrowserPresentationStyle.AUTOMATIC,
-                            },
-                          )
-                        }
+                        onPress={openPtcSheet}
                         style={({ pressed }) => [
                           actPrefStyles.row,
                           actPrefStyles.rowPtc,
@@ -3013,7 +3108,7 @@ export default function HomeScreen() {
                               actPrefStyles.rowSubPtc,
                             ]}
                           >
-                            Schedule on sagefield.co · Tap to book
+                            {ptcActionSubtext}
                           </Text>
                         </View>
                         <Ionicons
@@ -3077,35 +3172,6 @@ export default function HomeScreen() {
                   </View>
                 </View>
               )}
-
-              {/* Summer Info Banner */}
-              <Pressable
-                onPress={() => summerInfoSheetRef.current?.present()}
-                style={({ pressed }) => [
-                  styles.summerBanner,
-                  pressed && { opacity: 0.85 },
-                ]}
-              >
-                <LinearGradient
-                  colors={["#FFF3C4", "#FFE0A0"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.summerBannerGradient}
-                >
-                  <View style={styles.summerBannerLeft}>
-                    <Text style={styles.summerBannerEmoji}>☀️</Text>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.summerBannerTitle}>
-                        Summer 2026 — Important Info
-                      </Text>
-                      <Text style={styles.summerBannerSub}>
-                        Packing checklist & tuition deadlines
-                      </Text>
-                    </View>
-                  </View>
-                  <Ionicons name="chevron-forward" size={16} color="#92400e" />
-                </LinearGradient>
-              </Pressable>
 
               <View style={styles.childrenSection}>
                 <View style={styles.tuitionSectionHeader}>
@@ -4343,88 +4409,27 @@ export default function HomeScreen() {
           </BottomSheetScrollView>
         </BottomSheetModal>
 
-        {/* Summer Info Sheet */}
-        <BottomSheetModal
-          ref={summerInfoSheetRef}
-          snapPoints={["70%", "95%"]}
-          enablePanDownToClose
-          backdropComponent={(props) => (
-            <BottomSheetBackdrop
-              {...props}
-              disappearsOnIndex={-1}
-              appearsOnIndex={0}
-              pressBehavior="close"
-            />
-          )}
-        >
-          <BottomSheetScrollView
-            contentContainerStyle={styles.summerSheetContent}
-          >
-            <Text style={styles.summerSheetTitle}>☀️ Summer 2026</Text>
-
-            {/* Pack list */}
-            <Text style={styles.summerSheetSectionLabel}>What to Send</Text>
-            <View style={styles.summerChipGrid}>
-              {[
-                { emoji: "🍱", label: "Snack & lunch" },
-                { emoji: "💧", label: "Water bottle" },
-                { emoji: "👕", label: "Change of clothes" },
-                { emoji: "👟", label: "Closed-toe shoes" },
-                { emoji: "🩴", label: "Open-toe shoes" },
-                { emoji: "☀️", label: "Sunscreen" },
-                { emoji: "🏊", label: "Swimsuit" },
-                { emoji: "🏖️", label: "Towel" },
-                { emoji: "🥾", label: "Boots" },
-              ].map(({ emoji, label }) => (
-                <View key={label} style={styles.summerChip}>
-                  <Text>{emoji}</Text>
-                  <Text style={styles.summerChipText}>{label}</Text>
-                </View>
-              ))}
-            </View>
-            <Text style={styles.summerShoeNote}>
-              Shoes may be left at Sage Field — pick up on your last day.
-            </Text>
-
-            {/* Tuition deadlines */}
-            <Text style={[styles.summerSheetSectionLabel, { marginTop: 28 }]}>
-              💳 Tuition Deadlines
-            </Text>
-            <Text style={styles.summerDeadlineIntro}>
-              Due by the Friday before each week starts.
-            </Text>
-            {[
-              { week: "Week 1  ·  May 26", due: "Due May 22" },
-              { week: "Week 2  ·  June 1", due: "Due May 29" },
-            ].map(({ week, due }) => (
-              <View key={week} style={styles.summerDeadlineCard}>
-                <Text style={styles.summerDeadlineWeek}>{week}</Text>
-                <Text style={styles.summerDeadlineDate}>{due}</Text>
-              </View>
-            ))}
-            <View style={styles.summerLateFeeBlock}>
-              <Text style={{ fontSize: 16 }}>⚠️</Text>
-              <Text style={styles.summerLateFeeText}>
-                $30 late fee if not received by Friday at 11:59 PM
-              </Text>
-            </View>
-
-            <Pressable
-              style={({ pressed }) => [
-                styles.summerSheetBtn,
-                pressed && { opacity: 0.85 },
-              ]}
-              onPress={() => {
-                summerInfoSheetRef.current?.dismiss();
-                router.push("/(tabs)/tuition" as any);
-              }}
-            >
-              <Text style={styles.summerSheetBtnText}>
-                View Tuition & Billing
-              </Text>
-            </Pressable>
-          </BottomSheetScrollView>
-        </BottomSheetModal>
+        {students.length > 0 && effectiveParentId && (
+          <ParentTeacherConferenceSheet
+            ref={ptcSheetRef}
+            parentId={effectiveParentId}
+            conferenceTeachers={conferenceTeachers}
+            conferenceStudents={
+              conferenceStudents.length > 0
+                ? conferenceStudents
+                : ptcStudentsForBanner
+            }
+            initialBookingsByStudent={conferenceBookingsByStudent}
+            initialTakenSlotKeys={conferenceTakenSlotKeys}
+            contextLoading={conferenceContextLoading}
+            contextError={conferenceContextError}
+            onRetryLoad={() => void loadConferenceContext()}
+            onBookingsChange={(bookings, takenKeys) => {
+              setConferenceBookingsByStudent(bookings);
+              setConferenceTakenSlotKeys(takenKeys);
+            }}
+          />
+        )}
       </SafeAreaView>
 
       {/* Intro slideshow */}
@@ -5738,19 +5743,6 @@ const styles = StyleSheet.create({
     lineHeight: 17,
   },
 
-  // Summer info banner
-  summerBanner: {
-    marginHorizontal: 24,
-    marginBottom: 16,
-  },
-  summerBannerGradient: {
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
   summerBannerLeft: {
     flex: 1,
     flexDirection: "row",
@@ -5759,17 +5751,6 @@ const styles = StyleSheet.create({
   },
   summerBannerEmoji: {
     fontSize: 28,
-  },
-  summerBannerTitle: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 14,
-    color: "#78350f",
-  },
-  summerBannerSub: {
-    fontFamily: FontFamilies.body,
-    fontSize: 12,
-    color: "#92400e",
-    marginTop: 2,
   },
 
   tuitionBanner: {
@@ -5872,109 +5853,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // Summer info sheet
-  summerSheetContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 48,
-    paddingTop: 24,
-  },
-  summerSheetTitle: {
-    fontFamily: FontFamilies.heading,
-    fontSize: 20,
-    color: "#111827",
-    marginBottom: 14,
-  },
-  summerSheetSectionLabel: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 14,
-    color: "#374151",
-    marginBottom: 10,
-  },
-  summerChipGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-    marginTop: 4,
-  },
-  summerChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    backgroundColor: "#F3F4F6",
-    borderRadius: 9999,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-  },
-  summerChipText: {
-    fontFamily: FontFamilies.body,
-    fontSize: 13,
-    color: "#374151",
-  },
-  summerShoeNote: {
-    fontFamily: FontFamilies.body,
-    fontSize: 12,
-    color: "#9CA3AF",
-    marginTop: 14,
-    fontStyle: "italic",
-  },
-  summerDeadlineIntro: {
-    fontFamily: FontFamilies.body,
-    fontSize: 13,
-    color: "#6B7280",
-    marginBottom: 12,
-  },
-  summerDeadlineCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#F9FAFB",
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    marginBottom: 8,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#E5E7EB",
-  },
-  summerDeadlineWeek: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 13,
-    color: "#374151",
-  },
-  summerDeadlineDate: {
-    fontFamily: FontFamilies.body,
-    fontSize: 12,
-    color: "#6B7280",
-  },
-  summerLateFeeBlock: {
-    backgroundColor: "#FEF3C7",
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginTop: 10,
-    marginBottom: 8,
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 8,
-  },
-  summerLateFeeText: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 13,
-    color: "#92400e",
-    flex: 1,
-    lineHeight: 19,
-  },
-  summerSheetBtn: {
-    marginTop: 20,
-    backgroundColor: Brand.sage700,
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  summerSheetBtnText: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 15,
-    color: "#ffffff",
-  },
   tuitionSheetContainer: { flex: 1, paddingHorizontal: 20, paddingTop: 8, paddingBottom: 24 },
   tuitionSheetTitle: { fontFamily: FontFamilies.heading, fontSize: 16, color: "#1f2937", marginBottom: 10 },
   tuitionSheetBody: { fontFamily: FontFamilies.body, fontSize: 13, color: "#6b7280", lineHeight: 20, marginBottom: 10 },

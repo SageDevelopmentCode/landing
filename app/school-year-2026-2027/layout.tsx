@@ -62,7 +62,7 @@ export default function SchoolYearLayout({
       "@type": "CourseInstance",
       courseMode: "Onsite",
       startDate: "2026-08-17",
-      endDate: "2027-05-31",
+      endDate: "2027-05-27",
       location: {
         "@type": "Place",
         name: "Sage Field Private School",

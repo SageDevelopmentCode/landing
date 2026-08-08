@@ -84,7 +84,6 @@ export const SCHOOL_YEAR_AFTERCARE_MONTHS = [
       { label: "Tue Oct 6", date: "2026-10-06" },
       { label: "Wed Oct 7", date: "2026-10-07" },
       { label: "Thu Oct 8", date: "2026-10-08" },
-      { label: "Mon Oct 12", date: "2026-10-12" },
       { label: "Tue Oct 13", date: "2026-10-13" },
       { label: "Wed Oct 14", date: "2026-10-14" },
       { label: "Thu Oct 15", date: "2026-10-15" },
@@ -247,7 +246,6 @@ export const SCHOOL_YEAR_AFTERCARE_MONTHS = [
       { label: "Tue May 25", date: "2027-05-25" },
       { label: "Wed May 26", date: "2027-05-26" },
       { label: "Thu May 27", date: "2027-05-27" },
-      { label: "Mon May 31", date: "2027-05-31" },
     ],
   },
 ];
@@ -297,7 +295,6 @@ export const SCHOOL_YEAR_FUN_FRIDAY_MONTHS = [
     fridays: [
       { label: "Fri Dec 4", date: "2026-12-04" },
       { label: "Fri Dec 11", date: "2026-12-11" },
-      { label: "Fri Dec 18", date: "2026-12-18" },
     ],
   },
   {
@@ -326,7 +323,6 @@ export const SCHOOL_YEAR_FUN_FRIDAY_MONTHS = [
     fridays: [
       { label: "Fri Mar 5", date: "2027-03-05" },
       { label: "Fri Mar 12", date: "2027-03-12" },
-      { label: "Fri Mar 26", date: "2027-03-26" },
     ],
   },
   {
@@ -347,7 +343,6 @@ export const SCHOOL_YEAR_FUN_FRIDAY_MONTHS = [
       { label: "Fri May 7", date: "2027-05-07" },
       { label: "Fri May 14", date: "2027-05-14" },
       { label: "Fri May 21", date: "2027-05-21" },
-      { label: "Fri May 28", date: "2027-05-28" },
     ],
   },
 ];
