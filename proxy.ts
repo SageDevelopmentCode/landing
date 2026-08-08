@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { updateSession } from '@/app/lib/supabase-middleware'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { user, supabaseResponse } = await updateSession(request)
 
   // Protected admin routes
@@ -33,6 +33,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/apply/:path*', '/teacher/:path*'],
-  runtime: 'nodejs',
+  matcher: ['/admin/:path*', '/apply/:path*', '/teacher/:path*']
 }
