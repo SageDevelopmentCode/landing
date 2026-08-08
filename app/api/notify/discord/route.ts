@@ -16,6 +16,7 @@ import {
   createActivityPreferencesSavedEmbed,
   createDefaultPreferenceSetEmbed,
   createTestimonialEmbed,
+  createParentMessageEmbed,
 } from "@/app/lib/discord";
 
 export async function POST(request: NextRequest) {
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     const notifyKey = request.headers.get("x-notify-key");
     if (notifyKey && notifyKey === process.env.DISCORD_NOTIFY_KEY) {
-      const ANON_ALLOWED = ["login_otp_sent", "android_download_request"];
+      const ANON_ALLOWED = ["login_otp_sent", "android_download_request", "parent_message"];
       const { type, data } = await request.json();
       if (!ANON_ALLOWED.includes(type)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -54,6 +55,47 @@ export async function POST(request: NextRequest) {
             timestamp: new Date().toISOString(),
           },
           process.env.DISCORD_MOBILE_WEBHOOK_URL,
+        );
+        return NextResponse.json({ success: true });
+      }
+
+      if (type === "parent_message") {
+        const {
+          parentName,
+          parentEmail,
+          body,
+          messageType,
+          channelName,
+          hasImage,
+          hasFile,
+        } = data ?? {};
+        if (!parentName || !parentEmail || !messageType) {
+          return NextResponse.json(
+            {
+              error:
+                "parent_message requires parentName, parentEmail, and messageType",
+            },
+            { status: 400 },
+          );
+        }
+        if (messageType !== "dm" && messageType !== "channel") {
+          return NextResponse.json(
+            { error: "parent_message messageType must be dm or channel" },
+            { status: 400 },
+          );
+        }
+        const embed = createParentMessageEmbed({
+          parentName,
+          parentEmail,
+          body: typeof body === "string" ? body : "",
+          messageType,
+          channelName: channelName ?? null,
+          hasImage: Boolean(hasImage),
+          hasFile: Boolean(hasFile),
+        });
+        await sendDiscordNotification(
+          embed,
+          process.env.DISCORD_MESSAGES_WEBHOOK_URL,
         );
         return NextResponse.json({ success: true });
       }
