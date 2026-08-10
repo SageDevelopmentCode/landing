@@ -28,6 +28,15 @@ export async function signInWithEmail(formData: FormData) {
     .single()
 
   if (adminUser?.role === 'parent') {
+    const adminClient = createAdminClient()
+    const { data: grant } = await adminClient
+      .schema('parent_app')
+      .from('dashboard_access_grants')
+      .select('id')
+      .eq('grantee_id', authData.user.id)
+      .eq('status', 'active')
+      .maybeSingle()
+    if (grant) return { redirectTo: '/parent/home' }
     return { redirectTo: '/apply/dashboard' }
   }
 

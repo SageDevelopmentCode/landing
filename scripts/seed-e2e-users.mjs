@@ -31,8 +31,11 @@ const CONFERENCE_TEACHERS_SEED = [
 ]
 
 const E2E_ENROLLED_STUDENT_ID = '22222222-2222-4222-8222-222222222001'
+const E2E_GRANT_CHILD_ID = '22222222-2222-4222-8222-222222222002'
 const E2E_CONFERENCE_TEACHER_ID = 'bd562de1-18c2-4b47-91d7-5f0b93fee107'
 const E2E_TEACHER_STUDENT_ID = '44444444-4444-4444-8444-444444444001'
+const E2E_GRANT_TEACHER_STUDENT_ID = '44444444-4444-4444-8444-444444444002'
+const E2E_DASHBOARD_GRANT_ID = '55555555-5555-4555-8555-555555555001'
 
 const USERS = [
   {
@@ -54,14 +57,24 @@ const USERS = [
     email: 'parent-enrolled@e2e.sagefield.test',
     role: 'parent',
     full_name: 'E2E Parent Enrolled',
-    student: {
-      id: '22222222-2222-4222-8222-222222222001',
-      child_legal_name: 'E2E Test Child',
-      dob_month: '06',
-      dob_day: '15',
-      dob_year: '2018',
-      child_grade: '1',
-    },
+    students: [
+      {
+        id: E2E_ENROLLED_STUDENT_ID,
+        child_legal_name: 'E2E Test Child',
+        dob_month: '06',
+        dob_day: '15',
+        dob_year: '2018',
+        child_grade: '1',
+      },
+      {
+        id: E2E_GRANT_CHILD_ID,
+        child_legal_name: 'Grant E2E Child',
+        dob_month: '07',
+        dob_day: '20',
+        dob_year: '2017',
+        child_grade: '2',
+      },
+    ],
     applications: [
       {
         id: '33333333-3333-4333-8333-333333333002',
@@ -69,9 +82,14 @@ const USERS = [
         program: 'summer_26',
         child_legal_name: 'E2E Test Child',
         approved: true,
-        student_id: '22222222-2222-4222-8222-222222222001',
+        student_id: E2E_ENROLLED_STUDENT_ID,
       },
     ],
+  },
+  {
+    email: 'parent-grantee@e2e.sagefield.test',
+    role: 'parent',
+    full_name: 'E2E Parent Grantee',
   },
   {
     email: 'teacher@e2e.sagefield.test',
@@ -220,7 +238,15 @@ async function seedUser(user) {
     throw new Error(`admin.users upsert failed for ${user.email}: ${adminError.message}`)
   }
 
-  if (user.student) {
+  if (user.students?.length) {
+    for (const student of user.students) {
+      const { error } = await db
+        .schema('admin')
+        .from('students')
+        .upsert({ ...student, parent_id: userId })
+      if (error) throw new Error(`student seed failed: ${error.message}`)
+    }
+  } else if (user.student) {
     const { error } = await db
       .schema('admin')
       .from('students')
@@ -255,32 +281,61 @@ async function seedConferenceTeachers() {
   }
 }
 
+async function seedDashboardGrant(ownerId, granteeId, granteeEmail) {
+  const { error } = await db.schema('parent_app').from('dashboard_access_grants').upsert({
+    id: E2E_DASHBOARD_GRANT_ID,
+    owner_id: ownerId,
+    grantee_id: granteeId,
+    invited_email: granteeEmail,
+    status: 'active',
+    accepted_at: new Date().toISOString(),
+  })
+  if (error) {
+    throw new Error(`dashboard_access_grants seed failed: ${error.message}`)
+  }
+}
+
 async function seedConferenceTeacherAssignment() {
   const { error: clearError } = await db
     .schema('teachers')
     .from('parent_teacher_conference_bookings')
     .delete()
-    .eq('student_id', E2E_ENROLLED_STUDENT_ID)
+    .in('student_id', [E2E_ENROLLED_STUDENT_ID, E2E_GRANT_CHILD_ID])
   if (clearError) {
     throw new Error(`conference booking clear failed: ${clearError.message}`)
   }
 
-  const { error } = await db.schema('teachers').from('teacher_students').upsert({
-    id: E2E_TEACHER_STUDENT_ID,
-    teacher_id: E2E_CONFERENCE_TEACHER_ID,
-    student_id: E2E_ENROLLED_STUDENT_ID,
-    program: 'school_year_26_27',
-    is_deleted: false,
-  })
+  const { error } = await db.schema('teachers').from('teacher_students').upsert([
+    {
+      id: E2E_TEACHER_STUDENT_ID,
+      teacher_id: E2E_CONFERENCE_TEACHER_ID,
+      student_id: E2E_ENROLLED_STUDENT_ID,
+      program: 'school_year_26_27',
+      is_deleted: false,
+    },
+    {
+      id: E2E_GRANT_TEACHER_STUDENT_ID,
+      teacher_id: E2E_CONFERENCE_TEACHER_ID,
+      student_id: E2E_GRANT_CHILD_ID,
+      program: 'school_year_26_27',
+      is_deleted: false,
+    },
+  ])
   if (error) {
     throw new Error(`teacher_students seed failed: ${error.message}`)
   }
 }
 
 async function main() {
+  const userIds = {}
   for (const user of USERS) {
-    await seedUser(user)
+    userIds[user.email] = await seedUser(user)
   }
+  await seedDashboardGrant(
+    userIds['parent-enrolled@e2e.sagefield.test'],
+    userIds['parent-grantee@e2e.sagefield.test'],
+    'parent-grantee@e2e.sagefield.test',
+  )
   await seedConferenceTeachers()
   await seedConferenceTeacherAssignment()
   console.log('E2E seed complete (local Supabase only)')

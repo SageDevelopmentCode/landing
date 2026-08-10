@@ -366,7 +366,7 @@ export default async function ParentHomePage() {
     await getConferenceTeacherAssignments(students);
 
   const { bookingsByStudentId, takenSlotKeys } = await getConferenceBookings(
-    user.id,
+    effectiveParentId,
   );
 
   return (
@@ -396,6 +396,7 @@ export default async function ParentHomePage() {
           fullName={fullName}
           email={user.email ?? ""}
           userId={user.id}
+          parentId={effectiveParentId}
           students={students}
           activeCheckIns={[]}
           upcomingEvents={upcomingEvents}

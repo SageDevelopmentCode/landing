@@ -7,13 +7,18 @@ export const E2E_APPLICATION_IDS = {
 
 export const E2E_STUDENT_IDS = {
   parentEnrolled: '22222222-2222-4222-8222-222222222001',
+  parentEnrolledGrantChild: '22222222-2222-4222-8222-222222222002',
 } as const
 
 /** Conference teacher used in PTC E2E seed (Zelinda — 1st–2nd grade) */
 export const E2E_CONFERENCE_TEACHER_ID =
   'bd562de1-18c2-4b47-91d7-5f0b93fee107' as const
 
+export const E2E_GRANT_CHILD_FIRST_NAME = 'Grant' as const
+
 export const E2E_PTC_SLOT = '1:50 – 2:20pm' as const
+/** Second Mon–Thu slot — must match MON_THU_SLOTS[1] in app/lib/parent-teacher-conference.ts */
+export const E2E_PTC_GRANTEE_SLOT = '2:30 – 3:00pm' as const
 
 export const TEST_USERS = {
   parentApply: {
@@ -24,6 +29,11 @@ export const TEST_USERS = {
   parentEnrolled: {
     email: 'parent-enrolled@e2e.sagefield.test',
     storageState: 'e2e/.auth/parent-enrolled.json',
+    expectedRedirect: '/parent/home',
+  },
+  parentGrantee: {
+    email: 'parent-grantee@e2e.sagefield.test',
+    storageState: 'e2e/.auth/parent-grantee.json',
     expectedRedirect: '/parent/home',
   },
   teacher: {

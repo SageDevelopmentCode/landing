@@ -302,6 +302,7 @@ export default async function ImpersonateHomePage({
           fullName={fullName}
           email={email}
           userId={parentId}
+          parentId={parentId}
           students={students}
           activeCheckIns={activeCheckIns}
           upcomingEvents={upcomingEvents}

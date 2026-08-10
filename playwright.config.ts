@@ -70,6 +70,16 @@ export default defineConfig({
       grep: /@parent-enrolled/,
     },
     {
+      name: 'parent-grantee',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: path.join(AUTH_DIR, 'parent-grantee.json'),
+      },
+      dependencies: ['setup'],
+      testMatch: /parent-teacher-conference\.spec\.ts/,
+      grep: /@parent-grantee/,
+    },
+    {
       name: 'teacher',
       use: {
         ...devices['Desktop Chrome'],

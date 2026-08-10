@@ -2,6 +2,8 @@ import { test, expect } from '@playwright/test'
 import { assertNoPageErrors, trackPageErrors } from './helpers/page'
 import {
   E2E_PTC_SLOT,
+  E2E_PTC_GRANTEE_SLOT,
+  E2E_GRANT_CHILD_FIRST_NAME,
 } from './helpers/constants'
 
 /**
@@ -71,6 +73,51 @@ test.describe('Parent-teacher conference', () => {
 
     await expect(
       page.getByText(/Conference confirmed for E2E/i).first(),
+    ).toBeVisible({ timeout: CONTENT_TIMEOUT })
+
+    assertNoPageErrors(errors)
+  })
+})
+
+test.describe('Parent-teacher conference (grant access)', () => {
+  test('@parent-grantee grantee can book conference for owner child', async ({
+    page,
+  }) => {
+    const errors = trackPageErrors(page)
+    await page.goto('/parent/home')
+    expectAuthenticated(page)
+
+    await page
+      .getByRole('button', { name: /Schedule your parent-teacher conference/i })
+      .click()
+
+    await expect(
+      page.getByText('Parent-Teacher Conference', { exact: true }),
+    ).toBeVisible({ timeout: CONTENT_TIMEOUT })
+
+    await expect(
+      page.getByText(`Choose teacher for ${E2E_GRANT_CHILD_FIRST_NAME}`),
+    ).toBeVisible({ timeout: CONTENT_TIMEOUT })
+
+    await page
+      .getByRole('button', { name: E2E_GRANT_CHILD_FIRST_NAME, exact: true })
+      .click()
+    await page.getByRole('button', { name: /Zelinda Melo/i }).click()
+    await page.getByRole('button', { name: E2E_PTC_GRANTEE_SLOT, exact: true }).click()
+
+    const confirmBtn = page.getByRole('button', {
+      name: new RegExp(`Confirm conference for ${E2E_GRANT_CHILD_FIRST_NAME}`, 'i'),
+    })
+    await expect(confirmBtn).toBeEnabled({ timeout: CONTENT_TIMEOUT })
+    await confirmBtn.click()
+
+    await expect(page.getByText('Student not found')).not.toBeVisible()
+    await expect(
+      page
+        .getByText(
+          new RegExp(`Conference confirmed for ${E2E_GRANT_CHILD_FIRST_NAME}`, 'i'),
+        )
+        .first(),
     ).toBeVisible({ timeout: CONTENT_TIMEOUT })
 
     assertNoPageErrors(errors)

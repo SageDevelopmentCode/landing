@@ -75,7 +75,10 @@ npm run test:e2e
 - **Parent-teacher conference** (`e2e/parent-teacher-conference.spec.ts`):
   - **Parent home** — conference banner and drawer UI
   - **Parent booking** — enrolled parent books a Mon–Thu slot (local DB only)
+  - **Grant access** — grantee parent books for owner's child (uses owner `parentId`)
   - **Admin PTC Schedule** — `/admin/parent-teacher-conferences` loads and lists booked child after parent test
+
+**Production SQL:** After deploying PTC grant-access fixes, run `supabase/migrations/20260810170000_ptc_bookings_grants_and_grantee_rls.sql` in the Supabase SQL editor on production (do not use MCP `apply_migration` on hosted Sage Field).
 
 ## Schema updates
 

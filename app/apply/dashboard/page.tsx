@@ -25,6 +25,29 @@ export default async function ApplicationDashboard() {
   let shadowBooking: { shadow_date: string } | null = null;
   if (user) {
     const adminClient = createAdminClient();
+
+    const { data: grant } = await adminClient
+      .schema("parent_app")
+      .from("dashboard_access_grants")
+      .select("owner_id")
+      .eq("grantee_id", user.id)
+      .eq("status", "active")
+      .maybeSingle();
+
+    if (grant) {
+      const { data: ownerEnrolled } = await adminClient
+        .schema("parent_app")
+        .from("applications")
+        .select("id")
+        .eq("user_id", grant.owner_id)
+        .eq("status", "enrolled")
+        .limit(1);
+      if ((ownerEnrolled ?? []).length > 0) {
+        redirect("/parent/home");
+      }
+      redirect("/parent/dashboard");
+    }
+
     const [{ data }, { data: adminUser }, { data: booking }] =
       await Promise.all([
         adminClient

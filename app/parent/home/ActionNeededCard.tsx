@@ -24,7 +24,7 @@ import {
 } from "@/shared/action-needed";
 
 type Props = {
-  userId: string;
+  parentId: string;
   hasActivityForPaidDay: boolean;
   schoolYearOnlyApps: SchoolYearOnlyApp[];
   summerEnrollments: SummerEnrollment[];
@@ -37,7 +37,7 @@ type Props = {
 };
 
 export default function ActionNeededCard({
-  userId,
+  parentId,
   hasActivityForPaidDay,
   schoolYearOnlyApps,
   summerEnrollments,
@@ -158,7 +158,7 @@ export default function ActionNeededCard({
 
       {showPtc && (
         <ParentTeacherConferenceSection
-          parentId={userId}
+          parentId={parentId}
           conferenceTeachers={conferenceTeachers}
           conferenceStudents={conferenceStudents}
           initialBookingsByStudent={conferenceBookingsByStudent}
