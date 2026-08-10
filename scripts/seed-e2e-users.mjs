@@ -68,7 +68,7 @@ const USERS = [
       },
       {
         id: E2E_GRANT_CHILD_ID,
-        child_legal_name: 'E2E Grant Child',
+        child_legal_name: 'Grant E2E Child',
         dob_month: '07',
         dob_day: '20',
         dob_year: '2017',

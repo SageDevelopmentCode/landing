@@ -3,6 +3,7 @@ import { assertNoPageErrors, trackPageErrors } from './helpers/page'
 import {
   E2E_PTC_SLOT,
   E2E_PTC_GRANTEE_SLOT,
+  E2E_GRANT_CHILD_FIRST_NAME,
 } from './helpers/constants'
 
 /**
@@ -94,19 +95,29 @@ test.describe('Parent-teacher conference (grant access)', () => {
       page.getByText('Parent-Teacher Conference', { exact: true }),
     ).toBeVisible({ timeout: CONTENT_TIMEOUT })
 
-    await page.getByRole('button', { name: 'E2E Grant', exact: true }).click()
+    await expect(
+      page.getByText(`Choose teacher for ${E2E_GRANT_CHILD_FIRST_NAME}`),
+    ).toBeVisible({ timeout: CONTENT_TIMEOUT })
+
+    await page
+      .getByRole('button', { name: E2E_GRANT_CHILD_FIRST_NAME, exact: true })
+      .click()
     await page.getByRole('button', { name: /Zelinda Melo/i }).click()
     await page.getByRole('button', { name: E2E_PTC_GRANTEE_SLOT, exact: true }).click()
 
     const confirmBtn = page.getByRole('button', {
-      name: /Confirm conference for E2E/i,
+      name: new RegExp(`Confirm conference for ${E2E_GRANT_CHILD_FIRST_NAME}`, 'i'),
     })
     await expect(confirmBtn).toBeEnabled({ timeout: CONTENT_TIMEOUT })
     await confirmBtn.click()
 
     await expect(page.getByText('Student not found')).not.toBeVisible()
     await expect(
-      page.getByText(/Conference confirmed for E2E/i).first(),
+      page
+        .getByText(
+          new RegExp(`Conference confirmed for ${E2E_GRANT_CHILD_FIRST_NAME}`, 'i'),
+        )
+        .first(),
     ).toBeVisible({ timeout: CONTENT_TIMEOUT })
 
     assertNoPageErrors(errors)
