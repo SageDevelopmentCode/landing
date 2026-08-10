@@ -94,6 +94,7 @@ test.describe('Parent-teacher conference (grant access)', () => {
       page.getByText('Parent-Teacher Conference', { exact: true }),
     ).toBeVisible({ timeout: CONTENT_TIMEOUT })
 
+    await page.getByRole('button', { name: 'E2E Grant', exact: true }).click()
     await page.getByRole('button', { name: /Zelinda Melo/i }).click()
     await page.getByRole('button', { name: E2E_PTC_GRANTEE_SLOT, exact: true }).click()
 
