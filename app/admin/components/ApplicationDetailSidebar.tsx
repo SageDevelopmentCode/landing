@@ -41,6 +41,7 @@ import { sendSummerWeekFiveNewsletterEmail } from '../../actions/sendSummerWeekF
 import { sendSummerWeekSixNewsletterEmail } from '../../actions/sendSummerWeekSixNewsletterEmail'
 import { sendSummerWeekSevenNewsletterEmail } from '../../actions/sendSummerWeekSevenNewsletterEmail'
 import { sendSummerWeekEightNewsletterEmail } from '../../actions/sendSummerWeekEightNewsletterEmail'
+import { sendSummerWeekElevenNewsletterEmail } from '../../actions/sendSummerWeekElevenNewsletterEmail'
 import { sendSchoolYearCommitmentEmail } from '../../actions/sendSchoolYearCommitmentEmail'
 import { sendFreeFridayAnnouncementEmail } from '../../actions/sendFreeFridayAnnouncementEmail'
 import { sendGoogleReviewIncentiveEmail } from '../../actions/sendGoogleReviewIncentiveEmail'
@@ -265,6 +266,9 @@ export function ApplicationDetailSidebar({
   const [weekEightNewsletterSending, setWeekEightNewsletterSending] = useState(false)
   const [weekEightNewsletterSent, setWeekEightNewsletterSent] = useState(false)
   const [weekEightNewsletterError, setWeekEightNewsletterError] = useState<string | null>(null)
+  const [weekElevenNewsletterSending, setWeekElevenNewsletterSending] = useState(false)
+  const [weekElevenNewsletterSent, setWeekElevenNewsletterSent] = useState(false)
+  const [weekElevenNewsletterError, setWeekElevenNewsletterError] = useState<string | null>(null)
   const [freeFridaySending, setFreeFridaySending] = useState(false)
   const [freeFridaySent, setFreeFridaySent] = useState(false)
   const [freeFridayError, setFreeFridayError] = useState<string | null>(null)
@@ -1272,6 +1276,25 @@ export function ApplicationDetailSidebar({
     }
   }
 
+  const handleSendWeekElevenNewsletter = async () => {
+    if (weekElevenNewsletterSending || !application.g1_email) return
+    setWeekElevenNewsletterSending(true)
+    setWeekElevenNewsletterError(null)
+    const result = await sendSummerWeekElevenNewsletterEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+    })
+    setWeekElevenNewsletterSending(false)
+    if (result.success) {
+      setWeekElevenNewsletterSent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setWeekElevenNewsletterSent(false), 3000)
+    } else {
+      setWeekElevenNewsletterError(result.error ?? 'Failed to send')
+    }
+  }
+
   const handleSendOpenHouseEnrollment = async () => {
     if (openHouseSending || !application.g1_email) return
     setOpenHouseSending(true)
@@ -2081,6 +2104,17 @@ export function ApplicationDetailSidebar({
                     {weekEightNewsletterSending ? 'Sending…' : weekEightNewsletterSent ? '✓ Sent!' : 'Send Week Eight Newsletter'}
                   </button>
                   {weekEightNewsletterError && <span className="text-xs text-red-600">{weekEightNewsletterError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendWeekElevenNewsletter}
+                    disabled={weekElevenNewsletterSending || weekElevenNewsletterSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {weekElevenNewsletterSending ? 'Sending…' : weekElevenNewsletterSent ? '✓ Sent!' : 'Send Week Eleven Newsletter'}
+                  </button>
+                  {weekElevenNewsletterError && <span className="text-xs text-red-600">{weekElevenNewsletterError}</span>}
                 </div>
               </>}
 

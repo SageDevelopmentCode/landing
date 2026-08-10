@@ -401,6 +401,7 @@ interface Props {
   fullName: string | null;
   email: string;
   userId: string;
+  parentId: string;
   students: HomeStudent[];
   activeCheckIns: HomeCheckIn[];
   upcomingEvents: HomeEvent[];
@@ -431,6 +432,7 @@ interface Props {
 export default function HomePageClient({
   fullName,
   userId,
+  parentId,
   students,
   upcomingEvents,
   pendingPayments,
@@ -1013,7 +1015,7 @@ export default function HomePageClient({
         {/* Left column: Students + Drop-Off + Referral */}
         <div className="flex flex-col gap-8">
           <ActionNeededCard
-            userId={userId}
+            parentId={parentId}
             hasActivityForPaidDay={hasActivityForPaidDay}
             schoolYearOnlyApps={schoolYearOnlyApps}
             summerEnrollments={summerEnrollments}

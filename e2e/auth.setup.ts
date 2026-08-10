@@ -8,6 +8,7 @@ const authDir = path.join(__dirname, '.auth')
 const POST_LOGIN_URL: Record<keyof typeof TEST_USERS, RegExp> = {
   parentApply: /\/apply\/dashboard/,
   parentEnrolled: /\/parent\/(home|dashboard)/,
+  parentGrantee: /\/parent\/(home|dashboard)/,
   teacher: /\/teacher\/dashboard/,
   admin: /\/admin/,
 }

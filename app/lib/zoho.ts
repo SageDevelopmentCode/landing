@@ -4067,6 +4067,105 @@ export async function buildSummerWeekEightNewsletterEmail(opts: {
   return { subject, content };
 }
 
+export async function buildSummerWeekElevenNewsletterEmail(opts: {
+  g1FullName: string;
+  childLegalName: string;
+}): Promise<{ subject: string; content: string }> {
+  const firstName = opts.g1FullName.split(" ")[0];
+  const subject =
+    "Week Eleven Newsletter — August Tuition Due Tomorrow (Aug 10) 🌿";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+
+  <p style="margin-bottom: 24px;">Hi ${firstName}!</p>
+
+  <div style="background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px; font-size: 14px; color: #2c2c2c;">
+    <p style="margin: 0 0 8px 0; font-size: 15px; font-weight: bold; color: #b45309;">💳 Reminder: August Tuition Due Tomorrow</p>
+    <p style="margin: 0 0 12px 0;">August tuition is due <strong>tomorrow, August 10</strong> — one week before school starts on Monday, August 17. If you haven't already, please complete payment in your Parent Portal.</p>
+    <p style="margin: 0;"><a href="https://www.sagefield.co/parent/billing" style="color: #b45309; font-weight: bold;">View billing details →</a></p>
+  </div>
+
+  <p style="margin-bottom: 20px;">It was a week full of thoughtful writing, problem-solving, and meaningful opportunities to strengthen the skills our students use across all areas of learning.</p>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">🌿 What We've Been Up To</h2>
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px;">
+    <ul style="margin: 0; padding-left: 18px; line-height: 2.1; font-size: 14px; color: #2c2c2c;">
+      <li>✏️ <strong>Creative Writing (Lower &amp; Upper El)</strong> — sentence starters, persuasive writing, and informative writing to develop ideas and express themselves with greater detail and confidence</li>
+      <li>📝 <strong>ELA: Revising, Editing &amp; Grammar</strong> — students practiced looking back at their own writing, making thoughtful improvements, and strengthening their sentences</li>
+      <li>📊 <strong>Math: Data Analysis &amp; Graphing</strong> — collecting, organizing, representing, and interpreting data to make observations and draw conclusions</li>
+      <li>🥔 <strong>Cooking: Loaded Baked Potato Fries</strong> — washing, prepping, assembling, and preparing food; students loved taking an active role in creating their own delicious meal</li>
+    </ul>
+  </div>
+
+  <p style="margin-bottom: 20px; font-size: 14px; color: #444;">We've put together our eleventh newsletter — a closer look at the week through photos and classroom moments.</p>
+
+  <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 8px; padding: 20px 24px; margin: 28px 0; text-align: center;">
+    <p style="margin: 0 0 6px 0; font-size: 15px; font-weight: bold; color: #2C5F2E;">📰 Our Eleventh Newsletter is Live!</p>
+    <p style="margin: 0 0 18px 0; font-size: 13px; color: #555;">Photos, classroom moments, and a deeper look into our eleventh week.</p>
+    <a href="https://sagefield.co/newsletter/1d25a4aa-b7b9-4692-b330-6356bce63356" style="background: #2C5F2E; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-family: Georgia, serif; font-size: 15px; display: inline-block;">Read the Newsletter →</a>
+    <div style="margin-top: 14px;">
+      <span style="display: inline-block; background: #f7f4f0; border: 1px solid #a8c5a0; border-radius: 999px; padding: 5px 14px; font-size: 12px; color: #555;">🔑 Password: <strong>weekeleven</strong></span>
+    </div>
+  </div>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">📣 Upcoming Announcements</h2>
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px;">
+    <ul style="margin: 0; padding-left: 18px; line-height: 2.1; font-size: 14px; color: #2c2c2c;">
+      <li>🏫 <strong>School starts Monday, August 17</strong> — we can't wait to welcome everyone back for an exciting new year of learning, exploration, and adventure at Sage Field!</li>
+      <li>💳 <strong>August tuition due tomorrow, August 10</strong> — one week before the first day of school. All billing details can be found in your Parent Portal: <a href="https://www.sagefield.co/parent/billing" style="color: #2C5F2E;">sagefield.co/parent/billing</a></li>
+      <li>📅 <strong>Parent-Teacher Conferences</strong> — conference links are now live! Conferences are optional, but we encourage families to take advantage of this opportunity. You may choose in-person or virtual. To sign up, log into your Sage Field online portal at <a href="https://sagefield.co/parent/home" style="color: #2C5F2E;">sagefield.co/parent/home</a> or on the mobile app and select from the available time options.</li>
+      <li>🏷️ <strong>Label your children's items</strong> — due to the influx of lost and found items, please be sure to label your children's belongings. We do our best to keep items together or display them on the pick-up table, but labeling supports your children's independence as they pack up for themselves.</li>
+    </ul>
+  </div>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">🎒 What to Pack for the Summer!</h2>
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px;">
+    <ul style="margin: 0; padding-left: 18px; line-height: 2.1; font-size: 14px; color: #2c2c2c;">
+      <li>🍱 Snack + lunch</li>
+      <li>🩱 Swimsuit</li>
+      <li>🏖️ Towel</li>
+      <li>💧 Water bottle</li>
+      <li>👕 Change of clothes</li>
+      <li>👟 Closed-toe shoes</li>
+      <li>🩴 Open-toe shoes</li>
+      <li>☀️ Sunscreen</li>
+      <li>🥾 Boots</li>
+    </ul>
+    <p style="margin: 16px 0 0 0; font-size: 13px; color: #555;">Please send <strong>spray sunscreen</strong> and <strong>spray bug spray only</strong>, with the exception of sunscreen facial stick. Extra shoes may be left at Sage Field — pick them up on your last day.</p>
+  </div>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">🎁 Referral Program</h2>
+  <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px; font-size: 14px; color: #2c2c2c;">
+    <p style="margin: 0 0 12px 0;">We're excited to share our <strong>referral program</strong> — and we'd love your help spreading the word about Sage Field!</p>
+    <p style="margin: 0 0 12px 0;">When a family you refer <strong>enrolls in our upcoming school program and pays their registration fee</strong>, you'll receive a <strong>$500 gift card of your choice</strong>. 🎉</p>
+    <p style="margin: 0 0 16px 0;">Simply share your unique referral link — you can find it on your home dashboard. If sharing the link isn't convenient, you can also just let the family know to <strong>mention your name when they apply</strong> and it will still count toward your referral.</p>
+    <p style="margin: 0; color: #888; font-size: 13px;">⏳ This offer is available through the end of our summer program.</p>
+  </div>
+
+  <h2 style="font-size: 17px; color: #b45309; margin-top: 32px; margin-bottom: 14px;">🌟 Share Your Story</h2>
+  <div style="background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px; font-size: 14px; color: #2c2c2c;">
+    <p style="margin: 0 0 12px 0;">Has Sage Field made a difference for your family? We'd love to hear about it — and so would other families looking for the right fit for their child.</p>
+    <p style="margin: 0 0 12px 0;">As a thank-you for sharing your experience, we'll send you a <strong>$15 Starbucks gift card ☕</strong>. It only takes a few minutes and means the world to us.</p>
+    <div style="text-align: center; margin-top: 16px;">
+      <a href="https://sagefield.co/testimonial" style="background: #d97706; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-family: Georgia, serif; font-size: 15px; display: inline-block;">Share a Testimonial →</a>
+    </div>
+  </div>
+
+  <p style="margin-bottom: 8px; font-size: 14px; color: #555;">We are so thankful for each of your families and for the beautiful community we are building together. 🌱</p>
+
+  <p style="margin-top: 32px; margin-bottom: 4px;">Warmly,</p>
+  <p style="margin-top: 4px;"><strong>Sage Field School</strong></p>
+
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
 export async function buildMeetTheTeacherJoyEmail(opts: {
   parentName: string;
 }): Promise<{ subject: string; content: string }> {
