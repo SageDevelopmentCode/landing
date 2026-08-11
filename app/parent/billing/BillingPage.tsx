@@ -81,6 +81,7 @@ import {
   SUPPLY_FEE_CENTS,
   WEEKDAYS,
   formatCents,
+  formatHomeschoolSubline,
   getGradeTier,
   getWeekdaysForMonth,
   schoolYearAftercareMonthCents,
@@ -9847,25 +9848,7 @@ export default function BillingPage({
                 if (months.length > 0) return months.join(", ");
               }
               if (selectedTx!.payment_type === "homeschool_dropin") {
-                const days = meta.selected_days
-                  ? meta.selected_days
-                      .split(",")
-                      .filter(Boolean)
-                      .map((d) => d.charAt(0).toUpperCase() + d.slice(1))
-                  : [];
-                const wks = meta.selected_weeks
-                  ? meta.selected_weeks.split(",").filter(Boolean)
-                  : [];
-                if (days.length > 0 && wks.length > 0) {
-                  return `${days.length} day${days.length !== 1 ? "s" : ""} · ${days.join(", ")} · Wk ${wks.join(", ")}`;
-                }
-                if (days.length > 0) {
-                  return `${days.length} day${days.length !== 1 ? "s" : ""} · ${days.join(", ")}`;
-                }
-                if (wks.length > 0) {
-                  return `${wks.length} week${wks.length !== 1 ? "s" : ""}`;
-                }
-                return null;
+                return formatHomeschoolSubline(meta);
               }
               if (meta.selected_weeks) {
                 const wks = meta.selected_weeks.split(",").filter(Boolean);

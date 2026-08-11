@@ -9,6 +9,10 @@ import {
   FUN_FRIDAY_DROPIN_CENTS,
   FUN_FRIDAY_MONTHLY_CENTS,
   schoolYearFunFridayMonthCents,
+  SCHOOL_YEAR_MONTHS as SHARED_SCHOOL_YEAR_MONTHS,
+  HOMESCHOOL_TIERS,
+  getGradeTier as sharedGetGradeTier,
+  type HomeschoolTier,
 } from '@/shared/billing/school-year'
 import { cssColors as colors, radius, cssShadows as shadows } from '../design-system'
 import type { EnrolledStudentOption, ExistingPayments, StudentProgram } from './page'
@@ -149,18 +153,33 @@ const WEEKDAYS = [
   { key: 'thu', label: 'Thu' },
 ]
 
-const SCHOOL_YEAR_MONTHS = [
-  { index: 1, label: 'August 2026', short: 'Aug' },
-  { index: 2, label: 'September 2026', short: 'Sep' },
-  { index: 3, label: 'October 2026', short: 'Oct' },
-  { index: 4, label: 'November 2026', short: 'Nov' },
-  { index: 5, label: 'December 2026', short: 'Dec' },
-  { index: 6, label: 'January 2027', short: 'Jan' },
-  { index: 7, label: 'February 2027', short: 'Feb' },
-  { index: 8, label: 'March 2027', short: 'Mar' },
-  { index: 9, label: 'April 2027', short: 'Apr' },
-  { index: 10, label: 'May 2027', short: 'May' },
-]
+const SCHOOL_YEAR_MONTHS = SHARED_SCHOOL_YEAR_MONTHS
+
+type DropInProgramKey = 'summer_26' | 'school_year_26_27'
+
+function deriveHomeschoolTier(dayCount: number): HomeschoolTier {
+  if (dayCount <= 1) return 'dropin'
+  if (dayCount === 2) return '2day'
+  return '3day'
+}
+
+function weekdayKeysInSchoolYearMonth(monthIndex: number): string[] {
+  const monthOffsets: [number, number][] = [
+    [2026, 7], [2026, 8], [2026, 9], [2026, 10], [2026, 11],
+    [2027, 0], [2027, 1], [2027, 2], [2027, 3], [2027, 4],
+  ]
+  const [year, month] = monthOffsets[monthIndex - 1]
+  const seen = new Set<string>()
+  const date = new Date(year, month, 1)
+  while (date.getMonth() === month) {
+    const dow = date.getDay()
+    if (dow >= 1 && dow <= 4) {
+      seen.add(['', 'mon', 'tue', 'wed', 'thu'][dow])
+    }
+    date.setDate(date.getDate() + 1)
+  }
+  return WEEKDAYS.map((d) => d.key).filter((k) => seen.has(k))
+}
 
 const SUPPLY_FEE_CENTS = 30000
 const PRIMARY_TUITION_CENTS = 119500
@@ -169,12 +188,7 @@ const UPPER_TUITION_CENTS = 109500
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function getGradeTier(grade: string | null): 'primary' | 'upper' {
-  if (!grade) return 'upper'
-  const g = grade.toLowerCase().trim()
-  if (['pre-k', 'prek', 'pre k', 'kindergarten', 'k', '1st', '1', '1st grade'].includes(g)) {
-    return 'primary'
-  }
-  return 'upper'
+  return sharedGetGradeTier(grade)
 }
 
 function formatCents(cents: number): string {
@@ -668,6 +682,104 @@ function HomeschoolPicker({
   )
 }
 
+// ── School Year Homeschool Picker ─────────────────────────────────────────────
+
+function HomeschoolSchoolYearPicker({
+  paidMonthDays,
+  selectedMonthDays,
+  tier,
+  onToggleDay,
+  onTierChange,
+}: {
+  paidMonthDays: Record<number, string[]>
+  selectedMonthDays: Record<number, Set<string>>
+  tier: HomeschoolTier
+  onToggleDay: (monthIndex: number, day: string) => void
+  onTierChange: (tier: HomeschoolTier) => void
+}) {
+  return (
+    <div className="space-y-3">
+      <p className="text-xs mb-1" style={{ color: colors.textTertiary }}>
+        Select which days each month to mark as paid.
+      </p>
+      <div>
+        <label className="block text-xs font-semibold mb-1.5" style={{ color: colors.textSecondary }}>
+          Schedule tier
+        </label>
+        <div className="flex gap-2 flex-wrap">
+          {HOMESCHOOL_TIERS.map((t) => (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => onTierChange(t.key)}
+              className="px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
+              style={{
+                backgroundColor: tier === t.key ? colors.mistyForest : colors.elevated,
+                color: tier === t.key ? '#fff' : colors.textSecondary,
+                border: `1px solid ${tier === t.key ? colors.mistyForest : colors.border}`,
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      {SCHOOL_YEAR_MONTHS.map((month) => {
+        const paidDays = new Set(paidMonthDays[month.index] ?? [])
+        const selectedDays = selectedMonthDays[month.index] ?? new Set()
+        const availableKeys = weekdayKeysInSchoolYearMonth(month.index)
+        const allPaid = availableKeys.length > 0 && availableKeys.every((d) => paidDays.has(d))
+
+        return (
+          <div
+            key={month.index}
+            className="rounded-lg px-3 py-2.5"
+            style={{
+              border: `1px solid ${colors.border}`,
+              backgroundColor: allPaid ? colors.pastelSage : colors.elevated,
+            }}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-sm font-medium flex-1" style={{ color: colors.textPrimary }}>
+                {month.label}
+              </span>
+              {allPaid && <PaidChip />}
+            </div>
+            <div className="flex gap-2">
+              {WEEKDAYS.filter((d) => availableKeys.includes(d.key)).map((d) => {
+                const isPaidDay = paidDays.has(d.key)
+                const isSelected = selectedDays.has(d.key)
+                return (
+                  <button
+                    key={d.key}
+                    type="button"
+                    disabled={isPaidDay}
+                    onClick={() => onToggleDay(month.index, d.key)}
+                    className="flex-1 py-1.5 rounded-lg text-xs font-medium transition-all"
+                    style={{
+                      backgroundColor: isPaidDay
+                        ? colors.mistyForest
+                        : isSelected
+                        ? colors.accent
+                        : colors.surface,
+                      color: isPaidDay || isSelected ? '#fff' : colors.textTertiary,
+                      border: `1px solid ${isPaidDay ? colors.mistyForest : isSelected ? colors.accent : colors.border}`,
+                      cursor: isPaidDay ? 'not-allowed' : 'pointer',
+                      opacity: isPaidDay ? 0.7 : 1,
+                    }}
+                  >
+                    {d.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 // ── School Year Picker ────────────────────────────────────────────────────────
 
 function SchoolYearPicker({
@@ -865,6 +977,7 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
   const [showDropdown, setShowDropdown] = useState(false)
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
   const [activeProgram, setActiveProgram] = useState<PaymentTypeKey>('summer_tuition')
+  const [activeDropInProgram, setActiveDropInProgram] = useState<DropInProgramKey | null>(null)
 
   // Summer state
   const [selectedWeeks, setSelectedWeeks] = useState<Set<number>>(new Set())
@@ -880,6 +993,10 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
 
   // Homeschool state
   const [selectedWeekDays, setSelectedWeekDays] = useState<Record<number, Set<string>>>({})
+  const [selectedSchoolYearHomeschoolMonthDays, setSelectedSchoolYearHomeschoolMonthDays] = useState<
+    Record<number, Set<string>>
+  >({})
+  const [schoolYearHomeschoolTier, setSchoolYearHomeschoolTier] = useState<HomeschoolTier>('dropin')
 
   // School year state
   const [includeSupplyFee, setIncludeSupplyFee] = useState(false)
@@ -899,27 +1016,21 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
     [enrolledStudents, selectedStudentId]
   )
 
+  const emptyExistingPayments: ExistingPayments = {
+    paidWeeks: [],
+    paidAftercareMonths: [],
+    paidAftercareDays: [],
+    paidFunFridayMonths: [],
+    paidFridays: [],
+    paidHomeschoolSummerWeekDays: {},
+    paidHomeschoolSchoolYearMonthDays: {},
+    paidSupplyFee: false,
+    paidSchoolYearMonths: [],
+  }
+
   const existingPayments: ExistingPayments = selectedStudentId
-    ? (existingPaymentsByStudent[selectedStudentId] ?? {
-        paidWeeks: [],
-        paidAftercareMonths: [],
-        paidAftercareDays: [],
-        paidFunFridayMonths: [],
-        paidFridays: [],
-        paidHomeschoolWeekDays: {},
-        paidSupplyFee: false,
-        paidSchoolYearMonths: [],
-      })
-    : {
-        paidWeeks: [],
-        paidAftercareMonths: [],
-        paidAftercareDays: [],
-        paidFunFridayMonths: [],
-        paidFridays: [],
-        paidHomeschoolWeekDays: {},
-        paidSupplyFee: false,
-        paidSchoolYearMonths: [],
-      }
+    ? (existingPaymentsByStudent[selectedStudentId] ?? emptyExistingPayments)
+    : emptyExistingPayments
 
   const filteredStudents = useMemo(() => {
     const q = search.toLowerCase()
@@ -941,6 +1052,8 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
     setSelectedFunFridayMonths(new Set())
     setSelectedFridays(new Set())
     setSelectedWeekDays({})
+    setSelectedSchoolYearHomeschoolMonthDays({})
+    setSchoolYearHomeschoolTier('dropin')
     setIncludeSupplyFee(false)
     setSelectedSchoolYearMonths(new Set())
     setUseCustomTuitionAmount(false)
@@ -952,7 +1065,14 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
     setErrorMsg('')
     // Default to first available program
     const first = s.programs[0]
-    if (first) setActiveProgram(first.paymentType)
+    if (first) {
+      setActiveProgram(first.paymentType)
+      setActiveDropInProgram(
+        first.paymentType === 'homeschool_dropin'
+          ? (first.dropInProgram as DropInProgramKey | null) ?? 'summer_26'
+          : null,
+      )
+    }
   }
 
   function resetSelections() {
@@ -962,6 +1082,8 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
     setSelectedFunFridayMonths(new Set())
     setSelectedFridays(new Set())
     setSelectedWeekDays({})
+    setSelectedSchoolYearHomeschoolMonthDays({})
+    setSchoolYearHomeschoolTier('dropin')
     setIncludeSupplyFee(false)
     setSelectedSchoolYearMonths(new Set())
     setUseCustomTuitionAmount(false)
@@ -1043,6 +1165,22 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
     })
   }
 
+  function toggleSchoolYearHomeschoolDay(monthIndex: number, day: string) {
+    setSelectedSchoolYearHomeschoolMonthDays((prev) => {
+      const monthSet = new Set(prev[monthIndex] ?? [])
+      monthSet.has(day) ? monthSet.delete(day) : monthSet.add(day)
+      const next = { ...prev, [monthIndex]: monthSet }
+      const maxDays = Math.max(
+        0,
+        ...Object.values(next).map((s) => s.size),
+      )
+      if (maxDays > 0) {
+        setSchoolYearHomeschoolTier(deriveHomeschoolTier(maxDays))
+      }
+      return next
+    })
+  }
+
   function toggleSchoolYearMonth(index: number) {
     setSelectedSchoolYearMonths((prev) => {
       const next = new Set(prev)
@@ -1050,6 +1188,16 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
       return next
     })
   }
+
+  const activeHomeschoolProgram = useMemo(
+    () =>
+      selectedStudent?.programs.find(
+        (p) =>
+          p.paymentType === 'homeschool_dropin' &&
+          p.dropInProgram === activeDropInProgram,
+      ) ?? null,
+    [selectedStudent, activeDropInProgram],
+  )
 
   const schoolYearProgram = useMemo(
     () => selectedStudent?.programs.find((p) => p.paymentType === 'school_year') ?? null,
@@ -1088,14 +1236,32 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
     }
 
     if (activeProgram === 'homeschool_dropin') {
+      const isSchoolYear = activeDropInProgram === 'school_year_26_27'
+      const source = isSchoolYear ? selectedSchoolYearHomeschoolMonthDays : selectedWeekDays
       const selections: { week: number; days: string[] }[] = []
-      for (const [weekStr, daySet] of Object.entries(selectedWeekDays)) {
+      for (const [weekStr, daySet] of Object.entries(source)) {
         const days = Array.from(daySet)
         if (days.length > 0) selections.push({ week: Number(weekStr), days })
       }
       if (selections.length === 0) return null
+
+      const selectedWeeks = selections.map((s) => s.week).sort((a, b) => a - b)
+      const allDays = [...new Set(selections.flatMap((s) => s.days))]
+
+      if (isSchoolYear) {
+        const gradeTier = getGradeTier(program.childGrade)
+        return {
+          program: 'school_year_26_27',
+          tier: schoolYearHomeschoolTier,
+          grade_tier: gradeTier,
+          selected_weeks: selectedWeeks.join(','),
+          selected_days: allDays.join(','),
+          week_selections: JSON.stringify(selections),
+        }
+      }
+
       return {
-        program: program.dropInProgram ?? 'summer_26',
+        program: 'summer_26',
         tier: 'dropin',
         week_selections: JSON.stringify(selections),
       }
@@ -1108,7 +1274,12 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
     if (activeProgram === 'summer_tuition') return selectedWeeks.size > 0
     if (activeProgram === 'aftercare_tuition') return selectedAftercareMonths.size > 0 || selectedAftercareDays.size > 0
     if (activeProgram === 'fun_friday_tuition') return selectedFunFridayMonths.size > 0 || selectedFridays.size > 0
-    if (activeProgram === 'homeschool_dropin') return Object.values(selectedWeekDays).some((s) => s.size > 0)
+    if (activeProgram === 'homeschool_dropin') {
+      if (activeDropInProgram === 'school_year_26_27') {
+        return Object.values(selectedSchoolYearHomeschoolMonthDays).some((s) => s.size > 0)
+      }
+      return Object.values(selectedWeekDays).some((s) => s.size > 0)
+    }
     if (activeProgram === 'school_year') {
       const supplySelected = includeSupplyFee && !existingPayments.paidSupplyFee
       return supplySelected || selectedSchoolYearMonths.size > 0
@@ -1168,7 +1339,10 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
       return
     }
 
-    const program = selectedStudent.programs.find((p) => p.paymentType === activeProgram)
+    const program =
+      activeProgram === 'homeschool_dropin'
+        ? activeHomeschoolProgram
+        : selectedStudent.programs.find((p) => p.paymentType === activeProgram)
     if (!program) return
 
     const metadata = buildMetadata(program)
@@ -1305,17 +1479,21 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
             </label>
             <div className="flex gap-2 flex-wrap">
               {selectedStudent.programs.map((p) => {
-                const isActive = activeProgram === p.paymentType && (
-                  activeProgram !== 'homeschool_dropin' || true
-                )
                 const tabKey = p.paymentType + (p.dropInProgram ?? '')
-                const isCurrentTab = activeProgram === p.paymentType
+                const isCurrentTab =
+                  activeProgram === p.paymentType &&
+                  (p.paymentType !== 'homeschool_dropin' || p.dropInProgram === activeDropInProgram)
                 return (
                   <button
                     key={tabKey}
                     type="button"
                     onClick={() => {
                       setActiveProgram(p.paymentType)
+                      setActiveDropInProgram(
+                        p.paymentType === 'homeschool_dropin'
+                          ? (p.dropInProgram as DropInProgramKey | null) ?? 'summer_26'
+                          : null,
+                      )
                       resetSelections()
                       setSuccessMsg('')
                       setErrorMsg('')
@@ -1368,11 +1546,20 @@ export function ManualPaymentClient({ enrolledStudents, existingPaymentsByStuden
                 onToggleFriday={toggleFriday}
               />
             )}
-            {activeProgram === 'homeschool_dropin' && (
+            {activeProgram === 'homeschool_dropin' && activeDropInProgram === 'summer_26' && (
               <HomeschoolPicker
-                paidWeekDays={existingPayments.paidHomeschoolWeekDays}
+                paidWeekDays={existingPayments.paidHomeschoolSummerWeekDays}
                 selectedWeekDays={selectedWeekDays}
                 onToggleDay={toggleHomeschoolDay}
+              />
+            )}
+            {activeProgram === 'homeschool_dropin' && activeDropInProgram === 'school_year_26_27' && (
+              <HomeschoolSchoolYearPicker
+                paidMonthDays={existingPayments.paidHomeschoolSchoolYearMonthDays}
+                selectedMonthDays={selectedSchoolYearHomeschoolMonthDays}
+                tier={schoolYearHomeschoolTier}
+                onToggleDay={toggleSchoolYearHomeschoolDay}
+                onTierChange={setSchoolYearHomeschoolTier}
               />
             )}
             {activeProgram === 'school_year' && (
