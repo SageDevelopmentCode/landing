@@ -144,7 +144,7 @@ const TOUR_IMAGES = [
 const TODAY = new Date();
 TODAY.setHours(0, 0, 0, 0);
 
-const MAX_MONTH = 7; // August (0-indexed)
+const MAX_MONTH = 9; // October (0-indexed)
 const MAX_YEAR = 2026;
 
 // ─── New Constants ────────────────────────────────────────────────────────────
