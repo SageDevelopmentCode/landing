@@ -4757,6 +4757,77 @@ export async function buildSchoolYearTuitionReminderEmail(opts: {
   return { subject, content };
 }
 
+export async function buildSchoolYearTuitionDueDateTodayReminderEmail(opts: {
+  g1FullName?: string;
+  childLegalName?: string;
+  email: string;
+}): Promise<{ subject: string; content: string }> {
+  const firstName = opts.g1FullName?.split(" ")[0] || "there";
+
+  const subject = `August Tuition Due Tonight — 2026–2027`;
+
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+
+  <p style="margin-bottom: 12px;">Hi ${firstName}!</p>
+
+  <p style="margin-bottom: 16px;">
+    If you've already paid August tuition — thank you, you're all set! 🎉
+  </p>
+
+  <p style="margin-bottom: 16px;">
+    If you haven't yet — a quick reminder that <strong>August tuition is due tonight at midnight (August 10)</strong>.
+  </p>
+
+  <p style="margin-bottom: 16px;">
+    Please submit payment through your parent billing portal under the <strong>"School Year"</strong> tab before midnight tonight.
+    The school year begins on <strong>August 17</strong>.
+  </p>
+
+  <!-- Grade Comparison Table -->
+  ${schoolYearTuitionByGradeTableHtml("24px")}
+
+  <p style="margin-bottom: 16px; font-size: 14px; color: #3a3a3a;">
+    Both grade bands are billed in <strong>10 equal monthly payments</strong> (August through May).
+    Payments are due on the 1st of each month, with the exception of August (due <strong>August 10</strong>).
+    A <strong>$50 late fee</strong> applies to any payment not received by the 4th of the month (August payments not received by <strong>August 13</strong>).
+    We also require a <strong>$300 annual supply fee</strong> (one-time per school year) that covers all classroom consumables.
+  </p>
+
+  <p style="margin-bottom: 24px; font-size: 14px; color: #555;">
+    A quick note on August tuition: the school year starts August 17, but monthly tuition is <strong>not</strong> prorated for partial months.
+    Annual tuition is simply divided into 10 equal monthly payments for consistency — not calculated by days attended.
+  </p>
+
+  <!-- Portal CTA -->
+  <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 10px; padding: 24px; margin: 0 0 28px 0; text-align: center;">
+    <p style="margin: 0 0 6px 0; font-size: 15px; color: #2c2c2c; font-weight: bold;">Your parent billing portal reflects the correct tuition for your child's grade</p>
+    <p style="margin: 0 0 16px 0; font-size: 14px; color: #555;">Go to the <strong>Billing</strong> page and click the <strong>"School Year"</strong> tab.</p>
+    <a href="https://sagefield.co/parent/billing"
+       style="display: inline-block; background: #2C5F2E; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-size: 15px; font-weight: bold; letter-spacing: 0.3px;">
+      Pay Tuition Now →
+    </a>
+  </div>
+
+  <p style="margin-bottom: 24px; font-size: 14px; color: #555;">If you have any questions about your specific tuition or billing, please don't hesitate to reach out. We are happy to help!</p>
+
+  <p style="margin-top: 32px;">With warmth,</p>
+  <p style="margin-top: 4px;">
+    <strong>Sabrina</strong><br />
+    Sage Field School<br />
+    <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> · <a href="tel:5126775872" style="color: #5a7a5a;">(512) 677-5872</a>
+  </p>
+
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
 export async function buildHomeschoolDropInTuitionReminderEmail(opts: {
   g1FullName?: string;
   childLegalName?: string;

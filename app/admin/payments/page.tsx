@@ -30,7 +30,8 @@ export type ExistingPayments = {
   paidAftercareDays: string[]
   paidFunFridayMonths: string[]
   paidFridays: string[]
-  paidHomeschoolWeekDays: Record<number, string[]>
+  paidHomeschoolSummerWeekDays: Record<number, string[]>
+  paidHomeschoolSchoolYearMonthDays: Record<number, string[]>
   paidSupplyFee: boolean
   paidSchoolYearMonths: number[]
 }
@@ -192,12 +193,22 @@ export default async function ManualPaymentsPage() {
         paidAftercareDays: [],
         paidFunFridayMonths: [],
         paidFridays: [],
-        paidHomeschoolWeekDays: {},
+        paidHomeschoolSummerWeekDays: {},
+        paidHomeschoolSchoolYearMonthDays: {},
         paidSupplyFee: false,
         paidSchoolYearMonths: [],
       }
     }
     return existingPaymentsByStudent[sid]
+  }
+
+  function mergeHomeschoolWeekDays(
+    target: Record<number, string[]>,
+    week: number,
+    days: string[],
+  ) {
+    const existing = target[week] ?? []
+    target[week] = [...new Set([...existing, ...days])]
   }
 
   for (const tx of txData ?? []) {
@@ -229,20 +240,24 @@ export default async function ManualPaymentsPage() {
     }
 
     if (tx.payment_type === 'homeschool_dropin') {
+      const program = meta.program ?? 'summer_26'
+      const paidMap =
+        program === 'school_year_26_27'
+          ? entry.paidHomeschoolSchoolYearMonthDays
+          : entry.paidHomeschoolSummerWeekDays
+
       if (meta.week_selections) {
         try {
           const parsed: { week: number; days: string[] }[] = JSON.parse(meta.week_selections)
           for (const { week, days } of parsed) {
-            const existing = entry.paidHomeschoolWeekDays[week] ?? []
-            entry.paidHomeschoolWeekDays[week] = [...new Set([...existing, ...days])]
+            mergeHomeschoolWeekDays(paidMap, week, days)
           }
         } catch { /* ignore malformed */ }
       } else {
         const weeks = (meta.selected_weeks ?? '').split(',').map(Number).filter(Boolean)
         const days = (meta.selected_days ?? '').split(',').filter(Boolean)
         for (const w of weeks) {
-          const existing = entry.paidHomeschoolWeekDays[w] ?? []
-          entry.paidHomeschoolWeekDays[w] = [...new Set([...existing, ...days])]
+          mergeHomeschoolWeekDays(paidMap, w, days)
         }
       }
     }

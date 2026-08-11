@@ -434,3 +434,64 @@ export function tierToDays(tier: HomeschoolTier): string[] {
   if (tier === "2day") return ["mon", "tue"];
   return ["mon", "tue", "wed"];
 }
+
+export function schoolYearMonthShort(monthIndex: number): string {
+  return SCHOOL_YEAR_MONTHS.find((m) => m.index === monthIndex)?.short ?? `Month ${monthIndex}`;
+}
+
+export function formatHomeschoolSubline(meta: Record<string, string>): string | null {
+  const program = meta.program ?? "summer_26";
+  const isSchoolYear = program === "school_year_26_27";
+
+  const weekDayMap: Record<number, string[]> = {};
+  if (meta.week_selections) {
+    try {
+      const parsed: { week: number; days: string[] }[] = JSON.parse(meta.week_selections);
+      for (const { week, days } of parsed) {
+        weekDayMap[week] = days;
+      }
+    } catch {
+      /* ignore malformed */
+    }
+  }
+
+  const formatPeriod = (index: number) =>
+    isSchoolYear ? schoolYearMonthShort(index) : `Wk ${index}`;
+
+  if (Object.keys(weekDayMap).length > 0) {
+    const parts = Object.entries(weekDayMap)
+      .sort(([a], [b]) => Number(a) - Number(b))
+      .map(([wk, days]) => {
+        const dayLabels = days
+          .map((d) => d.charAt(0).toUpperCase() + d.slice(1))
+          .join(", ");
+        return `${dayLabels} · ${formatPeriod(Number(wk))}`;
+      });
+    return parts.join(" · ");
+  }
+
+  const days = meta.selected_days
+    ? meta.selected_days.split(",").filter(Boolean).map((d) => d.charAt(0).toUpperCase() + d.slice(1))
+    : [];
+  const wks = meta.selected_weeks
+    ? meta.selected_weeks.split(",").map(Number).filter(Boolean)
+    : [];
+
+  if (days.length > 0 && wks.length > 0) {
+    const periodLabels = isSchoolYear
+      ? wks.map((w) => schoolYearMonthShort(w)).join(", ")
+      : `Wk ${wks.join(", ")}`;
+    return `${days.length} day${days.length !== 1 ? "s" : ""} · ${days.join(", ")} · ${periodLabels}`;
+  }
+  if (days.length > 0) {
+    return `${days.length} day${days.length !== 1 ? "s" : ""} · ${days.join(", ")}`;
+  }
+  if (wks.length > 0) {
+    if (isSchoolYear) {
+      const labels = wks.map((w) => schoolYearMonthShort(w)).join(", ");
+      return `${wks.length} month${wks.length !== 1 ? "s" : ""} · ${labels}`;
+    }
+    return `${wks.length} week${wks.length !== 1 ? "s" : ""}`;
+  }
+  return null;
+}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { getParentTransactions } from '../../actions/getParentTransactions'
+import { formatHomeschoolSubline } from '@/shared/billing/school-year'
 
 type Transaction = {
   id: string
@@ -47,17 +48,7 @@ function getSubLine(tx: Transaction): string | null {
     if (months.length > 0) return months.join(', ')
   }
   if (tx.payment_type === 'homeschool_dropin') {
-    const days = meta.selected_days
-      ? meta.selected_days.split(',').filter(Boolean).map((d) => d.charAt(0).toUpperCase() + d.slice(1))
-      : []
-    const wks = meta.selected_weeks ? meta.selected_weeks.split(',').filter(Boolean) : []
-    if (days.length > 0 && wks.length > 0)
-      return `${days.length} day${days.length !== 1 ? 's' : ''} · ${days.join(', ')} · Wk ${wks.join(', ')}`
-    if (days.length > 0)
-      return `${days.length} day${days.length !== 1 ? 's' : ''} · ${days.join(', ')}`
-    if (wks.length > 0)
-      return `${wks.length} week${wks.length !== 1 ? 's' : ''}`
-    return null
+    return formatHomeschoolSubline(meta)
   }
   if (meta.selected_weeks) {
     const wks = meta.selected_weeks.split(',').filter(Boolean)

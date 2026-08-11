@@ -52,6 +52,7 @@ import { sendSummerTuitionConfirmationEmail } from '../../actions/sendSummerTuit
 import { sendSchoolYearTuitionInfoEmail } from '../../actions/sendSchoolYearTuitionInfoEmail'
 import { sendSchoolYearTuitionClarificationEmail } from '../../actions/sendSchoolYearTuitionClarificationEmail'
 import { sendSchoolYearTuitionReminderEmail } from '../../actions/sendSchoolYearTuitionReminderEmail'
+import { sendSchoolYearTuitionDueDateTodayReminderEmail } from '../../actions/sendSchoolYearTuitionDueDateTodayReminderEmail'
 import { sendHomeschoolDropInTuitionReminderEmail } from '../../actions/sendHomeschoolDropInTuitionReminderEmail'
 import { sendHomeschoolDropInClarificationEmail } from '../../actions/sendHomeschoolDropInClarificationEmail'
 import { enrollApplication } from '../../actions/enrollApplication'
@@ -299,6 +300,9 @@ export function ApplicationDetailSidebar({
   const [schoolYearTuitionReminderSending, setSchoolYearTuitionReminderSending] = useState(false)
   const [schoolYearTuitionReminderSent, setSchoolYearTuitionReminderSent] = useState(false)
   const [schoolYearTuitionReminderError, setSchoolYearTuitionReminderError] = useState<string | null>(null)
+  const [schoolYearTuitionDueTodayReminderSending, setSchoolYearTuitionDueTodayReminderSending] = useState(false)
+  const [schoolYearTuitionDueTodayReminderSent, setSchoolYearTuitionDueTodayReminderSent] = useState(false)
+  const [schoolYearTuitionDueTodayReminderError, setSchoolYearTuitionDueTodayReminderError] = useState<string | null>(null)
   const [homeschoolDropInTuitionReminderSending, setHomeschoolDropInTuitionReminderSending] = useState(false)
   const [homeschoolDropInTuitionReminderSent, setHomeschoolDropInTuitionReminderSent] = useState(false)
   const [homeschoolDropInTuitionReminderError, setHomeschoolDropInTuitionReminderError] = useState<string | null>(null)
@@ -1103,6 +1107,24 @@ export function ApplicationDetailSidebar({
       setEmailThreadKey(k => k + 1)
     } else {
       setSchoolYearTuitionReminderError(result.error ?? 'Failed to send')
+    }
+  }
+
+  const handleSendSchoolYearTuitionDueTodayReminder = async () => {
+    if (schoolYearTuitionDueTodayReminderSending || !application.g1_email) return
+    setSchoolYearTuitionDueTodayReminderSending(true)
+    setSchoolYearTuitionDueTodayReminderError(null)
+    const result = await sendSchoolYearTuitionDueDateTodayReminderEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+    })
+    setSchoolYearTuitionDueTodayReminderSending(false)
+    if (result.success) {
+      setSchoolYearTuitionDueTodayReminderSent(true)
+      setEmailThreadKey(k => k + 1)
+    } else {
+      setSchoolYearTuitionDueTodayReminderError(result.error ?? 'Failed to send')
     }
   }
 
@@ -2206,6 +2228,17 @@ export function ApplicationDetailSidebar({
                     {schoolYearTuitionReminderSending ? 'Sending…' : schoolYearTuitionReminderSent ? '✓ Sent!' : 'Send August Tuition Reminder (School Year)'}
                   </button>
                   {schoolYearTuitionReminderError && <span className="text-xs text-red-600">{schoolYearTuitionReminderError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendSchoolYearTuitionDueTodayReminder}
+                    disabled={schoolYearTuitionDueTodayReminderSending || schoolYearTuitionDueTodayReminderSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {schoolYearTuitionDueTodayReminderSending ? 'Sending…' : schoolYearTuitionDueTodayReminderSent ? '✓ Sent!' : 'Send August Tuition Due Tonight Reminder (School Year)'}
+                  </button>
+                  {schoolYearTuitionDueTodayReminderError && <span className="text-xs text-red-600">{schoolYearTuitionDueTodayReminderError}</span>}
                 </div>
                 <div className="flex items-center gap-3">
                   <button
