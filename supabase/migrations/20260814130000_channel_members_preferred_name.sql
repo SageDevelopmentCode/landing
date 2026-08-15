@@ -1,3 +1,4 @@
+-- Prefer application preferred_name for channel member child display names
 CREATE OR REPLACE FUNCTION public.get_channel_members(p_channel_id uuid)
 RETURNS json
 LANGUAGE sql

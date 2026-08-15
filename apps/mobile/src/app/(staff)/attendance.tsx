@@ -23,6 +23,10 @@ import { supabase } from "@/lib/supabase";
 import { notifyDiscord, notifyError } from "@/lib/discord";
 import { Brand, BottomTabInset, FontFamilies } from "@/constants/theme";
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
+import {
+  buildDisplayNameMap,
+  getStudentDisplayName,
+} from "@/lib/student-display-name";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -480,11 +484,19 @@ async function fetchDayData(date: string): Promise<SummerStudentRow[]> {
     supabase
       .schema("parent_app")
       .from("applications")
-      .select("student_id, admin_tags, has_allergies, program")
+      .select("student_id, admin_tags, has_allergies, program, preferred_name, child_legal_name")
       .eq("status", "enrolled"),
   ]);
 
-  const appsData = (appsRes.data ?? []) as { student_id: string; admin_tags: string[] | null; has_allergies: string | null; program: string | null }[];
+  const appsData = (appsRes.data ?? []) as {
+    student_id: string;
+    admin_tags: string[] | null;
+    has_allergies: string | null;
+    program: string | null;
+    preferred_name: string | null;
+    child_legal_name: string | null;
+  }[];
+  const displayNameMap = buildDisplayNameMap(appsData);
   const enrolledIds = new Set(
     appsData
       .filter((a) => !(a.admin_tags ?? []).includes("Don't Include"))
@@ -541,7 +553,9 @@ async function fetchDayData(date: string): Promise<SummerStudentRow[]> {
   return students
     .map((s) => ({
       student_id: s.id,
-      name: s.child_legal_name,
+      name:
+        displayNameMap.get(s.id) ??
+        getStudentDisplayName(null, s.child_legal_name),
       grade: s.child_grade,
       profile_image_url: s.profile_image_url,
       record: recordMap.get(s.id) ?? null,
@@ -571,11 +585,19 @@ async function fetchAftercareData(
     supabase
       .schema("parent_app")
       .from("applications")
-      .select("student_id, admin_tags, has_allergies, program")
+      .select("student_id, admin_tags, has_allergies, program, preferred_name, child_legal_name")
       .eq("status", "enrolled"),
   ]);
 
-  const appsDataAc = (appsRes.data ?? []) as { student_id: string; admin_tags: string[] | null; has_allergies: string | null; program: string | null }[];
+  const appsDataAc = (appsRes.data ?? []) as {
+    student_id: string;
+    admin_tags: string[] | null;
+    has_allergies: string | null;
+    program: string | null;
+    preferred_name: string | null;
+    child_legal_name: string | null;
+  }[];
+  const displayNameMap = buildDisplayNameMap(appsDataAc);
   const enrolledIds = new Set(
     appsDataAc
       .filter((a) => !(a.admin_tags ?? []).includes("Don't Include"))
@@ -634,7 +656,9 @@ async function fetchAftercareData(
   return students
     .map((s) => ({
       student_id: s.id,
-      name: s.child_legal_name,
+      name:
+        displayNameMap.get(s.id) ??
+        getStudentDisplayName(null, s.child_legal_name),
       grade: s.child_grade,
       profile_image_url: s.profile_image_url,
       record: recordMap.get(s.id) ?? null,
@@ -667,11 +691,19 @@ async function fetchFieldFridayData(
     supabase
       .schema("parent_app")
       .from("applications")
-      .select("student_id, admin_tags, has_allergies, program")
+      .select("student_id, admin_tags, has_allergies, program, preferred_name, child_legal_name")
       .eq("status", "enrolled"),
   ]);
 
-  const appsDataFf = (appsRes.data ?? []) as { student_id: string; admin_tags: string[] | null; has_allergies: string | null; program: string | null }[];
+  const appsDataFf = (appsRes.data ?? []) as {
+    student_id: string;
+    admin_tags: string[] | null;
+    has_allergies: string | null;
+    program: string | null;
+    preferred_name: string | null;
+    child_legal_name: string | null;
+  }[];
+  const displayNameMap = buildDisplayNameMap(appsDataFf);
   const enrolledIds = new Set(
     appsDataFf
       .filter((a) => !(a.admin_tags ?? []).includes("Don't Include"))
@@ -728,7 +760,9 @@ async function fetchFieldFridayData(
   return students
     .map((s) => ({
       student_id: s.id,
-      name: s.child_legal_name,
+      name:
+        displayNameMap.get(s.id) ??
+        getStudentDisplayName(null, s.child_legal_name),
       grade: s.child_grade,
       profile_image_url: s.profile_image_url,
       record: recordMap.get(s.id) ?? null,
@@ -761,12 +795,20 @@ async function fetchWeekHeadcounts(weekNum: number): Promise<DayHeadcount[]> {
     supabase
       .schema("parent_app")
       .from("applications")
-      .select("student_id, admin_tags")
+      .select("student_id, admin_tags, preferred_name, child_legal_name")
       .eq("status", "enrolled"),
   ]);
 
+  const appsData = (appsRes.data ?? []) as {
+    student_id: string;
+    admin_tags: string[] | null;
+    preferred_name: string | null;
+    child_legal_name: string | null;
+  }[];
+  const displayNameMap = buildDisplayNameMap(appsData);
+
   const enrolledIds = new Set(
-    ((appsRes.data ?? []) as { student_id: string; admin_tags: string[] | null }[])
+    appsData
       .filter((a) => !(a.admin_tags ?? []).includes("Don't Include"))
       .map((a) => a.student_id)
   );
@@ -816,7 +858,9 @@ async function fetchWeekHeadcounts(weekNum: number): Promise<DayHeadcount[]> {
       count: subset.length,
       students: sorted.slice(0, 6).map((s) => ({
         student_id: s.id,
-        name: s.child_legal_name,
+        name:
+          displayNameMap.get(s.id) ??
+          getStudentDisplayName(null, s.child_legal_name),
         profile_image_url: s.profile_image_url,
       })),
     };
@@ -1040,6 +1084,7 @@ export default function StaffAttendanceScreen() {
   // ── Student profile sheet
   const studentProfileSheetRef = useRef<BottomSheetModal>(null);
   const [profileStudent, setProfileStudent] = useState<ProfileStudentDetail | null>(null);
+  const [profileDisplayName, setProfileDisplayName] = useState<string | null>(null);
   const [profileContacts, setProfileContacts] = useState<ProfileContacts | null>(null);
   const [profileNotes, setProfileNotes] = useState<ProfileNote[]>([]);
   const [profileSchedule, setProfileSchedule] = useState<ProfileSchedule | null>(null);
@@ -1718,6 +1763,7 @@ export default function StaffAttendanceScreen() {
 
   async function openStudentProfile(studentId: string) {
     setProfileStudent(null);
+    setProfileDisplayName(null);
     setProfileContacts(null);
     setProfileNotes([]);
     setProfileSchedule(null);
@@ -1742,7 +1788,7 @@ export default function StaffAttendanceScreen() {
       supabase
         .schema("parent_app")
         .from("applications")
-        .select("program")
+        .select("program, preferred_name, child_legal_name")
         .eq("student_id", studentId)
         .single(),
       supabase
@@ -1757,6 +1803,14 @@ export default function StaffAttendanceScreen() {
 
     const sd = studentRes.data as ProfileStudentDetail | null;
     setProfileStudent(sd ?? null);
+    const appData = appRes.data as {
+      program: string;
+      preferred_name: string | null;
+      child_legal_name: string | null;
+    } | null;
+    setProfileDisplayName(
+      getStudentDisplayName(appData?.preferred_name, sd?.child_legal_name),
+    );
     setProfileNotes((notesRes.data ?? []) as ProfileNote[]);
 
     const appProgram = (appRes.data as { program: string } | null)?.program ?? null;
@@ -1943,7 +1997,7 @@ export default function StaffAttendanceScreen() {
   // ── Student profile sheet ───────────────────────────────────────────────────
 
   function renderStudentProfileSheet() {
-    const name = profileStudent?.child_legal_name ?? "Student";
+    const name = profileDisplayName ?? profileStudent?.child_legal_name ?? "Student";
     const grade = profileStudent?.child_grade ?? null;
     const profileImageUrl = profileStudent?.profile_image_url ?? null;
 
@@ -3627,6 +3681,7 @@ export default function StaffAttendanceScreen() {
         enablePanDownToClose
         onDismiss={() => {
           setProfileStudent(null);
+    setProfileDisplayName(null);
           setProfileContacts(null);
           setProfileNotes([]);
         }}

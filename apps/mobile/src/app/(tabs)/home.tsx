@@ -108,6 +108,12 @@ type TeacherSuggestion = {
   profile_image_url: string | null;
 };
 
+const SHOWN_TEACHERS = new Set([
+  "Sabrina Obnamia",
+  "Zelinda Melo",
+  "Joy Paige",
+]);
+
 type NotifItem = {
   id: string;
   kind: "direct" | "channel";
@@ -2294,7 +2300,6 @@ export default function HomeScreen() {
               supabase.schema("admin").from("users").select("id, full_name, profile_image_url").in("role", ["teacher", "super_admin"]).order("full_name", { ascending: true }),
             ]);
 
-          const SHOWN_TEACHERS = new Set(["Sabrina Obnamia", "Zelinda Melo"]);
           setTeachers((teachersResult.data ?? []).filter((t) => SHOWN_TEACHERS.has(t.full_name)));
           setTeachersLoading(false);
 
@@ -2417,7 +2422,6 @@ export default function HomeScreen() {
 
           if (eventsResult.data) setUpcomingEvents(eventsResult.data);
 
-          const SHOWN_TEACHERS = new Set(["Sabrina Obnamia", "Zelinda Melo"]);
           setTeachers(
             (teachersResult.data ?? []).filter((t) =>
               SHOWN_TEACHERS.has(t.full_name),

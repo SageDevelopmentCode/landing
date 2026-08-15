@@ -1,4 +1,6 @@
 import { ActivityPreferencesSheet } from "@/components/ActivityPreferencesSheet";
+import { StaffConferenceBookingsSheet } from "@/components/StaffConferenceBookingsSheet";
+import { StaffConferenceSection } from "@/components/StaffConferenceSection";
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
 import { BottomTabInset, Brand, FontFamilies } from "@/constants/theme";
 import { Activity, getActivities } from "@/lib/activities-actions";
@@ -21,6 +23,7 @@ import {
   ActivityIndicator,
   ImageBackground,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -29,6 +32,24 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  getTeacherColors,
+  groupStudentsByTeacher,
+} from "@/lib/group-by-teacher";
+import {
+  isSchoolYearFieldFridayPaid,
+  isSchoolYearWeekdayPaid,
+  SCHOOL_YEAR_START,
+} from "@/lib/school-year-attendance";
+import {
+  buildDisplayNameMap,
+  getStudentDisplayName,
+} from "@/lib/student-display-name";
+import {
+  fetchStaffConferenceBookings,
+  isConferenceTeacher,
+  type StaffConferenceBooking,
+} from "@/lib/staff-conference-bookings";
 
 // ─── Header images ────────────────────────────────────────────────────────────
 
@@ -97,19 +118,6 @@ function shiftDay(dateStr: string, delta: 1 | -1): string {
   return toYMD(dt);
 }
 
-// ─── Summer program helpers (mirrored from attendance.tsx) ────────────────────
-
-const SUMMER_START = new Date(2026, 4, 25);
-const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000;
-const TOTAL_WEEKS = 12;
-
-function getWeekNumForDate(dateStr: string): number {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  const diff = new Date(y, m - 1, d).getTime() - SUMMER_START.getTime();
-  if (diff < 0) return 1;
-  return Math.min(TOTAL_WEEKS, Math.floor(diff / MS_PER_WEEK) + 1);
-}
-
 function getDayOfWeek(dateStr: string): string {
   const [y, m, d] = dateStr.split("-").map(Number);
   return ["sun", "mon", "tue", "wed", "thu", "fri", "sat"][
@@ -140,66 +148,12 @@ const MONTH_NAMES_SHORT = [
   "dec",
 ] as const;
 
-function isStudentPaidForDate(
-  txn: TxnRow,
-  date: string,
-  weekNum: number,
-  dayOfWeek: string,
-): boolean {
-  const meta = txn.metadata ?? {};
-  if (txn.payment_type === "summer_tuition") {
-    if (meta.plan_type === "full") return true;
-    if (
-      (meta.plan_type === "weekly" || meta.plan_type === "custom") &&
-      typeof meta.weeks === "string"
-    ) {
-      return meta.weeks.split(",").map(Number).includes(weekNum);
-    }
-  } else if (txn.payment_type === "homeschool_dropin") {
-    if (
-      meta.program === "summer_26" &&
-      typeof meta.week_selections === "string"
-    ) {
-      try {
-        const sels = JSON.parse(meta.week_selections) as Array<{
-          week: number;
-          days: string[];
-        }>;
-        return sels.some(
-          (s) => s.week === weekNum && s.days.includes(dayOfWeek),
-        );
-      } catch {
-        return false;
-      }
-    }
-    if (typeof meta.selected_days === "string") {
-      return meta.selected_days.split(",").includes(date);
-    }
-  }
-  return false;
-}
-
 function isStudentPaidForAftercare(txn: TxnRow, date: string): boolean {
   if (txn.payment_type !== "aftercare_tuition") return false;
   const meta = txn.metadata ?? {};
   if (
     typeof meta.selected_days === "string" &&
     meta.selected_days.split(",").includes(date)
-  )
-    return true;
-  if (typeof meta.selected_months === "string") {
-    const monthName = MONTH_NAMES_SHORT[parseInt(date.split("-")[1], 10) - 1];
-    if (meta.selected_months.split(",").includes(monthName)) return true;
-  }
-  return false;
-}
-
-function isStudentPaidForFriday(txn: TxnRow, date: string): boolean {
-  if (txn.payment_type !== "fun_friday_tuition") return false;
-  const meta = txn.metadata ?? {};
-  if (
-    typeof meta.selected_fridays === "string" &&
-    meta.selected_fridays.split(",").includes(date)
   )
     return true;
   if (typeof meta.selected_months === "string") {
@@ -239,12 +193,6 @@ function shortName(name: string | null): string {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type CareEntry = {
-  id: string;
-  activity: "sunscreen" | "bug_spray";
-  logged_at: string;
-};
-
 type AllergyDetail = {
   student_id: string;
   name: string | null;
@@ -261,7 +209,15 @@ type AttendanceSlim = {
   paid_for_day: boolean;
   pickup_time: string | null;
   picked_up_by_name: string | null;
+  marked_absent: boolean;
 };
+
+const SY_ATTENDANCE_SELECT =
+  "id, student_id, paid_for_day, pickup_time, picked_up_by_name, marked_absent";
+const SY_ATTENDANCE_SLIM_SELECT =
+  "id, paid_for_day, pickup_time, picked_up_by_name, marked_absent";
+const AFTERCARE_SLIM_SELECT =
+  "id, paid_for_day, pickup_time, picked_up_by_name";
 
 type HomeStudentRow = {
   student_id: string;
@@ -269,18 +225,87 @@ type HomeStudentRow = {
   profile_image_url: string | null;
   has_allergies: string | null;
   program: string | null;
-  careEntries: CareEntry[];
   hasSummerEnrollment: boolean;
   hasAftercareEnrollment: boolean;
   hasFridayEnrollment: boolean;
+  hasSchoolYearEnrollment: boolean;
+  hasSchoolYearFridayEnrollment: boolean;
   summerRecord: AttendanceSlim | null;
   aftercareRecord: AttendanceSlim | null;
   fieldFridayRecord: AttendanceSlim | null;
+  schoolYearRecord: AttendanceSlim | null;
+  schoolYearFieldFridayRecord: AttendanceSlim | null;
+  teacherName: string | null;
+  teacherId: string | null;
+  classroom: string | null;
 };
+
+type TeacherAssignmentRow = {
+  assignment_id: string;
+  teacher_id: string;
+  teacher_name: string | null;
+  student_id: string;
+  program: string;
+  classroom: string | null;
+};
+
+function isSchoolYearTeacherAssignment(
+  assignment: TeacherAssignmentRow,
+  dropInProgram: string | null | undefined,
+): boolean {
+  if (assignment.program === "school_year_26_27") return true;
+  if (assignment.program === "homeschool_drop_in") {
+    return (
+      dropInProgram === "school_year_26_27" || dropInProgram === "both"
+    );
+  }
+  return false;
+}
+
+function buildSchoolYearTeacherMap(
+  assignments: TeacherAssignmentRow[],
+  dropInProgramByStudent: Map<string, string | null>,
+): Map<
+  string,
+  { teacherName: string | null; teacherId: string; classroom: string | null }
+> {
+  const byStudent = new Map<string, TeacherAssignmentRow[]>();
+  for (const assignment of assignments) {
+    if (
+      !isSchoolYearTeacherAssignment(
+        assignment,
+        dropInProgramByStudent.get(assignment.student_id),
+      )
+    ) {
+      continue;
+    }
+    if (!byStudent.has(assignment.student_id)) {
+      byStudent.set(assignment.student_id, []);
+    }
+    byStudent.get(assignment.student_id)!.push(assignment);
+  }
+
+  const map = new Map<
+    string,
+    { teacherName: string | null; teacherId: string; classroom: string | null }
+  >();
+  for (const [studentId, rows] of byStudent) {
+    const picked =
+      rows.find((r) => r.program === "school_year_26_27") ?? rows[0];
+    map.set(studentId, {
+      teacherName: picked.teacher_name,
+      teacherId: picked.teacher_id,
+      classroom: picked.classroom,
+    });
+  }
+  return map;
+}
 
 // ─── Data fetching ────────────────────────────────────────────────────────────
 
-async function fetchTodayStudents(date: string): Promise<HomeStudentRow[]> {
+async function fetchSchoolYearTodayStudents(
+  date: string,
+): Promise<HomeStudentRow[]> {
   const [studentsRes, appsRes] = await Promise.all([
     supabase
       .schema("admin")
@@ -291,7 +316,9 @@ async function fetchTodayStudents(date: string): Promise<HomeStudentRow[]> {
     supabase
       .schema("parent_app")
       .from("applications")
-      .select("student_id, admin_tags, has_allergies, program")
+      .select(
+        "student_id, admin_tags, has_allergies, program, drop_in_program, preferred_name, child_legal_name",
+      )
       .eq("status", "enrolled"),
   ]);
 
@@ -300,18 +327,36 @@ async function fetchTodayStudents(date: string): Promise<HomeStudentRow[]> {
     admin_tags: string[] | null;
     has_allergies: string | null;
     program: string | null;
+    drop_in_program: string | null;
+    preferred_name: string | null;
+    child_legal_name: string | null;
   };
 
   const appsData = (appsRes.data ?? []) as AppRow[];
+  const displayNameMap = buildDisplayNameMap(appsData);
+  const isSchoolYearApp = (a: AppRow) =>
+    a.program === "school_year_26_27" ||
+    a.program === "both" ||
+    (a.program === "homeschool_drop_in" &&
+      (a.drop_in_program === "school_year_26_27" ||
+        a.drop_in_program === "both"));
+
   const enrolledIds = new Set(
     appsData
-      .filter((a) => !(a.admin_tags ?? []).includes("Don't Include"))
+      .filter(
+        (a) =>
+          isSchoolYearApp(a) &&
+          !(a.admin_tags ?? []).includes("Don't Include"),
+      )
       .map((a) => a.student_id),
   );
   const allergyMap = new Map(
     appsData.map((a) => [a.student_id, a.has_allergies]),
   );
   const programMap = new Map(appsData.map((a) => [a.student_id, a.program]));
+  const dropInProgramMap = new Map(
+    appsData.map((a) => [a.student_id, a.drop_in_program]),
+  );
 
   type StudentRaw = {
     id: string;
@@ -326,101 +371,95 @@ async function fetchTodayStudents(date: string): Promise<HomeStudentRow[]> {
   if (!students.length) return [];
   const studentIds = students.map((s) => s.id);
 
-  const weekNum = getWeekNumForDate(date);
   const dayOfWeek = getDayOfWeek(date);
+  const isFridayDate = dayOfWeek === "fri";
+
+  type SyAttendanceRaw = {
+    id: string;
+    student_id: string;
+    paid_for_day: boolean;
+    pickup_time: string | null;
+    picked_up_by_name: string | null;
+    marked_absent: boolean;
+  };
 
   const [
     txnsRes,
-    careRes,
-    summerRecordsRes,
+    schoolYearRecordsRes,
+    schoolYearFridayRecordsRes,
     aftercareRecordsRes,
-    fridayRecordsRes,
+    assignmentsRes,
   ] = await Promise.all([
     supabase
       .schema("billing")
       .from("stripe_transactions")
       .select("student_id, payment_type, metadata")
       .in("payment_type", [
-        "summer_tuition",
+        "school_year_tuition",
         "homeschool_dropin",
-        "aftercare_tuition",
         "fun_friday_tuition",
       ])
       .eq("status", "completed")
       .eq("is_deleted", false)
       .in("student_id", studentIds),
-    supabase
-      .schema("care_log")
-      .from("entries")
-      .select("id, student_id, activity, logged_at")
-      .eq("date", date)
-      .in("student_id", studentIds)
-      .order("logged_at", { ascending: true }),
-    supabase
-      .schema("attendance")
-      .from("summer_records")
-      .select("id, student_id, paid_for_day, pickup_time, picked_up_by_name")
-      .eq("date", date)
-      .in("student_id", studentIds),
+    isFridayDate
+      ? Promise.resolve({ data: [] as SyAttendanceRaw[] })
+      : supabase
+          .schema("attendance")
+          .from("school_year_records")
+          .select(SY_ATTENDANCE_SELECT)
+          .eq("date", date)
+          .in("student_id", studentIds),
+    isFridayDate
+      ? supabase
+          .schema("attendance")
+          .from("school_year_field_friday_records")
+          .select(SY_ATTENDANCE_SELECT)
+          .eq("date", date)
+          .in("student_id", studentIds)
+      : Promise.resolve({ data: [] as SyAttendanceRaw[] }),
     supabase
       .schema("attendance")
       .from("aftercare_records")
       .select("id, student_id, paid_for_day, pickup_time, picked_up_by_name")
       .eq("date", date)
       .in("student_id", studentIds),
-    supabase
-      .schema("attendance")
-      .from("field_friday_records")
-      .select("id, student_id, paid_for_day, pickup_time, picked_up_by_name")
-      .eq("date", date)
-      .in("student_id", studentIds),
+    supabase.rpc("get_all_teacher_assignments"),
   ]);
 
   const txns = (txnsRes.data ?? []) as TxnRow[];
 
-  const summerPaidIds = new Set<string>();
+  const schoolYearPaidIds = new Set<string>();
+  const schoolYearFridayPaidIds = new Set<string>();
   const aftercarePaidIds = new Set<string>();
-  const fridayPaidIds = new Set<string>();
+
   for (const txn of txns) {
-    if (isStudentPaidForDate(txn, date, weekNum, dayOfWeek))
-      summerPaidIds.add(txn.student_id);
+    if (isSchoolYearWeekdayPaid(txn, date))
+      schoolYearPaidIds.add(txn.student_id);
+    if (isSchoolYearFieldFridayPaid(txn, date))
+      schoolYearFridayPaidIds.add(txn.student_id);
     if (isStudentPaidForAftercare(txn, date))
       aftercarePaidIds.add(txn.student_id);
-    if (isStudentPaidForFriday(txn, date)) fridayPaidIds.add(txn.student_id);
   }
 
-  type CareRaw = {
-    id: string;
-    student_id: string;
-    activity: string;
-    logged_at: string;
-  };
-  const careByStudent = new Map<string, CareEntry[]>();
-  for (const e of (careRes.data ?? []) as CareRaw[]) {
-    if (!careByStudent.has(e.student_id)) careByStudent.set(e.student_id, []);
-    careByStudent.get(e.student_id)!.push({
-      id: e.id,
-      activity: e.activity as "sunscreen" | "bug_spray",
-      logged_at: e.logged_at,
-    });
-  }
+  type AttendanceRaw = SyAttendanceRaw;
 
-  type AttendanceRaw = {
-    id: string;
-    student_id: string;
-    paid_for_day: boolean;
-    pickup_time: string | null;
-    picked_up_by_name: string | null;
-  };
   const toSlim = (r: AttendanceRaw): AttendanceSlim => ({
     id: r.id,
     paid_for_day: r.paid_for_day,
     pickup_time: r.pickup_time,
     picked_up_by_name: r.picked_up_by_name,
+    marked_absent: r.marked_absent ?? false,
   });
 
-  const summerRecordMap = new Map(
-    ((summerRecordsRes.data ?? []) as AttendanceRaw[]).map((r) => [
+  const schoolYearRecordMap = new Map(
+    ((schoolYearRecordsRes.data ?? []) as AttendanceRaw[]).map((r) => [
+      r.student_id,
+      toSlim(r),
+    ]),
+  );
+  const schoolYearFridayRecordMap = new Map(
+    ((schoolYearFridayRecordsRes.data ?? []) as AttendanceRaw[]).map((r) => [
       r.student_id,
       toSlim(r),
     ]),
@@ -431,34 +470,45 @@ async function fetchTodayStudents(date: string): Promise<HomeStudentRow[]> {
       toSlim(r),
     ]),
   );
-  const fridayRecordMap = new Map(
-    ((fridayRecordsRes.data ?? []) as AttendanceRaw[]).map((r) => [
-      r.student_id,
-      toSlim(r),
-    ]),
+
+  const teacherMap = buildSchoolYearTeacherMap(
+    (assignmentsRes.data ?? []) as TeacherAssignmentRow[],
+    dropInProgramMap,
   );
 
-  const isFridayDate = dayOfWeek === "fri";
   return students
     .filter((s) =>
       isFridayDate
-        ? fridayPaidIds.has(s.id) || fridayRecordMap.has(s.id)
-        : summerPaidIds.has(s.id) || summerRecordMap.has(s.id),
+        ? schoolYearFridayPaidIds.has(s.id) ||
+          schoolYearFridayRecordMap.has(s.id)
+        : schoolYearPaidIds.has(s.id) || schoolYearRecordMap.has(s.id),
     )
-    .map((s) => ({
-      student_id: s.id,
-      name: s.child_legal_name,
-      profile_image_url: s.profile_image_url,
-      has_allergies: allergyMap.get(s.id) ?? null,
-      program: programMap.get(s.id) ?? null,
-      careEntries: careByStudent.get(s.id) ?? [],
-      hasSummerEnrollment: summerPaidIds.has(s.id),
-      hasAftercareEnrollment: aftercarePaidIds.has(s.id),
-      hasFridayEnrollment: fridayPaidIds.has(s.id),
-      summerRecord: summerRecordMap.get(s.id) ?? null,
-      aftercareRecord: aftercareRecordMap.get(s.id) ?? null,
-      fieldFridayRecord: fridayRecordMap.get(s.id) ?? null,
-    }))
+    .map((s) => {
+      const teacher = teacherMap.get(s.id);
+      return {
+        student_id: s.id,
+        name:
+          displayNameMap.get(s.id) ??
+          getStudentDisplayName(null, s.child_legal_name),
+        profile_image_url: s.profile_image_url,
+        has_allergies: allergyMap.get(s.id) ?? null,
+        program: programMap.get(s.id) ?? null,
+        hasSummerEnrollment: false,
+        hasAftercareEnrollment: aftercarePaidIds.has(s.id),
+        hasFridayEnrollment: false,
+        hasSchoolYearEnrollment: schoolYearPaidIds.has(s.id),
+        hasSchoolYearFridayEnrollment: schoolYearFridayPaidIds.has(s.id),
+        summerRecord: null,
+        aftercareRecord: aftercareRecordMap.get(s.id) ?? null,
+        fieldFridayRecord: null,
+        schoolYearRecord: schoolYearRecordMap.get(s.id) ?? null,
+        schoolYearFieldFridayRecord:
+          schoolYearFridayRecordMap.get(s.id) ?? null,
+        teacherName: teacher?.teacherName ?? null,
+        teacherId: teacher?.teacherId ?? null,
+        classroom: teacher?.classroom ?? null,
+      };
+    })
     .sort((a, b) => (a.name ?? "").localeCompare(b.name ?? ""));
 }
 
@@ -476,7 +526,9 @@ async function fetchUnpaidStudentsForDate(
     supabase
       .schema("parent_app")
       .from("applications")
-      .select("student_id, admin_tags, has_allergies, program")
+      .select(
+        "student_id, admin_tags, has_allergies, program, drop_in_program, preferred_name, child_legal_name",
+      )
       .eq("status", "enrolled"),
   ]);
 
@@ -485,12 +537,27 @@ async function fetchUnpaidStudentsForDate(
     admin_tags: string[] | null;
     has_allergies: string | null;
     program: string | null;
+    drop_in_program: string | null;
+    preferred_name: string | null;
+    child_legal_name: string | null;
   };
 
   const appsData = (appsRes.data ?? []) as AppRow[];
+  const displayNameMap = buildDisplayNameMap(appsData);
+  const isSchoolYearApp = (a: AppRow) =>
+    a.program === "school_year_26_27" ||
+    a.program === "both" ||
+    (a.program === "homeschool_drop_in" &&
+      (a.drop_in_program === "school_year_26_27" ||
+        a.drop_in_program === "both"));
+
   const enrolledIds = new Set(
     appsData
-      .filter((a) => !(a.admin_tags ?? []).includes("Don't Include"))
+      .filter(
+        (a) =>
+          isSchoolYearApp(a) &&
+          !(a.admin_tags ?? []).includes("Don't Include"),
+      )
       .map((a) => a.student_id),
   );
   const allergyMap = new Map(
@@ -510,17 +577,25 @@ async function fetchUnpaidStudentsForDate(
 
   return students.map((s) => ({
     student_id: s.id,
-    name: s.child_legal_name,
+    name:
+      displayNameMap.get(s.id) ??
+      getStudentDisplayName(null, s.child_legal_name),
     profile_image_url: s.profile_image_url,
     has_allergies: allergyMap.get(s.id) ?? null,
     program: programMap.get(s.id) ?? null,
-    careEntries: [],
     hasSummerEnrollment: false,
     hasAftercareEnrollment: false,
     hasFridayEnrollment: false,
+    hasSchoolYearEnrollment: false,
+    hasSchoolYearFridayEnrollment: false,
     summerRecord: null,
     aftercareRecord: null,
     fieldFridayRecord: null,
+    schoolYearRecord: null,
+    schoolYearFieldFridayRecord: null,
+    teacherName: null,
+    teacherId: null,
+    classroom: null,
   }));
 }
 
@@ -626,6 +701,7 @@ export default function StaffHomeScreen() {
   })();
   const [todayStudents, setTodayStudents] = useState<HomeStudentRow[]>([]);
   const [studentsLoading, setStudentsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
 
   // Quick action sheet
@@ -633,11 +709,13 @@ export default function StaffHomeScreen() {
   const [selectedStudent, setSelectedStudent] = useState<HomeStudentRow | null>(
     null,
   );
-  const [logSaving, setLogSaving] = useState<"sunscreen" | "bug_spray" | null>(
-    null,
-  );
   const [attendanceSaving, setAttendanceSaving] = useState<
-    "summer" | "aftercare" | "friday" | null
+    | "aftercare"
+    | "school_year"
+    | "school_year_absent"
+    | "school_year_friday"
+    | "school_year_friday_absent"
+    | null
   >(null);
 
   // Activities quick-access section
@@ -667,6 +745,15 @@ export default function StaffHomeScreen() {
   const [selectedPickupPerson, setSelectedPickupPerson] =
     useState<PickupPerson | null>(null);
   const [pickupSaving, setPickupSaving] = useState(false);
+
+  // Parent-teacher conferences (conference teachers only)
+  const ptcBookingsSheetRef = useRef<BottomSheetModal>(null);
+  const [conferenceBookings, setConferenceBookings] = useState<
+    StaffConferenceBooking[]
+  >([]);
+  const [conferenceBookingsLoading, setConferenceBookingsLoading] =
+    useState(false);
+  const showConferenceSection = isConferenceTeacher(userId);
 
   // ── Load user profile ────────────────────────────────────────────────────────
 
@@ -712,69 +799,120 @@ export default function StaffHomeScreen() {
     loadUser();
   }, []);
 
-  // ── Load published activities + pref counts ──────────────────────────────────
-
   useEffect(() => {
-    async function loadActivities() {
+    if (!showConferenceSection || !userId) return;
+
+    let cancelled = false;
+    async function loadConferenceBookings() {
+      setConferenceBookingsLoading(true);
       try {
-        const all = await getActivities();
-        const published = all
-          .filter((a) => a.status === "published")
-          .slice(0, 5);
-        setActivities(published);
-
-        if (published.length > 0) {
-          const ids = published.map((a) => a.id);
-          const { data } = await supabase
-            .schema("parent_app")
-            .from("activity_preferences")
-            .select("activity_id, participation_level")
-            .in("activity_id", ids);
-
-          const counts: Record<string, { full: number; nonFull: number }> = {};
-          for (const row of (data ?? []) as {
-            activity_id: string;
-            participation_level: string;
-          }[]) {
-            if (!counts[row.activity_id])
-              counts[row.activity_id] = { full: 0, nonFull: 0 };
-            if (row.participation_level === "full")
-              counts[row.activity_id].full++;
-            else counts[row.activity_id].nonFull++;
-          }
-          setPrefCounts(counts);
-        }
-      } catch (e) {
-        notifyError("staff-home-activities", e);
+        const rows = await fetchStaffConferenceBookings(userId!);
+        if (!cancelled) setConferenceBookings(rows);
+      } catch (err) {
+        notifyError("staff-home-ptc-bookings", err);
+        if (!cancelled) setConferenceBookings([]);
       } finally {
-        setActivitiesLoading(false);
+        if (!cancelled) setConferenceBookingsLoading(false);
       }
     }
-    loadActivities();
+
+    loadConferenceBookings();
+    return () => {
+      cancelled = true;
+    };
+  }, [showConferenceSection, userId]);
+
+  // ── Load published activities + pref counts ──────────────────────────────────
+
+  const loadActivities = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setActivitiesLoading(true);
+    try {
+      const all = await getActivities();
+      const published = all
+        .filter((a) => a.status === "published")
+        .slice(0, 5);
+      setActivities(published);
+
+      if (published.length > 0) {
+        const ids = published.map((a) => a.id);
+        const { data } = await supabase
+          .schema("parent_app")
+          .from("activity_preferences")
+          .select("activity_id, participation_level")
+          .in("activity_id", ids);
+
+        const counts: Record<string, { full: number; nonFull: number }> = {};
+        for (const row of (data ?? []) as {
+          activity_id: string;
+          participation_level: string;
+        }[]) {
+          if (!counts[row.activity_id])
+            counts[row.activity_id] = { full: 0, nonFull: 0 };
+          if (row.participation_level === "full")
+            counts[row.activity_id].full++;
+          else counts[row.activity_id].nonFull++;
+        }
+        setPrefCounts(counts);
+      } else {
+        setPrefCounts({});
+      }
+    } catch (e) {
+      notifyError("staff-home-activities", e);
+    } finally {
+      if (!opts?.silent) setActivitiesLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadActivities();
+  }, [loadActivities]);
 
   // ── Load today's students (refreshes on focus) ───────────────────────────────
 
+  const loadTodayStudents = useCallback(
+    async (opts?: { silent?: boolean }) => {
+      if (!opts?.silent) setStudentsLoading(true);
+      try {
+        const rows = await fetchSchoolYearTodayStudents(selectedDate);
+        setTodayStudents(rows);
+      } catch (e) {
+        notifyError("staff-home-today-students", e);
+      } finally {
+        if (!opts?.silent) setStudentsLoading(false);
+      }
+    },
+    [selectedDate],
+  );
+
   useFocusEffect(
     useCallback(() => {
-      let cancelled = false;
-      setStudentsLoading(true);
-      fetchTodayStudents(selectedDate)
-        .then((rows) => {
-          if (!cancelled) {
-            setTodayStudents(rows);
-            setStudentsLoading(false);
-          }
-        })
-        .catch((e) => {
-          notifyError("staff-home-today-students", e);
-          if (!cancelled) setStudentsLoading(false);
-        });
-      return () => {
-        cancelled = true;
-      };
-    }, [selectedDate]),
+      loadTodayStudents();
+    }, [loadTodayStudents]),
   );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        loadTodayStudents({ silent: true }),
+        loadActivities({ silent: true }),
+        showConferenceSection && userId
+          ? fetchStaffConferenceBookings(userId)
+              .then(setConferenceBookings)
+              .catch((e) => notifyError("staff-home-ptc-bookings", e))
+          : Promise.resolve(),
+      ]);
+    } catch (e) {
+      notifyError("staff-home-refresh", e);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [
+    loadTodayStudents,
+    loadActivities,
+    showConferenceSection,
+    userId,
+  ]);
 
   // ── Profile image upload ─────────────────────────────────────────────────────
 
@@ -879,10 +1017,15 @@ export default function StaffHomeScreen() {
         has_emergency_medications: string | null;
         emergency_medications_description: string | null;
       };
+      const nameById = new Map(
+        todayStudents.map((s) => [s.student_id, s.name]),
+      );
       setAllergyDetails(
         ((data ?? []) as AllergyRaw[]).map((r) => ({
           student_id: r.id,
-          name: r.child_legal_name,
+          name:
+            nameById.get(r.id) ??
+            getStudentDisplayName(null, r.child_legal_name),
           profile_image_url: r.profile_image_url,
           allergies_description: r.allergies_description,
           has_medical_conditions: r.has_medical_conditions,
@@ -903,129 +1046,107 @@ export default function StaffHomeScreen() {
     addStudentSheetRef.current?.dismiss();
   }
 
-  async function handleLogCare(activity: "sunscreen" | "bug_spray") {
-    if (!selectedStudent || logSaving) return;
-
-    setLogSaving(activity);
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const { data, error } = await supabase
-        .schema("care_log")
-        .from("entries")
-        .insert({
-          student_id: selectedStudent.student_id,
-          activity,
-          date: selectedDate,
-          logged_by: session.user.id,
-          notes: null,
-        })
-        .select("id, activity, logged_at")
-        .single();
-
-      if (error) throw error;
-
-      type NewEntry = { id: string; activity: string; logged_at: string };
-      const e = data as NewEntry;
-      const newEntry: CareEntry = {
-        id: e.id,
-        activity: e.activity as "sunscreen" | "bug_spray",
-        logged_at: e.logged_at,
-      };
-
-      setTodayStudents((prev) =>
-        prev.map((s) =>
-          s.student_id !== selectedStudent.student_id
-            ? s
-            : { ...s, careEntries: [...s.careEntries, newEntry] },
-        ),
-      );
-      setSelectedStudent((prev) =>
-        prev ? { ...prev, careEntries: [...prev.careEntries, newEntry] } : prev,
-      );
-
-      notifyDiscord({
-        type: "care_log_activity",
-        data: {
-          teacherName: fullName,
-          studentNames: [selectedStudent.name ?? "Unknown"],
-          activity,
-          date: selectedDate,
-        },
-      });
-    } catch (e) {
-      notifyError("staff-home-care-log", e);
-    } finally {
-      setLogSaving(null);
-    }
-  }
-
   // ── Attendance toggles ────────────────────────────────────────────────────────
 
   function patchStudent(transform: (s: HomeStudentRow) => HomeStudentRow) {
     if (!selectedStudent) return;
-    const id = selectedStudent.student_id;
-    setTodayStudents((prev) =>
-      prev.map((s) => (s.student_id === id ? transform(s) : s)),
-    );
-    setSelectedStudent((prev) => (prev ? transform(prev) : prev));
+    patchStudentById(selectedStudent.student_id, transform);
   }
 
-  async function toggleSummerAttendance() {
-    if (!selectedStudent || attendanceSaving) return;
+  function patchStudentById(
+    studentId: string,
+    transform: (s: HomeStudentRow) => HomeStudentRow,
+  ) {
+    setTodayStudents((prev) =>
+      prev.map((s) => (s.student_id === studentId ? transform(s) : s)),
+    );
+    setSelectedStudent((prev) =>
+      prev?.student_id === studentId ? transform(prev) : prev,
+    );
+  }
+
+  async function markStudentPresent(student: HomeStudentRow) {
+    if (attendanceSaving) return;
+    const record = getActiveAttendanceRecord(student);
+    if (record && !record.marked_absent) return;
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) return;
 
-    setAttendanceSaving("summer");
-    const existing = selectedStudent.summerRecord;
+    const isFriday = selectedIsFriday;
+    const table = isFriday
+      ? "school_year_field_friday_records"
+      : "school_year_records";
+    const recordKey = isFriday
+      ? ("schoolYearFieldFridayRecord" as const)
+      : ("schoolYearRecord" as const);
+    const paidForDay = isFriday
+      ? student.hasSchoolYearFridayEnrollment
+      : student.hasSchoolYearEnrollment;
+    const savingKey = isFriday ? "school_year_friday" : "school_year";
+    const discordType = isFriday
+      ? "school_year_field_friday_checked_in"
+      : "school_year_attendance_marked";
+    const errorContext = isFriday
+      ? "staff-home-school-year-friday-mark-present"
+      : "staff-home-school-year-mark-present";
 
-    if (existing) {
-      patchStudent((s) => ({ ...s, summerRecord: null }));
-      const { error } = await supabase
-        .schema("attendance")
-        .from("summer_records")
-        .delete()
-        .eq("id", existing.id);
-      if (error) {
-        notifyError("staff-home-summer-toggle", error);
-        patchStudent((s) => ({ ...s, summerRecord: existing }));
+    setAttendanceSaving(savingKey);
+    try {
+      if (record?.marked_absent) {
+        const { data, error } = await supabase
+          .schema("attendance")
+          .from(table)
+          .update({ marked_absent: false })
+          .eq("id", record.id)
+          .select(SY_ATTENDANCE_SLIM_SELECT)
+          .single();
+        if (error || !data) {
+          notifyError(errorContext, error);
+        } else {
+          patchStudentById(student.student_id, (s) => ({
+            ...s,
+            [recordKey]: data as AttendanceSlim,
+          }));
+          notifyDiscord({
+            type: discordType,
+            data: { studentName: student.name, date: selectedDate },
+          });
+        }
       } else {
-        notifyDiscord({
-          type: "summer_attendance_removed",
-          data: { studentName: selectedStudent.name, date: selectedDate },
-        });
+        const { data, error } = await supabase
+          .schema("attendance")
+          .from(table)
+          .upsert(
+            {
+              student_id: student.student_id,
+              date: selectedDate,
+              recorded_by: user.id,
+              paid_for_day: paidForDay,
+              marked_absent: false,
+            },
+            { onConflict: "student_id,date" },
+          )
+          .select(SY_ATTENDANCE_SLIM_SELECT)
+          .single();
+        if (error || !data) {
+          notifyError(errorContext, error);
+        } else {
+          patchStudentById(student.student_id, (s) => ({
+            ...s,
+            [recordKey]: data as AttendanceSlim,
+          }));
+          notifyDiscord({
+            type: discordType,
+            data: { studentName: student.name, date: selectedDate },
+          });
+        }
       }
-    } else {
-      const { data, error } = await supabase
-        .schema("attendance")
-        .from("summer_records")
-        .upsert(
-          {
-            student_id: selectedStudent.student_id,
-            date: selectedDate,
-            recorded_by: user.id,
-            paid_for_day: selectedStudent.hasSummerEnrollment,
-          },
-          { onConflict: "student_id,date" },
-        )
-        .select("id, paid_for_day, pickup_time, picked_up_by_name")
-        .single();
-      if (error || !data) {
-        notifyError("staff-home-summer-toggle", error);
-      } else {
-        patchStudent((s) => ({ ...s, summerRecord: data as AttendanceSlim }));
-        notifyDiscord({
-          type: "summer_attendance_marked",
-          data: { studentName: selectedStudent.name, date: selectedDate },
-        });
-      }
+    } finally {
+      setAttendanceSaving(null);
     }
-    setAttendanceSaving(null);
   }
 
   async function toggleAftercareAttendance() {
@@ -1067,14 +1188,17 @@ export default function StaffHomeScreen() {
           },
           { onConflict: "student_id,date" },
         )
-        .select("id, paid_for_day, pickup_time, picked_up_by_name")
+        .select(AFTERCARE_SLIM_SELECT)
         .single();
       if (error || !data) {
         notifyError("staff-home-aftercare-toggle", error);
       } else {
         patchStudent((s) => ({
           ...s,
-          aftercareRecord: data as AttendanceSlim,
+          aftercareRecord: {
+            ...(data as Omit<AttendanceSlim, "marked_absent">),
+            marked_absent: false,
+          },
         }));
         notifyDiscord({
           type: "aftercare_checked_in",
@@ -1085,61 +1209,336 @@ export default function StaffHomeScreen() {
     setAttendanceSaving(null);
   }
 
-  async function toggleFieldFridayAttendance() {
+  async function toggleSchoolYearAttendance() {
     if (!selectedStudent || attendanceSaving) return;
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) return;
 
-    setAttendanceSaving("friday");
-    const existing = selectedStudent.fieldFridayRecord;
+    setAttendanceSaving("school_year");
+    const existing = selectedStudent.schoolYearRecord;
+    const table = "school_year_records";
+    const recordKey = "schoolYearRecord" as const;
 
-    if (existing) {
-      patchStudent((s) => ({ ...s, fieldFridayRecord: null }));
-      const { error } = await supabase
-        .schema("attendance")
-        .from("field_friday_records")
-        .delete()
-        .eq("id", existing.id);
-      if (error) {
-        notifyError("staff-home-friday-toggle", error);
-        patchStudent((s) => ({ ...s, fieldFridayRecord: existing }));
+    try {
+      if (existing && !existing.marked_absent) {
+        patchStudent((s) => ({ ...s, [recordKey]: null }));
+        const { error } = await supabase
+          .schema("attendance")
+          .from(table)
+          .delete()
+          .eq("id", existing.id);
+        if (error) {
+          notifyError("staff-home-school-year-toggle", error);
+          patchStudent((s) => ({ ...s, [recordKey]: existing }));
+        } else {
+          notifyDiscord({
+            type: "school_year_attendance_removed",
+            data: { studentName: selectedStudent.name, date: selectedDate },
+          });
+        }
+      } else if (existing?.marked_absent) {
+        const { data, error } = await supabase
+          .schema("attendance")
+          .from(table)
+          .update({ marked_absent: false })
+          .eq("id", existing.id)
+          .select(SY_ATTENDANCE_SLIM_SELECT)
+          .single();
+        if (error || !data) {
+          notifyError("staff-home-school-year-toggle", error);
+        } else {
+          patchStudent((s) => ({
+            ...s,
+            [recordKey]: data as AttendanceSlim,
+          }));
+          notifyDiscord({
+            type: "school_year_attendance_marked",
+            data: { studentName: selectedStudent.name, date: selectedDate },
+          });
+        }
       } else {
-        notifyDiscord({
-          type: "field_friday_checked_out",
-          data: { studentName: selectedStudent.name, date: selectedDate },
-        });
+        const { data, error } = await supabase
+          .schema("attendance")
+          .from(table)
+          .upsert(
+            {
+              student_id: selectedStudent.student_id,
+              date: selectedDate,
+              recorded_by: user.id,
+              paid_for_day: selectedStudent.hasSchoolYearEnrollment,
+              marked_absent: false,
+            },
+            { onConflict: "student_id,date" },
+          )
+          .select(SY_ATTENDANCE_SLIM_SELECT)
+          .single();
+        if (error || !data) {
+          notifyError("staff-home-school-year-toggle", error);
+        } else {
+          patchStudent((s) => ({
+            ...s,
+            [recordKey]: data as AttendanceSlim,
+          }));
+          notifyDiscord({
+            type: "school_year_attendance_marked",
+            data: { studentName: selectedStudent.name, date: selectedDate },
+          });
+        }
       }
-    } else {
-      const { data, error } = await supabase
-        .schema("attendance")
-        .from("field_friday_records")
-        .upsert(
-          {
-            student_id: selectedStudent.student_id,
-            date: selectedDate,
-            recorded_by: user.id,
-            paid_for_day: selectedStudent.hasFridayEnrollment,
-          },
-          { onConflict: "student_id,date" },
-        )
-        .select("id, paid_for_day, pickup_time, picked_up_by_name")
-        .single();
-      if (error || !data) {
-        notifyError("staff-home-friday-toggle", error);
-      } else {
-        patchStudent((s) => ({
-          ...s,
-          fieldFridayRecord: data as AttendanceSlim,
-        }));
-        notifyDiscord({
-          type: "field_friday_checked_in",
-          data: { studentName: selectedStudent.name, date: selectedDate },
-        });
-      }
+    } finally {
+      setAttendanceSaving(null);
     }
-    setAttendanceSaving(null);
+  }
+
+  async function toggleSchoolYearAbsent() {
+    if (!selectedStudent || attendanceSaving) return;
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+
+    setAttendanceSaving("school_year_absent");
+    const existing = selectedStudent.schoolYearRecord;
+    const table = "school_year_records";
+    const recordKey = "schoolYearRecord" as const;
+
+    try {
+      if (existing?.marked_absent) {
+        patchStudent((s) => ({ ...s, [recordKey]: null }));
+        const { error } = await supabase
+          .schema("attendance")
+          .from(table)
+          .delete()
+          .eq("id", existing.id);
+        if (error) {
+          notifyError("staff-home-school-year-absent", error);
+          patchStudent((s) => ({ ...s, [recordKey]: existing }));
+        } else {
+          notifyDiscord({
+            type: "school_year_attendance_absent_removed",
+            data: { studentName: selectedStudent.name, date: selectedDate },
+          });
+        }
+      } else if (existing && !existing.marked_absent) {
+        const { data, error } = await supabase
+          .schema("attendance")
+          .from(table)
+          .update({ marked_absent: true })
+          .eq("id", existing.id)
+          .select(SY_ATTENDANCE_SLIM_SELECT)
+          .single();
+        if (error || !data) {
+          notifyError("staff-home-school-year-absent", error);
+        } else {
+          patchStudent((s) => ({
+            ...s,
+            [recordKey]: data as AttendanceSlim,
+          }));
+          notifyDiscord({
+            type: "school_year_attendance_absent",
+            data: { studentName: selectedStudent.name, date: selectedDate },
+          });
+        }
+      } else {
+        const { data, error } = await supabase
+          .schema("attendance")
+          .from(table)
+          .upsert(
+            {
+              student_id: selectedStudent.student_id,
+              date: selectedDate,
+              recorded_by: user.id,
+              paid_for_day: selectedStudent.hasSchoolYearEnrollment,
+              marked_absent: true,
+            },
+            { onConflict: "student_id,date" },
+          )
+          .select(SY_ATTENDANCE_SLIM_SELECT)
+          .single();
+        if (error || !data) {
+          notifyError("staff-home-school-year-absent", error);
+        } else {
+          patchStudent((s) => ({
+            ...s,
+            [recordKey]: data as AttendanceSlim,
+          }));
+          notifyDiscord({
+            type: "school_year_attendance_absent",
+            data: { studentName: selectedStudent.name, date: selectedDate },
+          });
+        }
+      }
+    } finally {
+      setAttendanceSaving(null);
+    }
+  }
+
+  async function toggleSchoolYearFieldFridayAttendance() {
+    if (!selectedStudent || attendanceSaving) return;
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+
+    setAttendanceSaving("school_year_friday");
+    const existing = selectedStudent.schoolYearFieldFridayRecord;
+    const table = "school_year_field_friday_records";
+    const recordKey = "schoolYearFieldFridayRecord" as const;
+
+    try {
+      if (existing && !existing.marked_absent) {
+        patchStudent((s) => ({ ...s, [recordKey]: null }));
+        const { error } = await supabase
+          .schema("attendance")
+          .from(table)
+          .delete()
+          .eq("id", existing.id);
+        if (error) {
+          notifyError("staff-home-school-year-friday-toggle", error);
+          patchStudent((s) => ({ ...s, [recordKey]: existing }));
+        } else {
+          notifyDiscord({
+            type: "school_year_field_friday_checked_out",
+            data: { studentName: selectedStudent.name, date: selectedDate },
+          });
+        }
+      } else if (existing?.marked_absent) {
+        const { data, error } = await supabase
+          .schema("attendance")
+          .from(table)
+          .update({ marked_absent: false })
+          .eq("id", existing.id)
+          .select(SY_ATTENDANCE_SLIM_SELECT)
+          .single();
+        if (error || !data) {
+          notifyError("staff-home-school-year-friday-toggle", error);
+        } else {
+          patchStudent((s) => ({
+            ...s,
+            [recordKey]: data as AttendanceSlim,
+          }));
+          notifyDiscord({
+            type: "school_year_field_friday_checked_in",
+            data: { studentName: selectedStudent.name, date: selectedDate },
+          });
+        }
+      } else {
+        const { data, error } = await supabase
+          .schema("attendance")
+          .from(table)
+          .upsert(
+            {
+              student_id: selectedStudent.student_id,
+              date: selectedDate,
+              recorded_by: user.id,
+              paid_for_day: selectedStudent.hasSchoolYearFridayEnrollment,
+              marked_absent: false,
+            },
+            { onConflict: "student_id,date" },
+          )
+          .select(SY_ATTENDANCE_SLIM_SELECT)
+          .single();
+        if (error || !data) {
+          notifyError("staff-home-school-year-friday-toggle", error);
+        } else {
+          patchStudent((s) => ({
+            ...s,
+            [recordKey]: data as AttendanceSlim,
+          }));
+          notifyDiscord({
+            type: "school_year_field_friday_checked_in",
+            data: { studentName: selectedStudent.name, date: selectedDate },
+          });
+        }
+      }
+    } finally {
+      setAttendanceSaving(null);
+    }
+  }
+
+  async function toggleSchoolYearFieldFridayAbsent() {
+    if (!selectedStudent || attendanceSaving) return;
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+
+    setAttendanceSaving("school_year_friday_absent");
+    const existing = selectedStudent.schoolYearFieldFridayRecord;
+    const table = "school_year_field_friday_records";
+    const recordKey = "schoolYearFieldFridayRecord" as const;
+
+    try {
+      if (existing?.marked_absent) {
+        patchStudent((s) => ({ ...s, [recordKey]: null }));
+        const { error } = await supabase
+          .schema("attendance")
+          .from(table)
+          .delete()
+          .eq("id", existing.id);
+        if (error) {
+          notifyError("staff-home-school-year-friday-absent", error);
+          patchStudent((s) => ({ ...s, [recordKey]: existing }));
+        } else {
+          notifyDiscord({
+            type: "school_year_field_friday_absent_removed",
+            data: { studentName: selectedStudent.name, date: selectedDate },
+          });
+        }
+      } else if (existing && !existing.marked_absent) {
+        const { data, error } = await supabase
+          .schema("attendance")
+          .from(table)
+          .update({ marked_absent: true })
+          .eq("id", existing.id)
+          .select(SY_ATTENDANCE_SLIM_SELECT)
+          .single();
+        if (error || !data) {
+          notifyError("staff-home-school-year-friday-absent", error);
+        } else {
+          patchStudent((s) => ({
+            ...s,
+            [recordKey]: data as AttendanceSlim,
+          }));
+          notifyDiscord({
+            type: "school_year_field_friday_absent",
+            data: { studentName: selectedStudent.name, date: selectedDate },
+          });
+        }
+      } else {
+        const { data, error } = await supabase
+          .schema("attendance")
+          .from(table)
+          .upsert(
+            {
+              student_id: selectedStudent.student_id,
+              date: selectedDate,
+              recorded_by: user.id,
+              paid_for_day: selectedStudent.hasSchoolYearFridayEnrollment,
+              marked_absent: true,
+            },
+            { onConflict: "student_id,date" },
+          )
+          .select(SY_ATTENDANCE_SLIM_SELECT)
+          .single();
+        if (error || !data) {
+          notifyError("staff-home-school-year-friday-absent", error);
+        } else {
+          patchStudent((s) => ({
+            ...s,
+            [recordKey]: data as AttendanceSlim,
+          }));
+          notifyDiscord({
+            type: "school_year_field_friday_absent",
+            data: { studentName: selectedStudent.name, date: selectedDate },
+          });
+        }
+      }
+    } finally {
+      setAttendanceSaving(null);
+    }
   }
 
   // ── Pickup ────────────────────────────────────────────────────────────────────
@@ -1147,9 +1546,9 @@ export default function StaffHomeScreen() {
   async function openPickup(student?: HomeStudentRow) {
     const target = student ?? selectedStudent;
     const record = selectedIsFriday
-      ? target?.fieldFridayRecord
-      : target?.summerRecord;
-    if (!record || !target) return;
+      ? target?.schoolYearFieldFridayRecord
+      : target?.schoolYearRecord;
+    if (!record || record.marked_absent || !target) return;
     setSelectedPickupPerson(null);
     setPickupPersonsLoading(true);
     pickupSheetRef.current?.present();
@@ -1201,10 +1600,10 @@ export default function StaffHomeScreen() {
   }
 
   async function confirmPickup() {
-    const hasRecord = selectedIsFriday
-      ? !!selectedStudent?.fieldFridayRecord
-      : !!selectedStudent?.summerRecord;
-    if (!hasRecord || !selectedPickupPerson) return;
+    const record = selectedIsFriday
+      ? selectedStudent?.schoolYearFieldFridayRecord
+      : selectedStudent?.schoolYearRecord;
+    if (!record || record.marked_absent || !selectedPickupPerson) return;
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -1212,83 +1611,64 @@ export default function StaffHomeScreen() {
 
     setPickupSaving(true);
 
-    if (selectedIsFriday) {
-      const { data, error } = await supabase
-        .schema("attendance")
-        .from("field_friday_records")
-        .upsert(
-          {
-            student_id: selectedStudent!.student_id,
-            date: selectedDate,
-            recorded_by: user.id,
-            paid_for_day: selectedStudent!.hasFridayEnrollment,
-            picked_up_by_name: selectedPickupPerson.name,
-            picked_up_by_relationship: selectedPickupPerson.relationship,
-            pickup_recorded_by: user.id,
-          },
-          { onConflict: "student_id,date" },
-        )
-        .select("id, paid_for_day, pickup_time, picked_up_by_name")
-        .single();
+    const table = selectedIsFriday
+      ? "school_year_field_friday_records"
+      : "school_year_records";
+    const paidForDay = selectedIsFriday
+      ? selectedStudent!.hasSchoolYearFridayEnrollment
+      : selectedStudent!.hasSchoolYearEnrollment;
 
-      if (!error && data) {
-        patchStudent((s) => ({
+    const { data, error } = await supabase
+      .schema("attendance")
+      .from(table)
+      .upsert(
+        {
+          student_id: selectedStudent!.student_id,
+          date: selectedDate,
+          recorded_by: user.id,
+          paid_for_day: paidForDay,
+          picked_up_by_name: selectedPickupPerson.name,
+          picked_up_by_relationship: selectedPickupPerson.relationship,
+          pickup_recorded_by: user.id,
+        },
+        { onConflict: "student_id,date" },
+      )
+      .select(SY_ATTENDANCE_SLIM_SELECT)
+      .single();
+
+    if (!error && data) {
+      patchStudent((s) => {
+        if (selectedIsFriday) {
+          return {
+            ...s,
+            schoolYearFieldFridayRecord: {
+              ...s.schoolYearFieldFridayRecord!,
+              ...(data as Partial<AttendanceSlim>),
+            },
+          };
+        }
+        return {
           ...s,
-          fieldFridayRecord: {
-            ...s.fieldFridayRecord!,
+          schoolYearRecord: {
+            ...s.schoolYearRecord!,
             ...(data as Partial<AttendanceSlim>),
           },
-        }));
-        notifyDiscord({
-          type: "field_friday_pickup_recorded",
-          data: {
-            studentName: selectedStudent!.name,
-            date: selectedDate,
-            pickedUpBy: selectedPickupPerson.name,
-            relationship: selectedPickupPerson.relationship,
-          },
-        });
-      } else if (error) {
-        notifyError("staff-home-pickup", error);
-      }
-    } else {
-      const { data, error } = await supabase
-        .schema("attendance")
-        .from("summer_records")
-        .upsert(
-          {
-            student_id: selectedStudent!.student_id,
-            date: selectedDate,
-            recorded_by: user.id,
-            paid_for_day: selectedStudent!.hasSummerEnrollment,
-            picked_up_by_name: selectedPickupPerson.name,
-            picked_up_by_relationship: selectedPickupPerson.relationship,
-            pickup_recorded_by: user.id,
-          },
-          { onConflict: "student_id,date" },
-        )
-        .select("id, paid_for_day, pickup_time, picked_up_by_name")
-        .single();
+        };
+      });
 
-      if (!error && data) {
-        patchStudent((s) => ({
-          ...s,
-          summerRecord: {
-            ...s.summerRecord!,
-            ...(data as Partial<AttendanceSlim>),
-          },
-        }));
-        notifyDiscord({
-          type: "summer_pickup_recorded",
-          data: {
-            studentName: selectedStudent!.name,
-            date: selectedDate,
-            pickedUpBy: selectedPickupPerson.name,
-          },
-        });
-      } else if (error) {
-        notifyError("staff-home-pickup", error);
-      }
+      notifyDiscord({
+        type: selectedIsFriday
+          ? "school_year_field_friday_pickup_recorded"
+          : "school_year_pickup_recorded",
+        data: {
+          studentName: selectedStudent!.name,
+          date: selectedDate,
+          pickedUpBy: selectedPickupPerson.name,
+          relationship: selectedPickupPerson.relationship,
+        },
+      });
+    } else if (error) {
+      notifyError("staff-home-pickup", error);
     }
 
     setPickupSaving(false);
@@ -1297,44 +1677,36 @@ export default function StaffHomeScreen() {
 
   // ── Derived data ──────────────────────────────────────────────────────────────
 
+  function getActiveAttendanceRecord(s: HomeStudentRow): AttendanceSlim | null {
+    return selectedIsFriday
+      ? s.schoolYearFieldFridayRecord
+      : s.schoolYearRecord;
+  }
+
   function statusPriority(s: HomeStudentRow): number {
-    const record = selectedIsFriday ? s.fieldFridayRecord : s.summerRecord;
+    const record = getActiveAttendanceRecord(s);
     if (!record) return 0;
     if (record.picked_up_by_name) return 2;
     return 1;
   }
 
-  const filteredStudents = (
-    search
+  const filteredStudents =
+    search.length > 0
       ? todayStudents.filter((s) =>
           (s.name ?? "").toLowerCase().includes(search.toLowerCase()),
         )
-      : todayStudents
-  )
-    .slice()
-    .sort((a, b) => {
-      const diff = statusPriority(a) - statusPriority(b);
-      if (diff !== 0) return diff;
-      return (a.name ?? "").localeCompare(b.name ?? "");
-    });
+      : todayStudents;
 
-  const sunscreenEntries =
-    selectedStudent?.careEntries.filter((e) => e.activity === "sunscreen") ??
-    [];
-  const bugSprayEntries =
-    selectedStudent?.careEntries.filter((e) => e.activity === "bug_spray") ??
-    [];
-  const sunscreenEntry = sunscreenEntries[0] ?? null;
-  const bugSprayEntry = bugSprayEntries[0] ?? null;
-  const sunscreenLogged = sunscreenEntries.length > 0;
-  const bugSprayLogged = bugSprayEntries.length > 0;
+  const teacherSections = groupStudentsByTeacher(
+    filteredStudents,
+    statusPriority,
+  );
 
   // ── Empty state ───────────────────────────────────────────────────────────────
 
   function renderEmptyState() {
     const dow = new Date().getDay();
     const isWeekend = dow === 0 || dow === 6;
-    const beforeSummer = new Date() < SUMMER_START;
 
     if (search) {
       return (
@@ -1346,24 +1718,229 @@ export default function StaffHomeScreen() {
       );
     }
 
+    const [y, m, d] = selectedDate.split("-").map(Number);
+    const selectedDay = new Date(y, m - 1, d);
+    const beforeSchoolYear = selectedDay < SCHOOL_YEAR_START;
+
     return (
       <View style={styles.emptyState}>
-        <Ionicons name="sunny-outline" size={40} color="#d1d5db" />
+        <Ionicons name="school-outline" size={40} color="#d1d5db" />
         <Text style={styles.emptyStateTitle}>
           {isWeekend
             ? "No school today"
-            : beforeSummer
-              ? "Summer hasn't started yet"
+            : beforeSchoolYear
+              ? "School year hasn't started yet"
               : "No students scheduled today"}
         </Text>
         <Text style={styles.emptyStateSub}>
           {isWeekend
             ? "Enjoy your weekend!"
-            : beforeSummer
-              ? `Summer begins ${SUMMER_START.toLocaleDateString("en-US", { month: "long", day: "numeric" })}`
+            : beforeSchoolYear
+              ? `School year begins ${SCHOOL_YEAR_START.toLocaleDateString("en-US", { month: "long", day: "numeric" })}`
               : "No paid enrollments found for today."}
         </Text>
       </View>
+    );
+  }
+
+  function renderStudentRow(
+    student: HomeStudentRow,
+    teacherColors: { bg: string; accent: string },
+  ) {
+    const color = avatarColor(student.student_id);
+    const isPaid = selectedIsFriday
+      ? student.hasSchoolYearFridayEnrollment
+      : student.hasSchoolYearEnrollment;
+
+    return (
+      <Pressable
+        key={student.student_id}
+        style={({ pressed }) => [
+          styles.studentRow,
+          {
+            borderLeftWidth: 3,
+            borderLeftColor: teacherColors.accent,
+          },
+          pressed && { backgroundColor: "#f9fafb" },
+        ]}
+        onPress={() => openStudentActions(student)}
+      >
+        <View style={{ position: "relative", width: 40, height: 40 }}>
+          <View
+            style={[styles.avatarCircle, { backgroundColor: color }]}
+          >
+            {student.profile_image_url ? (
+              <Image
+                source={{ uri: student.profile_image_url }}
+                style={styles.avatarCircleImage}
+                contentFit="cover"
+              />
+            ) : (
+              <Text style={styles.avatarCircleText}>
+                {getInitials(student.name ?? "?")}
+              </Text>
+            )}
+          </View>
+          {student.has_allergies === "yes" && (
+            <View style={styles.allergyBadge}>
+              <Ionicons name="medical" size={7} color="#fff" />
+            </View>
+          )}
+        </View>
+
+        <View style={styles.studentRowInfo}>
+          <View style={styles.studentNameRow}>
+            <Text style={styles.studentName} numberOfLines={1}>
+              {shortName(student.name)}
+            </Text>
+            {student.program === "homeschool_drop_in" && (
+              <Ionicons
+                name="home"
+                size={13}
+                color="#059669"
+                style={{ marginLeft: 4 }}
+              />
+            )}
+          </View>
+          <View style={styles.careChipsRow}>
+            {(() => {
+              const record = getActiveAttendanceRecord(student);
+              if (record?.marked_absent) {
+                return (
+                  <View style={[styles.careChip, styles.careChipAbsent]}>
+                    <Ionicons name="close-circle" size={10} color="#b91c1c" />
+                    <Text
+                      style={[
+                        styles.careChipText,
+                        styles.careChipTextAbsent,
+                      ]}
+                    >
+                      Absent
+                    </Text>
+                  </View>
+                );
+              }
+              if (record?.picked_up_by_name) {
+                return (
+                  <View style={[styles.careChip, styles.careChipLogged]}>
+                    <Ionicons name="car" size={10} color="#15803d" />
+                    <Text
+                      style={[
+                        styles.careChipText,
+                        styles.careChipTextLogged,
+                      ]}
+                    >
+                      Picked Up
+                    </Text>
+                  </View>
+                );
+              }
+              if (record) {
+                return (
+                  <View style={[styles.careChip, styles.careChipLogged]}>
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={10}
+                      color="#15803d"
+                    />
+                    <Text
+                      style={[
+                        styles.careChipText,
+                        styles.careChipTextLogged,
+                      ]}
+                    >
+                      Present
+                    </Text>
+                  </View>
+                );
+              }
+              return null;
+            })()}
+            {!isPaid && (
+              <View style={[styles.careChip, { backgroundColor: "#f3f4f6" }]}>
+                <Text
+                  style={[styles.careChipText, styles.careChipTextUnlogged]}
+                >
+                  Unpaid
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+
+        <View
+          style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+        >
+          {(() => {
+            const record = getActiveAttendanceRecord(student);
+            const isPresent = !!record && !record.marked_absent;
+            const alreadyPickedUp = !!record?.picked_up_by_name;
+            const chipDisabled = attendanceSaving !== null;
+
+            if (!isPresent) {
+              return (
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.todayChip,
+                    {
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 4,
+                      paddingVertical: 7,
+                    },
+                    (pressed || chipDisabled) && { opacity: 0.7 },
+                  ]}
+                  disabled={chipDisabled}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    markStudentPresent(student);
+                  }}
+                >
+                  <Ionicons
+                    name="checkmark-circle-outline"
+                    size={13}
+                    color={Brand.sage700}
+                  />
+                  <Text style={styles.todayChipText}>Mark Present</Text>
+                </Pressable>
+              );
+            }
+
+            if (!alreadyPickedUp) {
+              return (
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.todayChip,
+                    {
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 4,
+                      paddingVertical: 7,
+                    },
+                    (pressed || chipDisabled) && { opacity: 0.7 },
+                  ]}
+                  disabled={chipDisabled}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    setSelectedStudent(student);
+                    openPickup(student);
+                  }}
+                >
+                  <Ionicons
+                    name="car-outline"
+                    size={13}
+                    color={Brand.sage700}
+                  />
+                  <Text style={styles.todayChipText}>Record Pickup</Text>
+                </Pressable>
+              );
+            }
+
+            return null;
+          })()}
+          <Ionicons name="chevron-forward" size={16} color="#d1d5db" />
+        </View>
+      </Pressable>
     );
   }
 
@@ -1489,6 +2066,13 @@ export default function StaffHomeScreen() {
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={Brand.sage700}
+              />
+            }
           >
             {studentsLoading
               ? Array.from({ length: 5 }).map((_, i) => (
@@ -1502,257 +2086,40 @@ export default function StaffHomeScreen() {
                 ))
               : filteredStudents.length === 0
                 ? renderEmptyState()
-                : filteredStudents.map((student) => {
-                    const sunscreen = student.careEntries.find(
-                      (e) => e.activity === "sunscreen",
-                    );
-                    const bugSpray = student.careEntries.find(
-                      (e) => e.activity === "bug_spray",
-                    );
-                    const color = avatarColor(student.student_id);
-
+                : teacherSections.map((section) => {
+                    const colors = getTeacherColors(section.teacherName);
                     return (
-                      <Pressable
-                        key={student.student_id}
-                        style={({ pressed }) => [
-                          styles.studentRow,
-                          pressed && { backgroundColor: "#f9fafb" },
-                        ]}
-                        onPress={() => openStudentActions(student)}
-                      >
-                        {/* Avatar */}
+                      <View key={section.teacherName} style={styles.teacherSection}>
                         <View
-                          style={{
-                            position: "relative",
-                            width: 40,
-                            height: 40,
-                          }}
+                          style={[
+                            styles.teacherSectionHeader,
+                            { backgroundColor: colors.bg },
+                          ]}
                         >
-                          <View
+                          <Text
                             style={[
-                              styles.avatarCircle,
-                              { backgroundColor: color },
+                              styles.teacherSectionTitle,
+                              { color: colors.accent },
                             ]}
                           >
-                            {student.profile_image_url ? (
-                              <Image
-                                source={{ uri: student.profile_image_url }}
-                                style={styles.avatarCircleImage}
-                                contentFit="cover"
-                              />
-                            ) : (
-                              <Text style={styles.avatarCircleText}>
-                                {getInitials(student.name ?? "?")}
-                              </Text>
-                            )}
-                          </View>
-                          {student.has_allergies === "yes" && (
-                            <View style={styles.allergyBadge}>
-                              <Ionicons name="medical" size={7} color="#fff" />
-                            </View>
-                          )}
+                            {section.teacherName}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.teacherSectionCount,
+                              { color: colors.accent },
+                            ]}
+                          >
+                            {section.students.length}{" "}
+                            {section.students.length === 1
+                              ? "student"
+                              : "students"}
+                          </Text>
                         </View>
-
-                        {/* Name + care chips */}
-                        <View style={styles.studentRowInfo}>
-                          <View style={styles.studentNameRow}>
-                            <Text style={styles.studentName} numberOfLines={1}>
-                              {shortName(student.name)}
-                            </Text>
-                            {student.program === "homeschool_drop_in" && (
-                              <Ionicons
-                                name="home"
-                                size={13}
-                                color="#059669"
-                                style={{ marginLeft: 4 }}
-                              />
-                            )}
-                          </View>
-                          <View style={styles.careChipsRow}>
-                            {selectedIsFriday ? (
-                              student.fieldFridayRecord?.picked_up_by_name ? (
-                                <View
-                                  style={[
-                                    styles.careChip,
-                                    styles.careChipLogged,
-                                  ]}
-                                >
-                                  <Ionicons
-                                    name="car"
-                                    size={10}
-                                    color="#15803d"
-                                  />
-                                  <Text
-                                    style={[
-                                      styles.careChipText,
-                                      styles.careChipTextLogged,
-                                    ]}
-                                  >
-                                    Picked Up
-                                  </Text>
-                                </View>
-                              ) : student.fieldFridayRecord ? (
-                                <View
-                                  style={[
-                                    styles.careChip,
-                                    styles.careChipLogged,
-                                  ]}
-                                >
-                                  <Ionicons
-                                    name="checkmark-circle"
-                                    size={10}
-                                    color="#15803d"
-                                  />
-                                  <Text
-                                    style={[
-                                      styles.careChipText,
-                                      styles.careChipTextLogged,
-                                    ]}
-                                  >
-                                    Present
-                                  </Text>
-                                </View>
-                              ) : null
-                            ) : student.summerRecord?.picked_up_by_name ? (
-                              <View
-                                style={[styles.careChip, styles.careChipLogged]}
-                              >
-                                <Ionicons
-                                  name="car"
-                                  size={10}
-                                  color="#15803d"
-                                />
-                                <Text
-                                  style={[
-                                    styles.careChipText,
-                                    styles.careChipTextLogged,
-                                  ]}
-                                >
-                                  Picked Up
-                                </Text>
-                              </View>
-                            ) : student.summerRecord ? (
-                              <View
-                                style={[styles.careChip, styles.careChipLogged]}
-                              >
-                                <Ionicons
-                                  name="checkmark-circle"
-                                  size={10}
-                                  color="#15803d"
-                                />
-                                <Text
-                                  style={[
-                                    styles.careChipText,
-                                    styles.careChipTextLogged,
-                                  ]}
-                                >
-                                  Present
-                                </Text>
-                              </View>
-                            ) : null}
-                            {sunscreen && (
-                              <View
-                                style={[styles.careChip, styles.careChipLogged]}
-                              >
-                                <Text style={styles.careChipIcon}>🧴</Text>
-                                <Text
-                                  style={[
-                                    styles.careChipText,
-                                    styles.careChipTextLogged,
-                                  ]}
-                                >
-                                  {formatTime12h(sunscreen.logged_at)}
-                                </Text>
-                              </View>
-                            )}
-                            {bugSpray && (
-                              <View
-                                style={[styles.careChip, styles.careChipLogged]}
-                              >
-                                <Text style={styles.careChipIcon}>🦟</Text>
-                                <Text
-                                  style={[
-                                    styles.careChipText,
-                                    styles.careChipTextLogged,
-                                  ]}
-                                >
-                                  {formatTime12h(bugSpray.logged_at)}
-                                </Text>
-                              </View>
-                            )}
-                            {!student.hasSummerEnrollment &&
-                              !student.hasFridayEnrollment && (
-                                <View
-                                  style={[
-                                    styles.careChip,
-                                    { backgroundColor: "#f3f4f6" },
-                                  ]}
-                                >
-                                  <Text
-                                    style={[
-                                      styles.careChipText,
-                                      styles.careChipTextUnlogged,
-                                    ]}
-                                  >
-                                    Unpaid
-                                  </Text>
-                                </View>
-                              )}
-                          </View>
-                        </View>
-
-                        {/* right-side controls */}
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            gap: 6,
-                          }}
-                        >
-                          {(() => {
-                            const record = selectedIsFriday
-                              ? student.fieldFridayRecord
-                              : student.summerRecord;
-                            const alreadyPickedUp = !!record?.picked_up_by_name;
-                            if (record && !alreadyPickedUp) {
-                              return (
-                                <Pressable
-                                  style={({ pressed }) => [
-                                    styles.todayChip,
-                                    {
-                                      flexDirection: "row",
-                                      alignItems: "center",
-                                      gap: 4,
-                                      paddingVertical: 7,
-                                    },
-                                    pressed && { opacity: 0.7 },
-                                  ]}
-                                  onPress={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedStudent(student);
-                                    openPickup(student);
-                                  }}
-                                >
-                                  <Ionicons
-                                    name="car-outline"
-                                    size={13}
-                                    color={Brand.sage700}
-                                  />
-                                  <Text style={styles.todayChipText}>
-                                    Record Pickup
-                                  </Text>
-                                </Pressable>
-                              );
-                            }
-                            return null;
-                          })()}
-                          <Ionicons
-                            name="chevron-forward"
-                            size={16}
-                            color="#d1d5db"
-                          />
-                        </View>
-                      </Pressable>
+                        {section.students.map((student) =>
+                          renderStudentRow(student, colors),
+                        )}
+                      </View>
                     );
                   })}
 
@@ -1777,6 +2144,15 @@ export default function StaffHomeScreen() {
                   </Text>
                 </View>
               </Pressable>
+            )}
+
+            {showConferenceSection && (
+              <StaffConferenceSection
+                bookings={conferenceBookings}
+                loading={conferenceBookingsLoading}
+                todayYmd={todayActual}
+                onViewAll={() => ptcBookingsSheetRef.current?.present()}
+              />
             )}
 
             {/* This Week's Activities */}
@@ -2086,49 +2462,56 @@ export default function StaffHomeScreen() {
                   onPress: () => void;
                 };
                 const tiles: Tile[] = [];
+                const activeRecord = getActiveAttendanceRecord(selectedStudent);
                 if (!selectedIsFriday) {
                   tiles.push({
-                    key: "summer",
-                    icon: "☀️",
-                    label: selectedStudent.summerRecord
-                      ? "Present"
-                      : "Mark Present",
-                    active: !!selectedStudent.summerRecord,
-                    saving: attendanceSaving === "summer",
+                    key: "school_year",
+                    icon: "🎒",
+                    label:
+                      activeRecord && !activeRecord.marked_absent
+                        ? "Present"
+                        : "Mark Present",
+                    active: !!activeRecord && !activeRecord.marked_absent,
+                    saving: attendanceSaving === "school_year",
                     disabled: attendanceSaving !== null,
-                    onPress: toggleSummerAttendance,
+                    onPress: toggleSchoolYearAttendance,
+                  });
+                  tiles.push({
+                    key: "school_year_absent",
+                    icon: "🚫",
+                    label: activeRecord?.marked_absent
+                      ? "Absent"
+                      : "Mark Absent",
+                    active: !!activeRecord?.marked_absent,
+                    saving: attendanceSaving === "school_year_absent",
+                    disabled: attendanceSaving !== null,
+                    onPress: toggleSchoolYearAbsent,
+                  });
+                } else {
+                  tiles.push({
+                    key: "school_year_friday",
+                    icon: "🌿",
+                    label:
+                      activeRecord && !activeRecord.marked_absent
+                        ? "Field Friday"
+                        : "Mark Present",
+                    active: !!activeRecord && !activeRecord.marked_absent,
+                    saving: attendanceSaving === "school_year_friday",
+                    disabled: attendanceSaving !== null,
+                    onPress: toggleSchoolYearFieldFridayAttendance,
+                  });
+                  tiles.push({
+                    key: "school_year_friday_absent",
+                    icon: "🚫",
+                    label: activeRecord?.marked_absent
+                      ? "Absent"
+                      : "Mark Absent",
+                    active: !!activeRecord?.marked_absent,
+                    saving: attendanceSaving === "school_year_friday_absent",
+                    disabled: attendanceSaving !== null,
+                    onPress: toggleSchoolYearFieldFridayAbsent,
                   });
                 }
-                tiles.push(
-                  {
-                    key: "sunscreen",
-                    icon: "🧴",
-                    label:
-                      sunscreenEntries.length > 1
-                        ? `Sunscreen ×${sunscreenEntries.length}`
-                        : sunscreenLogged
-                          ? "Log Again"
-                          : "Log Sunscreen",
-                    active: sunscreenLogged,
-                    saving: logSaving === "sunscreen",
-                    disabled: logSaving !== null,
-                    onPress: () => handleLogCare("sunscreen"),
-                  },
-                  {
-                    key: "bugspray",
-                    icon: "🦟",
-                    label:
-                      bugSprayEntries.length > 1
-                        ? `Bug Spray ×${bugSprayEntries.length}`
-                        : bugSprayLogged
-                          ? "Log Again"
-                          : "Log Bug Spray",
-                    active: bugSprayLogged,
-                    saving: logSaving === "bug_spray",
-                    disabled: logSaving !== null,
-                    onPress: () => handleLogCare("bug_spray"),
-                  },
-                );
                 if (
                   selectedStudent.hasAftercareEnrollment ||
                   !!selectedStudent.aftercareRecord
@@ -2143,19 +2526,6 @@ export default function StaffHomeScreen() {
                     saving: attendanceSaving === "aftercare",
                     disabled: attendanceSaving !== null,
                     onPress: toggleAftercareAttendance,
-                  });
-                }
-                if (selectedIsFriday) {
-                  tiles.push({
-                    key: "friday",
-                    icon: "🌿",
-                    label: selectedStudent.fieldFridayRecord
-                      ? "Field Friday"
-                      : "Mark Present",
-                    active: !!selectedStudent.fieldFridayRecord,
-                    saving: attendanceSaving === "friday",
-                    disabled: attendanceSaving !== null,
-                    onPress: toggleFieldFridayAttendance,
                   });
                 }
                 return (
@@ -2202,35 +2572,10 @@ export default function StaffHomeScreen() {
                 );
               })()}
 
-              {/* Care log history */}
-              {(sunscreenEntries.length > 0 || bugSprayEntries.length > 0) && (
-                <View style={styles.careHistorySection}>
-                  {[...sunscreenEntries, ...bugSprayEntries]
-                    .sort((a, b) => a.logged_at.localeCompare(b.logged_at))
-                    .map((e) => (
-                      <View key={e.id} style={styles.careHistoryRow}>
-                        <Text style={styles.careHistoryIcon}>
-                          {e.activity === "sunscreen" ? "🧴" : "🦟"}
-                        </Text>
-                        <Text style={styles.careHistoryLabel}>
-                          {e.activity === "sunscreen"
-                            ? "Sunscreen"
-                            : "Bug Spray"}
-                        </Text>
-                        <Text style={styles.careHistoryTime}>
-                          {formatTime12h(e.logged_at)}
-                        </Text>
-                      </View>
-                    ))}
-                </View>
-              )}
-
               {/* Record Pickup */}
               {(() => {
-                const record = selectedIsFriday
-                  ? selectedStudent.fieldFridayRecord
-                  : selectedStudent.summerRecord;
-                if (!record) return null;
+                const record = getActiveAttendanceRecord(selectedStudent);
+                if (!record || record.marked_absent) return null;
                 if (record.picked_up_by_name) {
                   return (
                     <View style={styles.pickedUpRow}>
@@ -2248,7 +2593,7 @@ export default function StaffHomeScreen() {
                       styles.pickupBtn,
                       pressed && { opacity: 0.75 },
                     ]}
-                    onPress={openPickup}
+                    onPress={() => openPickup()}
                   >
                     <Ionicons
                       name="car-outline"
@@ -2636,6 +2981,13 @@ export default function StaffHomeScreen() {
           profile_image_url: s.profile_image_url,
         }))}
       />
+
+      {showConferenceSection && (
+        <StaffConferenceBookingsSheet
+          ref={ptcBookingsSheetRef}
+          bookings={conferenceBookings}
+        />
+      )}
     </View>
   );
 }
@@ -2814,6 +3166,30 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#9ca3af",
   },
+  teacherSection: {
+    marginBottom: 16,
+  },
+  teacherSectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: "#f9fafb",
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: "#f3f4f6",
+  },
+  teacherSectionTitle: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 14,
+    color: "#374151",
+  },
+  teacherSectionCount: {
+    fontFamily: FontFamilies.body,
+    fontSize: 12,
+    color: "#9ca3af",
+  },
   dateNavRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -2940,6 +3316,9 @@ const styles = StyleSheet.create({
   careChipLogged: {
     backgroundColor: "#dcfce7",
   },
+  careChipAbsent: {
+    backgroundColor: "#fee2e2",
+  },
   careChipUnlogged: {
     backgroundColor: "#f3f4f6",
   },
@@ -2952,6 +3331,10 @@ const styles = StyleSheet.create({
   careChipTextLogged: {
     fontFamily: FontFamilies.bodySemiBold,
     color: "#15803d",
+  },
+  careChipTextAbsent: {
+    fontFamily: FontFamilies.bodySemiBold,
+    color: "#b91c1c",
   },
   careChipTextUnlogged: {
     fontFamily: FontFamilies.body,

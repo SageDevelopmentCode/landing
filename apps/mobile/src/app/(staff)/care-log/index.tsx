@@ -22,6 +22,10 @@ import { supabase } from "@/lib/supabase";
 import { notifyDiscord, notifyError } from "@/lib/discord";
 import { Brand, BottomTabInset, FontFamilies } from "@/constants/theme";
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
+import {
+  buildDisplayNameMap,
+  getStudentDisplayName,
+} from "@/lib/student-display-name";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -155,7 +159,7 @@ async function fetchCareLogData(date: string): Promise<CareLogStudentRow[]> {
     supabase
       .schema("parent_app")
       .from("applications")
-      .select("student_id, admin_tags")
+      .select("student_id, admin_tags, preferred_name, child_legal_name")
       .eq("status", "enrolled"),
     supabase
       .schema("care_log")
@@ -166,10 +170,16 @@ async function fetchCareLogData(date: string): Promise<CareLogStudentRow[]> {
   ]);
 
   type StudentRaw = { id: string; child_legal_name: string | null; child_grade: string | null; profile_image_url: string | null };
-  type AppRaw = { student_id: string; admin_tags: string[] | null };
+  type AppRaw = {
+    student_id: string;
+    admin_tags: string[] | null;
+    preferred_name: string | null;
+    child_legal_name: string | null;
+  };
   type EntryRaw = { id: string; student_id: string; activity: string; logged_at: string; notes: string | null };
 
   const appsData = (appsRes.data ?? []) as AppRaw[];
+  const displayNameMap = buildDisplayNameMap(appsData);
   const enrolledIds = new Set(
     appsData
       .filter((a) => !(a.admin_tags ?? []).includes("Don't Include"))
@@ -187,7 +197,9 @@ async function fetchCareLogData(date: string): Promise<CareLogStudentRow[]> {
     .filter((s) => enrolledIds.has(s.id))
     .map((s) => ({
       student_id: s.id,
-      name: s.child_legal_name,
+      name:
+        displayNameMap.get(s.id) ??
+        getStudentDisplayName(null, s.child_legal_name),
       grade: s.child_grade,
       profile_image_url: s.profile_image_url,
       entries: entriesByStudent.get(s.id) ?? [],

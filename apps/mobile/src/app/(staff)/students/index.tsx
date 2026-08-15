@@ -2,6 +2,7 @@ import { BottomTabInset, Brand, FontFamilies } from "@/constants/theme";
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
 import { supabase } from "@/lib/supabase";
 import { notifyError } from "@/lib/discord";
+import { getStudentDisplayName } from "@/lib/student-display-name";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
@@ -53,6 +54,7 @@ const TEACHER_COLORS: Record<string, { bg: string; accent: string }> = {
   "Sabrina Obnamia": { bg: "#fce7f3", accent: "#db2777" },
   "Zelinda Melo":    { bg: "#ffedd5", accent: "#ea580c" },
   "Paige Wood":      { bg: "#dcfce7", accent: "#16a34a" },
+  "Joy Paige":       { bg: "#ecfdf5", accent: "#059669" },
 };
 
 function getInitials(name: string): string {
@@ -137,9 +139,21 @@ export default function StudentListScreen() {
         const { data: applications } = await supabase
           .schema("parent_app")
           .from("applications")
-          .select("student_id, has_allergies, program, drop_in_program")
+          .select("student_id, has_allergies, program, drop_in_program, preferred_name, child_legal_name")
           .in("student_id", studentIds);
 
+        const displayNameMap = new Map(
+          (applications ?? []).map(
+            (a: {
+              student_id: string;
+              preferred_name: string | null;
+              child_legal_name: string | null;
+            }) => [
+              a.student_id,
+              getStudentDisplayName(a.preferred_name, a.child_legal_name),
+            ],
+          ),
+        );
         const allergyMap = new Map(
           (applications ?? []).map((a) => [a.student_id, a.has_allergies])
         );
@@ -161,7 +175,10 @@ export default function StudentListScreen() {
         const rows: StudentRow[] = assignments.map((a) => ({
           id: a.id,
           student_id: a.student_id,
-          name: profileById[a.student_id]?.child_legal_name ?? null,
+          name:
+            displayNameMap.get(a.student_id) ??
+            profileById[a.student_id]?.child_legal_name ??
+            null,
           grade: profileById[a.student_id]?.child_grade ?? null,
           program: a.program,
           classroom: a.classroom,
@@ -214,7 +231,7 @@ export default function StudentListScreen() {
             supabase
               .schema("parent_app")
               .from("applications")
-              .select("student_id, has_allergies, program, drop_in_program")
+              .select("student_id, has_allergies, program, drop_in_program, preferred_name, child_legal_name")
               .in("student_id", studentIds),
           ]);
 
@@ -226,6 +243,18 @@ export default function StudentListScreen() {
           profileById[s.id] = s;
         }
 
+        const displayNameMap = new Map(
+          (applications ?? []).map(
+            (a: {
+              student_id: string;
+              preferred_name: string | null;
+              child_legal_name: string | null;
+            }) => [
+              a.student_id,
+              getStudentDisplayName(a.preferred_name, a.child_legal_name),
+            ],
+          ),
+        );
         const allergyMap = new Map(
           (applications ?? []).map((a) => [a.student_id, a.has_allergies])
         );
@@ -239,7 +268,10 @@ export default function StudentListScreen() {
         const rows: AllStudentRow[] = (allAssignments as any[]).map((a) => ({
           id: a.assignment_id,
           student_id: a.student_id,
-          name: profileById[a.student_id]?.child_legal_name ?? null,
+          name:
+            displayNameMap.get(a.student_id) ??
+            profileById[a.student_id]?.child_legal_name ??
+            null,
           grade: profileById[a.student_id]?.child_grade ?? null,
           program: a.program,
           classroom: a.classroom,

@@ -1,6 +1,7 @@
 import { Brand, FontFamilies } from "@/constants/theme";
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
 import { supabase } from "@/lib/supabase";
+import { getStudentDisplayName } from "@/lib/student-display-name";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -215,14 +216,35 @@ export default function TeacherProfileScreen() {
 
       const studentIds = assignmentRows.map((a: TeacherStudentRow) => a.student_id);
 
-      const { data: studentProfiles } = await supabase
-        .schema("admin")
-        .from("students")
-        .select("id, child_legal_name, child_grade, profile_image_url")
-        .in("id", studentIds)
-        .eq("is_deleted", false);
+      const [{ data: studentProfiles }, { data: applications }] = await Promise.all([
+        supabase
+          .schema("admin")
+          .from("students")
+          .select("id, child_legal_name, child_grade, profile_image_url")
+          .in("id", studentIds)
+          .eq("is_deleted", false),
+        supabase
+          .schema("parent_app")
+          .from("applications")
+          .select("student_id, preferred_name, child_legal_name")
+          .in("student_id", studentIds)
+          .eq("status", "enrolled"),
+      ]);
 
       if (cancelled) return;
+
+      const displayNameMap = new Map(
+        (applications ?? []).map(
+          (a: {
+            student_id: string;
+            preferred_name: string | null;
+            child_legal_name: string | null;
+          }) => [
+            a.student_id,
+            getStudentDisplayName(a.preferred_name, a.child_legal_name),
+          ],
+        ),
+      );
 
       // Build lookup by student id — same approach as staff/students/index.tsx
       const profileById: Record<string, StudentRow> = {};
@@ -232,14 +254,20 @@ export default function TeacherProfileScreen() {
 
       // Map over assignments (not over studentProfiles) so every assigned student appears
       // Use assignment id as the unique key to avoid duplicates when same student has multiple programs
-      const enriched: EnrichedStudent[] = assignmentRows.map((a: TeacherStudentRow) => ({
-        id: a.id,
-        child_legal_name: profileById[a.student_id]?.child_legal_name ?? "Unknown Student",
-        child_grade: profileById[a.student_id]?.child_grade ?? null,
-        profile_image_url: profileById[a.student_id]?.profile_image_url ?? null,
-        program: a.program ?? null,
-        classroom: a.classroom ?? null,
-      }));
+      const enriched: EnrichedStudent[] = assignmentRows.map((a: TeacherStudentRow) => {
+        const profile = profileById[a.student_id];
+        return {
+          id: a.id,
+          child_legal_name:
+            displayNameMap.get(a.student_id) ??
+            getStudentDisplayName(null, profile?.child_legal_name) ??
+            "Unknown Student",
+          child_grade: profile?.child_grade ?? null,
+          profile_image_url: profile?.profile_image_url ?? null,
+          program: a.program ?? null,
+          classroom: a.classroom ?? null,
+        };
+      });
 
       setStudents(enriched);
       const summerProgram = enriched.find((s) => /^summer_/i.test(s.program ?? ""))?.program;

@@ -254,6 +254,264 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
+    if (type === "school_year_attendance_marked") {
+      const { studentName, date } = data;
+      if (!date) {
+        return NextResponse.json(
+          { error: "school_year_attendance_marked requires date" },
+          { status: 400 },
+        );
+      }
+      await sendDiscordNotification(
+        {
+          title: "✅ School Year Attendance Marked",
+          color: 0x6366f1,
+          fields: [
+            { name: "Student", value: studentName ?? "Student", inline: true },
+            { name: "Date", value: date, inline: true },
+          ],
+          timestamp: new Date().toISOString(),
+        },
+        process.env.DISCORD_STUDENT_WEBHOOK_URL,
+      );
+      return NextResponse.json({ success: true });
+    }
+
+    if (type === "school_year_attendance_removed") {
+      const { studentName, date } = data;
+      if (!date) {
+        return NextResponse.json(
+          { error: "school_year_attendance_removed requires date" },
+          { status: 400 },
+        );
+      }
+      await sendDiscordNotification(
+        {
+          title: "❌ School Year Attendance Removed",
+          color: 0x6b7280,
+          fields: [
+            { name: "Student", value: studentName ?? "Student", inline: true },
+            { name: "Date", value: date, inline: true },
+          ],
+          timestamp: new Date().toISOString(),
+        },
+        process.env.DISCORD_STUDENT_WEBHOOK_URL,
+      );
+      return NextResponse.json({ success: true });
+    }
+
+    if (type === "school_year_attendance_absent") {
+      const { studentName, date } = data;
+      if (!date) {
+        return NextResponse.json(
+          { error: "school_year_attendance_absent requires date" },
+          { status: 400 },
+        );
+      }
+      await sendDiscordNotification(
+        {
+          title: "🚫 School Year Student Marked Absent",
+          color: 0xef4444,
+          fields: [
+            { name: "Student", value: studentName ?? "Student", inline: true },
+            { name: "Date", value: date, inline: true },
+          ],
+          timestamp: new Date().toISOString(),
+        },
+        process.env.DISCORD_STUDENT_WEBHOOK_URL,
+      );
+      return NextResponse.json({ success: true });
+    }
+
+    if (type === "school_year_attendance_absent_removed") {
+      const { studentName, date } = data;
+      if (!date) {
+        return NextResponse.json(
+          { error: "school_year_attendance_absent_removed requires date" },
+          { status: 400 },
+        );
+      }
+      await sendDiscordNotification(
+        {
+          title: "↩️ School Year Absence Cleared",
+          color: 0x6b7280,
+          fields: [
+            { name: "Student", value: studentName ?? "Student", inline: true },
+            { name: "Date", value: date, inline: true },
+          ],
+          timestamp: new Date().toISOString(),
+        },
+        process.env.DISCORD_STUDENT_WEBHOOK_URL,
+      );
+      return NextResponse.json({ success: true });
+    }
+
+    if (type === "school_year_pickup_recorded") {
+      const { studentName, date, pickedUpBy } = data;
+      if (!studentName || !date || !pickedUpBy) {
+        return NextResponse.json(
+          {
+            error:
+              "school_year_pickup_recorded requires studentName, date, and pickedUpBy",
+          },
+          { status: 400 },
+        );
+      }
+      await sendDiscordNotification(
+        {
+          title: "🚗 School Year Pickup Recorded",
+          color: 0x6366f1,
+          fields: [
+            { name: "Student", value: studentName, inline: true },
+            { name: "Picked Up By", value: pickedUpBy, inline: true },
+            { name: "Date", value: date, inline: true },
+          ],
+          timestamp: new Date().toISOString(),
+        },
+        process.env.DISCORD_STUDENT_WEBHOOK_URL,
+      );
+      return NextResponse.json({ success: true });
+    }
+
+    if (type === "school_year_field_friday_checked_in") {
+      const { studentName, date } = data;
+      if (!studentName || !date) {
+        return NextResponse.json(
+          {
+            error:
+              "school_year_field_friday_checked_in requires studentName and date",
+          },
+          { status: 400 },
+        );
+      }
+      await sendDiscordNotification(
+        {
+          title: "✅ School Year Field Fun Friday — Checked In",
+          color: 0x7c3aed,
+          fields: [
+            { name: "Student", value: studentName, inline: true },
+            { name: "Date", value: date, inline: true },
+          ],
+          timestamp: new Date().toISOString(),
+        },
+        process.env.DISCORD_FIELD_FRIDAY_WEBHOOK_URL ??
+          process.env.DISCORD_STUDENT_WEBHOOK_URL,
+      );
+      return NextResponse.json({ success: true });
+    }
+
+    if (type === "school_year_field_friday_checked_out") {
+      const { studentName, date } = data;
+      if (!studentName || !date) {
+        return NextResponse.json(
+          {
+            error:
+              "school_year_field_friday_checked_out requires studentName and date",
+          },
+          { status: 400 },
+        );
+      }
+      await sendDiscordNotification(
+        {
+          title: "❌ School Year Field Fun Friday — Checked Out",
+          color: 0x6b7280,
+          fields: [
+            { name: "Student", value: studentName, inline: true },
+            { name: "Date", value: date, inline: true },
+          ],
+          timestamp: new Date().toISOString(),
+        },
+        process.env.DISCORD_FIELD_FRIDAY_WEBHOOK_URL ??
+          process.env.DISCORD_STUDENT_WEBHOOK_URL,
+      );
+      return NextResponse.json({ success: true });
+    }
+
+    if (type === "school_year_field_friday_absent") {
+      const { studentName, date } = data;
+      if (!studentName || !date) {
+        return NextResponse.json(
+          {
+            error:
+              "school_year_field_friday_absent requires studentName and date",
+          },
+          { status: 400 },
+        );
+      }
+      await sendDiscordNotification(
+        {
+          title: "🚫 School Year Field Fun Friday — Marked Absent",
+          color: 0xef4444,
+          fields: [
+            { name: "Student", value: studentName, inline: true },
+            { name: "Date", value: date, inline: true },
+          ],
+          timestamp: new Date().toISOString(),
+        },
+        process.env.DISCORD_FIELD_FRIDAY_WEBHOOK_URL ??
+          process.env.DISCORD_STUDENT_WEBHOOK_URL,
+      );
+      return NextResponse.json({ success: true });
+    }
+
+    if (type === "school_year_field_friday_absent_removed") {
+      const { studentName, date } = data;
+      if (!studentName || !date) {
+        return NextResponse.json(
+          {
+            error:
+              "school_year_field_friday_absent_removed requires studentName and date",
+          },
+          { status: 400 },
+        );
+      }
+      await sendDiscordNotification(
+        {
+          title: "↩️ School Year Field Fun Friday — Absence Cleared",
+          color: 0x6b7280,
+          fields: [
+            { name: "Student", value: studentName, inline: true },
+            { name: "Date", value: date, inline: true },
+          ],
+          timestamp: new Date().toISOString(),
+        },
+        process.env.DISCORD_FIELD_FRIDAY_WEBHOOK_URL ??
+          process.env.DISCORD_STUDENT_WEBHOOK_URL,
+      );
+      return NextResponse.json({ success: true });
+    }
+
+    if (type === "school_year_field_friday_pickup_recorded") {
+      const { studentName, date, pickedUpBy, relationship } = data;
+      if (!studentName || !date || !pickedUpBy) {
+        return NextResponse.json(
+          {
+            error:
+              "school_year_field_friday_pickup_recorded requires studentName, date, and pickedUpBy",
+          },
+          { status: 400 },
+        );
+      }
+      await sendDiscordNotification(
+        {
+          title: "🚗 School Year Field Fun Friday Pickup Recorded",
+          color: 0x7c3aed,
+          fields: [
+            { name: "Student", value: studentName, inline: true },
+            { name: "Picked Up By", value: pickedUpBy, inline: true },
+            { name: "Date", value: date, inline: true },
+            ...(relationship
+              ? [{ name: "Relationship", value: relationship, inline: true }]
+              : []),
+          ],
+          timestamp: new Date().toISOString(),
+        },
+        process.env.DISCORD_FIELD_FRIDAY_WEBHOOK_URL ??
+          process.env.DISCORD_STUDENT_WEBHOOK_URL,
+      );
+      return NextResponse.json({ success: true });
+    }
+
     if (type === "summer_pickup_recorded") {
       const { studentName, date, pickupTime, pickedUpBy } = data;
       if (!studentName || !date || !pickupTime) {
