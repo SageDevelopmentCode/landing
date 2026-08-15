@@ -1859,6 +1859,64 @@ export async function POST(request: NextRequest) {
         }
       }
     }
+
+    // Insert sibling rows for bundled multi-child school-year tuition payment
+    if (
+      session.metadata?.payment_type === "school_year_tuition" &&
+      session.metadata?.sibling_student_ids
+    ) {
+      const sibStudentIds = session.metadata.sibling_student_ids
+        .split(",")
+        .filter(Boolean);
+      const sibMonthsArr =
+        session.metadata.sibling_selected_months?.split(",") ?? [];
+      const sibCents =
+        session.metadata.sibling_intended_cents?.split(",").map(Number) ?? [];
+      const paymentIntentId =
+        typeof session.payment_intent === "string"
+          ? session.payment_intent
+          : (session.payment_intent?.id ?? null);
+
+      for (let i = 0; i < sibStudentIds.length; i++) {
+        const selectedMonths = (sibMonthsArr[i] ?? "")
+          .replace(/;/g, ",")
+          .split(",")
+          .filter(Boolean);
+
+        const { error: sibError } = await supabase
+          .schema("billing")
+          .from("stripe_transactions")
+          .upsert(
+            {
+              stripe_session_id: `${session.id}_sib_${i}`,
+              stripe_payment_intent_id: paymentIntentId,
+              payment_type: "school_year_tuition",
+              amount_cents: sibCents[i] ?? 0,
+              intended_amount_cents: sibCents[i] ?? null,
+              currency: session.currency ?? "usd",
+              cover_fees: false,
+              payer_email:
+                session.metadata?.parent_email || session.customer_email || "",
+              student_id: sibStudentIds[i],
+              parent_id: session.metadata?.parent_id ?? null,
+              metadata: {
+                payment_type: "school_year_tuition",
+                selected_months: selectedMonths.join(","),
+                is_sibling_split: "true",
+                primary_session_id: session.id,
+              },
+              status: "completed",
+            },
+            { onConflict: "stripe_session_id" },
+          );
+        if (sibError) {
+          console.error(
+            `Failed to record school year tuition sibling[${i}] billing transaction:`,
+            sibError,
+          );
+        }
+      }
+    }
   }
 
   if (event.type === "payment_intent.succeeded") {
@@ -1910,6 +1968,57 @@ export async function POST(request: NextRequest) {
 
     if (billingError) {
       console.error("Failed to record mobile billing transaction:", billingError);
+    }
+
+    if (
+      metadata.payment_type === "school_year_tuition" &&
+      metadata.sibling_student_ids
+    ) {
+      const sibStudentIds = metadata.sibling_student_ids
+        .split(",")
+        .filter(Boolean);
+      const sibMonthsArr = metadata.sibling_selected_months?.split(",") ?? [];
+      const sibCents = metadata.sibling_intended_cents?.split(",").map(Number) ?? [];
+
+      for (let i = 0; i < sibStudentIds.length; i++) {
+        const selectedMonths = (sibMonthsArr[i] ?? "")
+          .replace(/;/g, ",")
+          .split(",")
+          .filter(Boolean);
+
+        const { error: sibError } = await supabase
+          .schema("billing")
+          .from("stripe_transactions")
+          .upsert(
+            {
+              stripe_session_id: `${intent.id}_sib_${i}`,
+              stripe_payment_intent_id: intent.id,
+              payment_type: "school_year_tuition",
+              amount_cents: sibCents[i] ?? 0,
+              intended_amount_cents: sibCents[i] ?? null,
+              currency: intent.currency,
+              cover_fees: false,
+              payer_email: payerEmail ?? "",
+              student_id: sibStudentIds[i],
+              parent_id: parentId,
+              metadata: {
+                payment_type: "school_year_tuition",
+                selected_months: selectedMonths.join(","),
+                is_sibling_split: "true",
+                primary_session_id: intent.id,
+              },
+              status: "completed",
+              is_deleted: false,
+            },
+            { onConflict: "stripe_session_id" },
+          );
+        if (sibError) {
+          console.error(
+            `Failed to record mobile school year tuition sibling[${i}]:`,
+            sibError,
+          );
+        }
+      }
     }
 
     // Per-payment-type Discord + email notifications

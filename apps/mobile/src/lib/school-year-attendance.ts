@@ -1,102 +1,6 @@
 // Keep in sync with shared/billing/school-year-attendance.ts (web uses repo-root shared/).
 
-// Keep in sync with shared/billing/school-year.ts SCHOOL_YEAR_FUN_FRIDAY_MONTHS
-const SCHOOL_YEAR_FUN_FRIDAY_MONTHS = [
-  {
-    key: "aug_26",
-    label: "August 2026",
-    fridays: [
-      { label: "Fri Aug 21", date: "2026-08-21" },
-      { label: "Fri Aug 28", date: "2026-08-28" },
-    ],
-  },
-  {
-    key: "sep_26",
-    label: "September 2026",
-    fridays: [
-      { label: "Fri Sep 4", date: "2026-09-04" },
-      { label: "Fri Sep 11", date: "2026-09-11" },
-      { label: "Fri Sep 18", date: "2026-09-18" },
-      { label: "Fri Sep 25", date: "2026-09-25" },
-    ],
-  },
-  {
-    key: "oct_26",
-    label: "October 2026",
-    fridays: [
-      { label: "Fri Oct 2", date: "2026-10-02" },
-      { label: "Fri Oct 9", date: "2026-10-09" },
-      { label: "Fri Oct 16", date: "2026-10-16" },
-      { label: "Fri Oct 23", date: "2026-10-23" },
-      { label: "Fri Oct 30", date: "2026-10-30" },
-    ],
-  },
-  {
-    key: "nov_26",
-    label: "November 2026",
-    fridays: [
-      { label: "Fri Nov 6", date: "2026-11-06" },
-      { label: "Fri Nov 13", date: "2026-11-13" },
-      { label: "Fri Nov 20", date: "2026-11-20" },
-    ],
-  },
-  {
-    key: "dec_26",
-    label: "December 2026",
-    fridays: [
-      { label: "Fri Dec 4", date: "2026-12-04" },
-      { label: "Fri Dec 11", date: "2026-12-11" },
-    ],
-  },
-  {
-    key: "jan_27",
-    label: "January 2027",
-    fridays: [
-      { label: "Fri Jan 8", date: "2027-01-08" },
-      { label: "Fri Jan 15", date: "2027-01-15" },
-      { label: "Fri Jan 22", date: "2027-01-22" },
-      { label: "Fri Jan 29", date: "2027-01-29" },
-    ],
-  },
-  {
-    key: "feb_27",
-    label: "February 2027",
-    fridays: [
-      { label: "Fri Feb 5", date: "2027-02-05" },
-      { label: "Fri Feb 12", date: "2027-02-12" },
-      { label: "Fri Feb 19", date: "2027-02-19" },
-      { label: "Fri Feb 26", date: "2027-02-26" },
-    ],
-  },
-  {
-    key: "mar_27",
-    label: "March 2027",
-    fridays: [
-      { label: "Fri Mar 5", date: "2027-03-05" },
-      { label: "Fri Mar 12", date: "2027-03-12" },
-    ],
-  },
-  {
-    key: "apr_27",
-    label: "April 2027",
-    fridays: [
-      { label: "Fri Apr 2", date: "2027-04-02" },
-      { label: "Fri Apr 9", date: "2027-04-09" },
-      { label: "Fri Apr 16", date: "2027-04-16" },
-      { label: "Fri Apr 23", date: "2027-04-23" },
-      { label: "Fri Apr 30", date: "2027-04-30" },
-    ],
-  },
-  {
-    key: "may_27",
-    label: "May 2027",
-    fridays: [
-      { label: "Fri May 7", date: "2027-05-07" },
-      { label: "Fri May 14", date: "2027-05-14" },
-      { label: "Fri May 21", date: "2027-05-21" },
-    ],
-  },
-];
+import { SCHOOL_YEAR_FUN_FRIDAY_MONTHS } from "./school-year";
 
 export type StripeTxnLike = {
   payment_type: string;
@@ -247,8 +151,7 @@ export function isSchoolYearFieldFridayPaid(
   if (txn.payment_type !== "fun_friday_tuition") return false;
 
   const meta = txn.metadata ?? {};
-  const paidFridays =
-    metaString(meta, "selected_fridays")?.split(",").filter(Boolean) ?? [];
+  const paidFridays = metaString(meta, "selected_fridays")?.split(",").filter(Boolean) ?? [];
   if (paidFridays.includes(dateStr)) return true;
 
   const monthKey = getSchoolYearFunFridayMonthKey(dateStr);
@@ -269,8 +172,7 @@ export function isSummerFieldFridayPaid(
 ): boolean {
   if (txn.payment_type !== "fun_friday_tuition") return false;
   const meta = txn.metadata ?? {};
-  const paidFridays =
-    metaString(meta, "selected_fridays")?.split(",").filter(Boolean) ?? [];
+  const paidFridays = metaString(meta, "selected_fridays")?.split(",").filter(Boolean) ?? [];
   if (paidFridays.includes(dateStr)) {
     const syKey = getSchoolYearFunFridayMonthKey(dateStr);
     if (syKey) return false;

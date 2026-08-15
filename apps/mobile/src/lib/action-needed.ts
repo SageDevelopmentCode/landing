@@ -1,7 +1,6 @@
 // Keep in sync with shared/action-needed.ts (web uses repo-root shared/).
 
-// Aug 2026 – May 2027; keep in sync with shared/billing/school-year.ts SCHOOL_YEAR_MONTHS
-const SCHOOL_YEAR_MONTH_COUNT = 10;
+import { SCHOOL_YEAR_MONTHS } from "./school-year";
 
 export type PaidSchoolYearByStudent = Record<string, number[]>;
 
@@ -19,7 +18,7 @@ export function needsSchoolYearTuitionAction(
   if (schoolYearTuitionStudentIds.size === 0) return false;
   return [...schoolYearTuitionStudentIds].some(
     (id) =>
-      (paidSchoolYearByStudent[id]?.length ?? 0) < SCHOOL_YEAR_MONTH_COUNT,
+      (paidSchoolYearByStudent[id]?.length ?? 0) < SCHOOL_YEAR_MONTHS.length,
   );
 }
 

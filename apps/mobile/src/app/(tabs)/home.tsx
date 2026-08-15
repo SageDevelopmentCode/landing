@@ -3055,15 +3055,7 @@ export default function HomeScreen() {
                   <View style={actPrefStyles.rows}>
                     {showActionTuition && (
                       <Pressable
-                        onPress={() =>
-                          openBrowserAsync(
-                            "https://www.sagefield.co/parent/billing",
-                            {
-                              presentationStyle:
-                                WebBrowserPresentationStyle.AUTOMATIC,
-                            },
-                          )
-                        }
+                        onPress={() => router.push("/(tabs)/tuition")}
                         style={({ pressed }) => [
                           actPrefStyles.row,
                           actPrefStyles.rowTuition,

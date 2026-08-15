@@ -3565,6 +3565,9 @@ function SchoolYearTuitionModal({
   parentEmail,
   onClose,
   paidMonthIndices,
+  siblingStudents = [],
+  siblingPaidSchoolYear = {},
+  siblingStudentMap = {},
 }: {
   studentId: string;
   studentName: string | null;
@@ -3573,9 +3576,13 @@ function SchoolYearTuitionModal({
   parentEmail: string;
   onClose: () => void;
   paidMonthIndices: Set<number>;
+  siblingStudents?: Array<{ student_id: string; child_grade: string | null }>;
+  siblingPaidSchoolYear?: PaidSchoolYearByStudent;
+  siblingStudentMap?: Record<string, StudentInfo>;
 }) {
   const gradeTier = getGradeTier(childGrade);
   const BASE_CENTS = gradeTier === "primary" ? 119500 : 109500;
+  const [step, setStep] = useState<"plan" | "sibling" | "payment">("plan");
   const [paymentMethod, setPaymentMethod] = useState<"card" | "ach">("card");
   const [coverFees, setCoverFees] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -3583,17 +3590,120 @@ function SchoolYearTuitionModal({
   const [selectedMonthIndices, setSelectedMonthIndices] = useState<Set<number>>(
     new Set(),
   );
+  const [includedSiblings, setIncludedSiblings] = useState<
+    Record<string, boolean>
+  >({});
+  const [siblingMonthOverrides, setSiblingMonthOverrides] = useState<
+    Record<string, Set<number>>
+  >({});
+  const [siblingEditorOpen, setSiblingEditorOpen] = useState<
+    Record<string, boolean>
+  >({});
+  const [siblingEditorDirty, setSiblingEditorDirty] = useState<
+    Record<string, boolean>
+  >({});
 
   const unitCount = selectedMonthIndices.size;
   const totalBaseCents = BASE_CENTS * unitCount;
+
+  const getSiblingPaidMonths = (sibStudentId: string) =>
+    new Set(siblingPaidSchoolYear[sibStudentId] ?? []);
+
+  const eligibleSiblings = siblingStudents.filter((sib) => {
+    const paidMonths = getSiblingPaidMonths(sib.student_id);
+    return Array.from(selectedMonthIndices).some((m) => !paidMonths.has(m));
+  });
+
+  useEffect(() => {
+    setIncludedSiblings((prev) =>
+      Object.fromEntries(
+        eligibleSiblings.map((s) => [s.student_id, prev[s.student_id] ?? true]),
+      ),
+    );
+    setSiblingEditorDirty((prev) =>
+      Object.fromEntries(
+        eligibleSiblings.map((s) => [
+          s.student_id,
+          prev[s.student_id] ?? false,
+        ]),
+      ),
+    );
+    setSiblingMonthOverrides((prev) =>
+      Object.fromEntries(
+        eligibleSiblings.map((s) => {
+          if (siblingEditorDirty[s.student_id])
+            return [s.student_id, prev[s.student_id] ?? new Set()];
+          const paidMonths = getSiblingPaidMonths(s.student_id);
+          const defaultMonths = Array.from(selectedMonthIndices).filter(
+            (m) => !paidMonths.has(m),
+          );
+          return [s.student_id, new Set(defaultMonths)];
+        }),
+      ),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    eligibleSiblings.map((s) => s.student_id).join(","),
+    Array.from(selectedMonthIndices)
+      .sort((a, b) => a - b)
+      .join(","),
+  ]);
+
+  function toggleSiblingMonth(sibStudentId: string, monthIndex: number) {
+    const paidMonths = getSiblingPaidMonths(sibStudentId);
+    if (paidMonths.has(monthIndex)) return;
+    setSiblingEditorDirty((prev) => ({ ...prev, [sibStudentId]: true }));
+    setSiblingMonthOverrides((prev) => {
+      const next = new Set(prev[sibStudentId] ?? []);
+      if (next.has(monthIndex)) next.delete(monthIndex);
+      else next.add(monthIndex);
+      return { ...prev, [sibStudentId]: next };
+    });
+  }
+
+  const siblingPayloads = eligibleSiblings
+    .filter((sib) => includedSiblings[sib.student_id])
+    .map((sib) => {
+      const sibGradeTier = getGradeTier(sib.child_grade);
+      const sibBaseCents =
+        sibGradeTier === "primary" ? 119500 : 109500;
+      const paidMonths = getSiblingPaidMonths(sib.student_id);
+      const override = siblingMonthOverrides[sib.student_id];
+      const sibMonths = override
+        ? Array.from(override)
+            .filter((m) => !paidMonths.has(m))
+            .sort((a, b) => a - b)
+        : Array.from(selectedMonthIndices)
+            .filter((m) => !paidMonths.has(m))
+            .sort((a, b) => a - b);
+      return {
+        studentId: sib.student_id,
+        gradeTier: sibGradeTier,
+        selectedMonths: sibMonths,
+        intendedAmountCents: sibBaseCents * sibMonths.length,
+        studentName: siblingStudentMap[sib.student_id]?.name,
+      };
+    });
+
+  const siblingTotal = siblingPayloads.reduce(
+    (sum, sib) => sum + sib.intendedAmountCents,
+    0,
+  );
+  const combinedIntendedCents = totalBaseCents + siblingTotal;
+
   const cardFee =
     unitCount > 0
-      ? Math.round((totalBaseCents + 30) / (1 - 0.029)) - totalBaseCents
+      ? Math.round((combinedIntendedCents + 30) / (1 - 0.029)) -
+        combinedIntendedCents
       : 0;
   const achFee =
-    unitCount > 0 ? Math.min(Math.round(totalBaseCents * 0.008), 500) : 0;
+    unitCount > 0
+      ? Math.min(Math.round(combinedIntendedCents * 0.008), 500)
+      : 0;
   const feeAmount = paymentMethod === "card" ? cardFee : achFee;
-  const totalWithFees = coverFees ? totalBaseCents + feeAmount : totalBaseCents;
+  const totalWithFees = coverFees
+    ? combinedIntendedCents + feeAmount
+    : combinedIntendedCents;
 
   const handlePayNow = async () => {
     setLoading(true);
@@ -3614,6 +3724,7 @@ function SchoolYearTuitionModal({
             selectedMonths: Array.from(selectedMonthIndices).sort(
               (a, b) => a - b,
             ),
+            siblings: siblingPayloads,
           }),
         },
       );
@@ -3659,132 +3770,391 @@ function SchoolYearTuitionModal({
             <X className="w-4 h-4 text-gray-500" />
           </button>
         </div>
-        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
-          <div>
-            <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">
-              Select months to pay · {formatCents(BASE_CENTS)}/mo
-            </p>
-            <div className="grid grid-cols-5 gap-2">
-              {SCHOOL_YEAR_MONTHS.map((month) => {
-                const isPaid = paidMonthIndices.has(month.index);
-                const isSelected = selectedMonthIndices.has(month.index);
-                return (
-                  <button
-                    key={month.index}
-                    disabled={isPaid}
-                    onClick={() => {
-                      if (isPaid) return;
-                      setSelectedMonthIndices((prev) => {
-                        const next = new Set(prev);
-                        if (next.has(month.index)) next.delete(month.index);
-                        else next.add(month.index);
-                        return next;
-                      });
-                    }}
-                    className={`relative rounded-lg py-2 text-xs font-semibold border transition-all cursor-pointer ${
-                      isPaid
-                        ? "border-green-200 bg-green-50 text-green-700 cursor-default opacity-70"
-                        : isSelected
-                          ? "text-white border-transparent"
-                          : "border-gray-200 text-gray-600 hover:border-primary hover:text-primary bg-white"
-                    }`}
-                    style={
-                      isSelected && !isPaid
-                        ? { backgroundColor: "#4a7c59", borderColor: "#4a7c59" }
-                        : undefined
-                    }
+        <div className="overflow-y-auto flex-1 px-6 py-5">
+          <AnimatePresence mode="wait">
+            {step === "plan" ? (
+              <motion.div
+                key="plan"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.2, ease: "easeInOut" as const }}
+                className="space-y-5"
+              >
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">
+                    Select months to pay · {formatCents(BASE_CENTS)}/mo
+                  </p>
+                  <div className="grid grid-cols-5 gap-2">
+                    {SCHOOL_YEAR_MONTHS.map((month) => {
+                      const isPaid = paidMonthIndices.has(month.index);
+                      const isSelected = selectedMonthIndices.has(month.index);
+                      return (
+                        <button
+                          key={month.index}
+                          disabled={isPaid}
+                          onClick={() => {
+                            if (isPaid) return;
+                            setSelectedMonthIndices((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(month.index)) next.delete(month.index);
+                              else next.add(month.index);
+                              return next;
+                            });
+                          }}
+                          className={`relative rounded-lg py-2 text-xs font-semibold border transition-all cursor-pointer ${
+                            isPaid
+                              ? "border-green-200 bg-green-50 text-green-700 cursor-default opacity-70"
+                              : isSelected
+                                ? "text-white border-transparent"
+                                : "border-gray-200 text-gray-600 hover:border-primary hover:text-primary bg-white"
+                          }`}
+                          style={
+                            isSelected && !isPaid
+                              ? {
+                                  backgroundColor: "#4a7c59",
+                                  borderColor: "#4a7c59",
+                                }
+                              : undefined
+                          }
+                        >
+                          {month.short}
+                          {isPaid && (
+                            <span className="block text-[9px] font-semibold text-green-600 leading-none mt-0.5">
+                              Paid
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </motion.div>
+            ) : step === "sibling" ? (
+              <motion.div
+                key="sibling"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2, ease: "easeInOut" as const }}
+                className="space-y-4"
+              >
+                <div>
+                  <p className="text-base font-bold font-heading text-gray-800 mb-1">
+                    Add a sibling to this payment?
+                  </p>
+                  <p className="text-sm text-gray-500 font-body">
+                    Pay for both children in one transaction and save the extra
+                    processing fee.
+                  </p>
+                </div>
+                <div className="space-y-3">
+                  {eligibleSiblings.map((sib) => {
+                    const sibGradeTier = getGradeTier(sib.child_grade);
+                    const sibBaseCents =
+                      sibGradeTier === "primary" ? 119500 : 109500;
+                    const paidMonths = getSiblingPaidMonths(sib.student_id);
+                    const override = siblingMonthOverrides[sib.student_id];
+                    const sibMonths = override
+                      ? Array.from(override)
+                          .filter((m) => !paidMonths.has(m))
+                          .sort((a, b) => a - b)
+                      : Array.from(selectedMonthIndices)
+                          .filter((m) => !paidMonths.has(m))
+                          .sort((a, b) => a - b);
+                    const sibAmount = sibBaseCents * sibMonths.length;
+                    const sibName =
+                      siblingStudentMap[sib.student_id]?.name ?? "Sibling";
+                    const isIncluded = includedSiblings[sib.student_id] ?? true;
+                    const isEditorOpen =
+                      siblingEditorOpen[sib.student_id] ?? false;
+
+                    return (
+                      <div
+                        key={sib.student_id}
+                        className={`w-full rounded-xl border transition-colors ${
+                          isIncluded
+                            ? "border-emerald-300 bg-emerald-50"
+                            : "border-gray-200 bg-white"
+                        }`}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIncludedSiblings((prev) => ({
+                              ...prev,
+                              [sib.student_id]: !prev[sib.student_id],
+                            }));
+                            setSiblingEditorOpen((prev) => ({
+                              ...prev,
+                              [sib.student_id]: false,
+                            }));
+                          }}
+                          className="w-full flex items-start gap-3 p-4 text-left cursor-pointer"
+                        >
+                          <span
+                            className={`flex-shrink-0 mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                              isIncluded
+                                ? "border-emerald-600 bg-emerald-600"
+                                : "border-gray-300 bg-white"
+                            }`}
+                          >
+                            {isIncluded && (
+                              <Check
+                                className="w-3 h-3 text-white"
+                                strokeWidth={3}
+                              />
+                            )}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-sm font-semibold text-gray-800 font-heading">
+                                {sibName}
+                              </span>
+                              <span
+                                className="text-sm font-bold font-heading"
+                                style={{
+                                  color: sibAmount > 0 ? "#4a7c59" : "#9ca3af",
+                                }}
+                              >
+                                {sibAmount > 0
+                                  ? formatCents(sibAmount)
+                                  : "—"}
+                              </span>
+                            </div>
+                            <span className="text-xs text-gray-500 font-body mt-0.5 block">
+                              {sibMonths.length === 0
+                                ? "No months selected"
+                                : `${sibMonths.length} mo. · ${sibMonths
+                                    .map(
+                                      (m) =>
+                                        SCHOOL_YEAR_MONTHS.find(
+                                          (sm) => sm.index === m,
+                                        )?.short ?? m,
+                                    )
+                                    .join(", ")}`}
+                            </span>
+                          </div>
+                        </button>
+                        {isIncluded && (
+                          <div className="px-4 pb-4">
+                            {!isEditorOpen ? (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setSiblingEditorOpen((prev) => ({
+                                    ...prev,
+                                    [sib.student_id]: true,
+                                  }))
+                                }
+                                className="text-xs font-semibold underline-offset-2 hover:underline cursor-pointer transition-colors"
+                                style={{ color: "#4a7c59" }}
+                              >
+                                Edit months
+                              </button>
+                            ) : (
+                              <div>
+                                <div className="flex items-center justify-between mb-2">
+                                  <p className="text-xs font-semibold text-gray-500 font-body">
+                                    Months for {sibName}
+                                  </p>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setSiblingEditorOpen((prev) => ({
+                                        ...prev,
+                                        [sib.student_id]: false,
+                                      }))
+                                    }
+                                    className="text-xs font-semibold cursor-pointer transition-colors"
+                                    style={{ color: "#4a7c59" }}
+                                  >
+                                    Done
+                                  </button>
+                                </div>
+                                <div className="grid grid-cols-5 gap-2">
+                                  {SCHOOL_YEAR_MONTHS.map((month) => {
+                                    const isPaid = paidMonths.has(month.index);
+                                    const isSelected =
+                                      isPaid ||
+                                      (override
+                                        ? override.has(month.index)
+                                        : sibMonths.includes(month.index));
+                                    return (
+                                      <button
+                                        key={month.index}
+                                        type="button"
+                                        disabled={isPaid}
+                                        onClick={() =>
+                                          toggleSiblingMonth(
+                                            sib.student_id,
+                                            month.index,
+                                          )
+                                        }
+                                        className={`rounded-lg py-2 text-xs font-semibold transition-all cursor-pointer ${
+                                          isPaid
+                                            ? "bg-green-50 border border-green-200 text-green-600 cursor-not-allowed"
+                                            : isSelected
+                                              ? "border-2 border-primary text-white"
+                                              : "border border-gray-200 text-gray-600 hover:border-gray-300 bg-white"
+                                        }`}
+                                        style={
+                                          isSelected && !isPaid
+                                            ? { backgroundColor: "#4a7c59" }
+                                            : undefined
+                                        }
+                                      >
+                                        {month.short}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="payment"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2, ease: "easeInOut" as const }}
+                className="space-y-5"
+              >
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">
+                    Payment method
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setPaymentMethod("card")}
+                      className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${paymentMethod === "card" ? "border-primary bg-primary/5 text-primary" : "border-gray-200 text-gray-600 hover:bg-gray-50"}`}
+                    >
+                      Credit/Debit Card
+                    </button>
+                    <button
+                      onClick={() => setPaymentMethod("ach")}
+                      className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${paymentMethod === "ach" ? "border-primary bg-primary/5 text-primary" : "border-gray-200 text-gray-600 hover:bg-gray-50"}`}
+                    >
+                      ACH / US bank account
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-400 font-body mt-1.5">
+                    {paymentMethod === "card"
+                      ? `Processing fee (est.): ~${formatCents(cardFee)}`
+                      : `Processing fee (est.): ~${formatCents(achFee)} (0.8%, max $5.00)`}
+                  </p>
+                </div>
+                <label className="flex items-start gap-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={coverFees}
+                    onChange={(e) => setCoverFees(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded cursor-pointer"
+                    style={{ accentColor: "#4a7c59" }}
+                  />
+                  <span className="text-sm text-gray-600 font-body group-hover:text-gray-800 transition-colors">
+                    I agree to pay the processing fee
+                  </span>
+                </label>
+                <p className="text-xs text-gray-400 font-body">
+                  Prefer to pay by check? No processing fee — email us at{" "}
+                  <a
+                    href="mailto:sabrina@sagefield.co"
+                    className="underline hover:text-gray-600 transition-colors"
                   >
-                    {month.short}
-                    {isPaid && (
-                      <span className="block text-[9px] font-semibold text-green-600 leading-none mt-0.5">
-                        Paid
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">
-              Payment method
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setPaymentMethod("card")}
-                className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${paymentMethod === "card" ? "border-primary bg-primary/5 text-primary" : "border-gray-200 text-gray-600 hover:bg-gray-50"}`}
-              >
-                Credit/Debit Card
-              </button>
-              <button
-                onClick={() => setPaymentMethod("ach")}
-                className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold font-body border transition-colors cursor-pointer ${paymentMethod === "ach" ? "border-primary bg-primary/5 text-primary" : "border-gray-200 text-gray-600 hover:bg-gray-50"}`}
-              >
-                ACH / US bank account
-              </button>
-            </div>
-            <p className="text-xs text-gray-400 font-body mt-1.5">
-              {paymentMethod === "card"
-                ? `Processing fee (est.): ~${formatCents(cardFee)}`
-                : `Processing fee (est.): ~${formatCents(achFee)} (0.8%, max $5.00)`}
-            </p>
-          </div>
-          <label className="flex items-start gap-3 cursor-pointer group">
-            <input
-              type="checkbox"
-              checked={coverFees}
-              onChange={(e) => setCoverFees(e.target.checked)}
-              className="mt-0.5 w-4 h-4 rounded cursor-pointer"
-              style={{ accentColor: "#4a7c59" }}
-            />
-            <span className="text-sm text-gray-600 font-body group-hover:text-gray-800 transition-colors">
-              I agree to pay the processing fee
-            </span>
-          </label>
-          <p className="text-xs text-gray-400 font-body">
-            Prefer to pay by check? No processing fee — email us at{" "}
-            <a
-              href="mailto:sabrina@sagefield.co"
-              className="underline hover:text-gray-600 transition-colors"
-            >
-              sabrina@sagefield.co
-            </a>{" "}
-            and we&apos;ll send you instructions.
-          </p>
-          <div
-            className="rounded-xl px-4 py-3 flex items-center justify-between"
-            style={{ backgroundColor: unitCount > 0 ? "#f0f9f4" : "#f9fafb" }}
-          >
-            <span className="text-sm text-gray-500 font-body">
-              {unitCount === 0
-                ? "No months selected"
-                : `${unitCount} month${unitCount !== 1 ? "s" : ""} × ${formatCents(BASE_CENTS)}/mo`}
-            </span>
-            <span
-              className="text-base font-bold font-heading"
-              style={{ color: "#4a7c59" }}
-            >
-              {unitCount > 0 ? formatCents(totalWithFees) : "—"}
-            </span>
-          </div>
+                    sabrina@sagefield.co
+                  </a>{" "}
+                  and we&apos;ll send you instructions.
+                </p>
+                <div
+                  className="rounded-xl px-4 py-3 flex items-center justify-between"
+                  style={{
+                    backgroundColor:
+                      combinedIntendedCents > 0 ? "#f0f9f4" : "#f9fafb",
+                  }}
+                >
+                  <span className="text-sm text-gray-500 font-body">
+                    {unitCount === 0
+                      ? "No months selected"
+                      : siblingPayloads.length > 0
+                        ? `${1 + siblingPayloads.length} children`
+                        : `${unitCount} month${unitCount !== 1 ? "s" : ""} × ${formatCents(BASE_CENTS)}/mo`}
+                  </span>
+                  <span
+                    className="text-base font-bold font-heading"
+                    style={{ color: "#4a7c59" }}
+                  >
+                    {combinedIntendedCents > 0
+                      ? formatCents(totalWithFees)
+                      : "—"}
+                  </span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
         {error && (
           <div className="px-6 pb-2">
             <p className="text-xs text-red-500 font-body">{error}</p>
           </div>
         )}
-        <div className="px-6 py-4 border-t border-gray-100">
+        <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
+          {(step === "payment" || step === "sibling") && (
+            <button
+              onClick={() =>
+                step === "payment"
+                  ? eligibleSiblings.length > 0
+                    ? setStep("sibling")
+                    : setStep("plan")
+                  : setStep("plan")
+              }
+              className="px-4 py-3 rounded-xl text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer"
+            >
+              Back
+            </button>
+          )}
           <button
-            disabled={loading || !coverFees || unitCount < 1}
-            className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            disabled={
+              step === "plan"
+                ? unitCount < 1
+                : step === "sibling"
+                  ? false
+                  : loading || !coverFees
+            }
+            className="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             style={{ backgroundColor: "#4a7c59" }}
-            onClick={handlePayNow}
+            onClick={
+              step === "plan"
+                ? () => {
+                    if (eligibleSiblings.length > 0) {
+                      setStep("sibling");
+                    } else {
+                      setStep("payment");
+                    }
+                  }
+                : step === "sibling"
+                  ? () => setStep("payment")
+                  : handlePayNow
+            }
           >
-            {loading
-              ? "Processing…"
-              : unitCount > 0
-                ? `Pay Now · ${formatCents(totalWithFees)}`
-                : "Select months to continue"}
+            {step === "plan"
+              ? unitCount > 0
+                ? `Continue · ${formatCents(totalBaseCents)}`
+                : "Continue"
+              : step === "sibling"
+                ? siblingPayloads.length > 0
+                  ? `Continue · ${formatCents(combinedIntendedCents)}`
+                  : "Continue"
+                : loading
+                  ? "Processing…"
+                  : `Pay Now · ${formatCents(totalWithFees)}`}
           </button>
         </div>
       </motion.div>
@@ -10382,6 +10752,23 @@ export default function BillingPage({
                   [],
               )
             }
+            siblingStudents={[
+              ...schoolYearOnlyApps.filter(
+                (a) => a.student_id !== schoolYearTuitionTarget.studentId,
+              ),
+              ...summerEnrollments
+                .filter(
+                  (e) =>
+                    e.student_id !== schoolYearTuitionTarget.studentId &&
+                    e.program === "both",
+                )
+                .map((e) => ({
+                  student_id: e.student_id,
+                  child_grade: e.child_grade,
+                })),
+            ].filter((s) => paidSupplyFeeByStudent[s.student_id])}
+            siblingPaidSchoolYear={paidSchoolYearByStudent}
+            siblingStudentMap={studentMap}
           />
         )}
         {showCommitModal &&
