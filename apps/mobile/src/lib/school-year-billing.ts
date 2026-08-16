@@ -1,4 +1,7 @@
-import { SCHOOL_YEAR_FUN_FRIDAY_MONTHS } from "@/lib/school-year";
+import {
+  SCHOOL_YEAR_AFTERCARE_MONTHS,
+  SCHOOL_YEAR_FUN_FRIDAY_MONTHS,
+} from "@/lib/school-year";
 
 export type ApplicationRow = {
   id: string;
@@ -23,6 +26,10 @@ export type PaidHomeschoolByStudent = Record<
   string,
   { summer: PaidHomeschoolEntry[]; schoolYear: PaidHomeschoolEntry[] }
 >;
+
+export const SY_AFTERCARE_KEYS = new Set(
+  SCHOOL_YEAR_AFTERCARE_MONTHS.map((m) => m.key),
+);
 
 export const SY_FUN_FRIDAY_KEYS = new Set(
   SCHOOL_YEAR_FUN_FRIDAY_MONTHS.map((m) => m.key),
@@ -78,6 +85,13 @@ export function resolveSupplyFeeProgramType(
   }
   if (apps.some((a) => a.program === "both")) return "school_year";
   return null;
+}
+
+export function countSchoolYearAftercarePaidMonths(
+  paidAftercare: { months: string[]; days: string[] } | undefined,
+): number {
+  return (paidAftercare?.months ?? []).filter((k) => SY_AFTERCARE_KEYS.has(k))
+    .length;
 }
 
 export function countSchoolYearFunFridayPaidMonths(

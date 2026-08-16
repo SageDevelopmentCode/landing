@@ -1,4 +1,7 @@
-import { SCHOOL_YEAR_FUN_FRIDAY_MONTHS } from "./school-year";
+import {
+  SCHOOL_YEAR_AFTERCARE_MONTHS,
+  SCHOOL_YEAR_FUN_FRIDAY_MONTHS,
+} from "./school-year";
 
 export type StripeTxnLike = {
   payment_type: string;
@@ -19,6 +22,10 @@ const SUMMER_FUN_FRIDAY_MONTH_KEYS = new Set(["may", "jun", "jul", "aug"]);
 
 export const SCHOOL_YEAR_FUN_FRIDAY_KEYS = new Set(
   SCHOOL_YEAR_FUN_FRIDAY_MONTHS.map((m) => m.key),
+);
+
+export const SCHOOL_YEAR_AFTERCARE_KEYS = new Set(
+  SCHOOL_YEAR_AFTERCARE_MONTHS.map((m) => m.key),
 );
 
 /** First school day of SY 26–27 (Mon Aug 17, 2026). */
@@ -46,6 +53,38 @@ export function isSchoolYearWeekday(dateStr: string): boolean {
 export function isSchoolYearFriday(dateStr: string): boolean {
   const [y, m, d] = dateStr.split("-").map(Number);
   return new Date(y, m - 1, d).getDay() === 5;
+}
+
+/** Current tuition month index 1..10, clamped to school year bounds. */
+export function getCurrentSchoolYearMonthIndex(): number {
+  const today = new Date();
+  const ymd = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  const idx = dateToSchoolYearMonthIndex(ymd);
+  if (idx !== null) return idx;
+  if (today < SCHOOL_YEAR_START) return 1;
+  return 10;
+}
+
+/** All school dates in a tuition month (aftercare weekdays + fun fridays), sorted. */
+export function getSchoolYearMonthDates(monthIndex: number): string[] {
+  const aftercareMonth = SCHOOL_YEAR_AFTERCARE_MONTHS[monthIndex - 1];
+  const fridayMonth = SCHOOL_YEAR_FUN_FRIDAY_MONTHS[monthIndex - 1];
+  if (!aftercareMonth || !fridayMonth) return [];
+  const dates = [
+    ...aftercareMonth.days.map((d) => d.date),
+    ...fridayMonth.fridays.map((f) => f.date),
+  ];
+  return [...new Set(dates)].sort();
+}
+
+/** Resolve aug_26 / sep_26 / … for a given aftercare weekday ISO date. */
+export function getSchoolYearAftercareMonthKey(dateStr: string): string | null {
+  for (const month of SCHOOL_YEAR_AFTERCARE_MONTHS) {
+    if (month.days.some((d) => d.date === dateStr)) {
+      return month.key;
+    }
+  }
+  return null;
 }
 
 /** Resolve aug_26 / sep_26 / … for a given Friday ISO date. */
@@ -138,6 +177,29 @@ export function isSchoolYearWeekdayPaid(
   }
 
   return false;
+}
+
+/** Extended Learning (aftercare) eligibility for school year from stripe_transactions row. */
+export function isSchoolYearAftercarePaid(
+  txn: StripeTxnLike,
+  dateStr: string,
+): boolean {
+  if (txn.payment_type !== "aftercare_tuition") return false;
+
+  const meta = txn.metadata ?? {};
+  const paidDays =
+    metaString(meta, "selected_days")?.split(",").filter(Boolean) ?? [];
+  if (paidDays.includes(dateStr)) return true;
+
+  const monthKey = getSchoolYearAftercareMonthKey(dateStr);
+  if (!monthKey) return false;
+
+  const paidMonths =
+    metaString(meta, "selected_months")?.split(",").filter(Boolean) ?? [];
+
+  return paidMonths.some(
+    (key) => SCHOOL_YEAR_AFTERCARE_KEYS.has(key) && key === monthKey,
+  );
 }
 
 /** Fri school-year Field Fun Friday eligibility (excludes summer FF month keys). */

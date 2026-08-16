@@ -1,46 +1,146 @@
 import { forwardRef, useCallback } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet } from "react-native";
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
-  BottomSheetView,
+  BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { openBrowserAsync, WebBrowserPresentationStyle } from "expo-web-browser";
 import { Brand } from "@/constants/theme";
+import {
+  MoreMenuGrid,
+  MoreMenuHeader,
+  type MoreMenuItem,
+  type MoreMenuSection,
+} from "@/components/MoreMenuGrid";
 
-type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
-
-interface MenuItem {
-  label: string;
-  icon: IoniconName;
-  route?: string;
-  url?: string;
-}
-
-const MENU_ITEMS: MenuItem[] = [
-  { label: "Feed",           icon: "newspaper-outline",          route: "/(staff)/feed" },
-  { label: "Calendar",       icon: "calendar-outline",           route: "/(staff)/calendar" },
-  { label: "Hours",          icon: "time-outline",               route: "/(staff)/hours" },
-  { label: "Payroll",        icon: "cash-outline",               route: "/(staff)/payroll" },
-  { label: "Forms & Docs",   icon: "document-text-outline",      route: "/(staff)/forms" },
-  { label: "Inventory",      icon: "cube-outline",               route: "/(staff)/inventory" },
-  { label: "Care Log",       icon: "medkit-outline",             route: "/(staff)/care-log" },
-  { label: "Activities",     icon: "ribbon-outline",             route: "/(staff)/activities" },
-  { label: "Newsletter",     icon: "newspaper-outline",          route: "/(staff)/newsletters" },
-  { label: "Photos",         icon: "images-outline",             route: "/(staff)/photos" },
-  { label: "Notify Parents", icon: "notifications-outline",      route: "/(staff)/notifications" },
-  { label: "Privacy",        icon: "shield-checkmark-outline",   url: "https://sagefield.co/privacy" },
-  { label: "Terms",          icon: "document-outline",           url: "https://sagefield.co/terms" },
-  { label: "Settings",       icon: "settings-outline",           route: "/(staff)/settings" },
+const MENU_SECTIONS: MoreMenuSection[] = [
+  {
+    title: "Work",
+    items: [
+      {
+        label: "Feed",
+        icon: "newspaper-outline",
+        route: "/(staff)/feed",
+        iconColor: "#2563EB",
+        iconBg: "rgba(37,99,235,0.12)",
+      },
+      {
+        label: "Calendar",
+        icon: "calendar-outline",
+        route: "/(staff)/calendar",
+        iconColor: "#2563EB",
+        iconBg: "rgba(37,99,235,0.12)",
+      },
+      {
+        label: "Hours",
+        icon: "time-outline",
+        route: "/(staff)/hours",
+        iconColor: "#0891B2",
+        iconBg: "rgba(8,145,178,0.12)",
+      },
+      {
+        label: "Payroll",
+        icon: "cash-outline",
+        route: "/(staff)/payroll",
+        iconColor: "#059669",
+        iconBg: "rgba(5,150,105,0.12)",
+      },
+    ],
+  },
+  {
+    title: "Classroom",
+    items: [
+      {
+        label: "Forms & Docs",
+        icon: "document-text-outline",
+        route: "/(staff)/forms",
+        iconColor: "#D97706",
+        iconBg: "rgba(217,119,6,0.12)",
+      },
+      {
+        label: "Inventory",
+        icon: "cube-outline",
+        route: "/(staff)/inventory",
+        iconColor: "#EA580C",
+        iconBg: "rgba(234,88,12,0.12)",
+      },
+      {
+        label: "Care Log",
+        icon: "medkit-outline",
+        route: "/(staff)/care-log",
+        iconColor: "#DC2626",
+        iconBg: "rgba(220,38,38,0.12)",
+      },
+      {
+        label: "Activities",
+        icon: "ribbon-outline",
+        route: "/(staff)/activities",
+        iconColor: "#7C3AED",
+        iconBg: "rgba(124,58,237,0.12)",
+      },
+    ],
+  },
+  {
+    title: "Community",
+    items: [
+      {
+        label: "Newsletter",
+        icon: "newspaper-outline",
+        route: "/(staff)/newsletters",
+        iconColor: "#4F46E5",
+        iconBg: "rgba(79,70,229,0.12)",
+      },
+      {
+        label: "Photos",
+        icon: "images-outline",
+        route: "/(staff)/photos",
+        iconColor: "#DB2777",
+        iconBg: "rgba(219,39,119,0.12)",
+      },
+      {
+        label: "Notify Parents",
+        icon: "notifications-outline",
+        route: "/(staff)/notifications",
+        iconColor: "#F59E0B",
+        iconBg: "rgba(245,158,11,0.12)",
+      },
+    ],
+  },
+  {
+    title: "Account",
+    items: [
+      {
+        label: "Privacy",
+        icon: "shield-checkmark-outline",
+        url: "https://sagefield.co/privacy",
+        iconColor: "#475569",
+        iconBg: "rgba(71,85,105,0.12)",
+      },
+      {
+        label: "Terms",
+        icon: "document-outline",
+        url: "https://sagefield.co/terms",
+        iconColor: "#6B7280",
+        iconBg: "rgba(107,114,128,0.12)",
+      },
+      {
+        label: "Settings",
+        icon: "settings-outline",
+        route: "/(staff)/settings",
+        iconColor: Brand.sage700,
+        iconBg: "rgba(94,124,104,0.12)",
+      },
+    ],
+  },
 ];
 
 export const StaffMoreMenuSheet = forwardRef<BottomSheetModal>((_, ref) => {
   const router = useRouter();
 
   const handleItemPress = useCallback(
-    (item: MenuItem) => {
+    (item: MoreMenuItem) => {
       (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
       if (item.url) {
         openBrowserAsync(item.url, {
@@ -50,19 +150,15 @@ export const StaffMoreMenuSheet = forwardRef<BottomSheetModal>((_, ref) => {
         router.push(item.route as any);
       }
     },
-    [ref, router]
+    [ref, router],
   );
-
-  const rows: MenuItem[][] = [];
-  for (let i = 0; i < MENU_ITEMS.length; i += 3) {
-    rows.push(MENU_ITEMS.slice(i, i + 3));
-  }
 
   return (
     <BottomSheetModal
       ref={ref}
-      snapPoints={["55%"]}
+      snapPoints={["72%"]}
       enablePanDownToClose
+      handleIndicatorStyle={styles.handle}
       backdropComponent={(props) => (
         <BottomSheetBackdrop
           {...props}
@@ -72,74 +168,24 @@ export const StaffMoreMenuSheet = forwardRef<BottomSheetModal>((_, ref) => {
         />
       )}
     >
-      <BottomSheetView style={styles.container}>
-        <Text style={styles.title}>More</Text>
-        <View style={styles.grid}>
-          {rows.map((row, rowIdx) => (
-            <View key={rowIdx} style={styles.row}>
-              {row.map((item) => (
-                <Pressable
-                  key={item.label}
-                  style={({ pressed }) => [
-                    styles.cell,
-                    pressed && styles.cellPressed,
-                  ]}
-                  onPress={() => handleItemPress(item)}
-                >
-                  <View style={styles.iconWrap}>
-                    <Ionicons name={item.icon} size={28} color={Brand.sage700} />
-                  </View>
-                  <Text style={styles.label}>{item.label}</Text>
-                </Pressable>
-              ))}
-            </View>
-          ))}
-        </View>
-      </BottomSheetView>
+      <BottomSheetScrollView
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
+        <MoreMenuHeader subtitle="Staff tools" />
+        <MoreMenuGrid sections={MENU_SECTIONS} onItemPress={handleItemPress} />
+      </BottomSheetScrollView>
     </BottomSheetModal>
   );
 });
 
 const styles = StyleSheet.create({
+  handle: {
+    backgroundColor: "#d1d5db",
+    width: 36,
+  },
   container: {
-    flex: 1,
     paddingHorizontal: 16,
-    paddingBottom: 24,
-  },
-  title: {
-    fontFamily: "Merriweather_700Bold",
-    fontSize: 18,
-    color: "#1f2937",
-    marginBottom: 20,
-    marginTop: 4,
-  },
-  grid: {
-    gap: 12,
-  },
-  row: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  cell: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#F2F7F3",
-    borderRadius: 12,
-    paddingVertical: 16,
-    gap: 8,
-  },
-  cellPressed: {
-    opacity: 0.7,
-  },
-  iconWrap: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  label: {
-    fontFamily: "Poppins_400Regular",
-    fontSize: 11,
-    color: "#4b5563",
-    textAlign: "center",
+    paddingBottom: 32,
   },
 });

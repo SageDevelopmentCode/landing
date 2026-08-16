@@ -22,10 +22,10 @@ const LINK_GROUPS: { label: string; links: LinkItem[] }[] = [
     label: "What's New",
     links: [
       {
-        emoji: "📸",
-        title: "Week 4 Highlights Are Live!",
-        subtitle: "Summer 2026 · Jun 15–19 · See the recap",
-        href: "/highlights/summer/week-4",
+        emoji: "🌱",
+        title: "Community Garden Day — You're Invited",
+        subtitle: "Aug 27 · Free evening on campus · Plant, connect & RSVP",
+        href: "/community",
         featured: true,
       },
     ],
@@ -39,12 +39,6 @@ const LINK_GROUPS: { label: string; links: LinkItem[] }[] = [
         subtitle: "Apply for enrollment today",
         href: "/apply",
         featured: true,
-      },
-      {
-        emoji: "☀️",
-        title: "Ages 4–11 Summer Program",
-        subtitle: "May 26 – Aug 13 · Outdoor & enrichment",
-        href: "/summer-2026",
       },
       {
         emoji: "📚",
@@ -123,6 +117,18 @@ const LINK_GROUPS: { label: string; links: LinkItem[] }[] = [
   {
     label: "Highlights",
     links: [
+      {
+        emoji: "📸",
+        title: "Week 6 Highlights",
+        subtitle: "Summer 2026 · Jun 29–Jul 2",
+        href: "/highlights/summer/week-6",
+      },
+      {
+        emoji: "📸",
+        title: "Week 5 Highlights",
+        subtitle: "Summer 2026 · Jun 22–26",
+        href: "/highlights/summer/week-5",
+      },
       {
         emoji: "📸",
         title: "Week 4 Highlights",

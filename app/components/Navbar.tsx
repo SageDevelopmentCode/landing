@@ -14,7 +14,6 @@ import {
   Eye,
   Sparkles,
   GraduationCap,
-  Sun,
   School,
   Home,
   DollarSign,
@@ -125,12 +124,6 @@ const NAV_TABS: NavTab[] = [
     kind: "dropdown",
     label: "Programs & Tuition",
     items: [
-      {
-        label: "Summer Program 2026",
-        action: { kind: "link", href: "/summer-2026" },
-        icon: Sun,
-        iconClass: "text-yellow-400",
-      },
       {
         label: "School Year 2026-2027",
         action: { kind: "link", href: "/school-year-2026-2027" },
@@ -349,7 +342,6 @@ export default function Navbar({ darkStyle, lightText }: { darkStyle?: boolean; 
       pathname === "/team" ||
       pathname === "/tuition" ||
       pathname === "/academic-calendar" ||
-      pathname === "/summer-2026" ||
       pathname === "/school-year-2026-2027" ||
       pathname === "/homeschool" ||
       pathname === "/rsvp" ||

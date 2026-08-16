@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
       { source: '/rsvp', destination: '/apply', permanent: true },
       { source: '/shadow-tour', destination: '/shadow', permanent: true },
       { source: '/shadow-day/start', destination: '/shadow', permanent: true },
+      { source: '/summer-2026', destination: '/school-year-2026-2027', permanent: true },
     ];
   },
   experimental: {

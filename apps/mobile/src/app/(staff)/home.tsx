@@ -1,4 +1,5 @@
 import { ActivityPreferencesSheet } from "@/components/ActivityPreferencesSheet";
+import { HomeHeroHeader } from "@/components/HomeHeroHeader";
 import { StaffConferenceBookingsSheet } from "@/components/StaffConferenceBookingsSheet";
 import { StaffConferenceSection } from "@/components/StaffConferenceSection";
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
@@ -21,7 +22,6 @@ import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  ImageBackground,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -51,37 +51,12 @@ import {
   type StaffConferenceBooking,
 } from "@/lib/staff-conference-bookings";
 
-// ─── Header images ────────────────────────────────────────────────────────────
-
-const HEADER_IMAGES = [
-  require("../../../assets/images/Interior.webp"),
-  require("../../../assets/images/Homeschool.webp"),
-  require("../../../assets/images/Homeschool2.webp"),
-  require("../../../assets/images/After2.webp"),
-  require("../../../assets/images/After4.webp"),
-];
-const headerImage =
-  HEADER_IMAGES[Math.floor(Math.random() * HEADER_IMAGES.length)];
-
 // ─── Greeting helpers ─────────────────────────────────────────────────────────
-
-function getGreeting() {
-  const hour = new Date().getHours();
-  if (hour >= 5 && hour < 12) return "Good morning";
-  if (hour >= 12 && hour < 18) return "Good afternoon";
-  return "Good evening";
-}
 
 function getInitials(fullName: string) {
   const parts = fullName.trim().split(/\s+/);
   if (parts.length === 1) return parts[0][0].toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
-function roleLabel(role: string) {
-  if (role === "super_admin") return "Super Admin";
-  if (role === "teacher") return "Teacher";
-  return role;
 }
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
@@ -1948,69 +1923,17 @@ export default function StaffHomeScreen() {
 
   return (
     <View style={styles.container}>
-      <ImageBackground
-        source={headerImage}
-        style={StyleSheet.absoluteFill}
-        imageStyle={styles.headerImage}
-      >
-        <View style={[StyleSheet.absoluteFill, styles.headerOverlay]} />
-      </ImageBackground>
+      <HomeHeroHeader
+        name={firstName || fullName}
+        role={role || undefined}
+        avatarUrl={profileImageUrl}
+        initials={initials}
+        onAvatarPress={() => avatarSheetRef.current?.present()}
+      />
 
-      <SafeAreaView style={styles.safeArea} edges={["top"]}>
-        {/* Greeting header */}
-        <View style={styles.header}>
-          <View style={styles.greetingBlock}>
-            <Text style={styles.greeting}>{getGreeting()},</Text>
-            <Text style={styles.heroName}>{firstName || fullName}</Text>
-            {!!role && (
-              <View style={styles.rolePill}>
-                <Text style={styles.rolePillText}>{roleLabel(role)}</Text>
-              </View>
-            )}
-          </View>
-          <Pressable
-            style={({ pressed }) => [
-              styles.avatar,
-              pressed && { opacity: 0.7 },
-            ]}
-            onPress={() => avatarSheetRef.current?.present()}
-          >
-            {profileImageUrl ? (
-              <Image
-                source={{ uri: profileImageUrl }}
-                style={styles.avatarImage}
-                contentFit="cover"
-              />
-            ) : (
-              <Text style={styles.avatarText}>{initials}</Text>
-            )}
-          </Pressable>
-        </View>
-
+      <SafeAreaView style={styles.safeArea} edges={[]}>
         {/* Content card */}
         <View style={styles.content}>
-          {/* Section heading */}
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>Today's Students</Text>
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
-            >
-              {!studentsLoading && (
-                <Text style={styles.sectionCount}>
-                  {filteredStudents.length}{" "}
-                  {filteredStudents.length === 1 ? "student" : "students"}
-                </Text>
-              )}
-              <Pressable onPress={openAddStudentSheet} hitSlop={8}>
-                <Ionicons
-                  name="add-circle-outline"
-                  size={22}
-                  color={Brand.sage700}
-                />
-              </Pressable>
-            </View>
-          </View>
-
           {/* Date navigation */}
           <View style={styles.dateNavRow}>
             <Pressable
@@ -2020,7 +1943,7 @@ export default function StaffHomeScreen() {
               ]}
               onPress={() => setSelectedDate((d) => shiftDay(d, -1))}
             >
-              <Ionicons name="chevron-back" size={18} color="#374151" />
+              <Ionicons name="chevron-back" size={20} color="#374151" />
             </Pressable>
             <Text style={styles.dateNavLabel}>
               {formatTodayDate(selectedDate)}
@@ -2037,8 +1960,26 @@ export default function StaffHomeScreen() {
               ]}
               onPress={() => setSelectedDate((d) => shiftDay(d, 1))}
             >
-              <Ionicons name="chevron-forward" size={18} color="#374151" />
+              <Ionicons name="chevron-forward" size={20} color="#374151" />
             </Pressable>
+            <View style={styles.dateNavActions}>
+              {!studentsLoading && (
+                <Text style={styles.sectionCount}>
+                  {filteredStudents.length}{" "}
+                  {filteredStudents.length === 1 ? "student" : "students"}
+                </Text>
+              )}
+              <Pressable
+                onPress={openAddStudentSheet}
+                hitSlop={10}
+                style={({ pressed }) => [
+                  styles.addStudentBtn,
+                  pressed && { opacity: 0.85 },
+                ]}
+              >
+                <Ionicons name="add" size={18} color="#ffffff" />
+              </Pressable>
+            </View>
           </View>
 
           {/* Search bar */}
@@ -2995,71 +2936,10 @@ export default function StaffHomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
-  },
-  headerImage: {
-    resizeMode: "cover",
-  },
-  headerOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.42)",
+    backgroundColor: "#F0DFC4",
   },
   safeArea: {
     flex: 1,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 32,
-  },
-  greetingBlock: {
-    gap: 4,
-  },
-  greeting: {
-    fontFamily: FontFamilies.body,
-    fontSize: 16,
-    color: "rgba(255,255,255,0.75)",
-  },
-  heroName: {
-    fontFamily: FontFamilies.heading,
-    fontSize: 28,
-    color: "#ffffff",
-  },
-  rolePill: {
-    alignSelf: "flex-start",
-    marginTop: 6,
-    backgroundColor: "rgba(255,255,255,0.18)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.35)",
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 20,
-  },
-  rolePillText: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 12,
-    color: "#ffffff",
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "rgba(255,255,255,0.20)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarText: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 16,
-    color: "#ffffff",
-  },
-  avatarImage: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
   },
 
   // Activities quick-access
@@ -3145,26 +3025,11 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     backgroundColor: "#ffffff",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
-  sectionHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingTop: 22,
-    paddingBottom: 4,
-  },
-  sectionTitle: {
-    fontFamily: FontFamilies.heading,
-    fontSize: 20,
-    color: "#1f2937",
   },
   sectionCount: {
-    fontFamily: FontFamilies.body,
-    fontSize: 13,
-    color: "#9ca3af",
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 15,
+    color: "#6b7280",
   },
   teacherSection: {
     marginBottom: 16,
@@ -3194,26 +3059,41 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 20,
+    paddingTop: 8,
     paddingBottom: 12,
-    gap: 8,
+    gap: 10,
+  },
+  dateNavActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginLeft: "auto",
+  },
+  addStudentBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: Brand.sage700,
+    alignItems: "center",
+    justifyContent: "center",
   },
   dateNavBtn: {
     padding: 4,
   },
   dateNavLabel: {
     fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 14,
+    fontSize: 16,
     color: "#374151",
   },
   todayChip: {
     backgroundColor: Brand.sage700 + "20",
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
     borderRadius: 9999,
   },
   todayChipText: {
     fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 11,
+    fontSize: 12,
     color: Brand.sage700,
   },
 
@@ -3356,8 +3236,9 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: "center",
     paddingHorizontal: 32,
-    paddingTop: 60,
-    gap: 8,
+    paddingTop: 44,
+    paddingBottom: 56,
+    gap: 10,
   },
   emptyStateTitle: {
     fontFamily: FontFamilies.bodySemiBold,

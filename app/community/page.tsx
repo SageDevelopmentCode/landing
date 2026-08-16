@@ -11,6 +11,8 @@ import Footer from "../components/Footer";
 import FloatingSMSButton from "../components/FloatingSMSButton";
 import WeekRecapPreview from "../components/WeekRecapPreview";
 import WaitlistDialog from "../components/WaitlistDialog";
+import EveningSpotlight from "../components/community/EveningSpotlight";
+import PlantCatalog from "../components/community/PlantCatalog";
 
 const dancingScript = Dancing_Script({
   subsets: ["latin"],
@@ -67,47 +69,42 @@ const GALLERY_IMAGES = [
 
 const EVENING_ACTIVITIES = [
   {
-    emoji: "🌱",
     title: "Planting",
     desc: "Help our community garden grow — every plant becomes part of something lasting.",
-    accent: "bg-mint-cream",
+    detail:
+      "Dig in alongside neighbors and leave a living mark on Sage Field. Every flower, herb, and vegetable planted becomes part of a garden built with love.",
+    image:
+      "/assets/highlights/summer_week_four/1B8DAE7D-4D49-4865-97C8-593B4F74D996.JPG",
   },
   {
-    emoji: "🎨",
     title: "Painting",
     desc: "Creative garden markers and art that make our space even more beautiful.",
-    accent: "bg-butter-yellow",
+    detail:
+      "Paint garden markers, signs, and outdoor art with your family. Creative touches that make our shared space feel even more welcoming.",
+    image:
+      "/assets/highlights/summer_week_four/C3E15299-9AB4-420A-BB46-2C998A4B1C38 2.JPG",
   },
   {
-    emoji: "🤝",
     title: "Connecting",
     desc: "Meet Sage Field families and visiting friends over a cozy evening outdoors.",
-    accent: "bg-lavender",
+    detail:
+      "Share a snack, swap stories, and meet families who call Sage Field home — and friends who are discovering us for the first time.",
+    image:
+      "/assets/highlights/summer_week_one/C8EAD2FA-0FB2-4D59-A079-493C09298ABF.JPG",
   },
   {
-    emoji: "🌸",
     title: "Creating",
     desc: "Memories that bloom for years — built together, rooted in community.",
-    accent: "bg-blush-pink",
+    detail:
+      "From first plantings to painted markers, this evening is about making memories our children will carry for years — rooted in community.",
+    image: "/assets/ImageSeven.jpg",
   },
 ];
 
-type PlantCategoryId = "herbs" | "fruits" | "vegetables" | "flowers";
-
-const PLANT_CATEGORIES: {
-  id: PlantCategoryId;
-  emoji: string;
-  label: string;
-  accent: string;
-  accentText: string;
-  plants: string[];
-}[] = [
+const PLANT_CATEGORIES = [
   {
     id: "herbs",
-    emoji: "🌿",
     label: "Herbs",
-    accent: "bg-mint-cream",
-    accentText: "text-sage-700",
     plants: [
       "Basil",
       "Rosemary",
@@ -120,18 +117,12 @@ const PLANT_CATEGORIES: {
   },
   {
     id: "fruits",
-    emoji: "🍓",
     label: "Fruits",
-    accent: "bg-blush-pink",
-    accentText: "text-rose-700",
     plants: ["Strawberries", "Blackberries", "Blueberries"],
   },
   {
     id: "vegetables",
-    emoji: "🥕",
     label: "Vegetables",
-    accent: "bg-butter-yellow",
-    accentText: "text-amber-800",
     plants: [
       "Cherry Tomatoes",
       "Bell Peppers",
@@ -144,10 +135,7 @@ const PLANT_CATEGORIES: {
   },
   {
     id: "flowers",
-    emoji: "🌸",
     label: "Flowers",
-    accent: "bg-lavender",
-    accentText: "text-violet-800",
     plants: [
       "Zinnias",
       "Marigolds",
@@ -256,18 +244,18 @@ function usePrefersReducedMotion() {
 
 export default function CommunityGardenPage() {
   const [activeSlide, setActiveSlide] = useState(0);
-  const [activePlantCategory, setActivePlantCategory] =
-    useState<PlantCategoryId>("herbs");
-  const [countdown, setCountdown] = useState({ days: 0, hours: 0, mins: 0 });
-  const [showStickyCta, setShowStickyCta] = useState(false);
+  const [countdown, setCountdown] = useState({
+    days: 0,
+    hours: 0,
+    mins: 0,
+    secs: 0,
+  });
   const [waitlistOpen, setWaitlistOpen] = useState(false);
+  const [pickedPlants, setPickedPlants] = useState<Set<string>>(new Set());
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mobileGalleryRef = useRef<HTMLDivElement>(null);
-  const desktopGalleryRef = useRef<HTMLDivElement>(null);
   const mobileRafRef = useRef<number | null>(null);
-  const desktopRafRef = useRef<number | null>(null);
-  const heroRef = useRef<HTMLElement>(null);
 
   const prefersReducedMotion = usePrefersReducedMotion();
 
@@ -291,17 +279,18 @@ export default function CommunityGardenPage() {
     const tick = () => {
       const diff = target.getTime() - Date.now();
       if (diff <= 0) {
-        setCountdown({ days: 0, hours: 0, mins: 0 });
+        setCountdown({ days: 0, hours: 0, mins: 0, secs: 0 });
         return;
       }
       setCountdown({
         days: Math.floor(diff / 86400000),
         hours: Math.floor((diff % 86400000) / 3600000),
         mins: Math.floor((diff % 3600000) / 60000),
+        secs: Math.floor((diff % 60000) / 1000),
       });
     };
     tick();
-    const id = setInterval(tick, 60000);
+    const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
 
@@ -336,23 +325,6 @@ export default function CommunityGardenPage() {
     };
   }, [setupAutoScroll]);
 
-  useEffect(() => {
-    setupAutoScroll(desktopGalleryRef.current, desktopRafRef);
-    return () => {
-      if (desktopRafRef.current) cancelAnimationFrame(desktopRafRef.current);
-    };
-  }, [setupAutoScroll]);
-
-  useEffect(() => {
-    const onScroll = () => {
-      const heroBottom = heroRef.current?.offsetHeight ?? 400;
-      setShowStickyCta(window.scrollY > heroBottom - 80);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   const goToSlide = (index: number) => {
     setActiveSlide(index);
     if (!prefersReducedMotion) startInterval();
@@ -372,9 +344,14 @@ export default function CommunityGardenPage() {
       .getElementById("about-evening")
       ?.scrollIntoView({ behavior: "smooth" });
 
-  const activeCategory = PLANT_CATEGORIES.find(
-    (c) => c.id === activePlantCategory,
-  )!;
+  const togglePickedPlant = (plant: string) => {
+    setPickedPlants((prev) => {
+      const next = new Set(prev);
+      if (next.has(plant)) next.delete(plant);
+      else next.add(plant);
+      return next;
+    });
+  };
 
   return (
     <div className={`min-h-screen bg-white ${dancingScript.variable}`}>
@@ -382,20 +359,40 @@ export default function CommunityGardenPage() {
 
       {/* ── HERO ── */}
       <section
-        ref={heroRef}
         className="bg-welcome-bg pt-28 sm:pt-32 pb-8 px-8 sm:px-12 lg:px-16 overflow-hidden"
       >
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center mb-10">
+            {/* Mobile auto-scroll strip */}
+            <div className="sm:hidden -mx-2">
+              <div
+                ref={mobileGalleryRef}
+                className="overflow-x-auto flex gap-3 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
+              >
+                {[...GALLERY_IMAGES, ...GALLERY_IMAGES].map((src, i) => (
+                  <div
+                    key={i}
+                    className="relative w-[72vw] flex-shrink-0 aspect-[4/3] rounded-xl overflow-hidden shadow-md"
+                  >
+                    <Image
+                      src={src}
+                      alt="Sage Field community"
+                      fill
+                      className="object-cover"
+                      sizes="72vw"
+                      loading="lazy"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <motion.div
               initial={{ opacity: 0, x: -24 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6 }}
               className="space-y-5"
             >
-              <span className="inline-block px-5 py-1.5 bg-sage-100 text-sage-800 text-sm font-semibold rounded-full font-body">
-                Community Event · Families Welcome
-              </span>
               <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] font-bold text-text-gray font-heading leading-tight">
                 Sage Field{" "}
                 <span className="text-sage-700">Community Garden Day</span>
@@ -432,6 +429,7 @@ export default function CommunityGardenPage() {
                   { label: "Days", value: countdown.days },
                   { label: "Hours", value: countdown.hours },
                   { label: "Mins", value: countdown.mins },
+                  { label: "Secs", value: countdown.secs },
                 ].map((d) => (
                   <div
                     key={d.label}
@@ -532,30 +530,6 @@ export default function CommunityGardenPage() {
               </div>
             </motion.div>
           </div>
-
-          {/* Mobile auto-scroll strip */}
-          <div className="sm:hidden -mx-2">
-            <div
-              ref={mobileGalleryRef}
-              className="overflow-x-auto flex gap-3 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
-            >
-              {[...GALLERY_IMAGES, ...GALLERY_IMAGES].map((src, i) => (
-                <div
-                  key={i}
-                  className="relative w-[72vw] flex-shrink-0 aspect-[4/3] rounded-xl overflow-hidden shadow-md"
-                >
-                  <Image
-                    src={src}
-                    alt="Sage Field community"
-                    fill
-                    className="object-cover"
-                    sizes="72vw"
-                    loading="lazy"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </section>
 
@@ -603,169 +577,18 @@ export default function CommunityGardenPage() {
         </div>
       </section>
 
-      {/* ── EVENING AT A GLANCE ── */}
-      <section
-        id="about-evening"
-        className="py-16 px-8 sm:px-12 lg:px-16 bg-sage-50"
-      >
-        <div className="max-w-5xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-10"
-          >
-            <span className="inline-block px-5 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4 font-body">
-              Your Evening
-            </span>
-            <h2 className="text-3xl md:text-4xl font-bold font-heading text-gray-800">
-              A Cozy Evening Together
-            </h2>
-            <p className="text-base text-gray-500 font-body mt-3 max-w-xl mx-auto">
-              Planting, painting, connecting, and creating — all in one
-              beautiful evening outdoors.
-            </p>
-          </motion.div>
+      <EveningSpotlight
+        activities={EVENING_ACTIVITIES}
+        onSaveTheDate={scrollToRSVP}
+      />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {EVENING_ACTIVITIES.map((activity, i) => (
-              <motion.div
-                key={activity.title}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.45, delay: i * 0.08 }}
-                whileHover={{ y: -4, scale: 1.02 }}
-                className={`${activity.accent} rounded-2xl p-6 shadow-sm border border-white/60 text-center space-y-3 transition-shadow hover:shadow-md`}
-              >
-                <span className="text-4xl">{activity.emoji}</span>
-                <h3 className="text-lg font-bold text-gray-800 font-heading">
-                  {activity.title}
-                </h3>
-                <p className="text-sm text-gray-600 font-body leading-relaxed">
-                  {activity.desc}
-                </p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── PLANT WISH LIST ── */}
-      <section className="py-16 px-8 sm:px-12 lg:px-16 bg-white">
-        <div className="max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-8"
-          >
-            <span className="inline-block px-5 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4 font-body">
-              What to Bring
-            </span>
-            <h2 className="text-3xl md:text-4xl font-bold font-heading text-gray-800 mb-4">
-              Help Our Garden Grow
-            </h2>
-            <p className="text-base text-gray-500 font-body max-w-2xl mx-auto leading-relaxed">
-              Bring at least one plant per family — and if you&apos;d like to
-              bring more, we&apos;d be incredibly grateful! Every contribution,
-              big or small, helps make our garden a little more beautiful.
-            </p>
-          </motion.div>
-
-          <div
-            className="flex flex-wrap justify-center gap-2 mb-8"
-            role="tablist"
-            aria-label="Plant categories"
-          >
-            {PLANT_CATEGORIES.map((cat) => (
-              <button
-                key={cat.id}
-                type="button"
-                role="tab"
-                aria-selected={activePlantCategory === cat.id}
-                onClick={() => setActivePlantCategory(cat.id)}
-                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold font-body transition-all duration-200 cursor-pointer ${
-                  activePlantCategory === cat.id
-                    ? "bg-sage-700 text-white shadow-md scale-105"
-                    : "bg-gray-100 text-gray-600 hover:bg-sage-100 hover:text-sage-800"
-                }`}
-              >
-                <span>{cat.emoji}</span>
-                {cat.label}
-              </button>
-            ))}
-          </div>
-
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activePlantCategory}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.3 }}
-              className={`${activeCategory.accent} rounded-2xl p-6 sm:p-8 border border-gray-100 shadow-sm`}
-            >
-              <h3
-                className={`text-xl font-bold font-heading mb-5 ${activeCategory.accentText}`}
-              >
-                {activeCategory.emoji} {activeCategory.label}
-              </h3>
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {activeCategory.plants.map((plant, i) => (
-                  <motion.li
-                    key={plant}
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.04 }}
-                    className="flex items-center gap-3 bg-white/70 rounded-xl px-4 py-3 text-gray-700 font-body text-sm font-medium"
-                  >
-                    <span className="text-sage-600">•</span>
-                    {plant}
-                  </motion.li>
-                ))}
-              </ul>
-            </motion.div>
-          </AnimatePresence>
-
-          <motion.p
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="text-center text-gray-500 font-body text-sm mt-8 leading-relaxed max-w-2xl mx-auto"
-          >
-            So bring a plant (or a few!), stay awhile, share a snack, meet
-            another family, and help us grow something truly special together.
-            We can&apos;t wait to see our garden and our community bloom.
-          </motion.p>
-        </div>
-      </section>
-
-      {/* ── PHOTO STRIP (desktop) ── */}
-      <section className="py-8 bg-welcome-bg hidden sm:block">
-        <div
-          ref={desktopGalleryRef}
-          className="overflow-x-auto flex gap-3 px-8 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
-        >
-          {[...GALLERY_IMAGES, ...GALLERY_IMAGES].map((src, i) => (
-            <div
-              key={i}
-              className="relative w-64 flex-shrink-0 aspect-[4/3] rounded-xl overflow-hidden shadow-md"
-            >
-              <Image
-                src={src}
-                alt="Sage Field community"
-                fill
-                className="object-cover"
-                sizes="256px"
-                loading="lazy"
-              />
-            </div>
-          ))}
-        </div>
-      </section>
+      <PlantCatalog
+        categories={PLANT_CATEGORIES}
+        pickedPlants={pickedPlants}
+        onTogglePlant={togglePickedPlant}
+        onSaveTheDate={scrollToRSVP}
+        prefersReducedMotion={prefersReducedMotion}
+      />
 
       <WeekRecapPreview className="bg-welcome-bg" />
 
@@ -1160,33 +983,41 @@ export default function CommunityGardenPage() {
       </section>
 
       <Footer />
-      <FloatingSMSButton />
+
+      {/* Floating footer CTA — mobile only */}
+      <motion.div
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 pt-2"
+        initial={{ y: 80, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.6, duration: 0.4, ease: "easeOut" as const }}
+      >
+        <div className="bg-sage-700 rounded-2xl shadow-xl flex items-center justify-between px-5 py-3 gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-white font-heading font-bold text-sm leading-tight whitespace-nowrap">
+              Community Garden Day
+            </p>
+            <p className="text-white/75 font-body text-xs">
+              Reserve your spot today
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={scrollToRSVP}
+            className="flex-shrink-0 bg-white text-sage-700 font-semibold text-sm font-body px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+          >
+            RSVP Now →
+          </button>
+        </div>
+      </motion.div>
+
+      <div className="hidden lg:block">
+        <FloatingSMSButton />
+      </div>
 
       <WaitlistDialog
         isOpen={waitlistOpen}
         onClose={() => setWaitlistOpen(false)}
       />
-
-      {/* Sticky mobile CTA */}
-      <AnimatePresence>
-        {showStickyCta && (
-          <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-lg sm:hidden"
-          >
-            <button
-              type="button"
-              onClick={scrollToRSVP}
-              className="w-full bg-primary hover:bg-primary-hover text-white font-semibold py-3.5 rounded-xl font-body shadow-md cursor-pointer"
-            >
-              RSVP Coming Soon — Save the Date
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

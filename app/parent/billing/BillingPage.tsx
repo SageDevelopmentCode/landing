@@ -80,8 +80,10 @@ import {
   SCHOOL_YEAR_MONTHS,
   SUPPLY_FEE_CENTS,
   WEEKDAYS,
+  buildPaidDaysByMonth,
   formatCents,
   formatHomeschoolSubline,
+  formatWeekdayKeys,
   getGradeTier,
   getWeekdaysForMonth,
   schoolYearAftercareMonthCents,
@@ -1095,6 +1097,8 @@ function HomeschoolSchoolYearModal({
     (paidData?.schoolYear ?? []).flatMap((entry) => entry.weeks),
   );
 
+  const paidDaysByMonth = buildPaidDaysByMonth(paidData?.schoolYear ?? []);
+
   const paidMonthsByTier = (paidData?.schoolYear ?? []).reduce<
     Record<string, Set<number>>
   >((acc, entry) => {
@@ -1398,23 +1402,29 @@ function HomeschoolSchoolYearModal({
                         {(() => {
                           const paidSet = paidMonthsByTier[tier.key];
                           if (!paidSet || paidSet.size === 0) return null;
-                          const months = SCHOOL_YEAR_MONTHS.filter((m) =>
+                          const paidMonths = SCHOOL_YEAR_MONTHS.filter((m) =>
                             paidSet.has(m.index),
-                          ).map((m) => m.short);
+                          );
                           return (
                             <div className="mt-2 flex flex-wrap gap-1">
-                              {months.map((m) => (
-                                <span
-                                  key={m}
-                                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700"
-                                >
-                                  <Check
-                                    className="w-2.5 h-2.5"
-                                    strokeWidth={2.5}
-                                  />
-                                  {m}
-                                </span>
-                              ))}
+                              {paidMonths.map((m) => {
+                                const dayLabel = formatWeekdayKeys(
+                                  paidDaysByMonth[m.index] ?? [],
+                                );
+                                return (
+                                  <span
+                                    key={m.index}
+                                    className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700"
+                                  >
+                                    <Check
+                                      className="w-2.5 h-2.5 shrink-0"
+                                      strokeWidth={2.5}
+                                    />
+                                    {m.short}
+                                    {dayLabel ? ` · ${dayLabel}` : ""}
+                                  </span>
+                                );
+                              })}
                             </div>
                           );
                         })()}
@@ -1504,6 +1514,9 @@ function HomeschoolSchoolYearModal({
                     {SCHOOL_YEAR_MONTHS.map((month) => {
                       const isPaid = paidMonthIndices.has(month.index);
                       const isSelected = selectedMonthIndices.has(month.index);
+                      const paidDayLabel = isPaid
+                        ? formatWeekdayKeys(paidDaysByMonth[month.index] ?? [])
+                        : "";
                       return (
                         <button
                           key={month.index}
@@ -1518,7 +1531,11 @@ function HomeschoolSchoolYearModal({
                               return next;
                             });
                           }}
-                          title={month.label}
+                          title={
+                            paidDayLabel
+                              ? `${month.label} · ${paidDayLabel}`
+                              : month.label
+                          }
                           className={`rounded-lg py-2 text-xs font-semibold transition-all cursor-pointer flex flex-col items-center gap-0.5 ${
                             isPaid
                               ? "bg-green-50 border border-green-200 text-green-600 cursor-not-allowed"
@@ -1534,6 +1551,11 @@ function HomeschoolSchoolYearModal({
                         >
                           {isPaid && <Check className="w-3 h-3" />}
                           {month.short}
+                          {paidDayLabel ? (
+                            <span className="text-[9px] font-medium text-green-600/80 leading-tight">
+                              {paidDayLabel}
+                            </span>
+                          ) : null}
                         </button>
                       );
                     })}

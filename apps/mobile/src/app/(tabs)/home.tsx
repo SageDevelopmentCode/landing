@@ -1,4 +1,11 @@
+import { HomeHeroHeader } from "@/components/HomeHeroHeader";
+import { YourChildrenSection } from "@/components/YourChildrenSection";
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
+import {
+  FallLeavesOverlay,
+  markFallLeavesPlayed,
+  shouldPlayFallLeaves,
+} from "@/components/FallLeavesOverlay";
 import { ParentTeacherConferenceSheet } from "@/components/ParentTeacherConferenceSheet";
 import { BottomTabInset, Brand, FontFamilies } from "@/constants/theme";
 import { API_BASE_URL } from "@/constants/config";
@@ -7,6 +14,7 @@ import { getChannels } from "@/lib/channel-actions";
 import { computePaidDates } from "@/lib/compute-paid-dates";
 import { notifyDiscord, notifyError } from "@/lib/discord";
 import { getPublishedNewsletters, type ParentNewsletterListItem } from "@/lib/newsletters-actions";
+import { fetchTeacherNamesByStudentId } from "@/lib/student-teacher-assignments";
 import { supabase } from "@/lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -19,7 +27,6 @@ import { Image } from "expo-image";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
-import { openBrowserAsync, WebBrowserPresentationStyle } from "expo-web-browser";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -32,7 +39,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -51,20 +57,16 @@ import {
   type ConferenceStudentContext,
   type ConferenceTeacherDisplay,
 } from "@/lib/parent-teacher-conference";
+import {
+  countSchoolYearAftercarePaidMonths,
+  countSchoolYearFunFridayPaidMonths,
+  type PaidHomeschoolByStudent,
+} from "@/lib/school-year-billing";
 
-const HEADER_IMAGES = [
-  require("../../../assets/images/stock/Stock1.webp"),
-  require("../../../assets/images/stock/Stock2.webp"),
-  require("../../../assets/images/stock/Stock3.webp"),
-  require("../../../assets/images/stock/Stock4.webp"),
-  require("../../../assets/images/stock/Stock5.webp"),
-  require("../../../assets/images/stock/Stock6.webp"),
-  require("../../../assets/images/stock/Stock7.webp"),
-  require("../../../assets/images/stock/Stock8.webp"),
-  require("../../../assets/images/stock/Stock9.webp"),
-  require("../../../assets/images/stock/Stock10.webp"),
-  require("../../../assets/images/stock/Stock11.webp"),
-];
+function formatHomeCardStatus(names: string[], status: string): string {
+  if (names.length === 0) return status;
+  return `${names.join(", ")} · ${status}`;
+}
 
 const HOME_CARD_IMAGES = {
   summer: require("../../../assets/images/stock/Stock1.webp"),
@@ -73,13 +75,6 @@ const HOME_CARD_IMAGES = {
   schoolYear: require("../../../assets/images/stock/Stock4.webp"),
   homeschool: require("../../../assets/images/stock/Stock5.webp"),
 };
-
-function getGreeting() {
-  const hour = new Date().getHours();
-  if (hour >= 5 && hour < 12) return "Good morning";
-  if (hour >= 12 && hour < 18) return "Good afternoon";
-  return "Good evening";
-}
 
 function abbreviateName(fullName: string): string {
   const parts = fullName.trim().split(/\s+/);
@@ -131,24 +126,6 @@ type NotifItem = {
   isDefault?: boolean;
   memberCount?: number;
 };
-
-function formatMonthKey(key: string): string {
-  const map: Record<string, string> = {
-    may: "May",
-    jun: "Jun",
-    jul: "Jul",
-    aug: "Aug",
-    sep: "Sep",
-    oct: "Oct",
-    nov: "Nov",
-    dec: "Dec",
-    jan: "Jan",
-    feb: "Feb",
-    mar: "Mar",
-    apr: "Apr",
-  };
-  return map[key] ?? key.charAt(0).toUpperCase() + key.slice(1);
-}
 
 // ---------------------------------------------------------------------------
 // Calendar helpers (upcoming events)
@@ -1290,30 +1267,6 @@ function TuitionPreview() {
         <View style={previewStyles.tuitionCard}>
           <View style={previewStyles.tuitionCardBanner}>
             <Image
-              source={require("../../../assets/images/stock/Stock1.webp")}
-              style={StyleSheet.absoluteFill}
-              contentFit="cover"
-            />
-            <LinearGradient
-              colors={["transparent", "rgba(0,0,0,0.54)"]}
-              style={StyleSheet.absoluteFill}
-            />
-            <Text style={previewStyles.tuitionCardBannerLabel}>
-              SUMMER 2026
-            </Text>
-          </View>
-          <View style={previewStyles.tuitionCardBody}>
-            <Text style={previewStyles.tuitionCardTitle} numberOfLines={2}>
-              Summer Program Tuition
-            </Text>
-            <Text style={previewStyles.tuitionCardStatus}>
-              8 of 12 weeks paid
-            </Text>
-          </View>
-        </View>
-        <View style={previewStyles.tuitionCard}>
-          <View style={previewStyles.tuitionCardBanner}>
-            <Image
               source={require("../../../assets/images/stock/Stock2.webp")}
               style={StyleSheet.absoluteFill}
               contentFit="cover"
@@ -1323,19 +1276,42 @@ function TuitionPreview() {
               style={StyleSheet.absoluteFill}
             />
             <Text style={previewStyles.tuitionCardBannerLabel}>
-              SUMMER 2026
+              SCHOOL YEAR 26–27
             </Text>
             <View style={previewStyles.tuitionCardBadge}>
-              <Text style={previewStyles.tuitionCardBadgeText}>Optional</Text>
+              <Text style={previewStyles.tuitionCardBadgeText}>$300</Text>
             </View>
           </View>
           <View style={previewStyles.tuitionCardBody}>
             <Text style={previewStyles.tuitionCardTitle} numberOfLines={2}>
-              Extended Learning
+              Annual Supply Fee
             </Text>
-            <Text style={previewStyles.tuitionCardStatus}>
-              No payment on file
+            <Text style={previewStyles.tuitionCardStatus}>Pay now</Text>
+          </View>
+        </View>
+        <View style={previewStyles.tuitionCard}>
+          <View style={previewStyles.tuitionCardBanner}>
+            <Image
+              source={require("../../../assets/images/stock/Stock1.webp")}
+              style={StyleSheet.absoluteFill}
+              contentFit="cover"
+            />
+            <LinearGradient
+              colors={["transparent", "rgba(0,0,0,0.54)"]}
+              style={StyleSheet.absoluteFill}
+            />
+            <Text style={previewStyles.tuitionCardBannerLabel}>
+              SCHOOL YEAR 26–27
             </Text>
+            <View style={previewStyles.tuitionCardBadge}>
+              <Text style={previewStyles.tuitionCardBadgeText}>3 mo. paid</Text>
+            </View>
+          </View>
+          <View style={previewStyles.tuitionCardBody}>
+            <Text style={previewStyles.tuitionCardTitle} numberOfLines={2}>
+              School Year Tuition
+            </Text>
+            <Text style={previewStyles.tuitionCardStatus}>Pay tuition</Text>
           </View>
         </View>
       </View>
@@ -1353,12 +1329,12 @@ function TuitionPreview() {
           </View>
           <View style={previewStyles.tuitionTxBody}>
             <Text style={previewStyles.tuitionTxDesc} numberOfLines={1}>
-              Summer Program Tuition
+              Annual Supply Fee
             </Text>
-            <Text style={previewStyles.tuitionTxMeta}>Emma J. · May 10</Text>
+            <Text style={previewStyles.tuitionTxMeta}>Emma J. · Aug 1</Text>
           </View>
           <View style={previewStyles.tuitionTxRight}>
-            <Text style={previewStyles.tuitionTxAmount}>$1,200</Text>
+            <Text style={previewStyles.tuitionTxAmount}>$300</Text>
             <View style={previewStyles.tuitionPaidBadge}>
               <Text style={previewStyles.tuitionPaidBadgeText}>Paid</Text>
             </View>
@@ -1375,12 +1351,12 @@ function TuitionPreview() {
           </View>
           <View style={previewStyles.tuitionTxBody}>
             <Text style={previewStyles.tuitionTxDesc} numberOfLines={1}>
-              Extended Learning
+              School Year Tuition
             </Text>
-            <Text style={previewStyles.tuitionTxMeta}>Liam M. · Apr 28</Text>
+            <Text style={previewStyles.tuitionTxMeta}>Liam M. · Sep 1</Text>
           </View>
           <View style={previewStyles.tuitionTxRight}>
-            <Text style={previewStyles.tuitionTxAmount}>$380</Text>
+            <Text style={previewStyles.tuitionTxAmount}>$1,450</Text>
             <View style={previewStyles.tuitionPaidBadge}>
               <Text style={previewStyles.tuitionPaidBadgeText}>Paid</Text>
             </View>
@@ -1551,37 +1527,58 @@ function SkeletonUpcomingEvents() {
 function SkeletonStudentList() {
   return (
     <View style={{ gap: 14 }}>
-      <SkeletonBox
-        width={180}
-        height={16}
-        borderRadius={4}
-        style={{ marginHorizontal: 24 }}
-      />
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: 24,
+        }}
+      >
+        <SkeletonBox width={120} height={16} borderRadius={4} />
+        <SkeletonBox width={52} height={13} borderRadius={4} />
+      </View>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 14, paddingHorizontal: 24 }}
+        contentContainerStyle={{ gap: 12, paddingHorizontal: 24, paddingBottom: 6 }}
       >
         {[0, 1, 2].map((i) => (
           <View
             key={i}
             style={{
-              width: 158,
-              borderRadius: 18,
-              backgroundColor: "#EEF5EF",
-              paddingTop: 16,
-              paddingBottom: 14,
-              paddingHorizontal: 14,
-              alignItems: "center",
-              gap: 6,
+              width: 172,
+              borderRadius: 16,
+              backgroundColor: "#ffffff",
+              borderWidth: 1,
+              borderColor: "#e5e7eb",
+              overflow: "hidden",
             }}
           >
-            <SkeletonBox width={58} height={58} borderRadius={29} />
-            <SkeletonBox width={72} height={13} borderRadius={4} />
-            <SkeletonBox width={48} height={10} borderRadius={4} />
-            <View style={{ flexDirection: "row", gap: 6, marginTop: 6 }}>
-              <SkeletonBox width={54} height={18} borderRadius={9} />
-              <SkeletonBox width={62} height={18} borderRadius={9} />
+            <View
+              style={{
+                height: 72,
+                backgroundColor: "#EEF5EF",
+                opacity: 0.5,
+              }}
+            />
+            <View style={{ alignItems: "center", marginTop: -44 }}>
+              <SkeletonBox width={62} height={62} borderRadius={31} />
+            </View>
+            <View style={{ paddingHorizontal: 14, paddingTop: 8, paddingBottom: 14, gap: 6 }}>
+              <SkeletonBox width={72} height={15} borderRadius={4} />
+              <SkeletonBox width={64} height={18} borderRadius={9999} />
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginTop: 4,
+                }}
+              >
+                <SkeletonBox width={72} height={12} borderRadius={4} />
+                <SkeletonBox width={14} height={14} borderRadius={4} />
+              </View>
             </View>
           </View>
         ))}
@@ -2020,10 +2017,10 @@ async function fetchDMNotifs(userId: string): Promise<NotifItem[]> {
 
 export default function HomeScreen() {
   const router = useRouter();
+  const goToTuition = useCallback(() => {
+    router.push("/(tabs)/tuition" as any);
+  }, [router]);
   const { userId, effectiveParentId, isGrantee, ownerName } = useAuth();
-  const [headerIndex, setHeaderIndex] = useState(() =>
-    Math.floor(Math.random() * HEADER_IMAGES.length),
-  );
   const [firstName, setFirstName] = useState<string>("there");
   const [initials, setInitials] = useState<string>("");
   const [parentImageUrl, setParentImageUrl] = useState<string | null>(null);
@@ -2036,6 +2033,9 @@ export default function HomeScreen() {
       profile_image_url: string | null;
     }[]
   >([]);
+  const [teacherNameByStudentId, setTeacherNameByStudentId] = useState<
+    Record<string, string>
+  >({});
   const [now, setNow] = useState(Date.now());
   const [loading, setLoading] = useState(true);
   const [upcomingEvents, setUpcomingEvents] = useState<CalendarEvent[]>([]);
@@ -2090,6 +2090,8 @@ export default function HomeScreen() {
   const [paidSupplyFeeByStudent, setPaidSupplyFeeByStudent] = useState<
     Record<string, boolean>
   >({});
+  const [paidHomeschoolByStudent, setPaidHomeschoolByStudent] =
+    useState<PaidHomeschoolByStudent>({});
   const [conferenceBookingsByStudent, setConferenceBookingsByStudent] =
     useState<Record<string, ConferenceBookingRecord>>({});
   const [conferenceStudents, setConferenceStudents] = useState<
@@ -2189,18 +2191,15 @@ export default function HomeScreen() {
   const checklistSheetRef = useRef<BottomSheetModal>(null);
   const notifSheetRef = useRef<BottomSheetModal>(null);
   const ptcSheetRef = useRef<BottomSheetModal>(null);
-  const tuitionSheetRef = useRef<BottomSheetModal>(null);
-  const [tuitionSecretCode, setTuitionSecretCode] = useState("");
   const [introVisible, setIntroVisible] = useState(false);
   const [introIndex, setIntroIndex] = useState(0);
   const introListRef = useRef<FlatList<IntroSlide>>(null);
+  const [showFallLeaves, setShowFallLeaves] = useState(false);
 
   useEffect(() => {
-    const timer = setInterval(
-      () => setHeaderIndex((i) => (i + 1) % HEADER_IMAGES.length),
-      6000,
-    );
-    return () => clearInterval(timer);
+    if (shouldPlayFallLeaves()) {
+      setShowFallLeaves(true);
+    }
   }, []);
 
   // Refresh "X min ago" labels every 30 seconds
@@ -2226,7 +2225,14 @@ export default function HomeScreen() {
         setCurrentUserId(userId);
 
         // ─── Core data: try RPC first (1 round-trip), fall back to individual queries ───
-        type TxRow = { student_id: string | null; payment_type: string; status: string; metadata: Record<string, string> | null };
+        type TxRow = {
+          student_id: string | null;
+          payment_type: string;
+          status: string;
+          metadata: Record<string, string> | null;
+          amount_cents?: number;
+          created_at?: string;
+        };
         type StudentRow = { id: string; child_legal_name: string; child_grade: string | null; profile_image_url: string | null };
 
         let studentsForActivity: StudentRow[] = [];
@@ -2282,6 +2288,11 @@ export default function HomeScreen() {
           txForActivity = rpc.transactions ?? [];
           applyTransactionState(txForActivity);
 
+          const teacherNames = await fetchTeacherNamesByStudentId(
+            studentsForActivity.map((s) => s.id),
+          );
+          setTeacherNameByStudentId(teacherNames);
+
           // Unlock the main render immediately after core data is ready
           setLoading(false);
           setOnboardingLoading(false);
@@ -2333,6 +2344,11 @@ export default function HomeScreen() {
 
           studentsForActivity = fetchedStudents ?? [];
           setStudents(studentsForActivity);
+
+          const teacherNames = await fetchTeacherNamesByStudentId(
+            studentsForActivity.map((s) => s.id),
+          );
+          setTeacherNameByStudentId(teacherNames);
 
           const [
             eventsResult,
@@ -2391,7 +2407,9 @@ export default function HomeScreen() {
             supabase
               .schema("billing")
               .from("stripe_transactions")
-              .select("student_id, payment_type, status, metadata")
+              .select(
+                "student_id, payment_type, status, metadata, amount_cents, created_at",
+              )
               .eq("parent_id", effectiveParentId)
               .eq("is_deleted", false)
               .eq("status", "completed"),
@@ -2548,7 +2566,14 @@ export default function HomeScreen() {
     }
 
     // ─── Shared helpers (close over state setters) ──────────────────────────
-    type TxRow = { student_id: string | null; payment_type: string; status: string; metadata: Record<string, string> | null };
+    type TxRow = {
+      student_id: string | null;
+      payment_type: string;
+      status: string;
+      metadata: Record<string, string> | null;
+      amount_cents?: number;
+      created_at?: string;
+    };
 
     function applyTransactionState(txData: TxRow[]) {
       const paidWeeks: Record<string, number[]> = {};
@@ -2556,9 +2581,10 @@ export default function HomeScreen() {
       const funFridayMap: Record<string, { months: string[]; fridays: string[] }> = {};
       const schoolYearMap: PaidSchoolYearByStudent = {};
       const supplyFeeMap: Record<string, boolean> = {};
+      const homeschoolMap: PaidHomeschoolByStudent = {};
 
       for (const tx of txData) {
-        if (!tx.student_id) continue;
+        if (tx.status !== "completed" || !tx.student_id) continue;
         const meta = tx.metadata;
         if (tx.payment_type === "summer_tuition") {
           if (meta?.plan_type === "full") {
@@ -2590,6 +2616,89 @@ export default function HomeScreen() {
           schoolYearMap[tx.student_id].push(...months);
         } else if (tx.payment_type === "supply_fee") {
           supplyFeeMap[tx.student_id] = true;
+          if (
+            meta?.bundle_type === "homeschool" &&
+            meta.bundle_homeschool_tier
+          ) {
+            const tier = meta.bundle_homeschool_tier;
+            const weeks = (meta.bundle_homeschool_selected_days ?? "")
+              .split(",")
+              .map(Number)
+              .filter(Boolean);
+            const weekDays: Record<number, string[]> = {};
+            if (meta.bundle_homeschool_week_selections_json) {
+              try {
+                const parsed: { week: number; days: string[] }[] = JSON.parse(
+                  meta.bundle_homeschool_week_selections_json,
+                );
+                parsed.forEach(({ week, days }) => {
+                  weekDays[week] = days;
+                });
+              } catch {
+                /* ignore */
+              }
+            }
+            if (Object.keys(weekDays).length === 0) {
+              weeks.forEach((w) => {
+                weekDays[w] = [];
+              });
+            }
+            const days = [...new Set(Object.values(weekDays).flat())];
+            const amountCents = meta.bundle_amount_cents
+              ? parseInt(meta.bundle_amount_cents, 10)
+              : (tx.amount_cents ?? 0);
+            if (!homeschoolMap[tx.student_id]) {
+              homeschoolMap[tx.student_id] = { summer: [], schoolYear: [] };
+            }
+            homeschoolMap[tx.student_id].schoolYear.push({
+              weeks,
+              tier,
+              days,
+              weekDays,
+              amountCents,
+              createdAt: tx.created_at ?? "",
+            });
+          }
+        } else if (tx.payment_type === "homeschool_dropin") {
+          const program = meta?.program ?? "summer_26";
+          const tier = meta?.tier ?? "dropin";
+          const days = meta?.selected_days?.split(",").filter(Boolean) ?? [];
+          const weeks =
+            meta?.selected_weeks?.split(",").map(Number).filter(Boolean) ?? [];
+          const weekDays: Record<number, string[]> = {};
+          if (meta?.week_selections) {
+            try {
+              const parsed: { week: number; days: string[] }[] = JSON.parse(
+                meta.week_selections,
+              );
+              parsed.forEach(({ week, days: d }) => {
+                weekDays[week] = d;
+              });
+            } catch {
+              /* ignore */
+            }
+          }
+          if (Object.keys(weekDays).length === 0) {
+            weeks.forEach((w) => {
+              weekDays[w] = days;
+            });
+          }
+          if (!homeschoolMap[tx.student_id]) {
+            homeschoolMap[tx.student_id] = { summer: [], schoolYear: [] };
+          }
+          const entry = {
+            weeks,
+            tier,
+            days,
+            weekDays,
+            amountCents: tx.amount_cents ?? 0,
+            createdAt: tx.created_at ?? "",
+          };
+          if (program === "school_year_26_27") {
+            homeschoolMap[tx.student_id].schoolYear.push(entry);
+          } else {
+            homeschoolMap[tx.student_id].summer.push(entry);
+          }
         }
       }
 
@@ -2598,6 +2707,7 @@ export default function HomeScreen() {
       setPaidFunFridayByStudent(funFridayMap);
       setPaidSchoolYearByStudent(schoolYearMap);
       setPaidSupplyFeeByStudent(supplyFeeMap);
+      setPaidHomeschoolByStudent(homeschoolMap);
     }
 
     function applyActivityBanner(
@@ -2940,83 +3050,23 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Image
-        source={HEADER_IMAGES[headerIndex]}
-        style={[StyleSheet.absoluteFill, styles.headerImage]}
-        contentFit="cover"
-        transition={800}
+      <HomeHeroHeader
+        name={firstName}
+        avatarUrl={parentImageUrl}
+        initials={initials}
+        onAvatarPress={() => profileSheetRef.current?.present()}
+        checklist={{
+          onPress: () => checklistSheetRef.current?.present(),
+          showBadge:
+            !onboardingLoading && completedTaskCount < TOTAL_TASKS,
+        }}
+        notifications={{
+          onPress: () => notifSheetRef.current?.present(),
+          count: notifTotal,
+        }}
       />
-      <View style={[StyleSheet.absoluteFill, styles.headerOverlay]} />
-      <SafeAreaView style={styles.safeArea} edges={["top"]}>
-        <View style={styles.header}>
-          <View style={styles.greetingBlock}>
-            <Text style={styles.greeting}>{getGreeting()},</Text>
-            <Text style={styles.name}>{firstName}</Text>
-          </View>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
-            <Pressable
-              onPress={() => checklistSheetRef.current?.present()}
-              hitSlop={8}
-              style={({ pressed }) => [
-                styles.avatar,
-                pressed && { opacity: 0.7 },
-              ]}
-            >
-              <View style={{ position: "relative" }}>
-                <Ionicons
-                  name="checkbox"
-                  size={22}
-                  color="rgba(255,255,255,0.9)"
-                />
-                {!onboardingLoading && completedTaskCount < TOTAL_TASKS && (
-                  <View style={styles.checklistBadge} />
-                )}
-              </View>
-            </Pressable>
-            <Pressable
-              onPress={() => notifSheetRef.current?.present()}
-              hitSlop={8}
-              style={({ pressed }) => [
-                styles.avatar,
-                pressed && { opacity: 0.7 },
-              ]}
-            >
-              <View style={{ position: "relative" }}>
-                <Ionicons
-                  name="notifications"
-                  size={22}
-                  color="rgba(255,255,255,0.9)"
-                />
-                {notifTotal > 0 && (
-                  <View style={styles.notifBadge}>
-                    <Text style={styles.notifBadgeText}>
-                      {notifTotal > 9 ? "9+" : String(notifTotal)}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </Pressable>
-            <Pressable
-              style={({ pressed }) => [
-                styles.avatar,
-                pressed && { opacity: 0.7 },
-              ]}
-              onPress={() => profileSheetRef.current?.present()}
-              hitSlop={8}
-            >
-              {parentImageUrl ? (
-                <Image
-                  source={{ uri: parentImageUrl }}
-                  style={styles.avatarImage}
-                  contentFit="cover"
-                />
-              ) : (
-                <Text style={styles.avatarText}>{initials}</Text>
-              )}
-            </Pressable>
-          </View>
-        </View>
 
+      <SafeAreaView style={styles.safeArea} edges={[]}>
         {isGrantee && ownerName && (
           <View style={styles.granteeBanner}>
             <Ionicons name="eye-outline" size={14} color="#7c3aed" />
@@ -3169,67 +3219,21 @@ export default function HomeScreen() {
                 </View>
               )}
 
-              <View style={styles.childrenSection}>
-                <View style={styles.tuitionSectionHeader}>
-                  <Text
-                    style={[styles.sectionHeading, { paddingHorizontal: 0 }]}
-                  >
-                    Your children
-                  </Text>
-                  <Pressable
-                    style={({ pressed }) => [pressed && { opacity: 0.7 }]}
-                    onPress={() => router.push("/(tabs)/children" as any)}
-                    hitSlop={8}
-                  >
-                    <Text style={styles.tuitionViewAllTxt}>View all</Text>
-                  </Pressable>
-                </View>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.cardRow}
-                >
-                  {students.map((s) => (
-                    <Pressable
-                      key={s.id}
-                      style={({ pressed }) => [
-                        styles.card,
-                        pressed && styles.cardPressed,
-                      ]}
-                      onPress={() =>
-                        router.push({
-                          pathname: "/(tabs)/children" as any,
-                          params: { studentId: s.id },
-                        })
-                      }
-                    >
-                      <View style={styles.cardAvatarRing}>
-                        {s.profile_image_url ? (
-                          <Image
-                            source={{ uri: s.profile_image_url }}
-                            style={styles.cardAvatarImage}
-                            contentFit="cover"
-                          />
-                        ) : (
-                          <View style={styles.cardInitialsBox}>
-                            <Text style={styles.cardInitialsText}>
-                              {getInitials(s.child_legal_name)}
-                            </Text>
-                          </View>
-                        )}
-                      </View>
-                      <Text style={styles.cardName} numberOfLines={1}>
-                        {s.child_legal_name.split(" ")[0]}
-                      </Text>
-                      {s.child_grade ? (
-                        <Text style={styles.cardGrade} numberOfLines={1}>
-                          {s.child_grade}
-                        </Text>
-                      ) : null}
-                    </Pressable>
-                  ))}
-                </ScrollView>
-              </View>
+              <YourChildrenSection
+                students={students.map((s) => ({
+                  id: s.id,
+                  child_legal_name: s.child_legal_name,
+                  profile_image_url: s.profile_image_url,
+                  teacher_name: teacherNameByStudentId[s.id] ?? null,
+                }))}
+                onViewAll={() => router.push("/(tabs)/children" as any)}
+                onSelectStudent={(id) =>
+                  router.push({
+                    pathname: "/(tabs)/children" as any,
+                    params: { studentId: id },
+                  })
+                }
+              />
             </>
           )}
 
@@ -3640,78 +3644,169 @@ export default function HomeScreen() {
           {/* Tuition & Billing Preview */}
           {!loading &&
             (() => {
-              const hasSummer = applications.some(
-                (a) => a.program === "summer_26" || a.program === "both",
+              const enrolledApps = applications.filter(
+                (a) => a.status === "enrolled",
               );
-              const homeschoolApps = applications.filter(
-                (a) => a.program === "homeschool_drop_in",
+              const schoolYearHomeschoolApps = enrolledApps.filter(
+                (a) =>
+                  a.program === "homeschool_drop_in" &&
+                  (a.drop_in_program === "school_year_26_27" ||
+                    a.drop_in_program === "both"),
+              );
+              const bothEnrollments = enrolledApps.filter(
+                (a) => a.program === "both",
+              );
+              const schoolYearTuitionStudentIds = new Set([
+                ...enrolledApps
+                  .filter((a) => a.program === "school_year_26_27")
+                  .map((a) => a.student_id),
+                ...bothEnrollments.map((a) => a.student_id),
+              ]);
+              const schoolYearStudentIds = new Set([
+                ...schoolYearTuitionStudentIds,
+                ...schoolYearHomeschoolApps.map((a) => a.student_id),
+              ]);
+
+              const studentMap = Object.fromEntries(
+                students.map((s) => [
+                  s.id,
+                  {
+                    name:
+                      s.child_legal_name?.trim().split(/\s+/)[0] ??
+                      s.child_legal_name ??
+                      "Student",
+                  },
+                ]),
               );
 
+              const schoolYearNames = [...schoolYearStudentIds]
+                .map((id) => studentMap[id]?.name)
+                .filter(Boolean) as string[];
+
+              const tuitionNames = [...schoolYearTuitionStudentIds]
+                .map((id) => studentMap[id]?.name)
+                .filter(Boolean) as string[];
+
+              const allSupplyFeesPaid =
+                schoolYearStudentIds.size > 0 &&
+                [...schoolYearStudentIds].every(
+                  (id) => paidSupplyFeeByStudent[id],
+                );
+
+              const anyTuitionSupplyFeeUnpaid = [
+                ...schoolYearTuitionStudentIds,
+              ].some((id) => !paidSupplyFeeByStudent[id]);
+
+              const totalTuitionMonthsPaid = [
+                ...schoolYearTuitionStudentIds,
+              ].reduce(
+                (acc, id) =>
+                  acc + (paidSchoolYearByStudent[id]?.length ?? 0),
+                0,
+              );
+
+              const totalAftercareMonths = [...schoolYearStudentIds].reduce(
+                (acc, id) =>
+                  acc +
+                  countSchoolYearAftercarePaidMonths(
+                    paidAftercareByStudent[id],
+                  ),
+                0,
+              );
+
+              const totalFunFridayMonths = [...schoolYearStudentIds].reduce(
+                (acc, id) =>
+                  acc +
+                  countSchoolYearFunFridayPaidMonths(
+                    paidFunFridayByStudent[id],
+                  ),
+                0,
+              );
+
+              const programLabel = "School Year 26–27";
               const programCards: Array<{ key: string } & HomeProgramCardDef> =
                 [];
 
-              if (hasSummer) {
-                const summerApps = applications.filter(
-                  (a) => a.program === "summer_26" || a.program === "both",
-                );
-                const totalPaidWeeks = Math.min(
-                  12,
-                  summerApps.reduce(
-                    (acc, a) =>
-                      acc + (paidWeeksByStudent[a.student_id]?.length ?? 0),
-                    0,
-                  ),
-                );
-                const aftercareMonths = summerApps.flatMap(
-                  (a) => paidAftercareByStudent[a.student_id]?.months ?? [],
-                );
-                const ffMonths = summerApps.flatMap(
-                  (a) => paidFunFridayByStudent[a.student_id]?.months ?? [],
-                );
-
+              if (schoolYearNames.length > 0) {
                 programCards.push({
-                  key: "summer",
-                  image: HOME_CARD_IMAGES.summer,
-                  programLabel: "Summer 2026",
-                  title: "Summer Program Tuition",
-                  statusLine:
-                    totalPaidWeeks === 0
-                      ? "No weeks paid"
-                      : totalPaidWeeks === 12
-                        ? "Full summer paid ✓"
-                        : `${totalPaidWeeks} of 12 weeks paid`,
-                });
-                programCards.push({
-                  key: "aftercare",
+                  key: "supply-fee",
                   image: HOME_CARD_IMAGES.aftercare,
-                  programLabel: "Summer 2026",
-                  title: "Extended Learning (3:00–5:00pm)",
-                  badge: "Optional",
-                  statusLine:
-                    aftercareMonths.length > 0
-                      ? `Paid: ${aftercareMonths.map(formatMonthKey).join(", ")}`
-                      : "No payment on file",
-                });
-                programCards.push({
-                  key: "funFriday",
-                  image: HOME_CARD_IMAGES.funFriday,
-                  programLabel: "Summer 2026",
-                  title: "Friday Enrichment Day",
-                  badge: "Optional",
-                  statusLine:
-                    ffMonths.length > 0
-                      ? `Paid: ${ffMonths.map(formatMonthKey).join(", ")}`
-                      : "No payment on file",
+                  programLabel,
+                  title: "Annual Supply Fee",
+                  badge: "$300",
+                  statusLine: formatHomeCardStatus(
+                    schoolYearNames,
+                    allSupplyFeesPaid ? "Paid ✓" : "Pay now",
+                  ),
                 });
               }
 
-              for (const app of homeschoolApps) {
+              if (tuitionNames.length > 0) {
                 programCards.push({
-                  key: `homeschool-${app.student_id}`,
+                  key: "tuition",
+                  image: HOME_CARD_IMAGES.summer,
+                  programLabel,
+                  title: "School Year Tuition",
+                  badge:
+                    totalTuitionMonthsPaid > 0
+                      ? `${totalTuitionMonthsPaid} mo. paid`
+                      : undefined,
+                  statusLine: formatHomeCardStatus(
+                    tuitionNames,
+                    anyTuitionSupplyFeeUnpaid
+                      ? "Pay supply fee first"
+                      : "Pay tuition",
+                  ),
+                });
+              }
+
+              for (const app of schoolYearHomeschoolApps) {
+                const studentName = studentMap[app.student_id]?.name ?? null;
+                const paidData = paidHomeschoolByStudent[app.student_id];
+                const hasSchoolYear =
+                  (paidData?.schoolYear?.length ?? 0) > 0;
+                programCards.push({
+                  key: `homeschool-sy-${app.id}`,
                   image: HOME_CARD_IMAGES.homeschool,
-                  programLabel: "Drop-In",
+                  programLabel,
                   title: "Homeschool Drop-In",
-                  statusLine: "Tap to view schedule",
+                  badge: hasSchoolYear ? "School year active" : undefined,
+                  statusLine: formatHomeCardStatus(
+                    studentName ? [studentName] : [],
+                    hasSchoolYear ? "Manage plan" : "Set up plan",
+                  ),
+                });
+              }
+
+              if (schoolYearNames.length > 0) {
+                programCards.push({
+                  key: "aftercare",
+                  image: HOME_CARD_IMAGES.funFriday,
+                  programLabel,
+                  title: "Extended Learning (3:00–5:00pm)",
+                  badge:
+                    totalAftercareMonths > 0
+                      ? `${totalAftercareMonths} mo. paid`
+                      : "Optional",
+                  statusLine: formatHomeCardStatus(
+                    schoolYearNames,
+                    totalAftercareMonths > 0 ? "Add months" : "Select plan",
+                  ),
+                });
+
+                programCards.push({
+                  key: "fun-friday",
+                  image: HOME_CARD_IMAGES.schoolYear,
+                  programLabel,
+                  title: "Friday Enrichment Day",
+                  badge:
+                    totalFunFridayMonths > 0
+                      ? `${totalFunFridayMonths} mo. paid`
+                      : "Optional",
+                  statusLine: formatHomeCardStatus(
+                    schoolYearNames,
+                    totalFunFridayMonths > 0 ? "Add months" : "Select plan",
+                  ),
                 });
               }
 
@@ -3728,6 +3823,9 @@ export default function HomeScreen() {
                 });
               }
 
+              const hasAnything =
+                pendingPayments.length > 0 || schoolYearStudentIds.size > 0;
+
               return (
                 <View style={styles.tuitionSection}>
                   <View style={styles.tuitionSectionHeader}>
@@ -3738,7 +3836,7 @@ export default function HomeScreen() {
                     </Text>
                     <Pressable
                       style={({ pressed }) => [pressed && { opacity: 0.7 }]}
-                      onPress={() => tuitionSheetRef.current?.present()}
+                      onPress={goToTuition}
                       hitSlop={8}
                     >
                       <Text style={styles.tuitionViewAllTxt}>View all</Text>
@@ -3751,7 +3849,7 @@ export default function HomeScreen() {
                         <SkeletonBox width="40%" height={11} borderRadius={4} />
                       </View>
                     </View>
-                  ) : programCards.length === 0 ? (
+                  ) : !hasAnything ? (
                     <View style={styles.tuitionCaughtUp}>
                       <Ionicons
                         name="checkmark-circle"
@@ -3771,7 +3869,7 @@ export default function HomeScreen() {
                           styles.tuitionHistoryBtn,
                           pressed && { opacity: 0.7 },
                         ]}
-                        onPress={() => tuitionSheetRef.current?.present()}
+                        onPress={goToTuition}
                       >
                         <Text style={styles.tuitionHistoryBtnTxt}>
                           See payment history
@@ -3800,7 +3898,7 @@ export default function HomeScreen() {
                               badge: item.badge,
                               statusLine: item.statusLine,
                             }}
-                            onPress={() => tuitionSheetRef.current?.present()}
+                            onPress={goToTuition}
                           />
                         ))}
                       </ScrollView>
@@ -4428,6 +4526,15 @@ export default function HomeScreen() {
         )}
       </SafeAreaView>
 
+      {showFallLeaves ? (
+        <FallLeavesOverlay
+          onComplete={() => {
+            markFallLeavesPlayed();
+            setShowFallLeaves(false);
+          }}
+        />
+      ) : null}
+
       {/* Intro slideshow */}
       <Modal
         visible={introVisible}
@@ -4510,56 +4617,6 @@ export default function HomeScreen() {
           </View>
         </SafeAreaView>
       </Modal>
-
-      {/* Tuition coming-soon sheet */}
-      <BottomSheetModal
-        ref={tuitionSheetRef}
-        snapPoints={["40%"]}
-        enablePanDownToClose
-        backdropComponent={(props) => (
-          <BottomSheetBackdrop
-            {...props}
-            disappearsOnIndex={-1}
-            appearsOnIndex={0}
-            pressBehavior="close"
-          />
-        )}
-      >
-        <BottomSheetView style={styles.tuitionSheetContainer}>
-          <Text style={styles.tuitionSheetTitle}>Tuition</Text>
-          <Text style={styles.tuitionSheetBody}>
-            We're still working on the mobile version of tuition — it's coming soon! In the meantime, please use the parent portal to make payments or view your billing history.
-          </Text>
-          <Pressable
-            style={({ pressed }) => [styles.tuitionSheetBtn, pressed && { opacity: 0.75 }]}
-            onPress={() =>
-              openBrowserAsync("https://www.sagefield.co/parent/billing", {
-                presentationStyle: WebBrowserPresentationStyle.AUTOMATIC,
-              })
-            }
-          >
-            <Ionicons name="open-outline" size={14} color="#fff" />
-            <Text style={styles.tuitionSheetBtnText}>Open Parent Portal</Text>
-          </Pressable>
-          <TextInput
-            style={styles.tuitionSheetSecretInput}
-            value={tuitionSecretCode}
-            onChangeText={(val) => {
-              setTuitionSecretCode(val);
-              if (val === "julius") {
-                tuitionSheetRef.current?.dismiss();
-                setTuitionSecretCode("");
-                router.push("/(tabs)/tuition" as any);
-              }
-            }}
-            secureTextEntry
-            placeholder="·"
-            placeholderTextColor="#ccc"
-            autoCorrect={false}
-            autoCapitalize="none"
-          />
-        </BottomSheetView>
-      </BottomSheetModal>
     </View>
   );
 }
@@ -4609,57 +4666,10 @@ const msgTeacherStyles = StyleSheet.create({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: "#F0DFC4",
   },
   safeArea: {
     flex: 1,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 28,
-  },
-  headerImage: {
-    resizeMode: "cover",
-  },
-  headerOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.45)",
-  },
-  greetingBlock: {
-    gap: 2,
-  },
-  greeting: {
-    fontFamily: FontFamilies.body,
-    fontSize: 16,
-    color: "rgba(255,255,255,0.75)",
-  },
-  name: {
-    fontFamily: FontFamilies.heading,
-    fontSize: 28,
-    color: "#ffffff",
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  avatarImage: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-  },
-  avatarText: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 16,
-    color: "#ffffff",
   },
 
   granteeBanner: {
@@ -4680,25 +4690,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#7c3aed",
     flex: 1,
-  },
-
-  // Notification bell badge
-  notifBadge: {
-    position: "absolute",
-    top: -5,
-    right: -6,
-    backgroundColor: "#ef4444",
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 3,
-  },
-  notifBadgeText: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 9,
-    color: "#fff",
   },
 
   // Notification sheet
@@ -4805,84 +4796,17 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     backgroundColor: "#ffffff",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
   },
   contentInner: {
-    paddingTop: 24,
+    paddingTop: 8,
     paddingBottom: BottomTabInset + 16,
   },
 
-  // Children section
-  childrenSection: {
-    gap: 14,
-  },
   sectionHeading: {
     fontFamily: FontFamilies.headingRegular,
     fontSize: 16,
     color: "#4b5563",
     paddingHorizontal: 24,
-  },
-  cardRow: {
-    paddingHorizontal: 24,
-    paddingBottom: 6,
-    gap: 14,
-  },
-
-  // Card
-  card: {
-    width: 158,
-    borderRadius: 18,
-    backgroundColor: "#EEF5EF",
-    alignItems: "center",
-    paddingTop: 16,
-    paddingBottom: 14,
-    paddingHorizontal: 14,
-    gap: 4,
-  },
-  cardPressed: {
-    opacity: 0.78,
-    transform: [{ scale: 0.97 }],
-  },
-
-  // Avatar ring
-  cardAvatarRing: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 6,
-  },
-  cardAvatarImage: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-  },
-  cardInitialsBox: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    backgroundColor: "rgba(255,255,255,0.75)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cardInitialsText: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 22,
-    color: Brand.sage700,
-  },
-  cardName: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 14,
-    color: "#1a3320",
-    textAlign: "center",
-  },
-  cardGrade: {
-    fontFamily: FontFamilies.body,
-    fontSize: 11,
-    color: "#5a7a61",
-    textAlign: "center",
   },
   // Bottom sheet
   sheetContent: {
@@ -5441,17 +5365,6 @@ const styles = StyleSheet.create({
   },
 
   // Checklist
-  checklistBadge: {
-    position: "absolute",
-    top: -1,
-    right: -1,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#22c55e",
-    borderWidth: 1.5,
-    borderColor: "rgba(0,0,0,0.25)",
-  },
   checklistSheet: {
     paddingHorizontal: 20,
     paddingTop: 8,
@@ -5848,11 +5761,4 @@ const styles = StyleSheet.create({
     color: "#166534",
     marginTop: 2,
   },
-
-  tuitionSheetContainer: { flex: 1, paddingHorizontal: 20, paddingTop: 8, paddingBottom: 24 },
-  tuitionSheetTitle: { fontFamily: FontFamilies.heading, fontSize: 16, color: "#1f2937", marginBottom: 10 },
-  tuitionSheetBody: { fontFamily: FontFamilies.body, fontSize: 13, color: "#6b7280", lineHeight: 20, marginBottom: 10 },
-  tuitionSheetBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: Brand.sage700, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 16, marginTop: 4 },
-  tuitionSheetBtnText: { fontFamily: FontFamilies.body, fontSize: 13, color: "#fff" },
-  tuitionSheetSecretInput: { marginTop: 24, alignSelf: "flex-end", width: 52, height: 20, fontSize: 11, color: "#9ca3af", opacity: 0.45, borderBottomWidth: 1, borderColor: "#9ca3af", textAlign: "center", paddingVertical: 0 },
 });

@@ -7,25 +7,6 @@ import Image from "next/image";
 
 const programs = [
   {
-    badge: "Summer 2026",
-    badgeColor: "bg-badge-bg",
-    title: "Summer 2026 Program",
-    dates: "May 26 – Aug 13, 2026",
-    details: [
-      "Ages 4–11",
-      "Mon–Thu",
-      "12 Weeks",
-      "~10 children per class",
-      "Field Fridays",
-    ],
-    description:
-      "Twelve weeks of themed adventures, hands-on projects, nature play, art, and academic enrichment in a small, nurturing group.",
-    href: "/summer-2026",
-    image: "/assets/ImageFive.jpg",
-    dateBg: "bg-primary/10",
-    dateText: "text-primary",
-  },
-  {
     badge: "School Year",
     badgeColor: "bg-primary/10",
     title: "School Year 2026–2027",
@@ -53,12 +34,12 @@ const programs = [
     dates: "Available for Both Programs",
     details: [
       "Ages 4–11",
-      "1–5 Days/Week",
+      "1–3 Days/Week",
       "Field Fridays",
       "Flexible Scheduling",
     ],
     description:
-      "Flexible drop-in program for homeschool families — choose 1 to 5 days per week with ability-based learning, enrichments, and Friday Field Days.",
+      "Flexible drop-in program for homeschool families — choose 1 to 3 days per week with ability-based learning, enrichments, and Friday Field Days.",
     href: "/homeschool",
     image: "/assets/After1.png",
     dateBg: "bg-emerald-50",
@@ -218,7 +199,7 @@ export default function WhatWeOfferSection() {
           </motion.h2>
 
           {/* Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
             {programs.map((program, index) => (
               <motion.div
                 key={program.href}

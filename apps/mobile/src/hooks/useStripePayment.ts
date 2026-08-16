@@ -2,11 +2,13 @@ import { useState } from "react";
 import { useStripe } from "@stripe/stripe-react-native";
 import { supabase } from "@/lib/supabase";
 import { API_BASE_URL } from "@/constants/config";
+import { useAuth } from "@/contexts/AuthContext";
 import * as Sentry from "@sentry/react-native";
 import { notifyError } from "@/lib/discord";
 
 export function useStripePayment() {
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
+  const { effectiveParentId } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,19 +24,29 @@ export function useStripePayment() {
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      const parentId = effectiveParentId ?? user.id;
+
       const res = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...payload,
-          parentId: user.id,
+          parentId,
           parentEmail: user.email ?? "",
           mobile: true,
         }),
       });
       const data = await res.json();
-      if (!res.ok || !data.clientSecret)
-        throw new Error(data.error ?? "Failed to create payment");
+      if (!res.ok) {
+        throw new Error(data.error ?? `Payment failed (${res.status})`);
+      }
+      if (!data.clientSecret) {
+        throw new Error(
+          data.url
+            ? "Server returned web checkout instead of mobile payment. Please update the app or try again later."
+            : "Failed to create payment",
+        );
+      }
 
       const { error: initError } = await initPaymentSheet({
         paymentIntentClientSecret: data.clientSecret,

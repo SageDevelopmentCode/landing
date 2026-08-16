@@ -13,7 +13,7 @@ import { useFocusEffect, useLocalSearchParams, useNavigation, useRouter } from "
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "@/lib/supabase";
-import { deletePhoto, getTeacherPhotos, TeacherPhoto, ConsentLevel } from "@/lib/photos-actions";
+import { deletePhoto, getAllSchoolPhotos, TeacherPhoto, ConsentLevel } from "@/lib/photos-actions";
 import { floatingTabBarStyle, FontFamilies } from "@/constants/theme";
 import { useUploadQueue } from "@/contexts/UploadQueueContext";
 import { saveImageToLibrary } from "@/utils/saveMedia";
@@ -46,6 +46,7 @@ export default function PhotoDetailScreen() {
     passedUrl && passedUrl.length > 0 ? passedUrl : null
   );
   const [loading, setLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -60,24 +61,28 @@ export default function PhotoDetailScreen() {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      setCurrentUserId(user.id);
 
-      // Fetch metadata (tags, caption, etc.)
-      const all = await getTeacherPhotos(user.id);
+      const all = await getAllSchoolPhotos();
       const found = all.find((p) => p.id === photoId);
       if (found) {
         setPhoto(found);
-        // If no signed URL was passed from gallery (e.g. navigated directly), fetch one now
-        if (found.storage_path) {
+        if (!(passedUrl && passedUrl.length > 0) && found.storage_path) {
           const { data } = await supabase.storage
             .from("teacher-photos")
             .createSignedUrl(found.storage_path, 86400);
           if (data?.signedUrl) setImageUrl(data.signedUrl);
         }
+      } else if (passedPath) {
+        const { data } = await supabase.storage
+          .from("teacher-photos")
+          .createSignedUrl(passedPath, 86400);
+        if (data?.signedUrl) setImageUrl(data.signedUrl);
       }
       setLoading(false);
     }
     load();
-  }, [photoId]);
+  }, [photoId, passedPath, passedUrl]);
 
   function handleDelete() {
     if (!photo) return;
@@ -94,6 +99,8 @@ export default function PhotoDetailScreen() {
       },
     ]);
   }
+
+  const isOwner = photo !== null && currentUserId !== null && photo.teacher_id === currentUserId;
 
   if (loading && !imageUrl) {
     return (
@@ -140,17 +147,21 @@ export default function PhotoDetailScreen() {
               <Ionicons name="download-outline" size={20} color="#fff" />
             </Pressable>
           )}
-          <Pressable
-            style={styles.iconBtn}
-            onPress={() =>
-              router.push({ pathname: "/(staff)/photos/edit", params: { photoId } })
-            }
-          >
-            <Ionicons name="pencil-outline" size={20} color="#fff" />
-          </Pressable>
-          <Pressable style={styles.iconBtn} onPress={handleDelete}>
-            <Ionicons name="trash-outline" size={20} color="#fff" />
-          </Pressable>
+          {isOwner && (
+            <>
+              <Pressable
+                style={styles.iconBtn}
+                onPress={() =>
+                  router.push({ pathname: "/(staff)/photos/edit", params: { photoId } })
+                }
+              >
+                <Ionicons name="pencil-outline" size={20} color="#fff" />
+              </Pressable>
+              <Pressable style={styles.iconBtn} onPress={handleDelete}>
+                <Ionicons name="trash-outline" size={20} color="#fff" />
+              </Pressable>
+            </>
+          )}
         </View>
       </View>
 
