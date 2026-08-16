@@ -14,7 +14,6 @@ import {
   Eye,
   Sparkles,
   GraduationCap,
-  Sun,
   School,
   Home,
   DollarSign,
@@ -125,12 +124,6 @@ const NAV_TABS: NavTab[] = [
     kind: "dropdown",
     label: "Programs & Tuition",
     items: [
-      {
-        label: "Summer Program 2026",
-        action: { kind: "link", href: "/summer-2026" },
-        icon: Sun,
-        iconClass: "text-yellow-400",
-      },
       {
         label: "School Year 2026-2027",
         action: { kind: "link", href: "/school-year-2026-2027" },
@@ -269,22 +262,16 @@ const NAV_TABS: NavTab[] = [
 
 const ANNOUNCEMENTS = [
   {
-    short: "🌟 Week 1 Highlights are live!",
-    full: "🌟 Week 1 of our Summer Program is complete — see the highlights!",
-    buttonLabel: "View Recap",
-    href: "/highlights/summer/week-1",
+    short: "🌱 Community Garden Day — Aug 27!",
+    full: "🌱 Join us Thursday, August 27 for planting, painting, and creating together — 5:30–7:00 PM!",
+    buttonLabel: "Save the Date",
+    href: "/community",
   },
   {
     short: "🗺️ Book a Private Tour!",
     full: "🗺️ Schedule a tour of our campus!",
     buttonLabel: "Book a Tour",
     href: "/tour",
-  },
-  {
-    short: "☀️ Join our Summer Program!",
-    full: "☀️ Join us for our 12-week Summer Program!",
-    buttonLabel: "Apply Today!",
-    href: "/apply",
   },
   {
     short: "📚 Enroll for School Year '26-'27!",
@@ -300,7 +287,7 @@ const ANNOUNCEMENTS = [
   },
   {
     short: "📖 View all our Programs!",
-    full: "📖 Explore all of our programs — Summer, School Year, and Homeschool Drop-In!",
+    full: "📖 Explore all of our programs — School Year and Homeschool Drop-In!",
     buttonLabel: "View Programs",
     href: "/programs",
   },
@@ -349,7 +336,6 @@ export default function Navbar({ darkStyle, lightText }: { darkStyle?: boolean; 
       pathname === "/team" ||
       pathname === "/tuition" ||
       pathname === "/academic-calendar" ||
-      pathname === "/summer-2026" ||
       pathname === "/school-year-2026-2027" ||
       pathname === "/homeschool" ||
       pathname === "/rsvp" ||

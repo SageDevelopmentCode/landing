@@ -12,6 +12,7 @@ const schema = z.object({
   intendedAmountCents: z.number().int().positive(),
   coverFees: z.boolean().optional().default(false),
   paymentMethod: z.enum(["card", "ach"]).optional().default("card"),
+  mobile: z.boolean().optional().default(false),
 });
 
 export async function POST(request: NextRequest) {
@@ -28,6 +29,7 @@ export async function POST(request: NextRequest) {
       intendedAmountCents,
       coverFees,
       paymentMethod,
+      mobile,
     } = validated;
 
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
@@ -77,6 +79,47 @@ export async function POST(request: NextRequest) {
       parentEmail,
     );
 
+    const metadata: Record<string, string> = {
+      payment_type: "custom_tuition",
+      parent_id: parentId,
+      parent_email: parentEmail,
+      ...(studentId ? { student_id: studentId } : {}),
+      tuition_code: tuitionCode,
+      label,
+      cover_fees: String(coverFees),
+      payment_method: paymentMethod,
+      intended_amount_cents: String(intendedAmountCents),
+      description: label,
+    };
+
+    if (mobile) {
+      const mobileFee = coverFees
+        ? paymentMethod === "ach"
+          ? Math.min(Math.round(intendedAmountCents * 0.008), 500)
+          : Math.round((intendedAmountCents + 30) / (1 - 0.029)) -
+            intendedAmountCents
+        : 0;
+      const paymentIntent = await getStripe().paymentIntents.create({
+        amount: intendedAmountCents + mobileFee,
+        currency: "usd",
+        customer: stripeCustomerId,
+        payment_method_types: ["card", "us_bank_account"],
+        receipt_email: parentEmail,
+        setup_future_usage: "off_session",
+        metadata,
+      });
+      const ephemeralKey = await getStripe().ephemeralKeys.create(
+        { customer: stripeCustomerId },
+        { apiVersion: "2026-02-25.clover" },
+      );
+      return NextResponse.json({
+        clientSecret: paymentIntent.client_secret,
+        ephemeralKey: ephemeralKey.secret,
+        customerId: stripeCustomerId,
+        publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+      });
+    }
+
     const session = await getStripe().checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card", "us_bank_account"],
@@ -90,18 +133,7 @@ export async function POST(request: NextRequest) {
         setup_future_usage: "off_session",
       },
       line_items: lineItems,
-      metadata: {
-        payment_type: "custom_tuition",
-        parent_id: parentId,
-        parent_email: parentEmail,
-        ...(studentId ? { student_id: studentId } : {}),
-        tuition_code: tuitionCode,
-        label,
-        cover_fees: String(coverFees),
-        payment_method: paymentMethod,
-        intended_amount_cents: String(intendedAmountCents),
-        description: label,
-      },
+      metadata,
       success_url: `${baseUrl}/parent/billing/custom-tuition-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/parent/billing`,
     });

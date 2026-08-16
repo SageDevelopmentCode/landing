@@ -1,8 +1,9 @@
 import { forwardRef, useCallback, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, Text, TextInput } from "react-native";
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
+  BottomSheetScrollView,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { Ionicons } from "@expo/vector-icons";
@@ -12,53 +13,120 @@ import {
   WebBrowserPresentationStyle,
 } from "expo-web-browser";
 import { Brand } from "@/constants/theme";
+import {
+  MoreMenuGrid,
+  MoreMenuHeader,
+  type MoreMenuItem,
+  type MoreMenuSection,
+} from "@/components/MoreMenuGrid";
 
-type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
-
-interface MenuItem {
-  label: string;
-  icon: IoniconName;
-  route?: string;
-  url?: string;
-}
-
-const MENU_ITEMS: MenuItem[] = [
-  { label: "Calendar", icon: "calendar-outline", route: "/(tabs)/calendar" },
+const MENU_SECTIONS: MoreMenuSection[] = [
   {
-    label: "Attendance",
-    icon: "checkmark-done-outline",
-    route: "/(tabs)/attendance",
-  },
-  // { label: "Enrollment",    icon: "school-outline",           route: "/(tabs)/enrollment" },
-  {
-    label: "Forms & Docs",
-    icon: "document-text-outline",
-    route: "/(tabs)/forms",
-  },
-  // { label: "Resources",     icon: "library-outline",          route: "/(tabs)/resources" },
-  { label: "Photos", icon: "images-outline", route: "/(tabs)/photos" },
-  {
-    label: "Newsletters",
-    icon: "newspaper-outline",
-    route: "/(tabs)/newsletters",
-  },
-  { label: "Volunteer", icon: "heart-outline", route: "/(tabs)/volunteer" },
-  // { label: "Reimbursement", icon: "cash-outline",             route: "/(tabs)/reimbursement" },
-  { label: "Activities", icon: "ribbon-outline", route: "/(tabs)/preferences" },
-  { label: "Rewards", icon: "gift-outline", route: "/(tabs)/rewards" },
-  { label: "Tuition", icon: "card-outline", route: "/(tabs)/tuition" },
-  {
-    label: "Privacy",
-    icon: "shield-checkmark-outline",
-    url: "https://sagefield.co/privacy",
+    title: "School",
+    items: [
+      {
+        label: "Calendar",
+        icon: "calendar-outline",
+        route: "/(tabs)/calendar",
+        iconColor: "#2563EB",
+        iconBg: "rgba(37,99,235,0.12)",
+      },
+      {
+        label: "Attendance",
+        icon: "checkmark-done-outline",
+        route: "/(tabs)/attendance",
+        iconColor: "#16A34A",
+        iconBg: "rgba(22,163,74,0.12)",
+      },
+      {
+        label: "Forms & Docs",
+        icon: "document-text-outline",
+        route: "/(tabs)/forms",
+        iconColor: "#D97706",
+        iconBg: "rgba(217,119,6,0.12)",
+      },
+      {
+        label: "Tuition",
+        icon: "card-outline",
+        route: "/(tabs)/tuition",
+        iconColor: "#0D9488",
+        iconBg: "rgba(13,148,136,0.12)",
+      },
+    ],
   },
   {
-    label: "Terms",
-    icon: "document-outline",
-    url: "https://sagefield.co/terms",
+    title: "Community",
+    items: [
+      {
+        label: "Photos",
+        icon: "images-outline",
+        route: "/(tabs)/photos",
+        iconColor: "#DB2777",
+        iconBg: "rgba(219,39,119,0.12)",
+      },
+      {
+        label: "Newsletters",
+        icon: "newspaper-outline",
+        route: "/(tabs)/newsletters",
+        iconColor: "#4F46E5",
+        iconBg: "rgba(79,70,229,0.12)",
+      },
+      {
+        label: "Volunteer",
+        icon: "heart-outline",
+        route: "/(tabs)/volunteer",
+        iconColor: "#E11D48",
+        iconBg: "rgba(225,29,72,0.12)",
+      },
+      {
+        label: "Activities",
+        icon: "ribbon-outline",
+        route: "/(tabs)/preferences",
+        iconColor: "#7C3AED",
+        iconBg: "rgba(124,58,237,0.12)",
+      },
+      {
+        label: "Rewards",
+        icon: "gift-outline",
+        route: "/(tabs)/rewards",
+        iconColor: "#CA8A04",
+        iconBg: "rgba(202,138,4,0.12)",
+      },
+    ],
   },
-  { label: "Help", icon: "help-circle-outline", route: "/(tabs)/help" },
-  { label: "Settings", icon: "settings-outline", route: "/(tabs)/settings" },
+  {
+    title: "Account",
+    items: [
+      {
+        label: "Privacy",
+        icon: "shield-checkmark-outline",
+        url: "https://sagefield.co/privacy",
+        iconColor: "#475569",
+        iconBg: "rgba(71,85,105,0.12)",
+      },
+      {
+        label: "Terms",
+        icon: "document-outline",
+        url: "https://sagefield.co/terms",
+        iconColor: "#6B7280",
+        iconBg: "rgba(107,114,128,0.12)",
+      },
+      {
+        label: "Help",
+        icon: "help-circle-outline",
+        route: "/(tabs)/help",
+        iconColor: "#0284C7",
+        iconBg: "rgba(2,132,199,0.12)",
+      },
+      {
+        label: "Settings",
+        icon: "settings-outline",
+        route: "/(tabs)/settings",
+        iconColor: Brand.sage700,
+        iconBg: "rgba(94,124,104,0.12)",
+      },
+    ],
+  },
 ];
 
 export const MoreMenuSheet = forwardRef<BottomSheetModal>((_, ref) => {
@@ -67,7 +135,7 @@ export const MoreMenuSheet = forwardRef<BottomSheetModal>((_, ref) => {
   const [secretCode, setSecretCode] = useState("");
 
   const handleItemPress = useCallback(
-    (item: MenuItem) => {
+    (item: MoreMenuItem) => {
       if (item.label === "Tuition") {
         (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
         setTimeout(() => tuitionSheetRef.current?.present(), 300);
@@ -85,20 +153,13 @@ export const MoreMenuSheet = forwardRef<BottomSheetModal>((_, ref) => {
     [ref, router],
   );
 
-  // Pad to a multiple of 3 so the last row always fills evenly
-  const padded = [...MENU_ITEMS];
-  while (padded.length % 3 !== 0) padded.push(null as any);
-  const rows: (MenuItem | null)[][] = [];
-  for (let i = 0; i < padded.length; i += 3) {
-    rows.push(padded.slice(i, i + 3));
-  }
-
   return (
     <>
       <BottomSheetModal
         ref={ref}
-        snapPoints={["60%"]}
+        snapPoints={["72%"]}
         enablePanDownToClose
+        handleIndicatorStyle={styles.handle}
         backdropComponent={(props) => (
           <BottomSheetBackdrop
             {...props}
@@ -108,44 +169,23 @@ export const MoreMenuSheet = forwardRef<BottomSheetModal>((_, ref) => {
           />
         )}
       >
-        <BottomSheetView style={styles.container}>
-          <Text style={styles.title}>More</Text>
-          <View style={styles.grid}>
-            {rows.map((row, rowIdx) => (
-              <View key={rowIdx} style={styles.row}>
-                {row.map((item, cellIdx) =>
-                  item === null ? (
-                    <View key={`spacer-${cellIdx}`} style={{ flex: 1 }} />
-                  ) : (
-                    <Pressable
-                      key={item.label}
-                      style={({ pressed }) => [
-                        styles.cell,
-                        pressed && styles.cellPressed,
-                      ]}
-                      onPress={() => handleItemPress(item)}
-                    >
-                      <View style={styles.iconWrap}>
-                        <Ionicons
-                          name={item.icon}
-                          size={28}
-                          color={Brand.sage700}
-                        />
-                      </View>
-                      <Text style={styles.label}>{item.label}</Text>
-                    </Pressable>
-                  ),
-                )}
-              </View>
-            ))}
-          </View>
-        </BottomSheetView>
+        <BottomSheetScrollView
+          contentContainerStyle={styles.container}
+          showsVerticalScrollIndicator={false}
+        >
+          <MoreMenuHeader subtitle="Quick links" />
+          <MoreMenuGrid
+            sections={MENU_SECTIONS}
+            onItemPress={handleItemPress}
+          />
+        </BottomSheetScrollView>
       </BottomSheetModal>
 
       <BottomSheetModal
         ref={tuitionSheetRef}
         snapPoints={["40%"]}
         enablePanDownToClose
+        handleIndicatorStyle={styles.handle}
         backdropComponent={(props) => (
           <BottomSheetBackdrop
             {...props}
@@ -200,46 +240,13 @@ export const MoreMenuSheet = forwardRef<BottomSheetModal>((_, ref) => {
 });
 
 const styles = StyleSheet.create({
+  handle: {
+    backgroundColor: "#d1d5db",
+    width: 36,
+  },
   container: {
-    flex: 1,
     paddingHorizontal: 16,
-    paddingBottom: 24,
-  },
-  title: {
-    fontFamily: "Merriweather_700Bold",
-    fontSize: 18,
-    color: "#1f2937",
-    marginBottom: 20,
-    marginTop: 4,
-  },
-  grid: {
-    gap: 12,
-  },
-  row: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  cell: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#F2F7F3",
-    borderRadius: 12,
-    paddingVertical: 16,
-    gap: 8,
-  },
-  cellPressed: {
-    opacity: 0.7,
-  },
-  iconWrap: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  label: {
-    fontFamily: "Poppins_400Regular",
-    fontSize: 11,
-    color: "#4b5563",
-    textAlign: "center",
+    paddingBottom: 32,
   },
   tuitionContainer: {
     flex: 1,

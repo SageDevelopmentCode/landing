@@ -23,16 +23,34 @@ import { supabase } from "@/lib/supabase";
 import { notifyDiscord, notifyError } from "@/lib/discord";
 import { Brand, BottomTabInset, FontFamilies } from "@/constants/theme";
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
+import {
+  buildDisplayNameMap,
+  getStudentDisplayName,
+} from "@/lib/student-display-name";
+import {
+  SCHOOL_YEAR_AFTERCARE_MONTHS,
+  SCHOOL_YEAR_MONTHS,
+  SCHOOL_YEAR_FUN_FRIDAY_MONTHS,
+} from "@/lib/school-year";
+import {
+  getCurrentSchoolYearMonthIndex,
+  getSchoolYearMonthDates,
+  isSchoolYearAftercarePaid,
+  isSchoolYearFieldFridayPaid,
+  isSchoolYearWeekdayPaid,
+  SCHOOL_YEAR_START,
+} from "@/lib/school-year-attendance";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type SummerRecord = {
+type SchoolYearRecord = {
   id: string;
   date: string;
   student_id: string;
   recorded_by: string;
   notes: string | null;
   paid_for_day: boolean;
+  marked_absent: boolean;
   pickup_time: string | null;
   picked_up_by_name: string | null;
   picked_up_by_relationship: string | null;
@@ -50,12 +68,12 @@ type StaffUser = {
   profile_image_url: string | null;
 };
 
-type SummerStudentRow = {
+type SchoolYearStudentRow = {
   student_id: string;
   name: string | null;
   grade: string | null;
   profile_image_url: string | null;
-  record: SummerRecord | null;
+  record: SchoolYearRecord | null;
   hasEnrollment: boolean;
   has_allergies: string | null;
   program: string | null;
@@ -128,7 +146,7 @@ type ProgramHeadcount = {
 
 type DayHeadcount = {
   date: string;
-  summer: ProgramHeadcount | null;
+  school_year: ProgramHeadcount | null;
   aftercare: ProgramHeadcount | null;
   field_friday: ProgramHeadcount | null;
 };
@@ -187,26 +205,35 @@ type ProfileNote = {
 type ProfileTab = "info" | "contacts" | "notes" | "weeks";
 
 type ProfileSchedule = {
-  programType: "summer_full" | "homeschool" | null;
-  paidWeeks: number[];
-  homeschoolSelections: Array<{ week: number; days: string[] }>;
+  programType: "school_year_full" | "homeschool" | null;
+  paidMonths: number[];
+  homeschoolSelections: Array<{ month: number; days: string[] }>;
 };
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const SUMMER_START = new Date(2026, 4, 25);
-const TOTAL_WEEKS = 12;
-const AMBER = "#d97706";
-const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000;
+const SY_COLOR = Brand.sage700;
+const FRIDAY_COLOR = "#0891b2";
 
 const PROGRAMS = [
-  { key: "week_plan",    label: "Week Plan",        icon: "calendar-outline", color: "#3b82f6" },
-  { key: "summer_26",   label: "Summer 2026",       icon: "sunny-outline",    color: "#d97706" },
-  { key: "aftercare",   label: "Aftercare",         icon: "home-outline",     color: "#7c3aed" },
-  { key: "field_friday",label: "Field Fun Fridays", icon: "leaf-outline",     color: "#0891b2" },
+  { key: "month_plan", label: "Month Plan", icon: "calendar-outline", color: "#3b82f6" },
+  { key: "school_year", label: "School Year", icon: "school-outline", color: SY_COLOR },
+  { key: "aftercare", label: "Extended Learning", icon: "home-outline", color: "#7c3aed" },
+  { key: "field_friday", label: "Friday Enrichment", icon: "leaf-outline", color: FRIDAY_COLOR },
 ] as const;
 type ProgramKey = (typeof PROGRAMS)[number]["key"];
-type CalendarTarget = "aftercare" | "field_friday" | "summer";
+type CalendarTarget = "aftercare" | "field_friday" | "school_year";
+
+const ALL_SY_WEEKDAY_DATES = SCHOOL_YEAR_AFTERCARE_MONTHS.flatMap((m) =>
+  m.days.map((d) => d.date),
+).sort();
+
+const ALL_SY_FRIDAY_DATES = SCHOOL_YEAR_FUN_FRIDAY_MONTHS.flatMap((m) =>
+  m.fridays.map((f) => f.date),
+).sort();
+
+const SY_WEEKDAY_DATE_SET = new Set(ALL_SY_WEEKDAY_DATES);
+const SY_FRIDAY_DATE_SET = new Set(ALL_SY_FRIDAY_DATES);
 
 const PROFILE_CATEGORY_COLORS: Record<ProfileNote["category"], string> = {
   general: "#6b7280",
@@ -232,12 +259,11 @@ function buildMonthCells(year: number, month: number): (number | null)[] {
 }
 
 function isCalendarDaySelectable(ymd: string, target: CalendarTarget): boolean {
-  const [y, m, d] = ymd.split("-").map(Number);
-  const dow = new Date(y, m - 1, d).getDay();
-  if (target === "aftercare") return dow !== 0 && dow !== 6;
-  if (target === "field_friday") return dow === 5;
-  if (target === "summer") return dow !== 0 && dow !== 6;
-  return true;
+  if (target === "aftercare" || target === "school_year") {
+    return SY_WEEKDAY_DATE_SET.has(ymd);
+  }
+  if (target === "field_friday") return SY_FRIDAY_DATE_SET.has(ymd);
+  return false;
 }
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
@@ -249,44 +275,26 @@ function toYMD(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
-function getCurrentWeekNum(): number {
-  const diff = Date.now() - SUMMER_START.getTime();
-  if (diff < 0) return 1;
-  return Math.min(TOTAL_WEEKS, Math.floor(diff / MS_PER_WEEK) + 1);
+function getMonthLabel(monthIndex: number): string {
+  return SCHOOL_YEAR_MONTHS.find((m) => m.index === monthIndex)?.label ?? `Month ${monthIndex}`;
 }
 
-function getWeekDates(weekNum: number): string[] {
-  return Array.from({ length: 5 }, (_, i) => {
-    const d = new Date(SUMMER_START);
-    d.setDate(d.getDate() + (weekNum - 1) * 7 + i);
-    return toYMD(d);
-  });
+function findNearestDate(dates: string[], today: string, fallback: string): string {
+  if (dates.includes(today)) return today;
+  const upcoming = dates.find((d) => d >= today);
+  return upcoming ?? dates[dates.length - 1] ?? fallback;
 }
 
-function getWeekNumForDate(dateStr: string): number {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  const diff = new Date(y, m - 1, d).getTime() - SUMMER_START.getTime();
-  if (diff < 0) return 1;
-  return Math.floor(diff / MS_PER_WEEK) + 1;
-}
-
-function getDayOfWeek(dateStr: string): string {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  return ["sun", "mon", "tue", "wed", "thu", "fri", "sat"][
-    new Date(y, m - 1, d).getDay()
-  ];
-}
-
-function getWeekLabel(weekNum: number): string {
-  const dates = getWeekDates(weekNum);
-  const fmt = (ds: string) => {
-    const [y, m, d] = ds.split("-").map(Number);
-    return new Date(y, m - 1, d).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
-  };
-  return `Week ${weekNum} · ${fmt(dates[0])}–${fmt(dates[4])}`;
+function shiftInDateList(dates: string[], dateStr: string, delta: 1 | -1): string {
+  let idx = dates.indexOf(dateStr);
+  if (idx === -1) {
+    const nearest = dates.find((d) => d >= dateStr) ?? dates[0];
+    idx = dates.indexOf(nearest);
+  }
+  const next = idx + delta;
+  if (next < 0) return dates[0];
+  if (next >= dates.length) return dates[dates.length - 1];
+  return dates[next];
 }
 
 function formatDayHeader(dateStr: string): string {
@@ -311,37 +319,29 @@ function shortName(name: string | null): string {
   return `${parts[0]} ${parts[parts.length - 1][0].toUpperCase()}.`;
 }
 
-// ─── Summer date helpers ──────────────────────────────────────────────────────
+// ─── School year date helpers ─────────────────────────────────────────────────
 
-function getInitialSummerDate(): string {
-  const d = new Date();
-  if (d < SUMMER_START) return toYMD(SUMMER_START);
-  const dow = d.getDay();
-  if (dow === 0) d.setDate(d.getDate() - 2);
-  if (dow === 6) d.setDate(d.getDate() - 1);
-  return toYMD(d);
+function getInitialSchoolYearDate(): string {
+  const today = toYMD(new Date());
+  return findNearestDate(ALL_SY_WEEKDAY_DATES, today, toYMD(SCHOOL_YEAR_START));
 }
 
-// ─── Aftercare date helpers ───────────────────────────────────────────────────
+function shiftSchoolYearWeekday(dateStr: string, delta: 1 | -1): string {
+  return shiftInDateList(ALL_SY_WEEKDAY_DATES, dateStr, delta);
+}
+
+// ─── Extended Learning date helpers ───────────────────────────────────────────
 
 function getInitialAftercareDate(): string {
-  const d = new Date();
-  const dow = d.getDay();
-  if (dow === 0) d.setDate(d.getDate() - 2);
-  if (dow === 6) d.setDate(d.getDate() - 1);
-  return toYMD(d);
+  const today = toYMD(new Date());
+  return findNearestDate(ALL_SY_WEEKDAY_DATES, today, toYMD(SCHOOL_YEAR_START));
 }
 
-function shiftWeekday(dateStr: string, delta: 1 | -1): string {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  const dt = new Date(y, m - 1, d);
-  do {
-    dt.setDate(dt.getDate() + delta);
-  } while (dt.getDay() === 0 || dt.getDay() === 6);
-  return toYMD(dt);
+function shiftAftercareWeekday(dateStr: string, delta: 1 | -1): string {
+  return shiftInDateList(ALL_SY_WEEKDAY_DATES, dateStr, delta);
 }
 
-function formatAftercareDateLabel(dateStr: string): string {
+function formatDateLabel(dateStr: string): string {
   const [y, m, d] = dateStr.split("-").map(Number);
   return new Date(y, m - 1, d).toLocaleDateString("en-US", {
     weekday: "short",
@@ -371,105 +371,51 @@ function avatarColor(studentId: string): string {
   return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
 }
 
-// ─── Field Fun Fridays date helpers ──────────────────────────────────────────
+// ─── Friday Enrichment date helpers ───────────────────────────────────────────
 
 function getInitialFriday(): string {
-  const d = new Date();
-  const dow = d.getDay();
-  if (dow === 5) return toYMD(d);
-  if (dow === 6) { d.setDate(d.getDate() + 6); return toYMD(d); }
-  d.setDate(d.getDate() + (5 - dow));
-  return toYMD(d);
+  const today = toYMD(new Date());
+  return findNearestDate(
+    ALL_SY_FRIDAY_DATES,
+    today,
+    ALL_SY_FRIDAY_DATES[0] ?? toYMD(SCHOOL_YEAR_START),
+  );
 }
 
 function shiftFriday(dateStr: string, delta: 1 | -1): string {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  const dt = new Date(y, m - 1, d);
-  dt.setDate(dt.getDate() + delta * 7);
-  return toYMD(dt);
+  return shiftInDateList(ALL_SY_FRIDAY_DATES, dateStr, delta);
 }
 
-// ─── Pickup time helpers ──────────────────────────────────────────────────────
+// ─── Enrollment helpers ───────────────────────────────────────────────────────
 
-const MONTH_NAMES_SHORT = [
-  "jan", "feb", "mar", "apr", "may", "jun",
-  "jul", "aug", "sep", "oct", "nov", "dec",
-] as const;
+type AppEnrollmentRow = {
+  student_id: string;
+  admin_tags: string[] | null;
+  has_allergies: string | null;
+  program: string | null;
+  drop_in_program?: string | null;
+  preferred_name: string | null;
+  child_legal_name: string | null;
+};
 
-// ─── Payment parsers ──────────────────────────────────────────────────────────
-
-function isStudentPaidForDate(
-  txn: TxnRow,
-  date: string,
-  weekNum: number,
-  dayOfWeek: string
-): boolean {
-  const meta = txn.metadata ?? {};
-  if (txn.payment_type === "summer_tuition") {
-    if (meta.plan_type === "full") return true;
-    if (
-      (meta.plan_type === "weekly" || meta.plan_type === "custom") &&
-      typeof meta.weeks === "string"
-    ) {
-      return meta.weeks.split(",").map(Number).includes(weekNum);
-    }
-  } else if (txn.payment_type === "homeschool_dropin") {
-    if (
-      meta.program === "summer_26" &&
-      typeof meta.week_selections === "string"
-    ) {
-      try {
-        const sels = JSON.parse(meta.week_selections) as Array<{
-          week: number;
-          days: string[];
-        }>;
-        return sels.some(
-          (s) => s.week === weekNum && s.days.includes(dayOfWeek)
-        );
-      } catch {
-        return false;
-      }
-    }
-    if (typeof meta.selected_days === "string") {
-      return meta.selected_days.split(",").includes(date);
-    }
-  }
-  return false;
-}
-
-function isStudentPaidForAftercare(txn: TxnRow, date: string): boolean {
-  if (txn.payment_type !== "aftercare_tuition") return false;
-  const meta = txn.metadata ?? {};
-  if (
-    typeof meta.selected_days === "string" &&
-    meta.selected_days.split(",").includes(date)
-  )
-    return true;
-  if (typeof meta.selected_months === "string") {
-    const monthName = MONTH_NAMES_SHORT[parseInt(date.split("-")[1], 10) - 1];
-    if (meta.selected_months.split(",").includes(monthName)) return true;
-  }
-  return false;
-}
-
-function isStudentPaidForFriday(txn: TxnRow, date: string): boolean {
-  if (txn.payment_type !== "fun_friday_tuition") return false;
-  const meta = txn.metadata ?? {};
-  if (
-    typeof meta.selected_fridays === "string" &&
-    meta.selected_fridays.split(",").includes(date)
-  )
-    return true;
-  if (typeof meta.selected_months === "string") {
-    const monthName = MONTH_NAMES_SHORT[parseInt(date.split("-")[1], 10) - 1];
-    if (meta.selected_months.split(",").includes(monthName)) return true;
-  }
-  return false;
+function isSchoolYearApp(a: {
+  program: string | null;
+  drop_in_program?: string | null;
+}): boolean {
+  return (
+    a.program === "school_year_26_27" ||
+    a.program === "both" ||
+    (a.program === "homeschool_drop_in" &&
+      (a.drop_in_program === "school_year_26_27" ||
+        a.drop_in_program === "both"))
+  );
 }
 
 // ─── Data fetching ────────────────────────────────────────────────────────────
 
-async function fetchDayData(date: string): Promise<SummerStudentRow[]> {
+async function fetchSchoolYearDayData(
+  date: string,
+): Promise<SchoolYearStudentRow[]> {
   const [studentsRes, appsRes] = await Promise.all([
     supabase
       .schema("admin")
@@ -480,17 +426,26 @@ async function fetchDayData(date: string): Promise<SummerStudentRow[]> {
     supabase
       .schema("parent_app")
       .from("applications")
-      .select("student_id, admin_tags, has_allergies, program")
+      .select(
+        "student_id, admin_tags, has_allergies, program, drop_in_program, preferred_name, child_legal_name",
+      )
       .eq("status", "enrolled"),
   ]);
 
-  const appsData = (appsRes.data ?? []) as { student_id: string; admin_tags: string[] | null; has_allergies: string | null; program: string | null }[];
+  const appsData = (appsRes.data ?? []) as AppEnrollmentRow[];
+  const displayNameMap = buildDisplayNameMap(appsData);
   const enrolledIds = new Set(
     appsData
-      .filter((a) => !(a.admin_tags ?? []).includes("Don't Include"))
-      .map((a) => a.student_id)
+      .filter(
+        (a) =>
+          isSchoolYearApp(a) &&
+          !(a.admin_tags ?? []).includes("Don't Include"),
+      )
+      .map((a) => a.student_id),
   );
-  const allergyMapDay = new Map(appsData.map((a) => [a.student_id, a.has_allergies]));
+  const allergyMapDay = new Map(
+    appsData.map((a) => [a.student_id, a.has_allergies]),
+  );
   const programMapDay = new Map(appsData.map((a) => [a.student_id, a.program]));
 
   type StudentRow = {
@@ -501,27 +456,26 @@ async function fetchDayData(date: string): Promise<SummerStudentRow[]> {
   };
 
   const students = ((studentsRes.data ?? []) as StudentRow[]).filter((s) =>
-    enrolledIds.has(s.id)
+    enrolledIds.has(s.id),
   );
 
   if (!students.length) return [];
   const studentIds = students.map((s) => s.id);
 
-  const weekNum = getWeekNumForDate(date);
-  const dayOfWeek = getDayOfWeek(date);
-
   const [recordsRes, txnsRes] = await Promise.all([
     supabase
       .schema("attendance")
-      .from("summer_records")
-      .select("id, date, student_id, recorded_by, notes, paid_for_day, pickup_time, picked_up_by_name, picked_up_by_relationship, pickup_recorded_by")
+      .from("school_year_records")
+      .select(
+        "id, date, student_id, recorded_by, notes, paid_for_day, marked_absent, pickup_time, picked_up_by_name, picked_up_by_relationship, pickup_recorded_by",
+      )
       .eq("date", date)
       .in("student_id", studentIds),
     supabase
       .schema("billing")
       .from("stripe_transactions")
       .select("student_id, payment_type, metadata")
-      .in("payment_type", ["summer_tuition", "homeschool_dropin"])
+      .in("payment_type", ["school_year_tuition", "homeschool_dropin"])
       .eq("status", "completed")
       .eq("is_deleted", false)
       .in("student_id", studentIds),
@@ -529,19 +483,25 @@ async function fetchDayData(date: string): Promise<SummerStudentRow[]> {
 
   const paidIds = new Set<string>();
   for (const txn of (txnsRes.data ?? []) as TxnRow[]) {
-    if (isStudentPaidForDate(txn, date, weekNum, dayOfWeek)) {
+    if (isSchoolYearWeekdayPaid(txn, date)) {
       paidIds.add(txn.student_id);
     }
   }
 
   const recordMap = new Map(
-    ((recordsRes.data ?? []) as SummerRecord[]).map((r) => [r.student_id, r])
+    ((recordsRes.data ?? []) as SchoolYearRecord[]).map((r) => [
+      r.student_id,
+      r,
+    ]),
   );
 
   return students
+    .filter((s) => paidIds.has(s.id) || recordMap.has(s.id))
     .map((s) => ({
       student_id: s.id,
-      name: s.child_legal_name,
+      name:
+        displayNameMap.get(s.id) ??
+        getStudentDisplayName(null, s.child_legal_name),
       grade: s.child_grade,
       profile_image_url: s.profile_image_url,
       record: recordMap.get(s.id) ?? null,
@@ -550,9 +510,16 @@ async function fetchDayData(date: string): Promise<SummerStudentRow[]> {
       program: programMapDay.get(s.id) ?? null,
     }))
     .sort((a, b) => {
-      const priority = (s: SummerStudentRow) =>
-        s.record !== null ? 0 : s.hasEnrollment ? 1 : 2;
-      const pa = priority(a), pb = priority(b);
+      const priority = (s: SchoolYearStudentRow) =>
+        s.record?.picked_up_by_name
+          ? 0
+          : s.record !== null && !s.record.marked_absent
+            ? 1
+            : s.hasEnrollment
+              ? 2
+              : 3;
+      const pa = priority(a),
+        pb = priority(b);
       if (pa !== pb) return pa - pb;
       return (a.name ?? "").localeCompare(b.name ?? "");
     });
@@ -571,11 +538,19 @@ async function fetchAftercareData(
     supabase
       .schema("parent_app")
       .from("applications")
-      .select("student_id, admin_tags, has_allergies, program")
+      .select("student_id, admin_tags, has_allergies, program, preferred_name, child_legal_name")
       .eq("status", "enrolled"),
   ]);
 
-  const appsDataAc = (appsRes.data ?? []) as { student_id: string; admin_tags: string[] | null; has_allergies: string | null; program: string | null }[];
+  const appsDataAc = (appsRes.data ?? []) as {
+    student_id: string;
+    admin_tags: string[] | null;
+    has_allergies: string | null;
+    program: string | null;
+    preferred_name: string | null;
+    child_legal_name: string | null;
+  }[];
+  const displayNameMap = buildDisplayNameMap(appsDataAc);
   const enrolledIds = new Set(
     appsDataAc
       .filter((a) => !(a.admin_tags ?? []).includes("Don't Include"))
@@ -619,7 +594,7 @@ async function fetchAftercareData(
 
   const paidIds = new Set<string>();
   for (const txn of (txnsRes.data ?? []) as TxnRow[]) {
-    if (isStudentPaidForAftercare(txn, date)) {
+    if (isSchoolYearAftercarePaid(txn, date)) {
       paidIds.add(txn.student_id);
     }
   }
@@ -634,7 +609,9 @@ async function fetchAftercareData(
   return students
     .map((s) => ({
       student_id: s.id,
-      name: s.child_legal_name,
+      name:
+        displayNameMap.get(s.id) ??
+        getStudentDisplayName(null, s.child_legal_name),
       grade: s.child_grade,
       profile_image_url: s.profile_image_url,
       record: recordMap.get(s.id) ?? null,
@@ -667,11 +644,19 @@ async function fetchFieldFridayData(
     supabase
       .schema("parent_app")
       .from("applications")
-      .select("student_id, admin_tags, has_allergies, program")
+      .select("student_id, admin_tags, has_allergies, program, preferred_name, child_legal_name")
       .eq("status", "enrolled"),
   ]);
 
-  const appsDataFf = (appsRes.data ?? []) as { student_id: string; admin_tags: string[] | null; has_allergies: string | null; program: string | null }[];
+  const appsDataFf = (appsRes.data ?? []) as {
+    student_id: string;
+    admin_tags: string[] | null;
+    has_allergies: string | null;
+    program: string | null;
+    preferred_name: string | null;
+    child_legal_name: string | null;
+  }[];
+  const displayNameMap = buildDisplayNameMap(appsDataFf);
   const enrolledIds = new Set(
     appsDataFf
       .filter((a) => !(a.admin_tags ?? []).includes("Don't Include"))
@@ -697,7 +682,7 @@ async function fetchFieldFridayData(
   const [recordsRes, txnsRes] = await Promise.all([
     supabase
       .schema("attendance")
-      .from("field_friday_records")
+      .from("school_year_field_friday_records")
       .select("id, date, student_id, pickup_time, picked_up_by_name, picked_up_by_relationship, pickup_recorded_by, recorded_by, notes, paid_for_day")
       .eq("date", date)
       .in("student_id", studentIds),
@@ -713,7 +698,7 @@ async function fetchFieldFridayData(
 
   const paidIds = new Set<string>();
   for (const txn of (txnsRes.data ?? []) as TxnRow[]) {
-    if (isStudentPaidForFriday(txn, date)) {
+    if (isSchoolYearFieldFridayPaid(txn, date)) {
       paidIds.add(txn.student_id);
     }
   }
@@ -728,7 +713,9 @@ async function fetchFieldFridayData(
   return students
     .map((s) => ({
       student_id: s.id,
-      name: s.child_legal_name,
+      name:
+        displayNameMap.get(s.id) ??
+        getStudentDisplayName(null, s.child_legal_name),
       grade: s.child_grade,
       profile_image_url: s.profile_image_url,
       record: recordMap.get(s.id) ?? null,
@@ -748,8 +735,8 @@ async function fetchFieldFridayData(
     });
 }
 
-async function fetchWeekHeadcounts(weekNum: number): Promise<DayHeadcount[]> {
-  const dates = getWeekDates(weekNum);
+async function fetchMonthHeadcounts(monthIndex: number): Promise<DayHeadcount[]> {
+  const dates = getSchoolYearMonthDates(monthIndex);
 
   const [studentsRes, appsRes] = await Promise.all([
     supabase
@@ -761,14 +748,22 @@ async function fetchWeekHeadcounts(weekNum: number): Promise<DayHeadcount[]> {
     supabase
       .schema("parent_app")
       .from("applications")
-      .select("student_id, admin_tags")
+      .select("student_id, admin_tags, preferred_name, child_legal_name")
       .eq("status", "enrolled"),
   ]);
 
+  const appsData = (appsRes.data ?? []) as {
+    student_id: string;
+    admin_tags: string[] | null;
+    preferred_name: string | null;
+    child_legal_name: string | null;
+  }[];
+  const displayNameMap = buildDisplayNameMap(appsData);
+
   const enrolledIds = new Set(
-    ((appsRes.data ?? []) as { student_id: string; admin_tags: string[] | null }[])
+    appsData
       .filter((a) => !(a.admin_tags ?? []).includes("Don't Include"))
-      .map((a) => a.student_id)
+      .map((a) => a.student_id),
   );
 
   type SRaw = {
@@ -778,12 +773,12 @@ async function fetchWeekHeadcounts(weekNum: number): Promise<DayHeadcount[]> {
   };
 
   const students = ((studentsRes.data ?? []) as SRaw[]).filter((s) =>
-    enrolledIds.has(s.id)
+    enrolledIds.has(s.id),
   );
 
   const empty = dates.map((date) => ({
     date,
-    summer: null,
+    school_year: null,
     aftercare: null,
     field_friday: null,
   }));
@@ -797,7 +792,7 @@ async function fetchWeekHeadcounts(weekNum: number): Promise<DayHeadcount[]> {
     .from("stripe_transactions")
     .select("student_id, payment_type, metadata")
     .in("payment_type", [
-      "summer_tuition",
+      "school_year_tuition",
       "homeschool_dropin",
       "aftercare_tuition",
       "fun_friday_tuition",
@@ -810,13 +805,15 @@ async function fetchWeekHeadcounts(weekNum: number): Promise<DayHeadcount[]> {
 
   const toHeadcount = (subset: SRaw[]): ProgramHeadcount => {
     const sorted = [...subset].sort(
-      (a, b) => (b.profile_image_url ? 1 : 0) - (a.profile_image_url ? 1 : 0)
+      (a, b) => (b.profile_image_url ? 1 : 0) - (a.profile_image_url ? 1 : 0),
     );
     return {
       count: subset.length,
       students: sorted.slice(0, 6).map((s) => ({
         student_id: s.id,
-        name: s.child_legal_name,
+        name:
+          displayNameMap.get(s.id) ??
+          getStudentDisplayName(null, s.child_legal_name),
         profile_image_url: s.profile_image_url,
       })),
     };
@@ -825,25 +822,36 @@ async function fetchWeekHeadcounts(weekNum: number): Promise<DayHeadcount[]> {
   return dates.map((date) => {
     const [y, m, d] = date.split("-").map(Number);
     const isFriday = new Date(y, m - 1, d).getDay() === 5;
-    const dowStr = getDayOfWeek(date);
 
     if (isFriday) {
       const fri = students.filter((s) =>
-        txns.some((t) => t.student_id === s.id && isStudentPaidForFriday(t, date))
+        txns.some(
+          (t) =>
+            t.student_id === s.id && isSchoolYearFieldFridayPaid(t, date),
+        ),
       );
-      return { date, summer: null, aftercare: null, field_friday: toHeadcount(fri) };
+      return {
+        date,
+        school_year: null,
+        aftercare: null,
+        field_friday: toHeadcount(fri),
+      };
     }
 
-    const summerStudents = students.filter((s) =>
-      txns.some((t) => t.student_id === s.id && isStudentPaidForDate(t, date, weekNum, dowStr))
+    const schoolYearStudents = students.filter((s) =>
+      txns.some(
+        (t) => t.student_id === s.id && isSchoolYearWeekdayPaid(t, date),
+      ),
     );
     const aftercareStudents = students.filter((s) =>
-      txns.some((t) => t.student_id === s.id && isStudentPaidForAftercare(t, date))
+      txns.some(
+        (t) => t.student_id === s.id && isSchoolYearAftercarePaid(t, date),
+      ),
     );
 
     return {
       date,
-      summer: toHeadcount(summerStudents),
+      school_year: toHeadcount(schoolYearStudents),
       aftercare: toHeadcount(aftercareStudents),
       field_friday: null,
     };
@@ -954,12 +962,12 @@ const pcStyles = StyleSheet.create({
 
 export default function StaffAttendanceScreen() {
   // ── Program tab
-  const [activeProgram, setActiveProgram] = useState<ProgramKey>("week_plan");
+  const [activeProgram, setActiveProgram] = useState<ProgramKey>("month_plan");
 
-  // ── Summer state
-  const [summerDate, setSummerDate] = useState(getInitialSummerDate);
-  const [summerStudents, setSummerStudents] = useState<SummerStudentRow[]>([]);
-  const [loadingSummer, setLoadingSummer] = useState(false);
+  // ── School Year state
+  const [schoolYearDate, setSchoolYearDate] = useState(getInitialSchoolYearDate);
+  const [schoolYearStudents, setSchoolYearStudents] = useState<SchoolYearStudentRow[]>([]);
+  const [loadingSchoolYear, setLoadingSchoolYear] = useState(false);
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
 
@@ -985,9 +993,9 @@ export default function StaffAttendanceScreen() {
   );
   const [fieldFridaySearch, setFieldFridaySearch] = useState("");
 
-  // ── Week plan state
-  const [planWeekNum, setPlanWeekNum] = useState(getCurrentWeekNum);
-  const [weekHeadcounts, setWeekHeadcounts] = useState<DayHeadcount[]>([]);
+  // ── Month plan state
+  const [planMonthIndex, setPlanMonthIndex] = useState(getCurrentSchoolYearMonthIndex);
+  const [monthHeadcounts, setMonthHeadcounts] = useState<DayHeadcount[]>([]);
   const [loadingHeadcounts, setLoadingHeadcounts] = useState(false);
 
   // ── Aftercare pickup sheets
@@ -1010,17 +1018,17 @@ export default function StaffAttendanceScreen() {
   const [fieldFridayPickupSaving, setFieldFridayPickupSaving] = useState(false);
   const [fieldFridayPickupDetailsStudent, setFieldFridayPickupDetailsStudent] = useState<FieldFridayStudentRow | null>(null);
 
-  // ── Summer pickup sheet
-  const summerPickupSheetRef = useRef<BottomSheetModal>(null);
-  const [summerPickupStudentId, setSummerPickupStudentId] = useState<string | null>(null);
-  const [summerPickupPersons, setSummerPickupPersons] = useState<PickupPerson[]>([]);
-  const [summerPickupPersonsLoading, setSummerPickupPersonsLoading] = useState(false);
-  const [selectedSummerPickupPerson, setSelectedSummerPickupPerson] = useState<PickupPerson | null>(null);
-  const [summerPickupSaving, setSummerPickupSaving] = useState(false);
+  // ── School Year pickup sheet
+  const schoolYearPickupSheetRef = useRef<BottomSheetModal>(null);
+  const [schoolYearPickupStudentId, setSchoolYearPickupStudentId] = useState<string | null>(null);
+  const [schoolYearPickupPersons, setSchoolYearPickupPersons] = useState<PickupPerson[]>([]);
+  const [schoolYearPickupPersonsLoading, setSchoolYearPickupPersonsLoading] = useState(false);
+  const [selectedSchoolYearPickupPerson, setSelectedSchoolYearPickupPerson] = useState<PickupPerson | null>(null);
+  const [schoolYearPickupSaving, setSchoolYearPickupSaving] = useState(false);
 
-  // ── Summer pickup details sheet
-  const summerPickupDetailsSheetRef = useRef<BottomSheetModal>(null);
-  const [summerPickupDetailsStudent, setSummerPickupDetailsStudent] = useState<SummerStudentRow | null>(null);
+  // ── School Year pickup details sheet
+  const schoolYearPickupDetailsSheetRef = useRef<BottomSheetModal>(null);
+  const [schoolYearPickupDetailsStudent, setSchoolYearPickupDetailsStudent] = useState<SchoolYearStudentRow | null>(null);
 
   // ── Shared pickup details staff state
   const [detailsStaffUsers, setDetailsStaffUsers] = useState<{
@@ -1029,8 +1037,8 @@ export default function StaffAttendanceScreen() {
   } | null>(null);
   const [loadingDetailsStaff, setLoadingDetailsStaff] = useState(false);
 
-  // ── Week picker sheet
-  const weekPickerSheetRef = useRef<BottomSheetModal>(null);
+  // ── Month picker sheet
+  const monthPickerSheetRef = useRef<BottomSheetModal>(null);
 
   // ── Calendar picker sheet
   const calendarSheetRef = useRef<BottomSheetModal>(null);
@@ -1040,6 +1048,7 @@ export default function StaffAttendanceScreen() {
   // ── Student profile sheet
   const studentProfileSheetRef = useRef<BottomSheetModal>(null);
   const [profileStudent, setProfileStudent] = useState<ProfileStudentDetail | null>(null);
+  const [profileDisplayName, setProfileDisplayName] = useState<string | null>(null);
   const [profileContacts, setProfileContacts] = useState<ProfileContacts | null>(null);
   const [profileNotes, setProfileNotes] = useState<ProfileNote[]>([]);
   const [profileSchedule, setProfileSchedule] = useState<ProfileSchedule | null>(null);
@@ -1048,21 +1057,21 @@ export default function StaffAttendanceScreen() {
 
   const today = toYMD(new Date());
 
-  // ── Summer data load
+  // ── School Year data load
   useEffect(() => {
-    if (activeProgram !== "summer_26") return;
+    if (activeProgram !== "school_year") return;
     let cancelled = false;
-    setLoadingSummer(true);
-    fetchDayData(summerDate).then((rows) => {
+    setLoadingSchoolYear(true);
+    fetchSchoolYearDayData(schoolYearDate).then((rows) => {
       if (!cancelled) {
-        setSummerStudents(rows);
-        setLoadingSummer(false);
+        setSchoolYearStudents(rows);
+        setLoadingSchoolYear(false);
       }
-    }).catch((e) => { notifyError("staff-attendance-day-fetch", e); if (!cancelled) setLoadingSummer(false); });
+    }).catch((e) => { notifyError("staff-attendance-day-fetch", e); if (!cancelled) setLoadingSchoolYear(false); });
     return () => {
       cancelled = true;
     };
-  }, [summerDate, activeProgram]);
+  }, [schoolYearDate, activeProgram]);
 
   // ── Aftercare data load
   useEffect(() => {
@@ -1080,21 +1089,21 @@ export default function StaffAttendanceScreen() {
     };
   }, [aftercareDate, activeProgram]);
 
-  // ── Week plan data load
+  // ── Month plan data load
   useEffect(() => {
-    if (activeProgram !== "week_plan") return;
+    if (activeProgram !== "month_plan") return;
     let cancelled = false;
     setLoadingHeadcounts(true);
-    fetchWeekHeadcounts(planWeekNum).then((data) => {
+    fetchMonthHeadcounts(planMonthIndex).then((data) => {
       if (!cancelled) {
-        setWeekHeadcounts(data);
+        setMonthHeadcounts(data);
         setLoadingHeadcounts(false);
       }
     }).catch((e) => { notifyError("staff-attendance-headcounts", e); if (!cancelled) setLoadingHeadcounts(false); });
     return () => {
       cancelled = true;
     };
-  }, [planWeekNum, activeProgram]);
+  }, [planMonthIndex, activeProgram]);
 
   // ── Field Fun Fridays data load
   useEffect(() => {
@@ -1112,9 +1121,9 @@ export default function StaffAttendanceScreen() {
     };
   }, [fieldFridayDate, activeProgram]);
 
-  // ── Summer attendance toggle ────────────────────────────────────────────────
+  // ── School Year attendance toggle ───────────────────────────────────────────
 
-  async function toggleAttendance(student: SummerStudentRow) {
+  async function toggleSchoolYearAttendance(student: SchoolYearStudentRow) {
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -1123,39 +1132,40 @@ export default function StaffAttendanceScreen() {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSavingIds((prev) => new Set(prev).add(student.student_id));
 
-    const patch = (transform: (s: SummerStudentRow) => SummerStudentRow) =>
-      setSummerStudents((prev) =>
+    const patch = (transform: (s: SchoolYearStudentRow) => SchoolYearStudentRow) =>
+      setSchoolYearStudents((prev) =>
         prev.map((s) =>
-          s.student_id !== student.student_id ? s : transform(s)
-        )
+          s.student_id !== student.student_id ? s : transform(s),
+        ),
       );
 
-    if (student.record) {
+    if (student.record && !student.record.marked_absent) {
       patch((s) => ({ ...s, record: null }));
 
       const { error } = await supabase
         .schema("attendance")
-        .from("summer_records")
+        .from("school_year_records")
         .delete()
-        .eq("id", student.record.id);
+        .eq("id", student.record!.id);
 
       if (error) {
         notifyError("staff-attendance-toggle", error);
         patch((s) => ({ ...s, record: student.record }));
       } else {
         notifyDiscord({
-          type: "summer_attendance_removed",
-          data: { studentName: student.name, date: summerDate },
+          type: "school_year_attendance_removed",
+          data: { studentName: student.name, date: schoolYearDate },
         });
       }
     } else {
-      const tempRecord: SummerRecord = {
+      const tempRecord: SchoolYearRecord = {
         id: "temp",
-        date: summerDate,
+        date: schoolYearDate,
         student_id: student.student_id,
         recorded_by: user.id,
         notes: null,
         paid_for_day: student.hasEnrollment,
+        marked_absent: false,
         pickup_time: null,
         picked_up_by_name: null,
         picked_up_by_relationship: null,
@@ -1165,26 +1175,29 @@ export default function StaffAttendanceScreen() {
 
       const { data, error } = await supabase
         .schema("attendance")
-        .from("summer_records")
+        .from("school_year_records")
         .upsert(
           {
             student_id: student.student_id,
-            date: summerDate,
+            date: schoolYearDate,
             recorded_by: user.id,
             paid_for_day: student.hasEnrollment,
+            marked_absent: false,
           },
-          { onConflict: "student_id,date" }
+          { onConflict: "student_id,date" },
         )
-        .select("id, date, student_id, recorded_by, notes, paid_for_day, pickup_time, picked_up_by_name, picked_up_by_relationship, pickup_recorded_by")
+        .select(
+          "id, date, student_id, recorded_by, notes, paid_for_day, marked_absent, pickup_time, picked_up_by_name, picked_up_by_relationship, pickup_recorded_by",
+        )
         .single();
 
       if (error || !data) {
         patch((s) => ({ ...s, record: null }));
       } else {
-        patch((s) => ({ ...s, record: data as SummerRecord }));
+        patch((s) => ({ ...s, record: data as SchoolYearRecord }));
         notifyDiscord({
-          type: "summer_attendance_marked",
-          data: { studentName: student.name, date: summerDate },
+          type: "school_year_attendance_marked",
+          data: { studentName: student.name, date: schoolYearDate },
         });
       }
     }
@@ -1309,7 +1322,7 @@ export default function StaffAttendanceScreen() {
 
       const { error } = await supabase
         .schema("attendance")
-        .from("field_friday_records")
+        .from("school_year_field_friday_records")
         .delete()
         .eq("id", student.record.id);
 
@@ -1318,7 +1331,7 @@ export default function StaffAttendanceScreen() {
         patch((s) => ({ ...s, record: student.record }));
       } else {
         notifyDiscord({
-          type: "field_friday_checked_out",
+          type: "school_year_field_friday_checked_out",
           data: { studentName: student.name, date: fieldFridayDate },
         });
       }
@@ -1339,7 +1352,7 @@ export default function StaffAttendanceScreen() {
 
       const { data, error } = await supabase
         .schema("attendance")
-        .from("field_friday_records")
+        .from("school_year_field_friday_records")
         .upsert(
           {
             student_id: student.student_id,
@@ -1357,7 +1370,7 @@ export default function StaffAttendanceScreen() {
       } else {
         patch((s) => ({ ...s, record: data as FieldFridayRecord }));
         notifyDiscord({
-          type: "field_friday_checked_in",
+          type: "school_year_field_friday_checked_in",
           data: { studentName: student.name, date: fieldFridayDate },
         });
       }
@@ -1543,7 +1556,7 @@ export default function StaffAttendanceScreen() {
 
     const { data, error } = await supabase
       .schema("attendance")
-      .from("field_friday_records")
+      .from("school_year_field_friday_records")
       .upsert(
         {
           student_id: student.student_id,
@@ -1566,7 +1579,7 @@ export default function StaffAttendanceScreen() {
         )
       );
       notifyDiscord({
-        type: "field_friday_pickup_recorded",
+        type: "school_year_field_friday_pickup_recorded",
         data: {
           studentName: student.name,
           date: fieldFridayDate,
@@ -1600,14 +1613,14 @@ export default function StaffAttendanceScreen() {
     setLoadingDetailsStaff(false);
   }
 
-  // ── Summer pickup ────────────────────────────────────────────────────────────
+  // ── School Year pickup ───────────────────────────────────────────────────────
 
-  async function openSummerPickup(student: SummerStudentRow) {
-    if (!student.record) return;
-    setSummerPickupStudentId(student.student_id);
-    setSelectedSummerPickupPerson(null);
-    setSummerPickupPersonsLoading(true);
-    summerPickupSheetRef.current?.present();
+  async function openSchoolYearPickup(student: SchoolYearStudentRow) {
+    if (!student.record || student.record.marked_absent) return;
+    setSchoolYearPickupStudentId(student.student_id);
+    setSelectedSchoolYearPickupPerson(null);
+    setSchoolYearPickupPersonsLoading(true);
+    schoolYearPickupSheetRef.current?.present();
 
     const [appsRes, authRes] = await Promise.all([
       supabase
@@ -1642,63 +1655,68 @@ export default function StaffAttendanceScreen() {
       add(p.full_name, p.relationship);
     }
 
-    setSummerPickupPersons(persons);
-    if (persons.length === 1) setSelectedSummerPickupPerson(persons[0]);
-    setSummerPickupPersonsLoading(false);
+    setSchoolYearPickupPersons(persons);
+    if (persons.length === 1) setSelectedSchoolYearPickupPerson(persons[0]);
+    setSchoolYearPickupPersonsLoading(false);
   }
 
-  async function confirmSummerPickup(student: SummerStudentRow) {
-    if (!student.record || !selectedSummerPickupPerson) return;
+  async function confirmSchoolYearPickup(student: SchoolYearStudentRow) {
+    if (!student.record || !selectedSchoolYearPickupPerson) return;
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) return;
 
-    setSummerPickupSaving(true);
+    setSchoolYearPickupSaving(true);
 
     const { data, error } = await supabase
       .schema("attendance")
-      .from("summer_records")
+      .from("school_year_records")
       .upsert(
         {
           student_id: student.student_id,
-          date: summerDate,
+          date: schoolYearDate,
           recorded_by: user.id,
           paid_for_day: student.hasEnrollment,
-          picked_up_by_name: selectedSummerPickupPerson.name,
-          picked_up_by_relationship: selectedSummerPickupPerson.relationship,
+          marked_absent: false,
+          picked_up_by_name: selectedSchoolYearPickupPerson.name,
+          picked_up_by_relationship: selectedSchoolYearPickupPerson.relationship,
           pickup_recorded_by: user.id,
         },
-        { onConflict: "student_id,date" }
+        { onConflict: "student_id,date" },
       )
-      .select("id, date, student_id, recorded_by, notes, paid_for_day, pickup_time, picked_up_by_name, picked_up_by_relationship, pickup_recorded_by")
+      .select(
+        "id, date, student_id, recorded_by, notes, paid_for_day, marked_absent, pickup_time, picked_up_by_name, picked_up_by_relationship, pickup_recorded_by",
+      )
       .single();
 
     if (!error && data) {
-      setSummerStudents((prev) =>
+      setSchoolYearStudents((prev) =>
         prev.map((s) =>
-          s.student_id !== student.student_id ? s : { ...s, record: data as SummerRecord }
-        )
+          s.student_id !== student.student_id
+            ? s
+            : { ...s, record: data as SchoolYearRecord },
+        ),
       );
       notifyDiscord({
-        type: "summer_pickup_recorded",
+        type: "school_year_pickup_recorded",
         data: {
           studentName: student.name,
-          date: summerDate,
-          pickedUpBy: selectedSummerPickupPerson.name,
+          date: schoolYearDate,
+          pickedUpBy: selectedSchoolYearPickupPerson.name,
         },
       });
     }
 
-    setSummerPickupSaving(false);
-    summerPickupSheetRef.current?.dismiss();
+    setSchoolYearPickupSaving(false);
+    schoolYearPickupSheetRef.current?.dismiss();
   }
 
-  async function openSummerPickupDetails(student: SummerStudentRow) {
-    setSummerPickupDetailsStudent(student);
+  async function openSchoolYearPickupDetails(student: SchoolYearStudentRow) {
+    setSchoolYearPickupDetailsStudent(student);
     setDetailsStaffUsers(null);
     setLoadingDetailsStaff(true);
-    summerPickupDetailsSheetRef.current?.present();
+    schoolYearPickupDetailsSheetRef.current?.present();
 
     const record = student.record;
     if (record) {
@@ -1718,6 +1736,7 @@ export default function StaffAttendanceScreen() {
 
   async function openStudentProfile(studentId: string) {
     setProfileStudent(null);
+    setProfileDisplayName(null);
     setProfileContacts(null);
     setProfileNotes([]);
     setProfileSchedule(null);
@@ -1742,7 +1761,7 @@ export default function StaffAttendanceScreen() {
       supabase
         .schema("parent_app")
         .from("applications")
-        .select("program")
+        .select("program, preferred_name, child_legal_name")
         .eq("student_id", studentId)
         .single(),
       supabase
@@ -1750,50 +1769,74 @@ export default function StaffAttendanceScreen() {
         .from("stripe_transactions")
         .select("payment_type, metadata")
         .eq("student_id", studentId)
-        .in("payment_type", ["summer_tuition", "homeschool_dropin"])
+        .in("payment_type", ["school_year_tuition", "homeschool_dropin"])
         .eq("status", "completed")
         .eq("is_deleted", false),
     ]);
 
     const sd = studentRes.data as ProfileStudentDetail | null;
     setProfileStudent(sd ?? null);
+    const appData = appRes.data as {
+      program: string;
+      preferred_name: string | null;
+      child_legal_name: string | null;
+    } | null;
+    setProfileDisplayName(
+      getStudentDisplayName(appData?.preferred_name, sd?.child_legal_name),
+    );
     setProfileNotes((notesRes.data ?? []) as ProfileNote[]);
 
     const appProgram = (appRes.data as { program: string } | null)?.program ?? null;
-    const isFull = appProgram === "summer_26" || appProgram === "both";
+    const isFull =
+      appProgram === "school_year_26_27" || appProgram === "both";
     const isHomeschool = appProgram === "homeschool_drop_in";
-    const txs = (txRes.data ?? []) as { payment_type: string; metadata: Record<string, string> | null }[];
+    const txs = (txRes.data ?? []) as {
+      payment_type: string;
+      metadata: Record<string, string> | null;
+    }[];
 
     if (isFull) {
-      const paidWeeks = new Set<number>();
+      const paidMonths = new Set<number>();
       for (const tx of txs) {
-        if (tx.payment_type !== "summer_tuition") continue;
-        const meta = tx.metadata ?? {};
-        if (meta.plan_type === "full") {
-          for (let w = 1; w <= 12; w++) paidWeeks.add(w);
-        } else {
-          (meta.weeks ?? "").split(",").map(Number).filter(Boolean).forEach((w) => paidWeeks.add(w));
-        }
+        if (tx.payment_type !== "school_year_tuition") continue;
+        const months = (tx.metadata?.selected_months ?? "")
+          .split(",")
+          .map(Number)
+          .filter(Boolean);
+        months.forEach((m) => paidMonths.add(m));
       }
-      setProfileSchedule({ programType: "summer_full", paidWeeks: Array.from(paidWeeks).sort((a, b) => a - b), homeschoolSelections: [] });
+      setProfileSchedule({
+        programType: "school_year_full",
+        paidMonths: Array.from(paidMonths).sort((a, b) => a - b),
+        homeschoolSelections: [],
+      });
     } else if (isHomeschool) {
-      const selections: Array<{ week: number; days: string[] }> = [];
+      const selections: Array<{ month: number; days: string[] }> = [];
       for (const tx of txs) {
         if (tx.payment_type !== "homeschool_dropin") continue;
+        if (tx.metadata?.program !== "school_year_26_27") continue;
         try {
-          const parsed = JSON.parse((tx.metadata?.week_selections as string) ?? "[]");
-          selections.push(...parsed);
+          const parsed = JSON.parse(
+            (tx.metadata?.week_selections as string) ?? "[]",
+          ) as Array<{ week: number; days: string[] }>;
+          selections.push(
+            ...parsed.map((s) => ({ month: s.week, days: s.days })),
+          );
         } catch {}
       }
       const merged = new Map<number, Set<string>>();
       for (const s of selections) {
-        if (!merged.has(s.week)) merged.set(s.week, new Set());
-        s.days.forEach((d) => merged.get(s.week)!.add(d));
+        if (!merged.has(s.month)) merged.set(s.month, new Set());
+        s.days.forEach((d) => merged.get(s.month)!.add(d));
       }
       const sorted = Array.from(merged.entries())
         .sort(([a], [b]) => a - b)
-        .map(([week, days]) => ({ week, days: Array.from(days) }));
-      setProfileSchedule({ programType: "homeschool", paidWeeks: [], homeschoolSelections: sorted });
+        .map(([month, days]) => ({ month, days: Array.from(days) }));
+      setProfileSchedule({
+        programType: "homeschool",
+        paidMonths: [],
+        homeschoolSelections: sorted,
+      });
     } else {
       setProfileSchedule(null);
     }
@@ -1848,7 +1891,7 @@ export default function StaffAttendanceScreen() {
     if (!calendarTarget) return;
     if (calendarTarget === "aftercare") setAftercareDate(ymd);
     else if (calendarTarget === "field_friday") setFieldFridayDate(ymd);
-    else if (calendarTarget === "summer") setSummerDate(ymd);
+    else if (calendarTarget === "school_year") setSchoolYearDate(ymd);
     calendarSheetRef.current?.dismiss();
   }
 
@@ -1862,7 +1905,7 @@ export default function StaffAttendanceScreen() {
     const selectedYMDs = new Set<string>();
     if (calendarTarget === "aftercare") selectedYMDs.add(aftercareDate);
     else if (calendarTarget === "field_friday") selectedYMDs.add(fieldFridayDate);
-    else if (calendarTarget === "summer") selectedYMDs.add(summerDate);
+    else if (calendarTarget === "school_year") selectedYMDs.add(schoolYearDate);
 
     const monthLabel = calendarMonth.toLocaleDateString("en-US", {
       month: "long",
@@ -1943,7 +1986,7 @@ export default function StaffAttendanceScreen() {
   // ── Student profile sheet ───────────────────────────────────────────────────
 
   function renderStudentProfileSheet() {
-    const name = profileStudent?.child_legal_name ?? "Student";
+    const name = profileDisplayName ?? profileStudent?.child_legal_name ?? "Student";
     const grade = profileStudent?.child_grade ?? null;
     const profileImageUrl = profileStudent?.profile_image_url ?? null;
 
@@ -2125,36 +2168,40 @@ export default function StaffAttendanceScreen() {
         return (
           <View style={{ padding: 16 }}>
             <View style={styles.profileEmptyCard}>
-              <Text style={styles.profileEmptyText}>No summer schedule on file.</Text>
+              <Text style={styles.profileEmptyText}>No school year schedule on file.</Text>
             </View>
           </View>
         );
       }
 
-      const currentWeek = getCurrentWeekNum();
+      const currentMonth = getCurrentSchoolYearMonthIndex();
       const now = Date.now();
 
-      if (profileSchedule.programType === "summer_full") {
+      if (profileSchedule.programType === "school_year_full") {
         return (
           <View style={{ gap: 0, paddingBottom: 32 }}>
-            {Array.from({ length: TOTAL_WEEKS }, (_, i) => i + 1).map((wNum) => {
-              const dates = getWeekDates(wNum);
-              const weekStart = new Date(SUMMER_START);
-              weekStart.setDate(weekStart.getDate() + (wNum - 1) * 7);
-              const weekEnd = new Date(weekStart);
-              weekEnd.setDate(weekEnd.getDate() + 6);
-              const isPast = weekEnd.getTime() < now;
-              const isCurrent = wNum === currentWeek;
-              const isAttending = profileSchedule.paidWeeks.includes(wNum);
+            {SCHOOL_YEAR_MONTHS.map((month) => {
+              const aftercareDays =
+                SCHOOL_YEAR_AFTERCARE_MONTHS[month.index - 1]?.days ?? [];
+              const firstDate = aftercareDays[0]?.date;
+              const lastDate = aftercareDays[aftercareDays.length - 1]?.date;
+              const isPast = lastDate
+                ? new Date(lastDate + "T23:59:59").getTime() < now
+                : false;
+              const isCurrent = month.index === currentMonth;
+              const isAttending = profileSchedule.paidMonths.includes(month.index);
 
               const fmt = (ds: string) => {
                 const [y, m, d] = ds.split("-").map(Number);
-                return new Date(y, m - 1, d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                return new Date(y, m - 1, d).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                });
               };
 
               return (
                 <View
-                  key={wNum}
+                  key={month.index}
                   style={[
                     styles.weeksRow,
                     isCurrent && styles.weeksRowCurrent,
@@ -2162,11 +2209,27 @@ export default function StaffAttendanceScreen() {
                   ]}
                 >
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.weeksRowLabel}>Week {wNum}</Text>
-                    <Text style={styles.weeksRowDates}>{fmt(dates[0])} – {fmt(dates[4])}</Text>
+                    <Text style={styles.weeksRowLabel}>{month.label}</Text>
+                    {firstDate && lastDate ? (
+                      <Text style={styles.weeksRowDates}>
+                        {fmt(firstDate)} – {fmt(lastDate)}
+                      </Text>
+                    ) : null}
                   </View>
-                  <View style={[styles.weeksBadge, isAttending ? styles.weeksBadgeGreen : styles.weeksBadgeGray]}>
-                    <Text style={[styles.weeksBadgeText, isAttending ? styles.weeksBadgeTextGreen : styles.weeksBadgeTextGray]}>
+                  <View
+                    style={[
+                      styles.weeksBadge,
+                      isAttending ? styles.weeksBadgeGreen : styles.weeksBadgeGray,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.weeksBadgeText,
+                        isAttending
+                          ? styles.weeksBadgeTextGreen
+                          : styles.weeksBadgeTextGray,
+                      ]}
+                    >
                       {isAttending ? "Attending" : "Not Enrolled"}
                     </Text>
                   </View>
@@ -2188,29 +2251,39 @@ export default function StaffAttendanceScreen() {
           );
         }
 
-        const DAY_KEYS = ["mon", "tue", "wed", "thu", "fri"] as const;
-        const DAY_LABELS: Record<string, string> = { mon: "M", tue: "T", wed: "W", thu: "Th", fri: "F" };
+        const DAY_KEYS = ["mon", "tue", "wed", "thu"] as const;
+        const DAY_LABELS: Record<string, string> = {
+          mon: "M",
+          tue: "T",
+          wed: "W",
+          thu: "Th",
+        };
 
         return (
           <View style={{ gap: 0, paddingBottom: 32 }}>
-            {profileSchedule.homeschoolSelections.map(({ week, days }) => {
-              const dates = getWeekDates(week);
-              const weekStart = new Date(SUMMER_START);
-              weekStart.setDate(weekStart.getDate() + (week - 1) * 7);
-              const weekEnd = new Date(weekStart);
-              weekEnd.setDate(weekEnd.getDate() + 6);
-              const isPast = weekEnd.getTime() < now;
-              const isCurrent = week === currentWeek;
+            {profileSchedule.homeschoolSelections.map(({ month, days }) => {
+              const monthMeta = SCHOOL_YEAR_MONTHS.find((m) => m.index === month);
+              const aftercareDays =
+                SCHOOL_YEAR_AFTERCARE_MONTHS[month - 1]?.days ?? [];
+              const firstDate = aftercareDays[0]?.date;
+              const lastDate = aftercareDays[aftercareDays.length - 1]?.date;
+              const isPast = lastDate
+                ? new Date(lastDate + "T23:59:59").getTime() < now
+                : false;
+              const isCurrent = month === currentMonth;
               const enrolledSet = new Set(days);
 
               const fmt = (ds: string) => {
                 const [y, m, d] = ds.split("-").map(Number);
-                return new Date(y, m - 1, d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                return new Date(y, m - 1, d).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                });
               };
 
               return (
                 <View
-                  key={week}
+                  key={month}
                   style={[
                     styles.weeksRow,
                     isCurrent && styles.weeksRowCurrent,
@@ -2219,8 +2292,14 @@ export default function StaffAttendanceScreen() {
                 >
                   <View style={{ flex: 1, gap: 6 }}>
                     <View>
-                      <Text style={styles.weeksRowLabel}>Week {week}</Text>
-                      <Text style={styles.weeksRowDates}>{fmt(dates[0])} – {fmt(dates[4])}</Text>
+                      <Text style={styles.weeksRowLabel}>
+                        {monthMeta?.label ?? `Month ${month}`}
+                      </Text>
+                      {firstDate && lastDate ? (
+                        <Text style={styles.weeksRowDates}>
+                          {fmt(firstDate)} – {fmt(lastDate)}
+                        </Text>
+                      ) : null}
                     </View>
                     <View style={{ flexDirection: "row", gap: 6 }}>
                       {DAY_KEYS.map((dk) => {
@@ -2228,9 +2307,17 @@ export default function StaffAttendanceScreen() {
                         return (
                           <View
                             key={dk}
-                            style={[styles.weeksDayPill, active && styles.weeksDayPillActive]}
+                            style={[
+                              styles.weeksDayPill,
+                              active && styles.weeksDayPillActive,
+                            ]}
                           >
-                            <Text style={[styles.weeksDayPillText, active && styles.weeksDayPillTextActive]}>
+                            <Text
+                              style={[
+                                styles.weeksDayPillText,
+                                active && styles.weeksDayPillTextActive,
+                              ]}
+                            >
                               {DAY_LABELS[dk]}
                             </Text>
                           </View>
@@ -2283,7 +2370,7 @@ export default function StaffAttendanceScreen() {
               }}
             >
               <Text style={[styles.aftercareDateLabel, styles.dateNavTappable]}>
-                {formatAftercareDateLabel(fieldFridayDate)}
+                {formatDateLabel(fieldFridayDate)}
               </Text>
             </Pressable>
             {isThisFriday && (
@@ -2520,7 +2607,7 @@ export default function StaffAttendanceScreen() {
         <View style={styles.aftercareDateNav}>
           <Pressable
             style={styles.aftercareDateNavBtn}
-            onPress={() => setAftercareDate((d) => shiftWeekday(d, -1))}
+            onPress={() => setAftercareDate((d) => shiftAftercareWeekday(d, -1))}
           >
             <Ionicons name="chevron-back" size={20} color="#1f2937" />
           </Pressable>
@@ -2535,7 +2622,7 @@ export default function StaffAttendanceScreen() {
               }}
             >
               <Text style={[styles.aftercareDateLabel, styles.dateNavTappable]}>
-                {formatAftercareDateLabel(aftercareDate)}
+                {formatDateLabel(aftercareDate)}
               </Text>
             </Pressable>
             {isToday && (
@@ -2547,7 +2634,7 @@ export default function StaffAttendanceScreen() {
 
           <Pressable
             style={styles.aftercareDateNavBtn}
-            onPress={() => setAftercareDate((d) => shiftWeekday(d, 1))}
+            onPress={() => setAftercareDate((d) => shiftAftercareWeekday(d, 1))}
           >
             <Ionicons name="chevron-forward" size={20} color="#1f2937" />
           </Pressable>
@@ -2791,39 +2878,39 @@ export default function StaffAttendanceScreen() {
     );
   }
 
-  function renderWeekPlanView() {
+  function renderMonthPlanView() {
     return (
       <View style={{ flex: 1 }}>
-        {/* Week navigation */}
+        {/* Month navigation */}
         <View style={styles.weekNavRow}>
           <Pressable
             style={styles.weekNavBtn}
-            onPress={() => setPlanWeekNum((n) => Math.max(1, n - 1))}
-            disabled={planWeekNum === 1}
+            onPress={() => setPlanMonthIndex((n) => Math.max(1, n - 1))}
+            disabled={planMonthIndex === 1}
           >
             <Ionicons
               name="chevron-back"
               size={20}
-              color={planWeekNum === 1 ? "#d1d5db" : "#1f2937"}
+              color={planMonthIndex === 1 ? "#d1d5db" : "#1f2937"}
             />
           </Pressable>
           <Pressable
-            onPress={() => weekPickerSheetRef.current?.present()}
+            onPress={() => monthPickerSheetRef.current?.present()}
             style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
           >
             <Text style={[styles.weekLabel, styles.dateNavTappable]}>
-              {getWeekLabel(planWeekNum)}
+              {getMonthLabel(planMonthIndex)}
             </Text>
           </Pressable>
           <Pressable
             style={styles.weekNavBtn}
-            onPress={() => setPlanWeekNum((n) => Math.min(TOTAL_WEEKS, n + 1))}
-            disabled={planWeekNum === TOTAL_WEEKS}
+            onPress={() => setPlanMonthIndex((n) => Math.min(10, n + 1))}
+            disabled={planMonthIndex === 10}
           >
             <Ionicons
               name="chevron-forward"
               size={20}
-              color={planWeekNum === TOTAL_WEEKS ? "#d1d5db" : "#1f2937"}
+              color={planMonthIndex === 10 ? "#d1d5db" : "#1f2937"}
             />
           </Pressable>
         </View>
@@ -2840,7 +2927,7 @@ export default function StaffAttendanceScreen() {
                   <SkeletonBox width="35%" height={14} borderRadius={4} />
                 </View>
                 <View style={styles.planBlocksRow}>
-                  <View style={[styles.planBlock, styles.planBlockSummer]}>
+                  <View style={[styles.planBlock, styles.planBlockSchoolYear]}>
                     <SkeletonBox width="40%" height={12} borderRadius={4} />
                     <SkeletonBox width={66} height={32} borderRadius={16} />
                   </View>
@@ -2852,7 +2939,7 @@ export default function StaffAttendanceScreen() {
               </View>
             ))
           ) : (
-            weekHeadcounts.map((day) => {
+            monthHeadcounts.map((day) => {
               const isToday = day.date === today;
               const [y, m, d] = day.date.split("-").map(Number);
               const isFriday = new Date(y, m - 1, d).getDay() === 5;
@@ -2864,7 +2951,7 @@ export default function StaffAttendanceScreen() {
                       {formatDayHeader(day.date)}
                     </Text>
                     {isToday && (
-                      <View style={[styles.todayBadge, { backgroundColor: AMBER }]}>
+                      <View style={[styles.todayBadge, { backgroundColor: SY_COLOR }]}>
                         <Text style={styles.todayBadgeText}>Today</Text>
                       </View>
                     )}
@@ -2884,8 +2971,8 @@ export default function StaffAttendanceScreen() {
                         }}
                       >
                         <View style={styles.planBlockTextGroup}>
-                          <Text style={[styles.planBlockLabel, { color: Brand.sage700 }]}>
-                            Field Fun Fridays
+                          <Text style={[styles.planBlockLabel, { color: FRIDAY_COLOR }]}>
+                            Friday Enrichment
                           </Text>
                           <Text style={styles.planBlockEnrolled}>
                             {day.field_friday.count} enrolled
@@ -2895,27 +2982,27 @@ export default function StaffAttendanceScreen() {
                       </Pressable>
                     ) : (
                       <>
-                        {day.summer && (
+                        {day.school_year && (
                           <Pressable
                             style={({ pressed }) => [
                               styles.planBlock,
-                              styles.planBlockSummer,
+                              styles.planBlockSchoolYear,
                               pressed && { opacity: 0.75 },
                             ]}
                             onPress={() => {
-                              setSummerDate(day.date);
-                              setActiveProgram("summer_26");
+                              setSchoolYearDate(day.date);
+                              setActiveProgram("school_year");
                             }}
                           >
                             <View style={styles.planBlockTextGroup}>
-                              <Text style={[styles.planBlockLabel, { color: AMBER }]}>
-                                Summer 2026
+                              <Text style={[styles.planBlockLabel, { color: SY_COLOR }]}>
+                                School Year 26–27
                               </Text>
                               <Text style={styles.planBlockEnrolled}>
-                                {day.summer.count} enrolled
+                                {day.school_year.count} enrolled
                               </Text>
                             </View>
-                            {renderAvatarStack(day.summer.students, day.summer.count)}
+                            {renderAvatarStack(day.school_year.students, day.school_year.count)}
                           </Pressable>
                         )}
                         {day.aftercare && (
@@ -2932,7 +3019,7 @@ export default function StaffAttendanceScreen() {
                           >
                             <View style={styles.planBlockTextGroup}>
                               <Text style={[styles.planBlockLabel, { color: "#374151" }]}>
-                                Aftercare
+                                Extended Learning
                               </Text>
                               <Text style={styles.planBlockEnrolled}>
                                 {day.aftercare.count} enrolled
@@ -3058,13 +3145,13 @@ export default function StaffAttendanceScreen() {
     );
   }
 
-  // ── Summer pickup details sheet ──────────────────────────────────────────────
+  // ── School Year pickup details sheet ─────────────────────────────────────────
 
-  function renderSummerPickupDetailsSheet() {
-    const student = summerPickupDetailsStudent;
+  function renderSchoolYearPickupDetailsSheet() {
+    const student = schoolYearPickupDetailsStudent;
     const record = student?.record;
     if (!record?.picked_up_by_name) return null;
-    return renderPickupDetailsContent(student!.name, record, () => summerPickupDetailsSheetRef.current?.dismiss());
+    return renderPickupDetailsContent(student!.name, record, () => schoolYearPickupDetailsSheetRef.current?.dismiss());
   }
 
   // ── Aftercare pickup sheet ────────────────────────────────────────────────────
@@ -3221,34 +3308,34 @@ export default function StaffAttendanceScreen() {
     );
   }
 
-  // ── Summer pickup sheet ──────────────────────────────────────────────────────
+  // ── School Year pickup sheet ─────────────────────────────────────────────────
 
-  function renderSummerPickupSheet() {
-    const student = summerStudents.find((s) => s.student_id === summerPickupStudentId);
-    const canConfirm = !!selectedSummerPickupPerson && !summerPickupSaving;
+  function renderSchoolYearPickupSheet() {
+    const student = schoolYearStudents.find((s) => s.student_id === schoolYearPickupStudentId);
+    const canConfirm = !!selectedSchoolYearPickupPerson && !schoolYearPickupSaving;
 
     return (
       <>
         <Text style={styles.pickupSheetTitle}>Who picked up?</Text>
-        {summerPickupPersonsLoading ? (
+        {schoolYearPickupPersonsLoading ? (
           <View style={{ padding: 24, alignItems: "center" }}>
-            <ActivityIndicator color={AMBER} />
+            <ActivityIndicator color={SY_COLOR} />
           </View>
-        ) : summerPickupPersons.length === 0 ? (
+        ) : schoolYearPickupPersons.length === 0 ? (
           <View style={{ padding: 16 }}>
             <Text style={styles.emptyText}>No authorized pickup persons on file.</Text>
           </View>
         ) : (
-          summerPickupPersons.map((p) => {
-            const isSelected = selectedSummerPickupPerson?.name === p.name;
+          schoolYearPickupPersons.map((p) => {
+            const isSelected = selectedSchoolYearPickupPerson?.name === p.name;
             return (
               <TouchableOpacity
                 key={p.name}
                 style={[
                   styles.pickupSlotRow,
-                  isSelected && { backgroundColor: AMBER + "18" },
+                  isSelected && { backgroundColor: SY_COLOR + "18" },
                 ]}
-                onPress={() => setSelectedSummerPickupPerson(p)}
+                onPress={() => setSelectedSchoolYearPickupPerson(p)}
                 activeOpacity={0.75}
               >
                 <View
@@ -3263,7 +3350,7 @@ export default function StaffAttendanceScreen() {
                   <Text
                     style={[
                       styles.pickupSlotText,
-                      isSelected && { color: AMBER },
+                      isSelected && { color: SY_COLOR },
                     ]}
                   >
                     {p.name}
@@ -3273,7 +3360,7 @@ export default function StaffAttendanceScreen() {
                   ) : null}
                 </View>
                 {isSelected && (
-                  <Ionicons name="checkmark" size={16} color={AMBER} />
+                  <Ionicons name="checkmark" size={16} color={SY_COLOR} />
                 )}
               </TouchableOpacity>
             );
@@ -3285,10 +3372,10 @@ export default function StaffAttendanceScreen() {
             styles.summerPickupConfirmBtn,
             !canConfirm && { opacity: 0.4 },
           ]}
-          onPress={() => student && confirmSummerPickup(student)}
+          onPress={() => student && confirmSchoolYearPickup(student)}
           disabled={!canConfirm}
         >
-          {summerPickupSaving ? (
+          {schoolYearPickupSaving ? (
             <ActivityIndicator color="#ffffff" />
           ) : (
             <Text style={styles.summerPickupConfirmText}>Confirm Pickup</Text>
@@ -3298,16 +3385,16 @@ export default function StaffAttendanceScreen() {
     );
   }
 
-  // ── Summer view ─────────────────────────────────────────────────────────────
+  // ── School Year view ─────────────────────────────────────────────────────────
 
-  function renderSummerView() {
-    const isToday = summerDate === today;
-    const presentCount = summerStudents.filter((s) => s.record !== null).length;
+  function renderSchoolYearView() {
+    const isToday = schoolYearDate === today;
+    const presentCount = schoolYearStudents.filter((s) => s.record !== null).length;
     const filtered = search
-      ? summerStudents.filter((s) =>
+      ? schoolYearStudents.filter((s) =>
           (s.name ?? "").toLowerCase().includes(search.toLowerCase())
         )
-      : summerStudents;
+      : schoolYearStudents;
 
     return (
       <View style={{ flex: 1 }}>
@@ -3315,7 +3402,7 @@ export default function StaffAttendanceScreen() {
         <View style={styles.aftercareDateNav}>
           <Pressable
             style={styles.aftercareDateNavBtn}
-            onPress={() => setSummerDate((d) => shiftWeekday(d, -1))}
+            onPress={() => setSchoolYearDate((d) => shiftSchoolYearWeekday(d, -1))}
           >
             <Ionicons name="chevron-back" size={20} color="#1f2937" />
           </Pressable>
@@ -3323,18 +3410,18 @@ export default function StaffAttendanceScreen() {
           <View style={styles.aftercareDateRow}>
             <Pressable
               onPress={() => {
-                const [y, m, d] = summerDate.split("-").map(Number);
+                const [y, m, d] = schoolYearDate.split("-").map(Number);
                 setCalendarMonth(new Date(y, m - 1, d));
-                setCalendarTarget("summer");
+                setCalendarTarget("school_year");
                 calendarSheetRef.current?.present();
               }}
             >
               <Text style={[styles.aftercareDateLabel, styles.dateNavTappable]}>
-                {formatAftercareDateLabel(summerDate)}
+                {formatDateLabel(schoolYearDate)}
               </Text>
             </Pressable>
             {isToday && (
-              <View style={[styles.todayBadge, { backgroundColor: AMBER }]}>
+              <View style={[styles.todayBadge, { backgroundColor: SY_COLOR }]}>
                 <Text style={styles.todayBadgeText}>Today</Text>
               </View>
             )}
@@ -3342,16 +3429,16 @@ export default function StaffAttendanceScreen() {
 
           <Pressable
             style={styles.aftercareDateNavBtn}
-            onPress={() => setSummerDate((d) => shiftWeekday(d, 1))}
+            onPress={() => setSchoolYearDate((d) => shiftSchoolYearWeekday(d, 1))}
           >
             <Ionicons name="chevron-forward" size={20} color="#1f2937" />
           </Pressable>
         </View>
 
         {/* Present count */}
-        {!loadingSummer && summerStudents.length > 0 && (
+        {!loadingSchoolYear && schoolYearStudents.length > 0 && (
           <Text style={styles.aftercarePresentCount}>
-            {presentCount} of {summerStudents.length} present
+            {presentCount} of {schoolYearStudents.length} present
           </Text>
         )}
 
@@ -3383,7 +3470,7 @@ export default function StaffAttendanceScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {loadingSummer ? (
+          {loadingSchoolYear ? (
             [0, 1, 2, 3].map((i) => (
               <View key={i} style={styles.aftercareSkeleton}>
                 <View style={styles.aftercareSkeletonTop}>
@@ -3414,7 +3501,7 @@ export default function StaffAttendanceScreen() {
                     {/* Left: car icon (picked up only) + avatar + info */}
                     <View style={styles.aftercareCardLeft}>
                       {hasPickup && (
-                        <Ionicons name="car-outline" size={14} color={AMBER} />
+                        <Ionicons name="car-outline" size={14} color={SY_COLOR} />
                       )}
                       <Pressable
                         style={({ pressed }) => [{ opacity: pressed ? 0.75 : 1, flexDirection: "row", alignItems: "center", gap: 12 }]}
@@ -3490,13 +3577,13 @@ export default function StaffAttendanceScreen() {
                             styles.summerPickupBadge,
                             pressed && { opacity: 0.7 },
                           ]}
-                          onPress={() => openSummerPickupDetails(student)}
+                          onPress={() => openSchoolYearPickupDetails(student)}
                         >
                           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                             <Text style={styles.summerPickupBadgeText}>
                               {student.record!.picked_up_by_name}
                             </Text>
-                            <Ionicons name="chevron-forward" size={11} color={AMBER} />
+                            <Ionicons name="chevron-forward" size={11} color={SY_COLOR} />
                           </View>
                         </Pressable>
                       ) : isPresent ? (
@@ -3505,7 +3592,7 @@ export default function StaffAttendanceScreen() {
                             styles.summerRecordPickupBtn,
                             pressed && { opacity: 0.7 },
                           ]}
-                          onPress={() => openSummerPickup(student)}
+                          onPress={() => openSchoolYearPickup(student)}
                         >
                           <Text style={styles.summerRecordPickupBtnText}>
                             Record Pickup
@@ -3516,17 +3603,17 @@ export default function StaffAttendanceScreen() {
                       <Pressable
                         style={({ pressed }) => [
                           styles.checkboxArea,
-                          isPresent && { backgroundColor: AMBER, borderColor: AMBER },
+                          isPresent && { backgroundColor: SY_COLOR, borderColor: SY_COLOR },
                           (pressed || isSaving) && { opacity: 0.7 },
                           hasPickup && { opacity: 0.4 },
                         ]}
-                        onPress={() => toggleAttendance(student)}
+                        onPress={() => toggleSchoolYearAttendance(student)}
                         disabled={isSaving || hasPickup}
                       >
                         {isSaving ? (
                           <ActivityIndicator
                             size="small"
-                            color={isPresent ? "#ffffff" : AMBER}
+                            color={isPresent ? "#ffffff" : SY_COLOR}
                           />
                         ) : isPresent ? (
                           <Ionicons name="checkmark" size={22} color="#ffffff" />
@@ -3594,9 +3681,9 @@ export default function StaffAttendanceScreen() {
             ? renderAftercareView()
             : activeProgram === "field_friday"
             ? renderFieldFridayView()
-            : activeProgram === "week_plan"
-            ? renderWeekPlanView()
-            : renderSummerView()}
+            : activeProgram === "month_plan"
+            ? renderMonthPlanView()
+            : renderSchoolYearView()}
         </View>
       </SafeAreaView>
 
@@ -3627,6 +3714,7 @@ export default function StaffAttendanceScreen() {
         enablePanDownToClose
         onDismiss={() => {
           setProfileStudent(null);
+    setProfileDisplayName(null);
           setProfileContacts(null);
           setProfileNotes([]);
         }}
@@ -3646,9 +3734,9 @@ export default function StaffAttendanceScreen() {
         </BottomSheetScrollView>
       </BottomSheetModal>
 
-      {/* Week picker bottom sheet */}
+      {/* Month picker bottom sheet */}
       <BottomSheetModal
-        ref={weekPickerSheetRef}
+        ref={monthPickerSheetRef}
         snapPoints={["50%"]}
         enablePanDownToClose
         backdropComponent={(props) => (
@@ -3661,21 +3749,21 @@ export default function StaffAttendanceScreen() {
         )}
       >
         <BottomSheetScrollView contentContainerStyle={styles.pickupSheetContent}>
-          <Text style={styles.pickupSheetTitle}>Select Week</Text>
-          {Array.from({ length: TOTAL_WEEKS }, (_, i) => i + 1).map((n) => {
-            const isSelected = n === planWeekNum;
+          <Text style={styles.pickupSheetTitle}>Select Month</Text>
+          {SCHOOL_YEAR_MONTHS.map((month) => {
+            const isSelected = month.index === planMonthIndex;
             return (
               <TouchableOpacity
-                key={n}
+                key={month.index}
                 style={[styles.pickupSlotRow, isSelected && styles.weekPickerSlotSelected]}
                 onPress={() => {
-                  setPlanWeekNum(n);
-                  weekPickerSheetRef.current?.dismiss();
+                  setPlanMonthIndex(month.index);
+                  monthPickerSheetRef.current?.dismiss();
                 }}
                 activeOpacity={0.75}
               >
                 <Text style={[styles.pickupSlotText, isSelected && styles.weekPickerSlotTextSelected]}>
-                  {getWeekLabel(n)}
+                  {month.label}
                 </Text>
                 {isSelected && (
                   <Ionicons name="checkmark" size={16} color="#3b82f6" />
@@ -3784,9 +3872,9 @@ export default function StaffAttendanceScreen() {
         </BottomSheetScrollView>
       </BottomSheetModal>
 
-      {/* Summer pickup — person selection sheet */}
+      {/* School Year pickup — person selection sheet */}
       <BottomSheetModal
-        ref={summerPickupSheetRef}
+        ref={schoolYearPickupSheetRef}
         snapPoints={["60%", "80%"]}
         enablePanDownToClose
         backdropComponent={(props) => (
@@ -3800,20 +3888,20 @@ export default function StaffAttendanceScreen() {
         backgroundStyle={{ backgroundColor: "#ffffff" }}
         handleIndicatorStyle={{ backgroundColor: "#d1d5db" }}
         onDismiss={() => {
-          setSummerPickupStudentId(null);
-          setSummerPickupPersons([]);
-          setSelectedSummerPickupPerson(null);
-          setSummerPickupSaving(false);
+          setSchoolYearPickupStudentId(null);
+          setSchoolYearPickupPersons([]);
+          setSelectedSchoolYearPickupPerson(null);
+          setSchoolYearPickupSaving(false);
         }}
       >
         <BottomSheetScrollView contentContainerStyle={styles.pickupSheetContent}>
-          {renderSummerPickupSheet()}
+          {renderSchoolYearPickupSheet()}
         </BottomSheetScrollView>
       </BottomSheetModal>
 
-      {/* Summer pickup — details sheet */}
+      {/* School Year pickup — details sheet */}
       <BottomSheetModal
-        ref={summerPickupDetailsSheetRef}
+        ref={schoolYearPickupDetailsSheetRef}
         snapPoints={["50%"]}
         enablePanDownToClose
         backdropComponent={(props) => (
@@ -3826,10 +3914,10 @@ export default function StaffAttendanceScreen() {
         )}
         backgroundStyle={{ backgroundColor: "#ffffff" }}
         handleIndicatorStyle={{ backgroundColor: "#d1d5db" }}
-        onDismiss={() => { setSummerPickupDetailsStudent(null); setDetailsStaffUsers(null); }}
+        onDismiss={() => { setSchoolYearPickupDetailsStudent(null); setDetailsStaffUsers(null); }}
       >
         <BottomSheetScrollView contentContainerStyle={styles.pickupSheetContent}>
-          {renderSummerPickupDetailsSheet()}
+          {renderSchoolYearPickupDetailsSheet()}
         </BottomSheetScrollView>
       </BottomSheetModal>
     </>
@@ -4090,7 +4178,7 @@ const styles = StyleSheet.create({
 
   // ── Today badge
   todayBadge: {
-    backgroundColor: AMBER,
+    backgroundColor: SY_COLOR,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 9999,
@@ -4234,7 +4322,7 @@ const styles = StyleSheet.create({
   },
   calendarDayNumToday: {
     borderWidth: 1.5,
-    borderColor: AMBER,
+    borderColor: SY_COLOR,
   },
   calendarDayNumSelected: {
     backgroundColor: Brand.sage700,
@@ -4249,7 +4337,7 @@ const styles = StyleSheet.create({
   },
   calendarDayTxtToday: {
     fontFamily: FontFamilies.bodySemiBold,
-    color: AMBER,
+    color: SY_COLOR,
   },
   calendarDayTxtSelected: {
     fontFamily: FontFamilies.bodySemiBold,
@@ -4287,8 +4375,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
-  planBlockSummer: {
-    backgroundColor: "#fef0e6",
+  planBlockSchoolYear: {
+    backgroundColor: "#e8f0ea",
   },
   planBlockAftercare: {
     backgroundColor: "#eaeeeb",
@@ -4619,13 +4707,13 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   summerPickupRadioSelected: {
-    borderColor: AMBER,
+    borderColor: SY_COLOR,
   },
   summerPickupRadioDot: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: AMBER,
+    backgroundColor: SY_COLOR,
   },
   summerPickupConfirmBtn: {
     marginHorizontal: 16,
@@ -4633,7 +4721,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     height: 52,
     borderRadius: 12,
-    backgroundColor: AMBER,
+    backgroundColor: SY_COLOR,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -4645,9 +4733,9 @@ const styles = StyleSheet.create({
 
   // ── Summer inline pickup badge + button
   summerPickupBadge: {
-    backgroundColor: AMBER + "18",
+    backgroundColor: SY_COLOR + "18",
     borderWidth: 1,
-    borderColor: AMBER + "40",
+    borderColor: SY_COLOR + "40",
     borderRadius: 8,
     paddingHorizontal: 9,
     paddingVertical: 5,
@@ -4655,20 +4743,20 @@ const styles = StyleSheet.create({
   summerPickupBadgeText: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 11,
-    color: AMBER,
+    color: SY_COLOR,
   },
   summerRecordPickupBtn: {
     borderWidth: 1.5,
-    borderColor: AMBER,
+    borderColor: SY_COLOR,
     borderRadius: 8,
     paddingHorizontal: 9,
     paddingVertical: 5,
-    backgroundColor: AMBER + "0D",
+    backgroundColor: SY_COLOR + "0D",
   },
   summerRecordPickupBtnText: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 11,
-    color: AMBER,
+    color: SY_COLOR,
   },
 
   // ── Pickup details (modern redesign)

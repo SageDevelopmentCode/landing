@@ -35,6 +35,7 @@ const schema = z.object({
     .optional()
     .default([]),
   bundleHomeschoolWeekSelectionsJson: z.string().optional(),
+  mobile: z.boolean().optional().default(false),
 });
 
 export async function POST(request: NextRequest) {
@@ -63,6 +64,7 @@ export async function POST(request: NextRequest) {
       bundleHomeschoolApplicationId,
       bundleHomeschoolSelectedDays,
       bundleHomeschoolWeekSelectionsJson,
+      mobile,
     } = validated;
 
     const supplyFeeCents = 30000;
@@ -221,6 +223,82 @@ export async function POST(request: NextRequest) {
       bundleHomeschoolTier != null ||
       siblingHomeschoolBundleStudentIds.length > 0;
 
+    const metadata: Record<string, string> = {
+      payment_type: "supply_fee",
+      parent_id: parentId,
+      parent_email: parentEmail,
+      student_id: studentId,
+      cover_fees: String(coverFees),
+      payment_method: paymentMethod,
+      intended_amount_cents: String(baseCents),
+      ...(bundleType
+        ? {
+            bundle_type: bundleType,
+            bundle_amount_cents: String(primaryBundleCents),
+            bundle_month_index:
+              bundleMonthIndex != null ? String(bundleMonthIndex) : "",
+          }
+        : {}),
+      ...(hasHomeschoolBundleMeta && bundleHomeschoolTier
+        ? {
+            bundle_homeschool_tier: bundleHomeschoolTier,
+            bundle_homeschool_grade_tier: bundleHomeschoolGradeTier ?? "",
+            bundle_homeschool_application_id:
+              bundleHomeschoolApplicationId ?? "",
+            bundle_homeschool_selected_days:
+              bundleHomeschoolSelectedDays.join(","),
+            bundle_homeschool_week_selections_json:
+              bundleHomeschoolWeekSelectionsJson ?? "",
+          }
+        : {}),
+      ...(siblingStudentIds.length > 0
+        ? {
+            sibling_supply_student_ids: siblingStudentIds.join(","),
+            sibling_bundle_student_ids: siblingBundleStudentIds.join(","),
+            sibling_bundle_amounts: siblingBundleAmounts.join(","),
+          }
+        : {}),
+      ...(siblingHomeschoolBundleStudentIds.length > 0
+        ? {
+            sibling_homeschool_bundle_student_ids:
+              siblingHomeschoolBundleStudentIds.join(","),
+            sibling_homeschool_bundle_amounts:
+              siblingHomeschoolBundleAmounts.join(","),
+            sibling_homeschool_application_ids:
+              siblingHomeschoolApplicationIds.join(","),
+            sibling_homeschool_grade_tiers:
+              siblingHomeschoolGradeTiers.join(","),
+          }
+        : {}),
+    };
+
+    if (mobile) {
+      const mobileFee = coverFees
+        ? paymentMethod === "ach"
+          ? Math.min(Math.round(baseCents * 0.008), 500)
+          : Math.round((baseCents + 30) / (1 - 0.029)) - baseCents
+        : 0;
+      const paymentIntent = await getStripe().paymentIntents.create({
+        amount: baseCents + mobileFee,
+        currency: "usd",
+        customer: stripeCustomerId,
+        payment_method_types: ["card", "us_bank_account"],
+        receipt_email: parentEmail,
+        setup_future_usage: "off_session",
+        metadata,
+      });
+      const ephemeralKey = await getStripe().ephemeralKeys.create(
+        { customer: stripeCustomerId },
+        { apiVersion: "2026-02-25.clover" },
+      );
+      return NextResponse.json({
+        clientSecret: paymentIntent.client_secret,
+        ephemeralKey: ephemeralKey.secret,
+        customerId: stripeCustomerId,
+        publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+      });
+    }
+
     const session = await getStripe().checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card", "us_bank_account"],
@@ -234,54 +312,7 @@ export async function POST(request: NextRequest) {
         setup_future_usage: "off_session",
       },
       line_items: lineItems,
-      metadata: {
-        payment_type: "supply_fee",
-        parent_id: parentId,
-        parent_email: parentEmail,
-        student_id: studentId,
-        cover_fees: String(coverFees),
-        payment_method: paymentMethod,
-        intended_amount_cents: String(baseCents),
-        ...(bundleType
-          ? {
-              bundle_type: bundleType,
-              bundle_amount_cents: String(primaryBundleCents),
-              bundle_month_index:
-                bundleMonthIndex != null ? String(bundleMonthIndex) : "",
-            }
-          : {}),
-        ...(hasHomeschoolBundleMeta && bundleHomeschoolTier
-          ? {
-              bundle_homeschool_tier: bundleHomeschoolTier,
-              bundle_homeschool_grade_tier: bundleHomeschoolGradeTier ?? "",
-              bundle_homeschool_application_id:
-                bundleHomeschoolApplicationId ?? "",
-              bundle_homeschool_selected_days:
-                bundleHomeschoolSelectedDays.join(","),
-              bundle_homeschool_week_selections_json:
-                bundleHomeschoolWeekSelectionsJson ?? "",
-            }
-          : {}),
-        ...(siblingStudentIds.length > 0
-          ? {
-              sibling_supply_student_ids: siblingStudentIds.join(","),
-              sibling_bundle_student_ids: siblingBundleStudentIds.join(","),
-              sibling_bundle_amounts: siblingBundleAmounts.join(","),
-            }
-          : {}),
-        ...(siblingHomeschoolBundleStudentIds.length > 0
-          ? {
-              sibling_homeschool_bundle_student_ids:
-                siblingHomeschoolBundleStudentIds.join(","),
-              sibling_homeschool_bundle_amounts:
-                siblingHomeschoolBundleAmounts.join(","),
-              sibling_homeschool_application_ids:
-                siblingHomeschoolApplicationIds.join(","),
-              sibling_homeschool_grade_tiers:
-                siblingHomeschoolGradeTiers.join(","),
-            }
-          : {}),
-      },
+      metadata,
       success_url: `${baseUrl}/parent/billing`,
       cancel_url: `${baseUrl}/parent/billing`,
     });

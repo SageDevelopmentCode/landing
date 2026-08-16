@@ -2224,6 +2224,70 @@ export function createMeetMissJoyRSVPEmbed(data: {
   };
 }
 
+export function createCommunityGardenDayRSVPEmbed(data: {
+  parentName: string;
+  email: string;
+  phone?: string;
+  adultsAttending: string;
+  childrenAttending: string;
+  isSageFieldFamily: string;
+  hearAboutUs?: string;
+  notes?: string;
+}): DiscordEmbed {
+  const familyLabels: Record<string, string> = {
+    yes: "Yes — current family",
+    no: "No",
+    interested: "Interested in learning more",
+  };
+
+  const hearLabels: Record<string, string> = {
+    friend: "Friend / Word of Mouth",
+    instagram: "Instagram",
+    facebook: "Facebook",
+    google: "Google",
+    nextdoor: "Nextdoor",
+    other: "Other",
+  };
+
+  const fields: DiscordEmbedField[] = [
+    { name: "Parent/Guardian", value: data.parentName, inline: true },
+    { name: "Email", value: data.email, inline: true },
+    { name: "Phone", value: data.phone || "Not provided", inline: true },
+    { name: "Adults Attending", value: data.adultsAttending, inline: true },
+    { name: "Children Attending", value: data.childrenAttending, inline: true },
+    {
+      name: "Sage Field Family",
+      value: familyLabels[data.isSageFieldFamily] ?? data.isSageFieldFamily,
+      inline: true,
+    },
+    {
+      name: "How They Heard",
+      value: data.hearAboutUs
+        ? (hearLabels[data.hearAboutUs] ?? data.hearAboutUs)
+        : "Not provided",
+      inline: true,
+    },
+  ];
+
+  if (data.notes) {
+    fields.push({
+      name: "Notes",
+      value:
+        data.notes.length > 1024
+          ? data.notes.substring(0, 1021) + "..."
+          : data.notes,
+      inline: false,
+    });
+  }
+
+  return {
+    title: "🌱 New Community Garden Day RSVP",
+    color: 0xa8c5a0,
+    fields,
+    timestamp: new Date().toISOString(),
+  };
+}
+
 /**
  * Creates a Discord embed for parent-teacher conference bookings
  */
@@ -2314,6 +2378,57 @@ export function createParentMessageEmbed(data: {
         ? "💬 New channel post from parent"
         : "💬 New message from parent",
     color: 0x5865f2,
+    fields,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * Creates a Discord embed for the 3:30 PM unpicked pickup reminder
+ */
+export function createUnpickedPickupReminderEmbed(data: {
+  date: string;
+  studentNames: string[];
+  count: number;
+}): DiscordEmbed {
+  const fields: DiscordEmbedField[] = [
+    { name: "Date", value: data.date, inline: true },
+    { name: "Count", value: String(data.count), inline: true },
+  ];
+
+  const list = data.studentNames.join(", ");
+  if (list.length <= 1024) {
+    fields.push({ name: "Students", value: list, inline: false });
+  } else {
+    let chunk = "";
+    let chunkIndex = 1;
+    for (const name of data.studentNames) {
+      const next = chunk ? `${chunk}, ${name}` : name;
+      if (next.length > 1024) {
+        fields.push({
+          name: chunkIndex === 1 ? "Students" : `Students (${chunkIndex})`,
+          value: chunk,
+          inline: false,
+        });
+        chunk = name;
+        chunkIndex++;
+      } else {
+        chunk = next;
+      }
+    }
+    if (chunk) {
+      fields.push({
+        name: chunkIndex === 1 ? "Students" : `Students (${chunkIndex})`,
+        value: chunk,
+        inline: false,
+      });
+    }
+  }
+
+  return {
+    title: "⚠️ Pickup not recorded (end of school day)",
+    description: "Present students still awaiting pickup (Mon–Thu school day).",
+    color: 0xf59e0b,
     fields,
     timestamp: new Date().toISOString(),
   };

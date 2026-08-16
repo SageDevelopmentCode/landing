@@ -96,6 +96,22 @@ export type MeetMissJoyRsvp = {
   updated_at: string
 }
 
+export type CommunityGardenDayRsvp = {
+  id: string
+  parent_name: string
+  email: string
+  phone: string | null
+  adults_attending: string
+  children_attending: string
+  is_sage_field_family: string
+  hear_about_us: string | null
+  notes: string | null
+  status: string
+  is_deleted: boolean
+  created_at: string
+  updated_at: string
+}
+
 export type AdminReferral = {
   id: string
   referrer_id: string
@@ -130,6 +146,7 @@ const VALID_TABS = [
   'parent-feedback',
   'info-session',
   'meet-miss-joy',
+  'community-garden-day',
   'info-session-faq',
   'testimonials',
   'emails',
@@ -158,6 +175,7 @@ export default async function MarketingPage({
     { data: shadowDayBookings },
     { data: testimonials },
     { data: meetMissJoyRsvps },
+    { data: communityGardenDayRsvps },
     { data: referrals },
     { data: feedbackRows },
   ] = await Promise.all([
@@ -202,6 +220,12 @@ export default async function MarketingPage({
     supabase
       .schema('marketing')
       .from('meet_miss_joy_rsvps')
+      .select('*')
+      .eq('is_deleted', false)
+      .order('created_at', { ascending: false }),
+    supabase
+      .schema('marketing')
+      .from('community_garden_day_rsvps')
       .select('*')
       .eq('is_deleted', false)
       .order('created_at', { ascending: false }),
@@ -296,6 +320,9 @@ export default async function MarketingPage({
       shadowDayBookings={(shadowDayBookings as ShadowDayBooking[]) ?? []}
       testimonials={(testimonials as Testimonial[]) ?? []}
       meetMissJoyRsvps={(meetMissJoyRsvps as MeetMissJoyRsvp[]) ?? []}
+      communityGardenDayRsvps={
+        (communityGardenDayRsvps as CommunityGardenDayRsvp[]) ?? []
+      }
       referrals={enrichedReferrals}
       feedback={feedback}
       updateReferralStatus={updateReferralStatus}

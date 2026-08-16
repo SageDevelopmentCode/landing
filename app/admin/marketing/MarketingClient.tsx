@@ -11,6 +11,7 @@ import { InfoSessionFAQView } from './InfoSessionFAQView'
 import { ShadowDayBookingsView } from './ShadowDayBookingsView'
 import { TestimonialsView } from './TestimonialsView'
 import { MeetMissJoyRSVPsView } from './MeetMissJoyRSVPsView'
+import { CommunityGardenDayRSVPsView } from './CommunityGardenDayRSVPsView'
 import { EmailDetailSidebar } from '../components/EmailDetailSidebar'
 import { Table, TableRow, TableCell } from '../components/Table'
 import { ReferralsClient } from '../referrals/ReferralsClient'
@@ -22,6 +23,7 @@ import type {
   ShadowDayBooking,
   Testimonial,
   MeetMissJoyRsvp,
+  CommunityGardenDayRsvp,
   AdminReferral,
   ParentFeedback,
   MarketingTab,
@@ -171,6 +173,7 @@ const subMenuItems: { id: MarketingTab; label: string; sublabel: string }[] = [
   { id: 'parent-feedback', label: 'Parent Feedback', sublabel: 'Parent submissions' },
   { id: 'info-session', label: 'Info Session', sublabel: 'April 18 RSVPs' },
   { id: 'meet-miss-joy', label: 'Meet Miss Joy', sublabel: 'July 13 RSVPs' },
+  { id: 'community-garden-day', label: 'Community Garden Day', sublabel: 'Aug 27 RSVPs' },
   { id: 'info-session-faq', label: 'Session FAQ', sublabel: 'April 18 prep' },
   { id: 'testimonials', label: 'Testimonials', sublabel: 'Parent submissions' },
   { id: 'emails', label: 'Sent Emails', sublabel: 'Via Zoho Mail' },
@@ -186,6 +189,7 @@ export function MarketingClient({
   shadowDayBookings,
   testimonials,
   meetMissJoyRsvps,
+  communityGardenDayRsvps,
   referrals,
   feedback,
   updateReferralStatus,
@@ -199,6 +203,7 @@ export function MarketingClient({
   shadowDayBookings: ShadowDayBooking[]
   testimonials: Testimonial[]
   meetMissJoyRsvps: MeetMissJoyRsvp[]
+  communityGardenDayRsvps: CommunityGardenDayRsvp[]
   referrals: AdminReferral[]
   feedback: ParentFeedback[]
   updateReferralStatus: (id: string, status: string) => Promise<void>
@@ -411,6 +416,28 @@ export function MarketingClient({
               </p>
             </div>
             <MeetMissJoyRSVPsView rsvps={meetMissJoyRsvps} />
+          </div>
+        )}
+
+        {active === 'community-garden-day' && (
+          <div>
+            <div style={{ marginBottom: '28px' }}>
+              <h1
+                className={merriweather.className}
+                style={{
+                  fontSize: '22px',
+                  fontWeight: 900,
+                  color: colors.textPrimary,
+                  marginBottom: '6px',
+                }}
+              >
+                Community Garden Day — August 27
+              </h1>
+              <p style={{ fontSize: '13px', color: colors.textSecondary }}>
+                RSVPs from the /community page
+              </p>
+            </div>
+            <CommunityGardenDayRSVPsView rsvps={communityGardenDayRsvps} />
           </div>
         )}
 

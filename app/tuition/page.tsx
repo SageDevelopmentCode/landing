@@ -7,16 +7,12 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import WaitlistDialog from "../components/WaitlistDialog";
 import FloatingSMSButton from "../components/FloatingSMSButton";
-import SummerProgramCard from "../components/SummerProgramCard";
 import FullEnrollmentCard from "../components/FullEnrollmentCard";
 import AfterCareCard from "../components/AfterCareCard";
 import FieldDayFridayCard from "../components/FieldDayFridayCard";
 
 export default function TuitionPage() {
   const [isWaitlistOpen, setIsWaitlistOpen] = useState(false);
-  const [activePricingTab, setActivePricingTab] = useState<
-    "summer" | "school-year"
-  >("summer");
   const router = useRouter();
 
   return (
@@ -71,14 +67,7 @@ export default function TuitionPage() {
         </div>
       </section>
 
-      {/* 2. Summer Program Section */}
-      <section className="bg-white py-16 px-8 sm:px-12 lg:px-16">
-        <div className="max-w-7xl mx-auto w-full">
-          <SummerProgramCard onQuestionsClick={() => setIsWaitlistOpen(true)} />
-        </div>
-      </section>
-
-      {/* 3. Full Enrollment Section */}
+      {/* 2. Full Enrollment Section */}
       <section className="bg-welcome-bg py-16 px-8 sm:px-12 lg:px-16">
         <div className="max-w-7xl mx-auto w-full">
           <FullEnrollmentCard
@@ -87,7 +76,7 @@ export default function TuitionPage() {
         </div>
       </section>
 
-      {/* 4. Extended Learning + Field Day Friday */}
+      {/* 3. Extended Learning + Field Day Friday */}
       <section className="bg-white py-16 px-8 sm:px-12 lg:px-16">
         <div className="max-w-7xl mx-auto w-full">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -97,7 +86,7 @@ export default function TuitionPage() {
         </div>
       </section>
 
-      {/* 5. Homeschool Drop-In Pricing */}
+      {/* 4. Homeschool Drop-In Pricing */}
       <section className="bg-welcome-bg py-16 px-8 sm:px-12 lg:px-16">
         <div className="max-w-4xl mx-auto">
           <motion.div
@@ -113,32 +102,8 @@ export default function TuitionPage() {
               Flexible Enrollment Options
             </h2>
             <p className="text-lg font-semibold text-primary font-heading mb-8">
-              Join our community 2–5 days/week
+              Join our community 1-3 days/week
             </p>
-
-            {/* Tab Switcher */}
-            <div className="flex gap-2 mb-8">
-              <button
-                onClick={() => setActivePricingTab("summer")}
-                className={`px-5 py-2 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
-                  activePricingTab === "summer"
-                    ? "bg-primary text-white"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                Summer
-              </button>
-              <button
-                onClick={() => setActivePricingTab("school-year")}
-                className={`px-5 py-2 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
-                  activePricingTab === "school-year"
-                    ? "bg-primary text-white"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                School Year
-              </button>
-            </div>
           </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -158,33 +123,18 @@ export default function TuitionPage() {
                 1 Day / Week
               </h3>
               <p className="text-xs text-gray-400 font-body mb-4">Part-Time</p>
-              {activePricingTab === "summer" ? (
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-sm font-body">
-                    <span className="text-gray-600">2nd–4th</span>
-                    <span className="font-semibold text-black">$95/day</span>
-                  </div>
-                  <div className="flex justify-between text-sm font-body">
-                    <span className="text-gray-600">Pre-K–1st</span>
-                    <span className="font-semibold text-black">$100/day</span>
-                  </div>
+              <div className="space-y-2 mb-4">
+                <div className="flex justify-between text-sm font-body">
+                  <span className="text-gray-600">2nd–4th</span>
+                  <span className="font-semibold text-black">$440/mo</span>
                 </div>
-              ) : (
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-sm font-body">
-                    <span className="text-gray-600">2nd–4th</span>
-                    <span className="font-semibold text-black">$440/mo</span>
-                  </div>
-                  <div className="flex justify-between text-sm font-body">
-                    <span className="text-gray-600">Pre-K–1st</span>
-                    <span className="font-semibold text-black">$480/mo</span>
-                  </div>
+                <div className="flex justify-between text-sm font-body">
+                  <span className="text-gray-600">Pre-K–1st</span>
+                  <span className="font-semibold text-black">$480/mo</span>
                 </div>
-              )}
+              </div>
               <p className="text-xs text-gray-400 font-body mt-auto">
-                {activePricingTab === "summer"
-                  ? "Perfect for trying it out or occasional days"
-                  : "Attend one consistent day each week, paid monthly"}
+                Attend one consistent day each week, paid monthly
               </p>
             </motion.div>
 
@@ -209,29 +159,16 @@ export default function TuitionPage() {
               <p className="text-xs text-gray-400 font-body mb-4">
                 Part-Time
               </p>
-              {activePricingTab === "summer" ? (
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-sm font-body">
-                    <span className="text-gray-600">2nd–4th</span>
-                    <span className="font-semibold text-black">$170/wk</span>
-                  </div>
-                  <div className="flex justify-between text-sm font-body">
-                    <span className="text-gray-600">Pre-K–1st</span>
-                    <span className="font-semibold text-black">$180/wk</span>
-                  </div>
+              <div className="space-y-2 mb-4">
+                <div className="flex justify-between text-sm font-body">
+                  <span className="text-gray-600">2nd–4th</span>
+                  <span className="font-semibold text-black">$520/mo</span>
                 </div>
-              ) : (
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-sm font-body">
-                    <span className="text-gray-600">2nd–4th</span>
-                    <span className="font-semibold text-black">$520/mo</span>
-                  </div>
-                  <div className="flex justify-between text-sm font-body">
-                    <span className="text-gray-600">Pre-K–1st</span>
-                    <span className="font-semibold text-black">$560/mo</span>
-                  </div>
+                <div className="flex justify-between text-sm font-body">
+                  <span className="text-gray-600">Pre-K–1st</span>
+                  <span className="font-semibold text-black">$560/mo</span>
                 </div>
-              )}
+              </div>
             </motion.div>
 
             {/* Card 3 — 3-Day/Week */}
@@ -252,29 +189,16 @@ export default function TuitionPage() {
               <p className="text-xs text-gray-400 font-body mb-4">
                 Part-Time
               </p>
-              {activePricingTab === "summer" ? (
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-sm font-body">
-                    <span className="text-gray-600">2nd–4th</span>
-                    <span className="font-semibold text-black">$240/wk</span>
-                  </div>
-                  <div className="flex justify-between text-sm font-body">
-                    <span className="text-gray-600">Pre-K–1st</span>
-                    <span className="font-semibold text-black">$255/wk</span>
-                  </div>
+              <div className="space-y-2 mb-4">
+                <div className="flex justify-between text-sm font-body">
+                  <span className="text-gray-600">2nd–4th</span>
+                  <span className="font-semibold text-black">$720/mo</span>
                 </div>
-              ) : (
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-sm font-body">
-                    <span className="text-gray-600">2nd–4th</span>
-                    <span className="font-semibold text-black">$720/mo</span>
-                  </div>
-                  <div className="flex justify-between text-sm font-body">
-                    <span className="text-gray-600">Pre-K–1st</span>
-                    <span className="font-semibold text-black">$780/mo</span>
-                  </div>
+                <div className="flex justify-between text-sm font-body">
+                  <span className="text-gray-600">Pre-K–1st</span>
+                  <span className="font-semibold text-black">$780/mo</span>
                 </div>
-              )}
+              </div>
             </motion.div>
           </div>
 

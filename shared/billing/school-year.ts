@@ -439,6 +439,41 @@ export function schoolYearMonthShort(monthIndex: number): string {
   return SCHOOL_YEAR_MONTHS.find((m) => m.index === monthIndex)?.short ?? `Month ${monthIndex}`;
 }
 
+export function formatWeekdayKeys(dayKeys: string[]): string {
+  const set = new Set(dayKeys);
+  return WEEKDAYS.filter(({ key }) => set.has(key))
+    .map(({ label }) => label)
+    .join(", ");
+}
+
+export function buildPaidDaysByMonth(
+  entries: {
+    weekDays: Record<number, string[]>;
+    weeks: number[];
+    days: string[];
+  }[],
+): Record<number, string[]> {
+  const result: Record<number, string[]> = {};
+  for (const entry of entries) {
+    for (const monthIndex of entry.weeks) {
+      const days =
+        entry.weekDays[monthIndex]?.length > 0
+          ? entry.weekDays[monthIndex]
+          : entry.days;
+      if (days.length > 0) {
+        result[monthIndex] = days;
+      }
+    }
+    for (const [wk, days] of Object.entries(entry.weekDays)) {
+      const monthIndex = Number(wk);
+      if (days.length > 0) {
+        result[monthIndex] = days;
+      }
+    }
+  }
+  return result;
+}
+
 export function formatHomeschoolSubline(meta: Record<string, string>): string | null {
   const program = meta.program ?? "summer_26";
   const isSchoolYear = program === "school_year_26_27";

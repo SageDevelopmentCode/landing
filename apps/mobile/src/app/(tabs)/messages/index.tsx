@@ -23,6 +23,7 @@ import {
   type ChannelWithMeta,
 } from "@/lib/channel-actions";
 import { Brand, FontFamilies } from "@/constants/theme";
+import { useAuth, useReadOnlyPreview } from "@/contexts/AuthContext";
 
 type ConversationRow = {
   id: string;
@@ -83,6 +84,7 @@ async function fetchRows(userId: string): Promise<ConversationRow[]> {
 
 export default function ConversationListScreen() {
   const router = useRouter();
+  const { parentViewUserId, isReadOnlyPreview } = useAuth();
 
   // DM state
   const [rows, setRows] = useState<ConversationRow[]>([]);
@@ -115,12 +117,13 @@ export default function ConversationListScreen() {
     else setLoading(true);
 
     const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      setCurrentUserId(user.id);
-      currentUserIdRef.current = user.id;
-      const built = await fetchRows(user.id);
+    const messagingUserId = parentViewUserId ?? user?.id ?? null;
+    if (messagingUserId) {
+      setCurrentUserId(messagingUserId);
+      currentUserIdRef.current = messagingUserId;
+      const built = await fetchRows(messagingUserId);
       setRows(built);
-      if (built.length === 0) {
+      if (!isReadOnlyPreview && built.length === 0) {
         const suggestions = await fetchTeachers();
         setTeachers(suggestions);
       } else {
@@ -130,7 +133,7 @@ export default function ConversationListScreen() {
 
     if (isRefresh) setRefreshing(false);
     else setLoading(false);
-  }, []);
+  }, [parentViewUserId, isReadOnlyPreview]);
 
   const loadChannelsList = useCallback(async (isRefresh = false) => {
     const uid = currentUserIdRef.current;
@@ -147,6 +150,7 @@ export default function ConversationListScreen() {
   }, []);
 
   async function handleStartConversation(teacher: TeacherSuggestion) {
+    if (isReadOnlyPreview) return;
     if (!currentUserIdRef.current || startingConv) return;
     setStartingConv(true);
     try {
@@ -267,7 +271,7 @@ export default function ConversationListScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.heading}>Messages</Text>
-        {activeTab === "dm" && (
+        {activeTab === "dm" && !isReadOnlyPreview && (
           <Pressable
             onPress={() => router.push("/(tabs)/messages/compose")}
             style={({ pressed }) => [styles.composeButton, pressed && styles.pressed]}

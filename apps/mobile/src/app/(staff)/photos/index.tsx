@@ -20,7 +20,7 @@ import { supabase } from "@/lib/supabase";
 import {
   deletePhoto,
   fetchSignedUrls,
-  getTeacherPhotos,
+  getAllSchoolPhotos,
   TeacherPhoto,
 } from "@/lib/photos-actions";
 import { BottomTabInset, Brand, FontFamilies } from "@/constants/theme";
@@ -129,6 +129,7 @@ export default function PhotosGalleryScreen() {
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   // Ref used inside debounce closure to avoid stale state reads
   const signedUrlsRef = useRef<Record<string, string>>({});
@@ -140,7 +141,8 @@ export default function PhotosGalleryScreen() {
   const loadPhotos = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const result = await getTeacherPhotos(user.id);
+    setCurrentUserId(user.id);
+    const result = await getAllSchoolPhotos();
     setPhotos(result);
     // Reset signed URL cache on fresh load
     signedUrlsRef.current = {};
@@ -206,22 +208,28 @@ export default function PhotosGalleryScreen() {
       params: {
         photoId: photo.id,
         storagePath: photo.storage_path,
+        signedUrl: signedUrls[photo.storage_path] ?? "",
+        allPhotosJson: JSON.stringify(photos),
       },
     });
   }
 
   function handleLongPress(photo: TeacherPhoto) {
-    Alert.alert(photo.caption ?? "Photo", undefined, [
+    const isOwner = currentUserId !== null && photo.teacher_id === currentUserId;
+    const actions: { text: string; style?: "destructive" | "cancel"; onPress?: () => void }[] = [
       { text: "View", onPress: () => handlePress(photo) },
-      {
+    ];
+
+    if (isOwner) {
+      actions.push({
         text: "Edit",
         onPress: () =>
           router.push({
             pathname: "/(staff)/photos/edit",
             params: { photoId: photo.id },
           }),
-      },
-      {
+      });
+      actions.push({
         text: "Delete",
         style: "destructive",
         onPress: () =>
@@ -241,9 +249,11 @@ export default function PhotosGalleryScreen() {
               },
             },
           ]),
-      },
-      { text: "Cancel", style: "cancel" },
-    ]);
+      });
+    }
+
+    actions.push({ text: "Cancel", style: "cancel" });
+    Alert.alert(photo.caption ?? "Photo", undefined, actions);
   }
 
   const sections = useMemo(() => groupByDate(photos), [photos]);

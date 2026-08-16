@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { getStudentDisplayName } from "@/lib/student-display-name";
 
 export type ChildInfo = {
   id: string;
@@ -52,12 +53,25 @@ export async function getParentsForTeacher(
   const { data: applications } = await supabase
     .schema("parent_app")
     .from("applications")
-    .select("student_id, program");
+    .select("student_id, program, preferred_name, child_legal_name")
+    .eq("status", "enrolled");
 
   const programMap = new Map(
     (applications ?? []).map(
       (a: { student_id: string; program: string }) => [a.student_id, a.program]
     )
+  );
+  const displayNameMap = new Map(
+    (applications ?? []).map(
+      (a: {
+        student_id: string;
+        preferred_name: string | null;
+        child_legal_name: string | null;
+      }) => [
+        a.student_id,
+        getStudentDisplayName(a.preferred_name, a.child_legal_name),
+      ],
+    ),
   );
 
   const { data: parents } = await supabase
@@ -97,7 +111,9 @@ export async function getParentsForTeacher(
     const rawProgram = programMap.get(s.id) ?? null;
     parent.children.push({
       id: s.id,
-      child_legal_name: s.child_legal_name,
+      child_legal_name:
+        displayNameMap.get(s.id) ??
+        getStudentDisplayName(null, s.child_legal_name),
       child_grade: s.child_grade,
       profile_image_url: s.profile_image_url,
       program: rawProgram

@@ -1,7 +1,7 @@
 import { Brand, BottomTabInset, FontFamilies } from "@/constants/theme";
 import { notifyDiscord, notifyError } from "@/lib/discord";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, useReadOnlyPreview } from "@/contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -20,6 +20,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function TestimonialScreen() {
   const router = useRouter();
   const { userId, effectiveParentId } = useAuth();
+  const isReadOnlyPreview = useReadOnlyPreview();
   const [testimonialText, setTestimonialText] = useState("");
   const [testimonialSubmitting, setTestimonialSubmitting] = useState(false);
   const [testimonialSubmitted, setTestimonialSubmitted] = useState(false);
@@ -78,6 +79,7 @@ export default function TestimonialScreen() {
   }, [userId, effectiveParentId]);
 
   async function handleSubmitTestimonial() {
+    if (isReadOnlyPreview) return;
     const trimmed = testimonialText.trim();
     if (!trimmed) return;
     setTestimonialSubmitting(true);

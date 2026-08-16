@@ -19,8 +19,8 @@ import { supabase } from "@/lib/supabase";
 import {
   deletePhoto,
   editPhoto,
+  getAllSchoolPhotos,
   getEnrolledStudentsWithConsent,
-  getTeacherPhotos,
   PublicationLabel,
   StudentWithConsent,
   TeacherPhoto,
@@ -69,24 +69,28 @@ export default function PhotoEditScreen() {
       if (!user) return;
 
       const [all, enrolledStudents] = await Promise.all([
-        getTeacherPhotos(user.id),
+        getAllSchoolPhotos(),
         getEnrolledStudentsWithConsent(),
       ]);
 
       const found = all.find((p) => p.id === photoId);
-      if (found) {
+      if (found && found.teacher_id === user.id) {
         setPhoto(found);
         setCaption(found.caption ?? "");
         setTakenOn(found.taken_on ?? "");
         setSelectedStudents(found.tags.map((t) => t.student_id));
         setPubLabels(found.publication_labels);
+      } else {
+        Alert.alert("Cannot edit photo", "You can only edit photos you uploaded.", [
+          { text: "OK", onPress: () => router.back() },
+        ]);
       }
 
       setStudents(enrolledStudents);
       setStudentsLoading(false);
     }
     load();
-  }, [photoId]);
+  }, [photoId, router]);
 
   function toggleLabel(key: PublicationLabel) {
     isDirty.current = true;

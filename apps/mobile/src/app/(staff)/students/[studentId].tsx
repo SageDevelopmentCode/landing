@@ -1,6 +1,7 @@
 import { BottomTabInset, Brand, FontFamilies } from "@/constants/theme";
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
 import { supabase } from "@/lib/supabase";
+import { getStudentDisplayName } from "@/lib/student-display-name";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import * as DocumentPicker from "expo-document-picker";
@@ -1091,6 +1092,7 @@ export default function StudentDetailScreen() {
   const [userMap, setUserMap] = useState<Record<string, { full_name: string; profile_image_url: string | null }>>({});
 
   const [userId, setUserId] = useState<string | null>(null);
+  const [preferredName, setPreferredName] = useState<string | null>(null);
 
   // Note bottom sheet state
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -1145,12 +1147,21 @@ export default function StudentDetailScreen() {
       }
     }
 
-    const { data: s, error: studentErr } = await supabase
-      .schema("admin")
-      .from("students")
-      .select("*")
-      .eq("id", studentId)
-      .single();
+    const [{ data: s, error: studentErr }, { data: app }] = await Promise.all([
+      supabase
+        .schema("admin")
+        .from("students")
+        .select("*")
+        .eq("id", studentId)
+        .single(),
+      supabase
+        .schema("parent_app")
+        .from("applications")
+        .select("preferred_name, child_legal_name")
+        .eq("student_id", studentId)
+        .eq("status", "enrolled")
+        .maybeSingle(),
+    ]);
 
     if (studentErr) {
       setDetailError(`Student fetch failed: ${studentErr.message}`);
@@ -1159,6 +1170,9 @@ export default function StudentDetailScreen() {
     }
 
     setStudent(s ?? null);
+    setPreferredName(
+      (app as { preferred_name: string | null } | null)?.preferred_name ?? null,
+    );
     setLoadingDetail(false);
   }, [studentId]);
 
@@ -1510,7 +1524,10 @@ export default function StudentDetailScreen() {
 
   // ── Render ────────────────────────────────────────────────────────────────
 
-  const name = studentName || student?.child_legal_name || "Student";
+  const name =
+    getStudentDisplayName(preferredName, student?.child_legal_name) ||
+    studentName ||
+    "Student";
   const grade = student?.child_grade ?? null;
   const programLabel = (() => {
     const raw = (program ?? "").replace(/_/g, " ");

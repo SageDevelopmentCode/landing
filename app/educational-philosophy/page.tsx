@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Navbar from "../components/Navbar";
 import EducationalPhilosophySection from "../components/EducationalPhilosophySection";
+import PhilosophyApproachesSection from "../components/PhilosophyApproachesSection";
 import ContactUsSection from "../components/ContactUsSection";
 import Footer from "../components/Footer";
 import FloatingSMSButton from "../components/FloatingSMSButton";
@@ -48,6 +49,7 @@ export default function EducationalPhilosophyPage() {
       </section>
 
       <EducationalPhilosophySection />
+      <PhilosophyApproachesSection />
       <ContactUsSection />
       <Footer />
       <FloatingSMSButton />

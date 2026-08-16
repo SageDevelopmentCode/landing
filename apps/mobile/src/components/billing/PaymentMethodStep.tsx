@@ -119,9 +119,9 @@ export function PaymentMethodStep({ intendedAmountCents, lineItems, onBack, onPa
       </View>
 
       <Pressable
-        style={[s.cta, loading && s.ctaDim]}
+        style={[s.cta, (loading || !coverFees) && s.ctaDim]}
         onPress={() => onPay(coverFees, paymentMethod)}
-        disabled={loading}
+        disabled={loading || !coverFees}
       >
         <Text style={s.ctaText}>
           {loading ? "Processing..." : `Pay ${formatCents(displayTotal)}`}

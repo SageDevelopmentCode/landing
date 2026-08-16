@@ -16,20 +16,20 @@ const slides = [
     buttonAction: "waitlist" as const,
   },
   {
-    image: "/assets/Stock3.jpg",
-    title: "Summer 2026 Program",
+    image: "/assets/highlights/summer_week_four/1B8DAE7D-4D49-4865-97C8-593B4F74D996.JPG",
+    title: "Sage Field Community Garden Day",
     description:
-      "12 weeks of themed adventures, nature play, art, and academic enrichment — May 26 to August 13.",
-    buttonLabel: "Explore Summer 2026",
-    buttonHref: "/summer-2026",
+      "Join us for a cozy evening of planting, painting, connecting, and creating a garden that will bloom with memories — Thursday, August 27, 5:30–7:00 PM.",
+    buttonLabel: "Save the Date",
+    buttonHref: "/community",
   },
   {
-    image: "/assets/highlights/summer_week_three/FE28F7EF-5568-4F11-9C62-E44AC6209D53.JPG",
-    title: "Week 3 Highlights Are Live!",
+    image: "/assets/highlights/summer_week_six/1A73BC70-CEC1-4979-8576-39585C31DB07.JPG",
+    title: "Week 6 Highlights Are Live!",
     description:
-      "Independence, phonics breakthroughs, banana bread muffins, Lunch with a Loved One, and a splashy Beach Bash — see what our students experienced.",
-    buttonLabel: "View Week 3 Recap →",
-    buttonHref: "/highlights/summer/week-3",
+      "Banana oatmeal pancakes, pineapple popsicles, Venn diagrams, and natural disaster dioramas — see what our students experienced halfway through summer.",
+    buttonLabel: "View Week 6 Recap →",
+    buttonHref: "/highlights/summer/week-6",
   },
   {
     image: "/assets/Stock4.jpg",
@@ -43,7 +43,7 @@ const slides = [
     image: "/assets/Stock6.jpg",
     title: "Apply to Sage Field",
     description:
-      "Spots are limited. Apply early to secure your child's place in our Summer or School Year program.",
+      "Spots are limited. Apply early to secure your child's place in our School Year program.",
     buttonLabel: "Apply Now",
     buttonHref: "/apply",
   },

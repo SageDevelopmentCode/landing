@@ -50,6 +50,11 @@ function fmtDayLabel(dateStr: string): string {
   })
 }
 
+function fmtSessionNoteLine(clockIn: string, clockOut: string | null, note: string): string {
+  const end = clockOut ? fmtTime(clockOut) : 'Active'
+  return `${fmtTime(clockIn)}–${end}: ${note}`
+}
+
 function isoToTimeInput(iso: string): string {
   const d = new Date(iso)
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
@@ -195,7 +200,17 @@ export function ClockSessionsTab({ initialSessions, initialDate, teachers }: Pro
       totalMins: number
       sessionCount: number
       activeCount: number
-      byDay: Map<string, { mins: number; sessionCount: number; activeCount: number }>
+      noteCount: number
+      byDay: Map<string, {
+        mins: number
+        sessionCount: number
+        activeCount: number
+        notedSessions: Array<{
+          clock_in_at: string
+          clock_out_at: string | null
+          note: string
+        }>
+      }>
     }>()
 
     for (const s of rangeSessions) {
@@ -207,6 +222,7 @@ export function ClockSessionsTab({ initialSessions, initialDate, teachers }: Pro
           totalMins: 0,
           sessionCount: 0,
           activeCount: 0,
+          noteCount: 0,
           byDay: new Map(),
         })
       }
@@ -215,10 +231,20 @@ export function ClockSessionsTab({ initialSessions, initialDate, teachers }: Pro
 
       const dateKey = toLocalDateKey(s.clock_in_at)
       if (!entry.byDay.has(dateKey)) {
-        entry.byDay.set(dateKey, { mins: 0, sessionCount: 0, activeCount: 0 })
+        entry.byDay.set(dateKey, { mins: 0, sessionCount: 0, activeCount: 0, notedSessions: [] })
       }
       const dayEntry = entry.byDay.get(dateKey)!
       dayEntry.sessionCount += 1
+
+      const trimmedNote = s.note?.trim()
+      if (trimmedNote) {
+        entry.noteCount += 1
+        dayEntry.notedSessions.push({
+          clock_in_at: s.clock_in_at,
+          clock_out_at: s.clock_out_at,
+          note: trimmedNote,
+        })
+      }
 
       if (s.clock_out_at) {
         const mins = Math.round(
@@ -652,7 +678,7 @@ export function ClockSessionsTab({ initialSessions, initialDate, teachers }: Pro
             </p>
           ) : (
             <div style={{ opacity: isRangePending ? 0.5 : 1, transition: 'opacity 0.15s' }}>
-              <Table headers={['Employee', 'Total Hours', 'Sessions']}>
+              <Table headers={['Employee', 'Total Hours', 'Sessions', 'Notes']}>
                 {employeeSummary.map((e, i) => {
                   const isExpanded = expandedEmployees.has(e.teacher_id)
                   const sortedDays = [...e.byDay.entries()].sort(([a], [b]) => a.localeCompare(b))
@@ -711,6 +737,18 @@ export function ClockSessionsTab({ initialSessions, initialDate, teachers }: Pro
                             )}
                           </span>
                         </TableCell>
+                        <TableCell>
+                          {e.noteCount > 0 ? (
+                            <span
+                              className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border"
+                              style={{ color: colors.accent, backgroundColor: colors.accentLight, borderColor: `${colors.accent}33` }}
+                            >
+                              {e.noteCount} note{e.noteCount !== 1 ? 's' : ''}
+                            </span>
+                          ) : (
+                            <span style={{ color: colors.textTertiary }}>—</span>
+                          )}
+                        </TableCell>
                       </TableRow>
 
                       {/* Day breakdown sub-rows */}
@@ -733,6 +771,19 @@ export function ClockSessionsTab({ initialSessions, initialDate, teachers }: Pro
                               </span>
                             )}
                           </td>
+                          <td style={{ ...cellBase, whiteSpace: 'normal', color: day.notedSessions.length > 0 ? colors.textPrimary : colors.textTertiary }}>
+                            {day.notedSessions.length > 0 ? (
+                              <div className="space-y-1">
+                                {day.notedSessions.map((session, idx) => (
+                                  <div key={idx}>
+                                    {fmtSessionNoteLine(session.clock_in_at, session.clock_out_at, session.note)}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              '—'
+                            )}
+                          </td>
                         </tr>
                       ))}
                     </React.Fragment>
@@ -753,6 +804,9 @@ export function ClockSessionsTab({ initialSessions, initialDate, teachers }: Pro
                     <span className="text-xs font-semibold" style={{ color: colors.textPrimary }}>
                       {rangeTotalSessions}
                     </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-xs font-semibold" style={{ color: colors.textTertiary }}>—</span>
                   </TableCell>
                 </TableRow>
               </Table>

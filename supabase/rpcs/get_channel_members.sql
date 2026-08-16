@@ -15,10 +15,21 @@ AS $$
         (
           SELECT json_agg(json_build_object(
             'id',                s.id,
-            'child_legal_name',  s.child_legal_name,
+            'child_legal_name',  COALESCE(
+              NULLIF(TRIM(a.preferred_name), ''),
+              s.child_legal_name
+            ),
             'profile_image_url', s.profile_image_url
           ) ORDER BY s.child_legal_name)
           FROM admin.students s
+          LEFT JOIN LATERAL (
+            SELECT preferred_name
+            FROM parent_app.applications
+            WHERE student_id = s.id
+              AND status = 'enrolled'
+            ORDER BY updated_at DESC NULLS LAST
+            LIMIT 1
+          ) a ON true
           WHERE s.parent_id = u.id
             AND s.is_deleted = false
         ),

@@ -1,7 +1,10 @@
-import { AftercareSelectionSheet } from "@/components/billing/AftercareSelectionSheet";
-import { FunFridaySelectionSheet } from "@/components/billing/FunFridaySelectionSheet";
-import { HomeschoolSelectionSheet } from "@/components/billing/HomeschoolSelectionSheet";
-import { SummerSelectionSheet } from "@/components/billing/SummerSelectionSheet";
+import { HomeschoolSchoolYearSelectionSheet } from "@/components/billing/HomeschoolSchoolYearSelectionSheet";
+import { SchoolYearAftercareSelectionSheet } from "@/components/billing/SchoolYearAftercareSelectionSheet";
+import { SchoolYearBillingSection } from "@/components/billing/SchoolYearBillingSection";
+import { SchoolYearFunFridaySelectionSheet } from "@/components/billing/SchoolYearFunFridaySelectionSheet";
+import { SchoolYearTuitionSelectionSheet } from "@/components/billing/SchoolYearTuitionSelectionSheet";
+import { SupplyFeeSelectionSheet } from "@/components/billing/SupplyFeeSelectionSheet";
+import { TuitionCodeSheet } from "@/components/billing/TuitionCodeSheet";
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
 import {
   BottomTabInset,
@@ -11,7 +14,12 @@ import {
 } from "@/constants/theme";
 import { notifyError } from "@/lib/discord";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, useReadOnlyPreview } from "@/contexts/AuthContext";
+import {
+  hasSchoolYearContent,
+  type ApplicationRow,
+  type PaidHomeschoolByStudent,
+} from "@/lib/school-year-billing";
 import { Ionicons } from "@expo/vector-icons";
 import {
   BottomSheetBackdrop,
@@ -20,7 +28,6 @@ import {
 } from "@gorhom/bottom-sheet";
 import { useFocusEffect } from "@react-navigation/native";
 import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -34,18 +41,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-// ─── Static assets ────────────────────────────────────────────────────────────
-
-const CARD_IMAGES = {
-  summer: require("@/assets/images/stock/Stock1.webp"),
-  aftercare: require("@/assets/images/stock/Stock2.webp"),
-  funFriday: require("@/assets/images/stock/Stock3.webp"),
-  schoolYear: require("@/assets/images/stock/Stock4.webp"),
-  homeschool: require("@/assets/images/stock/Stock5.webp"),
-};
-
-type CardType = "summer" | "aftercare" | "fun_friday" | "homeschool";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -71,30 +66,10 @@ type StripeTransaction = {
   is_deleted: boolean;
 };
 
-type ApplicationRow = {
-  id: string;
-  student_id: string;
-  status: string;
-  program: string | null;
-  drop_in_program: string | null;
-  child_legal_name: string | null;
-  child_grade: string | null;
-};
-
 type StudentInfo = {
   id: string;
   name: string;
   profileImageUrl: string | null;
-};
-
-type CardDef = {
-  bannerImage: any;
-  programLabel: string;
-  title: string;
-  badge?: string;
-  disabled?: boolean;
-  statusLine: string;
-  type?: CardType;
 };
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
@@ -120,26 +95,11 @@ function formatPaymentType(type: string): string {
     homeschool_dropin: "Homeschool Drop-In",
     aftercare_tuition: "Aftercare",
     fun_friday_tuition: "Fun Friday",
+    supply_fee: "Supply Fee",
+    school_year_tuition: "School Year Tuition",
+    custom_tuition: "Tuition Payment",
   };
   return map[type] ?? type;
-}
-
-function formatMonthKey(key: string): string {
-  const map: Record<string, string> = {
-    may: "May",
-    jun: "Jun",
-    jul: "Jul",
-    aug: "Aug",
-    sep: "Sep",
-    oct: "Oct",
-    nov: "Nov",
-    dec: "Dec",
-    jan: "Jan",
-    feb: "Feb",
-    mar: "Mar",
-    apr: "Apr",
-  };
-  return map[key] ?? key.charAt(0).toUpperCase() + key.slice(1);
 }
 
 function getInitials(name: string): string {
@@ -164,13 +124,6 @@ function groupTransactionsByMonth(
     groups[key].push(tx);
   }
   return Object.entries(groups).map(([title, data]) => ({ title, data }));
-}
-
-function chunk<T>(arr: T[], size: number): T[][] {
-  const result: T[][] = [];
-  for (let i = 0; i < arr.length; i += size)
-    result.push(arr.slice(i, i + size));
-  return result;
 }
 
 // ─── AvatarCircle ─────────────────────────────────────────────────────────────
@@ -584,211 +537,7 @@ function ChildTabRow({
   );
 }
 
-// ─── BillingProgramCard ───────────────────────────────────────────────────────
-
-function BillingProgramCard({
-  card,
-  onPress,
-}: {
-  card: CardDef;
-  onPress?: () => void;
-}) {
-  return (
-    <Pressable
-      style={({ pressed }) => [
-        styles.programCard,
-        card.disabled && styles.programCardDisabled,
-        pressed && !card.disabled && { opacity: 0.8 },
-      ]}
-      onPress={!card.disabled ? onPress : undefined}
-      disabled={card.disabled || !onPress}
-    >
-      <View style={styles.cardBannerWrap}>
-        <Image
-          source={card.bannerImage}
-          style={[styles.cardBannerImage, card.disabled && { opacity: 0.45 }]}
-          contentFit="cover"
-        />
-        <LinearGradient
-          colors={["transparent", "rgba(0,0,0,0.54)"]}
-          style={StyleSheet.absoluteFill}
-        />
-        <Text style={styles.cardProgramLabel}>{card.programLabel}</Text>
-        {card.badge ? (
-          <View style={styles.cardOptionalBadge}>
-            <Text style={styles.cardOptionalBadgeText}>{card.badge}</Text>
-          </View>
-        ) : null}
-      </View>
-
-      <View style={styles.cardBody}>
-        <Text
-          style={[styles.cardTitle, card.disabled && styles.cardTitleDisabled]}
-          numberOfLines={2}
-        >
-          {card.title}
-        </Text>
-        <View style={styles.cardStatusRow}>
-          {card.disabled ? (
-            <Ionicons
-              name="time-outline"
-              size={11}
-              color="#9CA3AF"
-              style={{ marginTop: 1 }}
-            />
-          ) : null}
-          <Text
-            style={[
-              styles.cardStatusLine,
-              card.disabled && styles.cardStatusDisabled,
-            ]}
-          >
-            {card.statusLine}
-          </Text>
-        </View>
-      </View>
-    </Pressable>
-  );
-}
-
-// ─── StudentBillingSection ────────────────────────────────────────────────────
-
-function StudentBillingSection({
-  applications,
-  paidWeeks,
-  paidAftercare,
-  paidFunFriday,
-  onCardPress,
-  onCheckPress,
-}: {
-  applications: ApplicationRow[];
-  paidWeeks: number[];
-  paidAftercare: { months: string[]; days: string[] } | undefined;
-  paidFunFriday: { months: string[]; fridays: string[] } | undefined;
-  onCardPress: (type: CardType) => void;
-  onCheckPress: () => void;
-}) {
-  if (applications.length === 0) return null;
-
-  const hasSummer = applications.some(
-    (a) => a.program === "summer_26" || a.program === "both",
-  );
-  const hasBoth = applications.some((a) => a.program === "both");
-  const hasSchoolYearOnly = applications.some(
-    (a) => a.program === "school_year_26_27",
-  );
-  const hasHomeschool = applications.some(
-    (a) => a.program === "homeschool_drop_in",
-  );
-
-  const summerStatus =
-    paidWeeks.length === 0
-      ? "No weeks paid"
-      : paidWeeks.length === 12
-        ? "Full summer paid ✓"
-        : `${paidWeeks.length} of 12 weeks paid`;
-
-  const aftercareMonths = paidAftercare?.months ?? [];
-  const aftercareDays = paidAftercare?.days ?? [];
-  const aftercareStatus =
-    aftercareMonths.length > 0
-      ? `Paid: ${aftercareMonths.map(formatMonthKey).join(", ")}`
-      : aftercareDays.length > 0
-        ? `${aftercareDays.length} sessions paid`
-        : "No payment on file";
-
-  const ffMonths = paidFunFriday?.months ?? [];
-  const ffFridays = paidFunFriday?.fridays ?? [];
-  const funFridayStatus =
-    ffMonths.length > 0
-      ? `Paid: ${ffMonths.map(formatMonthKey).join(", ")}`
-      : ffFridays.length > 0
-        ? `${ffFridays.length} sessions paid`
-        : "No payment on file";
-
-  const cards: CardDef[] = [];
-
-  if (hasSummer) {
-    cards.push({
-      bannerImage: CARD_IMAGES.summer,
-      programLabel: "Summer 2026",
-      title: "Summer Program Tuition",
-      statusLine: summerStatus,
-      type: "summer",
-    });
-  }
-
-  if (hasSummer || hasHomeschool) {
-    cards.push({
-      bannerImage: CARD_IMAGES.aftercare,
-      programLabel: "Summer 2026",
-      title: "Extended Learning (3:00–5:00pm)",
-      badge: "Optional",
-      statusLine: aftercareStatus,
-      type: "aftercare",
-    });
-    cards.push({
-      bannerImage: CARD_IMAGES.funFriday,
-      programLabel: "Summer 2026",
-      title: "Friday Enrichment Day",
-      badge: "Optional",
-      statusLine: funFridayStatus,
-      type: "fun_friday",
-    });
-  }
-
-  if (hasBoth || hasSchoolYearOnly) {
-    cards.push({
-      bannerImage: CARD_IMAGES.schoolYear,
-      programLabel: "School Year 26-27",
-      title: "School Year Tuition",
-      disabled: true,
-      statusLine: "Not available yet",
-    });
-  }
-
-  if (hasHomeschool) {
-    cards.push({
-      bannerImage: CARD_IMAGES.homeschool,
-      programLabel: "Drop-In",
-      title: "Homeschool Drop-In",
-      statusLine: "Tap to select your schedule",
-      type: "homeschool",
-    });
-  }
-
-  const rows = chunk(cards, 2);
-
-  return (
-    <View style={styles.billingSection}>
-      <View style={styles.billingSectionRow}>
-        <Text style={styles.billingSectionLabel}>Pending Payments</Text>
-        <Pressable onPress={onCheckPress} hitSlop={8}>
-          <Text style={styles.checkTextBtn}>Paying by check?</Text>
-        </Pressable>
-      </View>
-      <View style={styles.cardGrid}>
-        {rows.map((row, i) => (
-          <View key={i} style={styles.cardGridRow}>
-            {row.map((card, j) => (
-              <View key={j} style={styles.cardGridItem}>
-                <BillingProgramCard
-                  card={card}
-                  onPress={
-                    card.type ? () => onCardPress(card.type!) : undefined
-                  }
-                />
-              </View>
-            ))}
-            {row.length === 1 && <View style={styles.cardGridItem} />}
-          </View>
-        ))}
-      </View>
-    </View>
-  );
-}
-
-// ─── CheckMockup ──────────────────────────────────────────────────────────────
+// ─── Main Screen ──────────────────────────────────────────────────────────────
 
 function CheckMockup() {
   return (
@@ -947,11 +696,20 @@ function CheckInstructionsSheet({
 export default function TuitionScreen() {
   const router = useRouter();
   const { effectiveParentId } = useAuth();
+  const isReadOnlyPreview = useReadOnlyPreview();
+  const guardPayment =
+    <T extends unknown[]>(fn: (...args: T) => void) =>
+    (...args: T) => {
+      if (!isReadOnlyPreview) fn(...args);
+    };
   const [transactions, setTransactions] = useState<StripeTransaction[]>([]);
   const [applications, setApplications] = useState<ApplicationRow[]>([]);
   const [studentMap, setStudentMap] = useState<Record<string, StudentInfo>>({});
   const [activeChildId, setActiveChildId] = useState<string | null>(null);
-  const [paidWeeksByStudent, setPaidWeeksByStudent] = useState<
+  const [paidSupplyFeeByStudent, setPaidSupplyFeeByStudent] = useState<
+    Record<string, boolean>
+  >({});
+  const [paidSchoolYearByStudent, setPaidSchoolYearByStudent] = useState<
     Record<string, number[]>
   >({});
   const [paidAftercareByStudent, setPaidAftercareByStudent] = useState<
@@ -960,22 +718,25 @@ export default function TuitionScreen() {
   const [paidFunFridayByStudent, setPaidFunFridayByStudent] = useState<
     Record<string, { months: string[]; fridays: string[] }>
   >({});
-  const [paidHomeschoolByStudent, setPaidHomeschoolByStudent] = useState<
-    Record<string, Array<{ week: number; days: string[] }>>
-  >({});
+  const [paidHomeschoolByStudent, setPaidHomeschoolByStudent] =
+    useState<PaidHomeschoolByStudent>({});
   const [selectionStudentId, setSelectionStudentId] = useState<string | null>(
     null,
   );
+  const [selectionHomeschoolApp, setSelectionHomeschoolApp] =
+    useState<ApplicationRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedTx, setSelectedTx] = useState<StripeTransaction | null>(null);
   const hasLoaded = useRef(false);
   const detailSheetRef = useRef<BottomSheetModal>(null);
-  const summerSheetRef = useRef<BottomSheetModal>(null);
+  const supplyFeeSheetRef = useRef<BottomSheetModal>(null);
+  const schoolYearTuitionSheetRef = useRef<BottomSheetModal>(null);
   const homeschoolSheetRef = useRef<BottomSheetModal>(null);
   const aftercareSheetRef = useRef<BottomSheetModal>(null);
   const funFridaySheetRef = useRef<BottomSheetModal>(null);
+  const tuitionCodeSheetRef = useRef<BottomSheetModal>(null);
   const checkSheetRef = useRef<BottomSheetModal>(null);
 
   async function fetchAll() {
@@ -1012,42 +773,77 @@ export default function TuitionScreen() {
       setTransactions(txData);
       setApplications(appData);
 
-      // Build payment maps from transaction history
-      const paidWeeks: Record<string, number[]> = {};
+      const supplyFeeMap: Record<string, boolean> = {};
+      const schoolYearMap: Record<string, number[]> = {};
       const aftercareMap: Record<string, { months: string[]; days: string[] }> =
         {};
       const funFridayMap: Record<
         string,
         { months: string[]; fridays: string[] }
       > = {};
-      const homeschoolMap: Record<
-        string,
-        Array<{ week: number; days: string[] }>
-      > = {};
+      const homeschoolMap: PaidHomeschoolByStudent = {};
 
       for (const tx of txData) {
         if (tx.status !== "completed" || !tx.student_id) continue;
         const meta = tx.metadata as Record<string, string> | null;
 
-        if (tx.payment_type === "summer_tuition") {
-          if (meta?.plan_type === "full") {
-            paidWeeks[tx.student_id] = Array.from(
-              { length: 12 },
-              (_, i) => i + 1,
-            );
-          } else {
-            const weeks = (meta?.weeks ?? "")
+        if (tx.payment_type === "supply_fee") {
+          supplyFeeMap[tx.student_id] = true;
+          if (
+            meta?.bundle_type === "homeschool" &&
+            meta.bundle_homeschool_tier
+          ) {
+            const tier = meta.bundle_homeschool_tier;
+            const weeks = (meta.bundle_homeschool_selected_days ?? "")
               .split(",")
               .map(Number)
               .filter(Boolean);
-            const existing = new Set(paidWeeks[tx.student_id] ?? []);
-            weeks.forEach((w) => existing.add(w));
-            paidWeeks[tx.student_id] = Array.from(existing);
+            const weekDays: Record<number, string[]> = {};
+            if (meta.bundle_homeschool_week_selections_json) {
+              try {
+                const parsed: { week: number; days: string[] }[] = JSON.parse(
+                  meta.bundle_homeschool_week_selections_json,
+                );
+                parsed.forEach(({ week, days }) => {
+                  weekDays[week] = days;
+                });
+              } catch {
+                /* ignore */
+              }
+            }
+            if (Object.keys(weekDays).length === 0) {
+              weeks.forEach((w) => {
+                weekDays[w] = [];
+              });
+            }
+            const days = [...new Set(Object.values(weekDays).flat())];
+            const amountCents = meta.bundle_amount_cents
+              ? parseInt(meta.bundle_amount_cents, 10)
+              : tx.amount_cents;
+            if (!homeschoolMap[tx.student_id]) {
+              homeschoolMap[tx.student_id] = { summer: [], schoolYear: [] };
+            }
+            homeschoolMap[tx.student_id].schoolYear.push({
+              weeks,
+              tier,
+              days,
+              weekDays,
+              amountCents,
+              createdAt: tx.created_at,
+            });
           }
+        } else if (tx.payment_type === "school_year_tuition") {
+          const months =
+            meta?.selected_months?.split(",").map(Number).filter(Boolean) ?? [];
+          schoolYearMap[tx.student_id] = [
+            ...(schoolYearMap[tx.student_id] ?? []),
+            ...months,
+          ];
         } else if (tx.payment_type === "aftercare_tuition") {
-          const months = (meta?.selected_months ?? "")
-            .split(",")
-            .filter(Boolean);
+          const months =
+            meta?.plan_type === "monthly"
+              ? (meta?.selected_months ?? "").split(",").filter(Boolean)
+              : [];
           const days = (meta?.selected_days ?? "").split(",").filter(Boolean);
           const prev = aftercareMap[tx.student_id] ?? { months: [], days: [] };
           aftercareMap[tx.student_id] = {
@@ -1070,18 +866,50 @@ export default function TuitionScreen() {
             fridays: [...prev.fridays, ...fridays],
           };
         } else if (tx.payment_type === "homeschool_dropin") {
-          let parsed: Array<{ week: number; days: string[] }> = [];
-          try {
-            parsed = JSON.parse((meta?.week_selections as string) ?? "[]");
-          } catch {}
-          homeschoolMap[tx.student_id] = [
-            ...(homeschoolMap[tx.student_id] ?? []),
-            ...parsed,
-          ];
+          const program = meta?.program ?? "summer_26";
+          const tier = meta?.tier ?? "dropin";
+          const days = meta?.selected_days?.split(",").filter(Boolean) ?? [];
+          const weeks =
+            meta?.selected_weeks?.split(",").map(Number).filter(Boolean) ?? [];
+          const weekDays: Record<number, string[]> = {};
+          if (meta?.week_selections) {
+            try {
+              const parsed: { week: number; days: string[] }[] = JSON.parse(
+                meta.week_selections,
+              );
+              parsed.forEach(({ week, days: d }) => {
+                weekDays[week] = d;
+              });
+            } catch {
+              /* ignore */
+            }
+          }
+          if (Object.keys(weekDays).length === 0) {
+            weeks.forEach((w) => {
+              weekDays[w] = days;
+            });
+          }
+          if (!homeschoolMap[tx.student_id]) {
+            homeschoolMap[tx.student_id] = { summer: [], schoolYear: [] };
+          }
+          const entry = {
+            weeks,
+            tier,
+            days,
+            weekDays,
+            amountCents: tx.amount_cents,
+            createdAt: tx.created_at,
+          };
+          if (program === "school_year_26_27") {
+            homeschoolMap[tx.student_id].schoolYear.push(entry);
+          } else {
+            homeschoolMap[tx.student_id].summer.push(entry);
+          }
         }
       }
 
-      setPaidWeeksByStudent(paidWeeks);
+      setPaidSupplyFeeByStudent(supplyFeeMap);
+      setPaidSchoolYearByStudent(schoolYearMap);
       setPaidAftercareByStudent(aftercareMap);
       setPaidFunFridayByStudent(funFridayMap);
       setPaidHomeschoolByStudent(homeschoolMap);
@@ -1164,27 +992,14 @@ export default function TuitionScreen() {
     detailSheetRef.current?.present();
   }
 
-  function openCardSelection(type: CardType) {
-    setSelectionStudentId(activeChildId);
-    if (type === "summer") {
-      summerSheetRef.current?.present();
-    } else if (type === "homeschool") {
-      homeschoolSheetRef.current?.present();
-    } else if (type === "aftercare") {
-      aftercareSheetRef.current?.present();
-    } else if (type === "fun_friday") {
-      funFridaySheetRef.current?.present();
-    }
-  }
-
-  const visibleTransactions = transactions.filter(
-    (tx) =>
-      (tx.metadata as Record<string, string> | null)?.is_sibling_split !==
-      "true",
-  );
+  const visibleTransactions = transactions.filter((tx) => {
+    const meta = tx.metadata as Record<string, string> | null;
+    if (meta?.is_sibling_split === "true") return false;
+    if (meta?.bundled_with_supply_fee === "true") return false;
+    return true;
+  });
   const sections = groupTransactionsByMonth(visibleTransactions);
 
-  // Enrolled students deduplicated by student_id — drives child tabs
   const enrolledStudents = useMemo(() => {
     const seen = new Set<string>();
     const result: StudentInfo[] = [];
@@ -1211,22 +1026,48 @@ export default function TuitionScreen() {
     [applications, activeChildId],
   );
 
-  const showSiblingBanner = useMemo(() => {
-    const activeHasSummer = applications.some(
-      (a) =>
-        a.student_id === activeChildId &&
-        a.status === "enrolled" &&
-        (a.program === "summer_26" || a.program === "both"),
+  const showSchoolYearSection = useMemo(
+    () =>
+      activeChildId != null &&
+      hasSchoolYearContent(applications, activeChildId),
+    [applications, activeChildId],
+  );
+
+  const showMultiChildSchoolYearBanner = useMemo(() => {
+    if (!activeChildId || !showSchoolYearSection) return false;
+    const syStudents = enrolledStudents.filter((s) =>
+      hasSchoolYearContent(applications, s.id),
     );
-    if (!activeHasSummer) return false;
-    return applications.some(
-      (a) =>
-        a.student_id !== activeChildId &&
-        a.status === "enrolled" &&
-        (a.program === "summer_26" || a.program === "both") &&
-        (paidWeeksByStudent[a.student_id]?.length ?? 0) < 12,
+    return syStudents.length > 1;
+  }, [activeChildId, showSchoolYearSection, enrolledStudents, applications]);
+
+  const addonApplication = useMemo(() => {
+    const studentId = selectionStudentId ?? activeChildId;
+    if (!studentId) return null;
+    const apps = applications.filter(
+      (a) => a.student_id === studentId && a.status === "enrolled",
     );
-  }, [applications, activeChildId, paidWeeksByStudent]);
+    return (
+      apps.find((a) => a.program === "school_year_26_27") ??
+      apps.find((a) => a.program === "both") ??
+      apps.find(
+        (a) =>
+          a.program === "homeschool_drop_in" &&
+          (a.drop_in_program === "school_year_26_27" ||
+            a.drop_in_program === "both"),
+      ) ??
+      null
+    );
+  }, [applications, activeChildId, selectionStudentId]);
+
+  const homeschoolPaidMonths = useMemo(() => {
+    if (!selectionHomeschoolApp) return [];
+    return (
+      paidHomeschoolByStudent[selectionHomeschoolApp.student_id]?.schoolYear.flatMap(
+        (e) => e.weeks,
+      ) ?? []
+    );
+  }, [selectionHomeschoolApp, paidHomeschoolByStudent]);
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
@@ -1272,44 +1113,46 @@ export default function TuitionScreen() {
                       onSelect={setActiveChildId}
                     />
                   )}
-                  {showSiblingBanner && (
-                    <Pressable
-                      style={({ pressed }) => [
-                        styles.sibBanner,
-                        pressed && { opacity: 0.75 },
-                      ]}
-                      onPress={() => openCardSelection("summer")}
-                    >
-                      <Ionicons
-                        name="information-circle"
-                        size={18}
-                        color={Brand.sage700}
-                      />
-                      <View style={{ flex: 1, gap: 2 }}>
-                        <Text style={styles.sibBannerTitle}>
-                          Pay for both children in one transaction
-                        </Text>
-                        <Text style={styles.sibBannerSub}>
-                          Add siblings during checkout and pay only one
-                          processing fee.
-                        </Text>
-                      </View>
-                      <Ionicons
-                        name="chevron-forward"
-                        size={16}
-                        color={Brand.sage700}
-                      />
-                    </Pressable>
+                  {showSchoolYearSection && activeChildId && (
+                    <SchoolYearBillingSection
+                      activeStudentId={activeChildId}
+                      applications={activeApplications}
+                      allApplications={applications}
+                      studentMap={studentMap}
+                      paidSupplyFeeByStudent={paidSupplyFeeByStudent}
+                      paidSchoolYearByStudent={paidSchoolYearByStudent}
+                      paidHomeschoolByStudent={paidHomeschoolByStudent}
+                      paidFunFridayByStudent={paidFunFridayByStudent}
+                      showMultiChildSchoolYearBanner={
+                        showMultiChildSchoolYearBanner
+                      }
+                      onSelectSupplyFee={guardPayment(() => {
+                        setSelectionStudentId(activeChildId);
+                        supplyFeeSheetRef.current?.present();
+                      })}
+                      onSelectSchoolYearTuition={guardPayment(() => {
+                        setSelectionStudentId(activeChildId);
+                        schoolYearTuitionSheetRef.current?.present();
+                      })}
+                      onSelectHomeschool={guardPayment((app) => {
+                        setSelectionStudentId(activeChildId);
+                        setSelectionHomeschoolApp(app);
+                        homeschoolSheetRef.current?.present();
+                      })}
+                      onSelectAftercare={guardPayment(() => {
+                        setSelectionStudentId(activeChildId);
+                        aftercareSheetRef.current?.present();
+                      })}
+                      onSelectFunFriday={guardPayment(() => {
+                        setSelectionStudentId(activeChildId);
+                        funFridaySheetRef.current?.present();
+                      })}
+                      onTuitionCodePress={guardPayment(() =>
+                        tuitionCodeSheetRef.current?.present()
+                      )}
+                      onCheckPress={guardPayment(() => checkSheetRef.current?.present())}
+                    />
                   )}
-
-                  <StudentBillingSection
-                    applications={activeApplications}
-                    paidWeeks={paidWeeksByStudent[activeChildId ?? ""] ?? []}
-                    paidAftercare={paidAftercareByStudent[activeChildId ?? ""]}
-                    paidFunFriday={paidFunFridayByStudent[activeChildId ?? ""]}
-                    onCardPress={openCardSelection}
-                    onCheckPress={() => checkSheetRef.current?.present()}
-                  />
                 </>
               )}
 
@@ -1351,8 +1194,29 @@ export default function TuitionScreen() {
         studentMap={studentMap}
       />
 
-      <SummerSelectionSheet
-        sheetRef={summerSheetRef}
+      <SupplyFeeSelectionSheet
+        sheetRef={supplyFeeSheetRef}
+        student={
+          selectionStudentId ? (studentMap[selectionStudentId] ?? null) : null
+        }
+        applications={
+          selectionStudentId
+            ? applications.filter(
+                (a) =>
+                  a.student_id === selectionStudentId && a.status === "enrolled",
+              )
+            : []
+        }
+        allApplications={applications.filter((a) => a.status === "enrolled")}
+        paidSchoolYearByStudent={paidSchoolYearByStudent}
+        paidHomeschoolByStudent={paidHomeschoolByStudent}
+        paidSupplyFeeByStudent={paidSupplyFeeByStudent}
+        studentMap={studentMap}
+        onSuccess={fetchAll}
+      />
+
+      <SchoolYearTuitionSelectionSheet
+        sheetRef={schoolYearTuitionSheetRef}
         student={
           selectionStudentId ? (studentMap[selectionStudentId] ?? null) : null
         }
@@ -1361,74 +1225,71 @@ export default function TuitionScreen() {
             (a) =>
               a.student_id === selectionStudentId &&
               a.status === "enrolled" &&
-              a.program !== null &&
-              (a.program === "summer_26" || a.program === "both"),
+              (a.program === "school_year_26_27" || a.program === "both"),
           ) ?? null
         }
-        paidWeeks={paidWeeksByStudent[selectionStudentId ?? ""] ?? []}
-        onSuccess={fetchAll}
+        paidMonthIndices={paidSchoolYearByStudent[selectionStudentId ?? ""] ?? []}
         siblingApplications={applications.filter(
           (a) =>
             a.student_id !== selectionStudentId &&
             a.status === "enrolled" &&
-            (a.program === "summer_26" || a.program === "both"),
+            (a.program === "school_year_26_27" || a.program === "both") &&
+            paidSupplyFeeByStudent[a.student_id],
         )}
-        siblingPaidWeeks={paidWeeksByStudent}
+        paidSchoolYearByStudent={paidSchoolYearByStudent}
+        paidSupplyFeeByStudent={paidSupplyFeeByStudent}
         siblingStudentMap={studentMap}
+        onSuccess={fetchAll}
       />
 
-      <HomeschoolSelectionSheet
+      <HomeschoolSchoolYearSelectionSheet
         sheetRef={homeschoolSheetRef}
         student={
           selectionStudentId ? (studentMap[selectionStudentId] ?? null) : null
         }
-        application={
-          applications.find(
-            (a) =>
-              a.student_id === selectionStudentId && a.status === "enrolled",
-          ) ?? null
-        }
-        paidHomeschool={paidHomeschoolByStudent[selectionStudentId ?? ""]}
+        application={selectionHomeschoolApp}
+        paidMonthIndices={homeschoolPaidMonths}
+        siblingApplications={applications.filter(
+          (a) =>
+            a.id !== selectionHomeschoolApp?.id &&
+            a.status === "enrolled" &&
+            a.program === "homeschool_drop_in" &&
+            (a.drop_in_program === "school_year_26_27" ||
+              a.drop_in_program === "both") &&
+            paidSupplyFeeByStudent[a.student_id],
+        )}
+        paidHomeschoolByStudent={paidHomeschoolByStudent}
+        siblingStudentMap={studentMap}
         onSuccess={fetchAll}
       />
 
-      <AftercareSelectionSheet
+      <SchoolYearAftercareSelectionSheet
         sheetRef={aftercareSheetRef}
         student={
           selectionStudentId ? (studentMap[selectionStudentId] ?? null) : null
         }
-        application={
-          applications.find(
-            (a) =>
-              a.student_id === selectionStudentId &&
-              a.status === "enrolled" &&
-              (a.program === "summer_26" ||
-                a.program === "both" ||
-                a.program === "homeschool_drop_in"),
-          ) ?? null
-        }
+        application={addonApplication}
         paidAftercare={paidAftercareByStudent[selectionStudentId ?? ""]}
         onSuccess={fetchAll}
       />
 
-      <FunFridaySelectionSheet
+      <SchoolYearFunFridaySelectionSheet
         sheetRef={funFridaySheetRef}
         student={
           selectionStudentId ? (studentMap[selectionStudentId] ?? null) : null
         }
-        application={
-          applications.find(
-            (a) =>
-              a.student_id === selectionStudentId &&
-              a.status === "enrolled" &&
-              (a.program === "summer_26" ||
-                a.program === "both" ||
-                a.program === "homeschool_drop_in"),
-          ) ?? null
-        }
+        application={addonApplication}
         paidFunFriday={paidFunFridayByStudent[selectionStudentId ?? ""]}
         onSuccess={fetchAll}
       />
+
+      {effectiveParentId ? (
+        <TuitionCodeSheet
+          sheetRef={tuitionCodeSheetRef}
+          parentId={effectiveParentId}
+          onSuccess={fetchAll}
+        />
+      ) : null}
 
       <CheckInstructionsSheet sheetRef={checkSheetRef} />
     </SafeAreaView>

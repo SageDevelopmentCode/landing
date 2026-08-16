@@ -18,196 +18,11 @@ import FloatingSMSButton from "../components/FloatingSMSButton";
 import MeetTheTeamSection from "../components/MeetTheTeamSection";
 import WeeklySchedule from "../components/WeeklySchedule";
 import FAQAccordion from "../components/FAQAccordion";
-import WeekRecapPreview from "../components/WeekRecapPreview";
 import { submitWaitlist } from "@/app/actions/waitlist";
 import { formatPhone } from "@/app/utils/formatPhone";
 import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
 
-type Tab = "summer" | "school-year" | "homeschool";
-
-const weeks = [
-  {
-    week: 1,
-    dates: "May 26–29",
-    theme: "Welcome to Camp",
-    highlights: [
-      "Camp Kick-Off Games",
-      "Water Balloon Race and Toss",
-      "Musical Hulahoops",
-      "Cross the River",
-      "Camp Name Tags",
-      "Paper Plate Sun Craft",
-      "Leaf Rubbing Art",
-      "Friendship Bracelets",
-    ],
-  },
-  {
-    week: 2,
-    dates: "Jun 1–4",
-    theme: "Mystery Camp Escape Challenge",
-    highlights: [
-      "Giant Slip and Slide",
-      "Chicken Enrichment Toys",
-      "Crab Soccer",
-      "The Floor is Lava",
-      "Painted Stones",
-      "Chicken Wood Painting",
-      "Nature Paint",
-      "DIY Camp Flags",
-    ],
-  },
-  {
-    week: 3,
-    dates: "Jun 8–11",
-    theme: "Beach Day Bash",
-    highlights: [
-      "Ice Cream Bar",
-      "Tug of War & Field Games",
-      "Ocean Slime",
-      "Paper Plate Swimming Fish",
-      "Medal Making",
-      "Sports Jersey Art",
-      "Seashell Painting",
-      "DIY Sea Animal",
-    ],
-  },
-  {
-    week: 4,
-    dates: "Jun 15–18",
-    theme: "Scientist and Space Engineering Lab",
-    highlights: [
-      "Treasure Map Expedition",
-      "Puppet Safari Skit",
-      "Slime Lab",
-      "Build a Bridge Challenge",
-      "Volcano Model",
-      "Rocket Ship Craft",
-      "Galaxy Slime",
-      "Popsicle Stick Bridge",
-    ],
-  },
-  {
-    week: 5,
-    dates: "Jun 22–25",
-    theme: "Safari Escape",
-    highlights: [
-      "Safari Journals",
-      "Safari Bingo",
-      "Build a Habitat",
-      "Nature Sketching",
-      "Animal Masks",
-      "Paper Plate Lions",
-      "Clay Animal Sculptures",
-      "Animal Footprint Activity",
-    ],
-  },
-  {
-    week: 6,
-    dates: "Jun 29–Jul 2",
-    theme: "Splash Into Summer",
-    highlights: [
-      "Water Relay Races",
-      "Sponge Dodgeball",
-      "Splash Pad Games",
-      "Beach Ball Volleyball",
-      "Tie Dye Bandanas",
-      "Paper Boats",
-      "Paper Plate Jellyfish",
-      "Sand Art",
-    ],
-  },
-  {
-    week: 7,
-    dates: "Jul 6–9",
-    theme: "Dino Hunt",
-    highlights: [
-      "Dinosaur Dig",
-      "Dino Egg Hunt",
-      "Build a Dino Habitat",
-      "Dino Tag",
-      "Dinosaur Fossils",
-      "Paper Plate Dinosaurs",
-      "Dino Footprint Clay Painting",
-      "Moon Sand",
-    ],
-  },
-  {
-    week: 8,
-    dates: "Jul 13–16",
-    theme: "Pirate Adventure",
-    highlights: [
-      "X Marks the Spot",
-      "Walk the Plank Game",
-      "Build a Pirate Ship",
-      "Pirate Relay Races",
-      "Pirate Hats",
-      "Treasure Maps",
-      "Cardboard Boats",
-      "Beaded Eye Patches",
-    ],
-  },
-  {
-    week: 9,
-    dates: "Jul 20–23",
-    theme: "You are a Superhero!",
-    highlights: [
-      "Trip to the 'Movies'",
-      "Bingo",
-      "Super Strength Games",
-      "Hero Obstacle Course",
-      "Design Your Superhero",
-      "Superhero Masks",
-      "Comic Strip Art",
-      "Cape Decorating",
-    ],
-  },
-  {
-    week: 10,
-    dates: "Jul 27–30",
-    theme: "Space Explorers: Mission to the Stars",
-    highlights: [
-      "Space Trivia",
-      "Rocket Launch Game",
-      "Alien Tag",
-      "Planet Scavenger Hunt",
-      "Galaxy Paintings",
-      "Straw Rockets",
-      "Alien Headbands",
-      "Planet Craft",
-    ],
-  },
-  {
-    week: 11,
-    dates: "Aug 3–6",
-    theme: "Down on the Farm",
-    highlights: [
-      "Sack Races",
-      "Garden Scavenger Hunt",
-      "Dance Party Games",
-      "Egg and Spoon Relay",
-      "Barn Collage",
-      "Flower Pot Painting",
-      "Paper Plate Chickens",
-      "Vegetable Stamp Art",
-    ],
-  },
-  {
-    week: 12,
-    dates: "Aug 10–13",
-    theme: "Finale of Camp",
-    highlights: [
-      "Friendship Bracelets",
-      "Group Banner",
-      "Photo Booth",
-      "Camp Celebration Party",
-      "Decorate Camp T-Shirts",
-      "Friendship Necklaces",
-      "Camp Memory Scrapbook",
-      "Thank-You Cards",
-    ],
-  },
-];
-
+type Tab = "school-year" | "homeschool";
 
 const scheduleTiers = [
   {
@@ -270,35 +85,6 @@ const homeschoolPillars = [
 ];
 
 const tabContent = {
-  summer: {
-    badge: "Summer 2026",
-    title: "Summer 2026 Program",
-    description: [
-      "Our Summer 2026 program is a twelve-week academic enrichment session designed for curious learners ages 4–11. Each day features structured, teacher-led instruction in literacy and mathematics, complemented by specialized modules in nature study, fine arts, music, cooking, and social-emotional development.",
-      "We operate as a full-day school, maintaining a consistent academic schedule, attendance records, and small-group instructional cohorts from Monday through Thursday. This program is designed as a formal extension of our private-school curriculum to support student progress, and functions as an academic institution rather than a child care or camp program.",
-    ],
-    details: [
-      { label: "Dates", value: "May 26 – August 13, 2026" },
-      { label: "Ages", value: "4–11 years" },
-      { label: "Schedule", value: "Mon–Thu, ~6 hrs/day" },
-      { label: "Group Size", value: "~10 children" },
-    ],
-    images: [
-      "/assets/Stock1.jpg",
-      "/assets/Kid1.png",
-      "/assets/Kid2.jpg",
-      // "/assets/Stock2.jpg",
-      "/assets/Stock3.jpg",
-      "/assets/Stock4.jpg",
-      "/assets/Stock5.jpg",
-      "/assets/Stock6.jpg",
-      "/assets/Stock7.jpg",
-      "/assets/Stock8.jpg",
-      "/assets/Stock9.jpg",
-      "/assets/Stock10.jpg",
-      "/assets/Stock11.jpg",
-    ],
-  },
   "school-year": {
     badge: "School Year 2026",
     title: "School Year 2026–2027",
@@ -441,7 +227,7 @@ export default function ApplyPage() {
       answer: (
         <div>
           <p className="mb-4">
-            Enrollment for Summer 2026 and School Year 2026-2027 is now open.
+            Enrollment for School Year 2026-2027 is now open.
             Complete our interest form to begin the enrollment process.
           </p>
           <button
@@ -457,10 +243,10 @@ export default function ApplyPage() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
   const initialTab: Tab = (
-    ["summer", "school-year", "homeschool"] as Tab[]
+    ["school-year", "homeschool"] as Tab[]
   ).includes(tabParam as Tab)
     ? (tabParam as Tab)
-    : "summer";
+    : "school-year";
   const refParam = searchParams.get("ref");
   const applyStartUrl = refParam
     ? `/apply/start?ref=${encodeURIComponent(refParam)}`
@@ -511,9 +297,7 @@ export default function ApplyPage() {
         childName: inlineFormData.childName,
         childAge: parseInt(inlineFormData.childAge),
         programInterest: inlineFormData.programInterest as
-          | "summer-2026"
           | "school-year-2026"
-          | "both"
           | "homeschool_drop_in",
         specialInterests: inlineFormData.specialInterests || undefined,
       });
@@ -672,7 +456,7 @@ export default function ApplyPage() {
               <div className="lg:col-span-7">
                 {/* Tab Switcher */}
                 <div className="flex gap-3 mb-6 overflow-x-auto flex-nowrap [&::-webkit-scrollbar]:hidden [scrollbar-width:none] sm:flex-wrap">
-                  {(["summer", "school-year", "homeschool"] as Tab[]).map(
+                  {(["school-year", "homeschool"] as Tab[]).map(
                     (tab) => (
                       <button
                         key={tab}
@@ -683,11 +467,9 @@ export default function ApplyPage() {
                             : "border-2 border-gray-300 text-gray-600 bg-white hover:border-primary"
                         }`}
                       >
-                        {tab === "summer"
-                          ? "☀️ Summer 2026"
-                          : tab === "school-year"
-                            ? "📚 School Year 2026"
-                            : "🏡 Homeschool Drop-In"}
+                        {tab === "school-year"
+                          ? "📚 School Year 2026"
+                          : "🏡 Homeschool Drop-In"}
                       </button>
                     ),
                   )}
@@ -761,91 +543,8 @@ export default function ApplyPage() {
                   </div>
                 </div>
 
-                {/* Week 2 Highlights Preview — Summer only */}
-                <WeekRecapPreview className="-mx-8 sm:-mx-12 lg:-mx-16" />
-
-                {/* Daily Schedule — Summer only */}
-                {activeTab === "summer" && (
-                  <div className="mb-10">
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                      <div className="px-6 py-4 border-b border-gray-100">
-                        <h3 className="font-heading font-bold text-lg text-gray-800">
-                          Daily Schedule
-                        </h3>
-                      </div>
-                      <div className="divide-y divide-gray-50">
-                        {[
-                          {
-                            time: "8:15 – 9:00 AM",
-                            activity: "Drop Off / Outdoor Play 🌞",
-                          },
-                          {
-                            time: "9:00 – 9:15 AM",
-                            activity: "Morning Meeting (Good Citizenship) 🌟",
-                          },
-                          {
-                            time: "9:15 – 9:30 AM",
-                            activity: "ELA Challenger Block 📚",
-                          },
-                          {
-                            time: "9:30 – 9:45 AM",
-                            activity: "Math Challenger Block 🔢",
-                          },
-                          {
-                            time: "9:45 – 10:15 AM",
-                            activity: "Snack 🍎",
-                          },
-                          {
-                            time: "10:15 – 10:45 AM",
-                            activity: "Daily Activity 🌟",
-                          },
-                          { time: "10:45 – 11:15 AM", activity: "Art 🎨" },
-                          { time: "11:15 – 11:30 AM", activity: "Music 🎵" },
-                          { time: "11:30 AM – 12:15 PM", activity: "Lunch 🍱" },
-                          {
-                            time: "12:15 – 1:15 PM",
-                            activity: "Water Play 💦",
-                          },
-                          {
-                            time: "1:15 – 1:45 PM",
-                            activity: "Journaling & Reflection 📝",
-                          },
-                          {
-                            time: "1:45 – 2:30 PM",
-                            activity:
-                              "Cooking / Homesteading (Animal & Garden Care) 🌱",
-                          },
-                          {
-                            time: "1:45 – 2:45 PM",
-                            activity: "Outdoor Free Choice 🧸",
-                          },
-                          {
-                            time: "2:45 – 3:00 PM",
-                            activity: "Afternoon Meeting 🌤️",
-                          },
-                          {
-                            time: "2:45 – 3:00 PM",
-                            activity: "Pick Up / Outdoor Play 🌳",
-                          },
-                        ].map((row, i) => (
-                          <div
-                            key={i}
-                            className={`flex items-center gap-4 px-6 py-3 ${
-                              i % 2 === 0 ? "bg-white" : "bg-gray-50/60"
-                            }`}
-                          >
-                            <span className="text-sm font-semibold text-gray-800 font-body">
-                              {row.activity}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Educational Philosophy — Summer & School Year */}
-                {(activeTab === "summer" || activeTab === "school-year") && (
+                {/* Educational Philosophy — School Year */}
+                {activeTab === "school-year" && (
                   <motion.div
                     className="border-t border-gray-100 pt-10 mb-10"
                     initial={{ opacity: 0, y: 20 }}
@@ -976,173 +675,6 @@ export default function ApplyPage() {
                           </div>
                         </motion.div>
                       ))}
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* A Day in the Life — Summer 2026 only */}
-                {activeTab === "summer" && (
-                  <motion.div
-                    className="mb-10"
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.6, ease: "easeOut" as const }}
-                  >
-                    {/* Badge */}
-                    <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6">
-                      Sample Curriculum
-                    </span>
-                    <h2 className="text-2xl md:text-3xl font-bold text-black font-heading mb-6">
-                      A Day in the Life
-                    </h2>
-                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                      {/* Active Adventures */}
-                      <p className="text-sm font-bold text-gray-500 font-heading uppercase tracking-wide mb-4">
-                        Active Adventures
-                      </p>
-                      <div className="grid grid-cols-2 gap-3 mb-6">
-                        {[
-                          {
-                            emoji: "💦",
-                            title: "Giant Slip & Slide",
-                            desc: "\u201cCool off and race down the big slide\u201d",
-                          },
-                          {
-                            emoji: "🌈",
-                            title: "Rainbow Foam Party",
-                            desc: "\u201cSplash through colorful foam clouds\u201d",
-                          },
-                          {
-                            emoji: "🏞️",
-                            title: "Cross the River",
-                            desc: "\u201cHop across lily pads without falling in\u201d",
-                          },
-                          {
-                            emoji: "🌋",
-                            title: "The Floor is Lava",
-                            desc: "\u201cJump, dodge, and survive the eruption\u201d",
-                          },
-                          {
-                            emoji: "🎶",
-                            title: "Musical Hula Hoops",
-                            desc: "\u201cDance, move, and claim your hoop\u201d",
-                          },
-                        ].map((activity) => (
-                          <div
-                            key={activity.title}
-                            className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100"
-                          >
-                            <span className="text-2xl leading-none">
-                              {activity.emoji}
-                            </span>
-                            <div>
-                              <p className="text-sm font-bold text-gray-800 font-body leading-tight">
-                                {activity.title}
-                              </p>
-                              <p className="text-xs text-text-gray font-body mt-0.5">
-                                {activity.desc}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Divider */}
-                      <div className="border-t border-gray-100 mb-6" />
-
-                      {/* Creative Crafts */}
-                      <p className="text-sm font-bold text-gray-500 font-heading uppercase tracking-wide mb-4">
-                        Creative Crafts
-                      </p>
-                      <div className="grid grid-cols-2 gap-3">
-                        {[
-                          {
-                            emoji: "🎨",
-                            title: "Nature Paint",
-                            desc: "Use leaves, sticks & mud as your brush",
-                          },
-                          {
-                            emoji: "🍃",
-                            title: "Leaf Rubbing Art",
-                            desc: "Reveal hidden patterns from nature",
-                          },
-                          {
-                            emoji: "🪢",
-                            title: "Friendship Bracelets",
-                            desc: "Weave a bracelet to share with a friend",
-                          },
-                        ].map((craft) => (
-                          <div
-                            key={craft.title}
-                            className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100"
-                          >
-                            <span className="text-2xl leading-none">
-                              {craft.emoji}
-                            </span>
-                            <div>
-                              <p className="text-sm font-bold text-gray-800 font-body leading-tight">
-                                {craft.title}
-                              </p>
-                              <p className="text-xs text-text-gray font-body mt-0.5">
-                                {craft.desc}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    {/* Weekly Breakdown */}
-                    <div className="mt-8">
-                      <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6">
-                        Weekly Breakdown
-                      </span>
-                      <h2 className="text-2xl md:text-3xl font-bold text-black font-heading mb-6">
-                        12 Weeks of Adventure
-                      </h2>
-                      <div className="overflow-x-auto flex snap-x snap-mandatory gap-4 pb-4 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] sm:overflow-visible sm:grid sm:grid-cols-2">
-                        {weeks.map((w, i) => (
-                          <motion.div
-                            key={w.week}
-                            className="w-[80%] flex-shrink-0 snap-start sm:w-full bg-white rounded-xl p-5 shadow-sm border border-gray-100"
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{
-                              duration: 0.4,
-                              delay: 0.05 * i,
-                              ease: "easeOut" as const,
-                            }}
-                          >
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="text-xs font-bold text-white bg-primary rounded-full px-2.5 py-0.5 font-body">
-                                Week {w.week}
-                              </span>
-                              <span className="text-xs text-gray-400 font-body">
-                                {w.dates}
-                              </span>
-                            </div>
-                            <h3 className="text-sm font-bold text-gray-800 font-heading mb-2 leading-snug">
-                              {w.theme}
-                            </h3>
-                            <ul className="space-y-1">
-                              {w.highlights.map((h) => (
-                                <li
-                                  key={h}
-                                  className="flex items-start gap-1.5 text-xs text-gray-600 font-body"
-                                >
-                                  <span className="text-primary mt-0.5">•</span>
-                                  <span>{h}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </motion.div>
-                        ))}
-                      </div>
-                    </div>
-                    {/* Meet the Team — Summer only */}
-                    <div className="-mx-8 sm:-mx-12 lg:-mx-16">
-                      <MeetTheTeamSection featured={false} />
                     </div>
                   </motion.div>
                 )}
@@ -1457,11 +989,9 @@ export default function ApplyPage() {
                         className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary focus:outline-none transition-colors font-body text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
                       >
                         <option value="">Select a program...</option>
-                        <option value="summer-2026">Summer 2026</option>
                         <option value="school-year-2026">
                           School Year 2026-2027
                         </option>
-                        <option value="both">Both Programs</option>
                         <option value="homeschool_drop_in">
                           Homeschool Drop-In
                         </option>
