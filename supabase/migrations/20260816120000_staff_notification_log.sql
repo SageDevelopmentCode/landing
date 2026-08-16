@@ -7,3 +7,5 @@ CREATE TABLE IF NOT EXISTS admin.staff_notification_log (
 );
 
 ALTER TABLE admin.staff_notification_log ENABLE ROW LEVEL SECURITY;
+
+GRANT ALL ON TABLE admin.staff_notification_log TO service_role;

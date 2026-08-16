@@ -51,20 +51,19 @@ export function getChicagoDateTimeParts(now = new Date()): ChicagoDateTimeParts 
   };
 }
 
-/** Mon–Thu from 3:30 PM Central onward. */
+/** Mon–Thu in America/Chicago (for daily cron Discord alert). */
+export function isSchoolYearChicagoWeekday(now = new Date()): boolean {
+  const { dayOfWeek } = getChicagoDateTimeParts(now);
+  return dayOfWeek >= 1 && dayOfWeek <= 4;
+}
+
+/** Mon–Thu from 3:30 PM Central onward (staff mobile in-app card). */
 export function isSchoolYearPickupReminderWindow(now = new Date()): boolean {
   const { hour, minute, dayOfWeek } = getChicagoDateTimeParts(now);
   if (dayOfWeek < 1 || dayOfWeek > 4) return false;
   if (hour > 15) return true;
   if (hour === 15 && minute >= 30) return true;
   return false;
-}
-
-/** Cron guard: only fire during the 3:30–3:31 PM Central minute. */
-export function isSchoolYearPickupReminderCronMinute(now = new Date()): boolean {
-  const { hour, minute, dayOfWeek } = getChicagoDateTimeParts(now);
-  if (dayOfWeek < 1 || dayOfWeek > 4) return false;
-  return hour === 15 && minute >= 30 && minute <= 31;
 }
 
 export function isStudentAwaitingPickup(

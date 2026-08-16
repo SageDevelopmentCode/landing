@@ -2426,7 +2426,7 @@ export function createUnpickedPickupReminderEmbed(data: {
   }
 
   return {
-    title: "⚠️ 3:30 PM — Pickup not recorded",
+    title: "⚠️ Pickup not recorded (end of school day)",
     description: "Present students still awaiting pickup (Mon–Thu school day).",
     color: 0xf59e0b,
     fields,

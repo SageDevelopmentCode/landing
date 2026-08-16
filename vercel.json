@@ -3,10 +3,6 @@
     {
       "path": "/api/budget/monthly-summary?notify=true",
       "schedule": "0 23 * * *"
-    },
-    {
-      "path": "/api/staff/pickup-reminder",
-      "schedule": "30 20,21 * * 1-4"
     }
   ]
 }
