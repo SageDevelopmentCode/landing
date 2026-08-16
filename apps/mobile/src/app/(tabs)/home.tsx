@@ -1460,7 +1460,13 @@ type PendingPaymentPreview = {
   amount_cents: number | null;
   program: string;
   student_id: string | null;
+  payment_type?: string;
 };
+
+function isSupplyFeePendingPayment(p: PendingPaymentPreview): boolean {
+  if (p.payment_type === "supply_fee") return true;
+  return /supply fee/i.test(p.label);
+}
 
 function formatCents(cents: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -2020,7 +2026,7 @@ export default function HomeScreen() {
   const goToTuition = useCallback(() => {
     router.push("/(tabs)/tuition" as any);
   }, [router]);
-  const { userId, effectiveParentId, isGrantee, ownerName } = useAuth();
+  const { userId, effectiveParentId, parentViewUserId, isGrantee, ownerName, isReadOnlyPreview } = useAuth();
   const [firstName, setFirstName] = useState<string>("there");
   const [initials, setInitials] = useState<string>("");
   const [parentImageUrl, setParentImageUrl] = useState<string | null>(null);
@@ -2173,6 +2179,7 @@ export default function HomeScreen() {
   }, [effectiveParentId, loadConferenceBookingsFromSupabase]);
 
   const openPtcSheet = useCallback(() => {
+    if (isReadOnlyPreview) return;
     ptcSheetRef.current?.present();
     if (
       conferenceTeachers.length === 0 ||
@@ -2181,6 +2188,7 @@ export default function HomeScreen() {
       void loadConferenceContext();
     }
   }, [
+    isReadOnlyPreview,
     conferenceTeachers.length,
     conferenceStudents.length,
     loadConferenceContext,
@@ -2240,7 +2248,7 @@ export default function HomeScreen() {
 
         const { data: rpcRaw, error: rpcError } = await (supabase as any).rpc(
           "rpc_home_screen_data",
-          { p_user_id: userId, p_parent_id: effectiveParentId },
+          { p_user_id: parentViewUserId ?? userId, p_parent_id: effectiveParentId },
         );
 
         console.log("[home] core data source:", rpcRaw && !rpcError ? "RPC" : `fallback (rpcError: ${rpcError?.message ?? "no data"})`);
@@ -2374,7 +2382,7 @@ export default function HomeScreen() {
             supabase
               .schema("billing")
               .from("pending_payment_requests")
-              .select("id, label, amount_cents, program, student_id")
+              .select("id, label, amount_cents, program, student_id, payment_type")
               .eq("status", "pending")
               .order("created_at", { ascending: false })
               .limit(3),
@@ -2743,6 +2751,7 @@ export default function HomeScreen() {
   }, [
     effectiveParentId,
     userId,
+    parentViewUserId,
     loadConferenceBookingsFromSupabase,
     loadConferenceContext,
   ]);
@@ -2775,6 +2784,7 @@ export default function HomeScreen() {
   }, [effectiveParentId]);
 
   async function handlePickParentImage() {
+    if (isReadOnlyPreview) return;
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       allowsEditing: true,
@@ -2851,6 +2861,7 @@ export default function HomeScreen() {
   }
 
   async function handleSaveDropOff() {
+    if (isReadOnlyPreview) return;
     if (!dropOffSlot || !effectiveParentId) return;
     setDropOffSaving(true);
     setDropOffError(null);
@@ -2881,6 +2892,7 @@ export default function HomeScreen() {
   }
 
   async function toggleOnboardingTask(id: string) {
+    if (isReadOnlyPreview) return;
     const next = new Set(onboardingCompleted);
     next.has(id) ? next.delete(id) : next.add(id);
     setOnboardingCompleted(next);
@@ -2899,6 +2911,7 @@ export default function HomeScreen() {
   }
 
   async function markIntroSeen() {
+    if (isReadOnlyPreview) return;
     const next = new Set(onboardingCompleted);
     next.add("intro_seen");
     setOnboardingCompleted(next);
@@ -3810,7 +3823,11 @@ export default function HomeScreen() {
                 });
               }
 
-              for (const p of pendingPayments) {
+              const visiblePendingPayments = pendingPayments.filter(
+                (p) => !isSupplyFeePendingPayment(p),
+              );
+
+              for (const p of visiblePendingPayments) {
                 programCards.push({
                   key: `pending-${p.id}`,
                   image: HOME_CARD_IMAGES.schoolYear,
@@ -3824,7 +3841,8 @@ export default function HomeScreen() {
               }
 
               const hasAnything =
-                pendingPayments.length > 0 || schoolYearStudentIds.size > 0;
+                visiblePendingPayments.length > 0 ||
+                schoolYearStudentIds.size > 0;
 
               return (
                 <View style={styles.tuitionSection}>

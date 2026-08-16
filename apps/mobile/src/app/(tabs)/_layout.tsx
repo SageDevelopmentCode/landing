@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Tabs } from "expo-router";
+import { View, StyleSheet } from "react-native";
+import { Tabs, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { BottomSheetModal, BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import * as Sentry from "@sentry/react-native";
 import { notifyError } from "@/lib/discord";
 import { Brand, BottomTabInset, floatingTabBarStyle } from "@/constants/theme";
 import { MoreMenuSheet } from "@/components/MoreMenuSheet";
+import { AdminPreviewBanner } from "@/components/AdminPreviewBanner";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
@@ -21,10 +24,17 @@ function tabIcon(focused: boolean, active: IoniconName, inactive: IoniconName) {
 }
 
 export default function TabsLayout() {
+  const router = useRouter();
+  const { isImpersonating, parentViewUserId, stopImpersonation } = useAuth();
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const [totalUnread, setTotalUnread] = useState(0);
   const userIdRef = useRef<string | null>(null);
   const convIdsRef = useRef<string[]>([]);
+
+  const handleExitPreview = useCallback(async () => {
+    await stopImpersonation();
+    router.replace("/(staff)/home");
+  }, [stopImpersonation, router]);
 
   const openMoreSheet = useCallback(() => {
     bottomSheetRef.current?.present();
@@ -32,26 +42,29 @@ export default function TabsLayout() {
 
   const fetchTotalUnread = useCallback(async () => {
     try {
-      // Resolve user once and cache
-      if (!userIdRef.current) {
+      const messagingUserId = parentViewUserId ?? userIdRef.current;
+      if (!messagingUserId) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
         userIdRef.current = user.id;
       }
-      const userId = userIdRef.current;
+      const userId = parentViewUserId ?? userIdRef.current;
+      if (!userId) return;
 
-      // Resolve conversation IDs once and cache
-      if (!convIdsRef.current.length) {
-        const { data: participantRows } = await supabase
-          .schema("messaging")
-          .from("conversation_participants")
-          .select("conversation_id")
-          .eq("user_id", userId);
-        convIdsRef.current =
-          participantRows?.map((r: { conversation_id: string }) => r.conversation_id) ?? [];
-      }
+      convIdsRef.current = [];
+      const { data: participantRows } = await supabase
+        .schema("messaging")
+        .from("conversation_participants")
+        .select("conversation_id")
+        .eq("user_id", userId);
+      convIdsRef.current =
+        participantRows?.map((r: { conversation_id: string }) => r.conversation_id) ?? [];
+
       const ids = convIdsRef.current;
-      if (!ids.length) return;
+      if (!ids.length) {
+        setTotalUnread(0);
+        return;
+      }
 
       const { count } = await supabase
         .schema("messaging")
@@ -66,7 +79,7 @@ export default function TabsLayout() {
       Sentry.captureException(error, { tags: { area: 'messaging-badge' } });
       notifyError('messaging-badge-fetch', error);
     }
-  }, []);
+  }, [parentViewUserId]);
 
   // Initial fetch
   useEffect(() => { fetchTotalUnread(); }, [fetchTotalUnread]);
@@ -104,9 +117,13 @@ export default function TabsLayout() {
 
   return (
     <BottomSheetModalProvider>
-      <Tabs
-        safeAreaInsets={{ bottom: 0 }}
-        screenOptions={{
+      <View style={styles.root}>
+        {isImpersonating && (
+          <AdminPreviewBanner onExit={handleExitPreview} />
+        )}
+        <Tabs
+          safeAreaInsets={{ bottom: 0 }}
+          screenOptions={{
           headerShown: false,
           tabBarActiveTintColor: Brand.sage700,
           tabBarInactiveTintColor: "#9ca3af",
@@ -188,6 +205,14 @@ export default function TabsLayout() {
         <Tabs.Screen name="newsletters" options={{ href: null }} />
       </Tabs>
       <MoreMenuSheet ref={bottomSheetRef} />
+      </View>
     </BottomSheetModalProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: "#ffffff",
+  },
+});

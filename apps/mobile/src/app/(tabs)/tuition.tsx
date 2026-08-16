@@ -14,7 +14,7 @@ import {
 } from "@/constants/theme";
 import { notifyError } from "@/lib/discord";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, useReadOnlyPreview } from "@/contexts/AuthContext";
 import {
   hasSchoolYearContent,
   type ApplicationRow,
@@ -696,6 +696,12 @@ function CheckInstructionsSheet({
 export default function TuitionScreen() {
   const router = useRouter();
   const { effectiveParentId } = useAuth();
+  const isReadOnlyPreview = useReadOnlyPreview();
+  const guardPayment =
+    <T extends unknown[]>(fn: (...args: T) => void) =>
+    (...args: T) => {
+      if (!isReadOnlyPreview) fn(...args);
+    };
   const [transactions, setTransactions] = useState<StripeTransaction[]>([]);
   const [applications, setApplications] = useState<ApplicationRow[]>([]);
   const [studentMap, setStudentMap] = useState<Record<string, StudentInfo>>({});
@@ -1120,31 +1126,31 @@ export default function TuitionScreen() {
                       showMultiChildSchoolYearBanner={
                         showMultiChildSchoolYearBanner
                       }
-                      onSelectSupplyFee={() => {
+                      onSelectSupplyFee={guardPayment(() => {
                         setSelectionStudentId(activeChildId);
                         supplyFeeSheetRef.current?.present();
-                      }}
-                      onSelectSchoolYearTuition={() => {
+                      })}
+                      onSelectSchoolYearTuition={guardPayment(() => {
                         setSelectionStudentId(activeChildId);
                         schoolYearTuitionSheetRef.current?.present();
-                      }}
-                      onSelectHomeschool={(app) => {
+                      })}
+                      onSelectHomeschool={guardPayment((app) => {
                         setSelectionStudentId(activeChildId);
                         setSelectionHomeschoolApp(app);
                         homeschoolSheetRef.current?.present();
-                      }}
-                      onSelectAftercare={() => {
+                      })}
+                      onSelectAftercare={guardPayment(() => {
                         setSelectionStudentId(activeChildId);
                         aftercareSheetRef.current?.present();
-                      }}
-                      onSelectFunFriday={() => {
+                      })}
+                      onSelectFunFriday={guardPayment(() => {
                         setSelectionStudentId(activeChildId);
                         funFridaySheetRef.current?.present();
-                      }}
-                      onTuitionCodePress={() =>
+                      })}
+                      onTuitionCodePress={guardPayment(() =>
                         tuitionCodeSheetRef.current?.present()
-                      }
-                      onCheckPress={() => checkSheetRef.current?.present()}
+                      )}
+                      onCheckPress={guardPayment(() => checkSheetRef.current?.present())}
                     />
                   )}
                 </>

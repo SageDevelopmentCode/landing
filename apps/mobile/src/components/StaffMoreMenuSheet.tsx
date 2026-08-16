@@ -1,4 +1,4 @@
-import { forwardRef, useCallback } from "react";
+import { forwardRef, useCallback, useMemo } from "react";
 import { StyleSheet } from "react-native";
 import {
   BottomSheetBackdrop,
@@ -8,6 +8,7 @@ import {
 import { useRouter } from "expo-router";
 import { openBrowserAsync, WebBrowserPresentationStyle } from "expo-web-browser";
 import { Brand } from "@/constants/theme";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   MoreMenuGrid,
   MoreMenuHeader,
@@ -136,8 +137,27 @@ const MENU_SECTIONS: MoreMenuSection[] = [
   },
 ];
 
+const ADMIN_SECTION: MoreMenuSection = {
+  title: "Admin",
+  items: [
+    {
+      label: "Impersonate Parent",
+      icon: "eye-outline",
+      route: "/impersonate-parent",
+      iconColor: "#F97316",
+      iconBg: "rgba(249,115,22,0.12)",
+    },
+  ],
+};
+
 export const StaffMoreMenuSheet = forwardRef<BottomSheetModal>((_, ref) => {
   const router = useRouter();
+  const { userRole } = useAuth();
+
+  const menuSections = useMemo(() => {
+    if (userRole !== "super_admin") return MENU_SECTIONS;
+    return [ADMIN_SECTION, ...MENU_SECTIONS];
+  }, [userRole]);
 
   const handleItemPress = useCallback(
     (item: MoreMenuItem) => {
@@ -173,7 +193,7 @@ export const StaffMoreMenuSheet = forwardRef<BottomSheetModal>((_, ref) => {
         showsVerticalScrollIndicator={false}
       >
         <MoreMenuHeader subtitle="Staff tools" />
-        <MoreMenuGrid sections={MENU_SECTIONS} onItemPress={handleItemPress} />
+        <MoreMenuGrid sections={menuSections} onItemPress={handleItemPress} />
       </BottomSheetScrollView>
     </BottomSheetModal>
   );

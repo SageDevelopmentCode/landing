@@ -8,7 +8,7 @@ import { notifyError } from "@/lib/discord";
 
 export function useStripePayment() {
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
-  const { effectiveParentId } = useAuth();
+  const { effectiveParentId, isReadOnlyPreview } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -16,6 +16,7 @@ export function useStripePayment() {
     endpoint: string,
     payload: Record<string, unknown>,
   ): Promise<boolean> {
+    if (isReadOnlyPreview) return false;
     setLoading(true);
     setError(null);
     try {

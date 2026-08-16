@@ -50,6 +50,11 @@ import {
   isConferenceTeacher,
   type StaffConferenceBooking,
 } from "@/lib/staff-conference-bookings";
+import {
+  getChicagoDateTimeParts,
+  isSchoolYearPickupReminderWindow,
+  isStudentAwaitingPickup,
+} from "@/lib/pickup-reminder";
 
 // ─── Greeting helpers ─────────────────────────────────────────────────────────
 
@@ -729,6 +734,20 @@ export default function StaffHomeScreen() {
   const [conferenceBookingsLoading, setConferenceBookingsLoading] =
     useState(false);
   const showConferenceSection = isConferenceTeacher(userId);
+
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const update = () => setNow(new Date());
+    update();
+    const id = setInterval(() => {
+      const { hour, dayOfWeek } = getChicagoDateTimeParts();
+      if (dayOfWeek >= 1 && dayOfWeek <= 4 && hour >= 14) {
+        update();
+      }
+    }, 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   // ── Load user profile ────────────────────────────────────────────────────────
 
@@ -1677,6 +1696,23 @@ export default function StaffHomeScreen() {
     statusPriority,
   );
 
+  const showPickupReminder =
+    selectedDate === todayActual &&
+    !selectedIsFriday &&
+    isSchoolYearPickupReminderWindow(now);
+
+  const unpickedStudents = showPickupReminder
+    ? todayStudents.filter((s) =>
+        isStudentAwaitingPickup(s.schoolYearRecord),
+      )
+    : [];
+
+  const unpickedNamePreview = (() => {
+    const names = unpickedStudents.map((s) => shortName(s.name));
+    if (names.length <= 5) return names.join(", ");
+    return `${names.slice(0, 5).join(", ")} +${names.length - 5} more`;
+  })();
+
   // ── Empty state ───────────────────────────────────────────────────────────────
 
   function renderEmptyState() {
@@ -1981,6 +2017,39 @@ export default function StaffHomeScreen() {
               </Pressable>
             </View>
           </View>
+
+          {unpickedStudents.length > 0 && (
+            <Pressable
+              style={({ pressed }) => [
+                styles.pickupReminderCard,
+                pressed && { opacity: 0.85 },
+              ]}
+              onPress={() => router.push("/(staff)/attendance" as any)}
+            >
+              <View style={styles.pickupReminderIconWrap}>
+                <Ionicons name="warning" size={18} color="#b45309" />
+              </View>
+              <View style={styles.pickupReminderContent}>
+                <View style={styles.pickupReminderTitleRow}>
+                  <Text style={styles.pickupReminderTitle}>
+                    Pickup not recorded
+                  </Text>
+                  <View style={styles.pickupReminderBadge}>
+                    <Text style={styles.pickupReminderBadgeText}>
+                      {unpickedStudents.length}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.pickupReminderBody}>
+                  {unpickedNamePreview}
+                </Text>
+                <Text style={styles.pickupReminderHint}>
+                  Tap to record pickup in Attendance
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color="#b45309" />
+            </Pressable>
+          )}
 
           {/* Search bar */}
           <View style={styles.searchRow}>
@@ -3095,6 +3164,57 @@ const styles = StyleSheet.create({
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 12,
     color: Brand.sage700,
+  },
+  pickupReminderCard: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    marginHorizontal: 16,
+    marginBottom: 10,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: "#fffbeb",
+    borderWidth: 1,
+    borderColor: "#fde68a",
+  },
+  pickupReminderIconWrap: {
+    marginTop: 1,
+  },
+  pickupReminderContent: {
+    flex: 1,
+    gap: 4,
+  },
+  pickupReminderTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  pickupReminderTitle: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 14,
+    color: "#92400e",
+  },
+  pickupReminderBadge: {
+    backgroundColor: "#fde68a",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 9999,
+  },
+  pickupReminderBadgeText: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 12,
+    color: "#92400e",
+  },
+  pickupReminderBody: {
+    fontFamily: FontFamilies.body,
+    fontSize: 13,
+    color: "#b45309",
+    lineHeight: 18,
+  },
+  pickupReminderHint: {
+    fontFamily: FontFamilies.body,
+    fontSize: 11,
+    color: "#d97706",
   },
 
   // Search

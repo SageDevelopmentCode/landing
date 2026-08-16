@@ -170,6 +170,7 @@ function RootLayout() {
                   name="interested"
                   options={{ presentation: "fullScreenModal", animation: "slide_from_bottom" }}
                 />
+                <Stack.Screen name="impersonate-parent" options={{ headerShown: false }} />
               </Stack>
             </ThemeProvider>
           </Sentry.ErrorBoundary>

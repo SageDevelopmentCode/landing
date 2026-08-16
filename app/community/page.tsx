@@ -9,10 +9,11 @@ import { Dancing_Script } from "next/font/google";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import FloatingSMSButton from "../components/FloatingSMSButton";
+import ContactDialog from "../components/ContactDialog";
 import WeekRecapPreview from "../components/WeekRecapPreview";
-import WaitlistDialog from "../components/WaitlistDialog";
 import EveningSpotlight from "../components/community/EveningSpotlight";
 import PlantCatalog from "../components/community/PlantCatalog";
+import { formatPhone } from "@/app/utils/formatPhone";
 
 const dancingScript = Dancing_Script({
   subsets: ["latin"],
@@ -205,19 +206,19 @@ const PHILOSOPHY_PILLARS = [
     icon: "🌱",
     title: "Hands-on Learning",
     desc: "Children learn best by doing — building, growing, experimenting.",
-    image: "/assets/ImageOne.jpg",
+    image: "/assets/Stock2.jpg",
   },
   {
     icon: "🌳",
     title: "Movement & Nature",
     desc: "Outside is a classroom. Daily outdoor time is non-negotiable.",
-    image: "/assets/ImageSeven.jpg",
+    image: "/assets/Stock1.jpg",
   },
   {
     icon: "🎨",
     title: "Creative Expression",
     desc: "Art, storytelling, and music are core — not extras.",
-    image: "/assets/ImageEleven.jpg",
+    image: "/assets/Stock4.jpg",
   },
   {
     icon: "🏠",
@@ -229,6 +230,24 @@ const PHILOSOPHY_PILLARS = [
 
 const inputClass =
   "border border-gray-200 rounded-xl px-4 py-3 text-sm font-body text-text-gray placeholder-gray-400 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-60 disabled:cursor-not-allowed";
+
+const HEAR_ABOUT_OPTIONS = [
+  { value: "friend", label: "Friend / Word of Mouth" },
+  { value: "instagram", label: "Instagram" },
+  { value: "facebook", label: "Facebook" },
+  { value: "google", label: "Google" },
+  { value: "nextdoor", label: "Nextdoor" },
+  { value: "other", label: "Other" },
+] as const;
+
+const SAGE_FIELD_FAMILY_OPTIONS: {
+  value: "yes" | "no" | "interested";
+  label: string;
+}[] = [
+  { value: "yes", label: "Yes" },
+  { value: "no", label: "No" },
+  { value: "interested", label: "Interested in learning more" },
+];
 
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(false);
@@ -250,8 +269,21 @@ export default function CommunityGardenPage() {
     mins: 0,
     secs: 0,
   });
-  const [waitlistOpen, setWaitlistOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
   const [pickedPlants, setPickedPlants] = useState<Set<string>>(new Set());
+  const [referralSource, setReferralSource] = useState("");
+  const [parentName, setParentName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [adultsAttending, setAdultsAttending] = useState("");
+  const [childrenAttending, setChildrenAttending] = useState("");
+  const [isSageFieldFamily, setIsSageFieldFamily] = useState<
+    "yes" | "no" | "interested" | ""
+  >("");
+  const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mobileGalleryRef = useRef<HTMLDivElement>(null);
@@ -351,6 +383,50 @@ export default function CommunityGardenPage() {
       else next.add(plant);
       return next;
     });
+  };
+
+  const handleRSVPSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError(null);
+
+    if (!isSageFieldFamily) {
+      setFormError("Please let us know if you're a Sage Field family.");
+      return;
+    }
+
+    const phoneDigits = phone.replace(/\D/g, "");
+    if (phoneDigits.length > 0 && phoneDigits.length < 10) {
+      setFormError("Please enter a valid 10-digit phone number.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/community/garden-day/rsvp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          parentName,
+          email,
+          phone: phone || undefined,
+          adultsAttending,
+          childrenAttending,
+          isSageFieldFamily,
+          hearAboutUs: referralSource || undefined,
+          notes: notes || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setFormError(data.error ?? "Something went wrong. Please try again.");
+      } else {
+        setSubmitted(true);
+      }
+    } catch {
+      setFormError("Network error. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -728,10 +804,10 @@ export default function CommunityGardenPage() {
         </div>
       </section>
 
-      {/* ── RSVP PLACEHOLDER ── */}
+      {/* ── RSVP ── */}
       <section
         id="rsvp-section"
-        className="py-20 px-8 sm:px-12 lg:px-16 bg-welcome-bg"
+        className="py-16 sm:py-20 px-4 sm:px-12 lg:px-16 bg-welcome-bg"
       >
         <div className="max-w-3xl mx-auto">
           <motion.div
@@ -757,17 +833,6 @@ export default function CommunityGardenPage() {
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="mb-6 rounded-xl bg-sage-700 text-white px-5 py-4 text-center font-body text-sm font-semibold shadow-md"
-          >
-            RSVP opens soon — save the date! The form below previews what
-            we&apos;ll ask when registration is live.
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
             className="flex flex-wrap justify-center gap-3 mb-8"
           >
@@ -786,115 +851,169 @@ export default function CommunityGardenPage() {
             ))}
           </motion.div>
 
-          <div
-            className="text-left space-y-5 bg-white rounded-2xl shadow-md p-6 sm:p-8 border border-gray-100"
-            aria-disabled="true"
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.15 }}
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-semibold text-text-gray font-body">
-                  Parent / Guardian Name
-                </label>
-                <input
-                  type="text"
-                  placeholder="Jane Smith"
-                  disabled
-                  className={inputClass}
-                />
+            {submitted ? (
+              <div className="bg-white border-y border-gray-100 sm:border sm:rounded-2xl sm:shadow-md -mx-4 sm:mx-0 px-4 py-8 sm:p-8 text-center space-y-4">
+                <h3 className="text-2xl font-bold text-text-gray font-heading">
+                  You&apos;re on the list!
+                </h3>
+                <p className="text-base text-gray-500 font-body leading-relaxed">
+                  We&apos;ve received your RSVP and sent a confirmation to your
+                  email. We can&apos;t wait to see you on{" "}
+                  <strong>Thursday, August 27</strong>!
+                </p>
               </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-semibold text-text-gray font-body">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  placeholder="jane@example.com"
-                  disabled
-                  className={inputClass}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-semibold text-text-gray font-body">
-                  Phone (Optional)
-                </label>
-                <input
-                  type="tel"
-                  placeholder="(512) 555-0100"
-                  disabled
-                  className={inputClass}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-semibold text-text-gray font-body">
-                  Child&apos;s Name
-                </label>
-                <input
-                  type="text"
-                  placeholder="Alex Smith"
-                  disabled
-                  className={inputClass}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-semibold text-text-gray font-body">
-                  Child&apos;s Age
-                </label>
-                <input
-                  type="number"
-                  placeholder="4"
-                  disabled
-                  className={inputClass}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-semibold text-text-gray font-body">
-                  Adults Attending
-                </label>
-                <input
-                  type="text"
-                  placeholder="2 adults"
-                  disabled
-                  className={inputClass}
-                />
-              </div>
-            </div>
+            ) : (
+              <form
+                onSubmit={handleRSVPSubmit}
+                className="text-left space-y-5 bg-white border-y border-gray-100 sm:border sm:rounded-2xl sm:shadow-md -mx-4 sm:mx-0 px-4 py-6 sm:p-8"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-semibold text-text-gray font-body">
+                      Parent / Guardian Name{" "}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Jane Smith"
+                      required
+                      value={parentName}
+                      onChange={(e) => setParentName(e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-semibold text-text-gray font-body">
+                      Email <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="jane@example.com"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5 sm:col-span-2">
+                    <label className="text-sm font-semibold text-text-gray font-body">
+                      Phone (Optional)
+                    </label>
+                    <input
+                      type="tel"
+                      placeholder="(512) 555-0100"
+                      value={phone}
+                      onChange={(e) => setPhone(formatPhone(e.target.value))}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-semibold text-text-gray font-body">
+                      Adults Attending <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="2 adults"
+                      required
+                      value={adultsAttending}
+                      onChange={(e) => setAdultsAttending(e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-semibold text-text-gray font-body">
+                      Children Attending <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="2 children"
+                      required
+                      value={childrenAttending}
+                      onChange={(e) => setChildrenAttending(e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-text-gray font-body">
-                Are you currently a Sage Field family?
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {["Yes", "No", "Interested in learning more"].map((opt) => (
-                  <span
-                    key={opt}
-                    className="px-4 py-2 rounded-full bg-gray-100 text-sm font-body text-gray-500 border border-gray-200"
-                  >
-                    {opt}
-                  </span>
-                ))}
-              </div>
-            </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-semibold text-text-gray font-body">
+                    Are you currently a Sage Field family?{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {SAGE_FIELD_FAMILY_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setIsSageFieldFamily(opt.value)}
+                        className={`px-4 py-2 rounded-full text-sm font-body border transition-colors cursor-pointer ${
+                          isSageFieldFamily === opt.value
+                            ? "bg-sage-100 text-sage-800 border-sage-300 font-semibold"
+                            : "bg-gray-100 text-gray-500 border-gray-200 hover:border-sage-200"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-text-gray font-body">
-                Notes (Optional)
-              </label>
-              <textarea
-                placeholder="What plant are you planning to bring? Any questions?"
-                rows={3}
-                disabled
-                className={inputClass}
-              />
-            </div>
+                <div>
+                  <p className="text-xs font-semibold tracking-widest uppercase text-sage-600 font-body mb-3">
+                    A Bit More
+                  </p>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-semibold text-text-gray font-body">
+                      How did you hear about us?
+                    </label>
+                    <select
+                      value={referralSource}
+                      onChange={(e) => setReferralSource(e.target.value)}
+                      className={`${inputClass} cursor-pointer`}
+                    >
+                      <option value="">Select one</option>
+                      {HEAR_ABOUT_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
 
-            <button
-              type="button"
-              disabled
-              className="w-full bg-gray-300 text-gray-500 font-semibold px-8 py-4 rounded-xl text-base font-body cursor-not-allowed"
-            >
-              RSVP Coming Soon
-            </button>
-          </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-semibold text-text-gray font-body">
+                    Notes (Optional)
+                  </label>
+                  <textarea
+                    placeholder="What plant are you planning to bring? Any questions?"
+                    rows={3}
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className={`${inputClass} resize-none`}
+                  />
+                </div>
+
+                {formError && (
+                  <p className="text-sm text-red-600 font-body">{formError}</p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full bg-primary hover:bg-primary-hover disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold px-8 py-4 rounded-xl text-base font-body shadow-md transition-colors cursor-pointer"
+                >
+                  {submitting ? "Submitting…" : "RSVP — See You There →"}
+                </button>
+              </form>
+            )}
+          </motion.div>
         </div>
       </section>
 
@@ -973,10 +1092,10 @@ export default function CommunityGardenPage() {
           >
             <button
               type="button"
-              onClick={() => setWaitlistOpen(true)}
+              onClick={() => setContactOpen(true)}
               className="text-sm font-semibold text-sage-700 font-body underline underline-offset-2 hover:text-primary transition-colors cursor-pointer"
             >
-              Join our waitlist for future programs →
+              Have any questions? →
             </button>
           </motion.div>
         </div>
@@ -1014,9 +1133,9 @@ export default function CommunityGardenPage() {
         <FloatingSMSButton />
       </div>
 
-      <WaitlistDialog
-        isOpen={waitlistOpen}
-        onClose={() => setWaitlistOpen(false)}
+      <ContactDialog
+        isOpen={contactOpen}
+        onClose={() => setContactOpen(false)}
       />
     </div>
   );
