@@ -147,6 +147,13 @@ const ADMIN_SECTION: MoreMenuSection = {
       iconColor: "#F97316",
       iconBg: "rgba(249,115,22,0.12)",
     },
+    {
+      label: "Teacher IDs",
+      icon: "card-outline",
+      route: "/(staff)/teacher-ids",
+      iconColor: "#5E7C68",
+      iconBg: "rgba(94,124,104,0.12)",
+    },
   ],
 };
 

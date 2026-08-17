@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { X, CheckCircle2, ImageIcon, Loader2 } from "lucide-react";
-import { getPhotos, getPhotoSignedUrlsBatch, type TeacherPhoto } from "@/app/actions/photos";
+import { getAllSchoolPhotos, getPhotoSignedUrlsBatch, type TeacherPhoto } from "@/app/actions/photos";
 import { addLibraryPhotoToSection, type DBSectionImage } from "@/app/actions/newsletter";
 
 type DateGroup = { date: string; label: string; photos: TeacherPhoto[] };
@@ -71,7 +71,7 @@ export default function PhotoLibraryPickerModal({ sectionId, usedStoragePaths, o
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const fetched = await getPhotos();
+      const fetched = await getAllSchoolPhotos();
       setPhotos(fetched);
       setLoading(false);
     }
@@ -190,7 +190,7 @@ export default function PhotoLibraryPickerModal({ sectionId, usedStoragePaths, o
           {loading ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3 text-gray-400">
               <Loader2 className="w-6 h-6 animate-spin" />
-              <p className="text-sm font-body">Loading your photos…</p>
+              <p className="text-sm font-body">Loading school photos…</p>
             </div>
           ) : photos.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3 text-gray-400">

@@ -34,6 +34,12 @@ export type StudentDefaultPreference = {
   participation_level: "watch" | "cook_no_eat" | "full";
 };
 
+export type SchoolDayFoodPreference = {
+  student_id: string;
+  emergency_snack_preference: "always_allow" | "ask_permission" | "approved_only";
+  shared_food_preference: "always_allow" | "ask_each_time" | "do_not_offer";
+};
+
 export default async function PreferencesPage() {
   const supabase = await createServerSupabaseClient();
   const {
@@ -62,6 +68,7 @@ export default async function PreferencesPage() {
     { data: savedPrefsData },
     activities,
     { data: studentDefaultsData },
+    { data: schoolDayFoodPrefsData },
   ] = await Promise.all([
     adminClient
       .schema("admin")
@@ -99,6 +106,11 @@ export default async function PreferencesPage() {
       .from("student_default_preferences")
       .select("student_id, participation_level")
       .eq("parent_id", effectiveParentId),
+    adminClient
+      .schema("parent_app")
+      .from("student_school_day_food_preferences")
+      .select("student_id, emergency_snack_preference, shared_food_preference")
+      .eq("parent_id", effectiveParentId),
   ]);
 
   if ((enrolledCheck ?? []).length === 0) redirect("/parent/dashboard");
@@ -122,6 +134,7 @@ export default async function PreferencesPage() {
 
   const savedPreferences: SavedPreference[] = (savedPrefsData ?? []) as SavedPreference[];
   const studentDefaults: StudentDefaultPreference[] = (studentDefaultsData ?? []) as StudentDefaultPreference[];
+  const schoolDayFoodPreferences: SchoolDayFoodPreference[] = (schoolDayFoodPrefsData ?? []) as SchoolDayFoodPreference[];
 
   return (
     <div className="bg-welcome-bg">
@@ -158,6 +171,7 @@ export default async function PreferencesPage() {
             paidDatesByStudent={paidDatesByStudent}
             savedPreferences={savedPreferences}
             studentDefaults={studentDefaults}
+            schoolDayFoodPreferences={schoolDayFoodPreferences}
           />
         </main>
       </div>

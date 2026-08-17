@@ -83,6 +83,7 @@ import {
   buildPaidDaysByMonth,
   formatCents,
   formatHomeschoolSubline,
+  formatSchoolYearMonthsFromMetadata,
   formatWeekdayKeys,
   getGradeTier,
   getWeekdaysForMonth,
@@ -10236,6 +10237,13 @@ export default function BillingPage({
             function getSubLine(): string | null {
               if (selectedTx!.payment_type === "summer_tuition") return null;
               if (meta.selected_months) {
+                if (selectedTx!.payment_type === "school_year_tuition") {
+                  const formatted = formatSchoolYearMonthsFromMetadata(
+                    meta.selected_months,
+                    "short",
+                  );
+                  if (formatted) return formatted;
+                }
                 const months = meta.selected_months.split(",").filter(Boolean);
                 if (months.length > 0) return months.join(", ");
               }

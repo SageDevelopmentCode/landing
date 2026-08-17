@@ -1,6 +1,32 @@
 import { supabase } from "@/lib/supabase";
 
-const SCHOOL_YEAR_PROGRAM = "school_year_26_27";
+export const SCHOOL_YEAR_PROGRAM = "school_year_26_27";
+const HOMESCHOOL_DROP_IN_PROGRAM = "homeschool_drop_in";
+
+function isSchoolYearDropInBilling(
+  dropInProgram: string | null | undefined,
+): boolean {
+  return dropInProgram === SCHOOL_YEAR_PROGRAM || dropInProgram === "both";
+}
+
+export function isSchoolYearTeacherAssignment(
+  program: string,
+  dropInProgram: string | null | undefined,
+): boolean {
+  if (program === SCHOOL_YEAR_PROGRAM) return true;
+  if (program === HOMESCHOOL_DROP_IN_PROGRAM) {
+    return isSchoolYearDropInBilling(dropInProgram);
+  }
+  return false;
+}
+
+export function isHomeschoolDropInTeacherAssignment(
+  program: string,
+  dropInProgram: string | null | undefined,
+): boolean {
+  if (program !== HOMESCHOOL_DROP_IN_PROGRAM) return false;
+  return isSchoolYearDropInBilling(dropInProgram);
+}
 
 function abbreviateName(fullName: string): string {
   const parts = fullName.trim().split(/\s+/);

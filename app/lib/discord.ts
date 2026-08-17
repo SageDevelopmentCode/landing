@@ -3,6 +3,8 @@
  * Sends formatted notifications to Discord when forms are submitted
  */
 
+import { schoolYearMonthLabel } from "@/shared/billing/school-year";
+
 interface DiscordEmbedField {
   name: string;
   value: string;
@@ -1758,6 +1760,37 @@ export function createCustomTuitionEmbed(data: {
   };
 }
 
+export function createSchoolYearTuitionEmbed(data: {
+  parentName: string;
+  parentEmail: string;
+  childName: string;
+  amountCents: number;
+  selectedMonthIndices?: number[];
+}): DiscordEmbed {
+  const amountDollars = (data.amountCents / 100).toFixed(2);
+  const monthLabels =
+    data.selectedMonthIndices?.map((index) => schoolYearMonthLabel(index)) ?? [];
+  const title =
+    monthLabels.length === 1
+      ? `📚 ${monthLabels[0]} Tuition Paid`
+      : "📚 School Year Tuition Paid";
+  const fields: DiscordEmbedField[] = [
+    { name: "Parent", value: data.parentName || "N/A", inline: true },
+    { name: "Email", value: data.parentEmail || "N/A", inline: true },
+    { name: "Child", value: data.childName || "N/A", inline: true },
+  ];
+  if (monthLabels.length > 1) {
+    fields.push({ name: "Months", value: monthLabels.join(", "), inline: true });
+  }
+  fields.push({ name: "Amount Paid", value: `$${amountDollars}`, inline: true });
+  return {
+    title,
+    color: 0x4a7c59,
+    fields,
+    timestamp: new Date().toISOString(),
+  };
+}
+
 export function createSupplyFeeEmbed(data: {
   parentName: string;
   parentEmail: string;
@@ -2021,6 +2054,47 @@ export function createFreeFridayRegistrationEmbed(data: {
     title: "🌿 Free Friday Registration",
     color: 0x4a7c59,
     fields,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+export function createSchoolDayFoodPreferencesSavedEmbed(data: {
+  parentName: string;
+  parentEmail: string;
+  childName: string;
+  emergencySnack: string;
+  sharedFood: string;
+}): DiscordEmbed {
+  const EMERGENCY_LABELS: Record<string, string> = {
+    always_allow: "Always allow emergency/backup snack",
+    ask_permission: "Ask for permission before offering",
+    approved_only: "Only approved foods",
+  };
+
+  const SHARED_FOOD_LABELS: Record<string, string> = {
+    always_allow: "Always allow shared classroom foods",
+    ask_each_time: "Ask me each time",
+    do_not_offer: "Do not offer shared/gifted foods",
+  };
+
+  return {
+    title: "🍎 School Day Food Preferences Saved",
+    color: 0x4a7c59,
+    fields: [
+      { name: "Parent", value: data.parentName || "N/A", inline: true },
+      { name: "Email", value: data.parentEmail || "N/A", inline: true },
+      { name: "Child", value: data.childName || "N/A", inline: true },
+      {
+        name: "Emergency / Backup Snacks",
+        value: EMERGENCY_LABELS[data.emergencySnack] ?? data.emergencySnack,
+        inline: false,
+      },
+      {
+        name: "Shared / Gifted Foods",
+        value: SHARED_FOOD_LABELS[data.sharedFood] ?? data.sharedFood,
+        inline: false,
+      },
+    ],
     timestamp: new Date().toISOString(),
   };
 }

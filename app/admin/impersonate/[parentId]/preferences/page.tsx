@@ -8,7 +8,7 @@ import ImpersonateNotificationBell from "../../ImpersonateNotificationBell";
 import PreferencesPageClient from "@/app/parent/preferences/PreferencesPageClient";
 import { getPublishedActivities } from "@/app/actions/activities";
 import { computePaidDates } from "@/app/lib/compute-paid-dates";
-import type { PreferenceChild, SavedPreference, StudentDefaultPreference } from "@/app/parent/preferences/page";
+import type { PreferenceChild, SavedPreference, StudentDefaultPreference, SchoolDayFoodPreference } from "@/app/parent/preferences/page";
 
 export default async function ImpersonatePreferencesPage({
   params,
@@ -26,6 +26,7 @@ export default async function ImpersonatePreferencesPage({
     { data: savedPrefsData },
     activities,
     { data: studentDefaultsData },
+    { data: schoolDayFoodPrefsData },
   ] = await Promise.all([
     adminClient
       .schema("admin")
@@ -56,6 +57,11 @@ export default async function ImpersonatePreferencesPage({
       .from("student_default_preferences")
       .select("student_id, participation_level")
       .eq("parent_id", effectiveParentId),
+    adminClient
+      .schema("parent_app")
+      .from("student_school_day_food_preferences")
+      .select("student_id, emergency_snack_preference, shared_food_preference")
+      .eq("parent_id", effectiveParentId),
   ]);
 
   if (!adminUser) notFound();
@@ -70,6 +76,7 @@ export default async function ImpersonatePreferencesPage({
 
   const savedPreferences: SavedPreference[] = (savedPrefsData ?? []) as SavedPreference[];
   const studentDefaults: StudentDefaultPreference[] = (studentDefaultsData ?? []) as StudentDefaultPreference[];
+  const schoolDayFoodPreferences: SchoolDayFoodPreference[] = (schoolDayFoodPrefsData ?? []) as SchoolDayFoodPreference[];
 
   const fullName = adminUser.full_name ?? null;
   const email = (adminUser.email as string | null) ?? "";
@@ -91,6 +98,7 @@ export default async function ImpersonatePreferencesPage({
           paidDatesByStudent={paidDatesByStudent}
           savedPreferences={savedPreferences}
           studentDefaults={studentDefaults}
+          schoolDayFoodPreferences={schoolDayFoodPreferences}
         />
       </main>
     </div>

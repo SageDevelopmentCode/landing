@@ -6,6 +6,7 @@ import {
   HOMESCHOOL_TIERS,
   SCHOOL_YEAR_TUITION_PRIMARY_CENTS,
   SCHOOL_YEAR_TUITION_UPPER_CENTS,
+  formatSchoolYearMonthIndices,
 } from "@/shared/billing/school-year";
 import { createServerSupabaseClient } from "./supabase-server";
 
@@ -4166,6 +4167,91 @@ export async function buildSummerWeekElevenNewsletterEmail(opts: {
   return { subject, content };
 }
 
+export async function buildSummerWeekTwelveNewsletterEmail(opts: {
+  g1FullName: string;
+  childLegalName: string;
+}): Promise<{ subject: string; content: string }> {
+  const firstName = opts.g1FullName.split(" ")[0];
+  const subject =
+    "Week Twelve Newsletter — First Day of School Tomorrow (Aug 17) 🌿";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+
+  <p style="margin-bottom: 24px;">Hi ${firstName}!</p>
+
+  <div style="background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px; font-size: 14px; color: #2c2c2c;">
+    <p style="margin: 0 0 8px 0; font-size: 15px; font-weight: bold; color: #b45309;">🏫 First Day of School Tomorrow!</p>
+    <p style="margin: 0;">The first day of school is <strong>tomorrow, Monday, August 17</strong> — and we can't wait to welcome everyone back! We'll be celebrating with a <strong>coffee bar and photo booth</strong> on arrival. See you soon!</p>
+  </div>
+
+  <p style="margin-bottom: 20px;">It's bittersweet to know that summer has officially come to an end. Over these 12 weeks we've played in mud and pouring rain, made castles in the sandpit, raced down water slides and slip n' slides, wore the coolest costumes, made just about every popsicle flavor we could, and new friendships were made — one of which was welcoming <strong>Ms. Joy</strong>!</p>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">🌿 What We've Been Up To</h2>
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px;">
+    <ul style="margin: 0; padding-left: 18px; line-height: 2.1; font-size: 14px; color: #2c2c2c;">
+      <li>🔢 <strong>Math Review</strong> — place value, long addition and subtraction, multi-step word problems, data analysis, fractions, telling time, and multiplication</li>
+      <li>📚 <strong>ELA Review</strong> — fiction vs. nonfiction, reading comprehension, spelling, grammar, writing, and comparing and contrasting</li>
+      <li>💡 <strong>Skill Strengthening</strong> — every focus this summer was a chance for students to strengthen their skills before diving into the school year — nothing new was introduced</li>
+      <li>🍪 <strong>Cooking: Chocolate Chip Cookies</strong> — kids measured and made their own little batch of cookie dough before mixing it all together and baking their own personal cookie</li>
+      <li>💛 <strong>Friendship Building</strong> — learning how to build meaningful friendships, communicate with one another, and express how we're feeling during our final week together</li>
+      <li>🏫 <strong>Classroom Rearrangement</strong> — students helped design, decorate, and share their ideas about how they wanted their classroom to feel</li>
+    </ul>
+  </div>
+
+  <p style="margin-bottom: 20px; font-size: 14px; color: #444;">We've put together our twelfth and final summer newsletter — a closer look at the week through photos and classroom moments.</p>
+
+  <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 8px; padding: 20px 24px; margin: 28px 0; text-align: center;">
+    <p style="margin: 0 0 6px 0; font-size: 15px; font-weight: bold; color: #2C5F2E;">📰 Our Twelfth Newsletter is Live!</p>
+    <p style="margin: 0 0 18px 0; font-size: 13px; color: #555;">Photos, classroom moments, and a deeper look into our final week of summer.</p>
+    <a href="https://sagefield.co/newsletter/c958dfbf-b98b-435f-8876-066dbcf279cf" style="background: #2C5F2E; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-family: Georgia, serif; font-size: 15px; display: inline-block;">Read the Newsletter →</a>
+    <div style="margin-top: 14px;">
+      <span style="display: inline-block; background: #f7f4f0; border: 1px solid #a8c5a0; border-radius: 999px; padding: 5px 14px; font-size: 12px; color: #555;">🔑 Password: <strong>weektwelve</strong></span>
+    </div>
+  </div>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">📣 Reminders</h2>
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px;">
+    <ul style="margin: 0; padding-left: 18px; line-height: 2.1; font-size: 14px; color: #2c2c2c;">
+      <li>📸 <strong>Family photos</strong> — Upper &amp; Primary: bring a printed photo; Lower: send a digital copy before the end of the week</li>
+      <li>🔍 <strong>Lost &amp; Found</strong> — our Lost &amp; Found was emptied on Friday, August 14. Please check with us if you're missing anything!</li>
+      <li>☀️ <strong>Sunscreen &amp; bug spray</strong> — we are transitioning to spray sunscreen, spray bug spray, and facial sunscreen sticks only. Please do not send cream sunscreen or cream bug spray for the body, as spray options help us make reapplication more efficient</li>
+      <li>🏷️ <strong>Label belongings</strong> — please remember to label all of your child's belongings with their name. This helps us keep items organized and makes it much easier to return anything that gets misplaced</li>
+      <li>🚗 <strong>Drop-off &amp; pick-up</strong> — please pull through the gate during drop-off and pick-up. Do not park in the front unless the gates are closed</li>
+    </ul>
+  </div>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">🎁 Referral Program</h2>
+  <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px; font-size: 14px; color: #2c2c2c;">
+    <p style="margin: 0 0 12px 0;">We're excited to share our <strong>referral program</strong> — and we'd love your help spreading the word about Sage Field!</p>
+    <p style="margin: 0 0 12px 0;">When a family you refer <strong>enrolls in our current school program and pays their registration fee</strong>, you'll receive a <strong>$500 gift card of your choice</strong>. 🎉</p>
+    <p style="margin: 0 0 16px 0;">Simply share your unique referral link — you can find it on your home dashboard. If sharing the link isn't convenient, you can also just let the family know to <strong>mention your name when they apply</strong> and it will still count toward your referral.</p>
+    <p style="margin: 0; color: #888; font-size: 13px;">⏳ This offer is available through the end of our school year.</p>
+  </div>
+
+  <h2 style="font-size: 17px; color: #b45309; margin-top: 32px; margin-bottom: 14px;">🌟 Share Your Story</h2>
+  <div style="background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px; font-size: 14px; color: #2c2c2c;">
+    <p style="margin: 0 0 12px 0;">Has Sage Field made a difference for your family? We'd love to hear about it — and so would other families looking for the right fit for their child.</p>
+    <p style="margin: 0 0 12px 0;">As a thank-you for sharing your experience, we'll send you a <strong>$15 Starbucks gift card ☕</strong>. It only takes a few minutes and means the world to us.</p>
+    <div style="text-align: center; margin-top: 16px;">
+      <a href="https://sagefield.co/testimonial" style="background: #d97706; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-family: Georgia, serif; font-size: 15px; display: inline-block;">Share a Testimonial →</a>
+    </div>
+  </div>
+
+  <p style="margin-bottom: 8px; font-size: 14px; color: #555;">We are so thankful for each of your families and for the beautiful community we are building together. Looking forward to seeing you all tomorrow! 🌱</p>
+
+  <p style="margin-top: 32px; margin-bottom: 4px;">Warmly,</p>
+  <p style="margin-top: 4px;"><strong>Sage Field School</strong></p>
+
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
 export async function buildMeetTheTeacherJoyEmail(opts: {
   parentName: string;
 }): Promise<{ subject: string; content: string }> {
@@ -5004,15 +5090,10 @@ export async function buildSchoolYearTuitionConfirmationEmail(opts: {
 }): Promise<{ subject: string; content: string }> {
   const firstName = opts.g1FullName?.split(" ")[0] ?? "there";
 
-  const MONTH_NAMES: Record<number, string> = {
-    1: "January", 2: "February", 3: "March", 4: "April",
-    5: "May", 6: "June", 7: "July", 8: "August",
-    9: "September", 10: "October", 11: "November", 12: "December",
-  };
-
-  const monthList = opts.selectedMonths && opts.selectedMonths.length > 0
-    ? opts.selectedMonths.map((m) => MONTH_NAMES[m] ?? `Month ${m}`).join(", ")
-    : null;
+  const monthList =
+    opts.selectedMonths && opts.selectedMonths.length > 0
+      ? formatSchoolYearMonthIndices(opts.selectedMonths, "label")
+      : null;
 
   const subject = `School Year Tuition Received — Sage Field School`;
 

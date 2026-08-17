@@ -439,6 +439,35 @@ export function schoolYearMonthShort(monthIndex: number): string {
   return SCHOOL_YEAR_MONTHS.find((m) => m.index === monthIndex)?.short ?? `Month ${monthIndex}`;
 }
 
+export function schoolYearMonthLabel(monthIndex: number): string {
+  return SCHOOL_YEAR_MONTHS.find((m) => m.index === monthIndex)?.label ?? `Month ${monthIndex}`;
+}
+
+export function parseSchoolYearMonthIndices(raw: string): number[] {
+  return raw
+    .split(",")
+    .map(Number)
+    .filter((n) => !isNaN(n) && n > 0);
+}
+
+export function formatSchoolYearMonthIndices(
+  indices: number[],
+  style: "short" | "label" = "short",
+): string {
+  const formatter = style === "label" ? schoolYearMonthLabel : schoolYearMonthShort;
+  return indices.map(formatter).join(", ");
+}
+
+export function formatSchoolYearMonthsFromMetadata(
+  raw: string | undefined,
+  style: "short" | "label" = "short",
+): string | null {
+  if (!raw) return null;
+  const indices = parseSchoolYearMonthIndices(raw);
+  if (indices.length === 0) return null;
+  return formatSchoolYearMonthIndices(indices, style);
+}
+
 export function formatWeekdayKeys(dayKeys: string[]): string {
   const set = new Set(dayKeys);
   return WEEKDAYS.filter(({ key }) => set.has(key))

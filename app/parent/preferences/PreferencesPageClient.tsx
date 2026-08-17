@@ -1,12 +1,21 @@
 "use client";
 
-import { useState } from "react";
-import { SlidersHorizontal, Users, ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
+import { SlidersHorizontal, Users, ChevronDown, UtensilsCrossed, Pencil, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import type { Activity } from "@/app/actions/activities";
-import type { PreferenceChild, SavedPreference, StudentDefaultPreference } from "./page";
+import type {
+  PreferenceChild,
+  SavedPreference,
+  StudentDefaultPreference,
+  SchoolDayFoodPreference,
+} from "./page";
 import { saveActivityPreferences, type PreferenceEntry } from "@/app/actions/preferences";
 import { saveStudentDefaultPreference } from "@/app/actions/studentDefaultPreferences";
+import SchoolDayFoodPreferencesSheet, {
+  getEmergencySnackLabel,
+  getSharedFoodLabel,
+} from "./SchoolDayFoodPreferencesSheet";
 
 type ParticipationLevel = "watch" | "cook_no_eat" | "full";
 
@@ -43,9 +52,17 @@ interface Props {
   paidDatesByStudent: Record<string, string[]>;
   savedPreferences: SavedPreference[];
   studentDefaults: StudentDefaultPreference[];
+  schoolDayFoodPreferences: SchoolDayFoodPreference[];
 }
 
-export default function PreferencesPageClient({ students, activities, paidDatesByStudent, savedPreferences, studentDefaults: initialStudentDefaults }: Props) {
+export default function PreferencesPageClient({
+  students,
+  activities,
+  paidDatesByStudent,
+  savedPreferences,
+  studentDefaults: initialStudentDefaults,
+  schoolDayFoodPreferences: initialSchoolDayFoodPreferences,
+}: Props) {
   const [selectedChildId, setSelectedChildId] = useState(students[0]?.id ?? "");
   const [expandedFoods, setExpandedFoods] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
@@ -53,6 +70,11 @@ export default function PreferencesPageClient({ students, activities, paidDatesB
   const [acknowledged, setAcknowledged] = useState(false);
   const [defaults, setDefaults] = useState<StudentDefaultPreference[]>(initialStudentDefaults);
   const [savingDefault, setSavingDefault] = useState(false);
+  const [schoolDayFoodPrefs, setSchoolDayFoodPrefs] = useState<SchoolDayFoodPreference[]>(
+    initialSchoolDayFoodPreferences,
+  );
+  const [foodSheetOpen, setFoodSheetOpen] = useState(false);
+  const [foodSheetStudentId, setFoodSheetStudentId] = useState<string | null>(null);
   const [preferences, setPreferences] = useState<AllPreferences>(() => {
     const init: AllPreferences = {};
     for (const child of students) {
@@ -70,10 +92,44 @@ export default function PreferencesPageClient({ students, activities, paidDatesB
     return init;
   });
 
+  const selectedSchoolDayFoodPref = schoolDayFoodPrefs.find(
+    (p) => p.student_id === selectedChildId,
+  );
+
+  function childNeedsSchoolDayFoodPrefs(childId: string) {
+    return !schoolDayFoodPrefs.some((p) => p.student_id === childId);
+  }
+
+  function handleSchoolDayFoodSaved(pref: SchoolDayFoodPreference) {
+    setSchoolDayFoodPrefs((prev) => {
+      const without = prev.filter((p) => p.student_id !== pref.student_id);
+      return [...without, pref];
+    });
+  }
+
+  function openFoodSheetForStudent(studentId: string) {
+    setFoodSheetStudentId(studentId);
+    setFoodSheetOpen(true);
+  }
+
+  function maybeOpenFoodSheetForChild(childId: string) {
+    if (childNeedsSchoolDayFoodPrefs(childId)) {
+      openFoodSheetForStudent(childId);
+    } else {
+      setFoodSheetOpen(false);
+    }
+  }
+
+  useEffect(() => {
+    if (selectedChildId) maybeOpenFoodSheetForChild(selectedChildId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- initial child only
+  }, []);
+
   const handleSelectChild = (childId: string) => {
     setSelectedChildId(childId);
     setSaveStatus("idle");
     setAcknowledged(false);
+    maybeOpenFoodSheetForChild(childId);
   };
 
   function updatePreference(
@@ -166,6 +222,15 @@ export default function PreferencesPageClient({ students, activities, paidDatesB
 
   return (
     <div className="flex-1 flex overflow-hidden">
+      <SchoolDayFoodPreferencesSheet
+        open={foodSheetOpen}
+        onOpenChange={setFoodSheetOpen}
+        students={students}
+        savedPreferences={schoolDayFoodPrefs}
+        initialStudentId={foodSheetStudentId}
+        onSaved={handleSchoolDayFoodSaved}
+      />
+
       {/* Left sidebar — desktop only */}
       <aside className="hidden md:flex flex-col w-56 flex-shrink-0 overflow-y-auto px-3 pt-8 gap-1 bg-white border-r border-gray-100">
         <p className="text-xs font-semibold font-body text-gray-400 uppercase tracking-wider px-2 pb-2">
@@ -200,6 +265,12 @@ export default function PreferencesPageClient({ students, activities, paidDatesB
                   {child.child_legal_name}
                 </p>
               </div>
+              {childNeedsSchoolDayFoodPrefs(child.id) && (
+                <span
+                  className="w-2 h-2 rounded-full bg-amber-500 shrink-0"
+                  aria-label="School day food preferences needed"
+                />
+              )}
             </button>
           );
         })}
@@ -215,7 +286,7 @@ export default function PreferencesPageClient({ students, activities, paidDatesB
               <button
                 key={child.id}
                 onClick={() => handleSelectChild(child.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-body font-medium whitespace-nowrap transition-colors shrink-0 cursor-pointer ${
+                className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-body font-medium whitespace-nowrap transition-colors shrink-0 cursor-pointer ${
                   isActive
                     ? "bg-[#4a7c59]/10 text-gray-800"
                     : "text-gray-400 hover:text-gray-600 hover:bg-black/5"
@@ -234,6 +305,12 @@ export default function PreferencesPageClient({ students, activities, paidDatesB
                   </div>
                 )}
                 <span className="max-w-[10ch] truncate">{child.child_legal_name}</span>
+                {childNeedsSchoolDayFoodPrefs(child.id) && (
+                  <span
+                    className="w-2 h-2 rounded-full bg-amber-500 shrink-0"
+                    aria-label="School day food preferences needed"
+                  />
+                )}
               </button>
             );
           })}
@@ -247,9 +324,95 @@ export default function PreferencesPageClient({ students, activities, paidDatesB
                 Activity Preferences
               </h1>
               <p className="text-sm text-gray-500 font-body">
-                Let us know how each child would like to participate in upcoming activities.
+                Let us know how each child would like to participate in upcoming
+                activities. School day food preferences for snacks and shared
+                foods are separate from activity participation below.
               </p>
             </div>
+
+            {childNeedsSchoolDayFoodPrefs(selectedChildId) && (
+              <div className="mb-8 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-4 flex flex-col gap-3 shadow-sm">
+                <span className="self-start text-xs font-semibold bg-amber-500 text-white px-2 py-0.5 rounded-full font-body">
+                  Action Needed
+                </span>
+                <button
+                  type="button"
+                  onClick={() => openFoodSheetForStudent(selectedChildId)}
+                  className="w-full text-left rounded-xl border border-amber-200/60 bg-amber-100/60 px-3 py-3 flex items-center gap-3 hover:bg-amber-100/80 transition-colors cursor-pointer"
+                >
+                  <span className="text-xl shrink-0">🍎</span>
+                  <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                    <span className="text-sm font-bold text-amber-900 leading-snug font-heading">
+                      School Day Food Preferences
+                    </span>
+                    <span className="text-xs text-amber-800 font-body leading-relaxed">
+                      Please tell us how to handle backup snacks and food shared
+                      by families during the school day. This is a new form,
+                      separate from activity cooking preferences below.
+                    </span>
+                  </div>
+                  <ChevronRight size={16} className="text-amber-600 shrink-0" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openFoodSheetForStudent(selectedChildId)}
+                  className="self-start inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-3 py-1.5 rounded-full transition-colors font-body ml-0"
+                >
+                  Complete preferences
+                  <ChevronRight size={13} />
+                </button>
+              </div>
+            )}
+
+            {selectedSchoolDayFoodPref && (
+              <div className="mb-8 bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 rounded-full bg-amber-50 flex items-center justify-center shrink-0">
+                      <UtensilsCrossed className="w-4 h-4 text-amber-700" />
+                    </div>
+                    <div>
+                      <h2 className="text-sm font-semibold font-heading text-gray-900">
+                        School Day Food Preferences
+                      </h2>
+                      <p className="text-xs font-body text-gray-500">
+                        Saved to your child&apos;s profile for daily food offerings
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => openFoodSheetForStudent(selectedChildId)}
+                    className="flex items-center gap-1.5 text-xs font-semibold font-body text-[#4a7c59] hover:text-[#3d6b4a] transition-colors cursor-pointer shrink-0"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                    Update
+                  </button>
+                </div>
+                <div className="flex flex-col gap-3 text-xs font-body text-gray-600 leading-relaxed">
+                  <div>
+                    <p className="font-semibold text-gray-800 mb-0.5">
+                      Emergency / backup snacks
+                    </p>
+                    <p>
+                      {getEmergencySnackLabel(
+                        selectedSchoolDayFoodPref.emergency_snack_preference,
+                      )}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-800 mb-0.5">
+                      Shared / gifted foods
+                    </p>
+                    <p>
+                      {getSharedFoodLabel(
+                        selectedSchoolDayFoodPref.shared_food_preference,
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* No activities state */}
             {activities.length === 0 && (

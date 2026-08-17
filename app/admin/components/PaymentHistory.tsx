@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { getParentTransactions } from '../../actions/getParentTransactions'
-import { formatHomeschoolSubline } from '@/shared/billing/school-year'
+import { formatHomeschoolSubline, formatSchoolYearMonthsFromMetadata } from '@/shared/billing/school-year'
 
 type Transaction = {
   id: string
@@ -44,6 +44,10 @@ function getSubLine(tx: Transaction): string | null {
   const meta = (tx.metadata ?? {}) as Record<string, string>
   if (tx.payment_type === 'summer_tuition') return null
   if (meta.selected_months) {
+    if (tx.payment_type === 'school_year_tuition') {
+      const formatted = formatSchoolYearMonthsFromMetadata(meta.selected_months, 'short')
+      if (formatted) return formatted
+    }
     const months = meta.selected_months.split(',').filter(Boolean)
     if (months.length > 0) return months.join(', ')
   }

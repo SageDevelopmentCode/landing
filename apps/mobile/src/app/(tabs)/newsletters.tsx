@@ -14,7 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
-import { Brand } from "@/constants/theme";
+import { Brand, BottomTabInset } from "@/constants/theme";
 import { API_BASE_URL } from "@/constants/config";
 import {
   getPublishedNewsletters,
@@ -131,7 +131,10 @@ export default function NewslettersScreen() {
           data={items}
           keyExtractor={(item) => item.id}
           numColumns={2}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[
+            styles.listContent,
+            { paddingBottom: BottomTabInset + 24 },
+          ]}
           columnWrapperStyle={styles.columnWrapper}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={<EmptyState />}
