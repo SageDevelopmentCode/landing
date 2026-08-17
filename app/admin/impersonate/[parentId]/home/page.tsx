@@ -321,6 +321,8 @@ export default async function ImpersonateHomePage({
           checklistComplete={checklistComplete}
           initialCompletedIds={onboardingCompletedIds}
           checklistInteractive
+          actionNeededInteractive
+          readOnlyPreview
           suppressReferralPopup
           hasActivityForPaidDay={hasActivityForPaidDay}
           hasSubmittedTestimonial={hasSubmittedTestimonial}

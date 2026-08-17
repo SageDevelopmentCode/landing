@@ -13,6 +13,8 @@ import {
   MON_THU_SLOTS,
   FRIDAY_SLOTS,
   getDaysForWeek,
+  getFirstAvailableDayForTeacher,
+  isConferenceDayAvailable,
   takenSlotKey,
   formatConferenceDateForDisplay,
 } from "@/app/lib/parent-teacher-conference";
@@ -37,6 +39,7 @@ type Props = {
   hideBanner?: boolean;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  readOnly?: boolean;
 };
 
 export function getPtcBannerSubtext(
@@ -91,6 +94,7 @@ export default function ParentTeacherConferenceSection({
   hideBanner = false,
   open: controlledOpen,
   onOpenChange,
+  readOnly = false,
 }: Props) {
   const [internalOpen, setInternalOpen] = useState(false);
   const open = controlledOpen ?? internalOpen;
@@ -163,9 +167,26 @@ export default function ParentTeacherConferenceSection({
       const current =
         prev[activeChild.studentId] ??
         defaultSelectionForChild(activeChild);
+      const next = { ...current, ...patch };
+
+      if (patch.teacherId !== undefined) {
+        const weekStart = patch.weekStart ?? current.weekStart;
+        const dayDate = patch.dayDate ?? current.dayDate;
+        const weekDays = getDaysForWeek(weekStart);
+        const selectedDay =
+          weekDays.find((d) => d.date === dayDate) ?? weekDays[0];
+        if (!isConferenceDayAvailable(patch.teacherId, selectedDay)) {
+          next.dayDate = getFirstAvailableDayForTeacher(
+            weekStart,
+            patch.teacherId,
+          );
+          next.slot = null;
+        }
+      }
+
       return {
         ...prev,
-        [activeChild.studentId]: { ...current, ...patch },
+        [activeChild.studentId]: next,
       };
     });
     setSubmitError(null);
@@ -200,10 +221,9 @@ export default function ParentTeacherConferenceSection({
   });
 
   function handleWeekChange(start: string) {
-    const days = getDaysForWeek(start);
     updateActiveSelection({
       weekStart: start,
-      dayDate: days[0].date,
+      dayDate: getFirstAvailableDayForTeacher(start, selectedTeacherId),
       slot: null,
     });
   }
@@ -540,10 +560,16 @@ export default function ParentTeacherConferenceSection({
                         Choose a day
                       </h3>
                       <div className="flex flex-wrap gap-2">
-                        {weekDays.map((day) => (
+                        {weekDays.map((day) => {
+                          const dayAvailable = isConferenceDayAvailable(
+                            selectedTeacherId,
+                            day,
+                          );
+                          return (
                           <button
                             key={day.date}
                             type="button"
+                            disabled={!dayAvailable}
                             onClick={() =>
                               updateActiveSelection({
                                 dayDate: day.date,
@@ -551,14 +577,17 @@ export default function ParentTeacherConferenceSection({
                               })
                             }
                             className={`px-3 py-2 rounded-xl text-xs font-semibold font-body transition-colors ${
-                              activeDayDate === day.date
+                              !dayAvailable
+                                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                : activeDayDate === day.date
                                 ? "bg-[#4a7c59] text-white"
                                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                             }`}
                           >
                             {day.label}
                           </button>
-                        ))}
+                          );
+                        })}
                       </div>
                     </section>
 
@@ -696,7 +725,13 @@ export default function ParentTeacherConferenceSection({
               </div>
 
               <div className="shrink-0 border-t border-gray-100 px-5 py-4 flex flex-col gap-2 bg-white">
-                {!isActiveChildBooked && (
+                {!isActiveChildBooked && readOnly && (
+                  <p className="text-center text-xs text-gray-500 font-body leading-relaxed">
+                    Admin preview — read only. Parents book from their own
+                    account.
+                  </p>
+                )}
+                {!isActiveChildBooked && !readOnly && (
                   <>
                     <button
                       type="button"

@@ -31,6 +31,8 @@ import {
   MON_THU_SLOTS,
   formatConferenceDateForDisplay,
   getDaysForWeek,
+  getFirstAvailableDayForTeacher,
+  isConferenceDayAvailable,
   resolveTeacherImageSource,
   takenSlotKey,
   type ConferenceBookingRecord,
@@ -190,9 +192,26 @@ export const ParentTeacherConferenceSheet = forwardRef<
     setSelectionsByStudent((prev) => {
       const current =
         prev[activeChild.studentId] ?? defaultSelectionForChild(activeChild);
+      const next = { ...current, ...patch };
+
+      if (patch.teacherId !== undefined) {
+        const weekStart = patch.weekStart ?? current.weekStart;
+        const dayDate = patch.dayDate ?? current.dayDate;
+        const weekDays = getDaysForWeek(weekStart);
+        const selectedDay =
+          weekDays.find((d) => d.date === dayDate) ?? weekDays[0];
+        if (!isConferenceDayAvailable(patch.teacherId, selectedDay)) {
+          next.dayDate = getFirstAvailableDayForTeacher(
+            weekStart,
+            patch.teacherId,
+          );
+          next.slot = null;
+        }
+      }
+
       return {
         ...prev,
-        [activeChild.studentId]: { ...current, ...patch },
+        [activeChild.studentId]: next,
       };
     });
     setSubmitError(null);
@@ -200,10 +219,9 @@ export const ParentTeacherConferenceSheet = forwardRef<
   }
 
   function handleWeekChange(start: string) {
-    const days = getDaysForWeek(start);
     updateActiveSelection({
       weekStart: start,
-      dayDate: days[0].date,
+      dayDate: getFirstAvailableDayForTeacher(start, selectedTeacherId),
       slot: null,
     });
   }
@@ -553,9 +571,15 @@ export const ParentTeacherConferenceSheet = forwardRef<
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Choose a day</Text>
                 <View style={styles.pillRow}>
-                  {weekDays.map((day) => (
+                  {weekDays.map((day) => {
+                    const dayAvailable = isConferenceDayAvailable(
+                      selectedTeacherId,
+                      day,
+                    );
+                    return (
                     <Pressable
                       key={day.date}
+                      disabled={!dayAvailable}
                       onPress={() =>
                         updateActiveSelection({
                           dayDate: day.date,
@@ -564,19 +588,23 @@ export const ParentTeacherConferenceSheet = forwardRef<
                       }
                       style={[
                         styles.pill,
+                        !dayAvailable && styles.pillDisabled,
                         activeDayDate === day.date && styles.pillSelected,
                       ]}
                     >
                       <Text
                         style={[
                           styles.pillText,
-                          activeDayDate === day.date && styles.pillTextSelected,
+                          !dayAvailable && styles.pillTextDisabled,
+                          activeDayDate === day.date &&
+                            styles.pillTextSelected,
                         ]}
                       >
                         {day.label}
                       </Text>
                     </Pressable>
-                  ))}
+                    );
+                  })}
                 </View>
               </View>
 
@@ -976,6 +1004,9 @@ const styles = StyleSheet.create({
   pillSelected: {
     backgroundColor: Brand.sage700,
   },
+  pillDisabled: {
+    opacity: 0.5,
+  },
   pillText: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 12,
@@ -983,6 +1014,9 @@ const styles = StyleSheet.create({
   },
   pillTextSelected: {
     color: "#fff",
+  },
+  pillTextDisabled: {
+    color: "#9ca3af",
   },
   slotGrid: {
     gap: 8,

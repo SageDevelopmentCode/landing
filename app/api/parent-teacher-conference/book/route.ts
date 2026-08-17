@@ -71,6 +71,7 @@ export async function POST(request: NextRequest) {
       weekStart: validated.weekStart,
       conferenceDate: validated.conferenceDate,
       timeSlot: validated.timeSlot,
+      teacherId: validated.teacherId,
     })
   ) {
     return NextResponse.json({ error: "Invalid date or time slot" }, { status: 400 });

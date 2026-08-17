@@ -420,6 +420,8 @@ interface Props {
   checklistComplete: boolean;
   initialCompletedIds?: string[];
   checklistInteractive?: boolean;
+  actionNeededInteractive?: boolean;
+  readOnlyPreview?: boolean;
   suppressReferralPopup?: boolean;
   hasActivityForPaidDay: boolean;
   hasSubmittedTestimonial: boolean;
@@ -450,6 +452,8 @@ export default function HomePageClient({
   checklistComplete,
   initialCompletedIds,
   checklistInteractive,
+  actionNeededInteractive,
+  readOnlyPreview,
   suppressReferralPopup,
   hasActivityForPaidDay,
   hasSubmittedTestimonial,
@@ -1014,18 +1018,25 @@ export default function HomePageClient({
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8 items-start lg:items-stretch">
         {/* Left column: Students + Drop-Off + Referral */}
         <div className="flex flex-col gap-8">
-          <ActionNeededCard
-            parentId={parentId}
-            hasActivityForPaidDay={hasActivityForPaidDay}
-            schoolYearOnlyApps={schoolYearOnlyApps}
-            summerEnrollments={summerEnrollments}
-            paidSchoolYearByStudent={paidSchoolYearByStudent}
-            paidSupplyFeeByStudent={paidSupplyFeeByStudent}
-            conferenceTeachers={conferenceTeachers}
-            conferenceStudents={conferenceStudents}
-            conferenceBookingsByStudent={conferenceBookingsByStudent}
-            conferenceTakenSlotKeys={conferenceTakenSlotKeys}
-          />
+          <div
+            className={
+              actionNeededInteractive ? "pointer-events-auto" : undefined
+            }
+          >
+            <ActionNeededCard
+              parentId={parentId}
+              hasActivityForPaidDay={hasActivityForPaidDay}
+              schoolYearOnlyApps={schoolYearOnlyApps}
+              summerEnrollments={summerEnrollments}
+              paidSchoolYearByStudent={paidSchoolYearByStudent}
+              paidSupplyFeeByStudent={paidSupplyFeeByStudent}
+              conferenceTeachers={conferenceTeachers}
+              conferenceStudents={conferenceStudents}
+              conferenceBookingsByStudent={conferenceBookingsByStudent}
+              conferenceTakenSlotKeys={conferenceTakenSlotKeys}
+              readOnly={readOnlyPreview}
+            />
+          </div>
 
           {/* Student Cards */}
           <section>
