@@ -34,6 +34,7 @@ type Props = {
   conferenceStudents: ConferenceStudentContext[];
   conferenceBookingsByStudent: Record<string, ConferenceBookingRecord>;
   conferenceTakenSlotKeys: string[];
+  readOnly?: boolean;
 };
 
 export default function ActionNeededCard({
@@ -47,6 +48,7 @@ export default function ActionNeededCard({
   conferenceStudents,
   conferenceBookingsByStudent,
   conferenceTakenSlotKeys,
+  readOnly = false,
 }: Props) {
   const [ptcOpen, setPtcOpen] = useState(false);
 
@@ -166,6 +168,7 @@ export default function ActionNeededCard({
           hideBanner
           open={ptcOpen}
           onOpenChange={setPtcOpen}
+          readOnly={readOnly}
         />
       )}
     </>

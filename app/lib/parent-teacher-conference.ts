@@ -16,11 +16,19 @@ export type ConferenceDay = {
   isFriday: boolean;
 };
 
+export const SABRINA_OBNAMIA_TEACHER_ID =
+  "6db16988-f41e-4249-b3fa-7b6720d11ac0";
+
 export const CONFERENCE_TEACHER_IDS = [
-  "6db16988-f41e-4249-b3fa-7b6720d11ac0",
+  SABRINA_OBNAMIA_TEACHER_ID,
   "bd562de1-18c2-4b47-91d7-5f0b93fee107",
   "68709384-b054-4f38-a4ee-81554dad2eb8",
 ] as const;
+
+/** Teachers who do not work on Fridays — no PTC slots on Friday for these IDs. */
+export const TEACHERS_UNAVAILABLE_FRIDAYS = new Set<string>([
+  SABRINA_OBNAMIA_TEACHER_ID,
+]);
 
 export const CONFERENCE_TEACHERS: ConferenceTeacher[] = [
   {
@@ -95,6 +103,26 @@ export function getDaysForWeek(weekStart: string): ConferenceDay[] {
   });
 }
 
+export function isConferenceDayAvailable(
+  teacherId: string | null,
+  day: ConferenceDay,
+): boolean {
+  if (!teacherId) return true;
+  if (day.isFriday && TEACHERS_UNAVAILABLE_FRIDAYS.has(teacherId)) {
+    return false;
+  }
+  return true;
+}
+
+export function getFirstAvailableDayForTeacher(
+  weekStart: string,
+  teacherId: string | null,
+): string {
+  const days = getDaysForWeek(weekStart);
+  const available = days.find((d) => isConferenceDayAvailable(teacherId, d));
+  return available?.date ?? days[0].date;
+}
+
 export type ConferenceTeacherDisplay = ConferenceTeacher & {
   profileImageUrl: string | null;
 };
@@ -141,6 +169,7 @@ export function isValidConferenceBooking(opts: {
   weekStart: string;
   conferenceDate: string;
   timeSlot: string;
+  teacherId?: string;
 }): boolean {
   const validWeek = CONFERENCE_WEEKS.some((w) => w.start === opts.weekStart);
   if (!validWeek) return false;
@@ -148,6 +177,13 @@ export function isValidConferenceBooking(opts: {
   const weekDays = getDaysForWeek(opts.weekStart);
   const day = weekDays.find((d) => d.date === opts.conferenceDate);
   if (!day) return false;
+
+  if (
+    opts.teacherId &&
+    !isConferenceDayAvailable(opts.teacherId, day)
+  ) {
+    return false;
+  }
 
   if (day.isFriday) {
     return FRIDAY_SLOTS.includes(opts.timeSlot);
