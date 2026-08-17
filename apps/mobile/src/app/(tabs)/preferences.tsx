@@ -14,11 +14,23 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import {
+  BottomSheetBackdrop,
+  BottomSheetModal,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
+import { Image } from "expo-image";
 import { Brand, FontFamilies, Spacing } from "@/constants/theme";
 import { supabase } from "@/lib/supabase";
 import { useAuth, useReadOnlyPreview } from "@/contexts/AuthContext";
 import { notifyDiscord, notifyError } from "@/lib/discord";
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
+import {
+  SchoolDayFoodPreferencesSheet,
+  getEmergencySnackLabel,
+  getSharedFoodLabel,
+  type SchoolDayFoodPreference,
+} from "@/components/SchoolDayFoodPreferencesSheet";
 import { computePaidDates, SUMMER_FIRST_DATE, SUMMER_LAST_DATE, type TxRow } from "@/lib/compute-paid-dates";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -45,6 +57,7 @@ type Activity = {
   description: string | null;
   includes_food: boolean;
   activity_date: string | null;
+  cover_image_url: string | null;
   activity_foods: ActivityFood[];
 };
 
@@ -128,6 +141,46 @@ function computeSavedActivityIds(
   );
 }
 
+async function signActivityCoverUrls(
+  rows: { activity_images?: { id?: string; storage_path: string }[] }[],
+): Promise<Record<string, string>> {
+  const paths = [
+    ...new Set(
+      rows.flatMap((a) =>
+        [...(a.activity_images ?? [])]
+          .sort((x, y) => (x.id ?? "").localeCompare(y.id ?? ""))
+          .map((img) => img.storage_path),
+      ),
+    ),
+  ];
+  if (paths.length === 0) return {};
+
+  const { data, error } = await supabase.storage
+    .from("activity-images")
+    .createSignedUrls(paths, 3600);
+
+  if (error) {
+    console.error("[prefs] activity cover signed URLs:", error.message);
+    return {};
+  }
+
+  const map: Record<string, string> = {};
+  (data ?? []).forEach((item) => {
+    if (item.signedUrl && item.path) map[item.path] = item.signedUrl;
+    else if (item.error) console.error("[prefs] activity cover sign failed:", item.path, item.error);
+  });
+  return map;
+}
+
+function sortActivitiesByDate(activities: Activity[]): Activity[] {
+  return [...activities].sort((a, b) => {
+    if (!a.activity_date && !b.activity_date) return 0;
+    if (!a.activity_date) return 1;
+    if (!b.activity_date) return -1;
+    return a.activity_date.localeCompare(b.activity_date);
+  });
+}
+
 const LEVEL_OPTIONS: { level: ParticipationLevel; emoji: string; label: string }[] = [
   { level: "watch", emoji: "👀", label: "Do not participate, just watch" },
   { level: "cook_no_eat", emoji: "🧑‍🍳", label: "Cook and interact with ingredients but do not consume" },
@@ -187,29 +240,80 @@ export default function PreferencesScreen() {
   const [paidDatesByStudent, setPaidDatesByStudent] = useState<Record<string, string[]>>({});
   const [preferences, setPreferences] = useState<AllPreferences>({});
   const [expandedFoods, setExpandedFoods] = useState<Set<string>>(new Set());
+  const [autoFillExpanded, setAutoFillExpanded] = useState(false);
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
-  const [hasAcknowledged, setHasAcknowledged] = useState(false);
   const [userProfile, setUserProfile] = useState<{ full_name: string; email: string } | null>(null);
 
   const [defaults, setDefaults] = useState<StudentDefault[]>([]);
   const [defaultSaveStatus, setDefaultSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [savedActivityIds, setSavedActivityIds] = useState<Set<string>>(new Set());
+  const [schoolDayFoodPrefs, setSchoolDayFoodPrefs] = useState<SchoolDayFoodPreference[]>([]);
 
   const savedPrefsRaw = useRef<SavedPref[]>([]);
   const savedSnapshot = useRef<Record<string, Pref>>({});
   const defaultSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const foodSheetRef = useRef<BottomSheetModal>(null);
+  const confirmSheetRef = useRef<BottomSheetModal>(null);
+  const initialFoodSheetOpened = useRef(false);
+
+  const ALLERGEN_DISCLAIMER =
+    "I have reviewed the ingredients and allergens listed above. I understand and acknowledge that Sage Field is not responsible for any allergic reactions, dietary sensitivities, or adverse responses related to food items consumed during activities.";
 
   const today = new Date().toISOString().slice(0, 10);
 
   const visibleActivities = useMemo(
-    () => filterVisibleActivities(activities, selectedChildId, paidDatesByStudent, today),
+    () =>
+      sortActivitiesByDate(
+        filterVisibleActivities(activities, selectedChildId, paidDatesByStudent, today),
+      ),
     [activities, selectedChildId, paidDatesByStudent, today],
   );
 
   const currentDefault =
     defaults.find((d) => d.student_id === selectedChildId)?.participation_level ?? null;
+
+  const selectedSchoolDayFoodPref = schoolDayFoodPrefs.find(
+    (p) => p.student_id === selectedChildId,
+  );
+
+  function childNeedsSchoolDayFoodPrefs(childId: string) {
+    return !schoolDayFoodPrefs.some((p) => p.student_id === childId);
+  }
+
+  function openFoodSheet() {
+    foodSheetRef.current?.present();
+  }
+
+  function handleSchoolDayFoodSaved(pref: SchoolDayFoodPreference) {
+    setSchoolDayFoodPrefs((prev) => {
+      const without = prev.filter((p) => p.student_id !== pref.student_id);
+      return [...without, pref];
+    });
+    foodSheetRef.current?.dismiss();
+  }
+
+  function selectChild(childId: string) {
+    setSelectedChildId(childId);
+    setAutoFillExpanded(false);
+    setSaveStatus("idle");
+    const childDefault =
+      defaults.find((d) => d.student_id === childId)?.participation_level ?? null;
+    setSavedActivityIds(
+      computeSavedActivityIds(childId, savedPrefsRaw.current, childDefault),
+    );
+    savedSnapshot.current = buildSnapshotForChild(
+      childId,
+      filterVisibleActivities(activities, childId, paidDatesByStudent, today).map(
+        (a) => a.id,
+      ),
+      savedPrefsRaw.current,
+    );
+    if (childNeedsSchoolDayFoodPrefs(childId)) {
+      setTimeout(() => foodSheetRef.current?.present(), 100);
+    }
+  }
 
   const hasFoodActivities = visibleActivities.some(
     (a) => a.includes_food && a.activity_foods.length > 0,
@@ -229,10 +333,19 @@ export default function PreferencesScreen() {
   });
 
   const canSave =
-    hasUnsavedChanges &&
-    hasAnySelection &&
-    (!hasFoodActivities || hasAcknowledged) &&
-    saveStatus !== "saving";
+    hasUnsavedChanges && hasAnySelection && saveStatus !== "saving";
+
+  const renderConfirmBackdrop = useCallback(
+    (props: React.ComponentProps<typeof BottomSheetBackdrop>) => (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+        pressBehavior="close"
+      />
+    ),
+    [],
+  );
 
   const syncSnapshotForChild = useCallback(
     (childId: string) => {
@@ -253,7 +366,7 @@ export default function PreferencesScreen() {
   const loadData = useCallback(async () => {
     if (!effectiveParentId || !userId) return;
     try {
-      const [studentsRes, txRes, activitiesRes, prefsRes, profileRes, defaultsRes] = await Promise.all([
+      const [studentsRes, txRes, activitiesRes, prefsRes, profileRes, defaultsRes, schoolDayFoodRes] = await Promise.all([
         supabase
           .schema("admin")
           .from("students")
@@ -273,6 +386,7 @@ export default function PreferencesScreen() {
           .from("activities")
           .select(`
             id, title, description, includes_food, activity_date,
+            activity_images ( id, storage_path ),
             activity_foods (
               id, name, sort_order, allergens,
               activity_ingredients ( id, name, sort_order )
@@ -299,6 +413,12 @@ export default function PreferencesScreen() {
           .schema("parent_app")
           .from("student_default_preferences")
           .select("student_id, participation_level"),
+
+        supabase
+          .schema("parent_app")
+          .from("student_school_day_food_preferences")
+          .select("student_id, emergency_snack_preference, shared_food_preference")
+          .eq("parent_id", effectiveParentId),
       ]);
 
       if (studentsRes.error) console.error("[prefs] students:", studentsRes.error.message);
@@ -307,27 +427,39 @@ export default function PreferencesScreen() {
       if (prefsRes.error) console.error("[prefs] preferences:", prefsRes.error.message);
       if (profileRes.error) console.error("[prefs] profile:", profileRes.error.message);
       if (defaultsRes.error) console.error("[prefs] defaults:", defaultsRes.error.message);
+      if (schoolDayFoodRes.error) console.error("[prefs] school day food:", schoolDayFoodRes.error.message);
 
       const kidsData: Child[] = (studentsRes.data ?? []).filter((c: any) => c.id);
 
-      const activitiesData: Activity[] = (activitiesRes.data ?? []).map((a: any) => ({
-        id: a.id,
-        title: a.title,
-        description: a.description ?? null,
-        includes_food: a.includes_food,
-        activity_date: a.activity_date ?? null,
-        activity_foods: (a.activity_foods ?? [])
-          .sort((x: any, y: any) => x.sort_order - y.sort_order)
-          .map((f: any) => ({
-            id: f.id,
-            name: f.name,
-            sort_order: f.sort_order,
-            allergens: f.allergens ?? null,
-            activity_ingredients: (f.activity_ingredients ?? []).sort(
-              (x: any, y: any) => x.sort_order - y.sort_order,
-            ),
-          })),
-      }));
+      const rawActivities = activitiesRes.data ?? [];
+      const coverUrlMap = await signActivityCoverUrls(rawActivities);
+
+      const activitiesData: Activity[] = rawActivities.map((a: any) => {
+        const firstImage = [...(a.activity_images ?? [])].sort((x: any, y: any) =>
+          String(x.id ?? "").localeCompare(String(y.id ?? "")),
+        )[0];
+        return {
+          id: a.id,
+          title: a.title,
+          description: a.description ?? null,
+          includes_food: a.includes_food,
+          activity_date: a.activity_date ?? null,
+          cover_image_url: firstImage
+            ? coverUrlMap[firstImage.storage_path] ?? null
+            : null,
+          activity_foods: (a.activity_foods ?? [])
+            .sort((x: any, y: any) => x.sort_order - y.sort_order)
+            .map((f: any) => ({
+              id: f.id,
+              name: f.name,
+              sort_order: f.sort_order,
+              allergens: f.allergens ?? null,
+              activity_ingredients: (f.activity_ingredients ?? []).sort(
+                (x: any, y: any) => x.sort_order - y.sort_order,
+              ),
+            })),
+        };
+      });
 
       const savedPrefs: SavedPref[] = (prefsRes.data ?? []) as SavedPref[];
       savedPrefsRaw.current = savedPrefs;
@@ -339,6 +471,7 @@ export default function PreferencesScreen() {
       setActivities(activitiesData);
       setPaidDatesByStudent(paidDates);
       setDefaults(fetchedDefaults);
+      setSchoolDayFoodPrefs((schoolDayFoodRes.data ?? []) as SchoolDayFoodPreference[]);
       if (profileRes.data) setUserProfile(profileRes.data as any);
 
       const initPrefs: AllPreferences = {};
@@ -379,6 +512,14 @@ export default function PreferencesScreen() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    if (loading || !selectedChildId || initialFoodSheetOpened.current) return;
+    initialFoodSheetOpened.current = true;
+    if (childNeedsSchoolDayFoodPrefs(selectedChildId)) {
+      setTimeout(() => foodSheetRef.current?.present(), 350);
+    }
+  }, [loading, selectedChildId, schoolDayFoodPrefs]);
 
   useEffect(() => {
     return () => {
@@ -488,7 +629,6 @@ export default function PreferencesScreen() {
     if (!selectedChildId || !effectiveParentId) return;
     if (saveStatus === "saving") return;
     if (!hasUnsavedChanges || !hasAnySelection) return;
-    if (hasFoodActivities && !hasAcknowledged) return;
 
     setSaveStatus("saving");
     try {
@@ -582,6 +722,7 @@ export default function PreferencesScreen() {
         });
       }
 
+      confirmSheetRef.current?.dismiss();
       setSaveStatus("saved");
       if (saveTimer.current) clearTimeout(saveTimer.current);
       saveTimer.current = setTimeout(() => setSaveStatus("idle"), 2500);
@@ -589,6 +730,21 @@ export default function PreferencesScreen() {
       notifyError("preferences-save", err);
       setSaveStatus("error");
     }
+  };
+
+  const handleSavePress = () => {
+    if (isReadOnlyPreview) return;
+    if (!canSave) return;
+    if (hasFoodActivities) {
+      confirmSheetRef.current?.present();
+    } else {
+      handleSave();
+    }
+  };
+
+  const handleConfirmSave = () => {
+    confirmSheetRef.current?.dismiss();
+    handleSave();
   };
 
   const toggleFoods = (activityId: string) => {
@@ -614,48 +770,140 @@ export default function PreferencesScreen() {
     return null;
   })();
 
+  const currentDefaultOption = LEVEL_OPTIONS.find((o) => o.level === currentDefault);
+
   const AutoFillBanner = visibleActivities.length > 0 ? (
     <View style={styles.autoFillCard}>
-      <Text style={styles.autoFillTitle}>Auto-fill preference</Text>
-      <Text style={styles.autoFillDesc}>
-        Set a default for {selectedChildName}. It saves immediately and pre-fills new activities.
-        Tap Save Preferences below to confirm each activity.
-      </Text>
+      <TouchableOpacity
+        style={styles.autoFillHeader}
+        onPress={() => setAutoFillExpanded((v) => !v)}
+        activeOpacity={0.7}
+      >
+        <View style={styles.autoFillHeaderText}>
+          <Text style={styles.autoFillQuestion}>
+            What&apos;s {selectedChildName}&apos;s usual participation level?
+          </Text>
+          {!autoFillExpanded ? (
+            <Text style={styles.autoFillCollapsedSub}>
+              {currentDefaultOption
+                ? `${currentDefaultOption.emoji} ${LEVEL_SHORT_LABEL[currentDefault!]} · Default active`
+                : "Tap to set a default for new activities"}
+            </Text>
+          ) : null}
+        </View>
+        <Ionicons
+          name={autoFillExpanded ? "chevron-down" : "chevron-forward"}
+          size={18}
+          color="#6b7280"
+        />
+      </TouchableOpacity>
 
-      <LevelSegmentedControl
-        value={currentDefault}
-        onChange={(level) => {
-          if (level === null) {
-            if (currentDefault !== null) void handleSetDefault(null);
-          } else if (level !== currentDefault) {
-            void handleSetDefault(level);
-          }
-        }}
-        disabled={defaultSaveStatus === "saving"}
-      />
+      {autoFillExpanded ? (
+        <>
+          <Text style={styles.autoFillDesc}>
+            Saves immediately and pre-fills new activities.
+          </Text>
 
-      {currentDefault !== null && defaultSaveStatus !== "saving" && (
-        <TouchableOpacity
-          style={styles.autoFillClearBtn}
-          onPress={() => handleSetDefault(null)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.autoFillClearText}>Clear default</Text>
-        </TouchableOpacity>
-      )}
+          <LevelSegmentedControl
+            value={currentDefault}
+            onChange={(level) => {
+              if (level === null) {
+                if (currentDefault !== null) void handleSetDefault(null);
+              } else if (level !== currentDefault) {
+                void handleSetDefault(level);
+              }
+            }}
+            disabled={defaultSaveStatus === "saving"}
+          />
 
-      {autoFillStatusText ? (
-        <Text
-          style={[
-            styles.autoFillStatus,
-            defaultSaveStatus === "error" && styles.autoFillStatusError,
-          ]}
-        >
-          {autoFillStatusText}
-        </Text>
+          {currentDefault !== null && defaultSaveStatus !== "saving" && (
+            <TouchableOpacity
+              style={styles.autoFillClearBtn}
+              onPress={() => handleSetDefault(null)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.autoFillClearText}>Clear default</Text>
+            </TouchableOpacity>
+          )}
+
+          {autoFillStatusText ? (
+            <Text
+              style={[
+                styles.autoFillStatus,
+                defaultSaveStatus === "error" && styles.autoFillStatusError,
+              ]}
+            >
+              {autoFillStatusText}
+            </Text>
+          ) : null}
+        </>
       ) : null}
     </View>
   ) : null;
+
+  const ListHeader = (
+    <View style={styles.listHeader}>
+      {selectedChildId && childNeedsSchoolDayFoodPrefs(selectedChildId) ? (
+        <View style={styles.actionNeededCard}>
+          <View style={styles.actionNeededBadge}>
+            <Text style={styles.actionNeededBadgeText}>Action Needed</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.actionNeededRow}
+            onPress={openFoodSheet}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.actionNeededEmoji}>🍎</Text>
+            <View style={styles.actionNeededCopy}>
+              <Text style={styles.actionNeededTitle}>School Day Food Preferences</Text>
+              <Text style={styles.actionNeededBody}>
+                Please tell us how to handle backup snacks and food shared by families
+                during the school day. This is a new form, separate from activity cooking
+                preferences below.
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color="#d97706" />
+          </TouchableOpacity>
+        </View>
+      ) : null}
+
+      {selectedSchoolDayFoodPref ? (
+        <View style={styles.schoolFoodSummary}>
+          <View style={styles.schoolFoodSummaryHeader}>
+            <View style={styles.schoolFoodSummaryTitleRow}>
+              <View style={styles.schoolFoodIconWrap}>
+                <Ionicons name="restaurant-outline" size={16} color="#b45309" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.schoolFoodSummaryTitle}>School Day Food Preferences</Text>
+                <Text style={styles.schoolFoodSummarySubtitle}>
+                  Saved to your child&apos;s profile for daily food offerings
+                </Text>
+              </View>
+            </View>
+            <TouchableOpacity onPress={openFoodSheet} style={styles.updateBtn} activeOpacity={0.7}>
+              <Ionicons name="pencil-outline" size={14} color={Brand.sage700} />
+              <Text style={styles.updateBtnText}>Update</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.schoolFoodSummaryBlock}>
+            <Text style={styles.schoolFoodSummaryLabel}>Emergency / backup snacks</Text>
+            <Text style={styles.schoolFoodSummaryValue}>
+              {getEmergencySnackLabel(selectedSchoolDayFoodPref.emergency_snack_preference)}
+            </Text>
+          </View>
+          <View style={styles.schoolFoodSummaryBlock}>
+            <Text style={styles.schoolFoodSummaryLabel}>Shared / gifted foods</Text>
+            <Text style={styles.schoolFoodSummaryValue}>
+              {getSharedFoodLabel(selectedSchoolDayFoodPref.shared_food_preference)}
+            </Text>
+          </View>
+        </View>
+      ) : null}
+
+      {AutoFillBanner}
+    </View>
+  );
 
   if (loading) {
     return (
@@ -704,23 +952,7 @@ export default function PreferencesScreen() {
           return (
             <TouchableOpacity
               style={[styles.pill, active && styles.pillActive]}
-              onPress={() => {
-                setSelectedChildId(item.id);
-                setSaveStatus("idle");
-                setHasAcknowledged(false);
-                const childDefault =
-                  defaults.find((d) => d.student_id === item.id)?.participation_level ?? null;
-                setSavedActivityIds(
-                  computeSavedActivityIds(item.id, savedPrefsRaw.current, childDefault),
-                );
-                savedSnapshot.current = buildSnapshotForChild(
-                  item.id,
-                  filterVisibleActivities(activities, item.id, paidDatesByStudent, today).map(
-                    (a) => a.id,
-                  ),
-                  savedPrefsRaw.current,
-                );
-              }}
+              onPress={() => selectChild(item.id)}
             >
               <View style={[styles.pillAvatar, { backgroundColor: avatarColor(item.id) }]}>
                 <Text style={styles.pillAvatarText}>{getInitials(item.child_legal_name)}</Text>
@@ -728,6 +960,9 @@ export default function PreferencesScreen() {
               <Text style={[styles.pillName, active && styles.pillNameActive]} numberOfLines={1}>
                 {item.child_legal_name.split(" ")[0]}
               </Text>
+              {childNeedsSchoolDayFoodPrefs(item.id) ? (
+                <View style={styles.pillDot} />
+              ) : null}
             </TouchableOpacity>
           );
         }}
@@ -741,7 +976,7 @@ export default function PreferencesScreen() {
         <FlatList
           data={visibleActivities}
           keyExtractor={(a) => a.id}
-          ListHeaderComponent={AutoFillBanner}
+          ListHeaderComponent={ListHeader}
           contentContainerStyle={[
             styles.listContent,
             { paddingBottom: visibleActivities.length > 0 ? 140 : Spacing.four },
@@ -779,6 +1014,19 @@ export default function PreferencesScreen() {
 
             return (
               <View style={styles.card}>
+                {act.cover_image_url ? (
+                  <Image
+                    source={{ uri: act.cover_image_url }}
+                    style={styles.cardCover}
+                    contentFit="cover"
+                  />
+                ) : (
+                  <View style={[styles.cardCover, styles.cardCoverPlaceholder]}>
+                    <Ionicons name="ribbon-outline" size={28} color="#d1d5db" />
+                  </View>
+                )}
+
+                <View style={styles.cardBody}>
                 <View style={styles.cardHeaderRow}>
                   <View style={styles.cardHeaderText}>
                     <Text style={styles.activityTitle}>{act.title}</Text>
@@ -886,6 +1134,7 @@ export default function PreferencesScreen() {
                     onChangeText={(text) => setPref(act.id, { notes: text })}
                   />
                 )}
+                </View>
               </View>
             );
           }}
@@ -893,33 +1142,13 @@ export default function PreferencesScreen() {
 
         {visibleActivities.length > 0 && (
           <View style={styles.footer}>
-            {hasFoodActivities && (
-              <TouchableOpacity
-                style={styles.ackRow}
-                onPress={() => setHasAcknowledged((v) => !v)}
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name={hasAcknowledged ? "checkbox" : "square-outline"}
-                  size={22}
-                  color={hasAcknowledged ? Brand.sage700 : "#9ca3af"}
-                />
-                <Text style={styles.ackText}>
-                  I have reviewed the ingredients and allergens listed above. I understand and
-                  acknowledge that Sage Field is not responsible for any allergic reactions,
-                  dietary sensitivities, or adverse responses related to food items consumed
-                  during activities.
-                </Text>
-              </TouchableOpacity>
-            )}
-
             {saveStatus === "error" ? (
               <Text style={styles.saveErrorText}>Something went wrong. Please try again.</Text>
             ) : null}
 
             <TouchableOpacity
               style={[styles.saveBtn, !canSave && styles.saveBtnDisabled]}
-              onPress={handleSave}
+              onPress={handleSavePress}
               disabled={!canSave}
               activeOpacity={0.8}
             >
@@ -934,6 +1163,55 @@ export default function PreferencesScreen() {
           </View>
         )}
       </KeyboardAvoidingView>
+
+      <SchoolDayFoodPreferencesSheet
+        ref={foodSheetRef}
+        studentId={selectedChildId}
+        studentName={
+          children.find((c) => c.id === selectedChildId)?.child_legal_name ?? ""
+        }
+        initialPrefs={selectedSchoolDayFoodPref ?? null}
+        effectiveParentId={effectiveParentId}
+        userProfile={userProfile}
+        readOnly={isReadOnlyPreview}
+        onSaved={handleSchoolDayFoodSaved}
+      />
+
+      <BottomSheetModal
+        ref={confirmSheetRef}
+        snapPoints={["45%"]}
+        enablePanDownToClose
+        backdropComponent={renderConfirmBackdrop}
+      >
+        <BottomSheetView style={styles.confirmSheet}>
+          <Text style={styles.confirmTitle}>Review ingredients & allergens</Text>
+          <Text style={styles.confirmBody}>{ALLERGEN_DISCLAIMER}</Text>
+          <View style={styles.confirmActions}>
+            <TouchableOpacity
+              style={styles.confirmCancelBtn}
+              onPress={() => confirmSheetRef.current?.dismiss()}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.confirmCancelText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.confirmSaveBtn,
+                saveStatus === "saving" && styles.saveBtnDisabled,
+              ]}
+              onPress={handleConfirmSave}
+              disabled={saveStatus === "saving"}
+              activeOpacity={0.8}
+            >
+              {saveStatus === "saving" ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.saveBtnText}>Confirm and Save</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </BottomSheetView>
+      </BottomSheetModal>
     </SafeAreaView>
   );
 }
@@ -992,6 +1270,118 @@ const styles = StyleSheet.create({
   },
   pillName: { fontFamily: FontFamilies.body, fontSize: 13, color: "#4b5563" },
   pillNameActive: { color: "#fff" },
+  pillDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#f59e0b",
+  },
+
+  listHeader: { gap: 16, marginBottom: 4 },
+  actionNeededCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#fde68a",
+    backgroundColor: "#fffbeb",
+    padding: 14,
+    gap: 10,
+  },
+  actionNeededBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: "#f59e0b",
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  actionNeededBadgeText: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 11,
+    color: "#fff",
+  },
+  actionNeededRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#fde68a",
+    backgroundColor: "rgba(254, 243, 199, 0.6)",
+    padding: 12,
+  },
+  actionNeededEmoji: { fontSize: 20 },
+  actionNeededCopy: { flex: 1, gap: 4 },
+  actionNeededTitle: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 14,
+    color: "#78350f",
+  },
+  actionNeededBody: {
+    fontFamily: FontFamilies.body,
+    fontSize: 12,
+    color: "#92400e",
+    lineHeight: 17,
+  },
+  schoolFoodSummary: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    padding: 14,
+    gap: 12,
+  },
+  schoolFoodSummaryHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  schoolFoodSummaryTitleRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    flex: 1,
+  },
+  schoolFoodIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "#fffbeb",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  schoolFoodSummaryTitle: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 14,
+    color: "#1f2937",
+  },
+  schoolFoodSummarySubtitle: {
+    fontFamily: FontFamilies.body,
+    fontSize: 11,
+    color: "#6b7280",
+    marginTop: 2,
+  },
+  updateBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  updateBtnText: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 12,
+    color: Brand.sage700,
+  },
+  schoolFoodSummaryBlock: { gap: 4 },
+  schoolFoodSummaryLabel: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 12,
+    color: "#374151",
+  },
+  schoolFoodSummaryValue: {
+    fontFamily: FontFamilies.body,
+    fontSize: 12,
+    color: "#4b5563",
+    lineHeight: 17,
+  },
 
   listContent: { padding: Spacing.three, gap: 20 },
 
@@ -1000,6 +1390,18 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: "#e5e7eb",
+    overflow: "hidden",
+  },
+  cardCover: {
+    width: "100%",
+    height: 120,
+  },
+  cardCoverPlaceholder: {
+    backgroundColor: "#f3f4f6",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cardBody: {
     padding: Spacing.three,
     gap: 14,
   },
@@ -1128,20 +1530,49 @@ const styles = StyleSheet.create({
   },
   saveBtnDisabled: { opacity: 0.45 },
 
-  ackRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 10,
-    backgroundColor: "#fafafa",
-    borderRadius: 10,
-    padding: 12,
-  },
-  ackText: {
+  confirmSheet: {
     flex: 1,
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.three,
+    paddingBottom: Spacing.four,
+    gap: Spacing.three,
+  },
+  confirmTitle: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 17,
+    color: "#111827",
+  },
+  confirmBody: {
     fontFamily: FontFamilies.body,
-    fontSize: 12,
+    fontSize: 14,
     color: "#4b5563",
-    lineHeight: 18,
+    lineHeight: 22,
+  },
+  confirmActions: {
+    flexDirection: "row",
+    gap: Spacing.two,
+    marginTop: "auto",
+  },
+  confirmCancelBtn: {
+    flex: 1,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#f3f4f6",
+  },
+  confirmCancelText: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 15,
+    color: "#374151",
+  },
+  confirmSaveBtn: {
+    flex: 1,
+    backgroundColor: Brand.sage700,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
   },
   saveBtnText: {
     fontFamily: FontFamilies.bodySemiBold,
@@ -1200,6 +1631,27 @@ const styles = StyleSheet.create({
     padding: Spacing.three,
     gap: 12,
     marginBottom: 4,
+  },
+  autoFillHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  autoFillHeaderText: {
+    flex: 1,
+    gap: 4,
+  },
+  autoFillQuestion: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 14,
+    color: "#1f2937",
+    lineHeight: 20,
+  },
+  autoFillCollapsedSub: {
+    fontFamily: FontFamilies.body,
+    fontSize: 12,
+    color: "#6b7280",
+    lineHeight: 17,
   },
   autoFillTitle: {
     fontFamily: FontFamilies.bodySemiBold,

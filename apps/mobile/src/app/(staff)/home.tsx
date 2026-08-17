@@ -6,6 +6,7 @@ import { SkeletonBox } from "@/components/ui/SkeletonBox";
 import { BottomTabInset, Brand, FontFamilies } from "@/constants/theme";
 import { Activity, getActivities } from "@/lib/activities-actions";
 import { notifyDiscord, notifyError } from "@/lib/discord";
+import { isSchoolYearTeacherAssignment } from "@/lib/student-teacher-assignments";
 import { supabase } from "@/lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -229,19 +230,6 @@ type TeacherAssignmentRow = {
   classroom: string | null;
 };
 
-function isSchoolYearTeacherAssignment(
-  assignment: TeacherAssignmentRow,
-  dropInProgram: string | null | undefined,
-): boolean {
-  if (assignment.program === "school_year_26_27") return true;
-  if (assignment.program === "homeschool_drop_in") {
-    return (
-      dropInProgram === "school_year_26_27" || dropInProgram === "both"
-    );
-  }
-  return false;
-}
-
 function buildSchoolYearTeacherMap(
   assignments: TeacherAssignmentRow[],
   dropInProgramByStudent: Map<string, string | null>,
@@ -253,7 +241,7 @@ function buildSchoolYearTeacherMap(
   for (const assignment of assignments) {
     if (
       !isSchoolYearTeacherAssignment(
-        assignment,
+        assignment.program,
         dropInProgramByStudent.get(assignment.student_id),
       )
     ) {

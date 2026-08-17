@@ -111,6 +111,7 @@ export default function StaffLayout() {
         <Tabs.Screen name="newsletters" options={{ href: null }} />
         <Tabs.Screen name="photos" options={{ href: null }} />
         <Tabs.Screen name="notifications" options={{ href: null }} />
+        <Tabs.Screen name="teacher-ids" options={{ href: null }} />
       </Tabs>
       <StaffMoreMenuSheet ref={bottomSheetRef} />
     </BottomSheetModalProvider>

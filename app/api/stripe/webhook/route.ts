@@ -12,6 +12,7 @@ import {
   createShadowDayPaymentEmbed,
   createBeachBashPaymentEmbed,
   createCustomTuitionEmbed,
+  createSchoolYearTuitionEmbed,
   createSupplyFeeEmbed,
   createOneTimePaymentEmbed,
   createErrorEmbed,
@@ -1256,13 +1257,15 @@ export async function POST(request: NextRequest) {
         }
 
         sendDiscordNotification(
-          createCustomTuitionEmbed({
+          createSchoolYearTuitionEmbed({
             parentName,
             parentEmail: parentEmailAddr,
             childName,
-            label: "School Year Tuition — School Year 26–27",
-            tuitionCode: "N/A",
             amountCents,
+            selectedMonthIndices: (session.metadata?.selected_months ?? "")
+              .split(",")
+              .map(Number)
+              .filter((n) => !isNaN(n) && n > 0),
           }),
         ).catch((err) => console.error("School year tuition Discord notification failed:", err));
 

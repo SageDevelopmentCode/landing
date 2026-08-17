@@ -12,6 +12,7 @@ import { API_BASE_URL } from "@/constants/config";
 import { useAuth } from "@/contexts/AuthContext";
 import { getChannels } from "@/lib/channel-actions";
 import { computePaidDates } from "@/lib/compute-paid-dates";
+import { getActivities, type Activity } from "@/lib/activities-actions";
 import { notifyDiscord, notifyError } from "@/lib/discord";
 import { getPublishedNewsletters, type ParentNewsletterListItem } from "@/lib/newsletters-actions";
 import { fetchTeacherNamesByStudentId } from "@/lib/student-teacher-assignments";
@@ -1782,6 +1783,68 @@ const actPrefStyles = StyleSheet.create({
   },
 });
 
+const weekActStyles = StyleSheet.create({
+  section: {
+    paddingTop: 18,
+    paddingBottom: 6,
+    borderTopWidth: 1,
+    borderTopColor: "#f3f4f6",
+    marginTop: 8,
+  },
+  sectionTitle: {
+    fontFamily: FontFamilies.heading,
+    fontSize: 16,
+    color: "#1f2937",
+    paddingHorizontal: 24,
+    marginBottom: 12,
+  },
+  empty: {
+    fontFamily: FontFamilies.body,
+    fontSize: 13,
+    color: "#9ca3af",
+    paddingHorizontal: 24,
+    paddingBottom: 12,
+  },
+  cardsRow: {
+    paddingHorizontal: 24,
+    gap: 10,
+    paddingBottom: 12,
+  },
+  card: {
+    width: 180,
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#f3f4f6",
+  },
+  thumb: {
+    width: "100%",
+    height: 88,
+  },
+  thumbPlaceholder: {
+    backgroundColor: "#f3f4f6",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cardTitle: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 12,
+    color: "#1f2937",
+    paddingHorizontal: 10,
+    paddingTop: 8,
+    lineHeight: 17,
+  },
+  cardDate: {
+    fontFamily: FontFamilies.body,
+    fontSize: 11,
+    color: Brand.sage700,
+    paddingHorizontal: 10,
+    paddingTop: 4,
+    paddingBottom: 10,
+  },
+});
+
 function HomeProgramCard({
   card,
   onPress,
@@ -2091,6 +2154,8 @@ export default function HomeScreen() {
   const [homeNewsletters, setHomeNewsletters] = useState<ParentNewsletterListItem[]>([]);
   const [newslettersLoading, setNewslettersLoading] = useState(true);
   const [hasActivityForPaidDay, setHasActivityForPaidDay] = useState(false);
+  const [weekActivities, setWeekActivities] = useState<Activity[]>([]);
+  const [weekActivitiesLoading, setWeekActivitiesLoading] = useState(true);
   const [paidSchoolYearByStudent, setPaidSchoolYearByStudent] =
     useState<PaidSchoolYearByStudent>({});
   const [paidSupplyFeeByStudent, setPaidSupplyFeeByStudent] = useState<
@@ -2782,6 +2847,32 @@ export default function HomeScreen() {
       .catch(() => {})
       .finally(() => setNewslettersLoading(false));
   }, [effectiveParentId]);
+
+  const loadWeekActivities = useCallback(async () => {
+    setWeekActivitiesLoading(true);
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const all = await getActivities();
+      const filtered = all
+        .filter(
+          (a) =>
+            a.status === "published" &&
+            a.visibility === "public" &&
+            a.activity_date != null &&
+            a.activity_date >= today,
+        )
+        .sort((a, b) => (a.activity_date ?? "").localeCompare(b.activity_date ?? ""));
+      setWeekActivities(filtered);
+    } catch (e) {
+      notifyError("parent-home-week-activities", e);
+    } finally {
+      setWeekActivitiesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadWeekActivities();
+  }, [loadWeekActivities]);
 
   async function handlePickParentImage() {
     if (isReadOnlyPreview) return;
@@ -3479,6 +3570,68 @@ export default function HomeScreen() {
                 )}
               </LinearGradient>
             </Pressable>
+          )}
+
+          {!loading && (
+            <View style={weekActStyles.section}>
+              <Text style={weekActStyles.sectionTitle}>Upcoming Activities</Text>
+              {weekActivitiesLoading ? (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={weekActStyles.cardsRow}
+                >
+                  {[0, 1, 2].map((i) => (
+                    <SkeletonBox key={i} width={140} height={120} borderRadius={14} />
+                  ))}
+                </ScrollView>
+              ) : weekActivities.length === 0 ? (
+                <Text style={weekActStyles.empty}>No upcoming activities.</Text>
+              ) : (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={weekActStyles.cardsRow}
+                >
+                  {weekActivities.map((activity) => {
+                    const thumb = activity.images[0]?.signed_url ?? null;
+                    return (
+                      <Pressable
+                        key={activity.id}
+                        style={({ pressed }) => [
+                          weekActStyles.card,
+                          pressed && { opacity: 0.85 },
+                        ]}
+                        onPress={() => router.push("/(tabs)/preferences" as any)}
+                      >
+                        {thumb ? (
+                          <Image
+                            source={{ uri: thumb }}
+                            style={weekActStyles.thumb}
+                            contentFit="cover"
+                          />
+                        ) : (
+                          <View style={[weekActStyles.thumb, weekActStyles.thumbPlaceholder]}>
+                            <Ionicons name="ribbon-outline" size={24} color="#d1d5db" />
+                          </View>
+                        )}
+                        <Text style={weekActStyles.cardTitle} numberOfLines={2}>
+                          {activity.title}
+                        </Text>
+                        {activity.activity_date ? (
+                          <Text style={weekActStyles.cardDate}>
+                            {new Date(activity.activity_date + "T12:00:00").toLocaleDateString(
+                              "en-US",
+                              { weekday: "short", month: "short", day: "numeric" },
+                            )}
+                          </Text>
+                        ) : null}
+                      </Pressable>
+                    );
+                  })}
+                </ScrollView>
+              )}
+            </View>
           )}
 
           {/* Morning Drop-Off */}

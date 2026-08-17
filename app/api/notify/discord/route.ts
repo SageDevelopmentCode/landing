@@ -15,6 +15,7 @@ import {
   createCareLogEmbed,
   createActivityPreferencesSavedEmbed,
   createDefaultPreferenceSetEmbed,
+  createSchoolDayFoodPreferencesSavedEmbed,
   createTestimonialEmbed,
   createParentMessageEmbed,
 } from "@/app/lib/discord";
@@ -925,6 +926,28 @@ export async function POST(request: NextRequest) {
         );
       }
       const embed = createDefaultPreferenceSetEmbed({ parentName, parentEmail, childName, level: level ?? null });
+      await sendDiscordNotification(embed, process.env.DISCORD_WEBHOOK_URL);
+      return NextResponse.json({ success: true });
+    }
+
+    if (type === "school_day_food_preferences_saved") {
+      const { parentName, parentEmail, childName, emergencySnack, sharedFood } = data;
+      if (!parentName || !parentEmail || !childName || !emergencySnack || !sharedFood) {
+        return NextResponse.json(
+          {
+            error:
+              "school_day_food_preferences_saved requires parentName, parentEmail, childName, emergencySnack, and sharedFood",
+          },
+          { status: 400 },
+        );
+      }
+      const embed = createSchoolDayFoodPreferencesSavedEmbed({
+        parentName,
+        parentEmail,
+        childName,
+        emergencySnack,
+        sharedFood,
+      });
       await sendDiscordNotification(embed, process.env.DISCORD_WEBHOOK_URL);
       return NextResponse.json({ success: true });
     }

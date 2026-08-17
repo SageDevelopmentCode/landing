@@ -10,6 +10,10 @@ import {
   getTeacherColors,
   groupStudentsByTeacher,
 } from "@/lib/group-by-teacher";
+import {
+  isHomeschoolDropInTeacherAssignment,
+  isSchoolYearTeacherAssignment,
+} from "@/lib/student-teacher-assignments";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
@@ -73,36 +77,18 @@ function getInitials(name: string): string {
     .join("");
 }
 
-function isSchoolYearListStudent(s: {
-  program: string;
-  isHomeschoolDropIn: boolean;
-  dropInProgram: string | null;
-}): boolean {
-  if (s.program === "school_year_26_27") return true;
-  return (
-    s.isHomeschoolDropIn &&
-    (s.dropInProgram === "school_year_26_27" || s.dropInProgram === "both")
-  );
-}
-
-function isDropInListStudent(s: {
-  isHomeschoolDropIn: boolean;
-  dropInProgram: string | null;
-}): boolean {
-  return (
-    s.isHomeschoolDropIn &&
-    (s.dropInProgram === "school_year_26_27" || s.dropInProgram === "both")
-  );
-}
-
 function filterByProgram<T extends StudentRowBase>(
   rows: T[],
   activeProgram: string,
 ): T[] {
   if (activeProgram === "homeschool_drop_in") {
-    return rows.filter(isDropInListStudent);
+    return rows.filter((s) =>
+      isHomeschoolDropInTeacherAssignment(s.program, s.dropInProgram),
+    );
   }
-  return rows.filter(isSchoolYearListStudent);
+  return rows.filter((s) =>
+    isSchoolYearTeacherAssignment(s.program, s.dropInProgram),
+  );
 }
 
 function isStudentEnrolledForMonth(item: StudentRowBase): boolean {

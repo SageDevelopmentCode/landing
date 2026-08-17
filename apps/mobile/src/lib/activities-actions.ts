@@ -54,6 +54,7 @@ export type Activity = {
   title: string;
   description: string | null;
   includes_food: boolean;
+  activity_date: string | null;
   status: "draft" | "published";
   visibility: "public" | "private";
   created_by: string;
@@ -178,6 +179,7 @@ function assembleActivities(
     title: a.title,
     description: a.description ?? null,
     includes_food: a.includes_food ?? false,
+    activity_date: a.activity_date ?? null,
     status: a.status,
     visibility: a.visibility,
     created_by: a.created_by,
@@ -233,7 +235,7 @@ function assembleActivities(
 }
 
 const NESTED_SELECT = `
-  id, title, description, includes_food, status, visibility, created_by, created_at,
+  id, title, description, includes_food, activity_date, status, visibility, created_by, created_at,
   images:activity_images(id, storage_path),
   foods:activity_foods(
     id, name, sort_order, allergens,

@@ -692,12 +692,11 @@ export async function addLibraryPhotoToSection(
     .from('photos')
     .select('id, storage_path')
     .eq('id', photoId)
-    .eq('teacher_id', user.id)
     .eq('is_deleted', false)
     .single()
 
   if (photoError || !photo) {
-    return { error: 'Photo not found or does not belong to you' }
+    return { error: 'Photo not found' }
   }
 
   const { data: existing } = await adminClient
@@ -847,11 +846,10 @@ export async function addLibraryCoverPhoto(
     .from('photos')
     .select('id, storage_path')
     .eq('id', photoId)
-    .eq('teacher_id', user.id)
     .eq('is_deleted', false)
     .single()
 
-  if (photoError || !photo) return { error: 'Photo not found or does not belong to you' }
+  if (photoError || !photo) return { error: 'Photo not found' }
 
   const { error: updateError } = await adminClient
     .schema('newsletters')
