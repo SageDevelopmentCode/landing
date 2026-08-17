@@ -83,64 +83,33 @@ type Props = {
   onSaved: (pref: SchoolDayFoodPreference) => void;
 };
 
-export default function SchoolDayFoodPreferencesSheet({
-  open,
-  onOpenChange,
-  students,
-  savedPreferences,
-  initialStudentId,
+type FormProps = {
+  activeStudentId: string | null;
+  activeStudent: PreferenceChild | null;
+  showChildHeader: boolean;
+  initialEmergencySnack: EmergencySnackPreference | null;
+  initialSharedFood: SharedFoodPreference | null;
+  showMaybeLater: boolean;
+  onClose: () => void;
+  onSaved: (pref: SchoolDayFoodPreference) => void;
+};
+
+function SchoolDayFoodPreferencesForm({
+  activeStudentId,
+  activeStudent,
+  showChildHeader,
+  initialEmergencySnack,
+  initialSharedFood,
+  showMaybeLater,
+  onClose,
   onSaved,
-}: Props) {
-  const [isMobile, setIsMobile] = useState(false);
-  const [activeStudentId, setActiveStudentId] = useState<string | null>(null);
+}: FormProps) {
   const [emergencySnack, setEmergencySnack] =
-    useState<EmergencySnackPreference | null>(null);
+    useState<EmergencySnackPreference | null>(initialEmergencySnack);
   const [sharedFood, setSharedFood] =
-    useState<SharedFoodPreference | null>(null);
+    useState<SharedFoodPreference | null>(initialSharedFood);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const savedByStudent = useMemo(() => {
-    return Object.fromEntries(
-      savedPreferences.map((p) => [p.student_id, p]),
-    ) as Record<string, SchoolDayFoodPreference>;
-  }, [savedPreferences]);
-
-  const missingStudentIds = useMemo(
-    () => students.filter((s) => !savedByStudent[s.id]).map((s) => s.id),
-    [students, savedByStudent],
-  );
-
-  const activeStudent = students.find((s) => s.id === activeStudentId) ?? null;
-  const showChildHeader = students.length > 1;
-
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 767px)");
-    const update = () => setIsMobile(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const targetId =
-      initialStudentId ??
-      missingStudentIds[0] ??
-      students[0]?.id ??
-      null;
-
-    setActiveStudentId(targetId);
-
-    if (targetId) {
-      const existing = savedByStudent[targetId];
-      setEmergencySnack(existing?.emergency_snack_preference ?? null);
-      setSharedFood(existing?.shared_food_preference ?? null);
-    }
-
-    setError(null);
-  }, [open, initialStudentId, missingStudentIds, students, savedByStudent]);
 
   async function handleSave() {
     if (!activeStudentId || !emergencySnack || !sharedFood) return;
@@ -167,16 +136,12 @@ export default function SchoolDayFoodPreferencesSheet({
     };
 
     onSaved(saved);
-    onOpenChange(false);
-  }
-
-  function handleClose() {
-    onOpenChange(false);
+    onClose();
   }
 
   const canSave = !!emergencySnack && !!sharedFood && !saving;
 
-  const formContent = (
+  return (
     <>
       <div className="flex items-start justify-between gap-3 mb-4">
         <div>
@@ -205,7 +170,7 @@ export default function SchoolDayFoodPreferencesSheet({
         </div>
         <button
           type="button"
-          onClick={handleClose}
+          onClick={onClose}
           className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer shrink-0"
           aria-label="Close"
         >
@@ -304,10 +269,10 @@ export default function SchoolDayFoodPreferencesSheet({
           {saving && <Loader2 className="w-4 h-4 animate-spin" />}
           {saving ? "Saving…" : "Save Preferences"}
         </button>
-        {missingStudentIds.length > 0 && (
+        {showMaybeLater && (
           <button
             type="button"
-            onClick={handleClose}
+            onClick={onClose}
             className="w-full text-center text-xs font-body text-gray-400 hover:text-gray-600 transition-colors cursor-pointer py-1"
           >
             Maybe later
@@ -315,6 +280,66 @@ export default function SchoolDayFoodPreferencesSheet({
         )}
       </div>
     </>
+  );
+}
+
+export default function SchoolDayFoodPreferencesSheet({
+  open,
+  onOpenChange,
+  students,
+  savedPreferences,
+  initialStudentId,
+  onSaved,
+}: Props) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  const savedByStudent = useMemo(() => {
+    return Object.fromEntries(
+      savedPreferences.map((p) => [p.student_id, p]),
+    ) as Record<string, SchoolDayFoodPreference>;
+  }, [savedPreferences]);
+
+  const missingStudentIds = useMemo(
+    () => students.filter((s) => !savedByStudent[s.id]).map((s) => s.id),
+    [students, savedByStudent],
+  );
+
+  const activeStudentId = open
+    ? (initialStudentId ?? missingStudentIds[0] ?? students[0]?.id ?? null)
+    : null;
+
+  const activeStudent = students.find((s) => s.id === activeStudentId) ?? null;
+  const showChildHeader = students.length > 1;
+  const existingPrefs = activeStudentId
+    ? savedByStudent[activeStudentId]
+    : undefined;
+
+  const formKey = `${activeStudentId ?? ""}:${existingPrefs?.emergency_snack_preference ?? ""}:${existingPrefs?.shared_food_preference ?? ""}`;
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  function handleClose() {
+    onOpenChange(false);
+  }
+
+  const formContent = (
+    <SchoolDayFoodPreferencesForm
+      key={formKey}
+      activeStudentId={activeStudentId}
+      activeStudent={activeStudent}
+      showChildHeader={showChildHeader}
+      initialEmergencySnack={existingPrefs?.emergency_snack_preference ?? null}
+      initialSharedFood={existingPrefs?.shared_food_preference ?? null}
+      showMaybeLater={missingStudentIds.length > 0}
+      onClose={handleClose}
+      onSaved={onSaved}
+    />
   );
 
   return (

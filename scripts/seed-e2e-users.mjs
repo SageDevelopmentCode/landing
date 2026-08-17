@@ -30,6 +30,33 @@ const CONFERENCE_TEACHERS_SEED = [
   },
 ]
 
+const TEACHER_ID_CARDS_SEED = [
+  {
+    user_id: '6db16988-f41e-4249-b3fa-7b6720d11ac0',
+    full_name: 'Sabrina Obnamia',
+    title: 'Lead Teacher',
+    grade_classroom: '3rd – 4th Grade',
+    issue_year: 2026,
+    sort_order: 1,
+  },
+  {
+    user_id: 'bd562de1-18c2-4b47-91d7-5f0b93fee107',
+    full_name: 'Zelinda Melo',
+    title: 'Teacher',
+    grade_classroom: '1st – 2nd Grade',
+    issue_year: 2026,
+    sort_order: 2,
+  },
+  {
+    user_id: '68709384-b054-4f38-a4ee-81554dad2eb8',
+    full_name: 'Joy Paige',
+    title: 'Lead Teacher',
+    grade_classroom: 'Pre-K – Kindergarten',
+    issue_year: 2026,
+    sort_order: 3,
+  },
+]
+
 const E2E_ENROLLED_STUDENT_ID = '22222222-2222-4222-8222-222222222001'
 const E2E_GRANT_CHILD_ID = '22222222-2222-4222-8222-222222222002'
 const E2E_CONFERENCE_TEACHER_ID = 'bd562de1-18c2-4b47-91d7-5f0b93fee107'
@@ -281,6 +308,22 @@ async function seedConferenceTeachers() {
   }
 }
 
+async function seedTeacherIdCards() {
+  const { count, error: countError } = await db
+    .schema('teachers')
+    .from('teacher_id_cards')
+    .select('*', { count: 'exact', head: true })
+  if (countError) {
+    throw new Error(`teacher_id_cards count failed: ${countError.message}`)
+  }
+  if (count > 0) return
+
+  const { error } = await db.schema('teachers').from('teacher_id_cards').insert(TEACHER_ID_CARDS_SEED)
+  if (error) {
+    throw new Error(`teacher_id_cards seed failed: ${error.message}`)
+  }
+}
+
 async function seedDashboardGrant(ownerId, granteeId, granteeEmail) {
   const { error } = await db.schema('parent_app').from('dashboard_access_grants').upsert({
     id: E2E_DASHBOARD_GRANT_ID,
@@ -337,6 +380,7 @@ async function main() {
     'parent-grantee@e2e.sagefield.test',
   )
   await seedConferenceTeachers()
+  await seedTeacherIdCards()
   await seedConferenceTeacherAssignment()
   console.log('E2E seed complete (local Supabase only)')
 }

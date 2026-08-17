@@ -95,7 +95,7 @@ CREATE POLICY "Super admin delete teacher id photos"
     AND public.is_super_admin()
   );
 
--- Default staff ID cards (skip if already seeded)
+-- Default staff ID cards (skip if already seeded or users not present yet)
 INSERT INTO teachers.teacher_id_cards (
   user_id,
   full_name,
@@ -104,7 +104,13 @@ INSERT INTO teachers.teacher_id_cards (
   issue_year,
   sort_order
 )
-SELECT *
+SELECT
+  seed.user_id,
+  seed.full_name,
+  seed.title,
+  seed.grade_classroom,
+  seed.issue_year,
+  seed.sort_order
 FROM (
   VALUES
     (
@@ -134,4 +140,5 @@ FROM (
 ) AS seed (user_id, full_name, title, grade_classroom, issue_year, sort_order)
 WHERE NOT EXISTS (
   SELECT 1 FROM teachers.teacher_id_cards
-);
+)
+AND seed.user_id IN (SELECT id FROM admin.users);
