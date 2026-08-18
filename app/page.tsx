@@ -71,6 +71,14 @@ const PREVIEW_WEEKS = [
     href: "/highlights/summer/week-5",
     coverImage: "/assets/highlights/summer_week_five/69BAEEC0-7C4B-4821-8595-02152DC7E7FB.JPG",
   },
+  {
+    week: 12,
+    dates: "Aug 10–13",
+    theme: "Finale of Camp",
+    href: "/highlights/summer/week-12",
+    coverImage:
+      "/assets/highlights/summer_week_twelve/8C3B1791-0B49-4B7E-B069-C746C7CF6F65.JPG",
+  },
 ];
 
 export default function Home() {
