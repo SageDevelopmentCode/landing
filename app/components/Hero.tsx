@@ -24,12 +24,12 @@ const slides = [
     buttonHref: "/community",
   },
   {
-    image: "/assets/highlights/summer_week_six/1A73BC70-CEC1-4979-8576-39585C31DB07.JPG",
-    title: "Week 6 Highlights Are Live!",
+    image: "/assets/highlights/summer_week_twelve/8C3B1791-0B49-4B7E-B069-C746C7CF6F65.JPG",
+    title: "Week 12 Highlights Are Live!",
     description:
-      "Banana oatmeal pancakes, pineapple popsicles, Venn diagrams, and natural disaster dioramas — see what our students experienced halfway through summer.",
-    buttonLabel: "View Week 6 Recap →",
-    buttonHref: "/highlights/summer/week-6",
+      "The last week of camp — Miss Joy, friendship building, classroom redesign, chocolate chip cookies, and a 12-week summer in review.",
+    buttonLabel: "View Week 12 Recap →",
+    buttonHref: "/highlights/summer/week-12",
   },
   {
     image: "/assets/Stock4.jpg",

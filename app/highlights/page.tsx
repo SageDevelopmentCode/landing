@@ -68,7 +68,14 @@ const WEEKS: WeekEntry[] = [
     theme: "Space Explorers: Mission to the Stars",
   },
   { week: 11, dates: "Aug 3–6", theme: "Down on the Farm" },
-  { week: 12, dates: "Aug 10–13", theme: "Finale of Camp" },
+  {
+    week: 12,
+    dates: "Aug 10–13",
+    theme: "Finale of Camp",
+    href: "/highlights/summer/week-12",
+    coverImage:
+      "/assets/highlights/summer_week_twelve/8C3B1791-0B49-4B7E-B069-C746C7CF6F65.JPG",
+  },
 ];
 
 export default function HighlightsIndexPage() {

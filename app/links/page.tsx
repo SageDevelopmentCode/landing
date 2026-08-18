@@ -119,6 +119,12 @@ const LINK_GROUPS: { label: string; links: LinkItem[] }[] = [
     links: [
       {
         emoji: "📸",
+        title: "Week 12 Highlights",
+        subtitle: "Summer 2026 · Aug 10–13",
+        href: "/highlights/summer/week-12",
+      },
+      {
+        emoji: "📸",
         title: "Week 6 Highlights",
         subtitle: "Summer 2026 · Jun 29–Jul 2",
         href: "/highlights/summer/week-6",

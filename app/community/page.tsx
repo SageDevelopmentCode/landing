@@ -19,6 +19,8 @@ import ContactDialog from "../components/ContactDialog";
 import WeekRecapPreview from "../components/WeekRecapPreview";
 import EveningSpotlight from "../components/community/EveningSpotlight";
 import PlantCatalog from "../components/community/PlantCatalog";
+import EducationalPhilosophySection from "../components/EducationalPhilosophySection";
+import MeetTheTeamSection from "../components/MeetTheTeamSection";
 import { formatPhone } from "@/app/utils/formatPhone";
 
 const dancingScript = Dancing_Script({
@@ -28,50 +30,50 @@ const dancingScript = Dancing_Script({
 
 const HERO_IMAGES = [
   {
-    src: "/assets/highlights/summer_week_four/1B8DAE7D-4D49-4865-97C8-593B4F74D996.JPG",
-    caption: "Strawberry jam — from our garden to the stovetop",
+    src: "/assets/highlights/summer_week_twelve/8C3B1791-0B49-4B7E-B069-C746C7CF6F65.JPG",
+    caption: "Hands in the air with Miss Joy — friendship, feelings, and a brand-new classroom corner",
   },
   {
-    src: "/assets/highlights/summer_week_four/C4EB78AE-3AE3-4DB4-BAF4-DA09B3A7E941 2.JPG",
-    caption: "New friendships blooming at Sage Field",
+    src: "/assets/highlights/summer_week_twelve/D3FA9EEC-F140-4CE7-9B2F-65B3BAE014E0.JPG",
+    caption: "Story time under the neon rainbow — our cozy new reading nook",
   },
   {
-    src: "/assets/ImageSeven.jpg",
-    caption: "Nature is woven into every part of our day",
+    src: "/assets/highlights/summer_week_twelve/44B158CD-2668-4877-85F0-A45D4F56F958.JPG",
+    caption: "Students helped design, decorate, and decide how our classroom should feel",
   },
   {
-    src: "/assets/highlights/summer_week_one/C8EAD2FA-0FB2-4D59-A079-493C09298ABF.JPG",
-    caption: "Welcome to summer at Sage Field",
+    src: "/assets/highlights/summer_week_twelve/9CB7AFC5-A7A7-49C1-8417-5C17358D88AF.JPG",
+    caption: "Crafting together — a collaborative space the children helped create",
   },
   {
-    src: "/assets/highlights/summer_week_four/FF7095AC-1AFC-4011-9C27-8B2C0573121B 2.JPG",
-    caption: "Homemade strawberry jam — from scratch",
+    src: "/assets/highlights/summer_week_twelve/7FC17749-C35E-47DB-8B80-2BC59AFB8E19.JPG",
+    caption: "Up in the branches — outdoor adventure on the last week of camp",
   },
   {
-    src: "/assets/Stock3.jpg",
-    caption: "Hands-on learning in the great outdoors",
+    src: "/assets/highlights/summer_week_twelve/1B51CC5A-BF15-4969-8188-2D923C9489E5.JPG",
+    caption: "Picnic under the trees — slowing down and appreciating the friendships we've built",
   },
   {
-    src: "/assets/ImageOne.jpg",
-    caption: "Growing together as a community",
+    src: "/assets/highlights/summer_week_twelve/C87A6102-AD14-40A3-A0DE-8474C4FD0026.JPG",
+    caption: "Handprint summer shirts — a colorful keepsake from our last week together",
   },
   {
-    src: "/assets/highlights/summer_week_four/FD2FCA61-D903-4059-B681-20AF2027754F.JPG",
-    caption: "Tasting the fruits of our cooking class",
+    src: "/assets/highlights/summer_week_twelve/D9FAB2B8-9EBC-4EF4-9A1A-F99DB6B427AE.JPG",
+    caption: "Watering the garden beds — growing something together right to the last day",
   },
 ];
 
 const CAROUSEL_COUNT = 8;
 
 const GALLERY_IMAGES = [
-  "/assets/highlights/summer_week_four/1B8DAE7D-4D49-4865-97C8-593B4F74D996.JPG",
-  "/assets/highlights/summer_week_four/27B3519F-6BEB-4620-83AC-99F82ACEA5C2.JPG",
-  "/assets/highlights/summer_week_four/FF7095AC-1AFC-4011-9C27-8B2C0573121B 2.JPG",
-  "/assets/highlights/summer_week_one/C8EAD2FA-0FB2-4D59-A079-493C09298ABF.JPG",
-  "/assets/highlights/summer_week_one/66719803-D874-46B5-9B16-C4F79A865A85 2.JPG",
-  "/assets/ImageSeven.jpg",
-  "/assets/Stock3.jpg",
-  "/assets/highlights/summer_week_four/C4EB78AE-3AE3-4DB4-BAF4-DA09B3A7E941 2.JPG",
+  "/assets/highlights/summer_week_twelve/8C3B1791-0B49-4B7E-B069-C746C7CF6F65.JPG",
+  "/assets/highlights/summer_week_twelve/D3FA9EEC-F140-4CE7-9B2F-65B3BAE014E0.JPG",
+  "/assets/highlights/summer_week_twelve/44B158CD-2668-4877-85F0-A45D4F56F958.JPG",
+  "/assets/highlights/summer_week_twelve/9CB7AFC5-A7A7-49C1-8417-5C17358D88AF.JPG",
+  "/assets/highlights/summer_week_twelve/7FC17749-C35E-47DB-8B80-2BC59AFB8E19.JPG",
+  "/assets/highlights/summer_week_twelve/1B51CC5A-BF15-4969-8188-2D923C9489E5.JPG",
+  "/assets/highlights/summer_week_twelve/C87A6102-AD14-40A3-A0DE-8474C4FD0026.JPG",
+  "/assets/highlights/summer_week_twelve/D9FAB2B8-9EBC-4EF4-9A1A-F99DB6B427AE.JPG",
 ];
 
 const EVENING_ACTIVITIES = [
@@ -81,7 +83,7 @@ const EVENING_ACTIVITIES = [
     detail:
       "Dig in alongside neighbors and leave a living mark on Sage Field. Every flower, herb, and vegetable planted becomes part of a garden built with love.",
     image:
-      "/assets/highlights/summer_week_four/1B8DAE7D-4D49-4865-97C8-593B4F74D996.JPG",
+      "/assets/highlights/summer_week_twelve/D9FAB2B8-9EBC-4EF4-9A1A-F99DB6B427AE.JPG",
   },
   {
     title: "Painting",
@@ -89,7 +91,7 @@ const EVENING_ACTIVITIES = [
     detail:
       "Paint garden markers, signs, and outdoor art with your family. Creative touches that make our shared space feel even more welcoming.",
     image:
-      "/assets/highlights/summer_week_four/C3E15299-9AB4-420A-BB46-2C998A4B1C38 2.JPG",
+      "/assets/highlights/summer_week_twelve/C87A6102-AD14-40A3-A0DE-8474C4FD0026.JPG",
   },
   {
     title: "Connecting",
@@ -97,14 +99,15 @@ const EVENING_ACTIVITIES = [
     detail:
       "Share a snack, swap stories, and meet families who call Sage Field home — and friends who are discovering us for the first time.",
     image:
-      "/assets/highlights/summer_week_one/C8EAD2FA-0FB2-4D59-A079-493C09298ABF.JPG",
+      "/assets/highlights/summer_week_twelve/67752A12-DD09-421C-BC3E-EA2452FC8748.JPG",
   },
   {
     title: "Creating",
     desc: "Memories that bloom for years — built together, rooted in community.",
     detail:
       "From first plantings to painted markers, this evening is about making memories our children will carry for years — rooted in community.",
-    image: "/assets/ImageSeven.jpg",
+    image:
+      "/assets/highlights/summer_week_twelve/83D2FB1A-C506-4BC1-B5A1-8C4DBD31DA58.JPG",
   },
 ];
 
@@ -205,32 +208,13 @@ const PREVIEW_WEEKS = [
     coverImage:
       "/assets/highlights/summer_week_six/1A73BC70-CEC1-4979-8576-39585C31DB07.JPG",
   },
-];
-
-const PHILOSOPHY_PILLARS = [
   {
-    icon: "🌱",
-    title: "Hands-on Learning",
-    desc: "Children learn best by doing — building, growing, experimenting.",
-    image: "/assets/Stock2.jpg",
-  },
-  {
-    icon: "🌳",
-    title: "Movement & Nature",
-    desc: "Outside is a classroom. Daily outdoor time is non-negotiable.",
-    image: "/assets/Stock1.jpg",
-  },
-  {
-    icon: "🎨",
-    title: "Creative Expression",
-    desc: "Art, storytelling, and music are core — not extras.",
-    image: "/assets/Stock4.jpg",
-  },
-  {
-    icon: "🏠",
-    title: "Family Partnership",
-    desc: "School, student, and family grow together — rooted in trust.",
-    image: "/assets/Stock3.jpg",
+    week: 12,
+    dates: "Aug 10–13",
+    theme: "Finale of Camp",
+    href: "/highlights/summer/week-12",
+    coverImage:
+      "/assets/highlights/summer_week_twelve/8C3B1791-0B49-4B7E-B069-C746C7CF6F65.JPG",
   },
 ];
 
@@ -447,36 +431,36 @@ export default function CommunityGardenPage() {
     <div className={`min-h-screen bg-white ${dancingScript.variable}`}>
       <Navbar darkStyle />
 
+      {/* Mobile hero gallery — above heading */}
+      <div className="sm:hidden pt-20 bg-welcome-bg">
+        <div
+          ref={mobileGalleryRef}
+          className="overflow-x-auto flex gap-0 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
+        >
+          {[...GALLERY_IMAGES, ...GALLERY_IMAGES].map((src, i) => (
+            <div
+              key={i}
+              className="relative w-[88%] flex-shrink-0 aspect-square overflow-hidden"
+            >
+              <Image
+                src={src}
+                alt="Sage Field community"
+                fill
+                className="object-cover"
+                sizes="88vw"
+                priority={i === 0}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* ── HERO ── */}
       <section
-        className="bg-welcome-bg pt-28 sm:pt-32 pb-8 px-8 sm:px-12 lg:px-16 overflow-hidden"
+        className="bg-welcome-bg pt-8 sm:pt-32 pb-8 px-8 sm:px-12 lg:px-16 overflow-hidden"
       >
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center mb-10">
-            {/* Mobile auto-scroll strip */}
-            <div className="sm:hidden -mx-2">
-              <div
-                ref={mobileGalleryRef}
-                className="overflow-x-auto flex gap-3 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
-              >
-                {[...GALLERY_IMAGES, ...GALLERY_IMAGES].map((src, i) => (
-                  <div
-                    key={i}
-                    className="relative w-[72vw] flex-shrink-0 aspect-[4/3] rounded-xl overflow-hidden shadow-md"
-                  >
-                    <Image
-                      src={src}
-                      alt="Sage Field community"
-                      fill
-                      className="object-cover"
-                      sizes="72vw"
-                      loading="lazy"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
             <motion.div
               initial={{ opacity: 0, x: -24 }}
               animate={{ opacity: 1, x: 0 }}
@@ -762,61 +746,11 @@ export default function CommunityGardenPage() {
         </div>
       </section>
 
-      {/* ── WHO WE ARE ── */}
-      <section className="py-16 px-8 sm:px-12 lg:px-16 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-10"
-          >
-            <span className="inline-block bg-badge-bg px-5 py-2 rounded-full text-sm font-semibold text-text-gray font-body mb-4">
-              Who We Are
-            </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-text-gray font-heading">
-              Rooted in Nature, Growing Together
-            </h2>
-            <p className="text-base text-gray-500 font-body mt-3 max-w-xl mx-auto">
-              Sage Field is a nature-centered school where children learn by
-              doing — outdoors, with their families beside them.
-            </p>
-          </motion.div>
+      {/* ── Educational Philosophy ── */}
+      <EducationalPhilosophySection />
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-            {PHILOSOPHY_PILLARS.map((pillar, i) => (
-              <motion.div
-                key={pillar.title}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.08 * i }}
-                className="bg-welcome-bg rounded-2xl overflow-hidden shadow-sm border border-gray-100"
-              >
-                <div className="relative w-full aspect-[4/3]">
-                  <Image
-                    src={pillar.image}
-                    alt={pillar.title}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 640px) 50vw, 25vw"
-                  />
-                </div>
-                <div className="p-4 space-y-1">
-                  <p className="text-xl">{pillar.icon}</p>
-                  <p className="text-sm font-bold text-text-gray font-heading">
-                    {pillar.title}
-                  </p>
-                  <p className="text-xs text-gray-500 font-body leading-relaxed">
-                    {pillar.desc}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* ── Meet the Team ── */}
+      <MeetTheTeamSection featured={true} />
 
       {/* ── RSVP ── */}
       <section

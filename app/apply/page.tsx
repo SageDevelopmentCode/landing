@@ -623,25 +623,25 @@ export default function ApplyPage() {
                       {[
                         {
                           title: "Hands-on Learning",
-                          image: "/assets/ImageOne.jpg",
+                          image: "/assets/Stock3.jpg",
                           description:
                             "Experiential activities that engage curiosity",
                         },
                         {
                           title: "Emotional Regulation",
-                          image: "/assets/stock3.png",
+                          image: "/assets/Stock6.jpg",
                           description:
                             "Mindfulness practices for students & educators",
                         },
                         {
                           title: "Creative Expression",
-                          image: "/assets/ImageEleven.jpg",
+                          image: "/assets/Stock8.jpg",
                           description:
                             "Artistic and musical creativity flourish",
                         },
                         {
                           title: "Movement & Nature",
-                          image: "/assets/ImageSeven.jpg",
+                          image: "/assets/Stock11.jpg",
                           description: "Movement-based and outdoor education",
                         },
                       ].map((pillar, index) => (
