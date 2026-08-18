@@ -21,6 +21,7 @@ import EveningSpotlight from "../components/community/EveningSpotlight";
 import PlantCatalog from "../components/community/PlantCatalog";
 import EducationalPhilosophySection from "../components/EducationalPhilosophySection";
 import MeetTheTeamSection from "../components/MeetTheTeamSection";
+import ExploreOurProgramsSection from "../components/ExploreOurProgramsSection";
 import { formatPhone } from "@/app/utils/formatPhone";
 
 const dancingScript = Dancing_Script({
@@ -751,6 +752,8 @@ export default function CommunityGardenPage() {
 
       {/* ── Meet the Team ── */}
       <MeetTheTeamSection featured={true} />
+
+      <ExploreOurProgramsSection className="bg-white py-16 px-8 sm:px-12 lg:px-16" />
 
       {/* ── RSVP ── */}
       <section
