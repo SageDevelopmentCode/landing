@@ -23,6 +23,7 @@ import {
   type ChannelWithMeta,
 } from "@/lib/channel-actions";
 import { Brand, FontFamilies } from "@/constants/theme";
+import { isParentVisibleTeacher } from "@/lib/parent-visible-teachers";
 import { useAuth, useReadOnlyPreview } from "@/contexts/AuthContext";
 
 type ConversationRow = {
@@ -63,7 +64,9 @@ async function fetchTeachers(): Promise<TeacherSuggestion[]> {
     .select("id, full_name, profile_image_url")
     .in("role", ["teacher", "super_admin"])
     .order("full_name", { ascending: true });
-  return (data ?? []) as TeacherSuggestion[];
+  return ((data ?? []) as TeacherSuggestion[]).filter((t) =>
+    isParentVisibleTeacher(t.full_name),
+  );
 }
 
 async function fetchRows(userId: string): Promise<ConversationRow[]> {

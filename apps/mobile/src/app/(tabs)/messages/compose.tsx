@@ -14,6 +14,7 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "@/lib/supabase";
 import { Brand, FontFamilies } from "@/constants/theme";
+import { isParentVisibleTeacher } from "@/lib/parent-visible-teachers";
 
 type UserResult = {
   id: string;
@@ -36,11 +37,13 @@ async function searchUsers(query: string): Promise<UserResult[]> {
     .ilike("full_name", `%${query}%`)
     .in("role", ["teacher", "super_admin"])
     .limit(20);
-  return (data ?? []).map((u: { id: string; full_name: string; profile_image_url: string | null }) => ({
-    id: u.id,
-    full_name: u.full_name,
-    avatar_url: u.profile_image_url,
-  }));
+  return (data ?? [])
+    .filter((u: { full_name: string }) => isParentVisibleTeacher(u.full_name))
+    .map((u: { id: string; full_name: string; profile_image_url: string | null }) => ({
+      id: u.id,
+      full_name: u.full_name,
+      avatar_url: u.profile_image_url,
+    }));
 }
 
 export default function ComposeScreen() {
@@ -65,11 +68,13 @@ export default function ComposeScreen() {
       .order("full_name", { ascending: true })
       .then(({ data }) => {
         setAllTeachers(
-          (data ?? []).map((u: { id: string; full_name: string; profile_image_url: string | null }) => ({
-            id: u.id,
-            full_name: u.full_name,
-            avatar_url: u.profile_image_url,
-          }))
+          (data ?? [])
+            .filter((u: { full_name: string }) => isParentVisibleTeacher(u.full_name))
+            .map((u: { id: string; full_name: string; profile_image_url: string | null }) => ({
+              id: u.id,
+              full_name: u.full_name,
+              avatar_url: u.profile_image_url,
+            }))
         );
       });
   }, []);
