@@ -149,7 +149,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
         icon: <Camera className="w-4 h-4" />,
       },
       {
-        name: "Preferences",
+        name: "Family Preferences",
         href: "/admin/preferences",
         icon: <SlidersHorizontal className="w-4 h-4" />,
       },
