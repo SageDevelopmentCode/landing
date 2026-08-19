@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowLeft, UtensilsCrossed } from 'lucide-react'
@@ -85,6 +85,130 @@ function getVisibleActivities(
   )
 }
 
+type SchoolDayFoodAdminSectionProps = {
+  studentId: string
+  effectiveParentId: string
+  initialEmergencySnack: EmergencySnackPreference | ''
+  initialSharedFood: SharedFoodPreference | ''
+  onSaved: (saved: SchoolDayFoodPreference) => void
+}
+
+function SchoolDayFoodAdminSection({
+  studentId,
+  effectiveParentId,
+  initialEmergencySnack,
+  initialSharedFood,
+  onSaved,
+}: SchoolDayFoodAdminSectionProps) {
+  const [emergencySnack, setEmergencySnack] = useState<EmergencySnackPreference | ''>(
+    initialEmergencySnack,
+  )
+  const [sharedFood, setSharedFood] = useState<SharedFoodPreference | ''>(initialSharedFood)
+  const [savingFood, setSavingFood] = useState(false)
+  const [foodError, setFoodError] = useState<string | null>(null)
+
+  async function handleSaveFood() {
+    if (!emergencySnack || !sharedFood) {
+      setFoodError('Select both preferences before saving')
+      return
+    }
+    setSavingFood(true)
+    setFoodError(null)
+    const result = await adminSaveSchoolDayFoodPreferences(
+      effectiveParentId,
+      studentId,
+      { emergencySnack, sharedFood },
+    )
+    setSavingFood(false)
+    if (result.error) {
+      setFoodError(result.error)
+      return
+    }
+    onSaved({
+      student_id: studentId,
+      emergency_snack_preference: emergencySnack,
+      shared_food_preference: sharedFood,
+    })
+  }
+
+  return (
+    <section
+      className="rounded-xl p-5"
+      style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}`, boxShadow: shadows.soft }}
+    >
+      <div className="flex items-center gap-2 mb-1">
+        <UtensilsCrossed className="w-4 h-4" style={{ color: colors.textSecondary }} />
+        <h2 className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
+          School day food preferences
+        </h2>
+      </div>
+      <p className="text-xs mb-4" style={{ color: colors.textTertiary }}>
+        Backup snacks and shared food during the school day.
+      </p>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: colors.textSecondary }}>
+            Emergency / backup snacks
+          </label>
+          <select
+            value={emergencySnack}
+            onChange={(e) => setEmergencySnack(e.target.value as EmergencySnackPreference)}
+            className="w-full text-xs rounded-lg px-2 py-2 outline-none"
+            style={{
+              backgroundColor: colors.elevated,
+              border: `1px solid ${colors.border}`,
+              color: colors.textPrimary,
+            }}
+          >
+            <option value="">Select…</option>
+            {EMERGENCY_SNACK_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: colors.textSecondary }}>
+            Shared food from families
+          </label>
+          <select
+            value={sharedFood}
+            onChange={(e) => setSharedFood(e.target.value as SharedFoodPreference)}
+            className="w-full text-xs rounded-lg px-2 py-2 outline-none"
+            style={{
+              backgroundColor: colors.elevated,
+              border: `1px solid ${colors.border}`,
+              color: colors.textPrimary,
+            }}
+          >
+            <option value="">Select…</option>
+            {SHARED_FOOD_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      {foodError && (
+        <p className="text-xs mt-2" style={{ color: '#EF4444' }}>
+          {foodError}
+        </p>
+      )}
+      <button
+        type="button"
+        onClick={handleSaveFood}
+        disabled={savingFood}
+        className="mt-4 text-xs font-semibold px-4 py-2 rounded-lg transition-opacity disabled:opacity-50"
+        style={{ backgroundColor: colors.accent, color: '#fff' }}
+      >
+        {savingFood ? 'Saving…' : 'Save school day food'}
+      </button>
+    </section>
+  )
+}
+
 type Props = {
   effectiveParentId: string
   parentName: string | null
@@ -120,15 +244,12 @@ export function FamilyPreferencesClient({
     buildInitialPreferences(children, activities, savedPreferences, initialStudentDefaults),
   )
   const [savingDefault, setSavingDefault] = useState(false)
-  const [savingFood, setSavingFood] = useState(false)
-  const [foodError, setFoodError] = useState<string | null>(null)
   const [savingActivities, setSavingActivities] = useState(false)
   const [activitySaveStatus, setActivitySaveStatus] = useState<'idle' | 'success' | 'error'>('idle')
 
-  const [emergencySnack, setEmergencySnack] = useState<EmergencySnackPreference | ''>('')
-  const [sharedFood, setSharedFood] = useState<SharedFoodPreference | ''>('')
-
   const selectedChild = children.find((c) => c.id === selectedChildId)
+  const selectedFoodPref = schoolDayFoodPrefs.find((p) => p.student_id === selectedChildId)
+  const foodFormKey = `${selectedChildId}:${selectedFoodPref?.emergency_snack_preference ?? ''}:${selectedFoodPref?.shared_food_preference ?? ''}`
 
   const visibleActivities = useMemo(
     () => getVisibleActivities(activities, selectedChildId, paidDatesByStudent),
@@ -148,14 +269,7 @@ export function FamilyPreferencesClient({
   function handleSelectChild(childId: string) {
     setSelectedChildId(childId)
     setActivitySaveStatus('idle')
-    setFoodError(null)
   }
-
-  useEffect(() => {
-    const pref = schoolDayFoodPrefs.find((p) => p.student_id === selectedChildId)
-    setEmergencySnack(pref?.emergency_snack_preference ?? '')
-    setSharedFood(pref?.shared_food_preference ?? '')
-  }, [selectedChildId, schoolDayFoodPrefs])
 
   async function handleSetDefault(level: ParticipationLevel | null) {
     setSavingDefault(true)
@@ -200,34 +314,6 @@ export function FamilyPreferencesClient({
       },
     }))
     setActivitySaveStatus('idle')
-  }
-
-  async function handleSaveFood() {
-    if (!emergencySnack || !sharedFood) {
-      setFoodError('Select both preferences before saving')
-      return
-    }
-    setSavingFood(true)
-    setFoodError(null)
-    const result = await adminSaveSchoolDayFoodPreferences(
-      effectiveParentId,
-      selectedChildId,
-      { emergencySnack, sharedFood },
-    )
-    setSavingFood(false)
-    if (result.error) {
-      setFoodError(result.error)
-      return
-    }
-    const saved: SchoolDayFoodPreference = {
-      student_id: selectedChildId,
-      emergency_snack_preference: emergencySnack,
-      shared_food_preference: sharedFood,
-    }
-    setSchoolDayFoodPrefs((prev) => {
-      const without = prev.filter((p) => p.student_id !== selectedChildId)
-      return [...without, saved]
-    })
   }
 
   async function handleSaveActivities() {
@@ -384,83 +470,19 @@ export function FamilyPreferencesClient({
             </div>
           </section>
 
-          {/* School day food */}
-          <section
-            className="rounded-xl p-5"
-            style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}`, boxShadow: shadows.soft }}
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <UtensilsCrossed className="w-4 h-4" style={{ color: colors.textSecondary }} />
-              <h2 className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
-                School day food preferences
-              </h2>
-            </div>
-            <p className="text-xs mb-4" style={{ color: colors.textTertiary }}>
-              Backup snacks and shared food during the school day.
-            </p>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: colors.textSecondary }}>
-                  Emergency / backup snacks
-                </label>
-                <select
-                  value={emergencySnack}
-                  onChange={(e) =>
-                    setEmergencySnack(e.target.value as EmergencySnackPreference)
-                  }
-                  className="w-full text-xs rounded-lg px-2 py-2 outline-none"
-                  style={{
-                    backgroundColor: colors.elevated,
-                    border: `1px solid ${colors.border}`,
-                    color: colors.textPrimary,
-                  }}
-                >
-                  <option value="">Select…</option>
-                  {EMERGENCY_SNACK_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: colors.textSecondary }}>
-                  Shared food from families
-                </label>
-                <select
-                  value={sharedFood}
-                  onChange={(e) => setSharedFood(e.target.value as SharedFoodPreference)}
-                  className="w-full text-xs rounded-lg px-2 py-2 outline-none"
-                  style={{
-                    backgroundColor: colors.elevated,
-                    border: `1px solid ${colors.border}`,
-                    color: colors.textPrimary,
-                  }}
-                >
-                  <option value="">Select…</option>
-                  {SHARED_FOOD_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            {foodError && (
-              <p className="text-xs mt-2" style={{ color: '#EF4444' }}>
-                {foodError}
-              </p>
-            )}
-            <button
-              type="button"
-              onClick={handleSaveFood}
-              disabled={savingFood}
-              className="mt-4 text-xs font-semibold px-4 py-2 rounded-lg transition-opacity disabled:opacity-50"
-              style={{ backgroundColor: colors.accent, color: '#fff' }}
-            >
-              {savingFood ? 'Saving…' : 'Save school day food'}
-            </button>
-          </section>
+          <SchoolDayFoodAdminSection
+            key={foodFormKey}
+            studentId={selectedChildId}
+            effectiveParentId={effectiveParentId}
+            initialEmergencySnack={selectedFoodPref?.emergency_snack_preference ?? ''}
+            initialSharedFood={selectedFoodPref?.shared_food_preference ?? ''}
+            onSaved={(saved) => {
+              setSchoolDayFoodPrefs((prev) => {
+                const without = prev.filter((p) => p.student_id !== saved.student_id)
+                return [...without, saved]
+              })
+            }}
+          />
 
           {/* Activity preferences */}
           <section
