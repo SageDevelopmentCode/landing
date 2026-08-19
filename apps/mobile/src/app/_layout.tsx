@@ -138,10 +138,34 @@ function RootLayout() {
       const data = response.notification.request.content.data as {
         conversationId?: string;
         postId?: string;
+        activityId?: string;
+        channelId?: string;
         role?: string;
       };
       if (data.postId) {
         router.push({ pathname: '/(tabs)/feed/[postId]', params: { postId: data.postId } });
+        return;
+      }
+      if (data.activityId) {
+        router.push({
+          pathname: '/(tabs)/home',
+          params: { activityId: data.activityId },
+        });
+        return;
+      }
+      if (data.channelId) {
+        const role = data.role ?? userRoleRef.current;
+        if (role === 'parent') {
+          router.push({
+            pathname: '/(tabs)/messages/channel/[channelId]',
+            params: { channelId: data.channelId },
+          });
+        } else {
+          router.push({
+            pathname: '/(staff)/messages/channel/[channelId]',
+            params: { channelId: data.channelId },
+          });
+        }
         return;
       }
       if (!data?.conversationId) return;

@@ -4408,6 +4408,78 @@ export async function buildMeetMissJoyRSVPEmail(opts: {
 }
 
 /**
+ * Build HTML invite email for Community Garden Day (sent to current parents)
+ */
+export async function buildCommunityGardenDayInviteEmail(opts: {
+  g1FullName: string;
+}): Promise<{ subject: string; content: string }> {
+  const firstName = opts.g1FullName.split(" ")[0] || opts.g1FullName;
+  const subject =
+    "You're invited — Community Garden Day, Thursday Aug 27 | 5:30–7:00pm";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+
+  <p style="margin-bottom: 24px;">Dear ${firstName},</p>
+
+  <p style="margin-bottom: 20px;">We would love to invite you to <strong>Community Garden Day</strong> — a cozy evening of planting, painting, connecting, and creating a garden that will bloom with memories for years to come.</p>
+
+  <p style="margin-bottom: 20px;">This evening is for <strong>all families</strong>. Current Sage Field families are warmly invited, and new families and visiting friends are welcome too — if you'd like to invite anyone, please do! No enrollment required.</p>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">Event Details</h2>
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px;">
+    <p style="margin: 0 0 6px 0;"><strong>Date:</strong> Thursday, August 27, 2026</p>
+    <p style="margin: 0 0 6px 0;"><strong>Time:</strong> 5:30 – 7:00 PM</p>
+    <p style="margin: 0;"><strong>Location:</strong> <a href="https://maps.google.com/?q=2760+Gattis+School+Rd,+Round+Rock,+TX+78664" style="color: #2C5F2E;">2760 Gattis School Rd, Round Rock, TX 78664</a></p>
+  </div>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">What to Expect</h2>
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px;">
+    <ul style="margin: 0; padding-left: 18px; line-height: 2.1; font-size: 14px; color: #2c2c2c;">
+      <li>Planting in our community garden — flowers, herbs, fruits, and vegetables</li>
+      <li>Painting garden markers and outdoor art together</li>
+      <li>Connecting with Sage Field families and visiting friends</li>
+      <li>Snacks and a relaxed evening outdoors</li>
+    </ul>
+  </div>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">Please Bring a Plant</h2>
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px; font-size: 14px; color: #2c2c2c;">
+    <p style="margin: 0 0 8px 0;">We kindly invite each family to bring <strong>at least one plant</strong> to help our community garden grow — herbs, fruits, vegetables, or flowers. If you'd like to bring more, we would be incredibly grateful!</p>
+    <p style="margin: 0;">Every flower, herb, fruit, or vegetable planted becomes part of a garden built with love by Sage Field families.</p>
+  </div>
+
+  <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 8px; padding: 20px 24px; margin: 28px 0; text-align: center;">
+    <p style="margin: 0 0 6px 0; font-size: 15px; font-weight: bold; color: #2C5F2E;">Reserve your spot</p>
+    <p style="margin: 0 0 18px 0; font-size: 13px; color: #555;">Please RSVP so we can plan for snacks and space.</p>
+    <a href="https://sagefield.co/community" style="background: #2C5F2E; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-family: Georgia, serif; font-size: 15px; display: inline-block;">RSVP Now →</a>
+  </div>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">Reminder: Parent-Teacher Conferences</h2>
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px; font-size: 14px; color: #2c2c2c;">
+    <p style="margin: 0 0 12px 0;"><strong>For families enrolled in the 2026–2027 school year:</strong> if you haven't already, please schedule your parent-teacher conference. Conferences are optional, but we encourage enrolled families to take advantage of this opportunity. You may choose <strong>in-person or virtual</strong>.</p>
+    <p style="margin: 0 0 16px 0;">Available weeks: <strong>Aug 24, Aug 31, and Sep 7</strong>. Log into your Sage Field Parent Portal at <a href="https://sagefield.co/parent/home" style="color: #2C5F2E;">sagefield.co/parent/home</a> or on the mobile app and select from the available times.</p>
+    <div style="text-align: center;">
+      <a href="https://sagefield.co/parent/home" style="background: #2C5F2E; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-family: Georgia, serif; font-size: 15px; display: inline-block;">Schedule Your Conference →</a>
+    </div>
+  </div>
+
+  <p style="margin-top: 32px; margin-bottom: 4px;">Warmly,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br/>
+  Sage Field School<br/>
+  <a href="mailto:sabrina@sagefield.co" style="color: #2C5F2E;">sabrina@sagefield.co</a><br/>
+  (512) 677-5872</p>
+
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
+/**
  * Build HTML confirmation email after a family RSVPs for Community Garden Day
  */
 export async function buildCommunityGardenDayRSVPEmail(opts: {

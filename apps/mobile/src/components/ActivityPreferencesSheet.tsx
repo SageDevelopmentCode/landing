@@ -7,6 +7,7 @@ import {
 } from "@gorhom/bottom-sheet";
 import { Image } from "expo-image";
 import { Brand, FontFamilies } from "@/constants/theme";
+import { fetchDontIncludeStudentIds } from "@/lib/application-tags";
 import { supabase } from "@/lib/supabase";
 
 type ParticipationLevel = "watch" | "cook_no_eat" | "full";
@@ -65,6 +66,11 @@ export const ActivityPreferencesSheet = forwardRef<BottomSheetModal, Props>(
       setLoading(true);
       setError(null);
       try {
+        const excludedIds = await fetchDontIncludeStudentIds();
+        const eligibleStudents = (attendingStudents ?? []).filter(
+          (s) => !excludedIds.has(s.student_id),
+        );
+
         const { data: prefData, error: prefErr } = await supabase
           .schema("parent_app")
           .from("activity_preferences")
@@ -72,8 +78,13 @@ export const ActivityPreferencesSheet = forwardRef<BottomSheetModal, Props>(
           .eq("activity_id", activityId);
 
         if (prefErr) throw prefErr;
-        if (!prefData || prefData.length === 0) {
-          const allStudents = attendingStudents ?? [];
+
+        const filteredPrefData = (prefData ?? []).filter(
+          (r) => !excludedIds.has(r.student_id),
+        );
+
+        if (filteredPrefData.length === 0) {
+          const allStudents = eligibleStudents;
           if (allStudents.length > 0) {
             const allIds = allStudents.map((s) => s.student_id);
             const { data: defaultData, error: defaultErr } = await supabase
@@ -105,7 +116,7 @@ export const ActivityPreferencesSheet = forwardRef<BottomSheetModal, Props>(
           return;
         }
 
-        const studentIds = [...new Set(prefData.map((r: any) => r.student_id))];
+        const studentIds = [...new Set(filteredPrefData.map((r) => r.student_id))];
         const { data: studentData, error: studentErr } = await supabase
           .schema("admin")
           .from("students")
@@ -122,7 +133,7 @@ export const ActivityPreferencesSheet = forwardRef<BottomSheetModal, Props>(
           };
         }
 
-        const fetchedPrefs: PrefRow[] = (prefData as any[]).map((r) => ({
+        const fetchedPrefs: PrefRow[] = filteredPrefData.map((r) => ({
           student_id: r.student_id,
           participation_level: r.participation_level as ParticipationLevel,
           notes: r.notes ?? "",
@@ -131,7 +142,7 @@ export const ActivityPreferencesSheet = forwardRef<BottomSheetModal, Props>(
         }));
 
         const prefSet = new Set(fetchedPrefs.map((p) => p.student_id));
-        const noPrefStudents = (attendingStudents ?? []).filter((s) => !prefSet.has(s.student_id));
+        const noPrefStudents = eligibleStudents.filter((s) => !prefSet.has(s.student_id));
 
         if (noPrefStudents.length > 0) {
           const noPrefIds = noPrefStudents.map((s) => s.student_id);
