@@ -20,6 +20,7 @@ import {
 import { getActivities, type Activity } from "@/lib/activities-actions";
 import { notifyDiscord, notifyError } from "@/lib/discord";
 import { getPublishedNewsletters, type ParentNewsletterListItem } from "@/lib/newsletters-actions";
+import { isParentVisibleTeacher } from "@/lib/parent-visible-teachers";
 import { fetchTeacherNamesByStudentId } from "@/lib/student-teacher-assignments";
 import { supabase } from "@/lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
@@ -108,12 +109,6 @@ type TeacherSuggestion = {
   full_name: string;
   profile_image_url: string | null;
 };
-
-const SHOWN_TEACHERS = new Set([
-  "Sabrina Obnamia",
-  "Zelinda Melo",
-  "Joy Paige",
-]);
 
 type NotifItem = {
   id: string;
@@ -2399,7 +2394,7 @@ export default function HomeScreen() {
               supabase.schema("admin").from("users").select("id, full_name, profile_image_url").in("role", ["teacher", "super_admin"]).order("full_name", { ascending: true }),
             ]);
 
-          setTeachers((teachersResult.data ?? []).filter((t) => SHOWN_TEACHERS.has(t.full_name)));
+          setTeachers((teachersResult.data ?? []).filter((t) => isParentVisibleTeacher(t.full_name)));
           setTeachersLoading(false);
 
           applyActivityBanner(activitiesResult, activityPrefsResult, defaultPrefsResult, studentsForActivity, paidSets);
@@ -2530,7 +2525,7 @@ export default function HomeScreen() {
 
           setTeachers(
             (teachersResult.data ?? []).filter((t) =>
-              SHOWN_TEACHERS.has(t.full_name),
+              isParentVisibleTeacher(t.full_name),
             ),
           );
           setTeachersLoading(false);

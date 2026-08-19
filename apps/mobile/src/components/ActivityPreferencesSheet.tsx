@@ -8,9 +8,11 @@ import {
 import { Image } from "expo-image";
 import { Brand, FontFamilies } from "@/constants/theme";
 import { fetchDontIncludeStudentIds } from "@/lib/application-tags";
+import {
+  LEVEL_LABELS,
+  type ParticipationLevel,
+} from "@/lib/participation-level-labels";
 import { supabase } from "@/lib/supabase";
-
-type ParticipationLevel = "watch" | "cook_no_eat" | "full";
 
 type PrefRow = {
   student_id: string;
@@ -19,12 +21,6 @@ type PrefRow = {
   child_legal_name: string;
   profile_image_url: string | null;
   isDefault?: boolean;
-};
-
-const LEVEL_LABELS: Record<ParticipationLevel, { emoji: string; label: string; bg: string; color: string }> = {
-  watch:       { emoji: "👀", label: "Watch only",            bg: "#f3f4f6", color: "#374151" },
-  cook_no_eat: { emoji: "🧑‍🍳", label: "Cook, don't consume",  bg: "#fef9c3", color: "#854d0e" },
-  full:        { emoji: "✅", label: "Full participation",    bg: "#dcfce7", color: "#166534" },
 };
 
 const AVATAR_PALETTE = [

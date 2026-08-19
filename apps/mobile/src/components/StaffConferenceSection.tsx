@@ -84,13 +84,18 @@ function ConferencePreviewCard({
         <Text style={[styles.dateWeekday, isOwn && styles.dateWeekdayOwn]}>
           {weekday}
         </Text>
-        <Text style={styles.dateDay}>{day}</Text>
-        <Text style={styles.dateMonth}>{month}</Text>
+        <Text style={[styles.dateDay, isOwn && styles.dateDayOwn]}>{day}</Text>
+        <Text style={[styles.dateMonth, isOwn && styles.dateMonthOwn]}>
+          {month}
+        </Text>
       </View>
 
       <View style={styles.previewMain}>
         <View style={styles.previewTitleRow}>
-          <Text style={styles.previewStudentName} numberOfLines={1}>
+          <Text
+            style={[styles.previewStudentName, isOwn && styles.previewStudentNameOwn]}
+            numberOfLines={1}
+          >
             {booking.studentName}
           </Text>
           <View
@@ -106,30 +111,45 @@ function ConferencePreviewCard({
             </Text>
           </View>
           {isOwn ? (
-            <View style={styles.ownBadge}>
-              <Text style={styles.ownBadgeText}>Your conference</Text>
+            <View style={styles.ownBadgeInverted}>
+              <Text style={styles.ownBadgeInvertedText}>Your conference</Text>
             </View>
           ) : null}
         </View>
-        <Text style={styles.previewParent} numberOfLines={1}>
+        <Text
+          style={[styles.previewParent, isOwn && styles.previewParentOwn]}
+          numberOfLines={1}
+        >
           Parent: {shortName(booking.parentName)}
           {!isOwn ? ` · with ${teacherFirstName(booking.teacherName)}` : ""}
         </Text>
         <View style={styles.previewTimeRow}>
-          <Ionicons name="time-outline" size={12} color="#6b7280" />
-          <Text style={styles.previewTime}>{booking.timeSlot}</Text>
+          <Ionicons
+            name="time-outline"
+            size={12}
+            color={isOwn ? "#ffffff" : "#6b7280"}
+          />
+          <Text style={[styles.previewTime, isOwn && styles.previewTimeOwn]}>
+            {booking.timeSlot}
+          </Text>
           <View
             style={[
               styles.formatChip,
-              isInPerson ? styles.formatChipInPerson : styles.formatChipVirtual,
+              isOwn
+                ? styles.formatChipOwn
+                : isInPerson
+                  ? styles.formatChipInPerson
+                  : styles.formatChipVirtual,
             ]}
           >
             <Text
               style={[
                 styles.formatChipText,
-                isInPerson
-                  ? styles.formatChipTextInPerson
-                  : styles.formatChipTextVirtual,
+                isOwn
+                  ? styles.formatChipTextOwn
+                  : isInPerson
+                    ? styles.formatChipTextInPerson
+                    : styles.formatChipTextVirtual,
               ]}
             >
               {formatConferenceFormatLabel(booking.format)}
@@ -450,8 +470,9 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   previewCardOwn: {
-    backgroundColor: Brand.sage700 + "12",
-    borderColor: Brand.sage700 + "40",
+    backgroundColor: Brand.sage700,
+    borderColor: Brand.sage700,
+    borderWidth: 1,
   },
   previewCardOther: {
     backgroundColor: "#f9fafb",
@@ -467,7 +488,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   dateBlockOwn: {
-    backgroundColor: Brand.sage700 + "25",
+    backgroundColor: "rgba(255,255,255,0.18)",
   },
   dateWeekday: {
     fontFamily: FontFamilies.bodySemiBold,
@@ -476,7 +497,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   dateWeekdayOwn: {
-    color: Brand.sage700,
+    color: "#ffffff",
   },
   dateDay: {
     fontFamily: FontFamilies.bodySemiBold,
@@ -484,10 +505,16 @@ const styles = StyleSheet.create({
     color: "#1f2937",
     lineHeight: 22,
   },
+  dateDayOwn: {
+    color: "#ffffff",
+  },
   dateMonth: {
     fontFamily: FontFamilies.body,
     fontSize: 10,
     color: "#6b7280",
+  },
+  dateMonthOwn: {
+    color: "rgba(255,255,255,0.85)",
   },
   previewMain: {
     flex: 1,
@@ -506,6 +533,9 @@ const styles = StyleSheet.create({
     color: "#1f2937",
     flexShrink: 1,
   },
+  previewStudentNameOwn: {
+    color: "#ffffff",
+  },
   countdownBadge: {
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -515,13 +545,13 @@ const styles = StyleSheet.create({
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 10,
   },
-  ownBadge: {
-    backgroundColor: Brand.sage700 + "25",
+  ownBadgeInverted: {
+    backgroundColor: "#ffffff",
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 9999,
   },
-  ownBadgeText: {
+  ownBadgeInvertedText: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 10,
     color: Brand.sage700,
@@ -530,6 +560,9 @@ const styles = StyleSheet.create({
     fontFamily: FontFamilies.body,
     fontSize: 12,
     color: "#6b7280",
+  },
+  previewParentOwn: {
+    color: "rgba(255,255,255,0.85)",
   },
   previewTimeRow: {
     flexDirection: "row",
@@ -544,11 +577,17 @@ const styles = StyleSheet.create({
     color: "#374151",
     flexShrink: 1,
   },
+  previewTimeOwn: {
+    color: "rgba(255,255,255,0.85)",
+  },
   formatChip: {
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 9999,
     marginLeft: "auto" as const,
+  },
+  formatChipOwn: {
+    backgroundColor: "#ffffff",
   },
   formatChipInPerson: {
     backgroundColor: Brand.sage700 + "20",
@@ -561,6 +600,9 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   formatChipTextInPerson: {
+    color: Brand.sage700,
+  },
+  formatChipTextOwn: {
     color: Brand.sage700,
   },
   formatChipTextVirtual: {

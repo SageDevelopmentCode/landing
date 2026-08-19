@@ -2,6 +2,9 @@ import { ActivityPreferencesSheet } from "@/components/ActivityPreferencesSheet"
 import { HomeHeroHeader } from "@/components/HomeHeroHeader";
 import { StaffConferenceBookingsSheet, type StaffConferenceBookingsSheetRef } from "@/components/StaffConferenceBookingsSheet";
 import { StaffConferenceSection } from "@/components/StaffConferenceSection";
+import { StaffHealthFoodSection } from "@/components/StaffHealthFoodSection";
+import { StaffSchoolDayFoodPrefsSheet } from "@/components/StaffSchoolDayFoodPrefsSheet";
+import { StaffWeekActivityPrefsSheet } from "@/components/StaffWeekActivityPrefsSheet";
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
 import { BottomTabInset, Brand, FontFamilies } from "@/constants/theme";
 import { Activity, getActivities } from "@/lib/activities-actions";
@@ -20,7 +23,7 @@ import { Image } from "expo-image";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -46,6 +49,13 @@ import {
   buildDisplayNameMap,
   getStudentDisplayName,
 } from "@/lib/student-display-name";
+import {
+  fetchStaffSchoolDayFoodPrefs,
+  fetchStaffWeekActivityPrefs,
+  type StaffActivityPrefGroup,
+  type StaffSchoolDayFoodPref,
+} from "@/lib/staff-food-and-activity-prefs";
+import { getCurrentWeekRange, isDateInRange } from "@/lib/week-date-range";
 import {
   fetchAllStaffConferenceBookings,
   isConferenceTeacher,
@@ -694,6 +704,26 @@ export default function StaffHomeScreen() {
   >({});
   const [selectedPrefsActivityId, setSelectedPrefsActivityId] = useState("");
   const homePrefsSheetRef = useRef<BottomSheetModal>(null);
+  const [schoolDayFoodPrefs, setSchoolDayFoodPrefs] = useState<
+    StaffSchoolDayFoodPref[]
+  >([]);
+  const [schoolDayFoodLoading, setSchoolDayFoodLoading] = useState(true);
+  const [weekActivityPrefGroups, setWeekActivityPrefGroups] = useState<
+    StaffActivityPrefGroup[]
+  >([]);
+  const [weekActivityPrefsLoading, setWeekActivityPrefsLoading] =
+    useState(true);
+  const schoolDayFoodSheetRef = useRef<BottomSheetModal>(null);
+  const weekActivityPrefsSheetRef = useRef<BottomSheetModal>(null);
+
+  const weekActivityPrefSubmissionCount = useMemo(
+    () =>
+      weekActivityPrefGroups.reduce(
+        (total, group) => total + group.students.length,
+        0,
+      ),
+    [weekActivityPrefGroups],
+  );
 
   // Add student sheet
   const addStudentSheetRef = useRef<BottomSheetModal>(null);
@@ -809,10 +839,18 @@ export default function StaffHomeScreen() {
   const loadActivities = useCallback(async (opts?: { silent?: boolean }) => {
     if (!opts?.silent) setActivitiesLoading(true);
     try {
+      const { start, end } = getCurrentWeekRange(selectedDate);
       const all = await getActivities();
       const published = all
-        .filter((a) => a.status === "published")
-        .slice(0, 5);
+        .filter(
+          (a) =>
+            a.status === "published" &&
+            a.activity_date != null &&
+            isDateInRange(a.activity_date, start, end),
+        )
+        .sort((a, b) =>
+          (a.activity_date ?? "").localeCompare(b.activity_date ?? ""),
+        );
       setActivities(published);
 
       if (published.length > 0) {
@@ -838,16 +876,53 @@ export default function StaffHomeScreen() {
       } else {
         setPrefCounts({});
       }
+
+      return published;
     } catch (e) {
       notifyError("staff-home-activities", e);
+      return [];
     } finally {
       if (!opts?.silent) setActivitiesLoading(false);
+    }
+  }, [selectedDate]);
+
+  const loadWeekActivityPrefs = useCallback(async (activityIds: string[]) => {
+    setWeekActivityPrefsLoading(true);
+    try {
+      const groups = await fetchStaffWeekActivityPrefs(activityIds);
+      setWeekActivityPrefGroups(groups);
+    } catch (e) {
+      notifyError("staff-home-week-activity-prefs", e);
+      setWeekActivityPrefGroups([]);
+    } finally {
+      setWeekActivityPrefsLoading(false);
+    }
+  }, []);
+
+  const loadSchoolDayFoodPrefs = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setSchoolDayFoodLoading(true);
+    try {
+      const prefs = await fetchStaffSchoolDayFoodPrefs();
+      setSchoolDayFoodPrefs(prefs);
+    } catch (e) {
+      notifyError("staff-home-school-day-food-prefs", e);
+      setSchoolDayFoodPrefs([]);
+    } finally {
+      if (!opts?.silent) setSchoolDayFoodLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    loadActivities();
-  }, [loadActivities]);
+    async function loadAllActivityData() {
+      const published = await loadActivities();
+      await loadWeekActivityPrefs(published.map((a) => a.id));
+    }
+    void loadAllActivityData();
+  }, [loadActivities, loadWeekActivityPrefs]);
+
+  useEffect(() => {
+    loadSchoolDayFoodPrefs();
+  }, [loadSchoolDayFoodPrefs]);
 
   // ── Load today's students (refreshes on focus) ───────────────────────────────
 
@@ -875,9 +950,11 @@ export default function StaffHomeScreen() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
+      const published = await loadActivities({ silent: true });
       await Promise.all([
         loadTodayStudents({ silent: true }),
-        loadActivities({ silent: true }),
+        loadWeekActivityPrefs(published.map((a) => a.id)),
+        loadSchoolDayFoodPrefs({ silent: true }),
         showConferenceSection
           ? fetchAllStaffConferenceBookings()
               .then(setConferenceBookings)
@@ -892,6 +969,8 @@ export default function StaffHomeScreen() {
   }, [
     loadTodayStudents,
     loadActivities,
+    loadWeekActivityPrefs,
+    loadSchoolDayFoodPrefs,
     showConferenceSection,
   ]);
 
@@ -2120,28 +2199,27 @@ export default function StaffHomeScreen() {
                     );
                   })}
 
-            {/* Allergies for Today */}
-            {todayStudents.some((s) => s.has_allergies === "yes") && (
-              <Pressable
-                style={({ pressed }) => [
-                  styles.allergyButton,
-                  pressed && { opacity: 0.7 },
-                ]}
-                onPress={openAllergiesSheet}
-              >
-                <View style={styles.allergyButtonLeft}>
-                  <Ionicons name="medical" size={15} color="#dc2626" />
-                  <Text style={styles.allergyButtonText}>
-                    Allergies for Today
-                  </Text>
-                </View>
-                <View style={styles.allergyButtonBadge}>
-                  <Text style={styles.allergyButtonBadgeText}>
-                    {todayStudents.filter((s) => s.has_allergies === "yes").length}
-                  </Text>
-                </View>
-              </Pressable>
-            )}
+            <StaffHealthFoodSection
+              allergyCount={
+                todayStudents.filter((s) => s.has_allergies === "yes").length
+              }
+              showAllergiesRow={todayStudents.some(
+                (s) => s.has_allergies === "yes",
+              )}
+              schoolDayFoodCount={schoolDayFoodPrefs.length}
+              schoolDayFoodLoading={schoolDayFoodLoading}
+              activityPrefCount={weekActivityPrefSubmissionCount}
+              activityPrefsLoading={
+                activitiesLoading || weekActivityPrefsLoading
+              }
+              onOpenAllergies={openAllergiesSheet}
+              onOpenSchoolDayFood={() =>
+                schoolDayFoodSheetRef.current?.present()
+              }
+              onOpenActivityPrefs={() =>
+                weekActivityPrefsSheetRef.current?.present()
+              }
+            />
 
             {showConferenceSection && userId && (
               <StaffConferenceSection
@@ -2985,6 +3063,19 @@ export default function StaffHomeScreen() {
         }))}
       />
 
+      <StaffSchoolDayFoodPrefsSheet
+        ref={schoolDayFoodSheetRef}
+        prefs={schoolDayFoodPrefs}
+        loading={schoolDayFoodLoading}
+      />
+
+      <StaffWeekActivityPrefsSheet
+        ref={weekActivityPrefsSheetRef}
+        activities={activities}
+        groups={weekActivityPrefGroups}
+        loading={activitiesLoading || weekActivityPrefsLoading}
+      />
+
       {showConferenceSection && userId && (
         <StaffConferenceBookingsSheet
           ref={ptcBookingsSheetRef}
@@ -3630,43 +3721,6 @@ const styles = StyleSheet.create({
     fontFamily: FontFamilies.body,
     fontSize: 12,
     color: "#9ca3af",
-  },
-
-  // Allergies for Today button
-  allergyButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#fef2f2",
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    marginTop: 14,
-    marginHorizontal: 16,
-    marginBottom: 4,
-    borderWidth: 1,
-    borderColor: "#fecaca",
-  },
-  allergyButtonLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  allergyButtonText: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 13,
-    color: "#dc2626",
-  },
-  allergyButtonBadge: {
-    backgroundColor: "#dc2626",
-    borderRadius: 10,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-  },
-  allergyButtonBadgeText: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 11,
-    color: "#fff",
   },
 
   // Allergies sheet
