@@ -1,6 +1,6 @@
 import { ActivityPreferencesSheet } from "@/components/ActivityPreferencesSheet";
 import { HomeHeroHeader } from "@/components/HomeHeroHeader";
-import { StaffConferenceBookingsSheet } from "@/components/StaffConferenceBookingsSheet";
+import { StaffConferenceBookingsSheet, type StaffConferenceBookingsSheetRef } from "@/components/StaffConferenceBookingsSheet";
 import { StaffConferenceSection } from "@/components/StaffConferenceSection";
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
 import { BottomTabInset, Brand, FontFamilies } from "@/constants/theme";
@@ -47,7 +47,7 @@ import {
   getStudentDisplayName,
 } from "@/lib/student-display-name";
 import {
-  fetchStaffConferenceBookings,
+  fetchAllStaffConferenceBookings,
   isConferenceTeacher,
   type StaffConferenceBooking,
 } from "@/lib/staff-conference-bookings";
@@ -715,7 +715,7 @@ export default function StaffHomeScreen() {
   const [pickupSaving, setPickupSaving] = useState(false);
 
   // Parent-teacher conferences (conference teachers only)
-  const ptcBookingsSheetRef = useRef<BottomSheetModal>(null);
+  const ptcBookingsSheetRef = useRef<StaffConferenceBookingsSheetRef>(null);
   const [conferenceBookings, setConferenceBookings] = useState<
     StaffConferenceBooking[]
   >([]);
@@ -788,7 +788,7 @@ export default function StaffHomeScreen() {
     async function loadConferenceBookings() {
       setConferenceBookingsLoading(true);
       try {
-        const rows = await fetchStaffConferenceBookings(userId!);
+        const rows = await fetchAllStaffConferenceBookings();
         if (!cancelled) setConferenceBookings(rows);
       } catch (err) {
         notifyError("staff-home-ptc-bookings", err);
@@ -878,8 +878,8 @@ export default function StaffHomeScreen() {
       await Promise.all([
         loadTodayStudents({ silent: true }),
         loadActivities({ silent: true }),
-        showConferenceSection && userId
-          ? fetchStaffConferenceBookings(userId)
+        showConferenceSection
+          ? fetchAllStaffConferenceBookings()
               .then(setConferenceBookings)
               .catch((e) => notifyError("staff-home-ptc-bookings", e))
           : Promise.resolve(),
@@ -893,7 +893,6 @@ export default function StaffHomeScreen() {
     loadTodayStudents,
     loadActivities,
     showConferenceSection,
-    userId,
   ]);
 
   // ── Profile image upload ─────────────────────────────────────────────────────
@@ -2144,12 +2143,18 @@ export default function StaffHomeScreen() {
               </Pressable>
             )}
 
-            {showConferenceSection && (
+            {showConferenceSection && userId && (
               <StaffConferenceSection
                 bookings={conferenceBookings}
                 loading={conferenceBookingsLoading}
                 todayYmd={todayActual}
-                onViewAll={() => ptcBookingsSheetRef.current?.present()}
+                currentTeacherId={userId}
+                onOpenSheet={() => {
+                  ptcBookingsSheetRef.current?.presentList();
+                }}
+                onBookingPress={(id) => {
+                  ptcBookingsSheetRef.current?.presentDetail(id);
+                }}
               />
             )}
 
@@ -2980,10 +2985,11 @@ export default function StaffHomeScreen() {
         }))}
       />
 
-      {showConferenceSection && (
+      {showConferenceSection && userId && (
         <StaffConferenceBookingsSheet
           ref={ptcBookingsSheetRef}
           bookings={conferenceBookings}
+          currentTeacherId={userId}
         />
       )}
     </View>
