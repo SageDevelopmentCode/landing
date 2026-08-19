@@ -114,7 +114,6 @@ export async function POST(request: NextRequest) {
     .schema("teachers")
     .from("parent_teacher_conference_bookings")
     .select("id")
-    .eq("teacher_id", validated.teacherId)
     .eq("conference_date", validated.conferenceDate)
     .eq("time_slot", validated.timeSlot)
     .eq("status", "confirmed")

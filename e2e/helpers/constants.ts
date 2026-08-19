@@ -16,9 +16,9 @@ export const E2E_CONFERENCE_TEACHER_ID =
 
 export const E2E_GRANT_CHILD_FIRST_NAME = 'Grant' as const
 
-export const E2E_PTC_SLOT = '1:50 – 2:20pm' as const
+export const E2E_PTC_SLOT = '3:10 – 3:40pm' as const
 /** Second Mon–Thu slot — must match MON_THU_SLOTS[1] in app/lib/parent-teacher-conference.ts */
-export const E2E_PTC_GRANTEE_SLOT = '2:30 – 3:00pm' as const
+export const E2E_PTC_GRANTEE_SLOT = '3:50 – 4:20pm' as const
 
 export const TEST_USERS = {
   parentApply: {

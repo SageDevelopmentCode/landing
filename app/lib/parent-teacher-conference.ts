@@ -60,31 +60,14 @@ export const CONFERENCE_WEEKS: ConferenceWeek[] = [
 ];
 
 export const MON_THU_SLOTS = [
-  "1:50 – 2:20pm",
-  "2:30 – 3:00pm",
   "3:10 – 3:40pm",
+  "3:50 – 4:20pm",
 ] as const;
 
-function formatSlotLabel(startMinutes: number): string {
-  const endMinutes = startMinutes + 30;
-  const fmt = (mins: number) => {
-    const h = Math.floor(mins / 60);
-    const m = mins % 60;
-    const period = h >= 12 ? "pm" : "am";
-    const hour = h % 12 === 0 ? 12 : h % 12;
-    return m === 0 ? `${hour}${period}` : `${hour}:${String(m).padStart(2, "0")}${period}`;
-  };
-  return `${fmt(startMinutes)} – ${fmt(endMinutes)}`;
-}
-
-/** 30-minute blocks from 8:30am through 3:00pm */
-export const FRIDAY_SLOTS: string[] = (() => {
-  const slots: string[] = [];
-  for (let mins = 8 * 60 + 30; mins < 15 * 60; mins += 30) {
-    slots.push(formatSlotLabel(mins));
-  }
-  return slots;
-})();
+export const FRIDAY_SLOTS = [
+  "2:10 – 2:40pm",
+  "2:50 – 3:20pm",
+] as const;
 
 export function getDaysForWeek(weekStart: string): ConferenceDay[] {
   const start = new Date(`${weekStart}T12:00:00`);
@@ -147,11 +130,10 @@ export function getAllConferenceDates(): string[] {
 }
 
 export function takenSlotKey(
-  teacherId: string,
   conferenceDate: string,
   timeSlot: string,
 ): string {
-  return `${teacherId}:${conferenceDate}:${timeSlot}`;
+  return `${conferenceDate}:${timeSlot}`;
 }
 
 export function formatConferenceDateForDisplay(date: string): string {
@@ -186,7 +168,7 @@ export function isValidConferenceBooking(opts: {
   }
 
   if (day.isFriday) {
-    return FRIDAY_SLOTS.includes(opts.timeSlot);
+    return (FRIDAY_SLOTS as readonly string[]).includes(opts.timeSlot);
   }
   return (MON_THU_SLOTS as readonly string[]).includes(opts.timeSlot);
 }

@@ -156,9 +156,8 @@ export default function ParentTeacherConferenceSection({
     return !!bookingsByStudent[studentId];
   }
 
-  function isSlotTaken(teacherId: string | null, date: string, slot: string) {
-    if (!teacherId) return false;
-    return takenSlotKeys.includes(takenSlotKey(teacherId, date, slot));
+  function isSlotTaken(date: string, slot: string) {
+    return takenSlotKeys.includes(takenSlotKey(date, slot));
   }
 
   function updateActiveSelection(patch: Partial<ChildSelection>) {
@@ -276,7 +275,7 @@ export default function ParentTeacherConferenceSection({
       }));
       setTakenSlotKeys((prev) => [
         ...prev,
-        takenSlotKey(selectedTeacherId, activeDayDate, selectedSlot),
+        takenSlotKey(activeDayDate, selectedSlot),
       ]);
 
       setSuccessMessage(`Conference confirmed for ${activeChild.name}!`);
@@ -598,8 +597,8 @@ export default function ParentTeacherConferenceSection({
                         </h3>
                         <p className="text-xs text-gray-400 font-body mt-0.5">
                           {activeDay.isFriday
-                            ? "Friday · 30-minute blocks, 8:30am – 3:00pm"
-                            : "Mon – Thu · Afternoon blocks"}
+                            ? "Friday · Afternoon blocks, 2:10pm – 3:20pm"
+                            : "Mon – Thu · Afternoon blocks, 3:10pm – 4:20pm"}
                         </p>
                       </div>
                       <div
@@ -610,11 +609,7 @@ export default function ParentTeacherConferenceSection({
                         }`}
                       >
                         {timeSlots.map((slot) => {
-                          const taken = isSlotTaken(
-                            selectedTeacherId,
-                            activeDayDate,
-                            slot,
-                          );
+                          const taken = isSlotTaken(activeDayDate, slot);
                           return (
                             <button
                               key={slot}

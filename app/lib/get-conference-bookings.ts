@@ -47,7 +47,7 @@ export async function getConferenceBookings(
   }
 
   const takenSlotKeys = (takenRows ?? []).map((row) =>
-    takenSlotKey(row.teacher_id, row.conference_date, row.time_slot),
+    takenSlotKey(row.conference_date, row.time_slot),
   );
 
   return { bookingsByStudentId, takenSlotKeys };
