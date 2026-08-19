@@ -6,12 +6,17 @@ import {
   markFallLeavesPlayed,
   shouldPlayFallLeaves,
 } from "@/components/FallLeavesOverlay";
+import { ParentActivityPreferenceSheet } from "@/components/ParentActivityPreferenceSheet";
 import { ParentTeacherConferenceSheet } from "@/components/ParentTeacherConferenceSheet";
 import { BottomTabInset, Brand, FontFamilies } from "@/constants/theme";
 import { API_BASE_URL } from "@/constants/config";
 import { useAuth } from "@/contexts/AuthContext";
 import { getChannels } from "@/lib/channel-actions";
 import { computePaidDates } from "@/lib/compute-paid-dates";
+import {
+  computeHasUnsetActivityPreference,
+  findFirstUnsetActivity,
+} from "@/lib/activity-preferences";
 import { getActivities, type Activity } from "@/lib/activities-actions";
 import { notifyDiscord, notifyError } from "@/lib/discord";
 import { getPublishedNewsletters, type ParentNewsletterListItem } from "@/lib/newsletters-actions";
@@ -28,7 +33,7 @@ import { Image } from "expo-image";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
@@ -2086,6 +2091,8 @@ async function fetchDMNotifs(userId: string): Promise<NotifItem[]> {
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { activityId: activityIdParam } = useLocalSearchParams<{ activityId?: string }>();
+  const handledActivityNotificationRef = useRef<string | null>(null);
   const goToTuition = useCallback(() => {
     router.push("/(tabs)/tuition" as any);
   }, [router]);
@@ -2156,6 +2163,13 @@ export default function HomeScreen() {
   const [hasActivityForPaidDay, setHasActivityForPaidDay] = useState(false);
   const [weekActivities, setWeekActivities] = useState<Activity[]>([]);
   const [weekActivitiesLoading, setWeekActivitiesLoading] = useState(true);
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
+  const activityBannerRef = useRef<{
+    activities: { id: string; activity_date: string | null }[];
+    activityPrefs: { student_id: string; activity_id: string }[];
+    defaultPrefStudentIds: Set<string>;
+    paidSets: Record<string, Set<string>>;
+  } | null>(null);
   const [paidSchoolYearByStudent, setPaidSchoolYearByStudent] =
     useState<PaidSchoolYearByStudent>({});
   const [paidSupplyFeeByStudent, setPaidSupplyFeeByStudent] = useState<
@@ -2264,6 +2278,7 @@ export default function HomeScreen() {
   const checklistSheetRef = useRef<BottomSheetModal>(null);
   const notifSheetRef = useRef<BottomSheetModal>(null);
   const ptcSheetRef = useRef<BottomSheetModal>(null);
+  const activityPrefSheetRef = useRef<BottomSheetModal>(null);
   const [introVisible, setIntroVisible] = useState(false);
   const [introIndex, setIntroIndex] = useState(0);
   const introListRef = useRef<FlatList<IntroSlide>>(null);
@@ -2790,24 +2805,26 @@ export default function HomeScreen() {
       studentsData: { id: string }[],
       paidSets: Record<string, Set<string>>,
     ) {
-      const prefSet = new Set(
-        (activityPrefsResult.data ?? []).map(
-          (p) => `${p.student_id}:${p.activity_id}`,
-        ),
-      );
+      const activities = activitiesResult.data ?? [];
+      const activityPrefs = activityPrefsResult.data ?? [];
       const defaultPrefStudentIds = new Set(
         (defaultPrefsResult.data ?? []).map((d) => d.student_id),
       );
+
+      activityBannerRef.current = {
+        activities,
+        activityPrefs,
+        defaultPrefStudentIds,
+        paidSets,
+      };
+
       setHasActivityForPaidDay(
-        (activitiesResult.data ?? []).some(
-          (act) =>
-            act.activity_date != null &&
-            studentsData.some(
-              (s) =>
-                paidSets[s.id]?.has(act.activity_date!) &&
-                !defaultPrefStudentIds.has(s.id) &&
-                !prefSet.has(`${s.id}:${act.id}`),
-            ),
+        computeHasUnsetActivityPreference(
+          activities,
+          activityPrefs,
+          defaultPrefStudentIds,
+          studentsData,
+          paidSets,
         ),
       );
     }
@@ -2873,6 +2890,99 @@ export default function HomeScreen() {
   useEffect(() => {
     loadWeekActivities();
   }, [loadWeekActivities]);
+
+  const refreshActivityBanner = useCallback(async () => {
+    if (!effectiveParentId || !activityBannerRef.current) return;
+    const { activities, defaultPrefStudentIds, paidSets } =
+      activityBannerRef.current;
+
+    const { data: prefs } = await supabase
+      .schema("parent_app")
+      .from("activity_preferences")
+      .select("student_id, activity_id")
+      .eq("parent_id", effectiveParentId);
+
+    const activityPrefs = prefs ?? [];
+    activityBannerRef.current = {
+      ...activityBannerRef.current,
+      activityPrefs,
+    };
+
+    setHasActivityForPaidDay(
+      computeHasUnsetActivityPreference(
+        activities,
+        activityPrefs,
+        defaultPrefStudentIds,
+        students,
+        paidSets,
+      ),
+    );
+  }, [effectiveParentId, students]);
+
+  const openActivityPreferenceSheet = useCallback(
+    async (activity?: Activity | null) => {
+      if (isReadOnlyPreview && !activity) return;
+
+      let target = activity ?? null;
+
+      if (!target && activityBannerRef.current) {
+        const ctx = activityBannerRef.current;
+        const unsetId = findFirstUnsetActivity(
+          ctx.activities,
+          ctx.activityPrefs,
+          ctx.defaultPrefStudentIds,
+          students,
+          ctx.paidSets,
+        );
+        if (unsetId) {
+          target = weekActivities.find((a) => a.id === unsetId) ?? null;
+          if (!target) {
+            try {
+              const all = await getActivities();
+              target = all.find((a) => a.id === unsetId) ?? null;
+            } catch (e) {
+              notifyError("parent-home-activity-pref-open", e);
+            }
+          }
+        }
+      }
+
+      if (target) {
+        setSelectedActivity(target);
+        setTimeout(() => activityPrefSheetRef.current?.present(), 50);
+      } else {
+        router.push("/(tabs)/preferences" as any);
+      }
+    },
+    [isReadOnlyPreview, students, weekActivities, router],
+  );
+
+  useEffect(() => {
+    if (!activityIdParam || handledActivityNotificationRef.current === activityIdParam) return;
+    if (isReadOnlyPreview || !effectiveParentId) return;
+
+    handledActivityNotificationRef.current = activityIdParam;
+
+    void (async () => {
+      try {
+        const all = await getActivities();
+        const activity = all.find((a) => a.id === activityIdParam) ?? null;
+        if (activity) {
+          await openActivityPreferenceSheet(activity);
+        }
+      } catch (e) {
+        notifyError("activity-notification-deeplink", e);
+      } finally {
+        router.setParams({ activityId: undefined });
+      }
+    })();
+  }, [
+    activityIdParam,
+    effectiveParentId,
+    isReadOnlyPreview,
+    openActivityPreferenceSheet,
+    router,
+  ]);
 
   async function handlePickParentImage() {
     if (isReadOnlyPreview) return;
@@ -3271,9 +3381,7 @@ export default function HomeScreen() {
 
                     {showActionActivity && (
                       <Pressable
-                        onPress={() =>
-                          router.push("/(tabs)/preferences" as any)
-                        }
+                        onPress={() => void openActivityPreferenceSheet()}
                         style={({ pressed }) => [
                           actPrefStyles.row,
                           actPrefStyles.rowActivity,
@@ -3602,7 +3710,7 @@ export default function HomeScreen() {
                           weekActStyles.card,
                           pressed && { opacity: 0.85 },
                         ]}
-                        onPress={() => router.push("/(tabs)/preferences" as any)}
+                        onPress={() => void openActivityPreferenceSheet(activity)}
                       >
                         {thumb ? (
                           <Image
@@ -4673,6 +4781,18 @@ export default function HomeScreen() {
             </Pressable>
           </BottomSheetScrollView>
         </BottomSheetModal>
+
+        {students.length > 0 && effectiveParentId && (
+          <ParentActivityPreferenceSheet
+            ref={activityPrefSheetRef}
+            activity={selectedActivity}
+            students={students}
+            parentId={effectiveParentId}
+            userId={userId}
+            readOnly={isReadOnlyPreview}
+            onSaved={() => void refreshActivityBanner()}
+          />
+        )}
 
         {students.length > 0 && effectiveParentId && (
           <ParentTeacherConferenceSheet

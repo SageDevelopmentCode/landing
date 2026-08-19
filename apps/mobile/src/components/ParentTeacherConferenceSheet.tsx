@@ -182,9 +182,8 @@ export const ParentTeacherConferenceSheet = forwardRef<
     return !!bookingsByStudent[studentId];
   }
 
-  function isSlotTaken(teacherId: string | null, date: string, slot: string) {
-    if (!teacherId) return false;
-    return takenSlotKeys.includes(takenSlotKey(teacherId, date, slot));
+  function isSlotTaken(date: string, slot: string) {
+    return takenSlotKeys.includes(takenSlotKey(date, slot));
   }
 
   function updateActiveSelection(patch: Partial<ChildSelection>) {
@@ -263,7 +262,7 @@ export const ParentTeacherConferenceSheet = forwardRef<
       };
       const nextTaken = [
         ...takenSlotKeys,
-        takenSlotKey(selectedTeacherId, activeDayDate, selectedSlot),
+        takenSlotKey(activeDayDate, selectedSlot),
       ];
 
       setBookingsByStudent(nextBookings);
@@ -612,8 +611,8 @@ export const ParentTeacherConferenceSheet = forwardRef<
                 <Text style={styles.sectionTitle}>Choose a time</Text>
                 <Text style={styles.sectionSub}>
                   {activeDay.isFriday
-                    ? "Friday · 30-minute blocks, 8:30am – 3:00pm"
-                    : "Mon – Thu · Afternoon blocks"}
+                    ? "Friday · Afternoon blocks, 2:10pm – 3:20pm"
+                    : "Mon – Thu · Afternoon blocks, 3:10pm – 4:20pm"}
                 </Text>
                 <View
                   style={[
@@ -622,11 +621,7 @@ export const ParentTeacherConferenceSheet = forwardRef<
                   ]}
                 >
                   {timeSlots.map((slot) => {
-                    const taken = isSlotTaken(
-                      selectedTeacherId,
-                      activeDayDate,
-                      slot,
-                    );
+                    const taken = isSlotTaken(activeDayDate, slot);
                     return (
                       <Pressable
                         key={slot}

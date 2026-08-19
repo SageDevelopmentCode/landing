@@ -48,6 +48,7 @@ import { sendFreeFridayAnnouncementEmail } from '../../actions/sendFreeFridayAnn
 import { sendGoogleReviewIncentiveEmail } from '../../actions/sendGoogleReviewIncentiveEmail'
 import { sendMeetTheTeacherJoyEmail } from '../../actions/sendMeetTheTeacherJoyEmail'
 import { sendMeetTheTeacherJoyReminderEmail } from '../../actions/sendMeetTheTeacherJoyReminderEmail'
+import { sendCommunityGardenDayInviteEmail } from '../../actions/sendCommunityGardenDayInviteEmail'
 import { sendFunFridayConfirmationEmail } from '../../actions/sendFunFridayConfirmationEmail'
 import { sendSummerTuitionConfirmationEmail } from '../../actions/sendSummerTuitionConfirmationEmail'
 import { sendSchoolYearTuitionInfoEmail } from '../../actions/sendSchoolYearTuitionInfoEmail'
@@ -286,6 +287,9 @@ export function ApplicationDetailSidebar({
   const [meetJoyReminderSending, setMeetJoyReminderSending] = useState(false)
   const [meetJoyReminderSent, setMeetJoyReminderSent] = useState(false)
   const [meetJoyReminderError, setMeetJoyReminderError] = useState<string | null>(null)
+  const [gardenDayInviteSending, setGardenDayInviteSending] = useState(false)
+  const [gardenDayInviteSent, setGardenDayInviteSent] = useState(false)
+  const [gardenDayInviteError, setGardenDayInviteError] = useState<string | null>(null)
   const [summerTuitionConfirmSending, setSummerTuitionConfirmSending] = useState(false)
   const [summerTuitionConfirmSent, setSummerTuitionConfirmSent] = useState(false)
   const [summerTuitionConfirmError, setSummerTuitionConfirmError] = useState<string | null>(null)
@@ -1039,6 +1043,24 @@ export function ApplicationDetailSidebar({
       setTimeout(() => setMeetJoyReminderSent(false), 3000)
     } else {
       setMeetJoyReminderError(result.error ?? 'Failed to send')
+    }
+  }
+
+  async function handleSendGardenDayInvite() {
+    if (!application?.g1_email) return
+    setGardenDayInviteSending(true)
+    setGardenDayInviteError(null)
+    const result = await sendCommunityGardenDayInviteEmail({
+      g1FullName: application.g1_full_name ?? '',
+      email: application.g1_email,
+    })
+    setGardenDayInviteSending(false)
+    if (result.success) {
+      setGardenDayInviteSent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setGardenDayInviteSent(false), 3000)
+    } else {
+      setGardenDayInviteError(result.error ?? 'Failed to send')
     }
   }
 
@@ -2229,6 +2251,17 @@ export function ApplicationDetailSidebar({
                     {meetJoyReminderSending ? 'Sending…' : meetJoyReminderSent ? '✓ Sent!' : 'Send Meet Miss Joy Reminder'}
                   </button>
                   {meetJoyReminderError && <span className="text-xs text-red-600">{meetJoyReminderError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendGardenDayInvite}
+                    disabled={gardenDayInviteSending || gardenDayInviteSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {gardenDayInviteSending ? 'Sending…' : gardenDayInviteSent ? '✓ Sent!' : 'Send Community Garden Day Invite'}
+                  </button>
+                  {gardenDayInviteError && <span className="text-xs text-red-600">{gardenDayInviteError}</span>}
                 </div>
                 <div className="flex items-center gap-3">
                   <button
