@@ -1,8 +1,10 @@
 import { ActivityPreferencesSheet } from "@/components/ActivityPreferencesSheet";
 import { HomeHeroHeader } from "@/components/HomeHeroHeader";
+import { StaffAllBirthdaysSheet } from "@/components/StaffAllBirthdaysSheet";
 import { StaffConferenceBookingsSheet, type StaffConferenceBookingsSheetRef } from "@/components/StaffConferenceBookingsSheet";
 import { StaffConferenceSection } from "@/components/StaffConferenceSection";
 import { StaffHealthFoodSection } from "@/components/StaffHealthFoodSection";
+import { StaffUpcomingBirthdaysSection } from "@/components/StaffUpcomingBirthdaysSection";
 import { StaffSchoolDayFoodPrefsSheet } from "@/components/StaffSchoolDayFoodPrefsSheet";
 import { StaffWeekActivityPrefsSheet } from "@/components/StaffWeekActivityPrefsSheet";
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
@@ -61,6 +63,11 @@ import {
   isConferenceTeacher,
   type StaffConferenceBooking,
 } from "@/lib/staff-conference-bookings";
+import {
+  fetchStaffBirthdays,
+  getUpcomingBirthdays,
+  type StaffBirthday,
+} from "@/lib/staff-upcoming-birthdays";
 import {
   getChicagoDateTimeParts,
   isSchoolYearPickupReminderWindow,
@@ -715,6 +722,7 @@ export default function StaffHomeScreen() {
     useState(true);
   const schoolDayFoodSheetRef = useRef<BottomSheetModal>(null);
   const weekActivityPrefsSheetRef = useRef<BottomSheetModal>(null);
+  const allBirthdaysSheetRef = useRef<BottomSheetModal>(null);
 
   const weekActivityPrefSubmissionCount = useMemo(
     () =>
@@ -752,6 +760,14 @@ export default function StaffHomeScreen() {
   const [conferenceBookingsLoading, setConferenceBookingsLoading] =
     useState(false);
   const showConferenceSection = isConferenceTeacher(userId);
+
+  const [allBirthdays, setAllBirthdays] = useState<StaffBirthday[]>([]);
+  const [birthdaysLoading, setBirthdaysLoading] = useState(true);
+
+  const upcomingBirthdays = useMemo(
+    () => getUpcomingBirthdays(allBirthdays),
+    [allBirthdays],
+  );
 
   const [now, setNow] = useState(() => new Date());
 
@@ -941,10 +957,24 @@ export default function StaffHomeScreen() {
     [selectedDate],
   );
 
+  const loadBirthdays = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setBirthdaysLoading(true);
+    try {
+      const rows = await fetchStaffBirthdays();
+      setAllBirthdays(rows);
+    } catch (e) {
+      notifyError("staff-home-upcoming-birthdays", e);
+      setAllBirthdays([]);
+    } finally {
+      if (!opts?.silent) setBirthdaysLoading(false);
+    }
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
       loadTodayStudents();
-    }, [loadTodayStudents]),
+      loadBirthdays();
+    }, [loadTodayStudents, loadBirthdays]),
   );
 
   const onRefresh = useCallback(async () => {
@@ -953,6 +983,7 @@ export default function StaffHomeScreen() {
       const published = await loadActivities({ silent: true });
       await Promise.all([
         loadTodayStudents({ silent: true }),
+        loadBirthdays({ silent: true }),
         loadWeekActivityPrefs(published.map((a) => a.id)),
         loadSchoolDayFoodPrefs({ silent: true }),
         showConferenceSection
@@ -968,6 +999,7 @@ export default function StaffHomeScreen() {
     }
   }, [
     loadTodayStudents,
+    loadBirthdays,
     loadActivities,
     loadWeekActivityPrefs,
     loadSchoolDayFoodPrefs,
@@ -2366,6 +2398,13 @@ export default function StaffHomeScreen() {
                 </ScrollView>
               )}
             </View>
+
+            <StaffUpcomingBirthdaysSection
+              birthdays={upcomingBirthdays}
+              loading={birthdaysLoading}
+              totalCount={allBirthdays.length}
+              onViewAll={() => allBirthdaysSheetRef.current?.present()}
+            />
           </ScrollView>
         </View>
       </SafeAreaView>
@@ -3067,6 +3106,12 @@ export default function StaffHomeScreen() {
         ref={schoolDayFoodSheetRef}
         prefs={schoolDayFoodPrefs}
         loading={schoolDayFoodLoading}
+      />
+
+      <StaffAllBirthdaysSheet
+        ref={allBirthdaysSheetRef}
+        birthdays={allBirthdays}
+        loading={birthdaysLoading}
       />
 
       <StaffWeekActivityPrefsSheet

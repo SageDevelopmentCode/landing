@@ -12,11 +12,13 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "@/lib/supabase";
 import { notifyError } from "@/lib/discord";
+import { getAppUpdateInfo } from "@/lib/app-update-info";
 import { Brand } from "@/constants/theme";
 
 export default function SettingsScreen() {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
+  const updateInfo = getAppUpdateInfo();
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -136,7 +138,32 @@ export default function SettingsScreen() {
           )}
         </Pressable>
       </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>App Info</Text>
+        <View style={styles.infoBlock}>
+          <InfoRow label="App version" value={updateInfo.nativeAppVersion ?? "—"} />
+          <InfoRow label="Build" value={updateInfo.nativeBuildVersion ?? "—"} />
+          <InfoRow label="Runtime" value={String(updateInfo.runtimeVersion ?? "—")} />
+          <InfoRow label="Update channel" value={updateInfo.channel ?? "—"} />
+          <InfoRow
+            label="OTA update ID"
+            value={updateInfo.updateId ? updateInfo.updateId.slice(0, 8) + "…" : "embedded"}
+          />
+        </View>
+      </View>
     </SafeAreaView>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.infoRow}>
+      <Text style={styles.infoLabel}>{label}</Text>
+      <Text style={styles.infoValue} selectable>
+        {value}
+      </Text>
+    </View>
   );
 }
 
@@ -216,5 +243,28 @@ const styles = StyleSheet.create({
     height: StyleSheet.hairlineWidth,
     backgroundColor: "#e5e7eb",
     marginLeft: 62,
+  },
+  infoBlock: {
+    paddingHorizontal: 16,
+    paddingBottom: 14,
+    gap: 10,
+  },
+  infoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+  },
+  infoLabel: {
+    fontFamily: "Poppins_400Regular",
+    fontSize: 13,
+    color: "#6b7280",
+  },
+  infoValue: {
+    flexShrink: 1,
+    fontFamily: "Poppins_400Regular",
+    fontSize: 13,
+    color: "#1f2937",
+    textAlign: "right",
   },
 });
