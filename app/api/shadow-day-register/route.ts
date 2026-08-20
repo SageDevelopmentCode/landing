@@ -3,6 +3,10 @@ import { z } from "zod";
 import { getStripe } from "@/app/lib/stripe";
 import { createAdminClient } from "@/app/lib/supabase-server";
 import { sendDiscordNotification, createErrorEmbed } from "@/app/lib/discord";
+import {
+  isShadowDayBookable,
+  parseIsoDate,
+} from "@/app/lib/academic-calendar-data";
 
 const schema = z.object({
   parentName: z.string().min(1, "Parent name required"),
@@ -32,6 +36,14 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     data = schema.parse(body);
+
+    const selectedDate = parseIsoDate(data.selectedDate);
+    if (!isShadowDayBookable(selectedDate)) {
+      return NextResponse.json(
+        { error: "Selected date is not available." },
+        { status: 400 },
+      );
+    }
 
     const PRICE_PER_CHILD_CENTS = 2000; // $20
     const BASE_AMOUNT_CENTS = data.children.length * PRICE_PER_CHILD_CENTS;
