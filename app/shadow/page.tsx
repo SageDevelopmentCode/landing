@@ -23,6 +23,11 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import FloatingSMSButton from "../components/FloatingSMSButton";
 import { formatPhone } from "../utils/formatPhone";
+import {
+  isShadowDayBookable,
+  SHADOW_CAL_MAX,
+  SHADOW_CAL_MIN,
+} from "@/app/lib/academic-calendar-data";
 
 const dancingScript = Dancing_Script({
   subsets: ["latin"],
@@ -316,10 +321,27 @@ const DAY_HEADERS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const CALENDAR_TODAY = new Date();
 CALENDAR_TODAY.setHours(0, 0, 0, 0);
 
-const CAL_MAX_DATE = new Date(2026, 7, 13);
-CAL_MAX_DATE.setHours(0, 0, 0, 0);
-const CAL_MAX_MONTH = 7;
-const CAL_MAX_YEAR = 2026;
+const CAL_MIN_YEAR = SHADOW_CAL_MIN.getFullYear();
+const CAL_MIN_MONTH = SHADOW_CAL_MIN.getMonth();
+const CAL_MAX_YEAR = SHADOW_CAL_MAX.getFullYear();
+const CAL_MAX_MONTH = SHADOW_CAL_MAX.getMonth();
+
+function getMinCalendarMonth(): { year: number; month: number } {
+  if (CALENDAR_TODAY < SHADOW_CAL_MIN) {
+    return { year: CAL_MIN_YEAR, month: CAL_MIN_MONTH };
+  }
+  if (CALENDAR_TODAY > SHADOW_CAL_MAX) {
+    return { year: CAL_MAX_YEAR, month: CAL_MAX_MONTH };
+  }
+  return {
+    year: CALENDAR_TODAY.getFullYear(),
+    month: CALENDAR_TODAY.getMonth(),
+  };
+}
+
+function getInitialCalendarMonth(): { year: number; month: number } {
+  return getMinCalendarMonth();
+}
 
 function getDaysInMonth(year: number, month: number): number {
   return new Date(year, month + 1, 0).getDate();
@@ -329,13 +351,20 @@ function getFirstDayOfMonth(year: number, month: number): number {
   return new Date(year, month, 1).getDay();
 }
 
-function isAvailableDay(date: Date): boolean {
-  const day = date.getDay();
-  return day >= 1 && day <= 4;
+function isCalToday(date: Date): boolean {
+  return date.toDateString() === CALENDAR_TODAY.toDateString();
 }
 
-function isPastCalDate(date: Date): boolean {
-  return date < CALENDAR_TODAY || date > CAL_MAX_DATE;
+function isCalendarMonthAtMin(year: number, month: number): boolean {
+  const min = getMinCalendarMonth();
+  return year < min.year || (year === min.year && month <= min.month);
+}
+
+function isCalendarMonthAtMax(year: number, month: number): boolean {
+  return (
+    year > CAL_MAX_YEAR ||
+    (year === CAL_MAX_YEAR && month >= CAL_MAX_MONTH)
+  );
 }
 
 function formatShortDate(date: Date): string {
@@ -348,10 +377,6 @@ function formatShortDate(date: Date): string {
 
 function isDateSelected(date: Date, selected: Date | null): boolean {
   return selected !== null && date.toDateString() === selected.toDateString();
-}
-
-function isCalToday(date: Date): boolean {
-  return date.toDateString() === CALENDAR_TODAY.toDateString();
 }
 
 // ─── CalendarGrid ─────────────────────────────────────────────────────────────
@@ -373,11 +398,8 @@ function CalendarGrid({
 }) {
   const daysInMonth = getDaysInMonth(calendarYear, calendarMonth);
   const startOffset = getFirstDayOfMonth(calendarYear, calendarMonth);
-  const isPrevDisabled =
-    calendarYear === CALENDAR_TODAY.getFullYear() &&
-    calendarMonth <= CALENDAR_TODAY.getMonth();
-  const isNextDisabled =
-    calendarYear === CAL_MAX_YEAR && calendarMonth >= CAL_MAX_MONTH;
+  const isPrevDisabled = isCalendarMonthAtMin(calendarYear, calendarMonth);
+  const isNextDisabled = isCalendarMonthAtMax(calendarYear, calendarMonth);
 
   const totalCells = startOffset + daysInMonth;
   const paddedCells = Math.ceil(totalCells / 7) * 7;
@@ -424,8 +446,7 @@ function CalendarGrid({
             return <div key={idx} />;
           }
           const date = new Date(calendarYear, calendarMonth, dayNum);
-          const past = isPastCalDate(date);
-          const available = isAvailableDay(date) && !past;
+          const available = isShadowDayBookable(date, CALENDAR_TODAY);
           const selected = isDateSelected(date, selectedDate);
           const todayCell = isCalToday(date);
 
@@ -538,10 +559,15 @@ export default function ShadowPage() {
   const totalBase = children.length * 20;
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [calendarMonth, setCalendarMonth] = useState(CALENDAR_TODAY.getMonth());
-  const [calendarYear, setCalendarYear] = useState(
-    CALENDAR_TODAY.getFullYear(),
-  );
+  const initialCalendar = getInitialCalendarMonth();
+  const [calendarMonth, setCalendarMonth] = useState(initialCalendar.month);
+  const [calendarYear, setCalendarYear] = useState(initialCalendar.year);
+
+  useEffect(() => {
+    if (selectedDate && !isShadowDayBookable(selectedDate, CALENDAR_TODAY)) {
+      setSelectedDate(null);
+    }
+  }, [selectedDate]);
 
   function handlePrevMonth() {
     if (calendarMonth === 0) {
@@ -553,7 +579,7 @@ export default function ShadowPage() {
   }
 
   function handleNextMonth() {
-    if (calendarYear === CAL_MAX_YEAR && calendarMonth >= CAL_MAX_MONTH) return;
+    if (isCalendarMonthAtMax(calendarYear, calendarMonth)) return;
     if (calendarMonth === 11) {
       setCalendarMonth(0);
       setCalendarYear((y) => y + 1);
