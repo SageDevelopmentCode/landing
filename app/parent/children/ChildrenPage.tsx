@@ -33,8 +33,8 @@ import {
   type LearningNoteCategory,
 } from "@/app/actions/saveParentLearningNote";
 import { formatPhone } from "@/app/utils/formatPhone";
+import { getParentStudentAttendance } from "@/app/actions/getParentStudentAttendance";
 import {
-  getParentStudentAttendance,
   ATT_FILTER_TABS,
   filterAttendanceRecords,
   getAttendanceStatus,
@@ -42,7 +42,7 @@ import {
   type AttendanceFilter,
   type UnifiedAttendanceRecord,
   type UserMap,
-} from "@/app/actions/getParentStudentAttendance";
+} from "@/shared/parent/student-attendance";
 import { updateStudentProfile } from "@/app/actions/updateStudentProfile";
 import { DetailSidebar } from "@/app/admin/components/DetailSidebar";
 import {

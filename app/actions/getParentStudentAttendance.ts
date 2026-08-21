@@ -11,23 +11,6 @@ import {
   type UserMap,
 } from '@/shared/parent/student-attendance'
 
-export type {
-  AttendanceProgram,
-  AttendanceFilter,
-  UnifiedAttendanceRecord,
-  UserProfile,
-  UserMap,
-  AttendanceResult,
-  AttendanceStatus,
-} from '@/shared/parent/student-attendance'
-
-export {
-  ATT_FILTER_TABS,
-  filterAttendanceRecords,
-  getAttendanceStatus,
-  PROGRAM_CONFIG,
-} from '@/shared/parent/student-attendance'
-
 export async function getParentStudentAttendance(studentId: string): Promise<AttendanceResult> {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()

@@ -34,8 +34,8 @@ import type {
 import type { ConferenceStudentContext } from "@/app/lib/get-conference-teacher-assignments";
 import ActionNeededCard from "./ActionNeededCard";
 import HelpWidget from "@/app/parent/components/HelpWidget";
+import { getParentStudentAttendance } from "@/app/actions/getParentStudentAttendance";
 import {
-  getParentStudentAttendance,
   ATT_FILTER_TABS,
   filterAttendanceRecords,
   getAttendanceStatus,
@@ -43,7 +43,7 @@ import {
   type AttendanceFilter,
   type UnifiedAttendanceRecord,
   type UserMap,
-} from "@/app/actions/getParentStudentAttendance";
+} from "@/shared/parent/student-attendance";
 import { saveDropOffTime } from "@/app/actions/saveDropOffTime";
 import { submitTestimonial } from "@/app/actions/submitTestimonial";
 import { DetailSidebar } from "@/app/admin/components/DetailSidebar";
