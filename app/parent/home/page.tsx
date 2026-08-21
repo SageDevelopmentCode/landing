@@ -16,6 +16,7 @@ import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import DashboardHeader from "@/app/parent/dashboard/DashboardHeader";
 import SharedAccessBanner from "@/app/parent/dashboard/SharedAccessBanner";
 import HomePageClient from "./HomePageClient";
+import { computeHasUnsetActivityPreference } from "@/shared/parent/activity-preferences";
 import type {
   PaidHomeschoolByStudent,
   PaidAftercareByStudent,
@@ -141,7 +142,7 @@ export default async function ParentHomePage() {
   if ((enrolledCheck ?? []).length === 0) redirect("/parent/dashboard");
   const studentIds = students.map((s) => s.id);
 
-  const [{ data: checkInsData }, { data: eventsData }, { data: paymentsData }, { data: referralsData }, { data: dropOffData }, { data: txData }, { data: summerData }, { data: prefsData }, onboardingCompletedIds, publishedActivities, { data: testimonialData }] =
+  const [{ data: checkInsData }, { data: eventsData }, { data: paymentsData }, { data: referralsData }, { data: dropOffData }, { data: txData }, { data: summerData }, { data: prefsData }, { data: defaultPrefsData }, onboardingCompletedIds, publishedActivities, { data: testimonialData }] =
     await Promise.all([
       studentIds.length > 0
         ? adminClient
@@ -198,6 +199,11 @@ export default async function ParentHomePage() {
         .schema("parent_app")
         .from("activity_preferences")
         .select("student_id, activity_id")
+        .eq("parent_id", effectiveParentId),
+      adminClient
+        .schema("parent_app")
+        .from("student_default_preferences")
+        .select("student_id")
         .eq("parent_id", effectiveParentId),
       getOnboardingProgress(),
       getPublishedActivities(),
@@ -347,18 +353,26 @@ export default async function ParentHomePage() {
   const checklistComplete = onboardingCompletedIds.length >= 8;
 
   const paidSets = computePaidDates(transactions);
-  const prefSet = new Set(
-    (prefsData ?? []).map((p) => `${p.student_id}:${p.activity_id}`)
+  const activityPrefs = (prefsData ?? []) as { student_id: string; activity_id: string }[];
+  const defaultPrefStudentIds = new Set(
+    (defaultPrefsData ?? []).map((d: { student_id: string }) => d.student_id),
   );
-  const hasActivityForPaidDay = publishedActivities.some(
-    (a) =>
-      !!a.activity_date &&
-      students.some(
-        (s) =>
-          paidSets[s.id]?.has(a.activity_date!) &&
-          !prefSet.has(`${s.id}:${a.id}`)
-      )
+  const paidDateSets: Record<string, string[]> = {};
+  for (const [studentId, dates] of Object.entries(paidSets)) {
+    paidDateSets[studentId] = Array.from(dates);
+  }
+
+  const hasActivityForPaidDay = computeHasUnsetActivityPreference(
+    publishedActivities.map((a) => ({ id: a.id, activity_date: a.activity_date })),
+    activityPrefs,
+    defaultPrefStudentIds,
+    students,
+    paidSets,
   );
+
+  const upcomingActivities = publishedActivities
+    .filter((a) => a.activity_date != null && a.activity_date >= todayISO)
+    .sort((a, b) => (a.activity_date ?? "").localeCompare(b.activity_date ?? ""));
 
   const hasSubmittedTestimonial = !!testimonialData;
 
@@ -414,6 +428,14 @@ export default async function ParentHomePage() {
           paidSupplyFeeByStudent={paidSupplyFeeByStudent}
           checklistComplete={checklistComplete}
           hasActivityForPaidDay={hasActivityForPaidDay}
+          upcomingActivities={upcomingActivities}
+          activityPrefs={activityPrefs}
+          defaultPrefStudentIds={Array.from(defaultPrefStudentIds)}
+          paidDateSets={paidDateSets}
+          publishedActivitiesForBanner={publishedActivities.map((a) => ({
+            id: a.id,
+            activity_date: a.activity_date,
+          }))}
           hasSubmittedTestimonial={hasSubmittedTestimonial}
           conferenceTeachers={conferenceTeachers}
           conferenceStudents={conferenceStudents}

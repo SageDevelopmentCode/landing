@@ -1,3 +1,5 @@
+// Keep in sync with shared/parent/activity-preferences.ts (web uses repo-root shared/).
+
 import { supabase } from "@/lib/supabase";
 import { notifyDiscord } from "@/lib/discord";
 
@@ -37,6 +39,92 @@ export const LEVEL_SHORT_LABEL: Record<ParticipationLevel, string> = {
 
 export const ALLERGEN_DISCLAIMER =
   "I have reviewed the ingredients and allergens listed above. I understand and acknowledge that Sage Field is not responsible for any allergic reactions, dietary sensitivities, or adverse responses related to food items consumed during activities.";
+
+export function buildInitialPrefsForActivity(
+  studentIds: string[],
+  savedByStudent: Record<string, ActivityPref>,
+  defaultsByStudent: Record<string, ParticipationLevel>,
+  savedStudentIds: Set<string>,
+): {
+  prefs: Record<string, ActivityPref>;
+  savedIds: Set<string>;
+  snapshots: Record<string, ActivityPref>;
+} {
+  const prefs: Record<string, ActivityPref> = {};
+  for (const studentId of studentIds) {
+    if (savedByStudent[studentId]) {
+      prefs[studentId] = { ...savedByStudent[studentId] };
+    } else if (defaultsByStudent[studentId]) {
+      prefs[studentId] = { level: defaultsByStudent[studentId], notes: "" };
+    } else {
+      prefs[studentId] = { level: null, notes: "" };
+    }
+  }
+
+  const snapshots: Record<string, ActivityPref> = {};
+  for (const studentId of studentIds) {
+    snapshots[studentId] = { ...(prefs[studentId] ?? { level: null, notes: "" }) };
+  }
+
+  return { prefs, savedIds: new Set(savedStudentIds), snapshots };
+}
+
+export type SaveActivityPrefEntry = {
+  studentId: string;
+  childName: string;
+  level: ParticipationLevel | null;
+  notes: string;
+};
+
+type ActivityRow = { id: string; activity_date: string | null };
+
+export function computeHasUnsetActivityPreference(
+  activities: ActivityRow[],
+  activityPrefs: { student_id: string; activity_id: string }[],
+  defaultPrefStudentIds: Set<string>,
+  students: { id: string }[],
+  paidSets: Record<string, Set<string>>,
+): boolean {
+  const prefSet = new Set(
+    activityPrefs.map((p) => `${p.student_id}:${p.activity_id}`),
+  );
+
+  return activities.some(
+    (act) =>
+      act.activity_date != null &&
+      students.some(
+        (s) =>
+          paidSets[s.id]?.has(act.activity_date!) &&
+          !defaultPrefStudentIds.has(s.id) &&
+          !prefSet.has(`${s.id}:${act.id}`),
+      ),
+  );
+}
+
+export function findFirstUnsetActivity(
+  activities: ActivityRow[],
+  activityPrefs: { student_id: string; activity_id: string }[],
+  defaultPrefStudentIds: Set<string>,
+  students: { id: string }[],
+  paidSets: Record<string, Set<string>>,
+): string | null {
+  const prefSet = new Set(
+    activityPrefs.map((p) => `${p.student_id}:${p.activity_id}`),
+  );
+
+  for (const act of activities) {
+    if (act.activity_date == null) continue;
+    const needsPref = students.some(
+      (s) =>
+        paidSets[s.id]?.has(act.activity_date!) &&
+        !defaultPrefStudentIds.has(s.id) &&
+        !prefSet.has(`${s.id}:${act.id}`),
+    );
+    if (needsPref) return act.id;
+  }
+
+  return null;
+}
 
 type UserProfile = { full_name: string; email: string };
 
@@ -94,42 +182,6 @@ export async function fetchPreferencesForActivity(
 
   return { savedByStudent, defaultsByStudent, savedStudentIds };
 }
-
-export function buildInitialPrefsForActivity(
-  studentIds: string[],
-  savedByStudent: Record<string, ActivityPref>,
-  defaultsByStudent: Record<string, ParticipationLevel>,
-  savedStudentIds: Set<string>,
-): {
-  prefs: Record<string, ActivityPref>;
-  savedIds: Set<string>;
-  snapshots: Record<string, ActivityPref>;
-} {
-  const prefs: Record<string, ActivityPref> = {};
-  for (const studentId of studentIds) {
-    if (savedByStudent[studentId]) {
-      prefs[studentId] = { ...savedByStudent[studentId] };
-    } else if (defaultsByStudent[studentId]) {
-      prefs[studentId] = { level: defaultsByStudent[studentId], notes: "" };
-    } else {
-      prefs[studentId] = { level: null, notes: "" };
-    }
-  }
-
-  const snapshots: Record<string, ActivityPref> = {};
-  for (const studentId of studentIds) {
-    snapshots[studentId] = { ...(prefs[studentId] ?? { level: null, notes: "" }) };
-  }
-
-  return { prefs, savedIds: new Set(savedStudentIds), snapshots };
-}
-
-export type SaveActivityPrefEntry = {
-  studentId: string;
-  childName: string;
-  level: ParticipationLevel | null;
-  notes: string;
-};
 
 export async function saveActivityPreferencesBatch(
   parentId: string,
@@ -196,54 +248,4 @@ export async function saveActivityPreferencesBatch(
       });
     }
   }
-}
-
-type ActivityRow = { id: string; activity_date: string | null };
-
-export function computeHasUnsetActivityPreference(
-  activities: ActivityRow[],
-  activityPrefs: { student_id: string; activity_id: string }[],
-  defaultPrefStudentIds: Set<string>,
-  students: { id: string }[],
-  paidSets: Record<string, Set<string>>,
-): boolean {
-  const prefSet = new Set(
-    activityPrefs.map((p) => `${p.student_id}:${p.activity_id}`),
-  );
-
-  return activities.some(
-    (act) =>
-      act.activity_date != null &&
-      students.some(
-        (s) =>
-          paidSets[s.id]?.has(act.activity_date!) &&
-          !defaultPrefStudentIds.has(s.id) &&
-          !prefSet.has(`${s.id}:${act.id}`),
-      ),
-  );
-}
-
-export function findFirstUnsetActivity(
-  activities: ActivityRow[],
-  activityPrefs: { student_id: string; activity_id: string }[],
-  defaultPrefStudentIds: Set<string>,
-  students: { id: string }[],
-  paidSets: Record<string, Set<string>>,
-): string | null {
-  const prefSet = new Set(
-    activityPrefs.map((p) => `${p.student_id}:${p.activity_id}`),
-  );
-
-  for (const act of activities) {
-    if (act.activity_date == null) continue;
-    const needsPref = students.some(
-      (s) =>
-        paidSets[s.id]?.has(act.activity_date!) &&
-        !defaultPrefStudentIds.has(s.id) &&
-        !prefSet.has(`${s.id}:${act.id}`),
-    );
-    if (needsPref) return act.id;
-  }
-
-  return null;
 }

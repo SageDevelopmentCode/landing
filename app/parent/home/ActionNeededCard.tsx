@@ -26,6 +26,7 @@ import {
 type Props = {
   parentId: string;
   hasActivityForPaidDay: boolean;
+  onOpenActivityPrefs?: () => void;
   schoolYearOnlyApps: SchoolYearOnlyApp[];
   summerEnrollments: SummerEnrollment[];
   paidSchoolYearByStudent: PaidSchoolYearByStudent;
@@ -40,6 +41,7 @@ type Props = {
 export default function ActionNeededCard({
   parentId,
   hasActivityForPaidDay,
+  onOpenActivityPrefs,
   schoolYearOnlyApps,
   summerEnrollments,
   paidSchoolYearByStudent,
@@ -133,9 +135,10 @@ export default function ActionNeededCard({
           )}
 
           {showActivity && (
-            <Link
-              href="/parent/preferences"
-              className="rounded-xl border border-amber-200/60 bg-amber-100/60 px-3 py-3 flex flex-col gap-2 hover:bg-amber-100/80 transition-colors"
+            <button
+              type="button"
+              onClick={() => onOpenActivityPrefs?.()}
+              className="w-full text-left rounded-xl border border-amber-200/60 bg-amber-100/60 px-3 py-3 flex flex-col gap-2 hover:bg-amber-100/80 transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-3">
                 <span className="text-xl shrink-0">🍳</span>
@@ -153,7 +156,7 @@ export default function ActionNeededCard({
               <div className="self-start inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-3 py-1.5 rounded-full transition-colors font-body ml-9">
                 Set Preferences <ChevronRight size={13} />
               </div>
-            </Link>
+            </button>
           )}
         </div>
       </div>

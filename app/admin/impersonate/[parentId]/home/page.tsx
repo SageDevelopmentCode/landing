@@ -10,6 +10,7 @@ import ImpersonateNotificationBell from "../../ImpersonateNotificationBell";
 import { getConferenceTeacherAssignments } from "@/app/lib/get-conference-teacher-assignments";
 import { getConferenceBookings } from "@/app/lib/get-conference-bookings";
 import HomePageClient from "@/app/parent/home/HomePageClient";
+import { computeHasUnsetActivityPreference } from "@/shared/parent/activity-preferences";
 import { getOnboardingProgressForParent } from "@/app/actions/getOnboardingProgress";
 import type {
   HomeStudent,
@@ -70,6 +71,8 @@ export default async function ImpersonateHomePage({
     { data: dropOffData },
     { data: txData },
     { data: summerData },
+    { data: prefsData },
+    { data: defaultPrefsData },
     publishedActivities,
     { data: testimonialData },
   ] = await Promise.all([
@@ -126,6 +129,16 @@ export default async function ImpersonateHomePage({
       .eq("user_id", effectiveParentId)
       .eq("approved", true)
       .in("program", ["summer_26", "both", "homeschool_drop_in", "school_year_26_27"]),
+    adminClient
+      .schema("parent_app")
+      .from("activity_preferences")
+      .select("student_id, activity_id")
+      .eq("parent_id", effectiveParentId),
+    adminClient
+      .schema("parent_app")
+      .from("student_default_preferences")
+      .select("student_id")
+      .eq("parent_id", effectiveParentId),
     getPublishedActivities(),
     adminClient
       .schema("marketing")
@@ -156,11 +169,26 @@ export default async function ImpersonateHomePage({
   const transactions = (txData ?? []) as StripeTransaction[];
 
   const paidSets = computePaidDates(transactions);
-  const hasActivityForPaidDay = publishedActivities.some(
-    (a) =>
-      !!a.activity_date &&
-      students.some((s) => paidSets[s.id]?.has(a.activity_date!))
+  const activityPrefs = (prefsData ?? []) as { student_id: string; activity_id: string }[];
+  const defaultPrefStudentIds = new Set(
+    (defaultPrefsData ?? []).map((d: { student_id: string }) => d.student_id),
   );
+  const paidDateSets: Record<string, string[]> = {};
+  for (const [studentId, dates] of Object.entries(paidSets)) {
+    paidDateSets[studentId] = Array.from(dates);
+  }
+
+  const hasActivityForPaidDay = computeHasUnsetActivityPreference(
+    publishedActivities.map((a) => ({ id: a.id, activity_date: a.activity_date })),
+    activityPrefs,
+    defaultPrefStudentIds,
+    students,
+    paidSets,
+  );
+
+  const upcomingActivities = publishedActivities
+    .filter((a) => a.activity_date != null && a.activity_date >= todayISO)
+    .sort((a, b) => (a.activity_date ?? "").localeCompare(b.activity_date ?? ""));
 
   const allSummerApps = ((summerData ?? []) as {
     id: string;
@@ -325,6 +353,14 @@ export default async function ImpersonateHomePage({
           readOnlyPreview
           suppressReferralPopup
           hasActivityForPaidDay={hasActivityForPaidDay}
+          upcomingActivities={upcomingActivities}
+          activityPrefs={activityPrefs}
+          defaultPrefStudentIds={Array.from(defaultPrefStudentIds)}
+          paidDateSets={paidDateSets}
+          publishedActivitiesForBanner={publishedActivities.map((a) => ({
+            id: a.id,
+            activity_date: a.activity_date,
+          }))}
           hasSubmittedTestimonial={hasSubmittedTestimonial}
           conferenceTeachers={conferenceTeachers}
           conferenceStudents={conferenceStudents}
