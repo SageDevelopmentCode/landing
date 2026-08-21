@@ -1,47 +1,22 @@
 'use server'
 
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
-
-export type AttendanceProgram = "summer" | "aftercare" | "field_friday";
-
-type AttendanceRecordSelect = {
-  id: string
-  date: string
-  recorded_by: string
-  notes: string | null
-  paid_for_day: boolean
-  pickup_time: string | null
-  picked_up_by_name: string | null
-  picked_up_by_relationship: string | null
-  pickup_recorded_by: string | null
-}
-
-export type UnifiedAttendanceRecord = {
-  id: string;
-  program: AttendanceProgram;
-  date: string;
-  recorded_by: string;
-  notes: string | null;
-  paid_for_day: boolean;
-  pickup_time: string | null;
-  picked_up_by_name: string | null;
-  picked_up_by_relationship: string | null;
-  pickup_recorded_by: string | null;
-};
-
-export type UserProfile = { full_name: string; profile_image_url: string | null };
-export type UserMap = Record<string, UserProfile>;
-
-export type AttendanceResult = { records: UnifiedAttendanceRecord[]; userMap: UserMap };
-
-const SELECT_COLS = "id, date, recorded_by, notes, paid_for_day, pickup_time, picked_up_by_name, picked_up_by_relationship, pickup_recorded_by";
+import {
+  ATTENDANCE_SOURCES,
+  collectStaffIds,
+  mapRowsToUnified,
+  mergeAttendanceRecords,
+  type AttendanceRecordRow,
+  type AttendanceResult,
+  type UserMap,
+} from '@/shared/parent/student-attendance'
 
 export async function getParentStudentAttendance(studentId: string): Promise<AttendanceResult> {
-  const supabase = await createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { records: [], userMap: {} };
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { records: [], userMap: {} }
 
-  const adminClient = createAdminClient();
+  const adminClient = createAdminClient()
 
   const { data: student } = await adminClient
     .schema('admin')
@@ -51,54 +26,36 @@ export async function getParentStudentAttendance(studentId: string): Promise<Att
     .eq('parent_id', user.id)
     .eq('is_deleted', false)
     .limit(1)
-    .maybeSingle();
+    .maybeSingle()
 
-  if (!student) return { records: [], userMap: {} };
+  if (!student) return { records: [], userMap: {} }
 
-  const [summerRes, aftercareRes, fridayRes] = await Promise.all([
-    adminClient
-      .schema('attendance')
-      .from('summer_records')
-      .select(SELECT_COLS)
-      .eq('student_id', studentId)
-      .order('date', { ascending: false }),
-    adminClient
-      .schema('attendance')
-      .from('aftercare_records')
-      .select(SELECT_COLS)
-      .eq('student_id', studentId)
-      .order('date', { ascending: false }),
-    adminClient
-      .schema('attendance')
-      .from('field_friday_records')
-      .select(SELECT_COLS)
-      .eq('student_id', studentId)
-      .order('date', { ascending: false }),
-  ]);
-
-  const merged: UnifiedAttendanceRecord[] = [
-    ...((summerRes.data ?? []) as AttendanceRecordSelect[]).map((r) => ({ ...r, program: "summer" as const })),
-    ...((aftercareRes.data ?? []) as AttendanceRecordSelect[]).map((r) => ({ ...r, program: "aftercare" as const })),
-    ...((fridayRes.data ?? []) as AttendanceRecordSelect[]).map((r) => ({ ...r, program: "field_friday" as const })),
-  ].sort((a, b) => b.date.localeCompare(a.date));
-
-  const staffIds = [
-    ...new Set(
-      merged.flatMap((r) => [r.recorded_by, r.pickup_recorded_by]).filter(Boolean) as string[],
+  const results = await Promise.all(
+    ATTENDANCE_SOURCES.map(({ table, program, selectCols }) =>
+      adminClient
+        .schema('attendance')
+        .from(table)
+        .select(selectCols)
+        .eq('student_id', studentId)
+        .order('date', { ascending: false })
+        .then(({ data }) => mapRowsToUnified((data ?? []) as unknown as AttendanceRecordRow[], program)),
     ),
-  ];
+  )
 
-  const userMap: UserMap = {};
+  const merged = mergeAttendanceRecords(results)
+  const staffIds = collectStaffIds(merged)
+
+  const userMap: UserMap = {}
   if (staffIds.length > 0) {
     const { data: users } = await adminClient
       .schema('admin')
       .from('users')
       .select('id, full_name, profile_image_url')
-      .in('id', staffIds);
+      .in('id', staffIds)
     for (const u of users ?? []) {
-      userMap[u.id] = { full_name: u.full_name, profile_image_url: u.profile_image_url };
+      userMap[u.id] = { full_name: u.full_name, profile_image_url: u.profile_image_url }
     }
   }
 
-  return { records: merged, userMap };
+  return { records: merged, userMap }
 }

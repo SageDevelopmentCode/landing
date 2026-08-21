@@ -14,6 +14,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import SplashView from '@/components/SplashView';
 import { supabase } from '@/lib/supabase';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { useAppUpdatePrompt } from '@/hooks/useAppUpdatePrompt';
 import { registerForPushNotificationsAsync, isExpoGo } from '@/lib/notifications';
 
 SplashScreen.preventAutoHideAsync();
@@ -35,6 +36,8 @@ function RootLayout() {
     Poppins_400Regular,
     Poppins_600SemiBold,
   });
+
+  useAppUpdatePrompt();
 
   useEffect(() => {
     if (!fontsLoaded) return;

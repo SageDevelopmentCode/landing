@@ -8,6 +8,7 @@ import {
   SCHOOL_YEAR_FUN_FRIDAY_MONTHS,
   FUN_FRIDAY_DROPIN_CENTS,
   FUN_FRIDAY_MONTHLY_CENTS,
+  FUN_FRIDAY_SESSION_MONTHLY_CENTS,
   schoolYearFunFridayMonthCents,
   SCHOOL_YEAR_MONTHS as SHARED_SCHOOL_YEAR_MONTHS,
   HOMESCHOOL_TIERS,
@@ -198,7 +199,7 @@ function formatCents(cents: number): string {
 function summerFunFridayMonthCents(month: FunFridayMonth): number {
   return month.fridays.length >= 4
     ? FUN_FRIDAY_MONTHLY_CENTS
-    : month.fridays.length * FUN_FRIDAY_DROPIN_CENTS
+    : month.fridays.length * FUN_FRIDAY_SESSION_MONTHLY_CENTS
 }
 
 function findFunFridayMonth(key: string): FunFridayMonth | undefined {

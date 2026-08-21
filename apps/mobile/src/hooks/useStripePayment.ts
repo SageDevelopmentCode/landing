@@ -49,11 +49,18 @@ export function useStripePayment() {
         );
       }
 
+      const publishableKey =
+        (typeof data.publishableKey === "string" && data.publishableKey) ||
+        process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+      if (!publishableKey) {
+        throw new Error("Stripe publishable key is not configured");
+      }
+
       const { error: initError } = await initPaymentSheet({
         paymentIntentClientSecret: data.clientSecret,
         customerEphemeralKeySecret: data.ephemeralKey,
         customerId: data.customerId,
-        publishableKey: data.publishableKey,
+        publishableKey,
         merchantDisplayName: "Sage Field",
         allowsDelayedPaymentMethods: true,
         defaultBillingDetails: { email: user.email ?? "" },

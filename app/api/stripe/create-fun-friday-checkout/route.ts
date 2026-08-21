@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getStripe } from "@/app/lib/stripe";
 import { getOrCreateStripeCustomer } from "@/app/lib/stripe-customer";
-
-const FUN_FRIDAY_MONTHLY_CENTS = 16000; // $160/month (4 sessions × $40)
-const FUN_FRIDAY_DROPIN_CENTS = 6000; // $60/session
+import {
+  FUN_FRIDAY_DROPIN_CENTS,
+  FUN_FRIDAY_MONTHLY_CENTS,
+  FUN_FRIDAY_SESSION_MONTHLY_CENTS,
+} from "@/shared/billing/school-year";
 
 const FUN_FRIDAY_MONTHS = [
   { key: "may", label: "May 2026", fridayCount: 1 },
@@ -99,12 +101,14 @@ export async function POST(request: NextRequest) {
           quantity: 1,
           price_data: {
             currency: "usd",
-            unit_amount: isMonthlyRate ? FUN_FRIDAY_MONTHLY_CENTS : count * FUN_FRIDAY_DROPIN_CENTS,
+            unit_amount: isMonthlyRate
+              ? FUN_FRIDAY_MONTHLY_CENTS
+              : count * FUN_FRIDAY_SESSION_MONTHLY_CENTS,
             product_data: {
               name: `Fun Friday — ${MONTH_LABELS[monthKey] ?? monthKey}`,
               description: isMonthlyRate
                 ? "9:00 AM – 1:00 PM · Package of 4 Fridays"
-                : `9:00 AM – 1:00 PM · ${count} drop-in session${count !== 1 ? "s" : ""}`,
+                : `9:00 AM – 1:00 PM · ${count} session${count !== 1 ? "s" : ""}`,
             },
           },
         });

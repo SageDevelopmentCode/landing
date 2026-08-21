@@ -2,6 +2,16 @@ import { Brand, BottomTabInset, FontFamilies } from "@/constants/theme";
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
 import { supabase } from "@/lib/supabase";
 import { notifyError } from "@/lib/discord";
+import {
+  ATT_FILTER_TABS,
+  fetchParentStudentAttendanceRecords,
+  filterAttendanceRecords,
+  getAttendanceStatus,
+  PROGRAM_CONFIG,
+  type AttendanceFilter,
+  type UnifiedAttendanceRecord,
+  type UserMap,
+} from "@/lib/parent-student-attendance";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -22,44 +32,7 @@ import { useRouter } from "expo-router";
 
 type Student = { id: string; child_legal_name: string };
 
-type AttendanceProgram = "summer" | "aftercare" | "field_friday";
-type AttendanceFilter = "all" | "summer" | "aftercare" | "field_friday";
-
-type UnifiedAttendanceRecord = {
-  id: string;
-  program: AttendanceProgram;
-  date: string;
-  recorded_by: string;
-  notes: string | null;
-  paid_for_day: boolean;
-  pickup_time: string | null;
-  picked_up_by_name: string | null;
-  picked_up_by_relationship: string | null;
-  pickup_recorded_by: string | null;
-};
-
 type UserProfile = { full_name: string; profile_image_url: string | null };
-type UserMap = Record<string, UserProfile>;
-
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const PROGRAM_CONFIG: Record<
-  AttendanceProgram,
-  { label: string; icon: string; color: string; bg: string }
-> = {
-  summer:       { label: "Summer 2026",      icon: "sunny-outline",  color: "#d97706", bg: "#fef9ee" },
-  aftercare:    { label: "Aftercare",         icon: "home-outline",   color: "#7c3aed", bg: "#f5f3ff" },
-  field_friday: { label: "Field Fun Fridays", icon: "leaf-outline",   color: "#0891b2", bg: "#ecfeff" },
-};
-
-const ATT_FILTER_TABS: { key: AttendanceFilter; label: string }[] = [
-  { key: "all",          label: "All" },
-  { key: "summer",       label: "Summer" },
-  { key: "aftercare",    label: "Aftercare" },
-  { key: "field_friday", label: "Fridays" },
-];
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatYMD(dateStr: string): string {
   const [y, m, d] = dateStr.split("-").map(Number);
@@ -130,12 +103,26 @@ function PickupPersonAvatar({ name, size = 40 }: { name: string; size?: number }
   );
 }
 
-function AttendanceStatusBadge({ pickedUp }: { pickedUp: boolean }) {
+function AttendanceStatusBadge({ record }: { record: UnifiedAttendanceRecord }) {
+  const status = getAttendanceStatus(record);
+  const badgeStyle =
+    status === "absent"
+      ? styles.statusBadgeAbsent
+      : status === "picked_up"
+        ? styles.statusBadgePickedUp
+        : styles.statusBadgeAttended;
+  const textStyle =
+    status === "absent"
+      ? styles.statusBadgeTextAbsent
+      : status === "picked_up"
+        ? styles.statusBadgeTextPickedUp
+        : styles.statusBadgeTextAttended;
+  const label =
+    status === "absent" ? "Absent" : status === "picked_up" ? "Picked Up" : "Attended";
+
   return (
-    <View style={[styles.statusBadge, pickedUp ? styles.statusBadgePickedUp : styles.statusBadgeAttended]}>
-      <Text style={[styles.statusBadgeText, pickedUp ? styles.statusBadgeTextPickedUp : styles.statusBadgeTextAttended]}>
-        {pickedUp ? "Picked Up" : "Attended"}
-      </Text>
+    <View style={[styles.statusBadge, badgeStyle]}>
+      <Text style={[styles.statusBadgeText, textStyle]}>{label}</Text>
     </View>
   );
 }
@@ -165,6 +152,7 @@ function AttendanceDetailModal({
 
   if (!record) return null;
   const cfg = PROGRAM_CONFIG[record.program];
+  const status = getAttendanceStatus(record);
   const recordedByUser = userMap[record.recorded_by];
   const pickupByUser = record.pickup_recorded_by ? userMap[record.pickup_recorded_by] : null;
 
@@ -178,47 +166,58 @@ function AttendanceDetailModal({
           <Text style={styles.modalDate}>{formatYMD(record.date)}</Text>
           <Text style={[styles.modalProgram, { color: cfg.color }]}>{cfg.label}</Text>
 
-          {/* Recorded by */}
-          <View style={styles.modalRow}>
-            <View style={styles.modalRowLeft}>
-              <View style={[styles.modalDot, { backgroundColor: Brand.sage700 }]} />
-              <Text style={styles.modalLabel}>Recorded by</Text>
+          {status === "absent" ? (
+            <View style={styles.modalRow}>
+              <View style={styles.modalRowLeft}>
+                <View style={[styles.modalDot, { backgroundColor: "#b45309" }]} />
+                <Text style={styles.modalLabel}>Marked absent</Text>
+              </View>
             </View>
-            <View style={styles.modalUserBlock}>
-              <UserAvatar userId={record.recorded_by} userMap={userMap} size={32} />
-              {recordedByUser && (
-                <Text style={styles.modalUserName} numberOfLines={1}>
-                  {recordedByUser.full_name.split(" ")[0]}
-                </Text>
-              )}
-            </View>
-          </View>
-
-          {record.picked_up_by_name && (
+          ) : (
             <>
-              <View style={styles.modalDivider} />
+              {/* Recorded by */}
               <View style={styles.modalRow}>
                 <View style={styles.modalRowLeft}>
-                  <View style={[styles.modalDot, { backgroundColor: "#065f46" }]} />
-                  <View style={{ gap: 2 }}>
-                    <Text style={styles.modalLabel}>Picked Up</Text>
-                    <Text style={styles.modalPickupName}>
-                      {record.picked_up_by_name}
-                      {record.picked_up_by_relationship ? ` · ${record.picked_up_by_relationship}` : ""}
-                    </Text>
-                  </View>
+                  <View style={[styles.modalDot, { backgroundColor: Brand.sage700 }]} />
+                  <Text style={styles.modalLabel}>Recorded by</Text>
                 </View>
-                {record.pickup_recorded_by && (
-                  <View style={styles.modalUserBlock}>
-                    <UserAvatar userId={record.pickup_recorded_by} userMap={userMap} size={32} />
-                    {pickupByUser && (
-                      <Text style={styles.modalUserName} numberOfLines={1}>
-                        {pickupByUser.full_name.split(" ")[0]}
-                      </Text>
+                <View style={styles.modalUserBlock}>
+                  <UserAvatar userId={record.recorded_by} userMap={userMap} size={32} />
+                  {recordedByUser && (
+                    <Text style={styles.modalUserName} numberOfLines={1}>
+                      {recordedByUser.full_name.split(" ")[0]}
+                    </Text>
+                  )}
+                </View>
+              </View>
+
+              {record.picked_up_by_name && (
+                <>
+                  <View style={styles.modalDivider} />
+                  <View style={styles.modalRow}>
+                    <View style={styles.modalRowLeft}>
+                      <View style={[styles.modalDot, { backgroundColor: "#065f46" }]} />
+                      <View style={{ gap: 2 }}>
+                        <Text style={styles.modalLabel}>Picked Up</Text>
+                        <Text style={styles.modalPickupName}>
+                          {record.picked_up_by_name}
+                          {record.picked_up_by_relationship ? ` · ${record.picked_up_by_relationship}` : ""}
+                        </Text>
+                      </View>
+                    </View>
+                    {record.pickup_recorded_by && (
+                      <View style={styles.modalUserBlock}>
+                        <UserAvatar userId={record.pickup_recorded_by} userMap={userMap} size={32} />
+                        {pickupByUser && (
+                          <Text style={styles.modalUserName} numberOfLines={1}>
+                            {pickupByUser.full_name.split(" ")[0]}
+                          </Text>
+                        )}
+                      </View>
                     )}
                   </View>
-                )}
-              </View>
+                </>
+              )}
             </>
           )}
 
@@ -300,56 +299,14 @@ export default function AttendanceScreen() {
 
   useEffect(() => {
     if (!selectedId) return;
+    const studentId = selectedId;
     setRecordsLoading(true);
     setFilter("all");
 
     async function fetchRecords() {
       try {
-        const [summerRes, aftercareRes, fridayRes] = await Promise.all([
-          supabase
-            .schema("attendance")
-            .from("summer_records")
-            .select("id, date, recorded_by, notes, paid_for_day, pickup_time, picked_up_by_name, picked_up_by_relationship, pickup_recorded_by")
-            .eq("student_id", selectedId)
-            .order("date", { ascending: false }),
-          supabase
-            .schema("attendance")
-            .from("aftercare_records")
-            .select("id, date, recorded_by, notes, paid_for_day, pickup_time, picked_up_by_name, picked_up_by_relationship, pickup_recorded_by")
-            .eq("student_id", selectedId)
-            .order("date", { ascending: false }),
-          supabase
-            .schema("attendance")
-            .from("field_friday_records")
-            .select("id, date, recorded_by, notes, paid_for_day, pickup_time, picked_up_by_name, picked_up_by_relationship, pickup_recorded_by")
-            .eq("student_id", selectedId)
-            .order("date", { ascending: false }),
-        ]);
-
-        const merged: UnifiedAttendanceRecord[] = [
-          ...((summerRes.data ?? []) as any[]).map((r) => ({ ...r, program: "summer" as const })),
-          ...((aftercareRes.data ?? []) as any[]).map((r) => ({ ...r, program: "aftercare" as const })),
-          ...((fridayRes.data ?? []) as any[]).map((r) => ({ ...r, program: "field_friday" as const })),
-        ].sort((a, b) => b.date.localeCompare(a.date));
-
-        const staffIds = [
-          ...new Set(
-            merged.flatMap((r) => [r.recorded_by, r.pickup_recorded_by]).filter(Boolean) as string[]
-          ),
-        ];
-
-        let profiles: UserMap = {};
-        if (staffIds.length > 0) {
-          const { data: users } = await supabase
-            .schema("admin")
-            .from("users")
-            .select("id, full_name, profile_image_url")
-            .in("id", staffIds);
-          for (const u of users ?? []) {
-            profiles[u.id] = { full_name: u.full_name, profile_image_url: u.profile_image_url };
-          }
-        }
-
+        const { records: merged, userMap: profiles } =
+          await fetchParentStudentAttendanceRecords(studentId);
         setRecords(merged);
         setUserMap(profiles);
       } catch (e) {
@@ -362,7 +319,7 @@ export default function AttendanceScreen() {
     fetchRecords();
   }, [selectedId]);
 
-  const filtered = filter === "all" ? records : records.filter((r) => r.program === filter);
+  const filtered = filterAttendanceRecords(records, filter);
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
@@ -436,7 +393,8 @@ export default function AttendanceScreen() {
               <View style={styles.list}>
                 {filtered.map((record) => {
                   const cfg = PROGRAM_CONFIG[record.program];
-                  const isPickedUp = !!record.picked_up_by_name;
+                  const status = getAttendanceStatus(record);
+                  const isPickedUp = status === "picked_up";
                   return (
                     <TouchableOpacity
                       key={`${record.program}-${record.id}`}
@@ -462,7 +420,7 @@ export default function AttendanceScreen() {
                           </Text>
                         )}
                       </View>
-                      <AttendanceStatusBadge pickedUp={isPickedUp} />
+                      <AttendanceStatusBadge record={record} />
                     </TouchableOpacity>
                   );
                 })}
@@ -602,12 +560,14 @@ const styles = StyleSheet.create({
   },
   statusBadgePickedUp: { backgroundColor: "#d1fae5" },
   statusBadgeAttended: { backgroundColor: "#E0EDE2" },
+  statusBadgeAbsent: { backgroundColor: "#fef3c7" },
   statusBadgeText: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 12,
   },
   statusBadgeTextPickedUp: { color: "#065f46" },
   statusBadgeTextAttended: { color: Brand.sage700 },
+  statusBadgeTextAbsent: { color: "#b45309" },
 
   emptyState: {
     alignItems: "center",
