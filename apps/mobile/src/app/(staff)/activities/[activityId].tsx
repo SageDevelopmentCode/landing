@@ -17,8 +17,15 @@ import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { BottomTabInset, Brand, FontFamilies } from "@/constants/theme";
 import { Activity, ActivityFood, getActivities } from "@/lib/activities-actions";
 import { ActivityPreferencesSheet } from "@/components/ActivityPreferencesSheet";
+import { fetchSchoolYearTodayStudents } from "@/lib/school-year-today-students";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
+
+type AttendingStudent = {
+  student_id: string;
+  name: string | null;
+  profile_image_url: string | null;
+};
 
 function Chip({ label, bg, color }: { label: string; bg: string; color: string }) {
   return (
@@ -93,12 +100,26 @@ export default function ActivityDetailScreen() {
   const [activity, setActivity] = useState<Activity | null>(null);
   const [loading, setLoading] = useState(true);
   const [imageIndex, setImageIndex] = useState(0);
+  const [attendingStudents, setAttendingStudents] = useState<AttendingStudent[]>([]);
 
   const load = useCallback(async () => {
     try {
       const all = await getActivities();
       const found = all.find((a) => a.id === activityId) ?? null;
       setActivity(found);
+
+      if (found?.activity_date) {
+        const rows = await fetchSchoolYearTodayStudents(found.activity_date);
+        setAttendingStudents(
+          rows.map((s) => ({
+            student_id: s.student_id,
+            name: s.name,
+            profile_image_url: s.profile_image_url,
+          })),
+        );
+      } else {
+        setAttendingStudents([]);
+      }
     } catch (e: any) {
       Alert.alert("Error", e.message ?? "Failed to load activity");
     }
@@ -258,7 +279,12 @@ export default function ActivityDetailScreen() {
         <Ionicons name="pencil" size={22} color="#fff" />
       </Pressable>
 
-      <ActivityPreferencesSheet ref={prefsSheetRef} activityId={activity.id} />
+      <ActivityPreferencesSheet
+        ref={prefsSheetRef}
+        activityId={activity.id}
+        activityDate={activity.activity_date}
+        attendingStudents={attendingStudents}
+      />
     </View>
   );
 }

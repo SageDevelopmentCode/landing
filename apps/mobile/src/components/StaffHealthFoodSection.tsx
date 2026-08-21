@@ -53,7 +53,7 @@ type Props = {
   showAllergiesRow: boolean;
   schoolDayFoodCount: number;
   schoolDayFoodLoading: boolean;
-  activityPrefCount: number;
+  activityPrefBadge: string;
   activityPrefsLoading: boolean;
   onOpenAllergies: () => void;
   onOpenSchoolDayFood: () => void;
@@ -65,7 +65,7 @@ export function StaffHealthFoodSection({
   showAllergiesRow,
   schoolDayFoodCount,
   schoolDayFoodLoading,
-  activityPrefCount,
+  activityPrefBadge,
   activityPrefsLoading,
   onOpenAllergies,
   onOpenSchoolDayFood,
@@ -104,12 +104,12 @@ export function StaffHealthFoodSection({
         <QuickAccessRow
           icon="clipboard-outline"
           iconColor={Brand.sage700}
-          label="Activity Preferences This Week"
+          label="Upcoming Activity Preferences"
           labelColor={Brand.sage700}
           backgroundColor="#f0fdf4"
           borderColor="#bbf7d0"
           badgeBg={Brand.sage700}
-          badgeText={activityPrefsLoading ? "…" : String(activityPrefCount)}
+          badgeText={activityPrefsLoading ? "…" : activityPrefBadge}
           onPress={onOpenActivityPrefs}
         />
       </View>

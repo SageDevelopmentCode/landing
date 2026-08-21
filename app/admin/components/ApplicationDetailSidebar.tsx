@@ -57,6 +57,7 @@ import { sendSchoolYearTuitionReminderEmail } from '../../actions/sendSchoolYear
 import { sendSchoolYearTuitionDueDateTodayReminderEmail } from '../../actions/sendSchoolYearTuitionDueDateTodayReminderEmail'
 import { sendHomeschoolDropInTuitionReminderEmail } from '../../actions/sendHomeschoolDropInTuitionReminderEmail'
 import { sendHomeschoolDropInClarificationEmail } from '../../actions/sendHomeschoolDropInClarificationEmail'
+import { sendActivityPreferenceReminderPreview } from '../../actions/sendActivityPreferenceReminderEmail'
 import { enrollApplication } from '../../actions/enrollApplication'
 import { PaymentHistory } from './PaymentHistory'
 import { updateApplicationProgram } from '../../actions/updateApplicationProgram'
@@ -317,6 +318,9 @@ export function ApplicationDetailSidebar({
   const [homeschoolDropInClarificationSending, setHomeschoolDropInClarificationSending] = useState(false)
   const [homeschoolDropInClarificationSent, setHomeschoolDropInClarificationSent] = useState(false)
   const [homeschoolDropInClarificationError, setHomeschoolDropInClarificationError] = useState<string | null>(null)
+  const [activityPrefReminderSending, setActivityPrefReminderSending] = useState(false)
+  const [activityPrefReminderSent, setActivityPrefReminderSent] = useState(false)
+  const [activityPrefReminderError, setActivityPrefReminderError] = useState<string | null>(null)
   const [tagInput, setTagInput] = useState('')
   const [tagSaving, setTagSaving] = useState(false)
   const [tagError, setTagError] = useState<string | null>(null)
@@ -1043,6 +1047,25 @@ export function ApplicationDetailSidebar({
       setTimeout(() => setMeetJoyReminderSent(false), 3000)
     } else {
       setMeetJoyReminderError(result.error ?? 'Failed to send')
+    }
+  }
+
+  async function handleSendActivityPrefReminder() {
+    if (!application?.g1_email || !application?.student_id) return
+    setActivityPrefReminderSending(true)
+    setActivityPrefReminderError(null)
+    const result = await sendActivityPreferenceReminderPreview({
+      email: application.g1_email,
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? 'your child',
+    })
+    setActivityPrefReminderSending(false)
+    if (result.success) {
+      setActivityPrefReminderSent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setActivityPrefReminderSent(false), 3000)
+    } else {
+      setActivityPrefReminderError(result.error ?? 'Failed to send')
     }
   }
 
@@ -2251,6 +2274,29 @@ export function ApplicationDetailSidebar({
                     {meetJoyReminderSending ? 'Sending…' : meetJoyReminderSent ? '✓ Sent!' : 'Send Meet Miss Joy Reminder'}
                   </button>
                   {meetJoyReminderError && <span className="text-xs text-red-600">{meetJoyReminderError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendActivityPrefReminder}
+                    disabled={
+                      activityPrefReminderSending
+                      || activityPrefReminderSent
+                      || !application?.g1_email
+                      || !application?.student_id
+                    }
+                    title={
+                      !application?.g1_email
+                        ? 'No parent email on file'
+                        : !application?.student_id
+                          ? 'Student not enrolled yet'
+                          : undefined
+                    }
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {activityPrefReminderSending ? 'Sending…' : activityPrefReminderSent ? '✓ Sent!' : 'Send Activity Preference Reminder'}
+                  </button>
+                  {activityPrefReminderError && <span className="text-xs text-red-600">{activityPrefReminderError}</span>}
                 </div>
                 <div className="flex items-center gap-3">
                   <button

@@ -20,8 +20,11 @@ import {
 import { getActivities, type Activity } from "@/lib/activities-actions";
 import { notifyDiscord, notifyError } from "@/lib/discord";
 import { getPublishedNewsletters, type ParentNewsletterListItem } from "@/lib/newsletters-actions";
-import { isParentVisibleTeacher } from "@/lib/parent-visible-teachers";
-import { fetchTeacherNamesByStudentId } from "@/lib/student-teacher-assignments";
+import { fetchParentVisibleTeachers } from "@/lib/parent-visible-teachers";
+import {
+  abbreviateName,
+  fetchSchoolYearTeachersForStudents,
+} from "@/lib/student-teacher-assignments";
 import { supabase } from "@/lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -83,12 +86,6 @@ const HOME_CARD_IMAGES = {
   homeschool: require("../../../assets/images/stock/Stock5.webp"),
 };
 
-function abbreviateName(fullName: string): string {
-  const parts = fullName.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0];
-  return `${parts[0]} ${parts[parts.length - 1][0]}.`;
-}
-
 function getInitials(fullName: string) {
   const parts = fullName.trim().split(/\s+/);
   if (parts.length === 1) return parts[0][0].toUpperCase();
@@ -103,6 +100,18 @@ type HomeApplicationRow = {
   drop_in_program: string | null;
   child_legal_name: string | null;
 };
+
+function buildDropInProgramByStudent(
+  applications: HomeApplicationRow[],
+): Record<string, string | null> {
+  const result: Record<string, string | null> = {};
+  for (const app of applications) {
+    if (app.status === "enrolled" && app.program === "homeschool_drop_in") {
+      result[app.student_id] = app.drop_in_program;
+    }
+  }
+  return result;
+}
 
 type TeacherSuggestion = {
   id: string;
@@ -2371,31 +2380,37 @@ export default function HomeScreen() {
           txForActivity = rpc.transactions ?? [];
           applyTransactionState(txForActivity);
 
-          const teacherNames = await fetchTeacherNamesByStudentId(
-            studentsForActivity.map((s) => s.id),
-          );
-          setTeacherNameByStudentId(teacherNames);
+          const rpcApplications = rpc.applications ?? [];
+          const dropInProgramByStudent =
+            buildDropInProgramByStudent(rpcApplications);
+          const [{ teacherNameByStudentId }, parentVisibleTeachers] =
+            await Promise.all([
+              fetchSchoolYearTeachersForStudents(
+                studentsForActivity.map((s) => s.id),
+                dropInProgramByStudent,
+              ),
+              fetchParentVisibleTeachers(),
+            ]);
+          setTeacherNameByStudentId(teacherNameByStudentId);
+          setTeachers(parentVisibleTeachers);
+          setTeachersLoading(false);
 
           // Unlock the main render immediately after core data is ready
           setLoading(false);
           setOnboardingLoading(false);
 
-          // Background: teachers + activity-banner (non-critical, use existing skeletons)
+          // Background: activity-banner (non-critical, use existing skeletons)
           const paidDatesMap = computePaidDates(txForActivity.filter((tx): tx is typeof tx & { student_id: string } => tx.student_id != null));
           const paidSets: Record<string, Set<string>> = {};
           for (const [sid, dates] of Object.entries(paidDatesMap)) {
             paidSets[sid] = new Set(dates);
           }
-          const [activitiesResult, activityPrefsResult, defaultPrefsResult, teachersResult] =
+          const [activitiesResult, activityPrefsResult, defaultPrefsResult] =
             await Promise.all([
               supabase.schema("teachers").from("activities").select("id, activity_date").eq("status", "published").eq("visibility", "public").eq("is_deleted", false),
               supabase.schema("parent_app").from("activity_preferences").select("student_id, activity_id").eq("parent_id", effectiveParentId),
               supabase.schema("parent_app").from("student_default_preferences").select("student_id").eq("parent_id", effectiveParentId),
-              supabase.schema("admin").from("users").select("id, full_name, profile_image_url").in("role", ["teacher", "super_admin"]).order("full_name", { ascending: true }),
             ]);
-
-          setTeachers((teachersResult.data ?? []).filter((t) => isParentVisibleTeacher(t.full_name)));
-          setTeachersLoading(false);
 
           applyActivityBanner(activitiesResult, activityPrefsResult, defaultPrefsResult, studentsForActivity, paidSets);
           void loadConferenceBookingsFromSupabase();
@@ -2428,11 +2443,6 @@ export default function HomeScreen() {
           studentsForActivity = fetchedStudents ?? [];
           setStudents(studentsForActivity);
 
-          const teacherNames = await fetchTeacherNamesByStudentId(
-            studentsForActivity.map((s) => s.id),
-          );
-          setTeacherNameByStudentId(teacherNames);
-
           const [
             eventsResult,
             pendingResult,
@@ -2443,7 +2453,6 @@ export default function HomeScreen() {
             activitiesResult,
             activityPrefsResult,
             defaultPrefsResult,
-            teachersResult,
           ] = await Promise.all([
             supabase
               .schema("calendar")
@@ -2513,22 +2522,9 @@ export default function HomeScreen() {
               .from("student_default_preferences")
               .select("student_id")
               .eq("parent_id", effectiveParentId),
-            supabase
-              .schema("admin")
-              .from("users")
-              .select("id, full_name, profile_image_url")
-              .in("role", ["teacher", "super_admin"])
-              .order("full_name", { ascending: true }),
           ]);
 
           if (eventsResult.data) setUpcomingEvents(eventsResult.data);
-
-          setTeachers(
-            (teachersResult.data ?? []).filter((t) =>
-              isParentVisibleTeacher(t.full_name),
-            ),
-          );
-          setTeachersLoading(false);
 
           setPendingPayments(pendingResult.data ?? []);
           setTuitionLoading(false);
@@ -2551,6 +2547,21 @@ export default function HomeScreen() {
           }
 
           setApplications(applicationsResult.data ?? []);
+
+          const fallbackApplications = applicationsResult.data ?? [];
+          const dropInProgramByStudent =
+            buildDropInProgramByStudent(fallbackApplications);
+          const [{ teacherNameByStudentId }, parentVisibleTeachers] =
+            await Promise.all([
+              fetchSchoolYearTeachersForStudents(
+                studentsForActivity.map((s) => s.id),
+                dropInProgramByStudent,
+              ),
+              fetchParentVisibleTeachers(),
+            ]);
+          setTeacherNameByStudentId(teacherNameByStudentId);
+          setTeachers(parentVisibleTeachers);
+          setTeachersLoading(false);
 
           txForActivity = transactionsResult.data ?? [];
           applyTransactionState(txForActivity);
@@ -3476,6 +3487,18 @@ export default function HomeScreen() {
                   </View>
                 ))}
               </ScrollView>
+            ) : teachers.length === 0 ? (
+              <Text
+                style={{
+                  marginTop: 10,
+                  paddingHorizontal: 24,
+                  fontFamily: FontFamilies.body,
+                  fontSize: 13,
+                  color: "#9ca3af",
+                }}
+              >
+                No teachers available.
+              </Text>
             ) : (
               <ScrollView
                 horizontal

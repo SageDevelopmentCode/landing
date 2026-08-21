@@ -17,7 +17,11 @@ import { SkeletonBox } from "@/components/ui/SkeletonBox";
 import { BottomTabInset, Brand, FontFamilies } from "@/constants/theme";
 import { Activity, getActivities } from "@/lib/activities-actions";
 import { notifyDiscord, notifyError } from "@/lib/discord";
-import { isSchoolYearTeacherAssignment } from "@/lib/student-teacher-assignments";
+import {
+  fetchSchoolYearTodayStudents,
+  type AttendanceSlim,
+  type SchoolYearTodayStudent,
+} from "@/lib/school-year-today-students";
 import { supabase } from "@/lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -49,11 +53,7 @@ import {
   getTeacherColors,
   groupStudentsByTeacher,
 } from "@/lib/group-by-teacher";
-import {
-  isSchoolYearFieldFridayPaid,
-  isSchoolYearWeekdayPaid,
-  SCHOOL_YEAR_START,
-} from "@/lib/school-year-attendance";
+import { SCHOOL_YEAR_START } from "@/lib/school-year-attendance";
 import {
   buildDisplayNameMap,
   getStudentDisplayName,
@@ -64,7 +64,6 @@ import {
   type StaffActivityPrefGroup,
   type StaffSchoolDayFoodPref,
 } from "@/lib/staff-food-and-activity-prefs";
-import { getCurrentWeekRange, isDateInRange } from "@/lib/week-date-range";
 import {
   fetchAllStaffConferenceBookings,
   isConferenceTeacher,
@@ -123,51 +122,6 @@ function shiftDay(dateStr: string, delta: 1 | -1): string {
   return toYMD(dt);
 }
 
-function getDayOfWeek(dateStr: string): string {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  return ["sun", "mon", "tue", "wed", "thu", "fri", "sat"][
-    new Date(y, m - 1, d).getDay()
-  ];
-}
-
-// ─── Payment checker (mirrored from attendance.tsx) ───────────────────────────
-
-type TxnRow = {
-  student_id: string;
-  payment_type: string;
-  metadata: Record<string, unknown> | null;
-};
-
-const MONTH_NAMES_SHORT = [
-  "jan",
-  "feb",
-  "mar",
-  "apr",
-  "may",
-  "jun",
-  "jul",
-  "aug",
-  "sep",
-  "oct",
-  "nov",
-  "dec",
-] as const;
-
-function isStudentPaidForAftercare(txn: TxnRow, date: string): boolean {
-  if (txn.payment_type !== "aftercare_tuition") return false;
-  const meta = txn.metadata ?? {};
-  if (
-    typeof meta.selected_days === "string" &&
-    meta.selected_days.split(",").includes(date)
-  )
-    return true;
-  if (typeof meta.selected_months === "string") {
-    const monthName = MONTH_NAMES_SHORT[parseInt(date.split("-")[1], 10) - 1];
-    if (meta.selected_months.split(",").includes(monthName)) return true;
-  }
-  return false;
-}
-
 // ─── Avatar helpers (mirrored from attendance.tsx) ───────────────────────────
 
 const AVATAR_PALETTE = [
@@ -209,305 +163,15 @@ type AllergyDetail = {
   emergency_medications_description: string | null;
 };
 
-type AttendanceSlim = {
-  id: string;
-  paid_for_day: boolean;
-  pickup_time: string | null;
-  picked_up_by_name: string | null;
-  marked_absent: boolean;
-};
-
-const SY_ATTENDANCE_SELECT =
-  "id, student_id, paid_for_day, pickup_time, picked_up_by_name, marked_absent";
 const SY_ATTENDANCE_SLIM_SELECT =
   "id, paid_for_day, pickup_time, picked_up_by_name, marked_absent";
 const AFTERCARE_SLIM_SELECT =
   "id, paid_for_day, pickup_time, picked_up_by_name";
 
-type HomeStudentRow = {
-  student_id: string;
-  name: string | null;
-  profile_image_url: string | null;
-  has_allergies: string | null;
-  program: string | null;
-  hasSummerEnrollment: boolean;
-  hasAftercareEnrollment: boolean;
-  hasFridayEnrollment: boolean;
-  hasSchoolYearEnrollment: boolean;
-  hasSchoolYearFridayEnrollment: boolean;
-  summerRecord: AttendanceSlim | null;
-  aftercareRecord: AttendanceSlim | null;
-  fieldFridayRecord: AttendanceSlim | null;
-  schoolYearRecord: AttendanceSlim | null;
-  schoolYearFieldFridayRecord: AttendanceSlim | null;
-  teacherName: string | null;
-  teacherId: string | null;
-  classroom: string | null;
-};
-
-type TeacherAssignmentRow = {
-  assignment_id: string;
-  teacher_id: string;
-  teacher_name: string | null;
-  student_id: string;
-  program: string;
-  classroom: string | null;
-};
-
-function buildSchoolYearTeacherMap(
-  assignments: TeacherAssignmentRow[],
-  dropInProgramByStudent: Map<string, string | null>,
-): Map<
-  string,
-  { teacherName: string | null; teacherId: string; classroom: string | null }
-> {
-  const byStudent = new Map<string, TeacherAssignmentRow[]>();
-  for (const assignment of assignments) {
-    if (
-      !isSchoolYearTeacherAssignment(
-        assignment.program,
-        dropInProgramByStudent.get(assignment.student_id),
-      )
-    ) {
-      continue;
-    }
-    if (!byStudent.has(assignment.student_id)) {
-      byStudent.set(assignment.student_id, []);
-    }
-    byStudent.get(assignment.student_id)!.push(assignment);
-  }
-
-  const map = new Map<
-    string,
-    { teacherName: string | null; teacherId: string; classroom: string | null }
-  >();
-  for (const [studentId, rows] of byStudent) {
-    const picked =
-      rows.find((r) => r.program === "school_year_26_27") ?? rows[0];
-    map.set(studentId, {
-      teacherName: picked.teacher_name,
-      teacherId: picked.teacher_id,
-      classroom: picked.classroom,
-    });
-  }
-  return map;
-}
-
-// ─── Data fetching ────────────────────────────────────────────────────────────
-
-async function fetchSchoolYearTodayStudents(
-  date: string,
-): Promise<HomeStudentRow[]> {
-  const [studentsRes, appsRes] = await Promise.all([
-    supabase
-      .schema("admin")
-      .from("students")
-      .select("id, child_legal_name, profile_image_url")
-      .eq("is_deleted", false)
-      .order("child_legal_name", { ascending: true }),
-    supabase
-      .schema("parent_app")
-      .from("applications")
-      .select(
-        "student_id, admin_tags, has_allergies, program, drop_in_program, preferred_name, child_legal_name",
-      )
-      .eq("status", "enrolled"),
-  ]);
-
-  type AppRow = {
-    student_id: string;
-    admin_tags: string[] | null;
-    has_allergies: string | null;
-    program: string | null;
-    drop_in_program: string | null;
-    preferred_name: string | null;
-    child_legal_name: string | null;
-  };
-
-  const appsData = (appsRes.data ?? []) as AppRow[];
-  const displayNameMap = buildDisplayNameMap(appsData);
-  const isSchoolYearApp = (a: AppRow) =>
-    a.program === "school_year_26_27" ||
-    a.program === "both" ||
-    (a.program === "homeschool_drop_in" &&
-      (a.drop_in_program === "school_year_26_27" ||
-        a.drop_in_program === "both"));
-
-  const enrolledIds = new Set(
-    appsData
-      .filter(
-        (a) =>
-          isSchoolYearApp(a) &&
-          !(a.admin_tags ?? []).includes("Don't Include"),
-      )
-      .map((a) => a.student_id),
-  );
-  const allergyMap = new Map(
-    appsData.map((a) => [a.student_id, a.has_allergies]),
-  );
-  const programMap = new Map(appsData.map((a) => [a.student_id, a.program]));
-  const dropInProgramMap = new Map(
-    appsData.map((a) => [a.student_id, a.drop_in_program]),
-  );
-
-  type StudentRaw = {
-    id: string;
-    child_legal_name: string | null;
-    profile_image_url: string | null;
-  };
-
-  const students = ((studentsRes.data ?? []) as StudentRaw[]).filter((s) =>
-    enrolledIds.has(s.id),
-  );
-
-  if (!students.length) return [];
-  const studentIds = students.map((s) => s.id);
-
-  const dayOfWeek = getDayOfWeek(date);
-  const isFridayDate = dayOfWeek === "fri";
-
-  type SyAttendanceRaw = {
-    id: string;
-    student_id: string;
-    paid_for_day: boolean;
-    pickup_time: string | null;
-    picked_up_by_name: string | null;
-    marked_absent: boolean;
-  };
-
-  const [
-    txnsRes,
-    schoolYearRecordsRes,
-    schoolYearFridayRecordsRes,
-    aftercareRecordsRes,
-    assignmentsRes,
-  ] = await Promise.all([
-    supabase
-      .schema("billing")
-      .from("stripe_transactions")
-      .select("student_id, payment_type, metadata")
-      .in("payment_type", [
-        "school_year_tuition",
-        "homeschool_dropin",
-        "fun_friday_tuition",
-      ])
-      .eq("status", "completed")
-      .eq("is_deleted", false)
-      .in("student_id", studentIds),
-    isFridayDate
-      ? Promise.resolve({ data: [] as SyAttendanceRaw[] })
-      : supabase
-          .schema("attendance")
-          .from("school_year_records")
-          .select(SY_ATTENDANCE_SELECT)
-          .eq("date", date)
-          .in("student_id", studentIds),
-    isFridayDate
-      ? supabase
-          .schema("attendance")
-          .from("school_year_field_friday_records")
-          .select(SY_ATTENDANCE_SELECT)
-          .eq("date", date)
-          .in("student_id", studentIds)
-      : Promise.resolve({ data: [] as SyAttendanceRaw[] }),
-    supabase
-      .schema("attendance")
-      .from("aftercare_records")
-      .select("id, student_id, paid_for_day, pickup_time, picked_up_by_name")
-      .eq("date", date)
-      .in("student_id", studentIds),
-    supabase.rpc("get_all_teacher_assignments"),
-  ]);
-
-  const txns = (txnsRes.data ?? []) as TxnRow[];
-
-  const schoolYearPaidIds = new Set<string>();
-  const schoolYearFridayPaidIds = new Set<string>();
-  const aftercarePaidIds = new Set<string>();
-
-  for (const txn of txns) {
-    if (isSchoolYearWeekdayPaid(txn, date))
-      schoolYearPaidIds.add(txn.student_id);
-    if (isSchoolYearFieldFridayPaid(txn, date))
-      schoolYearFridayPaidIds.add(txn.student_id);
-    if (isStudentPaidForAftercare(txn, date))
-      aftercarePaidIds.add(txn.student_id);
-  }
-
-  type AttendanceRaw = SyAttendanceRaw;
-
-  const toSlim = (r: AttendanceRaw): AttendanceSlim => ({
-    id: r.id,
-    paid_for_day: r.paid_for_day,
-    pickup_time: r.pickup_time,
-    picked_up_by_name: r.picked_up_by_name,
-    marked_absent: r.marked_absent ?? false,
-  });
-
-  const schoolYearRecordMap = new Map(
-    ((schoolYearRecordsRes.data ?? []) as AttendanceRaw[]).map((r) => [
-      r.student_id,
-      toSlim(r),
-    ]),
-  );
-  const schoolYearFridayRecordMap = new Map(
-    ((schoolYearFridayRecordsRes.data ?? []) as AttendanceRaw[]).map((r) => [
-      r.student_id,
-      toSlim(r),
-    ]),
-  );
-  const aftercareRecordMap = new Map(
-    ((aftercareRecordsRes.data ?? []) as AttendanceRaw[]).map((r) => [
-      r.student_id,
-      toSlim(r),
-    ]),
-  );
-
-  const teacherMap = buildSchoolYearTeacherMap(
-    (assignmentsRes.data ?? []) as TeacherAssignmentRow[],
-    dropInProgramMap,
-  );
-
-  return students
-    .filter((s) =>
-      isFridayDate
-        ? schoolYearFridayPaidIds.has(s.id) ||
-          schoolYearFridayRecordMap.has(s.id)
-        : schoolYearPaidIds.has(s.id) || schoolYearRecordMap.has(s.id),
-    )
-    .map((s) => {
-      const teacher = teacherMap.get(s.id);
-      return {
-        student_id: s.id,
-        name:
-          displayNameMap.get(s.id) ??
-          getStudentDisplayName(null, s.child_legal_name),
-        profile_image_url: s.profile_image_url,
-        has_allergies: allergyMap.get(s.id) ?? null,
-        program: programMap.get(s.id) ?? null,
-        hasSummerEnrollment: false,
-        hasAftercareEnrollment: aftercarePaidIds.has(s.id),
-        hasFridayEnrollment: false,
-        hasSchoolYearEnrollment: schoolYearPaidIds.has(s.id),
-        hasSchoolYearFridayEnrollment: schoolYearFridayPaidIds.has(s.id),
-        summerRecord: null,
-        aftercareRecord: aftercareRecordMap.get(s.id) ?? null,
-        fieldFridayRecord: null,
-        schoolYearRecord: schoolYearRecordMap.get(s.id) ?? null,
-        schoolYearFieldFridayRecord:
-          schoolYearFridayRecordMap.get(s.id) ?? null,
-        teacherName: teacher?.teacherName ?? null,
-        teacherId: teacher?.teacherId ?? null,
-        classroom: teacher?.classroom ?? null,
-      };
-    })
-    .sort((a, b) => (a.name ?? "").localeCompare(b.name ?? ""));
-}
-
 async function fetchUnpaidStudentsForDate(
   date: string,
   excludeIds: Set<string>,
-): Promise<HomeStudentRow[]> {
+): Promise<SchoolYearTodayStudent[]> {
   const [studentsRes, appsRes] = await Promise.all([
     supabase
       .schema("admin")
@@ -691,14 +355,14 @@ export default function StaffHomeScreen() {
     const [y, m, d] = selectedDate.split("-").map(Number);
     return new Date(y, m - 1, d).getDay() === 5;
   })();
-  const [todayStudents, setTodayStudents] = useState<HomeStudentRow[]>([]);
+  const [todayStudents, setTodayStudents] = useState<SchoolYearTodayStudent[]>([]);
   const [studentsLoading, setStudentsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
 
   // Quick action sheet
   const studentActionSheetRef = useRef<BottomSheetModal>(null);
-  const [selectedStudent, setSelectedStudent] = useState<HomeStudentRow | null>(
+  const [selectedStudent, setSelectedStudent] = useState<SchoolYearTodayStudent | null>(
     null,
   );
   const [attendanceSaving, setAttendanceSaving] = useState<
@@ -732,18 +396,21 @@ export default function StaffHomeScreen() {
   const allBirthdaysSheetRef = useRef<BottomSheetModal>(null);
   const eventSheetRef = useRef<BottomSheetModal>(null);
 
-  const weekActivityPrefSubmissionCount = useMemo(
-    () =>
-      weekActivityPrefGroups.reduce(
-        (total, group) => total + group.students.length,
-        0,
-      ),
-    [weekActivityPrefGroups],
-  );
+  const weekActivityPrefBadge = useMemo(() => {
+    const signed = weekActivityPrefGroups.reduce(
+      (total, group) => total + group.signedUpCount,
+      0,
+    );
+    const expected = weekActivityPrefGroups.reduce(
+      (total, group) => total + group.totalCount,
+      0,
+    );
+    return `${signed}/${expected}`;
+  }, [weekActivityPrefGroups]);
 
   // Add student sheet
   const addStudentSheetRef = useRef<BottomSheetModal>(null);
-  const [unpaidStudents, setUnpaidStudents] = useState<HomeStudentRow[]>([]);
+  const [unpaidStudents, setUnpaidStudents] = useState<SchoolYearTodayStudent[]>([]);
   const [unpaidStudentsLoading, setUnpaidStudentsLoading] = useState(false);
   const [addStudentSearch, setAddStudentSearch] = useState("");
 
@@ -869,14 +536,13 @@ export default function StaffHomeScreen() {
   const loadActivities = useCallback(async (opts?: { silent?: boolean }) => {
     if (!opts?.silent) setActivitiesLoading(true);
     try {
-      const { start, end } = getCurrentWeekRange(selectedDate);
       const all = await getActivities();
       const published = all
         .filter(
           (a) =>
             a.status === "published" &&
             a.activity_date != null &&
-            isDateInRange(a.activity_date, start, end),
+            a.activity_date >= selectedDate,
         )
         .sort((a, b) =>
           (a.activity_date ?? "").localeCompare(b.activity_date ?? ""),
@@ -916,18 +582,21 @@ export default function StaffHomeScreen() {
     }
   }, [selectedDate]);
 
-  const loadWeekActivityPrefs = useCallback(async (activityIds: string[]) => {
-    setWeekActivityPrefsLoading(true);
-    try {
-      const groups = await fetchStaffWeekActivityPrefs(activityIds);
-      setWeekActivityPrefGroups(groups);
-    } catch (e) {
-      notifyError("staff-home-week-activity-prefs", e);
-      setWeekActivityPrefGroups([]);
-    } finally {
-      setWeekActivityPrefsLoading(false);
-    }
-  }, []);
+  const loadWeekActivityPrefs = useCallback(
+    async (weekActivities: { id: string; activity_date: string | null }[]) => {
+      setWeekActivityPrefsLoading(true);
+      try {
+        const groups = await fetchStaffWeekActivityPrefs(weekActivities);
+        setWeekActivityPrefGroups(groups);
+      } catch (e) {
+        notifyError("staff-home-week-activity-prefs", e);
+        setWeekActivityPrefGroups([]);
+      } finally {
+        setWeekActivityPrefsLoading(false);
+      }
+    },
+    [],
+  );
 
   const loadSchoolDayFoodPrefs = useCallback(async (opts?: { silent?: boolean }) => {
     if (!opts?.silent) setSchoolDayFoodLoading(true);
@@ -945,7 +614,9 @@ export default function StaffHomeScreen() {
   useEffect(() => {
     async function loadAllActivityData() {
       const published = await loadActivities();
-      await loadWeekActivityPrefs(published.map((a) => a.id));
+      await loadWeekActivityPrefs(
+        published.map((a) => ({ id: a.id, activity_date: a.activity_date })),
+      );
     }
     void loadAllActivityData();
   }, [loadActivities, loadWeekActivityPrefs]);
@@ -1028,7 +699,9 @@ export default function StaffHomeScreen() {
         loadTodayStudents({ silent: true }),
         loadBirthdays({ silent: true }),
         loadUpcomingEvents({ silent: true }),
-        loadWeekActivityPrefs(published.map((a) => a.id)),
+        loadWeekActivityPrefs(
+          published.map((a) => ({ id: a.id, activity_date: a.activity_date })),
+        ),
         loadSchoolDayFoodPrefs({ silent: true }),
         showConferenceSection
           ? fetchAllStaffConferenceBookings()
@@ -1108,7 +781,7 @@ export default function StaffHomeScreen() {
 
   // ── Student quick actions ─────────────────────────────────────────────────────
 
-  function openStudentActions(student: HomeStudentRow) {
+  function openStudentActions(student: SchoolYearTodayStudent) {
     setSelectedStudent(student);
     studentActionSheetRef.current?.present();
   }
@@ -1178,21 +851,21 @@ export default function StaffHomeScreen() {
     }
   }
 
-  function handleAddStudent(student: HomeStudentRow) {
+  function handleAddStudent(student: SchoolYearTodayStudent) {
     setTodayStudents((prev) => [...prev, student]);
     addStudentSheetRef.current?.dismiss();
   }
 
   // ── Attendance toggles ────────────────────────────────────────────────────────
 
-  function patchStudent(transform: (s: HomeStudentRow) => HomeStudentRow) {
+  function patchStudent(transform: (s: SchoolYearTodayStudent) => SchoolYearTodayStudent) {
     if (!selectedStudent) return;
     patchStudentById(selectedStudent.student_id, transform);
   }
 
   function patchStudentById(
     studentId: string,
-    transform: (s: HomeStudentRow) => HomeStudentRow,
+    transform: (s: SchoolYearTodayStudent) => SchoolYearTodayStudent,
   ) {
     setTodayStudents((prev) =>
       prev.map((s) => (s.student_id === studentId ? transform(s) : s)),
@@ -1202,7 +875,7 @@ export default function StaffHomeScreen() {
     );
   }
 
-  async function markStudentPresent(student: HomeStudentRow) {
+  async function markStudentPresent(student: SchoolYearTodayStudent) {
     if (attendanceSaving) return;
     const record = getActiveAttendanceRecord(student);
     if (record && !record.marked_absent) return;
@@ -1680,7 +1353,7 @@ export default function StaffHomeScreen() {
 
   // ── Pickup ────────────────────────────────────────────────────────────────────
 
-  async function openPickup(student?: HomeStudentRow) {
+  async function openPickup(student?: SchoolYearTodayStudent) {
     const target = student ?? selectedStudent;
     const record = selectedIsFriday
       ? target?.schoolYearFieldFridayRecord
@@ -1814,13 +1487,13 @@ export default function StaffHomeScreen() {
 
   // ── Derived data ──────────────────────────────────────────────────────────────
 
-  function getActiveAttendanceRecord(s: HomeStudentRow): AttendanceSlim | null {
+  function getActiveAttendanceRecord(s: SchoolYearTodayStudent): AttendanceSlim | null {
     return selectedIsFriday
       ? s.schoolYearFieldFridayRecord
       : s.schoolYearRecord;
   }
 
-  function statusPriority(s: HomeStudentRow): number {
+  function statusPriority(s: SchoolYearTodayStudent): number {
     const record = getActiveAttendanceRecord(s);
     if (!record) return 0;
     if (record.picked_up_by_name) return 2;
@@ -1898,7 +1571,7 @@ export default function StaffHomeScreen() {
   }
 
   function renderStudentRow(
-    student: HomeStudentRow,
+    student: SchoolYearTodayStudent,
     teacherColors: { bg: string; accent: string },
   ) {
     const color = avatarColor(student.student_id);
@@ -2285,7 +1958,7 @@ export default function StaffHomeScreen() {
               )}
               schoolDayFoodCount={schoolDayFoodPrefs.length}
               schoolDayFoodLoading={schoolDayFoodLoading}
-              activityPrefCount={weekActivityPrefSubmissionCount}
+              activityPrefBadge={weekActivityPrefBadge}
               activityPrefsLoading={
                 activitiesLoading || weekActivityPrefsLoading
               }
@@ -2313,10 +1986,10 @@ export default function StaffHomeScreen() {
               />
             )}
 
-            {/* This Week's Activities */}
+            {/* Upcoming Activities */}
             <View style={styles.activitiesSection}>
               <Text style={styles.activitiesSectionTitle}>
-                This Week's Activities
+                Upcoming Activities
               </Text>
               {activitiesLoading ? (
                 <ScrollView
