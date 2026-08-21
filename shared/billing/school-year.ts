@@ -10,6 +10,7 @@ export const SCHOOL_YEAR_TUITION_UPPER_CENTS = 109500;
 export const AFTERCARE_DAILY_CENTS = 3500;
 export const AFTERCARE_MONTHLY_CENTS = 29900;
 export const FUN_FRIDAY_MONTHLY_CENTS = 16000;
+export const FUN_FRIDAY_SESSION_MONTHLY_CENTS = 4000;
 export const FUN_FRIDAY_DROPIN_CENTS = 6000;
 
 export type HomeschoolTier = "dropin" | "2day" | "3day";
@@ -360,7 +361,7 @@ export function schoolYearFunFridayMonthCents(
 ): number {
   return month.fridays.length >= 4
     ? FUN_FRIDAY_MONTHLY_CENTS
-    : month.fridays.length * FUN_FRIDAY_DROPIN_CENTS;
+    : month.fridays.length * FUN_FRIDAY_SESSION_MONTHLY_CENTS;
 }
 
 export const SCHOOL_YEAR_MONTHS = [

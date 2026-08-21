@@ -35,9 +35,13 @@ import {
 import { formatPhone } from "@/app/utils/formatPhone";
 import {
   getParentStudentAttendance,
+  ATT_FILTER_TABS,
+  filterAttendanceRecords,
+  getAttendanceStatus,
+  PROGRAM_CONFIG,
+  type AttendanceFilter,
   type UnifiedAttendanceRecord,
   type UserMap,
-  type AttendanceProgram,
 } from "@/app/actions/getParentStudentAttendance";
 import { updateStudentProfile } from "@/app/actions/updateStudentProfile";
 import { DetailSidebar } from "@/app/admin/components/DetailSidebar";
@@ -62,15 +66,6 @@ type ContentTab =
   | "photos"
   | "pickup"
   | "profile";
-
-const PROGRAM_CONFIG: Record<
-  AttendanceProgram,
-  { label: string; color: string; bg: string }
-> = {
-  summer: { label: "Summer 2026", color: "#d97706", bg: "#fef9ee" },
-  aftercare: { label: "Aftercare", color: "#7c3aed", bg: "#f5f3ff" },
-  field_friday: { label: "Field Fun Fridays", color: "#0891b2", bg: "#ecfeff" },
-};
 
 interface Props {
   students: Student[];
@@ -439,6 +434,7 @@ function AttendanceTab({
   userMap: UserMap;
   loading: boolean;
 }) {
+  const [filter, setFilter] = useState<AttendanceFilter>("all");
   const [selectedRecord, setSelectedRecord] =
     useState<UnifiedAttendanceRecord | null>(null);
 
@@ -460,8 +456,28 @@ function AttendanceTab({
     });
   };
 
+  const filteredRecords = filterAttendanceRecords(records, filter);
+
   return (
     <>
+      {!loading && records.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-3">
+          {ATT_FILTER_TABS.map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setFilter(key)}
+              className={`px-3 py-1.5 rounded-full text-xs font-body border transition-colors ${
+                filter === key
+                  ? "bg-[#4a7c59] border-[#4a7c59] text-white"
+                  : "bg-white border-gray-200 text-gray-500 hover:bg-gray-50"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
         {loading ? (
           <div className="space-y-0">
@@ -476,7 +492,7 @@ function AttendanceTab({
               </div>
             ))}
           </div>
-        ) : records.length === 0 ? (
+        ) : filteredRecords.length === 0 ? (
           <p className="text-sm text-gray-400 px-4 py-6">
             No attendance records found.
           </p>
@@ -493,14 +509,15 @@ function AttendanceTab({
                 Status
               </span>
             </div>
-            {records.map((r, i) => {
+            {filteredRecords.map((r, i) => {
               const cfg = PROGRAM_CONFIG[r.program];
+              const status = getAttendanceStatus(r);
               return (
                 <div
-                  key={r.id}
+                  key={`${r.program}-${r.id}`}
                   onClick={() => setSelectedRecord(r)}
                   className={`grid grid-cols-3 px-4 py-3 cursor-pointer transition-colors hover:bg-gray-50 ${
-                    i < records.length - 1 ? "border-b border-gray-100" : ""
+                    i < filteredRecords.length - 1 ? "border-b border-gray-100" : ""
                   }`}
                 >
                   <span className="text-sm text-gray-700">
@@ -513,7 +530,11 @@ function AttendanceTab({
                     {cfg.label}
                   </span>
                   <div className="flex justify-end">
-                    {r.pickup_time ? (
+                    {status === "absent" ? (
+                      <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                        Absent
+                      </span>
+                    ) : status === "picked_up" ? (
                       <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-green-100 text-green-700">
                         Picked Up
                       </span>
@@ -541,6 +562,7 @@ function AttendanceTab({
         {selectedRecord &&
           (() => {
             const cfg = PROGRAM_CONFIG[selectedRecord.program];
+            const status = getAttendanceStatus(selectedRecord);
             const recordedBy =
               userMap[selectedRecord.recorded_by]?.full_name ?? "Staff";
             const pickupRecordedBy = selectedRecord.pickup_recorded_by
@@ -562,29 +584,35 @@ function AttendanceTab({
                     {cfg.label}
                   </span>
                 </div>
-                <SidebarField label="Recorded By" value={recordedBy} />
-                {selectedRecord.pickup_time && (
+                {status === "absent" ? (
+                  <SidebarField label="Status" value="Marked absent" />
+                ) : (
                   <>
-                    <SidebarField
-                      label="Pickup Time"
-                      value={formatPickupTime(selectedRecord.pickup_time)}
-                    />
-                    {selectedRecord.picked_up_by_name && (
-                      <SidebarField
-                        label="Picked Up By"
-                        value={[
-                          selectedRecord.picked_up_by_name,
-                          selectedRecord.picked_up_by_relationship,
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      />
-                    )}
-                    {pickupRecordedBy && (
-                      <SidebarField
-                        label="Pickup Recorded By"
-                        value={pickupRecordedBy}
-                      />
+                    <SidebarField label="Recorded By" value={recordedBy} />
+                    {selectedRecord.pickup_time && (
+                      <>
+                        <SidebarField
+                          label="Pickup Time"
+                          value={formatPickupTime(selectedRecord.pickup_time)}
+                        />
+                        {selectedRecord.picked_up_by_name && (
+                          <SidebarField
+                            label="Picked Up By"
+                            value={[
+                              selectedRecord.picked_up_by_name,
+                              selectedRecord.picked_up_by_relationship,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          />
+                        )}
+                        {pickupRecordedBy && (
+                          <SidebarField
+                            label="Pickup Recorded By"
+                            value={pickupRecordedBy}
+                          />
+                        )}
+                      </>
                     )}
                   </>
                 )}
@@ -2095,6 +2123,7 @@ function ChildProfile({
           )}
           {activeTab === "attendance" && (
             <AttendanceTab
+              key={child.id}
               records={attendanceRecords}
               userMap={attendanceUserMap}
               loading={attendanceLoading}

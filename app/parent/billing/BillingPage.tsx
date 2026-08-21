@@ -72,6 +72,7 @@ import {
   BUNDLE_MONTH_INDEX,
   FUN_FRIDAY_DROPIN_CENTS,
   FUN_FRIDAY_MONTHLY_CENTS,
+  FUN_FRIDAY_SESSION_MONTHLY_CENTS,
   HOMESCHOOL_SCHOOL_YEAR_PRICING,
   HOMESCHOOL_TIERS,
   type HomeschoolTier,
@@ -360,7 +361,7 @@ function funFridayMonthCents(
 ): number {
   return month.fridays.length >= 4
     ? FUN_FRIDAY_MONTHLY_CENTS
-    : month.fridays.length * FUN_FRIDAY_DROPIN_CENTS;
+    : month.fridays.length * FUN_FRIDAY_SESSION_MONTHLY_CENTS;
 }
 
 // --- Homeschool Drop-In pricing ---
@@ -6411,9 +6412,7 @@ function FunFridayPaymentModal({
                           {m.fridays.length !== 1 ? "s" : ""} ·{" "}
                           {m.fridays.length >= 4
                             ? `${formatCents(FUN_FRIDAY_MONTHLY_CENTS)}/mo`
-                            : formatCents(
-                                m.fridays.length * FUN_FRIDAY_DROPIN_CENTS,
-                              )}
+                            : formatCents(funFridayMonthCents(m))}
                           {individualPaidFridaysInMonth > 0 && (
                             <span className="ml-1.5 text-green-600 font-semibold">
                               · {individualPaidFridaysInMonth} Friday
@@ -7229,7 +7228,7 @@ function SchoolYearFunFridayPaymentModal({
 
   const monthlyTotal = SCHOOL_YEAR_FUN_FRIDAY_MONTHS.filter((m) =>
     selectedMonths.has(m.key),
-  ).reduce((sum, m) => sum + funFridayMonthCents(m), 0);
+  ).reduce((sum, m) => sum + schoolYearFunFridayMonthCents(m), 0);
   const dropinTotal = selectedFridays.size * FUN_FRIDAY_DROPIN_CENTS;
   const intendedAmountCents = tab === "monthly" ? monthlyTotal : dropinTotal;
   const canContinue =
@@ -7563,9 +7562,7 @@ function SchoolYearFunFridayPaymentModal({
                           {m.fridays.length !== 1 ? "s" : ""} ·{" "}
                           {m.fridays.length >= 4
                             ? `${formatCents(FUN_FRIDAY_MONTHLY_CENTS)}/mo`
-                            : formatCents(
-                                m.fridays.length * FUN_FRIDAY_DROPIN_CENTS,
-                              )}
+                            : formatCents(schoolYearFunFridayMonthCents(m))}
                           {individualPaidFridaysInMonth > 0 && (
                             <span className="ml-1.5 text-green-600 font-semibold">
                               · {individualPaidFridaysInMonth} Friday

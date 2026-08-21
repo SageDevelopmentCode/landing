@@ -4,6 +4,12 @@ import { StaffAllBirthdaysSheet } from "@/components/StaffAllBirthdaysSheet";
 import { StaffConferenceBookingsSheet, type StaffConferenceBookingsSheetRef } from "@/components/StaffConferenceBookingsSheet";
 import { StaffConferenceSection } from "@/components/StaffConferenceSection";
 import { StaffHealthFoodSection } from "@/components/StaffHealthFoodSection";
+import {
+  formatEventTime,
+  formatFullDate,
+  StaffUpcomingEventsSection,
+  type StaffUpcomingCalendarEvent,
+} from "@/components/StaffUpcomingEventsSection";
 import { StaffUpcomingBirthdaysSection } from "@/components/StaffUpcomingBirthdaysSection";
 import { StaffSchoolDayFoodPrefsSheet } from "@/components/StaffSchoolDayFoodPrefsSheet";
 import { StaffWeekActivityPrefsSheet } from "@/components/StaffWeekActivityPrefsSheet";
@@ -28,6 +34,7 @@ import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Linking,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -723,6 +730,7 @@ export default function StaffHomeScreen() {
   const schoolDayFoodSheetRef = useRef<BottomSheetModal>(null);
   const weekActivityPrefsSheetRef = useRef<BottomSheetModal>(null);
   const allBirthdaysSheetRef = useRef<BottomSheetModal>(null);
+  const eventSheetRef = useRef<BottomSheetModal>(null);
 
   const weekActivityPrefSubmissionCount = useMemo(
     () =>
@@ -763,6 +771,12 @@ export default function StaffHomeScreen() {
 
   const [allBirthdays, setAllBirthdays] = useState<StaffBirthday[]>([]);
   const [birthdaysLoading, setBirthdaysLoading] = useState(true);
+  const [upcomingEvents, setUpcomingEvents] = useState<
+    StaffUpcomingCalendarEvent[]
+  >([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
+  const [selectedEvent, setSelectedEvent] =
+    useState<StaffUpcomingCalendarEvent | null>(null);
 
   const upcomingBirthdays = useMemo(
     () => getUpcomingBirthdays(allBirthdays),
@@ -970,11 +984,40 @@ export default function StaffHomeScreen() {
     }
   }, []);
 
+  const loadUpcomingEvents = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setEventsLoading(true);
+    try {
+      const today = new Date();
+      const todayYmd = `${today.getFullYear()}-${String(
+        today.getMonth() + 1,
+      ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+      const { data, error } = await supabase
+        .schema("calendar")
+        .from("events")
+        .select(
+          "id,title,event_date,is_all_day,start_time,end_time,color,category,description,location,attachment_links",
+        )
+        .gte("event_date", todayYmd)
+        .order("event_date", { ascending: true })
+        .limit(3);
+
+      if (error) throw error;
+      setUpcomingEvents(data ?? []);
+    } catch (e) {
+      notifyError("staff-home-upcoming-events", e);
+      setUpcomingEvents([]);
+    } finally {
+      if (!opts?.silent) setEventsLoading(false);
+    }
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
       loadTodayStudents();
       loadBirthdays();
-    }, [loadTodayStudents, loadBirthdays]),
+      loadUpcomingEvents();
+    }, [loadTodayStudents, loadBirthdays, loadUpcomingEvents]),
   );
 
   const onRefresh = useCallback(async () => {
@@ -984,6 +1027,7 @@ export default function StaffHomeScreen() {
       await Promise.all([
         loadTodayStudents({ silent: true }),
         loadBirthdays({ silent: true }),
+        loadUpcomingEvents({ silent: true }),
         loadWeekActivityPrefs(published.map((a) => a.id)),
         loadSchoolDayFoodPrefs({ silent: true }),
         showConferenceSection
@@ -1000,6 +1044,7 @@ export default function StaffHomeScreen() {
   }, [
     loadTodayStudents,
     loadBirthdays,
+    loadUpcomingEvents,
     loadActivities,
     loadWeekActivityPrefs,
     loadSchoolDayFoodPrefs,
@@ -2399,6 +2444,16 @@ export default function StaffHomeScreen() {
               )}
             </View>
 
+            <StaffUpcomingEventsSection
+              events={upcomingEvents}
+              loading={eventsLoading}
+              onViewAll={() => router.push("/(staff)/calendar" as any)}
+              onEventPress={(evt) => {
+                setSelectedEvent(evt);
+                eventSheetRef.current?.present();
+              }}
+            />
+
             <StaffUpcomingBirthdaysSection
               birthdays={upcomingBirthdays}
               loading={birthdaysLoading}
@@ -3107,6 +3162,143 @@ export default function StaffHomeScreen() {
         prefs={schoolDayFoodPrefs}
         loading={schoolDayFoodLoading}
       />
+
+      <BottomSheetModal
+        ref={eventSheetRef}
+        snapPoints={["60%"]}
+        enablePanDownToClose
+        backdropComponent={(props) => (
+          <BottomSheetBackdrop
+            {...props}
+            disappearsOnIndex={-1}
+            appearsOnIndex={0}
+            pressBehavior="close"
+          />
+        )}
+        onDismiss={() => setSelectedEvent(null)}
+      >
+        <BottomSheetScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+          {selectedEvent && (
+            <View style={styles.eventDetailContainer}>
+              <View
+                style={[
+                  styles.eventDetailHeader,
+                  { borderLeftColor: selectedEvent.color },
+                ]}
+              >
+                <Text style={styles.eventDetailTitle}>
+                  {selectedEvent.title}
+                </Text>
+                {selectedEvent.category ? (
+                  <View
+                    style={[
+                      styles.eventDetailBadge,
+                      { backgroundColor: selectedEvent.color + "22" },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.eventDetailBadgeTxt,
+                        { color: selectedEvent.color },
+                      ]}
+                    >
+                      {selectedEvent.category}
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
+
+              <View style={styles.eventDetailRow}>
+                <Ionicons name="calendar-outline" size={16} color="#6b7280" />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.eventDetailRowPrimary}>
+                    {formatFullDate(selectedEvent.event_date)}
+                  </Text>
+                  <Text style={styles.eventDetailRowSub}>
+                    {formatEventTime(selectedEvent)}
+                  </Text>
+                </View>
+              </View>
+
+              {selectedEvent.location ? (
+                <View style={styles.eventDetailRow}>
+                  <Ionicons
+                    name="location-outline"
+                    size={16}
+                    color="#6b7280"
+                  />
+                  <Text style={[styles.eventDetailRowPrimary, { flex: 1 }]}>
+                    {selectedEvent.location}
+                  </Text>
+                </View>
+              ) : null}
+
+              {selectedEvent.description ? (
+                <View style={styles.eventDetailBlock}>
+                  <Text style={styles.eventDetailBlockLabel}>Details</Text>
+                  <Text style={styles.eventDetailDesc}>
+                    {selectedEvent.description}
+                  </Text>
+                </View>
+              ) : null}
+
+              {(selectedEvent.attachment_links ?? []).length > 0 ? (
+                <View style={styles.eventDetailBlock}>
+                  <Text style={styles.eventDetailBlockLabel}>
+                    Attachments
+                  </Text>
+                  {(selectedEvent.attachment_links ?? []).map((url, i) => (
+                    <TouchableOpacity
+                      key={i}
+                      style={styles.eventDetailAttachmentRow}
+                      onPress={() => Linking.openURL(url)}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons
+                        name="attach-outline"
+                        size={16}
+                        color={Brand.sage700}
+                      />
+                      <Text
+                        style={styles.eventDetailAttachmentTxt}
+                        numberOfLines={1}
+                      >
+                        {url.split("/").pop() ?? `Attachment ${i + 1}`}
+                      </Text>
+                      <Ionicons
+                        name="open-outline"
+                        size={14}
+                        color="#9ca3af"
+                      />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ) : null}
+
+              <Pressable
+                style={({ pressed }) => [
+                  styles.eventDetailCalBtn,
+                  pressed && { opacity: 0.75 },
+                ]}
+                onPress={() => {
+                  eventSheetRef.current?.dismiss();
+                  router.push({
+                    pathname: "/(staff)/calendar",
+                    params: { selectDate: selectedEvent.event_date },
+                  });
+                }}
+              >
+                <Ionicons
+                  name="calendar-outline"
+                  size={15}
+                  color={Brand.sage700}
+                />
+                <Text style={styles.eventDetailCalBtnTxt}>See in calendar</Text>
+              </Pressable>
+            </View>
+          )}
+        </BottomSheetScrollView>
+      </BottomSheetModal>
 
       <StaffAllBirthdaysSheet
         ref={allBirthdaysSheetRef}
@@ -3831,5 +4023,98 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#374151",
     lineHeight: 19,
+  },
+
+  // Event detail sheet
+  eventDetailContainer: {
+    padding: 24,
+    gap: 16,
+  },
+  eventDetailHeader: {
+    borderLeftWidth: 4,
+    paddingLeft: 12,
+    gap: 8,
+  },
+  eventDetailTitle: {
+    fontFamily: FontFamilies.heading,
+    fontSize: 20,
+    color: "#1f2937",
+    lineHeight: 28,
+  },
+  eventDetailBadge: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 9999,
+  },
+  eventDetailBadgeTxt: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 12,
+  },
+  eventDetailRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+  },
+  eventDetailRowPrimary: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 14,
+    color: "#374151",
+  },
+  eventDetailRowSub: {
+    fontFamily: FontFamilies.body,
+    fontSize: 13,
+    color: "#6b7280",
+    marginTop: 2,
+  },
+  eventDetailBlock: {
+    gap: 8,
+  },
+  eventDetailBlockLabel: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 11,
+    color: "#9ca3af",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  eventDetailDesc: {
+    fontFamily: FontFamilies.body,
+    fontSize: 14,
+    color: "#374151",
+    lineHeight: 22,
+  },
+  eventDetailAttachmentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: "#F2F7F3",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#C8DFCB",
+  },
+  eventDetailAttachmentTxt: {
+    flex: 1,
+    fontFamily: FontFamilies.body,
+    fontSize: 13,
+    color: Brand.sage700,
+  },
+  eventDetailCalBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    marginTop: 4,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: Brand.sage700,
+    backgroundColor: "#F2F7F3",
+  },
+  eventDetailCalBtnTxt: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 14,
+    color: Brand.sage700,
   },
 });

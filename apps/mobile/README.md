@@ -34,7 +34,7 @@ This project uses `runtimeVersion: { policy: "appVersion" }`, so the runtime equ
 npm run update:ios:prod -- --message "describe the change"
 ```
 
-After publishing, users need to force-quit and reopen the app twice (first launch downloads, second applies).
+After publishing, users see an **Update ready** prompt in the app — tap **Restart now** to apply immediately. If they choose **Later**, the update applies on the next cold start.
 
 Check the active runtime on a device: **More → Settings → App Info**.
 
