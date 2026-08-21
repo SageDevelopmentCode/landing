@@ -217,13 +217,12 @@ function AttendanceSidebar({ student, onClose }: AttendanceSidebarProps) {
   const [filter, setFilter] = useState<AttendanceFilter>("all");
   const [selectedRecord, setSelectedRecord] =
     useState<UnifiedAttendanceRecord | null>(null);
+  const studentId = student?.id;
 
   useEffect(() => {
-    if (!student) return;
+    if (!studentId) return;
     let cancelled = false;
-    setFilter("all");
-    setLoading(true);
-    getParentStudentAttendance(student.id)
+    getParentStudentAttendance(studentId)
       .then(({ records: r, userMap: m }) => {
         if (cancelled) return;
         setRecords(r);
@@ -240,7 +239,7 @@ function AttendanceSidebar({ student, onClose }: AttendanceSidebarProps) {
     return () => {
       cancelled = true;
     };
-  }, [student?.id]);
+  }, [studentId]);
 
   const firstName = student?.child_legal_name.split(" ")[0] ?? "";
   const filteredRecords = filterAttendanceRecords(records, filter);
