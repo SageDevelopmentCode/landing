@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, Zap } from "lucide-react";
 import type { Activity } from "@/app/actions/activities";
@@ -33,14 +33,6 @@ export default function AutoFillPreferencesSheet({
   readOnly = false,
   onDefaultsChange,
 }: Props) {
-  const [sessionKey, setSessionKey] = useState(0);
-
-  useEffect(() => {
-    if (open) {
-      setSessionKey((k) => k + 1);
-    }
-  }, [open]);
-
   const eligibleStudents = useMemo(
     () => getEligibleAutoFillStudents(students, paidDateSets, upcomingActivities),
     [students, paidDateSets, upcomingActivities],
@@ -104,7 +96,7 @@ export default function AutoFillPreferencesSheet({
                       ?.participation_level ?? null;
                   return (
                     <ChildAutoFillCard
-                      key={`${child.id}-${sessionKey}`}
+                      key={child.id}
                       child={child}
                       currentDefault={currentDefault}
                       readOnly={readOnly}
