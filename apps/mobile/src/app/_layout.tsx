@@ -16,6 +16,7 @@ import { supabase } from '@/lib/supabase';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { useAppUpdatePrompt } from '@/hooks/useAppUpdatePrompt';
 import { registerForPushNotificationsAsync, isExpoGo } from '@/lib/notifications';
+import { STRIPE_PUBLISHABLE_KEY, STRIPE_URL_SCHEME } from '@/constants/stripe';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -187,7 +188,10 @@ function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#ffffff' }}>
       <AuthProvider>
-        <StripeProvider publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY!}>
+        <StripeProvider
+          publishableKey={STRIPE_PUBLISHABLE_KEY}
+          urlScheme={STRIPE_URL_SCHEME}
+        >
           <Sentry.ErrorBoundary fallback={<Text style={{ padding: 32 }}>Something went wrong. Please restart the app.</Text>}>
             <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: '#ffffff' } }}>
               <Stack screenOptions={{ headerShown: false }}>

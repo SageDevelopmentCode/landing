@@ -1766,6 +1766,7 @@ export function createSchoolYearTuitionEmbed(data: {
   childName: string;
   amountCents: number;
   selectedMonthIndices?: number[];
+  source?: "web" | "mobile";
 }): DiscordEmbed {
   const amountDollars = (data.amountCents / 100).toFixed(2);
   const monthLabels =
@@ -1781,6 +1782,9 @@ export function createSchoolYearTuitionEmbed(data: {
   ];
   if (monthLabels.length > 1) {
     fields.push({ name: "Months", value: monthLabels.join(", "), inline: true });
+  }
+  if (data.source === "mobile") {
+    fields.push({ name: "Source", value: "Mobile app", inline: true });
   }
   fields.push({ name: "Amount Paid", value: `$${amountDollars}`, inline: true });
   return {
