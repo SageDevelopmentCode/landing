@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+import { isFieldFridayCalendarEvent } from "@/shared/parent/calendar";
 import {
   ChevronLeft,
   ChevronRight,
@@ -658,6 +660,17 @@ function EventDetailPanel({
                 RSVP enabled for parents
               </p>
               <span style={{ color: colors.mistyForest, fontSize: 16, fontWeight: 300 }}>→</span>
+            </motion.div>
+          )}
+
+          {isFieldFridayCalendarEvent(event) && (
+            <motion.div variants={fadeUpVariants} className="mt-4">
+              <Link
+                href="/parent/billing"
+                className="flex w-full items-center justify-center rounded-xl bg-[#4a7c59] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#3d6b4a]"
+              >
+                Register now!
+              </Link>
             </motion.div>
           )}
         </motion.div>

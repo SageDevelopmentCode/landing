@@ -126,6 +126,29 @@ export function findFirstUnsetActivity(
   return null;
 }
 
+/** Summer program window — activities outside this range skip paid-date eligibility. */
+export const SUMMER_FIRST_DATE = "2026-05-26";
+export const SUMMER_LAST_DATE = "2026-08-14";
+
+/** Matches filterVisibleActivities: school-year dates bypass paid-day check. */
+export function childHasVisibleUpcomingActivity(
+  paidDates: string[],
+  upcomingActivities: { activity_date: string | null }[],
+  today = new Date().toISOString().slice(0, 10),
+): boolean {
+  const paidSet = new Set(paidDates);
+  return upcomingActivities.some((a) => {
+    if (!a.activity_date || a.activity_date < today) return false;
+    if (
+      a.activity_date < SUMMER_FIRST_DATE ||
+      a.activity_date > SUMMER_LAST_DATE
+    ) {
+      return true;
+    }
+    return paidSet.has(a.activity_date);
+  });
+}
+
 type UserProfile = { full_name: string; email: string };
 
 export async function fetchPreferencesForActivity(

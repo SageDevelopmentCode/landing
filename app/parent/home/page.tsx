@@ -16,7 +16,6 @@ import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import DashboardHeader from "@/app/parent/dashboard/DashboardHeader";
 import SharedAccessBanner from "@/app/parent/dashboard/SharedAccessBanner";
 import HomePageClient from "./HomePageClient";
-import { computeHasUnsetActivityPreference } from "@/shared/parent/activity-preferences";
 import type {
   PaidHomeschoolByStudent,
   PaidAftercareByStudent,
@@ -27,6 +26,7 @@ import type {
   PaidSchoolYearByStudent,
   StripeTransaction,
 } from "@/app/parent/billing/page";
+import type { StudentDefaultPreference } from "@/app/parent/preferences/page";
 
 export type HomeStudent = {
   id: string;
@@ -203,7 +203,7 @@ export default async function ParentHomePage() {
       adminClient
         .schema("parent_app")
         .from("student_default_preferences")
-        .select("student_id")
+        .select("student_id, participation_level")
         .eq("parent_id", effectiveParentId),
       getOnboardingProgress(),
       getPublishedActivities(),
@@ -354,21 +354,11 @@ export default async function ParentHomePage() {
 
   const paidSets = computePaidDates(transactions);
   const activityPrefs = (prefsData ?? []) as { student_id: string; activity_id: string }[];
-  const defaultPrefStudentIds = new Set(
-    (defaultPrefsData ?? []).map((d: { student_id: string }) => d.student_id),
-  );
+  const studentDefaults = (defaultPrefsData ?? []) as StudentDefaultPreference[];
   const paidDateSets: Record<string, string[]> = {};
   for (const [studentId, dates] of Object.entries(paidSets)) {
     paidDateSets[studentId] = Array.from(dates);
   }
-
-  const hasActivityForPaidDay = computeHasUnsetActivityPreference(
-    publishedActivities.map((a) => ({ id: a.id, activity_date: a.activity_date })),
-    activityPrefs,
-    defaultPrefStudentIds,
-    students,
-    paidSets,
-  );
 
   const upcomingActivities = publishedActivities
     .filter((a) => a.activity_date != null && a.activity_date >= todayISO)
@@ -427,10 +417,9 @@ export default async function ParentHomePage() {
           paidSchoolYearByStudent={paidSchoolYearByStudent}
           paidSupplyFeeByStudent={paidSupplyFeeByStudent}
           checklistComplete={checklistComplete}
-          hasActivityForPaidDay={hasActivityForPaidDay}
           upcomingActivities={upcomingActivities}
           activityPrefs={activityPrefs}
-          defaultPrefStudentIds={Array.from(defaultPrefStudentIds)}
+          studentDefaults={studentDefaults}
           paidDateSets={paidDateSets}
           publishedActivitiesForBanner={publishedActivities.map((a) => ({
             id: a.id,

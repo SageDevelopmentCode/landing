@@ -7,16 +7,25 @@ import {
   shouldPlayFallLeaves,
 } from "@/components/FallLeavesOverlay";
 import { ParentActivityPreferenceSheet } from "@/components/ParentActivityPreferenceSheet";
+import { AutoFillPreferencesSheet } from "@/components/AutoFillPreferencesSheet";
 import { ParentTeacherConferenceSheet } from "@/components/ParentTeacherConferenceSheet";
 import { BottomTabInset, Brand, FontFamilies } from "@/constants/theme";
 import { API_BASE_URL } from "@/constants/config";
 import { useAuth } from "@/contexts/AuthContext";
 import { getChannels } from "@/lib/channel-actions";
+import { isFieldFridayCalendarEvent } from "@/lib/calendar";
 import { computePaidDates } from "@/lib/compute-paid-dates";
 import {
   computeHasUnsetActivityPreference,
   findFirstUnsetActivity,
 } from "@/lib/activity-preferences";
+import type { ParticipationLevel } from "@/lib/activity-preferences";
+import {
+  childHasVisibleUpcomingActivity,
+  persistStudentDefaultPreference,
+  type StudentDefaultPreference,
+} from "@/lib/default-preferences";
+import type { DefaultSaveStatus } from "@/components/AutoFillPreferenceCard";
 import { getActivities, type Activity } from "@/lib/activities-actions";
 import { notifyDiscord, notifyError } from "@/lib/discord";
 import { getPublishedNewsletters, type ParentNewsletterListItem } from "@/lib/newsletters-actions";
@@ -1793,6 +1802,25 @@ const actPrefStyles = StyleSheet.create({
 });
 
 const weekActStyles = StyleSheet.create({
+  sectionHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 24,
+    marginBottom: 12,
+    gap: 12,
+  },
+  sectionTitleInline: {
+    fontFamily: FontFamilies.heading,
+    fontSize: 16,
+    color: "#1f2937",
+    flex: 1,
+  },
+  autoFillLink: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 13,
+    color: Brand.sage700,
+  },
   section: {
     paddingTop: 18,
     paddingBottom: 6,
@@ -2171,9 +2199,15 @@ export default function HomeScreen() {
   const activityBannerRef = useRef<{
     activities: { id: string; activity_date: string | null }[];
     activityPrefs: { student_id: string; activity_id: string }[];
+    studentDefaults: StudentDefaultPreference[];
     defaultPrefStudentIds: Set<string>;
     paidSets: Record<string, Set<string>>;
   } | null>(null);
+  const [studentDefaults, setStudentDefaults] = useState<StudentDefaultPreference[]>([]);
+  const [activityPaidSets, setActivityPaidSets] = useState<Record<string, Set<string>>>({});
+  const [defaultSaveStatusByStudent, setDefaultSaveStatusByStudent] = useState<
+    Record<string, DefaultSaveStatus>
+  >({});
   const [paidSchoolYearByStudent, setPaidSchoolYearByStudent] =
     useState<PaidSchoolYearByStudent>({});
   const [paidSupplyFeeByStudent, setPaidSupplyFeeByStudent] = useState<
@@ -2283,6 +2317,7 @@ export default function HomeScreen() {
   const notifSheetRef = useRef<BottomSheetModal>(null);
   const ptcSheetRef = useRef<BottomSheetModal>(null);
   const activityPrefSheetRef = useRef<BottomSheetModal>(null);
+  const autoFillSheetRef = useRef<BottomSheetModal>(null);
   const [introVisible, setIntroVisible] = useState(false);
   const [introIndex, setIntroIndex] = useState(0);
   const introListRef = useRef<FlatList<IntroSlide>>(null);
@@ -2409,7 +2444,7 @@ export default function HomeScreen() {
             await Promise.all([
               supabase.schema("teachers").from("activities").select("id, activity_date").eq("status", "published").eq("visibility", "public").eq("is_deleted", false),
               supabase.schema("parent_app").from("activity_preferences").select("student_id, activity_id").eq("parent_id", effectiveParentId),
-              supabase.schema("parent_app").from("student_default_preferences").select("student_id").eq("parent_id", effectiveParentId),
+              supabase.schema("parent_app").from("student_default_preferences").select("student_id, participation_level").eq("parent_id", effectiveParentId),
             ]);
 
           applyActivityBanner(activitiesResult, activityPrefsResult, defaultPrefsResult, studentsForActivity, paidSets);
@@ -2520,7 +2555,7 @@ export default function HomeScreen() {
             supabase
               .schema("parent_app")
               .from("student_default_preferences")
-              .select("student_id")
+              .select("student_id, participation_level")
               .eq("parent_id", effectiveParentId),
           ]);
 
@@ -2807,19 +2842,24 @@ export default function HomeScreen() {
     function applyActivityBanner(
       activitiesResult: { data: { id: string; activity_date: string | null }[] | null },
       activityPrefsResult: { data: { student_id: string; activity_id: string }[] | null },
-      defaultPrefsResult: { data: { student_id: string }[] | null },
+      defaultPrefsResult: {
+        data: { student_id: string; participation_level: ParticipationLevel }[] | null;
+      },
       studentsData: { id: string }[],
       paidSets: Record<string, Set<string>>,
     ) {
       const activities = activitiesResult.data ?? [];
       const activityPrefs = activityPrefsResult.data ?? [];
-      const defaultPrefStudentIds = new Set(
-        (defaultPrefsResult.data ?? []).map((d) => d.student_id),
-      );
+      const defaults = (defaultPrefsResult.data ?? []) as StudentDefaultPreference[];
+      const defaultPrefStudentIds = new Set(defaults.map((d) => d.student_id));
+
+      setStudentDefaults(defaults);
+      setActivityPaidSets(paidSets);
 
       activityBannerRef.current = {
         activities,
         activityPrefs,
+        studentDefaults: defaults,
         defaultPrefStudentIds,
         paidSets,
       };
@@ -2924,6 +2964,84 @@ export default function HomeScreen() {
       ),
     );
   }, [effectiveParentId, students]);
+
+  const eligibleAutoFillStudents = useMemo(() => {
+    if (weekActivities.length === 0) return [];
+    return students.filter((s) =>
+      childHasVisibleUpcomingActivity(
+        Array.from(activityPaidSets[s.id] ?? []),
+        weekActivities,
+      ),
+    );
+  }, [students, weekActivities, activityPaidSets]);
+
+  const refreshActivityBannerFromDefaults = useCallback(
+    (nextDefaults: StudentDefaultPreference[]) => {
+      if (!activityBannerRef.current) return;
+      const defaultPrefStudentIds = new Set(nextDefaults.map((d) => d.student_id));
+      activityBannerRef.current = {
+        ...activityBannerRef.current,
+        studentDefaults: nextDefaults,
+        defaultPrefStudentIds,
+      };
+      const { activities, activityPrefs, paidSets } = activityBannerRef.current;
+      setHasActivityForPaidDay(
+        computeHasUnsetActivityPreference(
+          activities,
+          activityPrefs,
+          defaultPrefStudentIds,
+          students,
+          paidSets,
+        ),
+      );
+    },
+    [students],
+  );
+
+  const handleHomeSetDefault = useCallback(
+    async (studentId: string, level: ParticipationLevel | null) => {
+      if (isReadOnlyPreview || !effectiveParentId) return;
+
+      setDefaultSaveStatusByStudent((prev) => ({ ...prev, [studentId]: "saving" }));
+
+      const nextDefaults =
+        level !== null
+          ? [
+              ...studentDefaults.filter((d) => d.student_id !== studentId),
+              { student_id: studentId, participation_level: level },
+            ]
+          : studentDefaults.filter((d) => d.student_id !== studentId);
+
+      setStudentDefaults(nextDefaults);
+      refreshActivityBannerFromDefaults(nextDefaults);
+
+      const result = await persistStudentDefaultPreference({
+        parentId: effectiveParentId,
+        studentId,
+        level,
+      });
+
+      if (result.error) {
+        setDefaultSaveStatusByStudent((prev) => ({ ...prev, [studentId]: "error" }));
+        return;
+      }
+
+      setDefaultSaveStatusByStudent((prev) => ({ ...prev, [studentId]: "saved" }));
+      setTimeout(() => {
+        setDefaultSaveStatusByStudent((prev) => {
+          const next = { ...prev };
+          delete next[studentId];
+          return next;
+        });
+      }, 2500);
+    },
+    [
+      isReadOnlyPreview,
+      effectiveParentId,
+      studentDefaults,
+      refreshActivityBannerFromDefaults,
+    ],
+  );
 
   const openActivityPreferenceSheet = useCallback(
     async (activity?: Activity | null) => {
@@ -3700,7 +3818,18 @@ export default function HomeScreen() {
 
           {!loading && (
             <View style={weekActStyles.section}>
-              <Text style={weekActStyles.sectionTitle}>Upcoming Activities</Text>
+              <View style={weekActStyles.sectionHeaderRow}>
+                <Text style={weekActStyles.sectionTitleInline}>Upcoming Activities</Text>
+                {eligibleAutoFillStudents.length > 0 ? (
+                  <Pressable
+                    onPress={() => autoFillSheetRef.current?.present()}
+                    hitSlop={8}
+                    style={({ pressed }) => [pressed && { opacity: 0.7 }]}
+                  >
+                    <Text style={weekActStyles.autoFillLink}>Auto-Fill ⚡</Text>
+                  </Pressable>
+                ) : null}
+              </View>
               {weekActivitiesLoading ? (
                 <ScrollView
                   horizontal
@@ -4519,6 +4648,23 @@ export default function HomeScreen() {
                   </View>
                 ) : null}
 
+                {isFieldFridayCalendarEvent(selectedEvent) ? (
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.eventDetailRegisterBtn,
+                      pressed && { opacity: 0.85 },
+                    ]}
+                    onPress={() => {
+                      eventSheetRef.current?.dismiss();
+                      router.push("/(tabs)/tuition");
+                    }}
+                  >
+                    <Text style={styles.eventDetailRegisterBtnTxt}>
+                      Register now!
+                    </Text>
+                  </Pressable>
+                ) : null}
+
                 {/* See in calendar */}
                 <Pressable
                   style={({ pressed }) => [
@@ -4799,6 +4945,17 @@ export default function HomeScreen() {
             </Pressable>
           </BottomSheetScrollView>
         </BottomSheetModal>
+
+        {students.length > 0 && effectiveParentId && (
+          <AutoFillPreferencesSheet
+            ref={autoFillSheetRef}
+            eligibleStudents={eligibleAutoFillStudents}
+            studentDefaults={studentDefaults}
+            defaultSaveStatusByStudent={defaultSaveStatusByStudent}
+            onSetDefault={(studentId, level) => void handleHomeSetDefault(studentId, level)}
+            readOnly={isReadOnlyPreview}
+          />
+        )}
 
         {students.length > 0 && effectiveParentId && (
           <ParentActivityPreferenceSheet
@@ -5526,6 +5683,18 @@ const styles = StyleSheet.create({
     fontFamily: FontFamilies.body,
     fontSize: 13,
     color: Brand.sage700,
+  },
+  eventDetailRegisterBtn: {
+    marginTop: 4,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: Brand.sage700,
+    alignItems: "center",
+  },
+  eventDetailRegisterBtnTxt: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 15,
+    color: "#ffffff",
   },
   eventDetailCalBtn: {
     flexDirection: "row",

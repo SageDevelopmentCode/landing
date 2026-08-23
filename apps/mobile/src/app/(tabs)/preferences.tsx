@@ -32,6 +32,15 @@ import {
   type SchoolDayFoodPreference,
 } from "@/components/SchoolDayFoodPreferencesSheet";
 import { computePaidDates, SUMMER_FIRST_DATE, SUMMER_LAST_DATE, type TxRow } from "@/lib/compute-paid-dates";
+import {
+  LEVEL_OPTIONS,
+  type ParticipationLevel,
+} from "@/lib/activity-preferences";
+import { persistStudentDefaultPreference } from "@/lib/default-preferences";
+import {
+  AutoFillPreferenceCard,
+  LevelSegmentedControl,
+} from "@/components/AutoFillPreferenceCard";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -68,7 +77,6 @@ type SavedPref = {
   notes: string;
 };
 
-type ParticipationLevel = "watch" | "cook_no_eat" | "full";
 type Pref = { level: ParticipationLevel | null; notes: string };
 type AllPreferences = Record<string, Record<string, Pref>>;
 
@@ -181,52 +189,6 @@ function sortActivitiesByDate(activities: Activity[]): Activity[] {
   });
 }
 
-const LEVEL_OPTIONS: { level: ParticipationLevel; emoji: string; label: string }[] = [
-  { level: "watch", emoji: "👀", label: "Do not participate, just watch" },
-  { level: "cook_no_eat", emoji: "🧑‍🍳", label: "Cook and interact with ingredients but do not consume" },
-  { level: "full", emoji: "✅", label: "Okay for everything (cooking and eating)" },
-];
-
-const LEVEL_SHORT_LABEL: Record<ParticipationLevel, string> = {
-  watch: "Watch",
-  cook_no_eat: "Cook",
-  full: "Full",
-};
-
-// ─── Subcomponents ────────────────────────────────────────────────────────────
-
-function LevelSegmentedControl({
-  value,
-  onChange,
-  disabled,
-}: {
-  value: ParticipationLevel | null;
-  onChange: (level: ParticipationLevel | null) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <View style={styles.segmentedRow}>
-      {LEVEL_OPTIONS.map((opt) => {
-        const active = value === opt.level;
-        return (
-          <TouchableOpacity
-            key={opt.level}
-            style={[styles.segmentBtn, active && styles.segmentBtnActive]}
-            onPress={() => onChange(active ? null : opt.level)}
-            disabled={disabled}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.segmentEmoji}>{opt.emoji}</Text>
-            <Text style={[styles.segmentLabel, active && styles.segmentLabelActive]}>
-              {LEVEL_SHORT_LABEL[opt.level]}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
-  );
-}
-
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function PreferencesScreen() {
@@ -240,7 +202,6 @@ export default function PreferencesScreen() {
   const [paidDatesByStudent, setPaidDatesByStudent] = useState<Record<string, string[]>>({});
   const [preferences, setPreferences] = useState<AllPreferences>({});
   const [expandedFoods, setExpandedFoods] = useState<Set<string>>(new Set());
-  const [autoFillExpanded, setAutoFillExpanded] = useState(false);
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [userProfile, setUserProfile] = useState<{ full_name: string; email: string } | null>(null);
@@ -583,37 +544,21 @@ export default function PreferencesScreen() {
     if (saveStatus === "saved") setSaveStatus("idle");
 
     try {
-      if (level !== null) {
-        const { error } = await supabase
-          .schema("parent_app")
-          .from("student_default_preferences")
-          .upsert(
-            { parent_id: effectiveParentId, student_id: selectedChildId, participation_level: level },
-            { onConflict: "parent_id,student_id" },
-          );
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .schema("parent_app")
-          .from("student_default_preferences")
-          .delete()
-          .eq("parent_id", effectiveParentId)
-          .eq("student_id", selectedChildId);
-        if (error) throw error;
-      }
-
-      if (userProfile) {
-        const child = children.find((c) => c.id === selectedChildId);
-        notifyDiscord({
-          type: "default_preference_set",
-          data: {
-            parentName: userProfile.full_name,
-            parentEmail: userProfile.email,
-            childName: child?.child_legal_name ?? "Unknown",
-            level,
-          },
-        });
-      }
+      const result = await persistStudentDefaultPreference({
+        parentId: effectiveParentId,
+        studentId: selectedChildId,
+        level,
+        notify: userProfile
+          ? {
+              parentName: userProfile.full_name,
+              parentEmail: userProfile.email,
+              childName:
+                children.find((c) => c.id === selectedChildId)?.child_legal_name ??
+                "Unknown",
+            }
+          : undefined,
+      });
+      if (result.error) throw new Error(result.error);
 
       setDefaultSaveStatus("saved");
       if (defaultSaveTimer.current) clearTimeout(defaultSaveTimer.current);
@@ -759,86 +704,14 @@ export default function PreferencesScreen() {
   const selectedChildName =
     children.find((c) => c.id === selectedChildId)?.child_legal_name.split(" ")[0] ?? "your child";
 
-  const autoFillStatusText = (() => {
-    if (defaultSaveStatus === "saving") return "Saving default…";
-    if (defaultSaveStatus === "error") return "Something went wrong. Please try again.";
-    if (defaultSaveStatus === "saved" && currentDefault !== null) {
-      return `Default saved · ${LEVEL_SHORT_LABEL[currentDefault]}`;
-    }
-    if (defaultSaveStatus === "saved") return "Default cleared.";
-    if (currentDefault !== null) return `Default active · ${LEVEL_SHORT_LABEL[currentDefault]}`;
-    return null;
-  })();
-
-  const currentDefaultOption = LEVEL_OPTIONS.find((o) => o.level === currentDefault);
-
-  const AutoFillBanner = visibleActivities.length > 0 ? (
-    <View style={styles.autoFillCard}>
-      <TouchableOpacity
-        style={styles.autoFillHeader}
-        onPress={() => setAutoFillExpanded((v) => !v)}
-        activeOpacity={0.7}
-      >
-        <View style={styles.autoFillHeaderText}>
-          <Text style={styles.autoFillQuestion}>
-            What&apos;s {selectedChildName}&apos;s usual participation level?
-          </Text>
-          {!autoFillExpanded ? (
-            <Text style={styles.autoFillCollapsedSub}>
-              {currentDefaultOption
-                ? `${currentDefaultOption.emoji} ${LEVEL_SHORT_LABEL[currentDefault!]} · Default active`
-                : "Tap to set a default for new activities"}
-            </Text>
-          ) : null}
-        </View>
-        <Ionicons
-          name={autoFillExpanded ? "chevron-down" : "chevron-forward"}
-          size={18}
-          color="#6b7280"
-        />
-      </TouchableOpacity>
-
-      {autoFillExpanded ? (
-        <>
-          <Text style={styles.autoFillDesc}>
-            Saves immediately and pre-fills new activities.
-          </Text>
-
-          <LevelSegmentedControl
-            value={currentDefault}
-            onChange={(level) => {
-              if (level === null) {
-                if (currentDefault !== null) void handleSetDefault(null);
-              } else if (level !== currentDefault) {
-                void handleSetDefault(level);
-              }
-            }}
-            disabled={defaultSaveStatus === "saving"}
-          />
-
-          {currentDefault !== null && defaultSaveStatus !== "saving" && (
-            <TouchableOpacity
-              style={styles.autoFillClearBtn}
-              onPress={() => handleSetDefault(null)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.autoFillClearText}>Clear default</Text>
-            </TouchableOpacity>
-          )}
-
-          {autoFillStatusText ? (
-            <Text
-              style={[
-                styles.autoFillStatus,
-                defaultSaveStatus === "error" && styles.autoFillStatusError,
-              ]}
-            >
-              {autoFillStatusText}
-            </Text>
-          ) : null}
-        </>
-      ) : null}
-    </View>
+  const autoFillBanner = visibleActivities.length > 0 ? (
+    <AutoFillPreferenceCard
+      childName={selectedChildName}
+      currentDefault={currentDefault}
+      saveStatus={defaultSaveStatus}
+      onSetDefault={(level) => void handleSetDefault(level)}
+      disabled={isReadOnlyPreview}
+    />
   ) : null;
 
   const ListHeader = (
@@ -901,7 +774,7 @@ export default function PreferencesScreen() {
         </View>
       ) : null}
 
-      {AutoFillBanner}
+      {autoFillBanner}
     </View>
   );
 

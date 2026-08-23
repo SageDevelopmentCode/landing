@@ -47,7 +47,11 @@ import {
   type UnifiedAttendanceRecord,
   type UserMap,
 } from "@/shared/parent/student-attendance";
-import { findFirstUnsetActivity } from "@/shared/parent/activity-preferences";
+import { findFirstUnsetActivity, computeHasUnsetActivityPreference } from "@/shared/parent/activity-preferences";
+import { isFieldFridayCalendarEvent } from "@/shared/parent/calendar";
+import type { StudentDefaultPreference } from "@/app/parent/preferences/page";
+import AutoFillPreferencesSheet from "./AutoFillPreferencesSheet";
+import { getEligibleAutoFillStudents } from "@/app/parent/components/AutoFillPreferenceSection";
 import type { Activity } from "@/app/actions/activities";
 import { saveDropOffTime } from "@/app/actions/saveDropOffTime";
 import { submitTestimonial } from "@/app/actions/submitTestimonial";
@@ -456,10 +460,9 @@ interface Props {
   actionNeededInteractive?: boolean;
   readOnlyPreview?: boolean;
   suppressReferralPopup?: boolean;
-  hasActivityForPaidDay: boolean;
   upcomingActivities: Activity[];
   activityPrefs: { student_id: string; activity_id: string }[];
-  defaultPrefStudentIds: string[];
+  studentDefaults: StudentDefaultPreference[];
   paidDateSets: Record<string, string[]>;
   publishedActivitiesForBanner: { id: string; activity_date: string | null }[];
   hasSubmittedTestimonial: boolean;
@@ -493,10 +496,9 @@ export default function HomePageClient({
   actionNeededInteractive,
   readOnlyPreview,
   suppressReferralPopup,
-  hasActivityForPaidDay,
   upcomingActivities,
   activityPrefs,
-  defaultPrefStudentIds,
+  studentDefaults: initialStudentDefaults,
   paidDateSets,
   publishedActivitiesForBanner,
   hasSubmittedTestimonial,
@@ -534,6 +536,8 @@ export default function HomePageClient({
   );
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [activitySheetOpen, setActivitySheetOpen] = useState(false);
+  const [autoFillSheetOpen, setAutoFillSheetOpen] = useState(false);
+  const [studentDefaults, setStudentDefaults] = useState(initialStudentDefaults);
 
   const paidSets = useMemo(() => {
     const sets: Record<string, Set<string>> = {};
@@ -544,8 +548,33 @@ export default function HomePageClient({
   }, [paidDateSets]);
 
   const defaultPrefStudentIdSet = useMemo(
-    () => new Set(defaultPrefStudentIds),
-    [defaultPrefStudentIds],
+    () => new Set(studentDefaults.map((d) => d.student_id)),
+    [studentDefaults],
+  );
+
+  const hasActivityForPaidDayLive = useMemo(
+    () =>
+      computeHasUnsetActivityPreference(
+        publishedActivitiesForBanner,
+        activityPrefs,
+        defaultPrefStudentIdSet,
+        students,
+        paidSets,
+      ),
+    [
+      publishedActivitiesForBanner,
+      activityPrefs,
+      defaultPrefStudentIdSet,
+      students,
+      paidSets,
+    ],
+  );
+
+  const hasEligibleAutoFillStudents = useMemo(
+    () =>
+      getEligibleAutoFillStudents(students, paidDateSets, upcomingActivities).length >
+      0,
+    [students, paidDateSets, upcomingActivities],
   );
 
   const refreshActivityBanner = useCallback(() => {
@@ -1130,7 +1159,7 @@ export default function HomePageClient({
           >
             <ActionNeededCard
               parentId={parentId}
-              hasActivityForPaidDay={hasActivityForPaidDay}
+              hasActivityForPaidDay={hasActivityForPaidDayLive}
               onOpenActivityPrefs={() => openActivityPreferenceSheet()}
               schoolYearOnlyApps={schoolYearOnlyApps}
               summerEnrollments={summerEnrollments}
@@ -1149,6 +1178,8 @@ export default function HomePageClient({
               activities={upcomingActivities}
               onSelectActivity={(activity) => openActivityPreferenceSheet(activity)}
               readOnly={readOnlyPreview}
+              showAutoFillButton={hasEligibleAutoFillStudents}
+              onAutoFillClick={() => setAutoFillSheetOpen(true)}
             />
           </div>
 
@@ -1614,6 +1645,14 @@ export default function HomePageClient({
                             {evt.category}
                           </span>
                         )}
+                        {isFieldFridayCalendarEvent(evt) && (
+                          <Link
+                            href="/parent/billing"
+                            className="inline-block mt-2 text-xs font-semibold font-body text-[#4a7c59] hover:underline"
+                          >
+                            Register now!
+                          </Link>
+                        )}
                       </div>
                     </div>
                   );
@@ -2043,6 +2082,17 @@ export default function HomePageClient({
         students={students}
         readOnly={readOnlyPreview}
         onSaved={handleActivitySaved}
+      />
+
+      <AutoFillPreferencesSheet
+        open={autoFillSheetOpen}
+        onOpenChange={setAutoFillSheetOpen}
+        students={students}
+        studentDefaults={studentDefaults}
+        paidDateSets={paidDateSets}
+        upcomingActivities={upcomingActivities}
+        readOnly={readOnlyPreview}
+        onDefaultsChange={setStudentDefaults}
       />
     </div>
   );

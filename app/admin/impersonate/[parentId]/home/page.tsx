@@ -10,7 +10,6 @@ import ImpersonateNotificationBell from "../../ImpersonateNotificationBell";
 import { getConferenceTeacherAssignments } from "@/app/lib/get-conference-teacher-assignments";
 import { getConferenceBookings } from "@/app/lib/get-conference-bookings";
 import HomePageClient from "@/app/parent/home/HomePageClient";
-import { computeHasUnsetActivityPreference } from "@/shared/parent/activity-preferences";
 import { getOnboardingProgressForParent } from "@/app/actions/getOnboardingProgress";
 import type {
   HomeStudent,
@@ -137,7 +136,7 @@ export default async function ImpersonateHomePage({
     adminClient
       .schema("parent_app")
       .from("student_default_preferences")
-      .select("student_id")
+      .select("student_id, participation_level")
       .eq("parent_id", effectiveParentId),
     getPublishedActivities(),
     adminClient
@@ -170,21 +169,14 @@ export default async function ImpersonateHomePage({
 
   const paidSets = computePaidDates(transactions);
   const activityPrefs = (prefsData ?? []) as { student_id: string; activity_id: string }[];
-  const defaultPrefStudentIds = new Set(
-    (defaultPrefsData ?? []).map((d: { student_id: string }) => d.student_id),
-  );
+  const studentDefaults = (defaultPrefsData ?? []) as {
+    student_id: string;
+    participation_level: "watch" | "cook_no_eat" | "full";
+  }[];
   const paidDateSets: Record<string, string[]> = {};
   for (const [studentId, dates] of Object.entries(paidSets)) {
     paidDateSets[studentId] = Array.from(dates);
   }
-
-  const hasActivityForPaidDay = computeHasUnsetActivityPreference(
-    publishedActivities.map((a) => ({ id: a.id, activity_date: a.activity_date })),
-    activityPrefs,
-    defaultPrefStudentIds,
-    students,
-    paidSets,
-  );
 
   const upcomingActivities = publishedActivities
     .filter((a) => a.activity_date != null && a.activity_date >= todayISO)
@@ -352,10 +344,9 @@ export default async function ImpersonateHomePage({
           actionNeededInteractive
           readOnlyPreview
           suppressReferralPopup
-          hasActivityForPaidDay={hasActivityForPaidDay}
           upcomingActivities={upcomingActivities}
           activityPrefs={activityPrefs}
-          defaultPrefStudentIds={Array.from(defaultPrefStudentIds)}
+          studentDefaults={studentDefaults}
           paidDateSets={paidDateSets}
           publishedActivitiesForBanner={publishedActivities.map((a) => ({
             id: a.id,

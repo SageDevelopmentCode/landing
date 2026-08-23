@@ -8,6 +8,8 @@ type Props = {
   activities: Activity[];
   onSelectActivity: (activity: Activity) => void;
   readOnly?: boolean;
+  showAutoFillButton?: boolean;
+  onAutoFillClick?: () => void;
 };
 
 function formatCardDate(dateStr: string): string {
@@ -22,13 +24,26 @@ export default function UpcomingActivitiesSection({
   activities,
   onSelectActivity,
   readOnly = false,
+  showAutoFillButton = false,
+  onAutoFillClick,
 }: Props) {
   return (
     <section>
       <div className="mb-4">
-        <h2 className="text-base font-heading font-semibold text-gray-800">
-          Upcoming Activities
-        </h2>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-base font-heading font-semibold text-gray-800">
+            Upcoming Activities
+          </h2>
+          {showAutoFillButton && onAutoFillClick ? (
+            <button
+              type="button"
+              onClick={onAutoFillClick}
+              className="text-sm font-semibold font-body text-[#4a7c59] hover:text-[#3d6849] transition-colors cursor-pointer shrink-0"
+            >
+              Auto-Fill ⚡
+            </button>
+          ) : null}
+        </div>
         {activities.length > 0 ? (
           <p className="text-sm text-gray-500 font-body mt-1">
             Tap an activity to set participation preferences
