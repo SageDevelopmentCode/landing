@@ -2511,3 +2511,51 @@ export function createUnpickedPickupReminderEmbed(data: {
     timestamp: new Date().toISOString(),
   };
 }
+
+export function createActivityPreferenceRemindersSentEmbed(data: {
+  date: string;
+  reminders: Array<{
+    parentName: string;
+    parentEmail: string;
+    childName: string;
+    activityTitle: string;
+    activityDate: string;
+    daysBefore: 1 | 2;
+    emailSent: boolean;
+    pushSent: boolean;
+  }>;
+}): DiscordEmbed {
+  const formatGroup = (daysBefore: 1 | 2) => {
+    const label = daysBefore === 2 ? "2 days before" : "1 day before";
+    const rows = data.reminders.filter((r) => r.daysBefore === daysBefore);
+    if (rows.length === 0) return null;
+    const lines = rows.map((r) => {
+      const channels = [
+        r.emailSent ? "email" : null,
+        r.pushSent ? "push" : null,
+      ]
+        .filter(Boolean)
+        .join(" + ");
+      return `• **${r.parentName}** (${r.parentEmail}) — ${r.childName} · ${r.activityTitle} (${r.activityDate})${channels ? ` [${channels}]` : ""}`;
+    });
+    let value = lines.join("\n");
+    if (value.length > 1024) {
+      value = value.substring(0, 1021) + "...";
+    }
+    return { name: `📬 ${label} (${rows.length})`, value, inline: false };
+  };
+
+  const fields: DiscordEmbedField[] = [];
+  const twoDayField = formatGroup(2);
+  const oneDayField = formatGroup(1);
+  if (twoDayField) fields.push(twoDayField);
+  if (oneDayField) fields.push(oneDayField);
+
+  return {
+    title: "📋 Activity Preference Reminders Sent",
+    description: `**${data.reminders.length} reminder${data.reminders.length !== 1 ? "s" : ""}** sent on ${data.date}`,
+    color: 0x4a7c59,
+    fields,
+    timestamp: new Date().toISOString(),
+  };
+}

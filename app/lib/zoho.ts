@@ -5231,11 +5231,23 @@ export async function buildActivityPreferenceReminderEmail(opts: {
   activityTitle: string;
   activityDate: string;
   preferencesUrl?: string;
+  daysBefore?: 1 | 2;
 }): Promise<{ subject: string; content: string }> {
   const firstName = opts.g1FullName?.split(" ")[0] ?? "there";
   const preferencesUrl =
     opts.preferencesUrl ?? "https://www.sagefield.co/parent/preferences";
-  const subject = `Reminder: set activity preferences for ${opts.childLegalName} — ${opts.activityTitle}`;
+  const timingPhrase =
+    opts.daysBefore === 1
+      ? "tomorrow"
+      : opts.daysBefore === 2
+        ? "in 2 days"
+        : null;
+  const subject = timingPhrase
+    ? `Reminder (${timingPhrase}): set activity preferences for ${opts.childLegalName} — ${opts.activityTitle}`
+    : `Reminder: set activity preferences for ${opts.childLegalName} — ${opts.activityTitle}`;
+  const timingLine = timingPhrase
+    ? `<p style="margin-bottom: 16px; font-size: 14px; color: #555;">This activity is <strong>${timingPhrase}</strong> — please set preferences as soon as you can.</p>`
+    : "";
   const content = `
 <!DOCTYPE html>
 <html>
@@ -5245,6 +5257,8 @@ export async function buildActivityPreferenceReminderEmail(opts: {
   <p style="margin-bottom: 24px;">Dear ${firstName},</p>
 
   <p style="margin-bottom: 16px;">We have an upcoming activity at Sage Field and we still need your participation preferences for <strong>${opts.childLegalName}</strong>.</p>
+
+  ${timingLine}
 
   <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; margin: 24px 0; border-radius: 4px;">
     <p style="margin: 0 0 6px 0; font-weight: bold; font-size: 15px;">${opts.activityTitle}</p>
