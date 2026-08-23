@@ -14,7 +14,10 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "@/lib/supabase";
 import { Brand, FontFamilies } from "@/constants/theme";
-import { isParentVisibleTeacher } from "@/lib/parent-visible-teachers";
+import {
+  fetchParentVisibleTeachers,
+  isParentVisibleTeacher,
+} from "@/lib/parent-visible-teachers";
 
 type UserResult = {
   id: string;
@@ -60,23 +63,15 @@ export default function ComposeScreen() {
       if (user) setCurrentUserId(user.id);
     });
 
-    supabase
-      .schema("admin")
-      .from("users")
-      .select("id, full_name, profile_image_url")
-      .in("role", ["teacher", "super_admin"])
-      .order("full_name", { ascending: true })
-      .then(({ data }) => {
-        setAllTeachers(
-          (data ?? [])
-            .filter((u: { full_name: string }) => isParentVisibleTeacher(u.full_name))
-            .map((u: { id: string; full_name: string; profile_image_url: string | null }) => ({
-              id: u.id,
-              full_name: u.full_name,
-              avatar_url: u.profile_image_url,
-            }))
-        );
-      });
+    fetchParentVisibleTeachers().then((teachers) => {
+      setAllTeachers(
+        teachers.map((u) => ({
+          id: u.id,
+          full_name: u.full_name,
+          avatar_url: u.profile_image_url,
+        })),
+      );
+    });
   }, []);
 
   // Debounced search

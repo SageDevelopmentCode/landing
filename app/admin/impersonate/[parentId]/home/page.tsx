@@ -70,6 +70,8 @@ export default async function ImpersonateHomePage({
     { data: dropOffData },
     { data: txData },
     { data: summerData },
+    { data: prefsData },
+    { data: defaultPrefsData },
     publishedActivities,
     { data: testimonialData },
   ] = await Promise.all([
@@ -126,6 +128,16 @@ export default async function ImpersonateHomePage({
       .eq("user_id", effectiveParentId)
       .eq("approved", true)
       .in("program", ["summer_26", "both", "homeschool_drop_in", "school_year_26_27"]),
+    adminClient
+      .schema("parent_app")
+      .from("activity_preferences")
+      .select("student_id, activity_id")
+      .eq("parent_id", effectiveParentId),
+    adminClient
+      .schema("parent_app")
+      .from("student_default_preferences")
+      .select("student_id, participation_level")
+      .eq("parent_id", effectiveParentId),
     getPublishedActivities(),
     adminClient
       .schema("marketing")
@@ -156,11 +168,19 @@ export default async function ImpersonateHomePage({
   const transactions = (txData ?? []) as StripeTransaction[];
 
   const paidSets = computePaidDates(transactions);
-  const hasActivityForPaidDay = publishedActivities.some(
-    (a) =>
-      !!a.activity_date &&
-      students.some((s) => paidSets[s.id]?.has(a.activity_date!))
-  );
+  const activityPrefs = (prefsData ?? []) as { student_id: string; activity_id: string }[];
+  const studentDefaults = (defaultPrefsData ?? []) as {
+    student_id: string;
+    participation_level: "watch" | "cook_no_eat" | "full";
+  }[];
+  const paidDateSets: Record<string, string[]> = {};
+  for (const [studentId, dates] of Object.entries(paidSets)) {
+    paidDateSets[studentId] = Array.from(dates);
+  }
+
+  const upcomingActivities = publishedActivities
+    .filter((a) => a.activity_date != null && a.activity_date >= todayISO)
+    .sort((a, b) => (a.activity_date ?? "").localeCompare(b.activity_date ?? ""));
 
   const allSummerApps = ((summerData ?? []) as {
     id: string;
@@ -324,7 +344,14 @@ export default async function ImpersonateHomePage({
           actionNeededInteractive
           readOnlyPreview
           suppressReferralPopup
-          hasActivityForPaidDay={hasActivityForPaidDay}
+          upcomingActivities={upcomingActivities}
+          activityPrefs={activityPrefs}
+          studentDefaults={studentDefaults}
+          paidDateSets={paidDateSets}
+          publishedActivitiesForBanner={publishedActivities.map((a) => ({
+            id: a.id,
+            activity_date: a.activity_date,
+          }))}
           hasSubmittedTestimonial={hasSubmittedTestimonial}
           conferenceTeachers={conferenceTeachers}
           conferenceStudents={conferenceStudents}

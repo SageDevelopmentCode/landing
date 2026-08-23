@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { useStripe } from "@stripe/stripe-react-native";
+import { initStripe, useStripe } from "@stripe/stripe-react-native";
 import { supabase } from "@/lib/supabase";
 import { API_BASE_URL } from "@/constants/config";
+import { STRIPE_PUBLISHABLE_KEY, STRIPE_URL_SCHEME } from "@/constants/stripe";
 import { useAuth } from "@/contexts/AuthContext";
 import * as Sentry from "@sentry/react-native";
 import { notifyError } from "@/lib/discord";
@@ -51,16 +52,17 @@ export function useStripePayment() {
 
       const publishableKey =
         (typeof data.publishableKey === "string" && data.publishableKey) ||
-        process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+        STRIPE_PUBLISHABLE_KEY;
       if (!publishableKey) {
         throw new Error("Stripe publishable key is not configured");
       }
+
+      await initStripe({ publishableKey, urlScheme: STRIPE_URL_SCHEME });
 
       const { error: initError } = await initPaymentSheet({
         paymentIntentClientSecret: data.clientSecret,
         customerEphemeralKeySecret: data.ephemeralKey,
         customerId: data.customerId,
-        publishableKey,
         merchantDisplayName: "Sage Field",
         allowsDelayedPaymentMethods: true,
         defaultBillingDetails: { email: user.email ?? "" },

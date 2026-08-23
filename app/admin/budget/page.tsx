@@ -27,6 +27,7 @@ import {
 } from "../components/TransactionDetailSidebar";
 import { getStripeTransactions } from "@/app/actions/getStripeTransactions";
 import { Upload, Trash2, FileText, Download, X } from "lucide-react";
+import { ForecastTab } from "./ForecastTab";
 import { uploadExpenseReceipt } from "@/app/actions/uploadExpenseReceipt";
 import { deleteExpenseReceipt } from "@/app/actions/deleteExpenseReceipt";
 import { listExpenseReceipts } from "@/app/actions/listExpenseReceipts";
@@ -96,6 +97,7 @@ const fmt = (n: number) =>
 const TABS = [
   "Overview",
   "Budget",
+  "Forecast",
   "Expenses",
   "Revenue",
   "Taxes",
@@ -7340,7 +7342,19 @@ export default function BudgetPage() {
         </div>
 
         {/* Content */}
-        {loading ? (
+        {activeTab === "Forecast" ? (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ForecastTab />
+            </motion.div>
+          </AnimatePresence>
+        ) : loading ? (
           <div
             className="flex items-center justify-center py-24"
             style={{ color: colors.textSecondary }}

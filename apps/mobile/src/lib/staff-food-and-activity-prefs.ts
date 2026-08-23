@@ -1,5 +1,6 @@
 import { fetchDontIncludeStudentIds } from "@/lib/application-tags";
 import type { ParticipationLevel } from "@/lib/participation-level-labels";
+import { fetchSchoolYearTodayStudents } from "@/lib/school-year-today-students";
 import { supabase } from "@/lib/supabase";
 import type {
   EmergencySnackPreference,
@@ -24,9 +25,23 @@ export type StaffActivityPrefStudent = {
   isDefault: boolean;
 };
 
+export type StaffActivityPrefUnsignedStudent = {
+  studentId: string;
+  name: string;
+  photo: string | null;
+};
+
 export type StaffActivityPrefGroup = {
   activityId: string;
   students: StaffActivityPrefStudent[];
+  unsignedStudents: StaffActivityPrefUnsignedStudent[];
+  signedUpCount: number;
+  totalCount: number;
+};
+
+export type WeekActivityInput = {
+  id: string;
+  activity_date: string | null;
 };
 
 export async function fetchStaffSchoolDayFoodPrefs(): Promise<
@@ -93,11 +108,12 @@ export async function fetchStaffSchoolDayFoodPrefs(): Promise<
 }
 
 export async function fetchStaffWeekActivityPrefs(
-  activityIds: string[],
+  activities: WeekActivityInput[],
 ): Promise<StaffActivityPrefGroup[]> {
-  if (activityIds.length === 0) return [];
+  if (activities.length === 0) return [];
 
   const excludedIds = await fetchDontIncludeStudentIds();
+  const activityIds = activities.map((a) => a.id);
 
   const { data: prefData, error: prefErr } = await supabase
     .schema("parent_app")
@@ -113,103 +129,129 @@ export async function fetchStaffWeekActivityPrefs(
 
   const explicitByActivity = new Map<
     string,
-    {
-      student_id: string;
-      participation_level: string;
-      notes: string;
-    }[]
+    Map<
+      string,
+      { participation_level: ParticipationLevel; notes: string }
+    >
   >();
   for (const row of filteredPrefs) {
     const activityId = row.activity_id as string;
     if (!explicitByActivity.has(activityId)) {
-      explicitByActivity.set(activityId, []);
+      explicitByActivity.set(activityId, new Map());
     }
-    explicitByActivity.get(activityId)!.push({
-      student_id: row.student_id as string,
-      participation_level: row.participation_level as string,
+    explicitByActivity.get(activityId)!.set(row.student_id as string, {
+      participation_level: row.participation_level as ParticipationLevel,
       notes: (row.notes as string) ?? "",
     });
   }
 
-  const { data: defaultData, error: defaultErr } = await supabase
-    .schema("parent_app")
-    .from("student_default_preferences")
-    .select("student_id, participation_level");
+  const attendingByDate = new Map<
+    string,
+    Awaited<ReturnType<typeof fetchSchoolYearTodayStudents>>
+  >();
+  const uniqueDates = [
+    ...new Set(
+      activities
+        .map((a) => a.activity_date)
+        .filter((d): d is string => d != null),
+    ),
+  ];
 
-  if (defaultErr) throw defaultErr;
-
-  const defaultMap = new Map<string, ParticipationLevel>();
-  for (const row of defaultData ?? []) {
-    const studentId = row.student_id as string;
-    if (excludedIds.has(studentId)) continue;
-    defaultMap.set(studentId, row.participation_level as ParticipationLevel);
-  }
-
-  const allStudentIds = new Set<string>();
-  for (const rows of explicitByActivity.values()) {
-    for (const row of rows) allStudentIds.add(row.student_id);
-  }
-  for (const studentId of defaultMap.keys()) {
-    allStudentIds.add(studentId);
-  }
-
-  if (allStudentIds.size === 0) {
-    return activityIds.map((activityId) => ({ activityId, students: [] }));
-  }
-
-  const { data: studentData, error: studentErr } = await supabase
-    .schema("admin")
-    .from("students")
-    .select("id, child_legal_name, profile_image_url")
-    .in("id", [...allStudentIds])
-    .eq("is_deleted", false);
-
-  if (studentErr) throw studentErr;
-
-  const studentMap = new Map(
-    (studentData ?? []).map((s) => [
-      s.id as string,
-      {
-        name: s.child_legal_name as string,
-        photo: (s.profile_image_url as string | null) ?? null,
-      },
-    ]),
+  await Promise.all(
+    uniqueDates.map(async (date) => {
+      const rows = await fetchSchoolYearTodayStudents(date);
+      attendingByDate.set(
+        date,
+        rows.filter((s) => !excludedIds.has(s.student_id)),
+      );
+    }),
   );
 
-  return activityIds.map((activityId) => {
-    const explicitRows = explicitByActivity.get(activityId) ?? [];
-    const explicitStudentIds = new Set(explicitRows.map((r) => r.student_id));
+  const allAttendingIds = new Set<string>();
+  for (const rows of attendingByDate.values()) {
+    for (const s of rows) allAttendingIds.add(s.student_id);
+  }
+
+  const defaultMap = new Map<string, ParticipationLevel>();
+  if (allAttendingIds.size > 0) {
+    const { data: defaultData, error: defaultErr } = await supabase
+      .schema("parent_app")
+      .from("student_default_preferences")
+      .select("student_id, participation_level")
+      .in("student_id", [...allAttendingIds]);
+
+    if (defaultErr) throw defaultErr;
+
+    for (const row of defaultData ?? []) {
+      const studentId = row.student_id as string;
+      if (excludedIds.has(studentId)) continue;
+      defaultMap.set(studentId, row.participation_level as ParticipationLevel);
+    }
+  }
+
+  return activities.map((activity) => {
+    const emptyGroup: StaffActivityPrefGroup = {
+      activityId: activity.id,
+      students: [],
+      unsignedStudents: [],
+      signedUpCount: 0,
+      totalCount: 0,
+    };
+
+    if (!activity.activity_date) return emptyGroup;
+
+    const attending = attendingByDate.get(activity.activity_date) ?? [];
+    if (attending.length === 0) return emptyGroup;
+
+    const explicitForActivity =
+      explicitByActivity.get(activity.id) ?? new Map();
 
     const students: StaffActivityPrefStudent[] = [];
+    const unsignedStudents: StaffActivityPrefUnsignedStudent[] = [];
 
-    for (const row of explicitRows) {
-      const student = studentMap.get(row.student_id);
-      if (!student) continue;
-      students.push({
-        studentId: row.student_id,
-        name: student.name,
-        photo: student.photo,
-        level: row.participation_level as ParticipationLevel,
-        notes: row.notes,
-        isDefault: false,
-      });
-    }
+    for (const attendee of attending) {
+      const explicit = explicitForActivity.get(attendee.student_id);
+      if (explicit) {
+        students.push({
+          studentId: attendee.student_id,
+          name: attendee.name ?? "Unknown",
+          photo: attendee.profile_image_url,
+          level: explicit.participation_level,
+          notes: explicit.notes,
+          isDefault: false,
+        });
+        continue;
+      }
 
-    for (const [studentId, level] of defaultMap) {
-      if (explicitStudentIds.has(studentId)) continue;
-      const student = studentMap.get(studentId);
-      if (!student) continue;
-      students.push({
-        studentId,
-        name: student.name,
-        photo: student.photo,
-        level,
-        notes: "",
-        isDefault: true,
+      const defaultLevel = defaultMap.get(attendee.student_id);
+      if (defaultLevel) {
+        students.push({
+          studentId: attendee.student_id,
+          name: attendee.name ?? "Unknown",
+          photo: attendee.profile_image_url,
+          level: defaultLevel,
+          notes: "",
+          isDefault: true,
+        });
+        continue;
+      }
+
+      unsignedStudents.push({
+        studentId: attendee.student_id,
+        name: attendee.name ?? "Unknown",
+        photo: attendee.profile_image_url,
       });
     }
 
     students.sort((a, b) => a.name.localeCompare(b.name));
-    return { activityId, students };
+    unsignedStudents.sort((a, b) => a.name.localeCompare(b.name));
+
+    return {
+      activityId: activity.id,
+      students,
+      unsignedStudents,
+      signedUpCount: students.length,
+      totalCount: attending.length,
+    };
   });
 }

@@ -2,7 +2,11 @@ import { SkeletonBox } from "@/components/ui/SkeletonBox";
 import { Brand, FontFamilies } from "@/constants/theme";
 import type { Activity } from "@/lib/activities-actions";
 import { LEVEL_LABELS } from "@/lib/participation-level-labels";
-import type { StaffActivityPrefGroup } from "@/lib/staff-food-and-activity-prefs";
+import type {
+  StaffActivityPrefGroup,
+  StaffActivityPrefUnsignedStudent,
+} from "@/lib/staff-food-and-activity-prefs";
+import { useActivityPrefReminders } from "@/hooks/use-activity-pref-reminders";
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
@@ -62,6 +66,92 @@ function tabLabel(activity: Activity): string {
   return title.length > 24 ? `${title.slice(0, 24)}…` : title;
 }
 
+function UnsignedStudentRow({
+  student,
+  sendingId,
+  sentIds,
+  onSendReminder,
+}: {
+  student: StaffActivityPrefUnsignedStudent;
+  sendingId: string | null;
+  sentIds: Set<string>;
+  onSendReminder: (studentId: string) => void;
+}) {
+  const isSending = sendingId === student.studentId;
+  const isSent = sentIds.has(student.studentId);
+  const isDisabled = isSending || isSent || !!sendingId;
+
+  return (
+    <View style={styles.row}>
+      {student.photo ? (
+        <Image
+          source={{ uri: student.photo }}
+          style={[styles.avatar, styles.avatarImg]}
+          contentFit="cover"
+        />
+      ) : (
+        <View
+          style={[
+            styles.avatar,
+            { backgroundColor: avatarColor(student.studentId) },
+          ]}
+        >
+          <Text style={styles.avatarText}>{getInitials(student.name)}</Text>
+        </View>
+      )}
+      <View style={styles.info}>
+        <Text style={styles.name}>{student.name}</Text>
+        <View style={[styles.chip, { backgroundColor: "#f3f4f6" }]}>
+          <Text style={[styles.chipText, { color: "#6b7280" }]}>Not set</Text>
+        </View>
+      </View>
+      <Pressable
+        style={[
+          styles.reminderBtn,
+          isSent && styles.reminderBtnSent,
+          isDisabled && !isSent && styles.reminderBtnDisabled,
+        ]}
+        disabled={isDisabled}
+        onPress={() => onSendReminder(student.studentId)}
+      >
+        <Text
+          style={[
+            styles.reminderBtnText,
+            isSent && styles.reminderBtnTextSent,
+          ]}
+        >
+          {isSending ? "Sending…" : isSent ? "Sent" : "Send Reminder"}
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function ProgressSummaryCard({
+  signedUpCount,
+  totalCount,
+}: {
+  signedUpCount: number;
+  totalCount: number;
+}) {
+  const remaining = Math.max(totalCount - signedUpCount, 0);
+  const isComplete = totalCount > 0 && remaining === 0;
+
+  return (
+    <View style={styles.summaryCard}>
+      <Text style={styles.summaryTitle}>
+        {signedUpCount} of {totalCount} signed up
+      </Text>
+      <Text style={styles.summarySubtitle}>
+        {totalCount === 0
+          ? "No students signed up for this day."
+          : isComplete
+            ? "All students have preferences set."
+            : `${remaining} remaining`}
+      </Text>
+    </View>
+  );
+}
 function StudentPrefRow({ student }: { student: StudentPref }) {
   const lvl = LEVEL_LABELS[student.level];
 
@@ -111,6 +201,9 @@ export const StaffWeekActivityPrefsSheet = forwardRef<BottomSheetModal, Props>(
       null,
     );
 
+    const { sendingId, sentIds, sendReminder, resetReminderState } =
+      useActivityPrefReminders(selectedActivityId);
+
     const groupMap = new Map(groups.map((group) => [group.activityId, group]));
 
     useEffect(() => {
@@ -121,9 +214,20 @@ export const StaffWeekActivityPrefsSheet = forwardRef<BottomSheetModal, Props>(
       (index: number) => {
         if (index === 0) {
           setSelectedActivityId(activities[0]?.id ?? null);
+          resetReminderState();
+        } else if (index === -1) {
+          resetReminderState();
         }
       },
-      [activities],
+      [activities, resetReminderState],
+    );
+
+    const handleSelectActivity = useCallback(
+      (activityId: string) => {
+        setSelectedActivityId(activityId);
+        resetReminderState();
+      },
+      [resetReminderState],
     );
 
     const selectedActivity =
@@ -131,9 +235,13 @@ export const StaffWeekActivityPrefsSheet = forwardRef<BottomSheetModal, Props>(
       activities[0] ??
       null;
 
-    const selectedStudents = selectedActivity
-      ? (groupMap.get(selectedActivity.id)?.students ?? [])
-      : [];
+    const selectedGroup = selectedActivity
+      ? groupMap.get(selectedActivity.id)
+      : undefined;
+    const selectedStudents = selectedGroup?.students ?? [];
+    const unsignedStudents = selectedGroup?.unsignedStudents ?? [];
+    const signedUpCount = selectedGroup?.signedUpCount ?? 0;
+    const totalCount = selectedGroup?.totalCount ?? 0;
 
     return (
       <BottomSheetModal
@@ -153,7 +261,7 @@ export const StaffWeekActivityPrefsSheet = forwardRef<BottomSheetModal, Props>(
         handleIndicatorStyle={{ backgroundColor: "#d1d5db" }}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Activity Preferences This Week</Text>
+          <Text style={styles.title}>Upcoming Activity Preferences</Text>
 
           {!loading && activities.length > 1 && (
             <ScrollView
@@ -170,7 +278,7 @@ export const StaffWeekActivityPrefsSheet = forwardRef<BottomSheetModal, Props>(
                       styles.tabPill,
                       isSelected && styles.tabPillActive,
                     ]}
-                    onPress={() => setSelectedActivityId(activity.id)}
+                    onPress={() => handleSelectActivity(activity.id)}
                   >
                     <Text
                       style={[
@@ -197,7 +305,7 @@ export const StaffWeekActivityPrefsSheet = forwardRef<BottomSheetModal, Props>(
             </View>
           ) : activities.length === 0 ? (
             <Text style={styles.emptyText}>
-              No activities scheduled this week.
+              No upcoming published activities.
             </Text>
           ) : selectedActivity ? (
             <View style={styles.activityBlock}>
@@ -212,17 +320,42 @@ export const StaffWeekActivityPrefsSheet = forwardRef<BottomSheetModal, Props>(
                 ) : null}
               </View>
 
-              {selectedStudents.length === 0 ? (
+              <ProgressSummaryCard
+                signedUpCount={signedUpCount}
+                totalCount={totalCount}
+              />
+
+              {selectedStudents.length > 0 && (
+                <>
+                  <Text style={styles.sectionHeader}>Preferences Set</Text>
+                  {selectedStudents.map((student) => (
+                    <StudentPrefRow
+                      key={student.studentId}
+                      student={student}
+                    />
+                  ))}
+                </>
+              )}
+
+              {unsignedStudents.length > 0 && (
+                <>
+                  <Text style={styles.sectionHeader}>No Preference Set</Text>
+                  {unsignedStudents.map((student) => (
+                    <UnsignedStudentRow
+                      key={student.studentId}
+                      student={student}
+                      sendingId={sendingId}
+                      sentIds={sentIds}
+                      onSendReminder={sendReminder}
+                    />
+                  ))}
+                </>
+              )}
+
+              {totalCount === 0 && (
                 <Text style={styles.activityEmpty}>
-                  No preferences submitted yet.
+                  No students signed up for this day.
                 </Text>
-              ) : (
-                selectedStudents.map((student) => (
-                  <StudentPrefRow
-                    key={student.studentId}
-                    student={student}
-                  />
-                ))
               )}
             </View>
           ) : null}
@@ -311,6 +444,34 @@ const styles = StyleSheet.create({
     paddingLeft: 4,
     paddingBottom: 4,
   },
+  summaryCard: {
+    backgroundColor: "#f0fdf4",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#bbf7d0",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 4,
+  },
+  summaryTitle: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 14,
+    color: Brand.sage700,
+  },
+  summarySubtitle: {
+    fontFamily: FontFamilies.body,
+    fontSize: 12,
+    color: "#6b7280",
+  },
+  sectionHeader: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 13,
+    color: "#6b7280",
+    marginTop: 4,
+    marginBottom: 2,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
   row: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -366,5 +527,26 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: "#9ca3af",
     fontStyle: "italic",
+  },
+  reminderBtn: {
+    alignSelf: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: Brand.sage700,
+  },
+  reminderBtnSent: {
+    backgroundColor: "#e5e7eb",
+  },
+  reminderBtnDisabled: {
+    opacity: 0.6,
+  },
+  reminderBtnText: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 11,
+    color: "#ffffff",
+  },
+  reminderBtnTextSent: {
+    color: "#6b7280",
   },
 });

@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
@@ -33,6 +34,8 @@ import type {
 } from "@/app/lib/parent-teacher-conference";
 import type { ConferenceStudentContext } from "@/app/lib/get-conference-teacher-assignments";
 import ActionNeededCard from "./ActionNeededCard";
+import UpcomingActivitiesSection from "./UpcomingActivitiesSection";
+import ParentActivityPreferenceSheet from "./ParentActivityPreferenceSheet";
 import HelpWidget from "@/app/parent/components/HelpWidget";
 import { getParentStudentAttendance } from "@/app/actions/getParentStudentAttendance";
 import {
@@ -44,6 +47,12 @@ import {
   type UnifiedAttendanceRecord,
   type UserMap,
 } from "@/shared/parent/student-attendance";
+import { findFirstUnsetActivity, computeHasUnsetActivityPreference } from "@/shared/parent/activity-preferences";
+import { isFieldFridayCalendarEvent } from "@/shared/parent/calendar";
+import type { StudentDefaultPreference } from "@/app/parent/preferences/page";
+import AutoFillPreferencesSheet from "./AutoFillPreferencesSheet";
+import { getEligibleAutoFillStudents } from "@/app/parent/components/AutoFillPreferenceSection";
+import type { Activity } from "@/app/actions/activities";
 import { saveDropOffTime } from "@/app/actions/saveDropOffTime";
 import { submitTestimonial } from "@/app/actions/submitTestimonial";
 import { DetailSidebar } from "@/app/admin/components/DetailSidebar";
@@ -451,7 +460,11 @@ interface Props {
   actionNeededInteractive?: boolean;
   readOnlyPreview?: boolean;
   suppressReferralPopup?: boolean;
-  hasActivityForPaidDay: boolean;
+  upcomingActivities: Activity[];
+  activityPrefs: { student_id: string; activity_id: string }[];
+  studentDefaults: StudentDefaultPreference[];
+  paidDateSets: Record<string, string[]>;
+  publishedActivitiesForBanner: { id: string; activity_date: string | null }[];
   hasSubmittedTestimonial: boolean;
   conferenceTeachers: ConferenceTeacherDisplay[];
   conferenceStudents: ConferenceStudentContext[];
@@ -483,13 +496,18 @@ export default function HomePageClient({
   actionNeededInteractive,
   readOnlyPreview,
   suppressReferralPopup,
-  hasActivityForPaidDay,
+  upcomingActivities,
+  activityPrefs,
+  studentDefaults: initialStudentDefaults,
+  paidDateSets,
+  publishedActivitiesForBanner,
   hasSubmittedTestimonial,
   conferenceTeachers,
   conferenceStudents,
   conferenceBookingsByStudent,
   conferenceTakenSlotKeys,
 }: Props) {
+  const router = useRouter();
   const [checklistOpen, setChecklistOpen] = useState(false);
   const [bannerIdx, setBannerIdx] = useState(() =>
     bannerIndexForUser(userId, BANNER_IMAGES.length),
@@ -516,6 +534,94 @@ export default function HomePageClient({
   const [isMobile] = useState(
     () => typeof window !== "undefined" && window.innerWidth < 1024,
   );
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
+  const [activitySheetOpen, setActivitySheetOpen] = useState(false);
+  const [autoFillSheetOpen, setAutoFillSheetOpen] = useState(false);
+  const [studentDefaults, setStudentDefaults] = useState(initialStudentDefaults);
+
+  const paidSets = useMemo(() => {
+    const sets: Record<string, Set<string>> = {};
+    for (const [studentId, dates] of Object.entries(paidDateSets)) {
+      sets[studentId] = new Set(dates);
+    }
+    return sets;
+  }, [paidDateSets]);
+
+  const defaultPrefStudentIdSet = useMemo(
+    () => new Set(studentDefaults.map((d) => d.student_id)),
+    [studentDefaults],
+  );
+
+  const hasActivityForPaidDayLive = useMemo(
+    () =>
+      computeHasUnsetActivityPreference(
+        publishedActivitiesForBanner,
+        activityPrefs,
+        defaultPrefStudentIdSet,
+        students,
+        paidSets,
+      ),
+    [
+      publishedActivitiesForBanner,
+      activityPrefs,
+      defaultPrefStudentIdSet,
+      students,
+      paidSets,
+    ],
+  );
+
+  const hasEligibleAutoFillStudents = useMemo(
+    () =>
+      getEligibleAutoFillStudents(students, paidDateSets, upcomingActivities).length >
+      0,
+    [students, paidDateSets, upcomingActivities],
+  );
+
+  const refreshActivityBanner = useCallback(() => {
+    router.refresh();
+  }, [router]);
+
+  const openActivityPreferenceSheet = useCallback(
+    (activity?: Activity | null) => {
+      if (readOnlyPreview && !activity) return;
+
+      let target = activity ?? null;
+
+      if (!target) {
+        const unsetId = findFirstUnsetActivity(
+          publishedActivitiesForBanner,
+          activityPrefs,
+          defaultPrefStudentIdSet,
+          students,
+          paidSets,
+        );
+        if (unsetId) {
+          target = upcomingActivities.find((a) => a.id === unsetId) ?? null;
+        }
+      }
+
+      if (target) {
+        setSelectedActivity(target);
+        setActivitySheetOpen(true);
+      } else if (!readOnlyPreview) {
+        router.push("/parent/preferences");
+      }
+    },
+    [
+      readOnlyPreview,
+      publishedActivitiesForBanner,
+      activityPrefs,
+      defaultPrefStudentIdSet,
+      students,
+      paidSets,
+      upcomingActivities,
+      router,
+    ],
+  );
+
+  const handleActivitySaved = useCallback(() => {
+    refreshActivityBanner();
+  }, [refreshActivityBanner]);
 
   useEffect(() => {
     if (suppressReferralPopup) return;
@@ -1053,7 +1159,8 @@ export default function HomePageClient({
           >
             <ActionNeededCard
               parentId={parentId}
-              hasActivityForPaidDay={hasActivityForPaidDay}
+              hasActivityForPaidDay={hasActivityForPaidDayLive}
+              onOpenActivityPrefs={() => openActivityPreferenceSheet()}
               schoolYearOnlyApps={schoolYearOnlyApps}
               summerEnrollments={summerEnrollments}
               paidSchoolYearByStudent={paidSchoolYearByStudent}
@@ -1063,6 +1170,16 @@ export default function HomePageClient({
               conferenceBookingsByStudent={conferenceBookingsByStudent}
               conferenceTakenSlotKeys={conferenceTakenSlotKeys}
               readOnly={readOnlyPreview}
+            />
+          </div>
+
+          <div className={actionNeededInteractive ? "pointer-events-auto" : undefined}>
+            <UpcomingActivitiesSection
+              activities={upcomingActivities}
+              onSelectActivity={(activity) => openActivityPreferenceSheet(activity)}
+              readOnly={readOnlyPreview}
+              showAutoFillButton={hasEligibleAutoFillStudents}
+              onAutoFillClick={() => setAutoFillSheetOpen(true)}
             />
           </div>
 
@@ -1528,6 +1645,14 @@ export default function HomePageClient({
                             {evt.category}
                           </span>
                         )}
+                        {isFieldFridayCalendarEvent(evt) && (
+                          <Link
+                            href="/parent/billing"
+                            className="inline-block mt-2 text-xs font-semibold font-body text-[#4a7c59] hover:underline"
+                          >
+                            Register now!
+                          </Link>
+                        )}
                       </div>
                     </div>
                   );
@@ -1948,6 +2073,26 @@ export default function HomePageClient({
         key={attendanceStudent?.id ?? "none"}
         student={attendanceStudent}
         onClose={() => setAttendanceStudent(null)}
+      />
+
+      <ParentActivityPreferenceSheet
+        open={activitySheetOpen}
+        onOpenChange={setActivitySheetOpen}
+        activity={selectedActivity}
+        students={students}
+        readOnly={readOnlyPreview}
+        onSaved={handleActivitySaved}
+      />
+
+      <AutoFillPreferencesSheet
+        open={autoFillSheetOpen}
+        onOpenChange={setAutoFillSheetOpen}
+        students={students}
+        studentDefaults={studentDefaults}
+        paidDateSets={paidDateSets}
+        upcomingActivities={upcomingActivities}
+        readOnly={readOnlyPreview}
+        onDefaultsChange={setStudentDefaults}
       />
     </div>
   );

@@ -1,7 +1,9 @@
 import { Brand, BottomTabInset, FontFamilies } from "@/constants/theme";
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
+import { isFieldFridayCalendarEvent } from "@/lib/calendar";
 import { supabase } from "@/lib/supabase";
 import { notifyError } from "@/lib/discord";
+import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { useLocalSearchParams } from "expo-router";
@@ -138,7 +140,15 @@ function EventRow({
   );
 }
 
-function EventDetail({ event }: { event: CalendarEvent }) {
+function EventDetail({
+  event,
+  showRegisterCta,
+  onRegister,
+}: {
+  event: CalendarEvent;
+  showRegisterCta: boolean;
+  onRegister: () => void;
+}) {
   const attachments = event.attachment_links ?? [];
 
   return (
@@ -204,15 +214,30 @@ function EventDetail({ event }: { event: CalendarEvent }) {
           ))}
         </View>
       ) : null}
+
+      {showRegisterCta && isFieldFridayCalendarEvent(event) ? (
+        <TouchableOpacity
+          style={styles.registerBtn}
+          onPress={onRegister}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.registerBtnTxt}>Register now!</Text>
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 }
 
 type Props = {
   fetchErrorTag: string;
+  showRegisterCta?: boolean;
 };
 
-export function MobileCalendarScreen({ fetchErrorTag }: Props) {
+export function MobileCalendarScreen({
+  fetchErrorTag,
+  showRegisterCta = false,
+}: Props) {
+  const router = useRouter();
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [viewMode, setViewMode] = useState<"monthly" | "weekly">("weekly");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -323,6 +348,11 @@ export function MobileCalendarScreen({ fetchErrorTag }: Props) {
   function handleEventPress(event: CalendarEvent) {
     setSelectedEvent(event);
     bottomSheetRef.current?.present();
+  }
+
+  function handleRegister() {
+    bottomSheetRef.current?.dismiss();
+    router.push("/(tabs)/tuition");
   }
 
   const year = currentDate.getFullYear();
@@ -594,7 +624,13 @@ export function MobileCalendarScreen({ fetchErrorTag }: Props) {
         onDismiss={() => setSelectedEvent(null)}
       >
         <BottomSheetScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-          {selectedEvent && <EventDetail event={selectedEvent} />}
+          {selectedEvent && (
+            <EventDetail
+              event={selectedEvent}
+              showRegisterCta={showRegisterCta}
+              onRegister={handleRegister}
+            />
+          )}
         </BottomSheetScrollView>
       </BottomSheetModal>
     </SafeAreaView>
@@ -914,5 +950,17 @@ const styles = StyleSheet.create({
     fontFamily: FontFamilies.body,
     fontSize: 13,
     color: Brand.sage700,
+  },
+  registerBtn: {
+    marginTop: 8,
+    backgroundColor: Brand.sage700,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  registerBtnTxt: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 15,
+    color: "#ffffff",
   },
 });

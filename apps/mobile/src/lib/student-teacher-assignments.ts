@@ -28,7 +28,7 @@ export function isHomeschoolDropInTeacherAssignment(
   return isSchoolYearDropInBilling(dropInProgram);
 }
 
-function abbreviateName(fullName: string): string {
+export function abbreviateName(fullName: string): string {
   const parts = fullName.trim().split(/\s+/);
   if (parts.length === 1) return parts[0];
   return `${parts[0]} ${parts[parts.length - 1][0]}.`;
@@ -40,24 +40,39 @@ type AssignmentRow = {
   program: string | null;
 };
 
-function pickTeacherName(
-  assignments: { program: string | null; teacherName: string }[],
-): string | null {
+type SchoolYearAssignment = {
+  program: string | null;
+  teacherId: string;
+  teacherName: string;
+};
+
+export type SchoolYearTeacher = {
+  id: string;
+  full_name: string;
+  profile_image_url: string | null;
+};
+
+export type SchoolYearTeachersResult = {
+  teacherNameByStudentId: Record<string, string>;
+  schoolYearTeachers: SchoolYearTeacher[];
+};
+
+function pickSchoolYearTeacher(
+  assignments: SchoolYearAssignment[],
+): SchoolYearAssignment | null {
   if (assignments.length === 0) return null;
-
-  const schoolYear = assignments.find((a) => a.program === SCHOOL_YEAR_PROGRAM);
-  if (schoolYear) return schoolYear.teacherName;
-
-  const sorted = [...assignments].sort((a, b) =>
-    a.teacherName.localeCompare(b.teacherName),
+  return (
+    assignments.find((a) => a.program === SCHOOL_YEAR_PROGRAM) ?? assignments[0]
   );
-  return sorted[0]?.teacherName ?? null;
 }
 
-export async function fetchTeacherNamesByStudentId(
+export async function fetchSchoolYearTeachersForStudents(
   studentIds: string[],
-): Promise<Record<string, string>> {
-  if (studentIds.length === 0) return {};
+  dropInProgramByStudent: Record<string, string | null> = {},
+): Promise<SchoolYearTeachersResult> {
+  if (studentIds.length === 0) {
+    return { teacherNameByStudentId: {}, schoolYearTeachers: [] };
+  }
 
   const { data: assignmentRows } = await supabase
     .schema("teachers")
@@ -66,33 +81,86 @@ export async function fetchTeacherNamesByStudentId(
     .in("student_id", studentIds)
     .eq("is_deleted", false);
 
-  if (!assignmentRows?.length) return {};
+  if (!assignmentRows?.length) {
+    return { teacherNameByStudentId: {}, schoolYearTeachers: [] };
+  }
 
-  const teacherIds = [...new Set(assignmentRows.map((r) => r.teacher_id))];
+  const schoolYearRows = (assignmentRows as AssignmentRow[]).filter((row) =>
+    isSchoolYearTeacherAssignment(
+      row.program ?? "",
+      dropInProgramByStudent[row.student_id],
+    ),
+  );
+
+  if (schoolYearRows.length === 0) {
+    return { teacherNameByStudentId: {}, schoolYearTeachers: [] };
+  }
+
+  const teacherIds = [...new Set(schoolYearRows.map((r) => r.teacher_id))];
   const { data: teacherUsers } = await supabase
     .schema("admin")
     .from("users")
-    .select("id, full_name")
+    .select("id, full_name, profile_image_url")
     .in("id", teacherIds);
 
-  const nameById: Record<string, string> = {};
+  const userById: Record<
+    string,
+    { full_name: string; profile_image_url: string | null }
+  > = {};
   for (const u of teacherUsers ?? []) {
-    if (u.full_name) nameById[u.id] = u.full_name;
+    if (u.full_name) {
+      userById[u.id] = {
+        full_name: u.full_name,
+        profile_image_url: u.profile_image_url ?? null,
+      };
+    }
   }
 
-  const byStudent: Record<string, { program: string | null; teacherName: string }[]> =
-    {};
-  for (const row of assignmentRows as AssignmentRow[]) {
-    const teacherName = nameById[row.teacher_id];
-    if (!teacherName) continue;
+  const byStudent: Record<string, SchoolYearAssignment[]> = {};
+  for (const row of schoolYearRows) {
+    const teacher = userById[row.teacher_id];
+    if (!teacher) continue;
     if (!byStudent[row.student_id]) byStudent[row.student_id] = [];
-    byStudent[row.student_id].push({ program: row.program, teacherName });
+    byStudent[row.student_id].push({
+      program: row.program,
+      teacherId: row.teacher_id,
+      teacherName: teacher.full_name,
+    });
   }
 
-  const result: Record<string, string> = {};
+  const teacherNameByStudentId: Record<string, string> = {};
+  const teacherById = new Map<string, SchoolYearTeacher>();
+
   for (const studentId of studentIds) {
-    const name = pickTeacherName(byStudent[studentId] ?? []);
-    if (name) result[studentId] = abbreviateName(name);
+    const picked = pickSchoolYearTeacher(byStudent[studentId] ?? []);
+    if (!picked) continue;
+
+    teacherNameByStudentId[studentId] = abbreviateName(picked.teacherName);
+
+    const user = userById[picked.teacherId];
+    if (user) {
+      teacherById.set(picked.teacherId, {
+        id: picked.teacherId,
+        full_name: user.full_name,
+        profile_image_url: user.profile_image_url,
+      });
+    }
   }
-  return result;
+
+  const schoolYearTeachers = [...teacherById.values()].sort((a, b) =>
+    a.full_name.localeCompare(b.full_name),
+  );
+
+  return { teacherNameByStudentId, schoolYearTeachers };
+}
+
+export async function fetchTeacherNamesByStudentId(
+  studentIds: string[],
+  dropInProgramByStudent: Record<string, string | null> = {},
+): Promise<Record<string, string>> {
+  const { teacherNameByStudentId } = await fetchSchoolYearTeachersForStudents(
+    studentIds,
+    dropInProgramByStudent,
+  );
+  return teacherNameByStudentId;
 }

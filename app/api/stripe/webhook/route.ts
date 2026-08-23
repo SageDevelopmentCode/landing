@@ -34,6 +34,107 @@ import {
   sendZohoEmail,
 } from "@/app/lib/zoho";
 
+async function notifySchoolYearTuitionPayment(opts: {
+  supabase: ReturnType<typeof createAdminClient>;
+  parentId: string | null;
+  studentId: string | null;
+  parentEmailAddr: string;
+  amountCents: number;
+  selectedMonthsRaw: string;
+  source?: "web" | "mobile";
+}) {
+  const {
+    supabase,
+    parentId,
+    studentId,
+    parentEmailAddr,
+    amountCents,
+    selectedMonthsRaw,
+    source,
+  } = opts;
+
+  let parentName = "N/A";
+  let childName = "N/A";
+
+  if (parentId) {
+    const { data: userRow } = await supabase
+      .schema("admin")
+      .from("users")
+      .select("full_name")
+      .eq("id", parentId)
+      .single();
+    if (userRow) parentName = userRow.full_name ?? "N/A";
+  }
+  if (studentId) {
+    const { data: student } = await supabase
+      .schema("admin")
+      .from("students")
+      .select("child_legal_name")
+      .eq("id", studentId)
+      .single();
+    if (student) childName = student.child_legal_name ?? "N/A";
+  }
+
+  const selectedMonthIndices = selectedMonthsRaw
+    .split(",")
+    .map(Number)
+    .filter((n) => !isNaN(n) && n > 0);
+
+  sendDiscordNotification(
+    createSchoolYearTuitionEmbed({
+      parentName,
+      parentEmail: parentEmailAddr,
+      childName,
+      amountCents,
+      selectedMonthIndices,
+      source,
+    }),
+  ).catch((err) =>
+    console.error("School year tuition Discord notification failed:", err),
+  );
+
+  const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
+  let subject: string | undefined;
+  try {
+    if (!toAddress) return;
+    const amountDollars = (amountCents / 100).toFixed(2);
+    const built = await buildSchoolYearTuitionConfirmationEmail({
+      g1FullName: parentName !== "N/A" ? parentName : "Parent",
+      childName: childName !== "N/A" ? childName : "your child",
+      amountDollars,
+      selectedMonths:
+        selectedMonthIndices.length > 0 ? selectedMonthIndices : undefined,
+    });
+    subject = built.subject;
+    const emailResult = await sendZohoEmail({
+      toAddress,
+      subject: built.subject,
+      content: built.content,
+    });
+    if (emailResult.success) {
+      await supabase.schema("email_logs").from("sends").insert({
+        to_address: toAddress,
+        subject: built.subject,
+        template: "school_year_tuition_confirmation",
+        application_id: null,
+        status: "success",
+      });
+    }
+  } catch (err) {
+    console.error("School year tuition confirmation email failed:", err);
+    if (toAddress) {
+      await supabase.schema("email_logs").from("sends").insert({
+        to_address: toAddress,
+        subject: subject ?? "school_year_tuition_confirmation (failed to build)",
+        template: "school_year_tuition_confirmation",
+        application_id: null,
+        status: "error",
+        error_message: String(err).slice(0, 500),
+      });
+    }
+  }
+}
+
 export async function POST(request: NextRequest) {
   const body = await request.text();
   const signature = request.headers.get("stripe-signature");
@@ -1229,89 +1330,15 @@ export async function POST(request: NextRequest) {
 
     } else if (session.metadata?.payment_type === "school_year_tuition") {
       try {
-        const parentId = session.metadata?.parent_id;
-        const studentId = session.metadata?.student_id;
-        const parentEmailAddr = session.metadata?.parent_email ?? session.customer_email ?? "N/A";
-        const amountCents = session.amount_total ?? 0;
-
-        let parentName = "N/A";
-        let childName = "N/A";
-
-        if (parentId) {
-          const { data: userRow } = await supabase
-            .schema("admin")
-            .from("users")
-            .select("full_name")
-            .eq("id", parentId)
-            .single();
-          if (userRow) parentName = userRow.full_name ?? "N/A";
-        }
-        if (studentId) {
-          const { data: student } = await supabase
-            .schema("admin")
-            .from("students")
-            .select("child_legal_name")
-            .eq("id", studentId)
-            .single();
-          if (student) childName = student.child_legal_name ?? "N/A";
-        }
-
-        sendDiscordNotification(
-          createSchoolYearTuitionEmbed({
-            parentName,
-            parentEmail: parentEmailAddr,
-            childName,
-            amountCents,
-            selectedMonthIndices: (session.metadata?.selected_months ?? "")
-              .split(",")
-              .map(Number)
-              .filter((n) => !isNaN(n) && n > 0),
-          }),
-        ).catch((err) => console.error("School year tuition Discord notification failed:", err));
-
-        (async () => {
-          const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";
-          let subject: string | undefined;
-          try {
-            if (!toAddress) return;
-            const selectedMonthsRaw = session.metadata?.selected_months ?? "";
-            const selectedMonths = selectedMonthsRaw
-              .split(",")
-              .map(Number)
-              .filter((n) => !isNaN(n) && n > 0);
-            const amountDollars = (amountCents / 100).toFixed(2);
-            const built = await buildSchoolYearTuitionConfirmationEmail({
-              g1FullName: parentName !== "N/A" ? parentName : "Parent",
-              childName: childName !== "N/A" ? childName : "your child",
-              amountDollars,
-              selectedMonths: selectedMonths.length > 0 ? selectedMonths : undefined,
-            });
-            subject = built.subject;
-            const emailResult = await sendZohoEmail({ toAddress, subject: built.subject, content: built.content });
-            if (emailResult.success) {
-              await supabase.schema("email_logs").from("sends").insert({
-                to_address: toAddress,
-                subject: built.subject,
-                template: "school_year_tuition_confirmation",
-                application_id: null,
-                status: "success",
-              });
-            }
-          } catch (err) {
-            console.error("School year tuition confirmation email failed:", err);
-            if (toAddress) {
-              await supabase.schema("email_logs").from("sends").insert({
-                to_address: toAddress,
-                subject: subject ?? "school_year_tuition_confirmation (failed to build)",
-                template: "school_year_tuition_confirmation",
-                application_id: null,
-                status: "error",
-                error_message: String(err).slice(0, 500),
-              });
-            }
-          }
-        })();
-
+        await notifySchoolYearTuitionPayment({
+          supabase,
+          parentId: session.metadata?.parent_id ?? null,
+          studentId: session.metadata?.student_id ?? null,
+          parentEmailAddr:
+            session.metadata?.parent_email ?? session.customer_email ?? "N/A",
+          amountCents: session.amount_total ?? 0,
+          selectedMonthsRaw: session.metadata?.selected_months ?? "",
+        });
       } catch (err) {
         console.error("school_year_tuition webhook handler error:", err);
         sendDiscordNotification(
@@ -2293,6 +2320,33 @@ export async function POST(request: NextRequest) {
           sendDiscordNotification(createErrorEmbed({ context: "Mobile fun friday confirmation email", error: String(err), details: { applicationId: applicationId ?? "N/A", studentId: studentId ?? "N/A" } })).catch(() => {});
         }
       })();
+    } else if (
+      metadata.payment_type === "school_year_tuition" &&
+      metadata.mobile === "true"
+    ) {
+      try {
+        await notifySchoolYearTuitionPayment({
+          supabase,
+          parentId,
+          studentId: metadata.student_id ?? null,
+          parentEmailAddr: payerEmail ?? "N/A",
+          amountCents: intent.amount,
+          selectedMonthsRaw: metadata.selected_months ?? "",
+          source: "mobile",
+        });
+      } catch (err) {
+        console.error("Mobile school year tuition webhook handler error:", err);
+        sendDiscordNotification(
+          createErrorEmbed({
+            context: "Mobile school_year_tuition webhook",
+            error: String(err),
+            details: {
+              parentId: parentId ?? "N/A",
+              studentId: metadata.student_id ?? "N/A",
+            },
+          }),
+        ).catch(() => {});
+      }
     }
   }
 

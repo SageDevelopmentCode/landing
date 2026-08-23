@@ -23,7 +23,7 @@ import {
   type ChannelWithMeta,
 } from "@/lib/channel-actions";
 import { Brand, FontFamilies } from "@/constants/theme";
-import { isParentVisibleTeacher } from "@/lib/parent-visible-teachers";
+import { fetchParentVisibleTeachers } from "@/lib/parent-visible-teachers";
 import { useAuth, useReadOnlyPreview } from "@/contexts/AuthContext";
 
 type ConversationRow = {
@@ -58,15 +58,7 @@ function timeAgo(isoString: string): string {
 }
 
 async function fetchTeachers(): Promise<TeacherSuggestion[]> {
-  const { data } = await supabase
-    .schema("admin")
-    .from("users")
-    .select("id, full_name, profile_image_url")
-    .in("role", ["teacher", "super_admin"])
-    .order("full_name", { ascending: true });
-  return ((data ?? []) as TeacherSuggestion[]).filter((t) =>
-    isParentVisibleTeacher(t.full_name),
-  );
+  return fetchParentVisibleTeachers();
 }
 
 async function fetchRows(userId: string): Promise<ConversationRow[]> {

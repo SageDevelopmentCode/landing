@@ -1,5 +1,11 @@
 import { forwardRef, useCallback, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
@@ -13,6 +19,7 @@ import {
   type ParticipationLevel,
 } from "@/lib/participation-level-labels";
 import { supabase } from "@/lib/supabase";
+import { useActivityPrefReminders } from "@/hooks/use-activity-pref-reminders";
 
 type PrefRow = {
   student_id: string;
@@ -48,24 +55,70 @@ type AttendingStudent = {
 
 interface Props {
   activityId: string;
+  activityDate?: string | null;
   attendingStudents?: AttendingStudent[];
 }
 
+function PrefStudentRow({ pref }: { pref: PrefRow }) {
+  const lvl = LEVEL_LABELS[pref.participation_level];
+  return (
+    <View style={styles.row}>
+      {pref.profile_image_url ? (
+        <Image
+          source={{ uri: pref.profile_image_url }}
+          style={[styles.avatar, styles.avatarImg]}
+          contentFit="cover"
+        />
+      ) : (
+        <View style={[styles.avatar, { backgroundColor: avatarColor(pref.student_id) }]}>
+          <Text style={styles.avatarText}>{getInitials(pref.child_legal_name)}</Text>
+        </View>
+      )}
+      <View style={styles.info}>
+        <Text style={styles.name}>{pref.child_legal_name}</Text>
+        <View style={[styles.chip, { backgroundColor: lvl.bg }]}>
+          <Text style={[styles.chipText, { color: lvl.color }]}>
+            {lvl.emoji} {lvl.label}
+          </Text>
+        </View>
+        {!!pref.notes && <Text style={styles.notes}>{pref.notes}</Text>}
+        {pref.isDefault && (
+          <Text style={styles.defaultLabel}>Auto-fill preference</Text>
+        )}
+      </View>
+    </View>
+  );
+}
+
 export const ActivityPreferencesSheet = forwardRef<BottomSheetModal, Props>(
-  ({ activityId, attendingStudents }, ref) => {
+  ({ activityId, activityDate, attendingStudents }, ref) => {
     const [prefs, setPrefs] = useState<PrefRow[]>([]);
     const [noPreferenceStudents, setNoPreferenceStudents] = useState<AttendingStudent[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const { sendingId, sentIds, sendReminder, resetReminderState } =
+      useActivityPrefReminders(activityId);
 
     const fetchPrefs = useCallback(async () => {
       setLoading(true);
       setError(null);
       try {
         const excludedIds = await fetchDontIncludeStudentIds();
+        const hasAttendingScope = attendingStudents !== undefined;
         const eligibleStudents = (attendingStudents ?? []).filter(
           (s) => !excludedIds.has(s.student_id),
         );
+        const eligibleIdSet = new Set(eligibleStudents.map((s) => s.student_id));
+        const attendingMap = new Map(
+          eligibleStudents.map((s) => [s.student_id, s]),
+        );
+
+        if (hasAttendingScope && eligibleStudents.length === 0) {
+          setPrefs([]);
+          setNoPreferenceStudents([]);
+          return;
+        }
 
         const { data: prefData, error: prefErr } = await supabase
           .schema("parent_app")
@@ -75,14 +128,36 @@ export const ActivityPreferencesSheet = forwardRef<BottomSheetModal, Props>(
 
         if (prefErr) throw prefErr;
 
-        const filteredPrefData = (prefData ?? []).filter(
+        let filteredPrefData = (prefData ?? []).filter(
           (r) => !excludedIds.has(r.student_id),
         );
 
+        if (hasAttendingScope) {
+          filteredPrefData = filteredPrefData.filter((r) =>
+            eligibleIdSet.has(r.student_id),
+          );
+        }
+
+        const buildPrefRow = (
+          studentId: string,
+          participationLevel: ParticipationLevel,
+          notes: string,
+          isDefault = false,
+        ): PrefRow => {
+          const attending = attendingMap.get(studentId);
+          return {
+            student_id: studentId,
+            participation_level: participationLevel,
+            notes,
+            child_legal_name: attending?.name ?? "Unknown",
+            profile_image_url: attending?.profile_image_url ?? null,
+            isDefault,
+          };
+        };
+
         if (filteredPrefData.length === 0) {
-          const allStudents = eligibleStudents;
-          if (allStudents.length > 0) {
-            const allIds = allStudents.map((s) => s.student_id);
+          if (eligibleStudents.length > 0) {
+            const allIds = eligibleStudents.map((s) => s.student_id);
             const { data: defaultData, error: defaultErr } = await supabase
               .schema("parent_app")
               .from("student_default_preferences")
@@ -90,55 +165,76 @@ export const ActivityPreferencesSheet = forwardRef<BottomSheetModal, Props>(
               .in("student_id", allIds);
             if (defaultErr) throw defaultErr;
 
-            const defaultMap = new Map((defaultData ?? []).map((d: any) => [d.student_id, d.participation_level]));
+            const defaultMap = new Map(
+              (defaultData ?? []).map((d: { student_id: string; participation_level: string }) => [
+                d.student_id,
+                d.participation_level,
+              ]),
+            );
 
-            const defaultPrefRows: PrefRow[] = allStudents
+            const defaultPrefRows: PrefRow[] = eligibleStudents
               .filter((s) => defaultMap.has(s.student_id))
-              .map((s) => ({
-                student_id: s.student_id,
-                participation_level: defaultMap.get(s.student_id) as ParticipationLevel,
-                notes: "",
-                child_legal_name: s.name ?? "Unknown",
-                profile_image_url: s.profile_image_url,
-                isDefault: true,
-              }));
+              .map((s) =>
+                buildPrefRow(
+                  s.student_id,
+                  defaultMap.get(s.student_id) as ParticipationLevel,
+                  "",
+                  true,
+                ),
+              );
 
             setPrefs(defaultPrefRows);
-            setNoPreferenceStudents(allStudents.filter((s) => !defaultMap.has(s.student_id)));
-          } else {
+            setNoPreferenceStudents(
+              eligibleStudents.filter((s) => !defaultMap.has(s.student_id)),
+            );
+          } else if (!hasAttendingScope) {
             setPrefs([]);
             setNoPreferenceStudents([]);
+          } else {
+            setPrefs([]);
+            setNoPreferenceStudents(eligibleStudents);
           }
           return;
         }
 
-        const studentIds = [...new Set(filteredPrefData.map((r) => r.student_id))];
-        const { data: studentData, error: studentErr } = await supabase
-          .schema("admin")
-          .from("students")
-          .select("id, child_legal_name, profile_image_url")
-          .in("id", studentIds);
+        let studentMap: Record<string, { name: string; photo: string | null }> = {};
+        if (!hasAttendingScope) {
+          const studentIds = [...new Set(filteredPrefData.map((r) => r.student_id))];
+          const { data: studentData, error: studentErr } = await supabase
+            .schema("admin")
+            .from("students")
+            .select("id, child_legal_name, profile_image_url")
+            .in("id", studentIds);
 
-        if (studentErr) throw studentErr;
+          if (studentErr) throw studentErr;
 
-        const studentMap: Record<string, { name: string; photo: string | null }> = {};
-        for (const s of studentData ?? []) {
-          studentMap[(s as any).id] = {
-            name: (s as any).child_legal_name,
-            photo: (s as any).profile_image_url ?? null,
-          };
+          for (const s of studentData ?? []) {
+            studentMap[(s as { id: string }).id] = {
+              name: (s as { child_legal_name: string }).child_legal_name,
+              photo: (s as { profile_image_url: string | null }).profile_image_url ?? null,
+            };
+          }
         }
 
-        const fetchedPrefs: PrefRow[] = filteredPrefData.map((r) => ({
-          student_id: r.student_id,
-          participation_level: r.participation_level as ParticipationLevel,
-          notes: r.notes ?? "",
-          child_legal_name: studentMap[r.student_id]?.name ?? "Unknown",
-          profile_image_url: studentMap[r.student_id]?.photo ?? null,
-        }));
+        const fetchedPrefs: PrefRow[] = filteredPrefData.map((r) => {
+          const attending = attendingMap.get(r.student_id);
+          return {
+            student_id: r.student_id,
+            participation_level: r.participation_level as ParticipationLevel,
+            notes: r.notes ?? "",
+            child_legal_name:
+              attending?.name ?? studentMap[r.student_id]?.name ?? "Unknown",
+            profile_image_url:
+              attending?.profile_image_url ??
+              studentMap[r.student_id]?.photo ??
+              null,
+          };
+        });
 
         const prefSet = new Set(fetchedPrefs.map((p) => p.student_id));
-        const noPrefStudents = eligibleStudents.filter((s) => !prefSet.has(s.student_id));
+        const noPrefStudents = eligibleStudents.filter(
+          (s) => !prefSet.has(s.student_id),
+        );
 
         if (noPrefStudents.length > 0) {
           const noPrefIds = noPrefStudents.map((s) => s.student_id);
@@ -149,21 +245,28 @@ export const ActivityPreferencesSheet = forwardRef<BottomSheetModal, Props>(
             .in("student_id", noPrefIds);
           if (defaultErr) throw defaultErr;
 
-          const defaultMap = new Map((defaultData ?? []).map((d: any) => [d.student_id, d.participation_level]));
+          const defaultMap = new Map(
+            (defaultData ?? []).map((d: { student_id: string; participation_level: string }) => [
+              d.student_id,
+              d.participation_level,
+            ]),
+          );
 
           const defaultPrefRows: PrefRow[] = noPrefStudents
             .filter((s) => defaultMap.has(s.student_id))
-            .map((s) => ({
-              student_id: s.student_id,
-              participation_level: defaultMap.get(s.student_id) as ParticipationLevel,
-              notes: "",
-              child_legal_name: s.name ?? "Unknown",
-              profile_image_url: s.profile_image_url,
-              isDefault: true,
-            }));
+            .map((s) =>
+              buildPrefRow(
+                s.student_id,
+                defaultMap.get(s.student_id) as ParticipationLevel,
+                "",
+                true,
+              ),
+            );
 
           setPrefs([...fetchedPrefs, ...defaultPrefRows]);
-          setNoPreferenceStudents(noPrefStudents.filter((s) => !defaultMap.has(s.student_id)));
+          setNoPreferenceStudents(
+            noPrefStudents.filter((s) => !defaultMap.has(s.student_id)),
+          );
         } else {
           setPrefs(fetchedPrefs);
           setNoPreferenceStudents([]);
@@ -178,10 +281,22 @@ export const ActivityPreferencesSheet = forwardRef<BottomSheetModal, Props>(
     const handleChange = useCallback(
       (index: number) => {
         if (index === 0) fetchPrefs();
-        else if (index === -1) { setPrefs([]); setNoPreferenceStudents([]); }
+        else if (index === -1) {
+          setPrefs([]);
+          setNoPreferenceStudents([]);
+          resetReminderState();
+        }
       },
-      [fetchPrefs]
+      [fetchPrefs, resetReminderState],
     );
+
+    const hasAttendingScope = attendingStudents !== undefined;
+    const emptyMessage =
+      hasAttendingScope && !activityDate
+        ? "No activity date set."
+        : hasAttendingScope && attendingStudents.length === 0
+          ? "No students signed up for this day."
+          : "No preferences set yet.";
 
     return (
       <BottomSheetModal
@@ -215,48 +330,27 @@ export const ActivityPreferencesSheet = forwardRef<BottomSheetModal, Props>(
 
           {!loading && !error && prefs.length === 0 && noPreferenceStudents.length === 0 && (
             <View style={styles.centered}>
-              <Text style={styles.emptyText}>No preferences set yet.</Text>
+              <Text style={styles.emptyText}>{emptyMessage}</Text>
             </View>
           )}
 
-          {!loading && !error && prefs.map((pref) => {
-            const lvl = LEVEL_LABELS[pref.participation_level];
-            return (
-              <View key={pref.student_id} style={styles.row}>
-                {pref.profile_image_url ? (
-                  <Image
-                    source={{ uri: pref.profile_image_url }}
-                    style={[styles.avatar, styles.avatarImg]}
-                    contentFit="cover"
-                  />
-                ) : (
-                  <View style={[styles.avatar, { backgroundColor: avatarColor(pref.student_id) }]}>
-                    <Text style={styles.avatarText}>{getInitials(pref.child_legal_name)}</Text>
-                  </View>
-                )}
-                <View style={styles.info}>
-                  <Text style={styles.name}>{pref.child_legal_name}</Text>
-                  <View style={[styles.chip, { backgroundColor: lvl.bg }]}>
-                    <Text style={[styles.chipText, { color: lvl.color }]}>
-                      {lvl.emoji} {lvl.label}
-                    </Text>
-                  </View>
-                  {!!pref.notes && (
-                    <Text style={styles.notes}>{pref.notes}</Text>
-                  )}
-                  {pref.isDefault && (
-                    <Text style={styles.defaultLabel}>Auto-fill preference</Text>
-                  )}
-                </View>
-              </View>
-            );
-          })}
+          {!loading && !error && prefs.length > 0 && (
+            <>
+              <Text style={styles.sectionHeader}>Preferences Set</Text>
+              {prefs.map((pref) => (
+                <PrefStudentRow key={pref.student_id} pref={pref} />
+              ))}
+            </>
+          )}
 
           {!loading && !error && noPreferenceStudents.length > 0 && (
             <>
               <Text style={styles.sectionHeader}>No Preference Set</Text>
               {noPreferenceStudents.map((s) => {
                 const displayName = s.name ?? "Unknown";
+                const isSending = sendingId === s.student_id;
+                const isSent = sentIds.has(s.student_id);
+                const isDisabled = isSending || isSent || !!sendingId;
                 return (
                   <View key={s.student_id} style={styles.row}>
                     {s.profile_image_url ? (
@@ -266,16 +360,43 @@ export const ActivityPreferencesSheet = forwardRef<BottomSheetModal, Props>(
                         contentFit="cover"
                       />
                     ) : (
-                      <View style={[styles.avatar, { backgroundColor: avatarColor(s.student_id) }]}>
-                        <Text style={styles.avatarText}>{getInitials(displayName)}</Text>
+                      <View
+                        style={[
+                          styles.avatar,
+                          { backgroundColor: avatarColor(s.student_id) },
+                        ]}
+                      >
+                        <Text style={styles.avatarText}>
+                          {getInitials(displayName)}
+                        </Text>
                       </View>
                     )}
                     <View style={styles.info}>
                       <Text style={styles.name}>{displayName}</Text>
                       <View style={[styles.chip, { backgroundColor: "#f3f4f6" }]}>
-                        <Text style={[styles.chipText, { color: "#6b7280" }]}>❓ Not set</Text>
+                        <Text style={[styles.chipText, { color: "#6b7280" }]}>
+                          ❓ Not set
+                        </Text>
                       </View>
                     </View>
+                    <Pressable
+                      style={[
+                        styles.reminderBtn,
+                        isSent && styles.reminderBtnSent,
+                        isDisabled && !isSent && styles.reminderBtnDisabled,
+                      ]}
+                      disabled={isDisabled}
+                      onPress={() => sendReminder(s.student_id)}
+                    >
+                      <Text
+                        style={[
+                          styles.reminderBtnText,
+                          isSent && styles.reminderBtnTextSent,
+                        ]}
+                      >
+                        {isSending ? "Sending…" : isSent ? "Sent" : "Send Reminder"}
+                      </Text>
+                    </Pressable>
                   </View>
                 );
               })}
@@ -284,7 +405,7 @@ export const ActivityPreferencesSheet = forwardRef<BottomSheetModal, Props>(
         </BottomSheetScrollView>
       </BottomSheetModal>
     );
-  }
+  },
 );
 
 const styles = StyleSheet.create({
@@ -380,5 +501,26 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: "#9ca3af",
     fontStyle: "italic",
+  },
+  reminderBtn: {
+    alignSelf: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: Brand.sage700,
+  },
+  reminderBtnSent: {
+    backgroundColor: "#e5e7eb",
+  },
+  reminderBtnDisabled: {
+    opacity: 0.6,
+  },
+  reminderBtnText: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 11,
+    color: "#ffffff",
+  },
+  reminderBtnTextSent: {
+    color: "#6b7280",
   },
 });

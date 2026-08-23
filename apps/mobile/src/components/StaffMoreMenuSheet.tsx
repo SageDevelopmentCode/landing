@@ -154,6 +154,20 @@ const ADMIN_SECTION: MoreMenuSection = {
       iconColor: "#5E7C68",
       iconBg: "rgba(94,124,104,0.12)",
     },
+    {
+      label: "Campus Tours",
+      icon: "map-outline",
+      route: "/(staff)/admin/tours",
+      iconColor: "#EC4899",
+      iconBg: "rgba(236,72,153,0.12)",
+    },
+    {
+      label: "Employee Hours",
+      icon: "people-outline",
+      route: "/(staff)/admin/employee-hours",
+      iconColor: "#F59E0B",
+      iconBg: "rgba(245,158,11,0.12)",
+    },
   ],
 };
 

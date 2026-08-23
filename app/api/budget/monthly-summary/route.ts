@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/app/lib/supabase-server";
 import { maybeSendUnpickedPickupReminder } from "@/app/lib/pickup-reminder";
+import { maybeSendActivityPreferenceReminders } from "@/app/lib/activity-preference-reminder";
 import { sendDiscordNotification, createBudgetSummaryEmbed, createRentReminderEmbed, createRevenueReportEmbed, createDailyToursEmbed, createDailyHoursSummaryEmbed, createPayrollReminderEmbed } from "@/app/lib/discord";
 
 const CATEGORIES = [
@@ -152,6 +153,9 @@ export async function GET(request: NextRequest) {
     const notify = request.nextUrl.searchParams.get("notify") === "true";
     let pickupReminder: Awaited<ReturnType<typeof maybeSendUnpickedPickupReminder>> | null =
       null;
+    let activityPrefReminders: Awaited<
+      ReturnType<typeof maybeSendActivityPreferenceReminders>
+    > | null = null;
     if (notify) {
       const todayStr = now.toISOString().split("T")[0];
       const sevenDaysStr = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
@@ -240,6 +244,7 @@ export async function GET(request: NextRequest) {
       });
       const payrollReminder = createPayrollReminderEmbed();
       const pickupPromise = maybeSendUnpickedPickupReminder(db, now);
+      const activityPrefPromise = maybeSendActivityPreferenceReminders(db, now);
       await Promise.all([
         sendDiscordNotification(embed, process.env.DISCORD_BUDGET_WEBHOOK_URL),
         sendDiscordNotification(rentEmbed, process.env.DISCORD_BUDGET_WEBHOOK_URL, rentContent),
@@ -250,12 +255,14 @@ export async function GET(request: NextRequest) {
           ? [sendDiscordNotification(payrollReminder.embed, process.env.DISCORD_BUDGET_WEBHOOK_URL, payrollReminder.content)]
           : []),
         pickupPromise,
+        activityPrefPromise,
       ]);
       pickupReminder = await pickupPromise;
+      activityPrefReminders = await activityPrefPromise;
     }
 
     return NextResponse.json(
-      notify ? { ...summary, pickupReminder } : summary,
+      notify ? { ...summary, pickupReminder, activityPrefReminders } : summary,
     );
   } catch (error) {
     console.error("Error fetching budget summary:", error);
