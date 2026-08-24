@@ -14,6 +14,9 @@ export const E2E_STUDENT_IDS = {
 export const E2E_CONFERENCE_TEACHER_ID =
   'bd562de1-18c2-4b47-91d7-5f0b93fee107' as const
 
+/** Accessible name of the assigned-teacher card in the PTC drawer */
+export const E2E_CONFERENCE_TEACHER_BUTTON = 'Zelinda Melo Your Teacher' as const
+
 export const E2E_GRANT_CHILD_FIRST_NAME = 'Grant' as const
 
 export const E2E_PTC_SLOT = '3:10 – 3:40pm' as const

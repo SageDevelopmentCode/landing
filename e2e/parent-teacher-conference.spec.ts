@@ -4,6 +4,7 @@ import {
   E2E_PTC_SLOT,
   E2E_PTC_GRANTEE_SLOT,
   E2E_GRANT_CHILD_FIRST_NAME,
+  E2E_CONFERENCE_TEACHER_BUTTON,
 } from './helpers/constants'
 
 /**
@@ -61,7 +62,7 @@ test.describe('Parent-teacher conference', () => {
     ).toBeVisible({ timeout: CONTENT_TIMEOUT })
 
     // Assigned teacher (Zelinda) from seed — ensure selected
-    await page.getByRole('button', { name: /Zelinda Melo/i }).click()
+    await page.getByRole('button', { name: E2E_CONFERENCE_TEACHER_BUTTON }).click()
 
     await page.getByRole('button', { name: E2E_PTC_SLOT, exact: true }).click()
 
@@ -102,7 +103,7 @@ test.describe('Parent-teacher conference (grant access)', () => {
     await page
       .getByRole('button', { name: E2E_GRANT_CHILD_FIRST_NAME, exact: true })
       .click()
-    await page.getByRole('button', { name: /Zelinda Melo/i }).click()
+    await page.getByRole('button', { name: E2E_CONFERENCE_TEACHER_BUTTON }).click()
     await page.getByRole('button', { name: E2E_PTC_GRANTEE_SLOT, exact: true }).click()
 
     const confirmBtn = page.getByRole('button', {
