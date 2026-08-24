@@ -180,3 +180,45 @@ export type ConferenceBookingRecord = {
   format: "in_person" | "virtual";
   accommodationNote: string | null;
 };
+
+export type UpcomingConferenceEntry = {
+  studentId: string;
+  studentName: string;
+  booking: ConferenceBookingRecord;
+  teacherName: string;
+};
+
+export function getUpcomingConferenceEntries(
+  conferenceStudents: Array<{
+    studentId: string;
+    name: string;
+  }>,
+  bookingsByStudent: Record<string, ConferenceBookingRecord>,
+  teachers: ConferenceTeacherDisplay[],
+  todayYmd: string,
+): UpcomingConferenceEntry[] {
+  const entries: UpcomingConferenceEntry[] = [];
+
+  for (const student of conferenceStudents) {
+    const booking = bookingsByStudent[student.studentId];
+    if (!booking || booking.conferenceDate < todayYmd) continue;
+
+    const teacherName =
+      teachers.find((t) => t.id === booking.teacherId)?.name ?? "Your teacher";
+
+    entries.push({
+      studentId: student.studentId,
+      studentName: student.name,
+      booking,
+      teacherName,
+    });
+  }
+
+  return entries.sort((a, b) => {
+    const dateCmp = a.booking.conferenceDate.localeCompare(
+      b.booking.conferenceDate,
+    );
+    if (dateCmp !== 0) return dateCmp;
+    return a.booking.timeSlot.localeCompare(b.booking.timeSlot);
+  });
+}

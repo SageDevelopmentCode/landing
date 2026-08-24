@@ -34,6 +34,7 @@ import type {
 } from "@/app/lib/parent-teacher-conference";
 import type { ConferenceStudentContext } from "@/app/lib/get-conference-teacher-assignments";
 import ActionNeededCard from "./ActionNeededCard";
+import UpcomingParentTeacherConferenceCard from "./UpcomingParentTeacherConferenceCard";
 import UpcomingActivitiesSection from "./UpcomingActivitiesSection";
 import ParentActivityPreferenceSheet from "./ParentActivityPreferenceSheet";
 import HelpWidget from "@/app/parent/components/HelpWidget";
@@ -1154,9 +1155,19 @@ export default function HomePageClient({
         <div className="flex flex-col gap-8">
           <div
             className={
-              actionNeededInteractive ? "pointer-events-auto" : undefined
+              actionNeededInteractive
+                ? "pointer-events-auto flex flex-col gap-4"
+                : "flex flex-col gap-4"
             }
           >
+            <UpcomingParentTeacherConferenceCard
+              parentId={parentId}
+              conferenceTeachers={conferenceTeachers}
+              conferenceStudents={conferenceStudents}
+              conferenceBookingsByStudent={conferenceBookingsByStudent}
+              conferenceTakenSlotKeys={conferenceTakenSlotKeys}
+              readOnly={readOnlyPreview}
+            />
             <ActionNeededCard
               parentId={parentId}
               hasActivityForPaidDay={hasActivityForPaidDayLive}
