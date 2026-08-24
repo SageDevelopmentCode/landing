@@ -202,16 +202,21 @@ export default async function ManualPaymentsPage() {
     return existingPaymentsByStudent[sid]
   }
 
-  function mergeHomeschoolWeekDays(
+  function setHomeschoolMonthDays(
     target: Record<number, string[]>,
     week: number,
     days: string[],
   ) {
-    const existing = target[week] ?? []
-    target[week] = [...new Set([...existing, ...days])]
+    if (days.length > 0) {
+      target[week] = days
+    }
   }
 
-  for (const tx of txData ?? []) {
+  const sortedTx = [...(txData ?? [])].sort(
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+  )
+
+  for (const tx of sortedTx) {
     if (!tx.student_id) continue
     const entry = ensureEntry(tx.student_id)
     const meta = (tx.metadata ?? {}) as Record<string, string>
@@ -250,20 +255,37 @@ export default async function ManualPaymentsPage() {
         try {
           const parsed: { week: number; days: string[] }[] = JSON.parse(meta.week_selections)
           for (const { week, days } of parsed) {
-            mergeHomeschoolWeekDays(paidMap, week, days)
+            setHomeschoolMonthDays(paidMap, week, days)
           }
         } catch { /* ignore malformed */ }
       } else {
         const weeks = (meta.selected_weeks ?? '').split(',').map(Number).filter(Boolean)
         const days = (meta.selected_days ?? '').split(',').filter(Boolean)
         for (const w of weeks) {
-          mergeHomeschoolWeekDays(paidMap, w, days)
+          setHomeschoolMonthDays(paidMap, w, days)
         }
       }
     }
 
     if (tx.payment_type === 'supply_fee') {
       entry.paidSupplyFee = true
+      if (
+        meta.bundle_type === 'homeschool' &&
+        meta.bundle_homeschool_week_selections_json
+      ) {
+        try {
+          const parsed: { week: number; days: string[] }[] = JSON.parse(
+            meta.bundle_homeschool_week_selections_json,
+          )
+          for (const { week, days } of parsed) {
+            setHomeschoolMonthDays(
+              entry.paidHomeschoolSchoolYearMonthDays,
+              week,
+              days,
+            )
+          }
+        } catch { /* ignore malformed */ }
+      }
     }
 
     if (tx.payment_type === 'school_year_tuition') {

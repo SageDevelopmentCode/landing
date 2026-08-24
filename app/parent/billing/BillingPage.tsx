@@ -7927,10 +7927,14 @@ function PendingPaymentsSection({
 
   const isSchoolYearOnlyStudent =
     isSchoolYearOnly ||
+    summerEnrollments.some(
+      (e) => e.student_id === activeStudentId && e.program === "both",
+    ) ||
     homeschoolDropInApps.some(
       (a) =>
         a.student_id === activeStudentId &&
-        a.drop_in_program === "school_year_26_27",
+        (a.drop_in_program === "school_year_26_27" ||
+          a.drop_in_program === "both"),
     );
 
   const studentTermKey = `${activeStudentId}-${isSchoolYearOnlyStudent ? "school_year" : "summer"}`;
@@ -8247,7 +8251,7 @@ function PendingPaymentsSection({
                               Tuition
                             </span>
                             <span className="hidden sm:block text-xs text-amber-600 font-medium font-body mt-0.5">
-                              August tuition due Aug 10
+                              September tuition due Sept. 1
                             </span>
                           </div>
                         </div>
@@ -9749,7 +9753,7 @@ export default function BillingPage({
               <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
                 <Info size={16} className="text-amber-500 shrink-0" />
                 <p className="flex-1 text-sm font-semibold text-amber-800">
-                  August tuition is due <span className="font-bold">August 10</span> — one week before school starts.
+                  September tuition due <span className="font-bold">Sept. 1</span>.
                 </p>
                 <button
                   onClick={() => setTuitionBannerDismissed(true)}
