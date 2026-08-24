@@ -8251,7 +8251,7 @@ function PendingPaymentsSection({
                               Tuition
                             </span>
                             <span className="hidden sm:block text-xs text-amber-600 font-medium font-body mt-0.5">
-                              August tuition due Sep 1
+                              September tuition due Sept. 1
                             </span>
                           </div>
                         </div>
@@ -9753,7 +9753,7 @@ export default function BillingPage({
               <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
                 <Info size={16} className="text-amber-500 shrink-0" />
                 <p className="flex-1 text-sm font-semibold text-amber-800">
-                  August tuition is due <span className="font-bold">September 1</span>.
+                  September tuition due <span className="font-bold">Sept. 1</span>.
                 </p>
                 <button
                   onClick={() => setTuitionBannerDismissed(true)}
