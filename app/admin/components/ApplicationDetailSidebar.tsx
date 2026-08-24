@@ -43,6 +43,7 @@ import { sendSummerWeekSevenNewsletterEmail } from '../../actions/sendSummerWeek
 import { sendSummerWeekEightNewsletterEmail } from '../../actions/sendSummerWeekEightNewsletterEmail'
 import { sendSummerWeekElevenNewsletterEmail } from '../../actions/sendSummerWeekElevenNewsletterEmail'
 import { sendSummerWeekTwelveNewsletterEmail } from '../../actions/sendSummerWeekTwelveNewsletterEmail'
+import { sendSchoolYearWeekOneNewsletterEmail } from '../../actions/sendSchoolYearWeekOneNewsletterEmail'
 import { sendSchoolYearCommitmentEmail } from '../../actions/sendSchoolYearCommitmentEmail'
 import { sendFreeFridayAnnouncementEmail } from '../../actions/sendFreeFridayAnnouncementEmail'
 import { sendGoogleReviewIncentiveEmail } from '../../actions/sendGoogleReviewIncentiveEmail'
@@ -58,6 +59,7 @@ import { sendSchoolYearTuitionDueDateTodayReminderEmail } from '../../actions/se
 import { sendHomeschoolDropInTuitionReminderEmail } from '../../actions/sendHomeschoolDropInTuitionReminderEmail'
 import { sendHomeschoolDropInClarificationEmail } from '../../actions/sendHomeschoolDropInClarificationEmail'
 import { sendActivityPreferenceReminderPreview } from '../../actions/sendActivityPreferenceReminderEmail'
+import { sendParentTeacherConferenceRescheduleEmail } from '../../actions/sendParentTeacherConferenceRescheduleEmail'
 import { enrollApplication } from '../../actions/enrollApplication'
 import { PaymentHistory } from './PaymentHistory'
 import { updateApplicationProgram } from '../../actions/updateApplicationProgram'
@@ -276,6 +278,9 @@ export function ApplicationDetailSidebar({
   const [weekTwelveNewsletterSending, setWeekTwelveNewsletterSending] = useState(false)
   const [weekTwelveNewsletterSent, setWeekTwelveNewsletterSent] = useState(false)
   const [weekTwelveNewsletterError, setWeekTwelveNewsletterError] = useState<string | null>(null)
+  const [schoolYearWeekOneNewsletterSending, setSchoolYearWeekOneNewsletterSending] = useState(false)
+  const [schoolYearWeekOneNewsletterSent, setSchoolYearWeekOneNewsletterSent] = useState(false)
+  const [schoolYearWeekOneNewsletterError, setSchoolYearWeekOneNewsletterError] = useState<string | null>(null)
   const [freeFridaySending, setFreeFridaySending] = useState(false)
   const [freeFridaySent, setFreeFridaySent] = useState(false)
   const [freeFridayError, setFreeFridayError] = useState<string | null>(null)
@@ -321,6 +326,9 @@ export function ApplicationDetailSidebar({
   const [activityPrefReminderSending, setActivityPrefReminderSending] = useState(false)
   const [activityPrefReminderSent, setActivityPrefReminderSent] = useState(false)
   const [activityPrefReminderError, setActivityPrefReminderError] = useState<string | null>(null)
+  const [ptcRescheduleSending, setPtcRescheduleSending] = useState(false)
+  const [ptcRescheduleSent, setPtcRescheduleSent] = useState(false)
+  const [ptcRescheduleError, setPtcRescheduleError] = useState<string | null>(null)
   const [tagInput, setTagInput] = useState('')
   const [tagSaving, setTagSaving] = useState(false)
   const [tagError, setTagError] = useState<string | null>(null)
@@ -330,7 +338,7 @@ export function ApplicationDetailSidebar({
   const [isEnrolling, setIsEnrolling] = useState(false)
   const [enrollError, setEnrollError] = useState<string | null>(null)
   const [emailThreadKey, setEmailThreadKey] = useState(0)
-  const [outreachTab, setOutreachTab] = useState<'enrollment' | 'summer' | 'newsletters' | 'other'>('enrollment')
+  const [outreachTab, setOutreachTab] = useState<'enrollment' | 'summer' | 'newsletters' | 'schoolYear' | 'other'>('enrollment')
   const [isEditingProgram, setIsEditingProgram] = useState(false)
   const [selectedProgram, setSelectedProgram] = useState<string>(application?.program ?? '')
   const [isUpdatingProgram, setIsUpdatingProgram] = useState(false)
@@ -1069,6 +1077,25 @@ export function ApplicationDetailSidebar({
     }
   }
 
+  async function handleSendPtcReschedule() {
+    if (!application?.g1_email) return
+    setPtcRescheduleSending(true)
+    setPtcRescheduleError(null)
+    const result = await sendParentTeacherConferenceRescheduleEmail({
+      email: application.g1_email,
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? 'your child',
+    })
+    setPtcRescheduleSending(false)
+    if (result.success) {
+      setPtcRescheduleSent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setPtcRescheduleSent(false), 3000)
+    } else {
+      setPtcRescheduleError(result.error ?? 'Failed to send')
+    }
+  }
+
   async function handleSendGardenDayInvite() {
     if (!application?.g1_email) return
     setGardenDayInviteSending(true)
@@ -1382,6 +1409,25 @@ export function ApplicationDetailSidebar({
       setTimeout(() => setWeekTwelveNewsletterSent(false), 3000)
     } else {
       setWeekTwelveNewsletterError(result.error ?? 'Failed to send')
+    }
+  }
+
+  const handleSendSchoolYearWeekOneNewsletter = async () => {
+    if (schoolYearWeekOneNewsletterSending || !application.g1_email) return
+    setSchoolYearWeekOneNewsletterSending(true)
+    setSchoolYearWeekOneNewsletterError(null)
+    const result = await sendSchoolYearWeekOneNewsletterEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+    })
+    setSchoolYearWeekOneNewsletterSending(false)
+    if (result.success) {
+      setSchoolYearWeekOneNewsletterSent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setSchoolYearWeekOneNewsletterSent(false), 3000)
+    } else {
+      setSchoolYearWeekOneNewsletterError(result.error ?? 'Failed to send')
     }
   }
 
@@ -1871,7 +1917,7 @@ export function ApplicationDetailSidebar({
           <SidebarSection title="Outreach">
             {/* Tab bar */}
             <div className="flex gap-1 mb-3 flex-wrap">
-              {(['enrollment', 'summer', 'newsletters', 'other'] as const).map(tab => (
+              {(['enrollment', 'summer', 'newsletters', 'schoolYear', 'other'] as const).map(tab => (
                 <button
                   key={tab}
                   onClick={() => setOutreachTab(tab)}
@@ -1881,7 +1927,7 @@ export function ApplicationDetailSidebar({
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
-                  {tab === 'enrollment' ? 'Enrollment' : tab === 'summer' ? 'Summer' : tab === 'newsletters' ? 'Newsletters' : 'Other'}
+                  {tab === 'enrollment' ? 'Enrollment' : tab === 'summer' ? 'Summer' : tab === 'newsletters' ? 'Newsletters' : tab === 'schoolYear' ? 'School Year' : 'Other'}
                 </button>
               ))}
             </div>
@@ -2219,6 +2265,20 @@ export function ApplicationDetailSidebar({
                 </div>
               </>}
 
+              {outreachTab === 'schoolYear' && <>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendSchoolYearWeekOneNewsletter}
+                    disabled={schoolYearWeekOneNewsletterSending || schoolYearWeekOneNewsletterSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {schoolYearWeekOneNewsletterSending ? 'Sending…' : schoolYearWeekOneNewsletterSent ? '✓ Sent!' : 'Send School Year Week One Newsletter'}
+                  </button>
+                  {schoolYearWeekOneNewsletterError && <span className="text-xs text-red-600">{schoolYearWeekOneNewsletterError}</span>}
+                </div>
+              </>}
+
               {outreachTab === 'other' && <>
                 <div className="flex items-center gap-3">
                   <button
@@ -2297,6 +2357,22 @@ export function ApplicationDetailSidebar({
                     {activityPrefReminderSending ? 'Sending…' : activityPrefReminderSent ? '✓ Sent!' : 'Send Activity Preference Reminder'}
                   </button>
                   {activityPrefReminderError && <span className="text-xs text-red-600">{activityPrefReminderError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendPtcReschedule}
+                    disabled={
+                      ptcRescheduleSending
+                      || ptcRescheduleSent
+                      || !application?.g1_email
+                    }
+                    title={!application?.g1_email ? 'No parent email on file' : undefined}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {ptcRescheduleSending ? 'Sending…' : ptcRescheduleSent ? '✓ Sent!' : 'Send PTC Reschedule Email'}
+                  </button>
+                  {ptcRescheduleError && <span className="text-xs text-red-600">{ptcRescheduleError}</span>}
                 </div>
                 <div className="flex items-center gap-3">
                   <button

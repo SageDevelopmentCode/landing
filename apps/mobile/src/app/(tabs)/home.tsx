@@ -9,6 +9,7 @@ import {
 import { ParentActivityPreferenceSheet } from "@/components/ParentActivityPreferenceSheet";
 import { AutoFillPreferencesSheet } from "@/components/AutoFillPreferencesSheet";
 import { ParentTeacherConferenceSheet } from "@/components/ParentTeacherConferenceSheet";
+import { UpcomingParentTeacherConferenceCard } from "@/components/UpcomingParentTeacherConferenceCard";
 import { BottomTabInset, Brand, FontFamilies } from "@/constants/theme";
 import { API_BASE_URL } from "@/constants/config";
 import { useAuth } from "@/contexts/AuthContext";
@@ -3429,6 +3430,13 @@ export default function HomeScreen() {
             </>
           ) : (
             <>
+              <UpcomingParentTeacherConferenceCard
+                conferenceStudents={ptcStudentsForBanner}
+                conferenceBookingsByStudent={conferenceBookingsByStudent}
+                conferenceTeachers={conferenceTeachers}
+                onPress={openPtcSheet}
+              />
+
               {showActionNeededCard && (
                 <View style={actPrefStyles.card}>
                   <LinearGradient
