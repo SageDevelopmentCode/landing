@@ -481,23 +481,38 @@ export function buildPaidDaysByMonth(
     weekDays: Record<number, string[]>;
     weeks: number[];
     days: string[];
+    createdAt?: string;
   }[],
 ): Record<number, string[]> {
   const result: Record<number, string[]> = {};
+  const resultAt: Record<number, string> = {};
+
   for (const entry of entries) {
+    const entryTime = entry.createdAt ?? "";
+    const monthToDays: Record<number, string[]> = {};
+
     for (const monthIndex of entry.weeks) {
       const days =
         entry.weekDays[monthIndex]?.length > 0
           ? entry.weekDays[monthIndex]
           : entry.days;
       if (days.length > 0) {
-        result[monthIndex] = days;
+        monthToDays[monthIndex] = days;
       }
     }
     for (const [wk, days] of Object.entries(entry.weekDays)) {
       const monthIndex = Number(wk);
       if (days.length > 0) {
+        monthToDays[monthIndex] = days;
+      }
+    }
+
+    for (const [monthIndexStr, days] of Object.entries(monthToDays)) {
+      const monthIndex = Number(monthIndexStr);
+      const prevTime = resultAt[monthIndex] ?? "";
+      if (!result[monthIndex] || entryTime >= prevTime) {
         result[monthIndex] = days;
+        resultAt[monthIndex] = entryTime;
       }
     }
   }
