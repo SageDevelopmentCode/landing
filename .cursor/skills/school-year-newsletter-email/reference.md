@@ -1,5 +1,7 @@
 # School Year Newsletter Email — Reference
 
+For social media carousel slide copy from the same newsletter data, see [newsletter-carousel-highlights/reference.md](../newsletter-carousel-highlights/reference.md).
+
 ## Supabase project
 
 - Project ID: `vonuwpzepwrbdlectspd`
