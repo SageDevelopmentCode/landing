@@ -6,6 +6,7 @@ import {
   type ApplicationRow,
   type PaidHomeschoolByStudent,
 } from "@/lib/school-year-billing";
+import { FUN_FRIDAY_DROPIN_CENTS } from "@/lib/school-year";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -18,6 +19,14 @@ const CARD_IMAGES = {
   aftercare: require("@/assets/images/stock/Stock3.webp"),
   funFriday: require("@/assets/images/stock/Stock1.webp"),
 };
+
+function formatDropinRate(cents: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(cents / 100);
+}
 
 type StudentInfo = { id: string; name: string; profileImageUrl: string | null };
 
@@ -315,7 +324,7 @@ export function SchoolYearBillingSection({
               badge={
                 paidFfMonths > 0
                   ? `${paidFfMonths} mo. paid`
-                  : "Optional"
+                  : `${formatDropinRate(FUN_FRIDAY_DROPIN_CENTS)}/session drop-in`
               }
               badgeGreen={paidFfMonths > 0}
               ctaLabel="Select plan"

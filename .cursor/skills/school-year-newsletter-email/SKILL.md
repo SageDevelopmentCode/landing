@@ -175,6 +175,8 @@ Agent actions:
 ## Reference
 
 - SQL queries + HTML skeleton: [reference.md](reference.md)
+- Social carousel slides (heading + body): [newsletter-carousel-highlights](../newsletter-carousel-highlights/SKILL.md)
+- Highlights page + WeekRecapPreview: [newsletter-highlights-page](../newsletter-highlights-page/SKILL.md)
 - Canonical email: `app/lib/zoho.ts` → `buildSchoolYearWeekOneNewsletterEmail`
 - Newsletter schema: `supabase/migrations/20260801012118_remote_schema.sql` (`newsletters` schema)
 - Section defaults: `apps/mobile/src/lib/newsletters-actions.ts` → `DEFAULT_SECTIONS`

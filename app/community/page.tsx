@@ -17,6 +17,7 @@ import Footer from "../components/Footer";
 import FloatingSMSButton from "../components/FloatingSMSButton";
 import ContactDialog from "../components/ContactDialog";
 import WeekRecapPreview from "../components/WeekRecapPreview";
+import { SCHOOL_YEAR_LATEST_CARD } from "@/app/lib/highlights/school-year-latest-preview";
 import EveningSpotlight from "../components/community/EveningSpotlight";
 import PlantCatalog from "../components/community/PlantCatalog";
 import EducationalPhilosophySection from "../components/EducationalPhilosophySection";
@@ -160,64 +161,7 @@ const PLANT_CATEGORIES = [
   },
 ];
 
-const PREVIEW_WEEKS = [
-  {
-    week: 1,
-    dates: "May 26–29",
-    theme: "Welcome to Summer",
-    href: "/highlights/summer/week-1",
-    coverImage:
-      "/assets/highlights/summer_week_one/C8EAD2FA-0FB2-4D59-A079-493C09298ABF.JPG",
-  },
-  {
-    week: 2,
-    dates: "Jun 1–4",
-    theme: "Mystery Camp Escape Challenge",
-    href: "/highlights/summer/week-2",
-    coverImage:
-      "/assets/highlights/summer_week_two/A0AA3C22-7657-4E63-A3FD-7AB6CD3B85E0.JPG",
-  },
-  {
-    week: 3,
-    dates: "Jun 9–13",
-    theme: "Beach Day Bash",
-    href: "/highlights/summer/week-3",
-    coverImage:
-      "/assets/highlights/summer_week_three/FE28F7EF-5568-4F11-9C62-E44AC6209D53.JPG",
-  },
-  {
-    week: 4,
-    dates: "Jun 15–19",
-    theme: "STEM Adventure & Strawberry Jam",
-    href: "/highlights/summer/week-4",
-    coverImage:
-      "/assets/highlights/summer_week_four/C4EB78AE-3AE3-4DB4-BAF4-DA09B3A7E941 2.JPG",
-  },
-  {
-    week: 5,
-    dates: "Jun 22–26",
-    theme: "Safari Adventure & Snake Deep Dive",
-    href: "/highlights/summer/week-5",
-    coverImage:
-      "/assets/highlights/summer_week_five/69BAEEC0-7C4B-4821-8595-02152DC7E7FB.JPG",
-  },
-  {
-    week: 6,
-    dates: "Jun 29–Jul 2",
-    theme: "Cooking from Scratch & Halfway There",
-    href: "/highlights/summer/week-6",
-    coverImage:
-      "/assets/highlights/summer_week_six/1A73BC70-CEC1-4979-8576-39585C31DB07.JPG",
-  },
-  {
-    week: 12,
-    dates: "Aug 10–13",
-    theme: "Finale of Camp",
-    href: "/highlights/summer/week-12",
-    coverImage:
-      "/assets/highlights/summer_week_twelve/8C3B1791-0B49-4B7E-B069-C746C7CF6F65.JPG",
-  },
-];
+const PREVIEW_WEEKS = [SCHOOL_YEAR_LATEST_CARD];
 
 const inputClass =
   "border border-gray-200 rounded-xl px-4 py-3 text-sm font-body text-text-gray placeholder-gray-400 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-60 disabled:cursor-not-allowed";
@@ -678,18 +622,17 @@ export default function CommunityGardenPage() {
             transition={{ duration: 0.5 }}
           >
             <span className="inline-block px-5 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-5 font-body">
-              Summer 2026
+              School Year 2026–27
             </span>
             <h2 className="text-3xl md:text-4xl font-bold font-heading text-gray-800 mb-3">
               See What Life at Sage Field Looks Like
             </h2>
             <p className="text-base text-gray-500 font-body max-w-xl mx-auto">
-              12 weeks of outdoor learning, real academics, and joy — a glimpse
-              into our community.
+              Our school year is underway — community, routines, and hands-on learning from week one.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 max-w-sm mx-auto gap-6 mb-8">
             {PREVIEW_WEEKS.map((week, i) => (
               <motion.div
                 key={week.week}

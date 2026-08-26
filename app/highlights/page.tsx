@@ -15,7 +15,18 @@ interface WeekEntry {
   coverImage?: string;
 }
 
-const WEEKS: WeekEntry[] = [
+const SCHOOL_YEAR_WEEKS: WeekEntry[] = [
+  {
+    week: 1,
+    dates: "Aug 17–21",
+    theme: "First Week of School",
+    href: "/highlights/school-year/week-1",
+    coverImage:
+      "/assets/highlights/school_week_one/B5E9BAE4-8895-4A91-BE6A-E8D0232594E0 2.JPG",
+  },
+];
+
+const SUMMER_WEEKS: WeekEntry[] = [
   {
     week: 1,
     dates: "May 26–29",
@@ -78,12 +89,94 @@ const WEEKS: WeekEntry[] = [
   },
 ];
 
+function WeekCardsGrid({
+  weeks,
+  sectionKey,
+}: {
+  weeks: WeekEntry[];
+  sectionKey: string;
+}) {
+  return (
+    <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {weeks.map((entry, i) => {
+        const isLive = !!entry.href;
+
+        const cardInner = (
+          <motion.div
+            className={`group bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 transition-all duration-200 ${
+              isLive
+                ? "hover:shadow-md hover:scale-[1.02] cursor-pointer"
+                : "opacity-70"
+            }`}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: (i % 3) * 0.08 }}
+          >
+            <div className="relative w-full aspect-[4/3] bg-gray-100">
+              {isLive && entry.coverImage ? (
+                <Image
+                  src={entry.coverImage}
+                  alt={`Week ${entry.week} — ${entry.theme}`}
+                  fill
+                  className="object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                />
+              ) : (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                  <span className="text-3xl">📅</span>
+                  <span className="text-xs font-semibold text-gray-400 font-body">
+                    Coming Soon
+                  </span>
+                </div>
+              )}
+
+              <span className="absolute top-3 left-3 px-2.5 py-1 bg-primary text-white text-xs font-bold rounded-full font-body shadow-sm">
+                Week {entry.week}
+              </span>
+
+              {isLive && (
+                <span className="absolute top-3 right-3 px-2.5 py-1 bg-white/90 backdrop-blur-sm text-sage-700 text-xs font-bold rounded-full font-body shadow-sm">
+                  ✓ Live
+                </span>
+              )}
+            </div>
+
+            <div className="p-5">
+              <p className="text-xs text-gray-400 font-body mb-1">{entry.dates}</p>
+              <h3 className="text-base font-bold font-heading text-gray-800 mb-3 leading-snug">
+                {isLive ? entry.theme : "Coming Soon"}
+              </h3>
+              {isLive ? (
+                <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary font-body group-hover:underline">
+                  View Highlights →
+                </span>
+              ) : (
+                <span className="text-xs text-gray-400 font-body italic">
+                  Recap will be posted after the week ends
+                </span>
+              )}
+            </div>
+          </motion.div>
+        );
+
+        return isLive ? (
+          <Link key={`${sectionKey}-${entry.week}`} href={entry.href!} className="block">
+            {cardInner}
+          </Link>
+        ) : (
+          <div key={`${sectionKey}-${entry.week}`}>{cardInner}</div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function HighlightsIndexPage() {
   return (
     <div className="min-h-screen bg-welcome-bg">
       <Navbar darkStyle />
 
-      {/* Header */}
       <section className="pt-32 pb-12 px-8 sm:px-12 lg:px-16">
         <div className="max-w-5xl mx-auto text-center">
           <motion.div
@@ -92,7 +185,7 @@ export default function HighlightsIndexPage() {
             transition={{ duration: 0.5 }}
           >
             <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4 font-body">
-              Summer 2026
+              Highlights
             </span>
           </motion.div>
           <motion.h1
@@ -109,92 +202,37 @@ export default function HighlightsIndexPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            A look back at each week of our Summer 2026 program — photos,
-            lessons, and memories.
+            A look back at each week of our school year and summer programs —
+            photos, lessons, and memories.
           </motion.p>
         </div>
       </section>
 
-      {/* Week cards grid */}
-      <section className="pb-20 px-8 sm:px-12 lg:px-16">
-        <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {WEEKS.filter((entry) => !!entry.href).map((entry, i) => {
-            const isLive = !!entry.href;
-
-            const cardInner = (
-              <motion.div
-                className={`group bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 transition-all duration-200 ${
-                  isLive
-                    ? "hover:shadow-md hover:scale-[1.02] cursor-pointer"
-                    : "opacity-70"
-                }`}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: (i % 3) * 0.08 }}
-              >
-                {/* Cover image */}
-                <div className="relative w-full aspect-[4/3] bg-gray-100">
-                  {isLive && entry.coverImage ? (
-                    <Image
-                      src={entry.coverImage}
-                      alt={`Week ${entry.week} — ${entry.theme}`}
-                      fill
-                      className="object-cover group-hover:scale-[1.03] transition-transform duration-500"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                      <span className="text-3xl">📅</span>
-                      <span className="text-xs font-semibold text-gray-400 font-body">
-                        Coming Soon
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Week badge over image */}
-                  <span className="absolute top-3 left-3 px-2.5 py-1 bg-primary text-white text-xs font-bold rounded-full font-body shadow-sm">
-                    Week {entry.week}
-                  </span>
-
-                  {/* Live indicator */}
-                  {isLive && (
-                    <span className="absolute top-3 right-3 px-2.5 py-1 bg-white/90 backdrop-blur-sm text-sage-700 text-xs font-bold rounded-full font-body shadow-sm">
-                      ✓ Live
-                    </span>
-                  )}
-                </div>
-
-                {/* Card body */}
-                <div className="p-5">
-                  <p className="text-xs text-gray-400 font-body mb-1">
-                    {entry.dates}
-                  </p>
-                  <h3 className="text-base font-bold font-heading text-gray-800 mb-3 leading-snug">
-                    {isLive ? entry.theme : "Coming Soon"}
-                  </h3>
-                  {isLive ? (
-                    <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary font-body group-hover:underline">
-                      View Highlights →
-                    </span>
-                  ) : (
-                    <span className="text-xs text-gray-400 font-body italic">
-                      Recap will be posted after the week ends
-                    </span>
-                  )}
-                </div>
-              </motion.div>
-            );
-
-            return isLive ? (
-              <Link key={entry.week} href={entry.href!} className="block">
-                {cardInner}
-              </Link>
-            ) : (
-              <div key={entry.week}>{cardInner}</div>
-            );
-          })}
+      <section className="pb-16 px-8 sm:px-12 lg:px-16">
+        <div className="max-w-5xl mx-auto mb-8">
+          <h2 className="text-2xl font-bold font-heading text-gray-800 mb-1">
+            School Year 2026–27
+          </h2>
+          <p className="text-sm text-gray-500 font-body">
+            Weekly recaps from our school year program.
+          </p>
         </div>
+        <WeekCardsGrid weeks={SCHOOL_YEAR_WEEKS} sectionKey="school-year" />
+      </section>
+
+      <section className="pb-20 px-8 sm:px-12 lg:px-16">
+        <div className="max-w-5xl mx-auto mb-8">
+          <h2 className="text-2xl font-bold font-heading text-gray-800 mb-1">
+            Summer 2026
+          </h2>
+          <p className="text-sm text-gray-500 font-body">
+            Weekly recaps from our summer program.
+          </p>
+        </div>
+        <WeekCardsGrid
+          weeks={SUMMER_WEEKS.filter((entry) => !!entry.href)}
+          sectionKey="summer"
+        />
       </section>
 
       <Footer />

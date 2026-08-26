@@ -18,7 +18,8 @@
     "types:generate:token": "node scripts/generate-types-with-token.js",
     "mobile": "npm --prefix apps/mobile start",
     "mobile:ios": "npm --prefix apps/mobile run ios",
-    "mobile:android": "npm --prefix apps/mobile run android"
+    "mobile:android": "npm --prefix apps/mobile run android",
+    "compress:highlights": "node scripts/compress-highlight-images.mjs"
   },
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.15",
@@ -65,6 +66,7 @@
     "dotenv-cli": "^11.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

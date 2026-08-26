@@ -216,7 +216,12 @@ export function SchoolYearFunFridaySelectionSheet({
                   </View>
                 );
               })
-            : SCHOOL_YEAR_FUN_FRIDAY_MONTHS.map((month) => (
+            : (
+              <>
+                <Text style={s.dropinNote}>
+                  Select individual Fridays. {formatCents(FUN_FRIDAY_DROPIN_CENTS)}/session.
+                </Text>
+                {SCHOOL_YEAR_FUN_FRIDAY_MONTHS.map((month) => (
                 <View key={month.key} style={s.monthBlock}>
                   <Text style={s.monthTitle}>{month.label}</Text>
                   <View style={s.daysGrid}>
@@ -255,6 +260,8 @@ export function SchoolYearFunFridaySelectionSheet({
                   </View>
                 </View>
               ))}
+              </>
+            )}
 
           <Pressable
             style={[s.primaryBtn, !canContinue && s.primaryBtnDisabled]}
@@ -303,6 +310,12 @@ const s = StyleSheet.create({
     color: "#6B7280",
   },
   tabTextOn: { color: "#7c3aed" },
+  dropinNote: {
+    fontFamily: FontFamilies.body,
+    fontSize: 13,
+    color: "#6B7280",
+    marginBottom: 12,
+  },
   monthBlock: { marginBottom: 12 },
   monthHeader: {
     flexDirection: "row",

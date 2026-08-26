@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, Shield, Clock, Calendar, Star, BookOpen } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { Bebas_Neue } from "next/font/google";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import WelcomeSection from "./components/WelcomeSection";
@@ -24,6 +25,16 @@ import WaitlistDialog from "./components/WaitlistDialog";
 import FloatingSMSButton from "./components/FloatingSMSButton";
 import EnrollmentAnnouncementPopup from "./components/EnrollmentAnnouncementPopup";
 import WeekRecapPreview from "./components/WeekRecapPreview";
+import { SCHOOL_YEAR_LATEST_CARD } from "@/app/lib/highlights/school-year-latest-preview";
+import { FUN_FRIDAY_DROPIN_CENTS } from "@/shared/billing/school-year";
+
+const bebasNeue = Bebas_Neue({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-bebas-neue",
+});
+
+const FRIDAY_DROPIN_DOLLARS = FUN_FRIDAY_DROPIN_CENTS / 100;
 
 
 interface LatestPost {
@@ -35,51 +46,7 @@ interface LatestPost {
   cover_image_signed_url: string | null;
 }
 
-const PREVIEW_WEEKS = [
-  {
-    week: 1,
-    dates: "May 26–29",
-    theme: "Welcome to Summer",
-    href: "/highlights/summer/week-1",
-    coverImage: "/assets/highlights/summer_week_one/C8EAD2FA-0FB2-4D59-A079-493C09298ABF.JPG",
-  },
-  {
-    week: 2,
-    dates: "Jun 1–4",
-    theme: "Mystery Camp Escape Challenge",
-    href: "/highlights/summer/week-2",
-    coverImage: "/assets/highlights/summer_week_two/A0AA3C22-7657-4E63-A3FD-7AB6CD3B85E0.JPG",
-  },
-  {
-    week: 3,
-    dates: "Jun 9–13",
-    theme: "Beach Day Bash",
-    href: "/highlights/summer/week-3",
-    coverImage: "/assets/highlights/summer_week_three/FE28F7EF-5568-4F11-9C62-E44AC6209D53.JPG",
-  },
-  {
-    week: 4,
-    dates: "Jun 15–19",
-    theme: "STEM Adventure & Strawberry Jam",
-    href: "/highlights/summer/week-4",
-    coverImage: "/assets/highlights/summer_week_four/C4EB78AE-3AE3-4DB4-BAF4-DA09B3A7E941 2.JPG",
-  },
-  {
-    week: 5,
-    dates: "Jun 22–26",
-    theme: "Safari Adventure & Snake Deep Dive",
-    href: "/highlights/summer/week-5",
-    coverImage: "/assets/highlights/summer_week_five/69BAEEC0-7C4B-4821-8595-02152DC7E7FB.JPG",
-  },
-  {
-    week: 12,
-    dates: "Aug 10–13",
-    theme: "Finale of Camp",
-    href: "/highlights/summer/week-12",
-    coverImage:
-      "/assets/highlights/summer_week_twelve/8C3B1791-0B49-4B7E-B069-C746C7CF6F65.JPG",
-  },
-];
+const PREVIEW_WEEKS = [SCHOOL_YEAR_LATEST_CARD];
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -199,83 +166,78 @@ export default function Home() {
     },
   ];
   return (
-    <div>
+    <div className={bebasNeue.variable}>
       <Navbar />
       <Hero />
       <WelcomeSection />
 
       {/* ── Field Day Friday Preview ── */}
       <style>{`
-        @keyframes fdf-jungle-sway {
-          0%, 100% { transform: rotate(-4deg); transform-origin: bottom center; }
-          50%       { transform: rotate(4deg);  transform-origin: bottom center; }
+        @keyframes fdf-crane-swing {
+          0%, 100% { transform: rotate(-3deg); transform-origin: top center; }
+          50%       { transform: rotate(3deg); transform-origin: top center; }
         }
-        @keyframes fdf-firefly {
-          0%   { transform: translate(0, 0) scale(1);       opacity: 0.8; }
-          25%  { transform: translate(10px, -16px) scale(1.3); opacity: 1; }
-          50%  { transform: translate(-6px, -26px) scale(0.8); opacity: 0.5; }
-          75%  { transform: translate(14px, -12px) scale(1.1); opacity: 0.9; }
-          100% { transform: translate(0, 0) scale(1);       opacity: 0.8; }
+        @keyframes fdf-dust-drift {
+          0%   { transform: translate(0, 0) scale(1);      opacity: 0.5; }
+          25%  { transform: translate(8px, -18px) scale(1.1); opacity: 0.8; }
+          50%  { transform: translate(-5px, -30px) scale(0.9); opacity: 0.3; }
+          75%  { transform: translate(12px, -14px) scale(1.05); opacity: 0.7; }
+          100% { transform: translate(0, 0) scale(1);      opacity: 0.5; }
         }
-        @keyframes fdf-animal-peek {
-          0%, 100% { transform: translateY(0px) scale(1); }
-          40%       { transform: translateY(-8px) scale(1.04); }
-          70%       { transform: translateY(-4px) scale(1.02); }
-        }
-        @keyframes fdf-safari-shimmer {
-          0%   { background-position: -200% center; }
-          100% { background-position: 200% center; }
-        }
-        @keyframes fdf-golden-glow {
-          0%, 100% { text-shadow: 0 2px 16px rgba(245,158,11,0.4); }
-          50%       { text-shadow: 0 2px 32px rgba(245,158,11,0.75), 0 0 40px rgba(251,191,36,0.35); }
+        @keyframes fdf-beacon-blink {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0.4; }
         }
         @keyframes fdf-letter-drop {
           0%   { opacity: 0; transform: translateY(-24px) scale(0.85); filter: blur(4px); }
           60%  { opacity: 1; transform: translateY(4px) scale(1.04); filter: blur(0); }
           100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
         }
-        .fdf-safari-shimmer-text {
-          background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 20%, #fde68a 45%, #fbbf24 70%, #f59e0b 100%);
-          background-size: 200% auto;
-          -webkit-background-clip: text;
-          background-clip: text;
-          -webkit-text-fill-color: transparent;
-          animation: fdf-safari-shimmer 4s linear infinite, fdf-golden-glow 3s ease-in-out infinite;
+        .fdf-construction-headline {
+          color: #facc15;
+          -webkit-text-stroke: 2px #1c1917;
+          paint-order: stroke fill;
+          text-shadow:
+            0 2px 0 #1c1917,
+            0 0 24px rgba(250, 204, 21, 0.15);
+        }
+        @media (max-width: 640px) {
+          .fdf-construction-headline {
+            -webkit-text-stroke: 1.5px #1c1917;
+          }
         }
         .fdf-letter-drop span {
           display: inline-block;
           opacity: 0;
           animation: fdf-letter-drop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
         }
-        .fdf-jungle-sway { animation: fdf-jungle-sway 4s ease-in-out infinite; }
-        .fdf-firefly     { animation: fdf-firefly 5s ease-in-out infinite; }
-        .fdf-animal-peek { animation: fdf-animal-peek 3.5s ease-in-out infinite; }
+        .fdf-crane-swing { animation: fdf-crane-swing 6s ease-in-out infinite; }
+        .fdf-dust-drift  { animation: fdf-dust-drift 5s ease-in-out infinite; }
+        .fdf-beacon-blink { animation: fdf-beacon-blink 1.2s ease-in-out infinite; }
       `}</style>
 
       {/* Top wave: cream → dark */}
       <div style={{ background: "#FFF9F5", marginBottom: "-1px" }}>
         <svg viewBox="0 0 1440 56" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full block" style={{ height: "56px" }}>
-          <path d="M0,28 C240,56 480,0 720,28 C960,56 1200,0 1440,28 L1440,56 L0,56 Z" fill="#1a0a00" />
+          <path d="M0,28 C240,56 480,0 720,28 C960,56 1200,0 1440,28 L1440,56 L0,56 Z" fill="#1c1917" />
         </svg>
       </div>
 
       <section
         className="relative overflow-hidden py-16 px-8 sm:px-12 lg:px-16"
-        style={{ background: "linear-gradient(180deg, #1a0a00 0%, #2d1500 40%, #1a0800 100%)" }}
+        style={{ background: "linear-gradient(180deg, #1c1917 0%, #292524 40%, #1c1917 100%)" }}
       >
-        {/* Left palm accent */}
-        <div className="fdf-jungle-sway absolute bottom-0 left-0 w-16 sm:w-20 pointer-events-none opacity-50" style={{ zIndex: 1 }}>
-          <svg viewBox="0 0 80 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto">
-            <path d="M40 200 Q38 160 36 120 Q34 80 40 20" stroke="#78350f" strokeWidth="6" fill="none" strokeLinecap="round"/>
-            <path d="M40 20 Q10 -5 0 30" stroke="#92400e" strokeWidth="3.5" fill="none" strokeLinecap="round"/>
-            <path d="M40 20 Q70 -5 80 25" stroke="#92400e" strokeWidth="3.5" fill="none" strokeLinecap="round"/>
-            <path d="M40 20 Q5 40 0 65" stroke="#78350f" strokeWidth="3" fill="none" strokeLinecap="round"/>
-            <path d="M40 20 Q75 40 80 60" stroke="#78350f" strokeWidth="3" fill="none" strokeLinecap="round"/>
+        {/* Left traffic cone */}
+        <div className="fdf-crane-swing absolute bottom-0 left-4 sm:left-8 w-12 sm:w-16 pointer-events-none opacity-70" style={{ zIndex: 1 }}>
+          <svg viewBox="0 0 40 60" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto">
+            <polygon points="20,2 36,52 4,52" fill="#f97316" />
+            <rect x="4" y="52" width="32" height="6" rx="1" fill="#44403c" />
+            <rect x="8" y="18" width="24" height="5" fill="#fef9c3" opacity="0.9" />
+            <rect x="10" y="30" width="20" height="4" fill="#fef9c3" opacity="0.9" />
           </svg>
         </div>
 
-        {/* Fireflies */}
+        {/* Concrete dust particles */}
         {[
           { top: "18%", right: "15%", size: 4, delay: "0s"   },
           { top: "55%", right: "5%",  size: 3, delay: "1.2s" },
@@ -283,14 +245,13 @@ export default function Home() {
         ].map((f, i) => (
           <div
             key={i}
-            className="fdf-firefly absolute rounded-full pointer-events-none"
+            className="fdf-dust-drift absolute rounded-full pointer-events-none"
             style={{
               top: f.top,
               right: f.right,
               width: f.size,
               height: f.size,
-              background: "radial-gradient(circle, #fde68a 0%, #f59e0b 60%, transparent 100%)",
-              boxShadow: `0 0 ${f.size * 2}px rgba(251,191,36,0.9)`,
+              background: "radial-gradient(circle, #d6d3d1 0%, #a8a29e 60%, transparent 100%)",
               animationDelay: f.delay,
               zIndex: 1,
             }}
@@ -306,8 +267,8 @@ export default function Home() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <span className="inline-flex items-center gap-2 px-5 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-xs font-semibold text-amber-200 font-body uppercase tracking-wide">
-              🦕 This Friday · Jul 10 · Limited Spots
+            <span className="inline-flex items-center gap-2 px-5 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-xs font-semibold text-yellow-200 font-body uppercase tracking-wide">
+              🚧 This Friday · Aug 28 · Limited Spots
             </span>
           </motion.div>
 
@@ -319,33 +280,41 @@ export default function Home() {
               viewport={{ once: true }}
               transition={{ duration: 0.55 }}
             >
-              <div className="fdf-animal-peek text-4xl mb-4 inline-block">🦕</div>
+              <div className="fdf-beacon-blink text-4xl mb-4 inline-block">🚧</div>
               <h2
                 className="font-heading font-bold leading-tight mb-3"
                 style={{ fontSize: "clamp(1.9rem, 4vw, 3rem)" }}
               >
-                <span className="block italic fdf-safari-shimmer-text">Dino Hunt</span>
+                <span
+                  className="block fdf-construction-headline"
+                  style={{
+                    fontFamily: "var(--font-bebas-neue), sans-serif",
+                    letterSpacing: "0.04em",
+                  }}
+                >
+                  Construction Zone
+                </span>
                 <span className="fdf-letter-drop block">
-                  {Array.from("Field Day 🦕").map((ch, i) => (
+                  {Array.from("Field Day 🚧").map((ch, i) => (
                     <span
                       key={i}
-                      style={{ animationDelay: `${0.3 + i * 0.06}s`, color: "#fbbf24" }}
+                      style={{ animationDelay: `${0.3 + i * 0.06}s`, color: "#facc15" }}
                     >
                       {ch === " " ? " " : ch}
                     </span>
                   ))}
                 </span>
               </h2>
-              <p className="text-slate-300 font-body text-base leading-relaxed mb-6 max-w-md">
-                One wild Friday of dino digging, fossil making, and an epic egg hunt. Drop off, we handle the magic, you pick up an excited paleontologist with a real take-home fossil!
+              <p className="text-stone-300 font-body text-base leading-relaxed mb-6 max-w-md">
+                One hands-on Friday at Sage Field. Build LEGO towers, replicate buildings brick by brick, dig through oobleck like a real excavator, and decorate your own hard hat & vest!
               </p>
 
               {/* Event detail pills */}
               <div className="flex flex-wrap gap-2 mb-7">
                 {[
-                  { icon: "📅", text: "Jul 10, 2026" },
+                  { icon: "📅", text: "Aug 28, 2026" },
                   { icon: "🕗", text: "8:30 AM – 1:30 PM" },
-                  { icon: "💰", text: "$60 / child" },
+                  { icon: "💰", text: `$${FRIDAY_DROPIN_DOLLARS} / child` },
                   { icon: "👧", text: "Ages 4–11" },
                 ].map((pill) => (
                   <span
@@ -360,11 +329,11 @@ export default function Home() {
               <Link
                 href="/friday"
                 className="inline-flex items-center gap-2 px-7 py-3.5 font-bold font-body rounded-2xl text-white text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
-                style={{ background: "linear-gradient(135deg, #b45309 0%, #d97706 100%)" }}
+                style={{ background: "linear-gradient(135deg, #ca8a04 0%, #f97316 100%)" }}
               >
-                Reserve Your Spot →
+                🚧 Reserve Your Spot →
               </Link>
-              <p className="text-xs text-amber-400 font-body mt-3">
+              <p className="text-xs text-yellow-400 font-body mt-3">
                 No enrollment required · One-time drop-in
               </p>
             </motion.div>
@@ -376,11 +345,12 @@ export default function Home() {
               viewport={{ once: true }}
               transition={{ duration: 0.55, delay: 0.1 }}
             >
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 {[
-                  { emoji: "🦴", title: "Dino Dig",      accent: "#fef3c7" },
-                  { emoji: "🪨", title: "Fossil Making", accent: "#dcfce7" },
-                  { emoji: "🥚", title: "Dino Egg Hunt", accent: "#fed7aa" },
+                  { emoji: "🏗️", title: "Build a Tower",     accent: "#fef9c3" },
+                  { emoji: "🧱", title: "Brick by Brick",    accent: "#fff7ed" },
+                  { emoji: "🚜", title: "Excavator Dig",     accent: "#f0f9ff" },
+                  { emoji: "🦺", title: "Hard Hats & Vests", accent: "#fef3c7" },
                 ].map((act, i) => (
                   <motion.div
                     key={act.title}
@@ -401,13 +371,13 @@ export default function Home() {
                 ))}
               </div>
               <motion.p
-                className="text-center text-xs text-amber-300 font-body mt-4"
+                className="text-center text-xs text-yellow-300 font-body mt-4"
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: 0.45 }}
               >
-                All activities included · Everything provided · Take-home fossil!
+                All activities included · Take home your hat & vest!
               </motion.p>
             </motion.div>
           </div>
@@ -415,7 +385,7 @@ export default function Home() {
       </section>
 
       {/* Bottom wave: dark → cream */}
-      <div style={{ background: "#1a0800", marginBottom: "-1px" }}>
+      <div style={{ background: "#1c1917", marginBottom: "-1px" }}>
         <svg viewBox="0 0 1440 56" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full block" style={{ height: "56px" }}>
           <path d="M0,28 C360,0 1080,56 1440,28 L1440,56 L0,56 Z" fill="#FFF9F5" />
         </svg>
@@ -606,17 +576,17 @@ export default function Home() {
             transition={{ duration: 0.5 }}
           >
             <span className="inline-block px-5 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-5 font-body">
-              Summer 2026
+              School Year 2026–27
             </span>
             <h2 className="text-3xl md:text-4xl font-bold font-heading text-gray-800 mb-3">
               See What Kids Are Doing Here
             </h2>
             <p className="text-base text-gray-500 font-body max-w-xl mx-auto">
-              12 weeks of outdoor learning, real academics, and joy. Take a look at our first three weeks.
+              Our school year is underway — community, routines, and hands-on learning from week one.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 max-w-sm mx-auto gap-6 mb-8">
             {PREVIEW_WEEKS.map((week, i) => (
               <motion.div
                 key={week.week}
