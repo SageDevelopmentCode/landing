@@ -55,6 +55,8 @@ import { sendSummerTuitionConfirmationEmail } from '../../actions/sendSummerTuit
 import { sendSchoolYearTuitionInfoEmail } from '../../actions/sendSchoolYearTuitionInfoEmail'
 import { sendSchoolYearTuitionClarificationEmail } from '../../actions/sendSchoolYearTuitionClarificationEmail'
 import { sendSchoolYearTuitionReminderEmail } from '../../actions/sendSchoolYearTuitionReminderEmail'
+import { sendSchoolYearSeptemberTuitionReminderEmail } from '../../actions/sendSchoolYearSeptemberTuitionReminderEmail'
+import { sendSchoolYearSeptemberDropInTuitionReminderEmail } from '../../actions/sendSchoolYearSeptemberDropInTuitionReminderEmail'
 import { sendSchoolYearTuitionDueDateTodayReminderEmail } from '../../actions/sendSchoolYearTuitionDueDateTodayReminderEmail'
 import { sendHomeschoolDropInTuitionReminderEmail } from '../../actions/sendHomeschoolDropInTuitionReminderEmail'
 import { sendHomeschoolDropInClarificationEmail } from '../../actions/sendHomeschoolDropInClarificationEmail'
@@ -314,6 +316,12 @@ export function ApplicationDetailSidebar({
   const [schoolYearTuitionReminderSending, setSchoolYearTuitionReminderSending] = useState(false)
   const [schoolYearTuitionReminderSent, setSchoolYearTuitionReminderSent] = useState(false)
   const [schoolYearTuitionReminderError, setSchoolYearTuitionReminderError] = useState<string | null>(null)
+  const [schoolYearSeptemberTuitionReminderSending, setSchoolYearSeptemberTuitionReminderSending] = useState(false)
+  const [schoolYearSeptemberTuitionReminderSent, setSchoolYearSeptemberTuitionReminderSent] = useState(false)
+  const [schoolYearSeptemberTuitionReminderError, setSchoolYearSeptemberTuitionReminderError] = useState<string | null>(null)
+  const [schoolYearSeptemberDropInTuitionReminderSending, setSchoolYearSeptemberDropInTuitionReminderSending] = useState(false)
+  const [schoolYearSeptemberDropInTuitionReminderSent, setSchoolYearSeptemberDropInTuitionReminderSent] = useState(false)
+  const [schoolYearSeptemberDropInTuitionReminderError, setSchoolYearSeptemberDropInTuitionReminderError] = useState<string | null>(null)
   const [schoolYearTuitionDueTodayReminderSending, setSchoolYearTuitionDueTodayReminderSending] = useState(false)
   const [schoolYearTuitionDueTodayReminderSent, setSchoolYearTuitionDueTodayReminderSent] = useState(false)
   const [schoolYearTuitionDueTodayReminderError, setSchoolYearTuitionDueTodayReminderError] = useState<string | null>(null)
@@ -1183,6 +1191,42 @@ export function ApplicationDetailSidebar({
       setEmailThreadKey(k => k + 1)
     } else {
       setSchoolYearTuitionReminderError(result.error ?? 'Failed to send')
+    }
+  }
+
+  const handleSendSchoolYearSeptemberTuitionReminder = async () => {
+    if (schoolYearSeptemberTuitionReminderSending || !application.g1_email) return
+    setSchoolYearSeptemberTuitionReminderSending(true)
+    setSchoolYearSeptemberTuitionReminderError(null)
+    const result = await sendSchoolYearSeptemberTuitionReminderEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+    })
+    setSchoolYearSeptemberTuitionReminderSending(false)
+    if (result.success) {
+      setSchoolYearSeptemberTuitionReminderSent(true)
+      setEmailThreadKey(k => k + 1)
+    } else {
+      setSchoolYearSeptemberTuitionReminderError(result.error ?? 'Failed to send')
+    }
+  }
+
+  const handleSendSchoolYearSeptemberDropInTuitionReminder = async () => {
+    if (schoolYearSeptemberDropInTuitionReminderSending || !application.g1_email) return
+    setSchoolYearSeptemberDropInTuitionReminderSending(true)
+    setSchoolYearSeptemberDropInTuitionReminderError(null)
+    const result = await sendSchoolYearSeptemberDropInTuitionReminderEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+    })
+    setSchoolYearSeptemberDropInTuitionReminderSending(false)
+    if (result.success) {
+      setSchoolYearSeptemberDropInTuitionReminderSent(true)
+      setEmailThreadKey(k => k + 1)
+    } else {
+      setSchoolYearSeptemberDropInTuitionReminderError(result.error ?? 'Failed to send')
     }
   }
 
@@ -2276,6 +2320,28 @@ export function ApplicationDetailSidebar({
                     {schoolYearWeekOneNewsletterSending ? 'Sending…' : schoolYearWeekOneNewsletterSent ? '✓ Sent!' : 'Send School Year Week One Newsletter'}
                   </button>
                   {schoolYearWeekOneNewsletterError && <span className="text-xs text-red-600">{schoolYearWeekOneNewsletterError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendSchoolYearSeptemberTuitionReminder}
+                    disabled={schoolYearSeptemberTuitionReminderSending || schoolYearSeptemberTuitionReminderSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {schoolYearSeptemberTuitionReminderSending ? 'Sending…' : schoolYearSeptemberTuitionReminderSent ? '✓ Sent!' : 'Send September Tuition Reminder (School Year)'}
+                  </button>
+                  {schoolYearSeptemberTuitionReminderError && <span className="text-xs text-red-600">{schoolYearSeptemberTuitionReminderError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendSchoolYearSeptemberDropInTuitionReminder}
+                    disabled={schoolYearSeptemberDropInTuitionReminderSending || schoolYearSeptemberDropInTuitionReminderSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {schoolYearSeptemberDropInTuitionReminderSending ? 'Sending…' : schoolYearSeptemberDropInTuitionReminderSent ? '✓ Sent!' : 'Send September Tuition Reminder (Homeschool Drop-In)'}
+                  </button>
+                  {schoolYearSeptemberDropInTuitionReminderError && <span className="text-xs text-red-600">{schoolYearSeptemberDropInTuitionReminderError}</span>}
                 </div>
               </>}
 

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getStripe } from "@/app/lib/stripe";
 import { createAdminClient } from "@/app/lib/supabase-server";
 import { sendDiscordNotification, createErrorEmbed } from "@/app/lib/discord";
+import { FUN_FRIDAY_DROPIN_CENTS } from "@/shared/billing/school-year";
 
 const schema = z.object({
   parentName: z.string().min(1, "Parent name required"),
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     data = schema.parse(body);
 
-    const PRICE_PER_CHILD_CENTS = 6000; // $60
+    const PRICE_PER_CHILD_CENTS = FUN_FRIDAY_DROPIN_CENTS;
     const BASE_AMOUNT_CENTS = data.children.length * PRICE_PER_CHILD_CENTS;
     const childNames = data.children.map((c) => c.name).join(", ");
 
@@ -100,8 +101,8 @@ export async function POST(request: NextRequest) {
               ? Math.round(finalAmountCents / data.children.length)
               : PRICE_PER_CHILD_CENTS,
             product_data: {
-              name: "Dino Hunt — July 10",
-              description: "Sage Field Private School · $60 per child · July 10, 2026",
+              name: "Construction Zone — August 28",
+              description: `Sage Field Private School · $${FUN_FRIDAY_DROPIN_CENTS / 100} per child · August 28, 2026`,
             },
           },
         },
@@ -116,7 +117,7 @@ export async function POST(request: NextRequest) {
         intended_amount_cents: String(BASE_AMOUNT_CENTS),
         cover_fees: String(data.coverFees),
         payment_method: data.paymentMethod,
-        description: "Beach Bash Day Fee",
+        description: "Construction Zone Field Day Fee",
       },
       success_url: `${baseUrl}/friday/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/friday#reserve`,

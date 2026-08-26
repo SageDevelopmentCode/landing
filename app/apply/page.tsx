@@ -18,6 +18,7 @@ import FloatingSMSButton from "../components/FloatingSMSButton";
 import MeetTheTeamSection from "../components/MeetTheTeamSection";
 import WeeklySchedule from "../components/WeeklySchedule";
 import FAQAccordion from "../components/FAQAccordion";
+import WeekRecapPreview from "../components/WeekRecapPreview";
 import { submitWaitlist } from "@/app/actions/waitlist";
 import { formatPhone } from "@/app/utils/formatPhone";
 import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
@@ -1087,6 +1088,8 @@ export default function ApplyPage() {
           </AnimatePresence>
         </div>
       </section>
+
+      <WeekRecapPreview className="bg-welcome-bg" />
 
       {/* FAQ Section */}
       <section className="pb-16 px-8 sm:px-12 lg:px-16">

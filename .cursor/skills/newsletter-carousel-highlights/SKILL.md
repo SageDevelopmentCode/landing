@@ -176,4 +176,5 @@ User message with extra context:
 
 - SQL queries, grade-band mapping, philosophy voice, canonical example: [reference.md](reference.md)
 - Related skill (newsletter email): [school-year-newsletter-email](../school-year-newsletter-email/SKILL.md)
+- Related skill (highlights page + WeekRecapPreview): [newsletter-highlights-page](../newsletter-highlights-page/SKILL.md)
 - Newsletter schema: `supabase/migrations/20260801012118_remote_schema.sql` (`newsletters` schema)

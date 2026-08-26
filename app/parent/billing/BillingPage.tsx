@@ -6471,7 +6471,7 @@ function FunFridayPaymentModal({
               >
                 <p className="text-sm text-gray-500 font-body mb-1">
                   Select individual Fridays you&apos;d like to attend.
-                  $60/session.
+                  $50/session.
                 </p>
                 <p className="text-xs text-gray-400 font-body mb-4">
                   9:00am – 1:00pm
@@ -7619,7 +7619,7 @@ function SchoolYearFunFridayPaymentModal({
               >
                 <p className="text-sm text-gray-500 font-body mb-1">
                   Select individual Fridays you&apos;d like to attend.
-                  $60/session.
+                  $50/session.
                 </p>
                 <p className="text-xs text-gray-400 font-body mb-4">
                   9:00am – 1:00pm
