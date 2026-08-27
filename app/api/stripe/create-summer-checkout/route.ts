@@ -179,6 +179,7 @@ export async function POST(request: NextRequest) {
         { apiVersion: "2026-02-25.clover" },
       );
       return NextResponse.json({
+        paymentIntentId: paymentIntent.id,
         clientSecret: paymentIntent.client_secret,
         ephemeralKey: ephemeralKey.secret,
         customerId: stripeCustomerId,

@@ -80,6 +80,32 @@ export function useStripePayment() {
         }
         return false;
       }
+
+      const paymentIntentId =
+        typeof data.paymentIntentId === "string"
+          ? data.paymentIntentId
+          : (() => {
+              const secret = String(data.clientSecret ?? "");
+              const idx = secret.indexOf("_secret_");
+              return idx > 0 ? secret.slice(0, idx) : null;
+            })();
+
+      if (paymentIntentId) {
+        try {
+          await fetch(`${API_BASE_URL}/api/stripe/confirm-mobile-payment`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ paymentIntentId, parentId }),
+          });
+        } catch (confirmErr) {
+          notifyError("stripe-confirm-mobile-payment", confirmErr);
+          Sentry.captureException(
+            confirmErr instanceof Error ? confirmErr : new Error(String(confirmErr)),
+            { tags: { area: "stripe-confirm-mobile-payment", endpoint } },
+          );
+        }
+      }
+
       return true;
     } catch (e: unknown) {
       notifyError(`stripe-checkout:${endpoint}`, e);
