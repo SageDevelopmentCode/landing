@@ -184,6 +184,20 @@ export function getConferenceCountdown(
   return { label, urgency: "later" };
 }
 
+export function isConferencePast(
+  booking: Pick<StaffConferenceBooking, "conferenceDate" | "timeSlot">,
+  now = new Date(),
+): boolean {
+  return getConferenceMinutesUntil(booking.conferenceDate, booking.timeSlot, now) < 0;
+}
+
+export function filterActiveConferenceBookings(
+  bookings: StaffConferenceBooking[],
+  now = new Date(),
+): StaffConferenceBooking[] {
+  return bookings.filter((b) => !isConferencePast(b, now));
+}
+
 export function getUpcomingBookings(
   bookings: StaffConferenceBooking[],
   todayYmd: string,
