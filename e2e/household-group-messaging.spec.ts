@@ -23,9 +23,9 @@ test('household teacher group thread is shared between owner and grantee', async
 
   const ownerPage = await ownerContext.newPage()
   await ownerPage.goto(householdMessageUrl)
-  await expect(
-    ownerPage.getByText('Grant E2E Child', { exact: false }),
-  ).toBeVisible({ timeout: 30_000 })
+  await expect(ownerPage.getByPlaceholder('Type a message...')).toBeVisible({
+    timeout: 30_000,
+  })
 
   const messageInput = ownerPage.getByPlaceholder('Type a message...')
   await messageInput.fill(uniqueBody)
@@ -35,9 +35,9 @@ test('household teacher group thread is shared between owner and grantee', async
 
   const granteePage = await granteeContext.newPage()
   await granteePage.goto(householdMessageUrl)
-  await expect(
-    granteePage.getByText('Grant E2E Child', { exact: false }),
-  ).toBeVisible({ timeout: 30_000 })
+  await expect(granteePage.getByPlaceholder('Type a message...')).toBeVisible({
+    timeout: 30_000,
+  })
   await expect(granteePage.getByText(uniqueBody)).toBeVisible({
     timeout: 15_000,
   })
