@@ -327,12 +327,12 @@ export async function deletePhoto(
   const { error } = await supabase
     .schema("teachers")
     .from("photos")
-    .delete()
+    .update({ is_deleted: true, updated_at: new Date().toISOString() })
     .eq("id", photoId);
   if (error) {
     console.error("[deletePhoto] delete error:", error.code, error.message, error.details, error.hint);
     throw new Error(error.message);
   }
-  console.log("[deletePhoto] delete OK, removing storage:", storagePath);
+  console.log("[deletePhoto] soft-delete OK, removing storage:", storagePath);
   supabase.storage.from("teacher-photos").remove([storagePath]);
 }

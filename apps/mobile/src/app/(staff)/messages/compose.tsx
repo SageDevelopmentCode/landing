@@ -22,6 +22,10 @@ import {
   type ParentWithChildren,
   type ParentsForTeacher,
 } from "@/lib/teacher-messaging";
+import {
+  getConversationListMeta,
+  resolveHouseholdConversation,
+} from "@/lib/household-messaging";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -179,12 +183,13 @@ export default function StaffComposeScreen() {
     // 1. create/find conversations in parallel
     const convoResults = await Promise.all(
       selectedRecipients.map(async (r) => {
-        const { data, error } = await supabase.rpc(
-          "find_or_create_conversation",
-          { other_user_id: r.id }
+        const conversationId = await resolveHouseholdConversation(
+          r.id,
+          currentUserId,
+          parentDirectory,
         );
-        return { recipient: r, conversationId: data as string | null, error };
-      })
+        return { recipient: r, conversationId };
+      }),
     );
 
     const successPairs = convoResults.filter((c) => c.conversationId);
@@ -262,14 +267,25 @@ export default function StaffComposeScreen() {
       setSendError(`Failed to send to: ${names}`);
     }
 
-    if (lastSentConvoId && lastSentRecipient) {
+    if (lastSentConvoId) {
+      const listMeta = await getConversationListMeta(
+        currentUserId,
+        lastSentConvoId,
+      );
+      const isGroup = Boolean(listMeta?.is_group);
       router.replace({
         pathname: "/(staff)/messages/[id]",
         params: {
           id: lastSentConvoId,
-          otherUserName: lastSentRecipient.full_name,
-          otherUserAvatar: lastSentRecipient.profile_image_url ?? "",
-          otherUserId: lastSentRecipient.id,
+          otherUserName:
+            listMeta?.other_user_name ??
+            listMeta?.display_name ??
+            lastSentRecipient?.full_name ??
+            "Conversation",
+          otherUserAvatar: isGroup
+            ? ""
+            : (lastSentRecipient?.profile_image_url ?? ""),
+          otherUserId: isGroup ? "" : (lastSentRecipient?.id ?? ""),
         },
       });
     }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Search, Send, ChevronLeft, Loader2, ImageIcon, X, GraduationCap, Hash, Plus } from "lucide-react";
+import { Search, Send, ChevronLeft, Loader2, ImageIcon, X, GraduationCap, Hash, Plus, Users } from "lucide-react";
 import { Poppins } from 'next/font/google'
 import { createClient } from "@/app/lib/supabase-browser";
 import { cssColors as colors } from "@/app/admin/design-system";
@@ -14,7 +14,12 @@ import {
   type ConversationWithMeta,
   type MessageRow,
 } from "@/app/parent/messages/actions";
-import { getStudentsByParentId, type ChildInfo } from "./actions";
+import { getStudentsByParentId, getStudentById, type ChildInfo } from "./actions";
+import {
+  conversationTitle,
+  conversationSubtitle,
+  isGroupConversation,
+} from "@/app/messages/conversation-display";
 import {
   getChannels,
   ensureDefaultChannelMembership,
@@ -308,13 +313,20 @@ export default function AdminMessagesPage({ userId }: { userId: string }) {
     if (childInfoData.length > 0) { setShowChildInfo(true); return; }
     setLoadingChildInfo(true);
     setShowChildInfo(true);
-    const data = await getStudentsByParentId(active.otherUser.id);
-    setChildInfoData(data);
+    if (isGroupConversation(active) && active.studentId) {
+      const student = await getStudentById(active.studentId);
+      setChildInfoData(student ? [student] : []);
+    } else if (active.otherUser?.id) {
+      const data = await getStudentsByParentId(active.otherUser.id);
+      setChildInfoData(data);
+    } else {
+      setChildInfoData([]);
+    }
     setLoadingChildInfo(false);
   };
 
   const filtered = conversations.filter((c) =>
-    c.otherUser.full_name.toLowerCase().includes(search.toLowerCase())
+    conversationTitle(c).toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
@@ -422,11 +434,21 @@ export default function AdminMessagesPage({ userId }: { userId: string }) {
                         borderRight: convo.id === activeId ? `2px solid ${colors.mistyForest}` : "2px solid transparent",
                       }}
                     >
-                      <UserAvatar id={convo.otherUser.id} name={convo.otherUser.full_name} imageUrl={convo.otherUser.profile_image_url} />
+                      {isGroupConversation(convo) ? (
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: `${colors.mistyForest}1A`, color: colors.mistyForest }}>
+                          <Users className="w-4 h-4" />
+                        </div>
+                      ) : convo.otherUser ? (
+                        <UserAvatar id={convo.otherUser.id} name={convo.otherUser.full_name} imageUrl={convo.otherUser.profile_image_url} />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: `${colors.mistyForest}1A`, color: colors.mistyForest }}>
+                          <Users className="w-4 h-4" />
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-semibold truncate" style={{ color: colors.textPrimary }}>
-                            {convo.otherUser.full_name}
+                            {conversationTitle(convo)}
                           </span>
                           {convo.lastMessage && (
                             <span className="text-[11px] shrink-0 ml-2" style={{ color: colors.textTertiary }}>
@@ -599,11 +621,21 @@ export default function AdminMessagesPage({ userId }: { userId: string }) {
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
-                <UserAvatar id={active.otherUser.id} name={active.otherUser.full_name} imageUrl={active.otherUser.profile_image_url} size="sm" />
+                {isGroupConversation(active) ? (
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: `${colors.mistyForest}1A`, color: colors.mistyForest }}>
+                    <Users className="w-4 h-4" />
+                  </div>
+                ) : active.otherUser ? (
+                  <UserAvatar id={active.otherUser.id} name={active.otherUser.full_name} imageUrl={active.otherUser.profile_image_url} size="sm" />
+                ) : (
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: `${colors.mistyForest}1A`, color: colors.mistyForest }}>
+                    <Users className="w-4 h-4" />
+                  </div>
+                )}
                 <p className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
-                  {active.otherUser.full_name}
+                  {conversationTitle(active)}
                 </p>
-                {active.otherUser.role === "parent" && (
+                {(isGroupConversation(active) && active.studentId) || active.otherUser?.role === "parent" ? (
                   <button
                     onClick={handleViewChild}
                     className="ml-auto flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg cursor-pointer transition-colors"
@@ -612,7 +644,7 @@ export default function AdminMessagesPage({ userId }: { userId: string }) {
                     <GraduationCap className="w-3.5 h-3.5" />
                     View Child
                   </button>
-                )}
+                ) : null}
               </div>
 
               {/* Child info panel */}

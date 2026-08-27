@@ -35,6 +35,8 @@ type ConversationRow = {
   otherUserProfileImageUrl: string | null;
   lastMessagePreview: string | null;
   unreadCount: number;
+  isGroup: boolean;
+  participantCount: number;
 };
 
 function getInitials(fullName: string) {
@@ -65,6 +67,8 @@ async function fetchRows(userId: string): Promise<ConversationRow[]> {
     otherUserProfileImageUrl: r.other_user_profile_image ?? null,
     lastMessagePreview: r.last_message_preview ?? null,
     unreadCount: Number(r.unread_count ?? 0),
+    isGroup: Boolean(r.is_group),
+    participantCount: Number(r.participant_count ?? 0),
   }));
 }
 
@@ -373,7 +377,11 @@ export default function StaffConversationListScreen() {
                     });
                   }}
                 >
-                  {item.otherUserProfileImageUrl ? (
+                  {item.isGroup ? (
+                    <View style={styles.avatar}>
+                      <Ionicons name="people" size={22} color={Brand.sage700} />
+                    </View>
+                  ) : item.otherUserProfileImageUrl ? (
                     <Image source={{ uri: item.otherUserProfileImageUrl }} style={styles.avatar} resizeMode="cover" />
                   ) : (
                     <View style={styles.avatar}>
@@ -389,6 +397,11 @@ export default function StaffConversationListScreen() {
                       </Text>
                       <Text style={styles.rowTime}>{timeAgo(item.updatedAt)}</Text>
                     </View>
+                    {item.isGroup && item.participantCount > 0 ? (
+                      <Text style={styles.rowSubtitle}>
+                        {item.participantCount} members
+                      </Text>
+                    ) : null}
                     <View style={styles.rowBottom}>
                       <Text style={styles.rowPreview} numberOfLines={1}>
                         {item.lastMessagePreview ?? "No messages yet"}
@@ -754,6 +767,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#9ca3af",
     flexShrink: 0,
+  },
+  rowSubtitle: {
+    fontFamily: FontFamilies.body,
+    fontSize: 11,
+    color: "#9ca3af",
   },
   rowBottom: {
     flexDirection: "row",

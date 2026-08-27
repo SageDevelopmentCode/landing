@@ -21,6 +21,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fetchSignedUrls, getAllSchoolPhotos, TeacherPhoto } from "@/lib/photos-actions";
 import { BottomTabInset, Brand, FontFamilies } from "@/constants/theme";
+import { setPhotoGallerySession } from "@/lib/photo-gallery-session";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const TILE_GAP = 2;
@@ -163,13 +164,13 @@ export default function ParentPhotosGalleryScreen() {
   );
 
   function handlePress(photo: TeacherPhoto) {
+    setPhotoGallerySession(photos);
     router.push({
       pathname: "/(tabs)/photos/[photoId]",
       params: {
         photoId: photo.id,
         storagePath: photo.storage_path,
         signedUrl: signedUrls[photo.storage_path] ?? "",
-        allPhotosJson: JSON.stringify(photos),
       },
     });
   }

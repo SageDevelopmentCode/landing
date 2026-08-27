@@ -43,6 +43,19 @@ type TeacherPhotoRpcRow = {
   publication_labels: string[] | null
 }
 
+async function isCallerSuperAdmin(
+  adminClient: ReturnType<typeof createAdminClient>,
+  userId: string
+): Promise<boolean> {
+  const { data } = await adminClient
+    .schema('admin')
+    .from('users')
+    .select('role')
+    .eq('id', userId)
+    .single()
+  return data?.role === 'super_admin'
+}
+
 function mapRpcPhoto(p: TeacherPhotoRpcRow): TeacherPhoto {
   return {
     id: p.id,
@@ -277,14 +290,19 @@ export async function deletePhoto(photoId: string): Promise<{ error?: string }> 
   if (!user) return { error: 'Not authenticated' }
 
   const adminClient = createAdminClient()
+  const isSuperAdmin = await isCallerSuperAdmin(adminClient, user.id)
 
-  const { data: photo } = await adminClient
+  let photoQuery = adminClient
     .schema('teachers')
     .from('photos')
     .select('storage_path')
     .eq('id', photoId)
-    .eq('teacher_id', user.id)
-    .single()
+
+  if (!isSuperAdmin) {
+    photoQuery = photoQuery.eq('teacher_id', user.id)
+  }
+
+  const { data: photo } = await photoQuery.single()
 
   if (!photo) return { error: 'Photo not found' }
 

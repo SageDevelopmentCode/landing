@@ -1599,7 +1599,7 @@ function ParentCommunicationTab({
           rawParents.map((p) => {
             const userInfo = userMap[p.email] ?? null;
             const conversation = userInfo
-              ? (allConvos.find((c) => c.otherUser.id === userInfo.id) ?? null)
+              ? (allConvos.find((c) => c.otherUser?.id === userInfo.id) ?? null)
               : null;
             return { ...p, userInfo, conversation };
           }),

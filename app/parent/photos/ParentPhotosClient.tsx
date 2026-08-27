@@ -79,17 +79,43 @@ function PhotoLightbox({
 }) {
   const [idx, setIdx] = useState(initialIndex);
   const photo = photos[idx];
-  const [displayUrl, setDisplayUrl] = useState<string | null>(photo.signed_url);
+  const fullResCacheRef = useRef<Map<string, string>>(new Map());
+  const [displayUrl, setDisplayUrl] = useState<string | null>(() => {
+    const initial = photos[initialIndex];
+    if (!initial) return null;
+    return initial.signed_url ?? null;
+  });
 
   useEffect(() => {
+    const current = photos[idx];
+    if (!current) return;
+
+    const cached = fullResCacheRef.current.get(current.storage_path);
+    setDisplayUrl(cached ?? current.signed_url ?? null);
+
     let cancelled = false;
-    getFullResSignedUrl(photo.storage_path).then((url) => {
-      if (!cancelled && url) setDisplayUrl(url);
+    const path = current.storage_path;
+
+    if (!fullResCacheRef.current.has(path)) {
+      getFullResSignedUrl(path).then((url) => {
+        if (cancelled || !url) return;
+        fullResCacheRef.current.set(path, url);
+        setDisplayUrl(url);
+      });
+    }
+
+    [-1, 1].forEach((d) => {
+      const adj = photos[idx + d];
+      if (!adj || fullResCacheRef.current.has(adj.storage_path)) return;
+      getFullResSignedUrl(adj.storage_path).then((url) => {
+        if (url) fullResCacheRef.current.set(adj.storage_path, url);
+      });
     });
+
     return () => {
       cancelled = true;
     };
-  }, [photo.storage_path]);
+  }, [idx, photos]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -135,7 +161,7 @@ function PhotoLightbox({
         <ChevronRight className="w-6 h-6" />
       </button>
 
-      {displayUrl && (
+      {displayUrl ? (
         <motion.img
           key={photo.id}
           initial={{ opacity: 0.6 }}
@@ -144,6 +170,11 @@ function PhotoLightbox({
           src={displayUrl}
           alt={photo.caption ?? ""}
           className="max-h-[90vh] max-w-[80vw] object-contain rounded-xl"
+        />
+      ) : (
+        <div
+          className="w-[72vw] max-w-[80vw] h-[55vh] rounded-xl bg-gray-700 animate-pulse"
+          aria-hidden
         />
       )}
 

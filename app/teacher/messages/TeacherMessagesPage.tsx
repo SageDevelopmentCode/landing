@@ -1,21 +1,29 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Search, Send, ChevronLeft, SquarePen, X, Loader2, ImageIcon, Paperclip, FileText, Download, GraduationCap, Hash, Plus, Check } from "lucide-react";
+import { Search, Send, ChevronLeft, SquarePen, X, Loader2, ImageIcon, Paperclip, FileText, Download, GraduationCap, Hash, Plus, Check, Users } from "lucide-react";
 import { createClient } from "@/app/lib/supabase-browser";
 import {
   getConversations,
   getMessages,
   sendMessage,
   createConversation,
+  findOrCreateHouseholdTeacherConversation,
+  getConversationParticipants,
   markMessagesRead,
   uploadMessageImage,
   uploadMessageFile,
   type ConversationWithMeta,
+  type ConversationParticipant,
   type MessageRow,
 } from "@/app/parent/messages/actions";
 import { getParentsForTeacher, type ParentWithChildren, type ParentsForTeacher } from "./actions";
-import { getStudentsByParentId, type ChildInfo } from "@/app/admin/messages/actions";
+import { getStudentsByParentId, getStudentById, type ChildInfo } from "@/app/admin/messages/actions";
+import {
+  conversationTitle,
+  conversationSubtitle,
+  isGroupConversation,
+} from "@/app/messages/conversation-display";
 import {
   getChannels,
   ensureDefaultChannelMembership,
@@ -207,6 +215,8 @@ export default function TeacherMessagesPage({
   const [parentDirectory, setParentDirectory] = useState<ParentsForTeacher | null>(null);
   const [loadingDirectory, setLoadingDirectory] = useState(false);
   const [modalStep, setModalStep] = useState<1 | 2>(1);
+  const [participants, setParticipants] = useState<ConversationParticipant[]>([]);
+  const [showMembers, setShowMembers] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -249,7 +259,13 @@ export default function TeacherMessagesPage({
 
   useEffect(() => {
     if (!initialRecipientId || loadingConvos) return;
-    const existing = conversations.find((c) => c.otherUser.id === initialRecipientId);
+    const existingDirect = conversations.find(
+      (c) => !c.isGroup && c.otherUser?.id === initialRecipientId,
+    );
+    const existingGroup = conversations.find(
+      (c) => c.isGroup && c.studentId && c.teacherId === userId,
+    );
+    const existing = existingDirect ?? existingGroup;
     if (existing) {
       setActiveId(existing.id);
       setMobileShowChat(true);
@@ -260,6 +276,15 @@ export default function TeacherMessagesPage({
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadingConvos]);
+
+  useEffect(() => {
+    if (!activeId || !active || !isGroupConversation(active)) {
+      setParticipants([]);
+      setShowMembers(false);
+      return;
+    }
+    getConversationParticipants(activeId).then(setParticipants);
+  }, [activeId, active]);
 
   useEffect(() => {
     setShowChildInfo(false);
@@ -342,6 +367,19 @@ export default function TeacherMessagesPage({
     setSelectedRecipients((prev) => prev.filter((r) => r.id !== recipientId));
   };
 
+  const resolveHouseholdConversation = async (
+    parentId: string,
+  ): Promise<string | null> => {
+    if (!parentDirectory) return createConversation(userId, parentId);
+
+    const fromMine = parentDirectory.myStudentsParents.find((p) => p.id === parentId);
+    const studentId = fromMine?.children[0]?.id;
+    if (studentId) {
+      return findOrCreateHouseholdTeacherConversation(studentId, userId);
+    }
+    return createConversation(userId, parentId);
+  };
+
   const handleSendNewMulti = async () => {
     if (selectedRecipients.length === 0 || (!modalDraft.trim() && !modalImageFile && !modalAttachedFile) || sending) return;
     const body = modalDraft.trim();
@@ -349,7 +387,7 @@ export default function TeacherMessagesPage({
     setCreatingConvo(true);
 
     const convoResults = await Promise.all(
-      selectedRecipients.map((r) => createConversation(userId, r.id))
+      selectedRecipients.map((r) => resolveHouseholdConversation(r.id)),
     );
 
     const failures: string[] = [];
@@ -601,13 +639,20 @@ export default function TeacherMessagesPage({
     if (childInfoData.length > 0) { setShowChildInfo(true); return; }
     setLoadingChildInfo(true);
     setShowChildInfo(true);
-    const data = await getStudentsByParentId(active.otherUser.id);
-    setChildInfoData(data);
+    if (isGroupConversation(active) && active.studentId) {
+      const student = await getStudentById(active.studentId);
+      setChildInfoData(student ? [student] : []);
+    } else if (active.otherUser?.id) {
+      const data = await getStudentsByParentId(active.otherUser.id);
+      setChildInfoData(data);
+    } else {
+      setChildInfoData([]);
+    }
     setLoadingChildInfo(false);
   };
 
   const filtered = conversations.filter((c) =>
-    c.otherUser.full_name.toLowerCase().includes(search.toLowerCase())
+    conversationTitle(c).toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
@@ -710,11 +755,21 @@ export default function TeacherMessagesPage({
                         : "hover:bg-gray-50"
                     }`}
                   >
-                    <UserAvatar id={convo.otherUser.id} name={convo.otherUser.full_name} imageUrl={convo.otherUser.profile_image_url} />
+                    {isGroupConversation(convo) ? (
+                      <div className="w-10 h-10 rounded-full bg-[#4a7c59]/10 flex items-center justify-center text-[#4a7c59] shrink-0">
+                        <Users className="w-4 h-4" />
+                      </div>
+                    ) : convo.otherUser ? (
+                      <UserAvatar id={convo.otherUser.id} name={convo.otherUser.full_name} imageUrl={convo.otherUser.profile_image_url} />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-[#4a7c59]/10 flex items-center justify-center text-[#4a7c59] shrink-0">
+                        <Users className="w-4 h-4" />
+                      </div>
+                    )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-semibold font-body text-gray-800 truncate">
-                          {convo.otherUser.full_name}
+                          {conversationTitle(convo)}
                         </span>
                         {convo.lastMessage && (
                           <span className="text-[11px] text-gray-400 font-body shrink-0 ml-2">
@@ -722,9 +777,9 @@ export default function TeacherMessagesPage({
                           </span>
                         )}
                       </div>
-                      {roleLabel(convo.otherUser.role) && (
+                      {conversationSubtitle(convo) && (
                         <p className="text-[11px] text-gray-400 font-body">
-                          {roleLabel(convo.otherUser.role)}
+                          {conversationSubtitle(convo)}
                         </p>
                       )}
                       <div className="flex items-center gap-2 mt-0.5">
@@ -876,25 +931,54 @@ export default function TeacherMessagesPage({
           </div>
         ) : (
           <>
-            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-gray-100 shrink-0">
+            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-gray-100 shrink-0 relative">
               <button
                 onClick={() => setMobileShowChat(false)}
                 className="md:hidden text-gray-500 hover:text-gray-700 cursor-pointer"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
-              <UserAvatar id={active.otherUser.id} name={active.otherUser.full_name} imageUrl={active.otherUser.profile_image_url} size="sm" />
-              <div>
-                <p className="text-sm font-semibold font-body text-gray-800">
-                  {active.otherUser.full_name}
+              {isGroupConversation(active) ? (
+                <div className="w-9 h-9 rounded-full bg-[#4a7c59]/10 flex items-center justify-center text-[#4a7c59] shrink-0">
+                  <Users className="w-4 h-4" />
+                </div>
+              ) : active.otherUser ? (
+                <UserAvatar id={active.otherUser.id} name={active.otherUser.full_name} imageUrl={active.otherUser.profile_image_url} size="sm" />
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-[#4a7c59]/10 flex items-center justify-center text-[#4a7c59] shrink-0">
+                  <Users className="w-4 h-4" />
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => isGroupConversation(active) && setShowMembers((v) => !v)}
+                className={`text-left flex-1 min-w-0 ${isGroupConversation(active) ? "cursor-pointer" : ""}`}
+              >
+                <p className="text-sm font-semibold font-body text-gray-800 truncate">
+                  {conversationTitle(active)}
                 </p>
-                {roleLabel(active.otherUser.role) && (
+                {conversationSubtitle(active) && (
                   <p className="text-[11px] text-gray-400 font-body">
-                    {roleLabel(active.otherUser.role)}
+                    {conversationSubtitle(active)}
                   </p>
                 )}
-              </div>
-              {active.otherUser.role === "parent" && (
+              </button>
+              {isGroupConversation(active) && showMembers && participants.length > 0 && (
+                <div className="absolute top-full left-0 right-0 z-20 bg-white border border-gray-100 shadow-lg max-h-60 overflow-y-auto">
+                  {participants.map((member) => (
+                    <div key={member.id} className="flex items-center gap-3 px-5 py-2.5">
+                      <UserAvatar id={member.id} name={member.full_name} imageUrl={member.profile_image_url} size="sm" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-body text-gray-800 truncate">{member.full_name}</p>
+                        {roleLabel(member.role) && (
+                          <p className="text-[11px] text-gray-400 font-body">{roleLabel(member.role)}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {(isGroupConversation(active) && active.studentId) || active.otherUser?.role === "parent" ? (
                 <button
                   onClick={handleViewChild}
                   className="ml-auto flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg cursor-pointer transition-colors bg-[#4a7c59]/10 text-[#4a7c59] hover:bg-[#4a7c59]/20"
@@ -902,7 +986,7 @@ export default function TeacherMessagesPage({
                   <GraduationCap className="w-3.5 h-3.5" />
                   View Child
                 </button>
-              )}
+              ) : null}
             </div>
 
             {/* Child info panel */}
@@ -978,6 +1062,7 @@ export default function TeacherMessagesPage({
               ) : (
                 messages.map((msg) => {
                   const fromMe = msg.sender_id === userId;
+                  const showSenderName = isGroupConversation(active) && !fromMe;
                   return (
                     <div key={msg.id} className={`flex ${fromMe ? "justify-end" : "justify-start"}`}>
                       <div
@@ -987,6 +1072,11 @@ export default function TeacherMessagesPage({
                             : "bg-gray-100 text-gray-800 rounded-bl-md"
                         }`}
                       >
+                        {showSenderName && msg.sender_name && (
+                          <p className="text-[11px] font-semibold text-[#4a7c59] mb-1">
+                            {msg.sender_name}
+                          </p>
+                        )}
                         {msg.image_url && (
                           <HeicImage
                             src={msg.image_url}

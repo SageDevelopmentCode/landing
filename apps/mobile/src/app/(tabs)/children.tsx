@@ -209,17 +209,29 @@ function TeacherTab({
     if (startingConvId) return;
     setStartingConvId(teacherId);
     try {
-      const { data: conversationId, error } = await supabase
-        .rpc("find_or_create_conversation", { other_user_id: teacherId });
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: conversationId, error } = await supabase.rpc(
+        "find_or_create_household_teacher_conversation",
+        {
+          p_student_id: studentId,
+          p_teacher_id: teacherId,
+          p_caller_id: user.id,
+        },
+      );
 
       if (error) { notifyError("parent-children-message-teacher", error); return; }
 
       if (conversationId) {
+        const displayName = teacherName
+          ? `${teacherName}`
+          : "Group";
         router.push({
           pathname: "/(tabs)/messages/[id]",
           params: {
             id: conversationId,
-            otherUserName: teacherName ?? "",
+            otherUserName: displayName,
             otherUserAvatar: "",
             otherUserId: teacherId,
           },

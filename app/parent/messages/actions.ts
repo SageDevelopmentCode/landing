@@ -12,13 +12,25 @@ export type ConversationWithMeta = {
     full_name: string;
     role: string | null;
     profile_image_url: string | null;
-  };
+  } | null;
   lastMessage: {
     body: string;
     created_at: string;
     sender_id: string;
   } | null;
   unreadCount: number;
+  isGroup: boolean;
+  displayName: string | null;
+  studentId: string | null;
+  teacherId: string | null;
+  participantCount: number;
+};
+
+export type ConversationParticipant = {
+  id: string;
+  full_name: string;
+  role: string | null;
+  profile_image_url: string | null;
 };
 
 export type MessageRow = {
@@ -31,6 +43,7 @@ export type MessageRow = {
   image_url: string | null;
   file_url: string | null;
   file_name: string | null;
+  sender_name?: string | null;
 };
 
 export async function getConversations(userId: string): Promise<ConversationWithMeta[]> {
@@ -55,7 +68,7 @@ export async function getConversations(userId: string): Promise<ConversationWith
   return (data ?? []).map((row: {
     conversation_id: string;
     updated_at: string;
-    other_user_id: string;
+    other_user_id: string | null;
     other_full_name: string | null;
     other_role: string | null;
     other_profile_image_url: string | null;
@@ -63,15 +76,22 @@ export async function getConversations(userId: string): Promise<ConversationWith
     last_message_created_at: string | null;
     last_message_sender_id: string | null;
     unread_count: number;
+    is_group: boolean;
+    display_name: string | null;
+    student_id: string | null;
+    teacher_id: string | null;
+    participant_count: number;
   }) => ({
     id: row.conversation_id,
     updated_at: row.updated_at,
-    otherUser: {
-      id: row.other_user_id,
-      full_name: row.other_full_name ?? "Unknown",
-      role: row.other_role ?? null,
-      profile_image_url: row.other_profile_image_url ?? null,
-    },
+    otherUser: row.other_user_id
+      ? {
+          id: row.other_user_id,
+          full_name: row.other_full_name ?? "Unknown",
+          role: row.other_role ?? null,
+          profile_image_url: row.other_profile_image_url ?? null,
+        }
+      : null,
     lastMessage: row.last_message_body
       ? {
           body: row.last_message_body,
@@ -80,6 +100,13 @@ export async function getConversations(userId: string): Promise<ConversationWith
         }
       : null,
     unreadCount: Number(row.unread_count ?? 0),
+    isGroup:
+      Boolean(row.is_group) ||
+      (!row.other_user_id && Boolean(row.display_name)),
+    displayName: row.display_name ?? null,
+    studentId: row.student_id ?? null,
+    teacherId: row.teacher_id ?? null,
+    participantCount: Number(row.participant_count ?? 0),
   }));
 }
 
@@ -93,8 +120,88 @@ export async function getMessages(conversationId: string): Promise<MessageRow[]>
     .eq("conversation_id", conversationId)
     .order("created_at", { ascending: true });
 
-  if (error) return [];
-  return data ?? [];
+  if (error || !data?.length) return data ?? [];
+
+  const senderIds = [...new Set(data.map((m) => m.sender_id))];
+  const adminClient = createAdminClient();
+  const { data: senders } = await adminClient
+    .schema("admin")
+    .from("users")
+    .select("id, full_name")
+    .in("id", senderIds);
+
+  const nameMap = Object.fromEntries(
+    (senders ?? []).map((s) => [s.id, s.full_name ?? "Unknown"]),
+  );
+
+  return data.map((m) => ({
+    ...m,
+    sender_name: nameMap[m.sender_id] ?? null,
+  }));
+}
+
+export async function getConversationParticipants(
+  conversationId: string,
+): Promise<ConversationParticipant[]> {
+  const adminClient = createAdminClient();
+
+  const { data: participants } = await adminClient
+    .schema("messaging")
+    .from("conversation_participants")
+    .select("user_id")
+    .eq("conversation_id", conversationId);
+
+  const userIds = (participants ?? []).map((p) => p.user_id);
+  if (!userIds.length) return [];
+
+  const { data: users } = await adminClient
+    .schema("admin")
+    .from("users")
+    .select("id, full_name, role, profile_image_url")
+    .in("id", userIds)
+    .eq("is_deleted", false);
+
+  return (users ?? []).map((u) => ({
+    id: u.id,
+    full_name: u.full_name ?? "Unknown",
+    role: u.role ?? null,
+    profile_image_url: u.profile_image_url ?? null,
+  }));
+}
+
+export async function findOrCreateHouseholdTeacherConversation(
+  studentId: string,
+  teacherId: string,
+): Promise<string | null> {
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const adminClient = createAdminClient();
+  const { data, error } = await adminClient.rpc(
+    "find_or_create_household_teacher_conversation",
+    {
+      p_student_id: studentId,
+      p_teacher_id: teacherId,
+      p_caller_id: user.id,
+    },
+  );
+
+  if (error) {
+    console.error("[findOrCreateHouseholdTeacherConversation] rpc error:", error);
+    void sendDiscordNotification(
+      createErrorEmbed({
+        context: "findOrCreateHouseholdTeacherConversation RPC",
+        error: error.message,
+        details: { studentId, teacherId, callerId: user.id },
+      }),
+    ).catch(() => {});
+    return null;
+  }
+
+  return data as string;
 }
 
 export async function sendMessage(

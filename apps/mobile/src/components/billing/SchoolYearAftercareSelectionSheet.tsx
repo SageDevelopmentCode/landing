@@ -1,9 +1,14 @@
 import { PaymentMethodStep } from "@/components/billing/PaymentMethodStep";
-import { Brand, FontFamilies, Spacing } from "@/constants/theme";
+import {
+  SchoolYearMonthlyMonthGrid,
+  type SchoolYearMonthGridItem,
+} from "@/components/billing/SchoolYearMonthlyMonthGrid";
+import { FontFamilies, Spacing } from "@/constants/theme";
 import { useStripePayment } from "@/hooks/useStripePayment";
 import type { ApplicationRow } from "@/lib/school-year-billing";
 import {
   AFTERCARE_DAILY_CENTS,
+  AFTERCARE_MONTHLY_CENTS,
   SCHOOL_YEAR_AFTERCARE_MONTHS,
   schoolYearAftercareMonthCents,
 } from "@/lib/school-year";
@@ -17,6 +22,9 @@ import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 type StudentInfo = { id: string; name: string; profileImageUrl: string | null };
+
+const ACCENT = "#E07A3A";
+const ACCENT_TINT = "#FFF7F3";
 
 function formatCents(cents: number) {
   return new Intl.NumberFormat("en-US", {
@@ -56,17 +64,67 @@ export function SchoolYearAftercareSelectionSheet({
     [paidAftercare],
   );
 
-  const totalCents = useMemo(() => {
-    if (tab === "monthly") {
-      return SCHOOL_YEAR_AFTERCARE_MONTHS.filter((m) =>
-        selMonths.has(m.key),
-      ).reduce((sum, m) => sum + schoolYearAftercareMonthCents(m), 0);
-    }
-    return selDays.size * AFTERCARE_DAILY_CENTS;
-  }, [tab, selMonths, selDays]);
+  const monthlyTotal = useMemo(
+    () =>
+      SCHOOL_YEAR_AFTERCARE_MONTHS.filter((m) => selMonths.has(m.key)).reduce(
+        (sum, m) => sum + schoolYearAftercareMonthCents(m),
+        0,
+      ),
+    [selMonths],
+  );
+
+  const dailyTotal = selDays.size * AFTERCARE_DAILY_CENTS;
+  const totalCents = tab === "monthly" ? monthlyTotal : dailyTotal;
 
   const canContinue =
     tab === "monthly" ? selMonths.size > 0 : selDays.size > 0;
+
+  const monthGridItems: SchoolYearMonthGridItem[] = useMemo(
+    () =>
+      SCHOOL_YEAR_AFTERCARE_MONTHS.map((m) => {
+        const isPaid = paidMonths.has(m.key);
+        const partialCount = isPaid
+          ? 0
+          : m.days.filter((d) => paidDays.has(d.date)).length;
+        const monthCents = schoolYearAftercareMonthCents(m);
+        const priceLabel =
+          monthCents === AFTERCARE_MONTHLY_CENTS
+            ? `${formatCents(AFTERCARE_MONTHLY_CENTS)}/mo`
+            : formatCents(monthCents);
+        return {
+          key: m.key,
+          label: m.label,
+          subtitle: `${m.days.length} days · ${priceLabel}`,
+          partialPaidLabel:
+            partialCount > 0
+              ? `· ${partialCount} day${partialCount !== 1 ? "s" : ""} paid`
+              : undefined,
+        };
+      }),
+    [paidMonths, paidDays],
+  );
+
+  const monthlySummaryLabel = useMemo(() => {
+    if (selMonths.size === 0) return "No months selected";
+    const sel = SCHOOL_YEAR_AFTERCARE_MONTHS.filter((m) =>
+      selMonths.has(m.key),
+    );
+    const allNormal = sel.every(
+      (m) => schoolYearAftercareMonthCents(m) === AFTERCARE_MONTHLY_CENTS,
+    );
+    return allNormal
+      ? `${sel.length} month${sel.length !== 1 ? "s" : ""} × ${formatCents(AFTERCARE_MONTHLY_CENTS)}/mo`
+      : `${sel.length} month${sel.length !== 1 ? "s" : ""} selected`;
+  }, [selMonths]);
+
+  const continueLabel =
+    tab === "monthly"
+      ? selMonths.size > 0
+        ? `Continue · ${formatCents(monthlyTotal)}`
+        : "Select months to continue"
+      : selDays.size > 0
+        ? `Continue · ${formatCents(dailyTotal)}`
+        : "Select days to continue";
 
   function reset() {
     setTab("monthly");
@@ -74,6 +132,16 @@ export function SchoolYearAftercareSelectionSheet({
     setSelDays(new Set());
     setExpanded(new Set(SCHOOL_YEAR_AFTERCARE_MONTHS.map((m) => m.key)));
     setStep("select");
+  }
+
+  function toggleMonth(key: string) {
+    if (paidMonths.has(key)) return;
+    setSelMonths((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
   }
 
   async function handlePay(coverFees: boolean, paymentMethod: "card" | "ach") {
@@ -132,238 +200,381 @@ export function SchoolYearAftercareSelectionSheet({
           />
         </BottomSheetScrollView>
       ) : (
-        <BottomSheetScrollView contentContainerStyle={s.content}>
-          <Text style={s.title}>Extended Learning</Text>
-          {student ? (
-            <Text style={s.subtitle}>{student.name.split(" ")[0]}</Text>
-          ) : null}
-
-          <View style={s.tabRow}>
-            {(["monthly", "daily"] as const).map((t) => (
-              <Pressable
-                key={t}
-                style={[s.tab, tab === t && s.tabOn]}
-                onPress={() => setTab(t)}
-              >
-                <Text style={[s.tabText, tab === t && s.tabTextOn]}>
-                  {t === "monthly" ? "Monthly" : "Daily"}
-                </Text>
-              </Pressable>
-            ))}
+        <View style={s.flex}>
+          <View style={s.sheetHeader}>
+            <Text style={s.title}>Extended Learning — School Year 26–27</Text>
+            {student ? (
+              <View style={s.studentRow}>
+                <Text style={s.subtitle}>{student.name.split(" ")[0]}</Text>
+                {application?.child_grade ? (
+                  <View style={s.gradeBadge}>
+                    <Text style={s.gradeBadgeText}>
+                      {application.child_grade}
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
+            ) : null}
           </View>
 
-          {tab === "monthly" ? (
-            SCHOOL_YEAR_AFTERCARE_MONTHS.map((month) => {
-              const isPaid = paidMonths.has(month.key);
-              const isSelected = selMonths.has(month.key);
-              const isOpen = expanded.has(month.key);
-              return (
-                <View key={month.key} style={s.monthBlock}>
-                  <Pressable
-                    style={s.monthHeader}
-                    onPress={() =>
-                      setExpanded((prev) => {
-                        const next = new Set(prev);
-                        if (next.has(month.key)) next.delete(month.key);
-                        else next.add(month.key);
-                        return next;
-                      })
-                    }
-                  >
-                    <Pressable
-                      disabled={isPaid}
-                      style={[
-                        s.monthChip,
-                        isPaid && s.monthChipPaid,
-                        isSelected && s.monthChipOn,
-                      ]}
-                      onPress={() =>
-                        setSelMonths((prev) => {
-                          const next = new Set(prev);
-                          if (next.has(month.key)) next.delete(month.key);
-                          else next.add(month.key);
-                          return next;
-                        })
-                      }
-                    >
-                      <Text
-                        style={[
-                          s.monthChipText,
-                          isSelected && s.monthChipTextOn,
-                        ]}
-                      >
-                        {month.shortLabel}
-                      </Text>
-                    </Pressable>
-                    <Text style={s.monthPrice}>
-                      {formatCents(schoolYearAftercareMonthCents(month))}
-                    </Text>
-                    <Ionicons
-                      name={isOpen ? "chevron-up" : "chevron-down"}
-                      size={16}
-                      color="#9CA3AF"
-                    />
-                  </Pressable>
-                  {isOpen && (
-                    <View style={s.daysWrap}>
-                      {month.days.map((d) => (
-                        <Text key={d.date} style={s.dayLabel}>
-                          {d.label}
-                        </Text>
-                      ))}
-                    </View>
-                  )}
+          <View style={s.tabRow}>
+            <Pressable
+              style={[s.tab, tab === "monthly" && s.tabOn]}
+              onPress={() => setTab("monthly")}
+            >
+              <Text style={[s.tabText, tab === "monthly" && s.tabTextOn]}>
+                Monthly
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[s.tab, tab === "daily" && s.tabOn]}
+              onPress={() => setTab("daily")}
+            >
+              <Text style={[s.tabText, tab === "daily" && s.tabTextOn]}>
+                Daily
+              </Text>
+            </Pressable>
+          </View>
+
+          <BottomSheetScrollView
+            contentContainerStyle={s.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {tab === "monthly" ? (
+              <>
+                <Text style={s.instruction}>
+                  Select the months you'd like Extended Learning coverage for.
+                </Text>
+                <SchoolYearMonthlyMonthGrid
+                  months={monthGridItems}
+                  selectedKeys={selMonths}
+                  paidKeys={paidMonths}
+                  accentColor={ACCENT}
+                  accentTintBg={ACCENT_TINT}
+                  onToggle={toggleMonth}
+                />
+                <View
+                  style={[
+                    s.summaryBar,
+                    selMonths.size > 0 && { backgroundColor: ACCENT_TINT },
+                  ]}
+                >
+                  <Text style={s.summaryLabel}>{monthlySummaryLabel}</Text>
+                  <Text style={[s.summaryTotal, { color: ACCENT }]}>
+                    {selMonths.size > 0 ? formatCents(monthlyTotal) : "—"}
+                  </Text>
                 </View>
-              );
-            })
-          ) : (
-            SCHOOL_YEAR_AFTERCARE_MONTHS.map((month) => (
-              <View key={month.key} style={s.monthBlock}>
-                <Text style={s.monthTitle}>{month.label}</Text>
-                <View style={s.daysGrid}>
-                  {month.days.map((d) => {
-                    const isPaid = paidDays.has(d.date);
-                    const isSelected = selDays.has(d.date);
-                    return (
+              </>
+            ) : (
+              <>
+                <Text style={s.instruction}>
+                  Select individual days you'd like Extended Learning. $35/day.
+                </Text>
+                {SCHOOL_YEAR_AFTERCARE_MONTHS.map((month) => {
+                  const isOpen = expanded.has(month.key);
+                  const selectedInMonth = month.days.filter((d) =>
+                    selDays.has(d.date),
+                  ).length;
+                  const paidInMonth = month.days.filter((d) =>
+                    paidDays.has(d.date),
+                  ).length;
+                  return (
+                    <View key={month.key} style={s.accordion}>
                       <Pressable
-                        key={d.date}
-                        disabled={isPaid}
-                        style={[
-                          s.dayChip,
-                          isPaid && s.dayChipPaid,
-                          isSelected && s.dayChipOn,
-                        ]}
+                        style={s.accordionHeader}
                         onPress={() =>
-                          setSelDays((prev) => {
+                          setExpanded((prev) => {
                             const next = new Set(prev);
-                            if (next.has(d.date)) next.delete(d.date);
-                            else next.add(d.date);
+                            if (next.has(month.key)) next.delete(month.key);
+                            else next.add(month.key);
                             return next;
                           })
                         }
                       >
-                        <Text
-                          style={[
-                            s.dayChipText,
-                            isSelected && s.dayChipTextOn,
-                          ]}
-                        >
-                          {d.label.split(" ").slice(1).join(" ")}
-                        </Text>
+                        <View style={s.accordionHeaderLeft}>
+                          <Text style={s.monthTitle}>{month.label}</Text>
+                          {paidInMonth > 0 && (
+                            <View style={s.countBadgePaid}>
+                              <Text style={s.countBadgePaidText}>
+                                {paidInMonth} paid
+                              </Text>
+                            </View>
+                          )}
+                          {selectedInMonth > 0 && (
+                            <View
+                              style={[
+                                s.countBadgeSel,
+                                { backgroundColor: ACCENT },
+                              ]}
+                            >
+                              <Text style={s.countBadgeSelText}>
+                                {selectedInMonth} selected
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                        <Ionicons
+                          name={isOpen ? "chevron-up" : "chevron-down"}
+                          size={16}
+                          color="#9CA3AF"
+                        />
                       </Pressable>
-                    );
-                  })}
+                      {isOpen && (
+                        <View style={s.daysGrid}>
+                          {month.days.map((d) => {
+                            const isPaid = paidDays.has(d.date);
+                            const isSelected = selDays.has(d.date);
+                            return (
+                              <Pressable
+                                key={d.date}
+                                disabled={isPaid}
+                                style={[
+                                  s.dayChip,
+                                  isPaid && s.dayChipPaid,
+                                  isSelected && s.dayChipOn,
+                                ]}
+                                onPress={() =>
+                                  setSelDays((prev) => {
+                                    const next = new Set(prev);
+                                    if (next.has(d.date)) next.delete(d.date);
+                                    else next.add(d.date);
+                                    return next;
+                                  })
+                                }
+                              >
+                                <Text
+                                  style={[
+                                    s.dayChipText,
+                                    isPaid && s.dayChipTextPaid,
+                                    isSelected && s.dayChipTextOn,
+                                  ]}
+                                >
+                                  {d.label}
+                                </Text>
+                              </Pressable>
+                            );
+                          })}
+                        </View>
+                      )}
+                    </View>
+                  );
+                })}
+                <View
+                  style={[
+                    s.summaryBar,
+                    selDays.size > 0 && { backgroundColor: ACCENT_TINT },
+                  ]}
+                >
+                  <Text style={s.summaryLabel}>
+                    {selDays.size === 0
+                      ? "No days selected"
+                      : `${selDays.size} day${selDays.size !== 1 ? "s" : ""} × ${formatCents(AFTERCARE_DAILY_CENTS)}/day`}
+                  </Text>
+                  <Text style={[s.summaryTotal, { color: ACCENT }]}>
+                    {selDays.size > 0 ? formatCents(dailyTotal) : "—"}
+                  </Text>
                 </View>
-              </View>
-            ))
-          )}
+              </>
+            )}
+          </BottomSheetScrollView>
 
-          <Pressable
-            style={[s.primaryBtn, !canContinue && s.primaryBtnDisabled]}
-            disabled={!canContinue}
-            onPress={() => setStep("payment")}
-          >
-            <Text style={s.primaryBtnText}>
-              Continue · {formatCents(totalCents)}
-            </Text>
-          </Pressable>
-        </BottomSheetScrollView>
+          <View style={s.footer}>
+            <Pressable
+              style={[s.primaryBtn, !canContinue && s.primaryBtnDisabled]}
+              disabled={!canContinue}
+              onPress={() => setStep("payment")}
+            >
+              <Text style={s.primaryBtnText}>{continueLabel}</Text>
+            </Pressable>
+          </View>
+        </View>
       )}
     </BottomSheetModal>
   );
 }
 
 const s = StyleSheet.create({
+  flex: { flex: 1 },
   content: { padding: Spacing.three, paddingBottom: 40 },
+  sheetHeader: {
+    paddingHorizontal: Spacing.three,
+    paddingTop: 4,
+    paddingBottom: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#E5E7EB",
+  },
   title: {
     fontFamily: FontFamilies.heading,
     fontSize: 18,
     color: "#111827",
   },
+  studentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 4,
+  },
   subtitle: {
     fontFamily: FontFamilies.body,
     fontSize: 13,
-    color: "#9CA3AF",
-    marginBottom: 16,
+    color: "#6B7280",
   },
-  tabRow: { flexDirection: "row", gap: 8, marginBottom: 16 },
+  gradeBadge: {
+    backgroundColor: "#F3F4F6",
+    borderRadius: 9999,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  gradeBadgeText: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 11,
+    color: "#4B5563",
+  },
+  tabRow: {
+    flexDirection: "row",
+    gap: 8,
+    paddingHorizontal: Spacing.three,
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
   tab: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 9999,
+    backgroundColor: "#F3F4F6",
   },
   tabOn: {
-    borderColor: Brand.sage700,
-    backgroundColor: "rgba(74,124,89,0.08)",
+    backgroundColor: ACCENT,
   },
   tabText: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 13,
     color: "#6B7280",
   },
-  tabTextOn: { color: Brand.sage700 },
-  monthBlock: { marginBottom: 12 },
-  monthHeader: {
+  tabTextOn: { color: "#ffffff" },
+  scrollContent: {
+    paddingHorizontal: Spacing.three,
+    paddingTop: 12,
+    paddingBottom: 20,
+  },
+  instruction: {
+    fontFamily: FontFamilies.body,
+    fontSize: 13,
+    color: "#6B7280",
+    marginBottom: 16,
+  },
+  summaryBar: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    justifyContent: "space-between",
+    backgroundColor: "#F9FAFB",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginTop: 16,
   },
-  monthChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  monthChipOn: { backgroundColor: Brand.sage700, borderColor: Brand.sage700 },
-  monthChipPaid: { opacity: 0.5 },
-  monthChipText: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 12,
-    color: "#374151",
-  },
-  monthChipTextOn: { color: "#ffffff" },
-  monthPrice: {
+  summaryLabel: {
     flex: 1,
     fontFamily: FontFamilies.body,
-    fontSize: 12,
+    fontSize: 13,
     color: "#6B7280",
+    marginRight: 8,
+  },
+  summaryTotal: {
+    fontFamily: FontFamilies.heading,
+    fontSize: 16,
+    color: ACCENT,
+  },
+  accordion: {
+    borderRadius: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#F3F4F6",
+    marginBottom: 10,
+    overflow: "hidden",
+  },
+  accordionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    backgroundColor: "#F9FAFB",
+  },
+  accordionHeaderLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flex: 1,
+    flexWrap: "wrap",
   },
   monthTitle: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 13,
     color: "#374151",
-    marginBottom: 8,
   },
-  daysWrap: { paddingLeft: 8, paddingTop: 8, gap: 4 },
-  dayLabel: { fontFamily: FontFamilies.body, fontSize: 11, color: "#9CA3AF" },
-  daysGrid: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
-  dayChip: {
+  countBadgePaid: {
+    backgroundColor: "#DCFCE7",
+    borderRadius: 9999,
     paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  countBadgePaidText: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 10,
+    color: "#15803D",
+  },
+  countBadgeSel: {
+    borderRadius: 9999,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  countBadgeSelText: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 10,
+    color: "#ffffff",
+  },
+  daysGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  dayChip: {
+    paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 6,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "#E5E7EB",
+    backgroundColor: "#ffffff",
   },
-  dayChipOn: { backgroundColor: Brand.sage700, borderColor: Brand.sage700 },
-  dayChipPaid: { opacity: 0.4 },
+  dayChipOn: { backgroundColor: ACCENT, borderColor: ACCENT },
+  dayChipPaid: {
+    backgroundColor: "#DCFCE7",
+    borderColor: "#86EFAC",
+  },
   dayChipText: {
-    fontFamily: FontFamilies.body,
+    fontFamily: FontFamilies.bodySemiBold,
     fontSize: 11,
     color: "#374151",
   },
+  dayChipTextPaid: { color: "#15803D" },
   dayChipTextOn: { color: "#ffffff" },
+  footer: {
+    paddingHorizontal: Spacing.three,
+    paddingTop: Spacing.two,
+    paddingBottom: Spacing.three,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "#E5E7EB",
+    backgroundColor: "#ffffff",
+  },
   primaryBtn: {
-    backgroundColor: Brand.sage700,
+    backgroundColor: ACCENT,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: "center",
-    marginTop: 20,
   },
-  primaryBtnDisabled: { opacity: 0.45 },
+  primaryBtnDisabled: { opacity: 0.4 },
   primaryBtnText: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 14,

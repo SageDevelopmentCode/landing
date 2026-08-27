@@ -44,3 +44,33 @@ export async function getStudentsByParentId(parentId: string): Promise<ChildInfo
     drop_in_program: appMap[s.id]?.drop_in_program ?? null,
   }));
 }
+
+export async function getStudentById(studentId: string): Promise<ChildInfo | null> {
+  const client = createAdminClient();
+
+  const { data: student } = await client
+    .schema("admin")
+    .from("students")
+    .select("id, child_legal_name, child_grade, profile_image_url")
+    .eq("id", studentId)
+    .eq("is_deleted", false)
+    .maybeSingle();
+
+  if (!student) return null;
+
+  const { data: app } = await client
+    .schema("parent_app")
+    .from("applications")
+    .select("program, drop_in_program")
+    .eq("student_id", studentId)
+    .maybeSingle();
+
+  return {
+    id: student.id,
+    child_legal_name: student.child_legal_name ?? null,
+    child_grade: student.child_grade ?? null,
+    profile_image_url: student.profile_image_url ?? null,
+    program: app?.program ?? null,
+    drop_in_program: app?.drop_in_program ?? null,
+  };
+}

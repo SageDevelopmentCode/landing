@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { useUploadQueue } from "@/contexts/UploadQueueContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -24,6 +25,7 @@ import {
   TeacherPhoto,
 } from "@/lib/photos-actions";
 import { BottomTabInset, Brand, FontFamilies } from "@/constants/theme";
+import { setPhotoGallerySession } from "@/lib/photo-gallery-session";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const TILE_GAP = 2;
@@ -124,6 +126,7 @@ function TileRow({
 export default function PhotosGalleryScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { userRole } = useAuth();
 
   const [photos, setPhotos] = useState<TeacherPhoto[]>([]);
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
@@ -203,19 +206,20 @@ export default function PhotosGalleryScreen() {
   );
 
   function handlePress(photo: TeacherPhoto) {
+    setPhotoGallerySession(photos);
     router.push({
       pathname: "/(staff)/photos/[photoId]",
       params: {
         photoId: photo.id,
         storagePath: photo.storage_path,
         signedUrl: signedUrls[photo.storage_path] ?? "",
-        allPhotosJson: JSON.stringify(photos),
       },
     });
   }
 
   function handleLongPress(photo: TeacherPhoto) {
     const isOwner = currentUserId !== null && photo.teacher_id === currentUserId;
+    const canDelete = isOwner || userRole === "super_admin";
     const actions: { text: string; style?: "destructive" | "cancel"; onPress?: () => void }[] = [
       { text: "View", onPress: () => handlePress(photo) },
     ];
@@ -229,6 +233,9 @@ export default function PhotosGalleryScreen() {
             params: { photoId: photo.id },
           }),
       });
+    }
+
+    if (canDelete) {
       actions.push({
         text: "Delete",
         style: "destructive",

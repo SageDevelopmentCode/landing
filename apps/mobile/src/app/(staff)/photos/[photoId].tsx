@@ -3,35 +3,77 @@ import {
   Alert,
   Pressable,
   ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
   View,
 } from "react-native";
-import { Image } from "expo-image";
 import { useFocusEffect, useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "@/lib/supabase";
-import { deletePhoto, getAllSchoolPhotos, TeacherPhoto, ConsentLevel } from "@/lib/photos-actions";
+import {
+  deletePhoto,
+  getAllSchoolPhotos,
+  TeacherPhoto,
+  ConsentLevel,
+} from "@/lib/photos-actions";
+import { PhotoSwipeGallery } from "@/components/photos/PhotoSwipeGallery";
+import {
+  getPhotoGallerySession,
+  updatePhotoGallerySession,
+} from "@/lib/photo-gallery-session";
 import { floatingTabBarStyle, FontFamilies } from "@/constants/theme";
 import { useUploadQueue } from "@/contexts/UploadQueueContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { saveImageToLibrary } from "@/utils/saveMedia";
 
 const CONSENT_COLORS: Record<ConsentLevel, { dot: string }> = {
-  FULL:    { dot: "#16a34a" },
+  FULL: { dot: "#16a34a" },
   LIMITED: { dot: "#d97706" },
-  NO:      { dot: "#dc2626" },
+  NO: { dot: "#dc2626" },
 };
 
 const LABEL_DISPLAY: Record<string, string> = {
-  newsletter:   "Newsletter",
+  newsletter: "Newsletter",
   social_media: "Social Media",
-  website:      "Website",
+  website: "Website",
 };
 
+function buildStubPhoto(
+  photoId: string,
+  storagePath: string | undefined,
+  signedUrl: string | undefined
+): TeacherPhoto {
+  return {
+    id: photoId,
+    teacher_id: "",
+    storage_path: storagePath ?? "",
+    signed_url: signedUrl && signedUrl.length > 0 ? signedUrl : null,
+    caption: null,
+    taken_on: null,
+    created_at: new Date().toISOString(),
+    tags: [],
+    publication_labels: [],
+  };
+}
+
+function initialPhotosFromSessionOrStub(
+  photoId: string,
+  storagePath: string | undefined,
+  signedUrl: string | undefined
+): TeacherPhoto[] {
+  const session = getPhotoGallerySession();
+  if (session.length > 0) return session;
+  if (!storagePath) return [];
+  return [buildStubPhoto(photoId, storagePath, signedUrl)];
+}
+
 export default function PhotoDetailScreen() {
-  const { photoId, signedUrl: passedUrl, storagePath: passedPath } = useLocalSearchParams<{
+  const {
+    photoId,
+    signedUrl: passedUrl,
+    storagePath: passedPath,
+  } = useLocalSearchParams<{
     photoId: string;
     signedUrl?: string;
     storagePath?: string;
@@ -40,12 +82,11 @@ export default function PhotoDetailScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const { markGalleryDirty } = useUploadQueue();
+  const { userRole } = useAuth();
 
-  const [photo, setPhoto] = useState<TeacherPhoto | null>(null);
-  const [imageUrl, setImageUrl] = useState<string | null>(
-    passedUrl && passedUrl.length > 0 ? passedUrl : null
+  const [photos, setPhotos] = useState<TeacherPhoto[]>(() =>
+    initialPhotosFromSessionOrStub(photoId, passedPath, passedUrl)
   );
-  const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useFocusEffect(
@@ -58,34 +99,34 @@ export default function PhotoDetailScreen() {
   );
 
   useEffect(() => {
-    async function load() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      setCurrentUserId(user.id);
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setCurrentUserId(user.id);
+    });
+  }, []);
 
+  useEffect(() => {
+    if (getPhotoGallerySession().length > 0) return;
+
+    let cancelled = false;
+
+    async function loadFallback() {
       const all = await getAllSchoolPhotos();
+      if (cancelled) return;
+
       const found = all.find((p) => p.id === photoId);
       if (found) {
-        setPhoto(found);
-        if (!(passedUrl && passedUrl.length > 0) && found.storage_path) {
-          const { data } = await supabase.storage
-            .from("teacher-photos")
-            .createSignedUrl(found.storage_path, 86400);
-          if (data?.signedUrl) setImageUrl(data.signedUrl);
-        }
-      } else if (passedPath) {
-        const { data } = await supabase.storage
-          .from("teacher-photos")
-          .createSignedUrl(passedPath, 86400);
-        if (data?.signedUrl) setImageUrl(data.signedUrl);
+        setPhotos([found]);
+        updatePhotoGallerySession([found]);
       }
-      setLoading(false);
     }
-    load();
-  }, [photoId, passedPath, passedUrl]);
 
-  function handleDelete() {
-    if (!photo) return;
+    loadFallback();
+    return () => {
+      cancelled = true;
+    };
+  }, [photoId]);
+
+  function handleDelete(photo: TeacherPhoto) {
     Alert.alert("Delete Photo", "This cannot be undone.", [
       { text: "Cancel", style: "cancel" },
       {
@@ -94,173 +135,121 @@ export default function PhotoDetailScreen() {
         onPress: async () => {
           await deletePhoto(photo.id, photo.storage_path);
           markGalleryDirty();
-          router.back();
+          const next = photos.filter((p) => p.id !== photo.id);
+          if (next.length === 0) {
+            router.back();
+            return;
+          }
+          setPhotos(next);
+          updatePhotoGallerySession(next);
         },
       },
     ]);
   }
 
-  const isOwner = photo !== null && currentUserId !== null && photo.teacher_id === currentUserId;
-
-  if (loading && !imageUrl) {
-    return (
-      <View style={styles.loadingContainer}>
-        <StatusBar barStyle="light-content" />
-        <Pressable
-          style={[styles.backBtn, { top: insets.top + 12 }]}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={22} color="#fff" />
-        </Pressable>
-      </View>
-    );
-  }
-
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <PhotoSwipeGallery
+      photos={photos}
+      initialPhotoId={photoId}
+      passedUrl={passedUrl}
+      renderTopBarRight={(photo, url) => {
+        const slideIsOwner =
+          photo !== null &&
+          currentUserId !== null &&
+          photo.teacher_id === currentUserId;
+        const slideCanDelete = slideIsOwner || userRole === "super_admin";
 
-      {imageUrl ? (
-        <Image
-          source={{ uri: imageUrl }}
-          style={StyleSheet.absoluteFill}
-          contentFit="contain"
-        />
-      ) : (
-        <View style={[StyleSheet.absoluteFill, styles.imagePlaceholder]}>
-          <Ionicons name="image-outline" size={56} color="#4b5563" />
-        </View>
-      )}
-
-      {/* Top bar */}
-      <View style={[styles.topBar, { paddingTop: insets.top + 12 }]}>
-        <Pressable style={styles.iconBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#fff" />
-        </Pressable>
-        <View style={styles.topBarRight}>
-          {imageUrl && (
-            <Pressable
-              style={styles.iconBtn}
-              onPress={() => saveImageToLibrary(imageUrl)}
-              hitSlop={12}
-            >
-              <Ionicons name="download-outline" size={20} color="#fff" />
-            </Pressable>
-          )}
-          {isOwner && (
-            <>
+        return (
+          <>
+            {url ? (
+              <Pressable
+                style={styles.iconBtn}
+                onPress={() => saveImageToLibrary(url)}
+                hitSlop={12}
+              >
+                <Ionicons name="download-outline" size={20} color="#fff" />
+              </Pressable>
+            ) : null}
+            {slideIsOwner && photo && (
               <Pressable
                 style={styles.iconBtn}
                 onPress={() =>
-                  router.push({ pathname: "/(staff)/photos/edit", params: { photoId } })
+                  router.push({
+                    pathname: "/(staff)/photos/edit",
+                    params: { photoId: photo.id },
+                  })
                 }
               >
                 <Ionicons name="pencil-outline" size={20} color="#fff" />
               </Pressable>
-              <Pressable style={styles.iconBtn} onPress={handleDelete}>
+            )}
+            {slideCanDelete && photo && (
+              <Pressable style={styles.iconBtn} onPress={() => handleDelete(photo)}>
                 <Ionicons name="trash-outline" size={20} color="#fff" />
               </Pressable>
-            </>
-          )}
-        </View>
-      </View>
-
-      {/* Bottom overlay — only if there's something to show */}
-      {photo && (
-        photo.caption ||
-        photo.taken_on ||
-        photo.tags.length > 0 ||
-        photo.publication_labels.length > 0
-      ) ? (
-        <View style={[styles.overlay, { paddingBottom: insets.bottom + 20 }]}>
-          <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
-            {photo!.caption ? (
-              <Text style={styles.caption}>{photo!.caption}</Text>
-            ) : null}
-
-            {photo!.taken_on ? (
-              <Text style={styles.date}>
-                {new Date(photo!.taken_on + "T00:00:00").toLocaleDateString("en-US", {
-                  month: "long",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </Text>
-            ) : null}
-
-            {photo!.tags.length > 0 && (
-              <View style={styles.chips}>
-                {photo!.tags.map((tag) => (
-                  <View key={tag.student_id} style={styles.tagChip}>
-                    {tag.consent_level && tag.consent_level !== "FULL" && (
-                      <View
-                        style={[
-                          styles.consentDot,
-                          { backgroundColor: CONSENT_COLORS[tag.consent_level].dot },
-                        ]}
-                      />
-                    )}
-                    <Text style={styles.tagText}>{tag.name ?? "Unknown"}</Text>
-                  </View>
-                ))}
-              </View>
             )}
+          </>
+        );
+      }}
+      renderOverlay={(photo) =>
+        photo &&
+        (photo.caption ||
+          photo.taken_on ||
+          photo.tags.length > 0 ||
+          photo.publication_labels.length > 0) ? (
+          <View style={[styles.overlay, { paddingBottom: insets.bottom + 20 }]}>
+            <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
+              {photo.caption ? (
+                <Text style={styles.caption}>{photo.caption}</Text>
+              ) : null}
 
-            {photo!.publication_labels.length > 0 && (
-              <View style={[styles.chips, { marginTop: 6 }]}>
-                {photo!.publication_labels.map((lbl) => (
-                  <View key={lbl} style={styles.labelChip}>
-                    <Text style={styles.labelText}>{LABEL_DISPLAY[lbl] ?? lbl}</Text>
-                  </View>
-                ))}
-              </View>
-            )}
-          </ScrollView>
-        </View>
-      ) : null}
-    </View>
+              {photo.taken_on ? (
+                <Text style={styles.date}>
+                  {new Date(photo.taken_on + "T00:00:00").toLocaleDateString("en-US", {
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </Text>
+              ) : null}
+
+              {photo.tags.length > 0 && (
+                <View style={styles.chips}>
+                  {photo.tags.map((tag) => (
+                    <View key={tag.student_id} style={styles.tagChip}>
+                      {tag.consent_level && tag.consent_level !== "FULL" && (
+                        <View
+                          style={[
+                            styles.consentDot,
+                            { backgroundColor: CONSENT_COLORS[tag.consent_level].dot },
+                          ]}
+                        />
+                      )}
+                      <Text style={styles.tagText}>{tag.name ?? "Unknown"}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {photo.publication_labels.length > 0 && (
+                <View style={[styles.chips, { marginTop: 6 }]}>
+                  {photo.publication_labels.map((lbl) => (
+                    <View key={lbl} style={styles.labelChip}>
+                      <Text style={styles.labelText}>{LABEL_DISPLAY[lbl] ?? lbl}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </ScrollView>
+          </View>
+        ) : null
+      }
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#000",
-  },
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: "#000",
-  },
-  imagePlaceholder: {
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#111",
-  },
-  topBar: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    paddingHorizontal: 16,
-  },
-  topBarRight: {
-    flexDirection: "row",
-    gap: 8,
-  },
   iconBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(0,0,0,0.45)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  backBtn: {
-    position: "absolute",
-    left: 16,
     width: 40,
     height: 40,
     borderRadius: 20,

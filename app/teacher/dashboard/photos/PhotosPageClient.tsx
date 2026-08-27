@@ -277,14 +277,20 @@ function PhotoCard({
   onEdit,
   teacherName,
   teacherProfileImageUrl,
+  isSuperAdmin,
+  currentUserId,
   containerRef,
 }: {
   photo: TeacherPhoto;
   onEdit: (p: TeacherPhoto) => void;
   teacherName: string | null;
   teacherProfileImageUrl: string | null;
+  isSuperAdmin: boolean;
+  currentUserId: string;
   containerRef?: (el: HTMLDivElement | null) => void;
 }) {
+  const canEditPhoto = photo.teacher_id === currentUserId;
+  const showUploaderAvatar = !isSuperAdmin || photo.teacher_id === currentUserId;
   const visibleTags = photo.tags.slice(0, 2);
   const extraCount = photo.tags.length - 2;
   const dateStr = formatDate(photo.taken_on);
@@ -318,13 +324,16 @@ function PhotoCard({
         </div>
       )}
 
-      <button
-        onClick={(e) => { e.stopPropagation(); onEdit(photo); }}
-        className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 rounded-lg opacity-0 group-hover:opacity-100 transition-all cursor-pointer z-10"
-      >
-        <Pencil className="w-3.5 h-3.5 text-white" />
-      </button>
+      {canEditPhoto && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onEdit(photo); }}
+          className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 rounded-lg opacity-0 group-hover:opacity-100 transition-all cursor-pointer z-10"
+        >
+          <Pencil className="w-3.5 h-3.5 text-white" />
+        </button>
+      )}
 
+      {showUploaderAvatar && (
       <div className="absolute top-2 left-2 z-10">
         {teacherProfileImageUrl ? (
           <img src={teacherProfileImageUrl} alt="" className="w-8 h-8 rounded-full object-cover ring-2 ring-white" />
@@ -334,6 +343,7 @@ function PhotoCard({
           </div>
         )}
       </div>
+      )}
 
       <div className="px-3 pt-2 pb-2.5 bg-white">
         {/* Row 1: date — always rendered, empty string keeps the line height */}
@@ -344,12 +354,16 @@ function PhotoCard({
         {/* Row 2: student tags — single non-wrapping row */}
         <div className="flex items-center gap-1 mb-1.5 overflow-hidden flex-nowrap">
           {photo.tags.length === 0 ? (
+            canEditPhoto ? (
             <button
               onClick={() => onEdit(photo)}
               className="text-xs font-body text-gray-400 hover:text-[#4a7c59] transition-colors cursor-pointer flex-shrink-0"
             >
               + Add tags
             </button>
+            ) : (
+              <span className="text-xs font-body text-gray-400 flex-shrink-0">No tags</span>
+            )
           ) : (
             <>
               {visibleTags.map((t) => (
@@ -398,12 +412,16 @@ function PhotoCard({
 function EditPhotoModal({
   photo,
   students,
+  canEdit,
+  canDelete,
   onClose,
   onSaved,
   onDeleted,
 }: {
   photo: TeacherPhoto;
   students: StudentWithConsent[];
+  canEdit: boolean;
+  canDelete: boolean;
   onClose: () => void;
   onSaved: (updated: Partial<TeacherPhoto> & { id: string }) => void;
   onDeleted: (photoId: string) => void;
@@ -484,7 +502,9 @@ function EditPhotoModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-          <h2 className="text-base font-semibold font-body text-gray-900">Edit Photo</h2>
+          <h2 className="text-base font-semibold font-body text-gray-900">
+            {canEdit ? "Edit Photo" : "Photo"}
+          </h2>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 cursor-pointer transition-colors">
             <X className="w-4 h-4" />
           </button>
@@ -510,6 +530,7 @@ function EditPhotoModal({
             </div>
           )}
 
+          {canEdit ? (
           <div>
             <label className="block text-xs font-medium text-gray-500 font-body mb-1.5">Caption</label>
             <textarea
@@ -520,7 +541,14 @@ function EditPhotoModal({
               className="w-full text-sm font-body text-gray-800 placeholder-gray-400 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/30 focus:border-[#4a7c59] transition-colors"
             />
           </div>
+          ) : photo.caption ? (
+            <div>
+              <label className="block text-xs font-medium text-gray-500 font-body mb-1.5">Caption</label>
+              <p className="text-sm font-body text-gray-800">{photo.caption}</p>
+            </div>
+          ) : null}
 
+          {canEdit ? (
           <div>
             <label className="block text-xs font-medium text-gray-500 font-body mb-1.5">Date taken</label>
             <input
@@ -530,7 +558,14 @@ function EditPhotoModal({
               className="w-full text-sm font-body text-gray-800 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/30 focus:border-[#4a7c59] transition-colors"
             />
           </div>
+          ) : photo.taken_on ? (
+            <div>
+              <label className="block text-xs font-medium text-gray-500 font-body mb-1.5">Date taken</label>
+              <p className="text-sm font-body text-gray-800">{formatDate(photo.taken_on)}</p>
+            </div>
+          ) : null}
 
+          {canEdit ? (
           <div>
             <label className="block text-xs font-medium text-gray-500 font-body mb-1.5">Students in photo</label>
             <div className="flex items-start gap-2">
@@ -565,7 +600,23 @@ function EditPhotoModal({
               </button>
             </div>
           </div>
+          ) : photo.tags.length > 0 ? (
+            <div>
+              <label className="block text-xs font-medium text-gray-500 font-body mb-1.5">Students in photo</label>
+              <div className="flex flex-wrap gap-1.5">
+                {photo.tags.map((t) => (
+                  <span
+                    key={t.student_id}
+                    className="bg-[#4a7c59]/10 text-[#4a7c59] text-xs font-medium font-body px-2 py-0.5 rounded-full"
+                  >
+                    {t.name ?? "Unknown"}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
 
+          {canEdit ? (
           <div>
             <label className="block text-xs font-medium text-gray-500 font-body mb-1.5">Publication</label>
             <div className="flex flex-wrap gap-2">
@@ -593,6 +644,22 @@ function EditPhotoModal({
               })}
             </div>
           </div>
+          ) : photo.publication_labels.length > 0 ? (
+            <div>
+              <label className="block text-xs font-medium text-gray-500 font-body mb-1.5">Publication</label>
+              <div className="flex flex-wrap gap-2">
+                {PUBLICATION_LABELS.filter((l) => photo.publication_labels.includes(l.id)).map(({ id, label, icon: Icon }) => (
+                  <span
+                    key={id}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium font-body bg-blue-50 text-blue-600"
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    {label}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
 
           {error && <p className="text-sm text-red-500 font-body">{error}</p>}
 
@@ -606,7 +673,8 @@ function EditPhotoModal({
             </button>
           </div>
 
-          {confirmDelete ? (
+          {canDelete && (
+            confirmDelete ? (
             <div className="bg-red-50 rounded-xl p-3 space-y-2">
               <p className="text-sm text-red-700 font-body font-medium">Delete this photo?</p>
               <p className="text-xs text-red-500 font-body">This cannot be undone.</p>
@@ -627,17 +695,19 @@ function EditPhotoModal({
                 </button>
               </div>
             </div>
-          ) : (
-            <button
-              onClick={() => setConfirmDelete(true)}
-              className="flex items-center gap-1.5 text-sm text-red-400 hover:text-red-500 font-body transition-colors cursor-pointer"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              Delete photo
-            </button>
+            ) : (
+              <button
+                onClick={() => setConfirmDelete(true)}
+                className="flex items-center gap-1.5 text-sm text-red-400 hover:text-red-500 font-body transition-colors cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Delete photo
+              </button>
+            )
           )}
         </div>
 
+        {canEdit && (
         <div className="px-5 py-4 border-t border-gray-100">
           <button
             onClick={handleSave}
@@ -648,6 +718,7 @@ function EditPhotoModal({
             Save Changes
           </button>
         </div>
+        )}
       </motion.div>
 
       <AnimatePresence>
@@ -677,9 +748,18 @@ interface Props {
   enrolledStudents: StudentWithConsent[];
   teacherName: string | null;
   teacherProfileImageUrl: string | null;
+  isSuperAdmin: boolean;
+  currentUserId: string;
 }
 
-export default function PhotosPageClient({ initialPhotos, enrolledStudents, teacherName, teacherProfileImageUrl }: Props) {
+export default function PhotosPageClient({
+  initialPhotos,
+  enrolledStudents,
+  teacherName,
+  teacherProfileImageUrl,
+  isSuperAdmin,
+  currentUserId,
+}: Props) {
   const [photos, setPhotos] = useState<TeacherPhoto[]>(initialPhotos);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [editingPhoto, setEditingPhoto] = useState<TeacherPhoto | null>(null);
@@ -778,6 +858,14 @@ export default function PhotosPageClient({ initialPhotos, enrolledStudents, teac
     setEditingPhoto(null);
   }
 
+  function canEditPhoto(photo: TeacherPhoto) {
+    return photo.teacher_id === currentUserId;
+  }
+
+  function canDeletePhoto(photo: TeacherPhoto) {
+    return photo.teacher_id === currentUserId || isSuperAdmin;
+  }
+
   return (
     <div className="flex-1 flex overflow-hidden">
       {/* TOC sidebar */}
@@ -867,6 +955,8 @@ export default function PhotosPageClient({ initialPhotos, enrolledStudents, teac
                       onEdit={setEditingPhoto}
                       teacherName={teacherName}
                       teacherProfileImageUrl={teacherProfileImageUrl}
+                      isSuperAdmin={isSuperAdmin}
+                      currentUserId={currentUserId}
                       containerRef={(el) => {
                         if (!el || photo.signed_url) return;
                         if (observedPhotoIds.current.has(photo.id)) return;
@@ -897,6 +987,8 @@ export default function PhotosPageClient({ initialPhotos, enrolledStudents, teac
               key={editingPhoto.id}
               photo={editingPhoto}
               students={enrolledStudents}
+              canEdit={canEditPhoto(editingPhoto)}
+              canDelete={canDeletePhoto(editingPhoto)}
               onClose={() => setEditingPhoto(null)}
               onSaved={handleSaved}
               onDeleted={handleDeleted}

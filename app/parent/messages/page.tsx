@@ -11,7 +11,12 @@ import ParentHeaderRight from "@/app/parent/components/ParentHeaderRight";
 export default async function MessagesRoute({
   searchParams,
 }: {
-  searchParams: Promise<{ recipientId?: string; recipientName?: string; tab?: string }>;
+  searchParams: Promise<{
+    recipientId?: string;
+    recipientName?: string;
+    studentId?: string;
+    tab?: string;
+  }>;
 }) {
   const supabase = await createServerSupabaseClient();
   const {
@@ -65,6 +70,7 @@ export default async function MessagesRoute({
   const params = await searchParams;
   const initialRecipientId = params.recipientId ?? null;
   const initialRecipientName = params.recipientName ?? null;
+  const initialStudentId = params.studentId ?? null;
   const initialTab = params.tab === "community" ? "community" : "direct";
 
   return (
@@ -93,8 +99,10 @@ export default async function MessagesRoute({
         <main className="flex-1 min-h-0 flex flex-col">
           <MessagesPage
             userId={user.id}
+            effectiveParentId={effectiveParentId}
             initialRecipientId={initialRecipientId}
             initialRecipientName={initialRecipientName}
+            initialStudentId={initialStudentId}
             initialTab={initialTab}
           />
         </main>

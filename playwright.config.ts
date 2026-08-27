@@ -90,6 +90,12 @@ export default defineConfig({
       grep: /@teacher/,
     },
     {
+      name: 'household-messaging',
+      use: { ...devices['Desktop Chrome'] },
+      dependencies: ['setup'],
+      testMatch: /household-group-messaging\.spec\.ts/,
+    },
+    {
       name: 'admin',
       use: {
         ...devices['Desktop Chrome'],
