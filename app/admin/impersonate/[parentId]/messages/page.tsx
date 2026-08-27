@@ -37,6 +37,7 @@ export default async function ImpersonateMessagesPage({
       <main className="flex-1 min-h-0 flex flex-col pointer-events-none select-none">
         <MessagesPage
           userId={parentId}
+          effectiveParentId={parentId}
           initialRecipientId={null}
           initialRecipientName={null}
         />

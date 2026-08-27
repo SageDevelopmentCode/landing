@@ -13,6 +13,7 @@ import {
   FileText,
   Download,
   Hash,
+  Users,
 } from "lucide-react";
 import { createClient } from "@/app/lib/supabase-browser";
 import {
@@ -20,6 +21,8 @@ import {
   getMessages,
   sendMessage,
   createConversation,
+  findOrCreateHouseholdTeacherConversation,
+  getConversationParticipants,
   searchUsers,
   markMessagesRead,
   uploadMessageImage,
@@ -27,6 +30,7 @@ import {
   getTeachersAndAdmins,
   type TeacherOrAdmin,
   type ConversationWithMeta,
+  type ConversationParticipant,
   type MessageRow,
   type UserSearchResult,
   type EnrolledParent,
@@ -38,6 +42,11 @@ import {
   type ChannelWithMeta,
 } from "@/app/messages/channel-actions";
 import ChannelChatArea from "@/app/messages/components/ChannelChatArea";
+import {
+  conversationTitle,
+  conversationSubtitle,
+  isGroupConversation,
+} from "@/app/messages/conversation-display";
 
 // Renders images, converting HEIC/HEIF URLs on-the-fly for browsers that can't display them natively
 function HeicImage({
@@ -212,13 +221,17 @@ function formatTime(iso: string): string {
 
 export default function MessagesPage({
   userId,
+  effectiveParentId,
   initialRecipientId,
   initialRecipientName,
+  initialStudentId,
   initialTab,
 }: {
   userId: string;
+  effectiveParentId: string;
   initialRecipientId?: string | null;
   initialRecipientName?: string | null;
+  initialStudentId?: string | null;
   initialTab?: "direct" | "community";
 }) {
   const [conversations, setConversations] = useState<ConversationWithMeta[]>(
@@ -265,6 +278,11 @@ export default function MessagesPage({
   const [suggestedParents, setSuggestedParents] = useState<EnrolledParent[]>(
     [],
   );
+  const [participants, setParticipants] = useState<ConversationParticipant[]>([]);
+  const [showMembers, setShowMembers] = useState(false);
+  const [pendingHouseholdStudentId, setPendingHouseholdStudentId] = useState<
+    string | null
+  >(initialStudentId ?? null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -299,23 +317,70 @@ export default function MessagesPage({
   // Handle deep-link to a specific recipient (e.g. from teacher card)
   useEffect(() => {
     if (!initialRecipientId || loadingConvos) return;
-    const existing = conversations.find(
-      (c) => c.otherUser.id === initialRecipientId,
-    );
-    if (existing) {
-      setActiveId(existing.id);
+
+    const openHouseholdThread = async () => {
+      if (!initialStudentId) return false;
+
+      const existingGroup = conversations.find(
+        (c) =>
+          c.isGroup &&
+          c.studentId === initialStudentId &&
+          c.teacherId === initialRecipientId,
+      );
+      if (existingGroup) {
+        setActiveId(existingGroup.id);
+        setMobileShowChat(true);
+        return true;
+      }
+
+      const convoId = await findOrCreateHouseholdTeacherConversation(
+        initialStudentId,
+        initialRecipientId,
+      );
+      if (!convoId) return false;
+
+      const updated = await getConversations(userId);
+      setConversations(updated);
+      setActiveId(convoId);
+      setIsComposingNew(false);
+      setSelectedRecipient(null);
       setMobileShowChat(true);
-    } else if (initialRecipientName) {
-      setIsComposingNew(true);
-      setSelectedRecipient({
-        id: initialRecipientId,
-        full_name: initialRecipientName,
-        profile_image_url: null,
-      });
-      setMobileShowChat(true);
-    }
+      return true;
+    };
+
+    void (async () => {
+      if (initialStudentId && (await openHouseholdThread())) return;
+
+      const existing = conversations.find(
+        (c) =>
+          !c.isGroup && c.otherUser?.id === initialRecipientId,
+      );
+      if (existing) {
+        setActiveId(existing.id);
+        setMobileShowChat(true);
+      } else if (initialRecipientName) {
+        setIsComposingNew(true);
+        setPendingHouseholdStudentId(initialStudentId ?? null);
+        setSelectedRecipient({
+          id: initialRecipientId,
+          full_name: initialRecipientName,
+          profile_image_url: null,
+        });
+        setMobileShowChat(true);
+      }
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadingConvos]);
+
+  // Load participants for active group conversation
+  useEffect(() => {
+    if (!activeId || !active || !isGroupConversation(active)) {
+      setParticipants([]);
+      setShowMembers(false);
+      return;
+    }
+    getConversationParticipants(activeId).then(setParticipants);
+  }, [activeId, active]);
 
   // Load messages when active conversation changes
   useEffect(() => {
@@ -441,7 +506,18 @@ export default function MessagesPage({
     setSendError(null);
     setCreatingConvo(true);
 
-    const convoId = await createConversation(userId, selectedRecipient.id);
+    let convoId: string | null = null;
+    if (
+      pendingHouseholdStudentId &&
+      selectedRecipient.role !== "parent"
+    ) {
+      convoId = await findOrCreateHouseholdTeacherConversation(
+        pendingHouseholdStudentId,
+        selectedRecipient.id,
+      );
+    } else {
+      convoId = await createConversation(userId, selectedRecipient.id);
+    }
     if (!convoId) {
       setSendError("Could not create conversation. Please try again.");
       setCreatingConvo(false);
@@ -494,6 +570,7 @@ export default function MessagesPage({
     setActiveId(convoId);
     setIsComposingNew(false);
     setSelectedRecipient(null);
+    setPendingHouseholdStudentId(null);
     setRecipientSearch("");
     setRecipientResults([]);
     setSending(false);
@@ -632,7 +709,7 @@ export default function MessagesPage({
   };
 
   const filtered = conversations.filter((c) =>
-    c.otherUser.full_name.toLowerCase().includes(search.toLowerCase()),
+    conversationTitle(c).toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
@@ -743,6 +820,7 @@ export default function MessagesPage({
                       setActiveChannelId(null);
                       setIsComposingNew(false);
                       setSelectedRecipient(null);
+                      setPendingHouseholdStudentId(null);
                       setMobileShowChat(true);
                     }}
                     className={`w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors cursor-pointer ${
@@ -751,15 +829,25 @@ export default function MessagesPage({
                         : "hover:bg-gray-50"
                     }`}
                   >
-                    <UserAvatar
-                      id={convo.otherUser.id}
-                      name={convo.otherUser.full_name}
-                      imageUrl={convo.otherUser.profile_image_url}
-                    />
+                    {isGroupConversation(convo) ? (
+                      <div className="w-10 h-10 rounded-full bg-[#4a7c59]/10 flex items-center justify-center text-[#4a7c59] shrink-0">
+                        <Users className="w-4 h-4" />
+                      </div>
+                    ) : convo.otherUser ? (
+                      <UserAvatar
+                        id={convo.otherUser.id}
+                        name={convo.otherUser.full_name}
+                        imageUrl={convo.otherUser.profile_image_url}
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-[#4a7c59]/10 flex items-center justify-center text-[#4a7c59] shrink-0">
+                        <Users className="w-4 h-4" />
+                      </div>
+                    )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-semibold font-body text-gray-800 truncate">
-                          {convo.otherUser.full_name}
+                          {conversationTitle(convo)}
                         </span>
                         {convo.lastMessage && (
                           <span className="text-[11px] text-gray-400 font-body shrink-0 ml-2">
@@ -767,9 +855,9 @@ export default function MessagesPage({
                           </span>
                         )}
                       </div>
-                      {roleLabel(convo.otherUser.role) && (
+                      {conversationSubtitle(convo) && (
                         <p className="text-[11px] text-gray-400 font-body">
-                          {roleLabel(convo.otherUser.role)}
+                          {conversationSubtitle(convo)}
                         </p>
                       )}
                       <div className="flex items-center gap-2 mt-0.5">
@@ -1295,29 +1383,70 @@ export default function MessagesPage({
         ) : (
           <>
             {/* Chat header */}
-            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-gray-100 shrink-0">
+            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-gray-100 shrink-0 relative">
               <button
                 onClick={() => setMobileShowChat(false)}
                 className="md:hidden text-gray-500 hover:text-gray-700 cursor-pointer"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
-              <UserAvatar
-                id={active.otherUser.id}
-                name={active.otherUser.full_name}
-                imageUrl={active.otherUser.profile_image_url}
-                size="sm"
-              />
-              <div>
-                <p className="text-sm font-semibold font-body text-gray-800">
-                  {active.otherUser.full_name}
+              {isGroupConversation(active) ? (
+                <div className="w-9 h-9 rounded-full bg-[#4a7c59]/10 flex items-center justify-center text-[#4a7c59] shrink-0">
+                  <Users className="w-4 h-4" />
+                </div>
+              ) : active.otherUser ? (
+                <UserAvatar
+                  id={active.otherUser.id}
+                  name={active.otherUser.full_name}
+                  imageUrl={active.otherUser.profile_image_url}
+                  size="sm"
+                />
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-[#4a7c59]/10 flex items-center justify-center text-[#4a7c59] shrink-0">
+                  <Users className="w-4 h-4" />
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => isGroupConversation(active) && setShowMembers((v) => !v)}
+                className={`text-left flex-1 min-w-0 ${isGroupConversation(active) ? "cursor-pointer" : ""}`}
+              >
+                <p className="text-sm font-semibold font-body text-gray-800 truncate">
+                  {conversationTitle(active)}
                 </p>
-                {roleLabel(active.otherUser.role) && (
+                {conversationSubtitle(active) && (
                   <p className="text-[11px] text-gray-400 font-body">
-                    {roleLabel(active.otherUser.role)}
+                    {conversationSubtitle(active)}
                   </p>
                 )}
-              </div>
+              </button>
+              {isGroupConversation(active) && showMembers && participants.length > 0 && (
+                <div className="absolute top-full left-0 right-0 z-20 bg-white border border-gray-100 shadow-lg max-h-60 overflow-y-auto">
+                  {participants.map((member) => (
+                    <div
+                      key={member.id}
+                      className="flex items-center gap-3 px-5 py-2.5"
+                    >
+                      <UserAvatar
+                        id={member.id}
+                        name={member.full_name}
+                        imageUrl={member.profile_image_url}
+                        size="sm"
+                      />
+                      <div className="min-w-0">
+                        <p className="text-sm font-body text-gray-800 truncate">
+                          {member.full_name}
+                        </p>
+                        {roleLabel(member.role) && (
+                          <p className="text-[11px] text-gray-400 font-body">
+                            {roleLabel(member.role)}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Messages */}
@@ -1333,6 +1462,7 @@ export default function MessagesPage({
               ) : (
                 messages.map((msg) => {
                   const fromMe = msg.sender_id === userId;
+                  const showSenderName = isGroupConversation(active) && !fromMe;
                   return (
                     <div
                       key={msg.id}
@@ -1345,6 +1475,11 @@ export default function MessagesPage({
                             : "bg-gray-100 text-gray-800 rounded-bl-md"
                         }`}
                       >
+                        {showSenderName && msg.sender_name && (
+                          <p className="text-[11px] font-semibold text-[#4a7c59] mb-1">
+                            {msg.sender_name}
+                          </p>
+                        )}
                         {msg.image_url && (
                           <HeicImage
                             src={msg.image_url}

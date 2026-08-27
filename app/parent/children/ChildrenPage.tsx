@@ -2116,7 +2116,7 @@ function ChildProfile({
               teachers={teachers}
               onMessage={(teacherId, teacherName) =>
                 router.push(
-                  `/parent/messages?recipientId=${teacherId}&recipientName=${encodeURIComponent(teacherName)}`,
+                  `/parent/messages?studentId=${child.id}&recipientId=${teacherId}&recipientName=${encodeURIComponent(teacherName)}`,
                 )
               }
             />

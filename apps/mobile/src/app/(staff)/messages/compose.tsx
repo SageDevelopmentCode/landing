@@ -19,9 +19,19 @@ import { supabase } from "@/lib/supabase";
 import { Brand, FontFamilies } from "@/constants/theme";
 import {
   getParentsForTeacher,
+  getHouseholdsForCompose,
+  composeTargetKey,
+  composeTargetLabel,
+  type ComposeTarget,
+  type HouseholdComposeRow,
   type ParentWithChildren,
   type ParentsForTeacher,
 } from "@/lib/teacher-messaging";
+import {
+  getConversationListMeta,
+  resolveHouseholdConversation,
+  startHouseholdConversation,
+} from "@/lib/household-messaging";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -55,12 +65,26 @@ function filterDirectory(
   if (!query.trim()) return dir;
   const q = query.toLowerCase();
   const match = (p: ParentWithChildren) =>
-    p.full_name.toLowerCase().includes(q) ||
+    (p.full_name ?? "").toLowerCase().includes(q) ||
     p.children.some((c) => c.child_legal_name.toLowerCase().includes(q));
   return {
     myStudentsParents: dir.myStudentsParents.filter(match),
     allParents: dir.allParents.filter(match),
   };
+}
+
+function filterHouseholds(
+  list: HouseholdComposeRow[],
+  query: string,
+): HouseholdComposeRow[] {
+  if (!query.trim()) return list;
+  const q = query.toLowerCase();
+  return list.filter(
+    (h) =>
+      h.studentName.toLowerCase().includes(q) ||
+      h.primaryParentName.toLowerCase().includes(q) ||
+      h.guardianNames.some((n) => n.toLowerCase().includes(q)),
+  );
 }
 
 function chunkPairs<T>(arr: T[]): [T, T | null][] {
@@ -85,14 +109,16 @@ export default function StaffComposeScreen() {
 
   // directory
   const directoryCache = useRef<ParentsForTeacher | null>(null);
+  const householdsCache = useRef<HouseholdComposeRow[] | null>(null);
   const [parentDirectory, setParentDirectory] =
     useState<ParentsForTeacher | null>(null);
+  const [households, setHouseholds] = useState<HouseholdComposeRow[]>([]);
   const [loadingDirectory, setLoadingDirectory] = useState(false);
 
   // selection
-  const [selectedRecipients, setSelectedRecipients] = useState<
-    ParentWithChildren[]
-  >([]);
+  const [selectedRecipients, setSelectedRecipients] = useState<ComposeTarget[]>(
+    [],
+  );
   const [recipientSearch, setRecipientSearch] = useState("");
 
   // compose
@@ -115,15 +141,21 @@ export default function StaffComposeScreen() {
   }, []);
 
   async function loadDirectory(teacherId: string) {
-    if (directoryCache.current) {
+    if (directoryCache.current && householdsCache.current) {
       setParentDirectory(directoryCache.current);
+      setHouseholds(householdsCache.current);
       return;
     }
     setLoadingDirectory(true);
     try {
-      const dir = await getParentsForTeacher(teacherId);
+      const [dir, householdRows] = await Promise.all([
+        getParentsForTeacher(teacherId),
+        getHouseholdsForCompose(),
+      ]);
       directoryCache.current = dir;
+      householdsCache.current = householdRows;
       setParentDirectory(dir);
+      setHouseholds(householdRows);
     } finally {
       setLoadingDirectory(false);
     }
@@ -131,19 +163,57 @@ export default function StaffComposeScreen() {
 
   // ── selection helpers ─────────────────────────────────────────────────────
 
-  const isSelected = (id: string) =>
-    selectedRecipients.some((r) => r.id === id);
+  const isParentSelected = (id: string) =>
+    selectedRecipients.some((t) => t.kind === "parent" && t.parent.id === id);
 
-  function toggleRecipient(parent: ParentWithChildren) {
+  const isHouseholdSelected = (studentId: string) =>
+    selectedRecipients.some(
+      (t) => t.kind === "household" && t.household.studentId === studentId,
+    );
+
+  function toggleParent(parent: ParentWithChildren, section: "mine" | "all") {
+    const key = `parent:${parent.id}`;
     setSelectedRecipients((prev) =>
-      prev.some((r) => r.id === parent.id)
-        ? prev.filter((r) => r.id !== parent.id)
-        : [...prev, parent]
+      prev.some((t) => composeTargetKey(t) === key)
+        ? prev.filter((t) => composeTargetKey(t) !== key)
+        : [...prev, { kind: "parent", section, parent }],
     );
   }
 
-  function removeRecipient(id: string) {
-    setSelectedRecipients((prev) => prev.filter((r) => r.id !== id));
+  function toggleHousehold(household: HouseholdComposeRow) {
+    const key = `household:${household.studentId}`;
+    setSelectedRecipients((prev) =>
+      prev.some((t) => composeTargetKey(t) === key)
+        ? prev.filter((t) => composeTargetKey(t) !== key)
+        : [...prev, { kind: "household", household }],
+    );
+  }
+
+  function removeRecipient(targetKey: string) {
+    setSelectedRecipients((prev) =>
+      prev.filter((t) => composeTargetKey(t) !== targetKey),
+    );
+  }
+
+  async function resolveComposeTarget(
+    target: ComposeTarget,
+    teacherId: string,
+  ): Promise<string | null> {
+    if (target.kind === "household") {
+      return startHouseholdConversation(target.household.studentId, teacherId);
+    }
+    if (target.section === "mine") {
+      return resolveHouseholdConversation(
+        target.parent.id,
+        teacherId,
+        parentDirectory,
+      );
+    }
+    const { data, error } = await supabase.rpc("find_or_create_conversation", {
+      other_user_id: target.parent.id,
+    });
+    if (error) return null;
+    return data as string | null;
   }
 
   // ── image picker ──────────────────────────────────────────────────────────
@@ -178,13 +248,10 @@ export default function StaffComposeScreen() {
 
     // 1. create/find conversations in parallel
     const convoResults = await Promise.all(
-      selectedRecipients.map(async (r) => {
-        const { data, error } = await supabase.rpc(
-          "find_or_create_conversation",
-          { other_user_id: r.id }
-        );
-        return { recipient: r, conversationId: data as string | null, error };
-      })
+      selectedRecipients.map(async (r) => ({
+        target: r,
+        conversationId: await resolveComposeTarget(r, currentUserId),
+      })),
     );
 
     const successPairs = convoResults.filter((c) => c.conversationId);
@@ -223,7 +290,6 @@ export default function StaffComposeScreen() {
 
     // 3. send message to each conversation sequentially
     let lastSentConvoId: string | null = null;
-    let lastSentRecipient: ParentWithChildren | null = null;
     const sendFailures: string[] = [];
 
     for (const pair of successPairs) {
@@ -238,7 +304,7 @@ export default function StaffComposeScreen() {
         });
 
       if (msgError) {
-        sendFailures.push(pair.recipient.full_name);
+        sendFailures.push(composeTargetLabel(pair.target));
         continue;
       }
 
@@ -249,27 +315,42 @@ export default function StaffComposeScreen() {
         .eq("id", pair.conversationId);
 
       lastSentConvoId = pair.conversationId;
-      lastSentRecipient = pair.recipient;
     }
 
     setSending(false);
 
     if (failures.length > 0 || sendFailures.length > 0) {
       const names = [
-        ...failures.map((f) => f.recipient.full_name),
+        ...failures.map((f) => composeTargetLabel(f.target)),
         ...sendFailures,
       ].join(", ");
       setSendError(`Failed to send to: ${names}`);
     }
 
-    if (lastSentConvoId && lastSentRecipient) {
+    if (lastSentConvoId) {
+      const listMeta = await getConversationListMeta(
+        currentUserId,
+        lastSentConvoId,
+      );
+      const isGroup = Boolean(listMeta?.is_group);
+      const lastTarget = successPairs[successPairs.length - 1]?.target;
       router.replace({
         pathname: "/(staff)/messages/[id]",
         params: {
           id: lastSentConvoId,
-          otherUserName: lastSentRecipient.full_name,
-          otherUserAvatar: lastSentRecipient.profile_image_url ?? "",
-          otherUserId: lastSentRecipient.id,
+          otherUserName:
+            listMeta?.other_user_name ??
+            listMeta?.display_name ??
+            (lastTarget ? composeTargetLabel(lastTarget) : "Conversation"),
+          otherUserAvatar: isGroup
+            ? ""
+            : lastTarget?.kind === "parent"
+              ? (lastTarget.parent.profile_image_url ?? "")
+              : "",
+          otherUserId:
+            isGroup || lastTarget?.kind !== "parent"
+              ? ""
+              : lastTarget.parent.id,
         },
       });
     }
@@ -291,6 +372,7 @@ export default function StaffComposeScreen() {
   const filtered = parentDirectory
     ? filterDirectory(parentDirectory, recipientSearch)
     : null;
+  const filteredHouseholds = filterHouseholds(households, recipientSearch);
 
   // ── render ────────────────────────────────────────────────────────────────
 
@@ -317,12 +399,12 @@ export default function StaffComposeScreen() {
         {selectedRecipients.length > 0 && (
           <View style={styles.pillsRow}>
             {selectedRecipients.map((r) => (
-              <View key={r.id} style={styles.pill}>
+              <View key={composeTargetKey(r)} style={styles.pill}>
                 <Text style={styles.pillText} numberOfLines={1}>
-                  {r.full_name}
+                  {composeTargetLabel(r)}
                 </Text>
                 <Pressable
-                  onPress={() => removeRecipient(r.id)}
+                  onPress={() => removeRecipient(composeTargetKey(r))}
                   hitSlop={6}
                   style={({ pressed }) => pressed && styles.pressed}
                 >
@@ -361,6 +443,30 @@ export default function StaffComposeScreen() {
             contentContainerStyle={styles.directoryContent}
             keyboardShouldPersistTaps="handled"
           >
+            {filteredHouseholds.length > 0 && (
+              <>
+                <Text style={styles.sectionHeader}>HOUSEHOLDS</Text>
+                {chunkPairs(filteredHouseholds).map((row, i) => (
+                  <View key={`hh-${i}`} style={styles.cardRow}>
+                    <HouseholdCard
+                      household={row[0]}
+                      selected={isHouseholdSelected(row[0].studentId)}
+                      onPress={() => toggleHousehold(row[0])}
+                    />
+                    {row[1] ? (
+                      <HouseholdCard
+                        household={row[1]}
+                        selected={isHouseholdSelected(row[1].studentId)}
+                        onPress={() => toggleHousehold(row[1]!)}
+                      />
+                    ) : (
+                      <View style={styles.cardPlaceholder} />
+                    )}
+                  </View>
+                ))}
+              </>
+            )}
+
             {filtered && filtered.myStudentsParents.length > 0 && (
               <>
                 <Text style={styles.sectionHeader}>MY STUDENTS' PARENTS</Text>
@@ -368,14 +474,14 @@ export default function StaffComposeScreen() {
                   <View key={`my-${i}`} style={styles.cardRow}>
                     <ParentCard
                       parent={row[0]}
-                      selected={isSelected(row[0].id)}
-                      onPress={() => toggleRecipient(row[0])}
+                      selected={isParentSelected(row[0].id)}
+                      onPress={() => toggleParent(row[0], "mine")}
                     />
                     {row[1] ? (
                       <ParentCard
                         parent={row[1]}
-                        selected={isSelected(row[1].id)}
-                        onPress={() => toggleRecipient(row[1]!)}
+                        selected={isParentSelected(row[1].id)}
+                        onPress={() => toggleParent(row[1]!, "mine")}
                       />
                     ) : (
                       <View style={styles.cardPlaceholder} />
@@ -392,14 +498,14 @@ export default function StaffComposeScreen() {
                   <View key={`all-${i}`} style={styles.cardRow}>
                     <ParentCard
                       parent={row[0]}
-                      selected={isSelected(row[0].id)}
-                      onPress={() => toggleRecipient(row[0])}
+                      selected={isParentSelected(row[0].id)}
+                      onPress={() => toggleParent(row[0], "all")}
                     />
                     {row[1] ? (
                       <ParentCard
                         parent={row[1]}
-                        selected={isSelected(row[1].id)}
-                        onPress={() => toggleRecipient(row[1]!)}
+                        selected={isParentSelected(row[1].id)}
+                        onPress={() => toggleParent(row[1]!, "all")}
                       />
                     ) : (
                       <View style={styles.cardPlaceholder} />
@@ -409,7 +515,8 @@ export default function StaffComposeScreen() {
               </>
             )}
 
-            {filtered &&
+            {filteredHouseholds.length === 0 &&
+              filtered &&
               filtered.myStudentsParents.length === 0 &&
               filtered.allParents.length === 0 && (
                 <View style={styles.centered}>
@@ -486,12 +593,12 @@ export default function StaffComposeScreen() {
           <Text style={styles.toLabel}>To:</Text>
           <View style={styles.toPillsWrap}>
             {selectedRecipients.map((r) => (
-              <View key={r.id} style={styles.pill}>
+              <View key={composeTargetKey(r)} style={styles.pill}>
                 <Text style={styles.pillText} numberOfLines={1}>
-                  {r.full_name}
+                  {composeTargetLabel(r)}
                 </Text>
                 <Pressable
-                  onPress={() => removeRecipient(r.id)}
+                  onPress={() => removeRecipient(composeTargetKey(r))}
                   hitSlop={6}
                   style={({ pressed }) => pressed && styles.pressed}
                 >
@@ -581,6 +688,69 @@ export default function StaffComposeScreen() {
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
+  );
+}
+
+// ── HouseholdCard ─────────────────────────────────────────────────────────────
+
+function HouseholdCard({
+  household,
+  selected,
+  onPress,
+}: {
+  household: HouseholdComposeRow;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        styles.card,
+        selected && styles.cardSelected,
+        pressed && styles.pressed,
+      ]}
+      onPress={onPress}
+    >
+      {selected && (
+        <View style={styles.checkBadge}>
+          <Ionicons name="checkmark" size={12} color="#fff" />
+        </View>
+      )}
+
+      <View style={styles.householdTitleRow}>
+        <View
+          style={[
+            styles.cardAvatar,
+            { backgroundColor: colorForId(household.studentId) },
+          ]}
+        >
+          {household.profileImageUrl ? (
+            <Image
+              source={{ uri: household.profileImageUrl }}
+              style={StyleSheet.absoluteFill}
+              resizeMode="cover"
+            />
+          ) : (
+            <Text style={styles.cardAvatarText}>
+              {getInitials(household.studentName)}
+            </Text>
+          )}
+        </View>
+        <Ionicons name="people" size={16} color={Brand.sage700} />
+      </View>
+
+      <Text style={styles.cardName} numberOfLines={1}>
+        {household.studentName}
+      </Text>
+      <Text style={styles.guardianNames} numberOfLines={2}>
+        {household.guardianNames.join(" · ")}
+      </Text>
+      {(household.studentGrade || household.program) && (
+        <Text style={styles.childProgram} numberOfLines={1}>
+          {[household.studentGrade, household.program].filter(Boolean).join(" · ")}
+        </Text>
+      )}
+    </Pressable>
   );
 }
 
@@ -825,6 +995,18 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#1f2937",
     marginBottom: 6,
+  },
+  householdTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 4,
+  },
+  guardianNames: {
+    fontFamily: FontFamilies.body,
+    fontSize: 11,
+    color: "#6b7280",
+    marginBottom: 4,
   },
   childRow: {
     flexDirection: "row",

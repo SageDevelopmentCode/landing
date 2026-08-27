@@ -98,6 +98,8 @@ export default function StaffChatScreen() {
   const [sending, setSending] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [attachMenuOpen, setAttachMenuOpen] = useState(false);
+  const [isGroup, setIsGroup] = useState(false);
+  const [senderNames, setSenderNames] = useState<Record<string, string>>({});
   const attachMenuAnim = useRef(new Animated.Value(0)).current;
   const inputRef = useRef<TextInput>(null);
 
@@ -209,8 +211,17 @@ export default function StaffChatScreen() {
             setResolvedOtherUserId(match.other_user_id ?? '');
             if (match.other_user_profile_image) setResolvedAvatar(match.other_user_profile_image);
           }
+          setIsGroup(Boolean(match.is_group));
         }
       }
+
+      const { data: convoMeta } = await supabase
+        .schema("messaging")
+        .from("conversations")
+        .select("kind")
+        .eq("id", id)
+        .maybeSingle();
+      if (convoMeta?.kind === "household_teacher") setIsGroup(true);
 
       if (otherUserId) {
         const { data: profile } = await supabase
@@ -233,6 +244,20 @@ export default function StaffChatScreen() {
       if (data) {
         setMessages([...data].reverse());
         setHasMore(data.length === PAGE_SIZE);
+
+        if (convoMeta?.kind === "household_teacher") {
+          const senderIds = [...new Set(data.map((m) => m.sender_id))];
+          const { data: users } = await supabase
+            .schema("admin")
+            .from("users")
+            .select("id, full_name")
+            .in("id", senderIds);
+          setSenderNames(
+            Object.fromEntries(
+              (users ?? []).map((u) => [u.id, u.full_name ?? "Unknown"]),
+            ),
+          );
+        }
       }
     }
     load();
@@ -365,7 +390,7 @@ export default function StaffChatScreen() {
         <Pressable
           style={({ pressed }) => [styles.headerUserPressable, pressed && styles.pressed]}
           onPress={() => {
-            if (resolvedOtherUserId) {
+            if (resolvedOtherUserId && !isGroup) {
               router.push({
                 pathname: "/(tabs)/teacher/[teacherId]",
                 params: { teacherId: resolvedOtherUserId, teacherName: resolvedName },
@@ -374,7 +399,11 @@ export default function StaffChatScreen() {
           }}
           hitSlop={4}
         >
-          {resolvedAvatar ? (
+          {isGroup ? (
+            <View style={styles.headerAvatar}>
+              <Ionicons name="people" size={18} color={Brand.sage700} />
+            </View>
+          ) : resolvedAvatar ? (
             <Image source={{ uri: resolvedAvatar }} style={styles.headerAvatar} resizeMode="cover" />
           ) : (
             <View style={styles.headerAvatar}>
@@ -416,6 +445,7 @@ export default function StaffChatScreen() {
           initialNumToRender={20}
           renderItem={({ item }) => {
             const isMine = item.sender_id === currentUserId;
+            const senderLabel = isGroup && !isMine ? senderNames[item.sender_id] : null;
             return (
               <View
                 style={[
@@ -423,6 +453,9 @@ export default function StaffChatScreen() {
                   isMine ? styles.bubbleWrapperRight : styles.bubbleWrapperLeft,
                 ]}
               >
+                {senderLabel ? (
+                  <Text style={styles.senderName}>{senderLabel}</Text>
+                ) : null}
                 <View
                   style={[
                     styles.bubble,
@@ -675,6 +708,13 @@ const styles = StyleSheet.create({
   },
   bubbleWrapper: {
     marginVertical: 2,
+  },
+  senderName: {
+    fontSize: 11,
+    fontFamily: FontFamilies.bodySemiBold,
+    color: Brand.sage700,
+    marginBottom: 2,
+    marginLeft: 4,
   },
   bubbleWrapperRight: { alignItems: "flex-end" },
   bubbleWrapperLeft: { alignItems: "flex-start" },

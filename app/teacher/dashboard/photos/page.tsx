@@ -6,7 +6,7 @@ import ProfileDropdown from '@/app/apply/dashboard/ProfileDropdown'
 import TeacherNav from '../TeacherNav'
 import TeacherNotificationBell from '../../components/TeacherNotificationBell'
 import PhotosPageClient from './PhotosPageClient'
-import { getPhotos, getEnrolledStudentsWithConsent } from '@/app/actions/photos'
+import { getPhotos, getAllSchoolPhotos, getEnrolledStudentsWithConsent } from '@/app/actions/photos'
 
 export default async function PhotosPage() {
   const supabase = await createServerSupabaseClient()
@@ -18,9 +18,17 @@ export default async function PhotosPage() {
 
   const adminClient = createAdminClient()
 
-  const [{ data: adminUser }, initialPhotos, enrolledStudents] = await Promise.all([
-    adminClient.schema('admin').from('users').select('full_name, profile_image_url').eq('id', user.id).single(),
-    getPhotos(),
+  const { data: adminUser } = await adminClient
+    .schema('admin')
+    .from('users')
+    .select('full_name, profile_image_url, role')
+    .eq('id', user.id)
+    .single()
+
+  const isSuperAdmin = adminUser?.role === 'super_admin'
+
+  const [initialPhotos, enrolledStudents] = await Promise.all([
+    isSuperAdmin ? getAllSchoolPhotos() : getPhotos(),
     getEnrolledStudentsWithConsent(),
   ])
 
@@ -63,6 +71,8 @@ export default async function PhotosPage() {
           enrolledStudents={enrolledStudents}
           teacherName={fullName}
           teacherProfileImageUrl={profileImageUrl}
+          isSuperAdmin={isSuperAdmin}
+          currentUserId={user.id}
         />
       </main>
     </div>

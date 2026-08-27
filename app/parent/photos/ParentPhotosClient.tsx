@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Camera, X, ChevronLeft, ChevronRight } from "lucide-react";
 import {
@@ -68,6 +68,55 @@ function formatDate(iso: string | null): string | null {
 
 // ─── Photo Lightbox ───────────────────────────────────────────────────────────
 
+function PhotoLightboxSlide({
+  photo,
+  cachedUrl,
+  onCached,
+}: {
+  photo: TeacherPhoto;
+  cachedUrl?: string;
+  onCached: (path: string, url: string) => void;
+}) {
+  const [fetchedUrl, setFetchedUrl] = useState<string | null>(null);
+  const displayUrl = cachedUrl ?? fetchedUrl ?? photo.signed_url ?? null;
+
+  useEffect(() => {
+    if (cachedUrl) return;
+
+    let cancelled = false;
+    getFullResSignedUrl(photo.storage_path).then((url) => {
+      if (cancelled || !url) return;
+      onCached(photo.storage_path, url);
+      setFetchedUrl(url);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [photo.storage_path, cachedUrl, onCached]);
+
+  if (!displayUrl) {
+    return (
+      <div
+        className="w-[72vw] max-w-[80vw] h-[55vh] rounded-xl bg-gray-700 animate-pulse"
+        aria-hidden
+      />
+    );
+  }
+
+  return (
+    <motion.img
+      key={photo.id}
+      initial={{ opacity: 0.6 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.15 }}
+      src={displayUrl}
+      alt={photo.caption ?? ""}
+      className="max-h-[90vh] max-w-[80vw] object-contain rounded-xl"
+    />
+  );
+}
+
 function PhotoLightbox({
   photos,
   initialIndex,
@@ -79,17 +128,25 @@ function PhotoLightbox({
 }) {
   const [idx, setIdx] = useState(initialIndex);
   const photo = photos[idx];
-  const [displayUrl, setDisplayUrl] = useState<string | null>(photo.signed_url);
+  const [fullResCache, setFullResCache] = useState<Record<string, string>>({});
+  const prefetchRequestedRef = useRef<Set<string>>(new Set());
+
+  const cacheUrl = useCallback((path: string, url: string) => {
+    setFullResCache((prev) => (prev[path] ? prev : { ...prev, [path]: url }));
+  }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    getFullResSignedUrl(photo.storage_path).then((url) => {
-      if (!cancelled && url) setDisplayUrl(url);
+    [-1, 1].forEach((d) => {
+      const adj = photos[idx + d];
+      if (!adj) return;
+      const path = adj.storage_path;
+      if (prefetchRequestedRef.current.has(path)) return;
+      prefetchRequestedRef.current.add(path);
+      getFullResSignedUrl(path).then((url) => {
+        if (url) cacheUrl(path, url);
+      });
     });
-    return () => {
-      cancelled = true;
-    };
-  }, [photo.storage_path]);
+  }, [idx, photos, cacheUrl]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -135,15 +192,12 @@ function PhotoLightbox({
         <ChevronRight className="w-6 h-6" />
       </button>
 
-      {displayUrl && (
-        <motion.img
-          key={photo.id}
-          initial={{ opacity: 0.6 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.15 }}
-          src={displayUrl}
-          alt={photo.caption ?? ""}
-          className="max-h-[90vh] max-w-[80vw] object-contain rounded-xl"
+      {photo && (
+        <PhotoLightboxSlide
+          key={photo.storage_path}
+          photo={photo}
+          cachedUrl={fullResCache[photo.storage_path]}
+          onCached={cacheUrl}
         />
       )}
 

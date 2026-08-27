@@ -110,7 +110,12 @@ export async function getAllConversations(): Promise<ModerationConversation[]> {
         messageCount: msgs.length,
       };
     })
-    .filter(Boolean) as ModerationConversation[];
+    .filter((c): c is ModerationConversation => c !== null)
+    .sort((a, b) => {
+      const aTime = new Date(a.lastMessage?.created_at ?? a.updated_at).getTime();
+      const bTime = new Date(b.lastMessage?.created_at ?? b.updated_at).getTime();
+      return bTime - aTime;
+    }) as ModerationConversation[];
 }
 
 export async function getConversationMessages(conversationId: string): Promise<ModerationMessage[]> {

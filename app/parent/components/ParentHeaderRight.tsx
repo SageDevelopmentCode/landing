@@ -1,5 +1,6 @@
 import { getConversations } from "@/app/parent/messages/actions";
 import { getChannels } from "@/app/messages/channel-actions";
+import { conversationTitle } from "@/app/messages/conversation-display";
 import OnboardingChecklistButton from "./OnboardingChecklistButton";
 import FeedbackButton from "./FeedbackButton";
 import NotificationBell, { type NotificationItem } from "./NotificationBell";
@@ -27,11 +28,11 @@ export default async function ParentHeaderRight({
       .map((c) => ({
         id: c.id,
         kind: "direct" as const,
-        name: c.otherUser.full_name,
+        name: conversationTitle(c),
         preview: c.lastMessage!.body.slice(0, 40),
         timestamp: c.lastMessage!.created_at,
         unreadCount: c.unreadCount,
-        otherUserId: c.otherUser.id,
+        otherUserId: c.otherUser?.id ?? c.id,
       })),
     ...channels
       .filter((ch) => ch.isMember && ch.unreadCount > 0 && ch.lastMessage)
