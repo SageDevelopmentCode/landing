@@ -1,3 +1,6 @@
+-- Allow any staff teacher to start household group threads from compose.
+-- Restrict find_or_create_conversation to direct 2-person threads only.
+
 CREATE OR REPLACE FUNCTION public.find_or_create_household_teacher_conversation(
   p_student_id uuid,
   p_teacher_id uuid,
@@ -84,3 +87,49 @@ BEGIN
   RETURN conv_id;
 END;
 $$;
+
+GRANT EXECUTE ON FUNCTION public.find_or_create_household_teacher_conversation(uuid, uuid, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.find_or_create_household_teacher_conversation(uuid, uuid, uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.find_or_create_conversation(other_user_id uuid)
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = messaging, admin, public
+AS $$
+DECLARE
+  conv_id uuid;
+  my_id uuid := auth.uid();
+BEGIN
+  SELECT cp1.conversation_id INTO conv_id
+  FROM messaging.conversation_participants cp1
+  JOIN messaging.conversation_participants cp2
+    ON cp1.conversation_id = cp2.conversation_id
+  JOIN messaging.conversations c ON c.id = cp1.conversation_id
+  WHERE cp1.user_id = my_id
+    AND cp2.user_id = other_user_id
+    AND c.kind = 'direct'
+    AND (
+      SELECT COUNT(*)
+      FROM messaging.conversation_participants cp3
+      WHERE cp3.conversation_id = c.id
+    ) = 2
+  LIMIT 1;
+
+  IF conv_id IS NOT NULL THEN
+    RETURN conv_id;
+  END IF;
+
+  INSERT INTO messaging.conversations (kind)
+  VALUES ('direct')
+  RETURNING id INTO conv_id;
+
+  INSERT INTO messaging.conversation_participants (conversation_id, user_id)
+  VALUES (conv_id, my_id), (conv_id, other_user_id);
+
+  RETURN conv_id;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.find_or_create_conversation(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.find_or_create_conversation(uuid) TO service_role;

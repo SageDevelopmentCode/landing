@@ -17,7 +17,12 @@ import {
   type ConversationParticipant,
   type MessageRow,
 } from "@/app/parent/messages/actions";
-import { getParentsForTeacher, type ParentWithChildren, type ParentsForTeacher } from "./actions";
+import { getParentsForTeacher, getHouseholdsForCompose, type ParentWithChildren, type ParentsForTeacher, type HouseholdComposeRow } from "./actions";
+import {
+  composeTargetKey,
+  composeTargetLabel,
+  type ComposeTarget,
+} from "./compose-targets";
 import { getStudentsByParentId, getStudentById, type ChildInfo } from "@/app/admin/messages/actions";
 import {
   conversationTitle,
@@ -202,7 +207,7 @@ export default function TeacherMessagesPage({
   const [creatingChannel, setCreatingChannel] = useState(false);
 
   const [showNewMessageModal, setShowNewMessageModal] = useState(false);
-  const [selectedRecipients, setSelectedRecipients] = useState<{ id: string; full_name: string; profile_image_url: string | null }[]>([]);
+  const [selectedRecipients, setSelectedRecipients] = useState<ComposeTarget[]>([]);
   const [modalDraft, setModalDraft] = useState("");
   const [modalImageFile, setModalImageFile] = useState<File | null>(null);
   const [modalImagePreview, setModalImagePreview] = useState<string | null>(null);
@@ -213,6 +218,7 @@ export default function TeacherMessagesPage({
   const modalFileInputRef = useRef<HTMLInputElement>(null);
   const modalAttachmentInputRef = useRef<HTMLInputElement>(null);
   const [parentDirectory, setParentDirectory] = useState<ParentsForTeacher | null>(null);
+  const [households, setHouseholds] = useState<HouseholdComposeRow[]>([]);
   const [loadingDirectory, setLoadingDirectory] = useState(false);
   const [modalStep, setModalStep] = useState<1 | 2>(1);
   const [participants, setParticipants] = useState<ConversationParticipant[]>([]);
@@ -271,7 +277,16 @@ export default function TeacherMessagesPage({
       setMobileShowChat(true);
     } else if (initialRecipientName) {
       setShowNewMessageModal(true);
-      setSelectedRecipients([{ id: initialRecipientId, full_name: initialRecipientName, profile_image_url: null }]);
+      setSelectedRecipients([{
+        kind: "parent",
+        section: "mine",
+        parent: {
+          id: initialRecipientId,
+          full_name: initialRecipientName,
+          profile_image_url: null,
+          children: [],
+        },
+      }]);
       setMobileShowChat(true);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -357,14 +372,40 @@ export default function TeacherMessagesPage({
     setRecipientSearch(query);
   }, []);
 
-  const handleSelectRecipient = (recipient: { id: string; full_name: string; profile_image_url: string | null }) => {
-    if (selectedRecipients.find((r) => r.id === recipient.id)) return;
-    setSelectedRecipients((prev) => [...prev, recipient]);
+  const handleSelectParent = (parent: ParentWithChildren, section: "mine" | "all") => {
+    const key = `parent:${parent.id}`;
+    if (selectedRecipients.some((t) => composeTargetKey(t) === key)) return;
+    setSelectedRecipients((prev) => [...prev, { kind: "parent", section, parent }]);
     setRecipientSearch("");
   };
 
-  const handleRemoveRecipient = (recipientId: string) => {
-    setSelectedRecipients((prev) => prev.filter((r) => r.id !== recipientId));
+  const handleSelectHousehold = (household: HouseholdComposeRow) => {
+    const key = `household:${household.studentId}`;
+    if (selectedRecipients.some((t) => composeTargetKey(t) === key)) return;
+    setSelectedRecipients((prev) => [...prev, { kind: "household", household }]);
+    setRecipientSearch("");
+  };
+
+  const handleRemoveRecipient = (targetKey: string) => {
+    setSelectedRecipients((prev) => prev.filter((t) => composeTargetKey(t) !== targetKey));
+  };
+
+  const toggleParent = (parent: ParentWithChildren, section: "mine" | "all") => {
+    const key = `parent:${parent.id}`;
+    if (selectedRecipients.some((t) => composeTargetKey(t) === key)) {
+      handleRemoveRecipient(key);
+    } else {
+      handleSelectParent(parent, section);
+    }
+  };
+
+  const toggleHousehold = (household: HouseholdComposeRow) => {
+    const key = `household:${household.studentId}`;
+    if (selectedRecipients.some((t) => composeTargetKey(t) === key)) {
+      handleRemoveRecipient(key);
+    } else {
+      handleSelectHousehold(household);
+    }
   };
 
   const resolveHouseholdConversation = async (
@@ -380,6 +421,21 @@ export default function TeacherMessagesPage({
     return createConversation(userId, parentId);
   };
 
+  const resolveComposeTarget = async (
+    target: ComposeTarget,
+  ): Promise<string | null> => {
+    if (target.kind === "household") {
+      return findOrCreateHouseholdTeacherConversation(
+        target.household.studentId,
+        userId,
+      );
+    }
+    if (target.section === "mine") {
+      return resolveHouseholdConversation(target.parent.id);
+    }
+    return createConversation(userId, target.parent.id);
+  };
+
   const handleSendNewMulti = async () => {
     if (selectedRecipients.length === 0 || (!modalDraft.trim() && !modalImageFile && !modalAttachedFile) || sending) return;
     const body = modalDraft.trim();
@@ -387,16 +443,16 @@ export default function TeacherMessagesPage({
     setCreatingConvo(true);
 
     const convoResults = await Promise.all(
-      selectedRecipients.map((r) => resolveHouseholdConversation(r.id)),
+      selectedRecipients.map((r) => resolveComposeTarget(r)),
     );
 
     const failures: string[] = [];
-    const successPairs: Array<{ recipient: typeof selectedRecipients[0]; convoId: string }> = [];
+    const successPairs: Array<{ target: ComposeTarget; convoId: string }> = [];
     selectedRecipients.forEach((r, i) => {
       if (!convoResults[i]) {
-        failures.push(`Could not create conversation with ${r.full_name}.`);
+        failures.push(`Could not create conversation with ${composeTargetLabel(r)}.`);
       } else {
-        successPairs.push({ recipient: r, convoId: convoResults[i]! });
+        successPairs.push({ target: r, convoId: convoResults[i]! });
       }
     });
 
@@ -446,13 +502,13 @@ export default function TeacherMessagesPage({
     let lastSentConvoId: string | null = null;
     let lastSavedMessage: MessageRow | null = null;
 
-    for (const { recipient, convoId } of successPairs) {
+    for (const { target, convoId } of successPairs) {
       const saved = await sendMessage(convoId, body, imageUrl, fileUrl, fileName);
       if (saved) {
         lastSentConvoId = convoId;
         lastSavedMessage = saved;
       } else {
-        failures.push(`Message to ${recipient.full_name} failed to send.`);
+        failures.push(`Message to ${composeTargetLabel(target)} failed to send.`);
       }
     }
 
@@ -717,8 +773,12 @@ export default function TeacherMessagesPage({
                   setRecipientSearch("");
                   if (!parentDirectory) {
                     setLoadingDirectory(true);
-                    getParentsForTeacher(userId).then((data) => {
-                      setParentDirectory(data);
+                    Promise.all([
+                      getParentsForTeacher(userId),
+                      getHouseholdsForCompose(),
+                    ]).then(([parents, householdRows]) => {
+                      setParentDirectory(parents);
+                      setHouseholds(householdRows);
                       setLoadingDirectory(false);
                     });
                   }
@@ -1251,11 +1311,11 @@ export default function TeacherMessagesPage({
                     <div className="px-5 py-2 border-b border-gray-100 shrink-0 flex flex-wrap gap-1.5">
                       {selectedRecipients.map((r) => (
                         <div
-                          key={r.id}
+                          key={composeTargetKey(r)}
                           className="flex items-center gap-1 bg-[#4a7c59]/10 text-[#4a7c59] text-xs font-body px-2.5 py-1 rounded-full"
                         >
-                          <span>{r.full_name}</span>
-                          <button onClick={() => handleRemoveRecipient(r.id)} className="text-[#4a7c59] hover:text-[#3d6849] cursor-pointer">
+                          <span>{composeTargetLabel(r)}</span>
+                          <button onClick={() => handleRemoveRecipient(composeTargetKey(r))} className="text-[#4a7c59] hover:text-[#3d6849] cursor-pointer">
                             <X className="w-3 h-3" />
                           </button>
                         </div>
@@ -1280,23 +1340,32 @@ export default function TeacherMessagesPage({
                             )
                           : list;
 
+                      const filterHouseholds = (list: HouseholdComposeRow[]) =>
+                        q
+                          ? list.filter(
+                              (h) =>
+                                h.studentName.toLowerCase().includes(q) ||
+                                h.primaryParentName.toLowerCase().includes(q) ||
+                                h.guardianNames.some((n) => n.toLowerCase().includes(q)),
+                            )
+                          : list;
+
+                      const householdRows = filterHouseholds(households);
                       const mine = filterParents(parentDirectory.myStudentsParents);
                       const all = filterParents(parentDirectory.allParents);
 
-                      if (mine.length === 0 && all.length === 0) {
+                      if (householdRows.length === 0 && mine.length === 0 && all.length === 0) {
                         return <p className="text-sm text-gray-400 font-body text-center py-10">No parents found</p>;
                       }
 
-                      const renderParentCard = (parent: ParentWithChildren) => {
-                        const isSelected = !!selectedRecipients.find((r) => r.id === parent.id);
+                      const renderParentCard = (parent: ParentWithChildren, section: "mine" | "all") => {
+                        const isSelected = selectedRecipients.some(
+                          (t) => t.kind === "parent" && t.parent.id === parent.id,
+                        );
                         return (
                           <button
                             key={parent.id}
-                            onClick={() =>
-                              isSelected
-                                ? handleRemoveRecipient(parent.id)
-                                : handleSelectRecipient({ id: parent.id, full_name: parent.full_name, profile_image_url: parent.profile_image_url })
-                            }
+                            onClick={() => toggleParent(parent, section)}
                             className={`relative text-left rounded-xl border p-3 transition-all cursor-pointer ${
                               isSelected
                                 ? "border-[#4a7c59] bg-[#4a7c59]/5 ring-1 ring-[#4a7c59]/20"
@@ -1344,15 +1413,70 @@ export default function TeacherMessagesPage({
                         );
                       };
 
+                      const renderHouseholdCard = (household: HouseholdComposeRow) => {
+                        const isSelected = selectedRecipients.some(
+                          (t) => t.kind === "household" && t.household.studentId === household.studentId,
+                        );
+                        return (
+                          <button
+                            key={household.studentId}
+                            onClick={() => toggleHousehold(household)}
+                            className={`relative text-left rounded-xl border p-3 transition-all cursor-pointer ${
+                              isSelected
+                                ? "border-[#4a7c59] bg-[#4a7c59]/5 ring-1 ring-[#4a7c59]/20"
+                                : "border-gray-100 hover:bg-gray-50 hover:border-gray-200"
+                            }`}
+                          >
+                            {isSelected && (
+                              <span className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-[#4a7c59] flex items-center justify-center">
+                                <Check className="w-3 h-3 text-white" />
+                              </span>
+                            )}
+                            <div className="flex items-center gap-2 mb-2">
+                              {household.profileImageUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={household.profileImageUrl} alt={household.studentName} className="w-9 h-9 rounded-full object-cover shrink-0" />
+                              ) : (
+                                <div className={`${colorForId(household.studentId)} w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0`}>
+                                  {initialsFor(household.studentName)}
+                                </div>
+                              )}
+                              <span className="text-sm font-semibold font-body text-gray-800 leading-tight pr-5 flex-1 min-w-0 truncate">
+                                {household.studentName}
+                              </span>
+                              <Users className="w-4 h-4 text-[#4a7c59] shrink-0" />
+                            </div>
+                            <p className="text-[11px] font-body text-gray-500 leading-snug pl-0.5">
+                              {household.guardianNames.join(" · ")}
+                            </p>
+                            {(household.studentGrade || household.program) && (
+                              <p className="text-[11px] font-body text-gray-400 leading-snug pl-0.5 mt-1">
+                                {[household.studentGrade, household.program].filter(Boolean).join(" · ")}
+                              </p>
+                            )}
+                          </button>
+                        );
+                      };
+
                       return (
                         <div className="pb-2">
+                          {householdRows.length > 0 && (
+                            <>
+                              <div className="px-5 py-2 bg-gray-50 border-b border-gray-100">
+                                <p className="text-[11px] font-semibold font-body text-gray-400 uppercase tracking-wide">Households</p>
+                              </div>
+                              <div className="grid grid-cols-2 gap-3 p-4">
+                                {householdRows.map(renderHouseholdCard)}
+                              </div>
+                            </>
+                          )}
                           {mine.length > 0 && (
                             <>
                               <div className="px-5 py-2 bg-gray-50 border-b border-gray-100">
                                 <p className="text-[11px] font-semibold font-body text-gray-400 uppercase tracking-wide">My Students&apos; Parents</p>
                               </div>
                               <div className="grid grid-cols-2 gap-3 p-4">
-                                {mine.map(renderParentCard)}
+                                {mine.map((p) => renderParentCard(p, "mine"))}
                               </div>
                             </>
                           )}
@@ -1362,7 +1486,7 @@ export default function TeacherMessagesPage({
                                 <p className="text-[11px] font-semibold font-body text-gray-400 uppercase tracking-wide">All Parents</p>
                               </div>
                               <div className="grid grid-cols-2 gap-3 p-4">
-                                {all.map(renderParentCard)}
+                                {all.map((p) => renderParentCard(p, "all"))}
                               </div>
                             </>
                           )}
@@ -1397,11 +1521,11 @@ export default function TeacherMessagesPage({
                       <span className="text-sm font-body text-gray-500 shrink-0 mt-1">To:</span>
                       {selectedRecipients.map((r) => (
                         <div
-                          key={r.id}
+                          key={composeTargetKey(r)}
                           className="flex items-center gap-1 bg-[#4a7c59]/10 text-[#4a7c59] text-xs font-body px-2.5 py-1 rounded-full"
                         >
-                          <span>{r.full_name}</span>
-                          <button onClick={() => handleRemoveRecipient(r.id)} className="text-[#4a7c59] hover:text-[#3d6849] cursor-pointer">
+                          <span>{composeTargetLabel(r)}</span>
+                          <button onClick={() => handleRemoveRecipient(composeTargetKey(r))} className="text-[#4a7c59] hover:text-[#3d6849] cursor-pointer">
                             <X className="w-3 h-3" />
                           </button>
                         </div>

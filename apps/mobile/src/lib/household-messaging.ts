@@ -1,6 +1,22 @@
 import { supabase } from "@/lib/supabase";
 import type { ParentsForTeacher } from "@/lib/teacher-messaging";
 
+export async function startHouseholdConversation(
+  studentId: string,
+  teacherId: string,
+): Promise<string | null> {
+  const { data, error } = await supabase.rpc(
+    "find_or_create_household_teacher_conversation",
+    {
+      p_student_id: studentId,
+      p_teacher_id: teacherId,
+      p_caller_id: teacherId,
+    },
+  );
+  if (error) return null;
+  return data as string | null;
+}
+
 export async function resolveHouseholdConversation(
   parentId: string,
   teacherId: string,
