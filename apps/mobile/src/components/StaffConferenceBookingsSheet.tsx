@@ -1,6 +1,7 @@
 import {
   forwardRef,
   useCallback,
+  useEffect,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -18,6 +19,7 @@ import { ConferenceTeacherFilterRow } from "@/components/ConferenceTeacherFilter
 import { Brand, FontFamilies } from "@/constants/theme";
 import { CONFERENCE_TEACHERS } from "@/lib/parent-teacher-conference";
 import {
+  filterActiveConferenceBookings,
   filterBookingsByTeacher,
   formatConferenceDateForDisplay,
   formatConferenceFormatLabel,
@@ -166,18 +168,30 @@ export const StaffConferenceBookingsSheet = forwardRef<
   const [detailBookingId, setDetailBookingId] = useState<string | null>(null);
   const [teacherFilter, setTeacherFilter] =
     useState<ConferenceTeacherFilter>("all");
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const activeBookings = useMemo(
+    () => filterActiveConferenceBookings(bookings, now),
+    [bookings, now],
+  );
 
   const activeDetailId = detailBookingIdRef.current ?? detailBookingId;
   const isDetailMode = !!activeDetailId;
 
   const selectedBooking = useMemo(
-    () => bookings.find((b) => b.id === activeDetailId) ?? null,
-    [bookings, activeDetailId],
+    () => activeBookings.find((b) => b.id === activeDetailId) ?? null,
+    [activeBookings, activeDetailId],
   );
 
   const filteredBookings = useMemo(
-    () => filterBookingsByTeacher(bookings, teacherFilter, currentTeacherId),
-    [bookings, teacherFilter, currentTeacherId],
+    () =>
+      filterBookingsByTeacher(activeBookings, teacherFilter, currentTeacherId),
+    [activeBookings, teacherFilter, currentTeacherId],
   );
 
   const snapPoints = useMemo(
@@ -274,14 +288,15 @@ export const StaffConferenceBookingsSheet = forwardRef<
           <>
             <Text style={styles.sheetTitle}>Parent-Teacher Conferences</Text>
             <Text style={styles.sheetSubtitle}>
-              {bookings.length}{" "}
-              {bookings.length === 1 ? "conference" : "conferences"} scheduled
+              {activeBookings.length}{" "}
+              {activeBookings.length === 1 ? "conference" : "conferences"}{" "}
+              scheduled
               {teacherFilter !== "all"
                 ? ` · showing ${filterLabel(teacherFilter)}`
                 : ""}
             </Text>
 
-            {bookings.length > 0 && (
+            {activeBookings.length > 0 && (
               <ConferenceTeacherFilterRow
                 filter={teacherFilter}
                 onFilterChange={setTeacherFilter}
@@ -292,7 +307,7 @@ export const StaffConferenceBookingsSheet = forwardRef<
 
             {filteredBookings.length === 0 ? (
               <Text style={styles.emptyText}>
-                {bookings.length === 0
+                {activeBookings.length === 0
                   ? "No conferences scheduled yet."
                   : "No conferences match this filter."}
               </Text>

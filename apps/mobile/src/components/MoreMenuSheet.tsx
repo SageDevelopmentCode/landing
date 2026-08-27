@@ -1,12 +1,10 @@
-import { forwardRef, useCallback, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput } from "react-native";
+import { forwardRef, useCallback } from "react";
+import { StyleSheet } from "react-native";
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetScrollView,
-  BottomSheetView,
 } from "@gorhom/bottom-sheet";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import {
   openBrowserAsync,
@@ -131,16 +129,9 @@ const MENU_SECTIONS: MoreMenuSection[] = [
 
 export const MoreMenuSheet = forwardRef<BottomSheetModal>((_, ref) => {
   const router = useRouter();
-  const tuitionSheetRef = useRef<BottomSheetModal>(null);
-  const [secretCode, setSecretCode] = useState("");
 
   const handleItemPress = useCallback(
     (item: MoreMenuItem) => {
-      if (item.label === "Tuition") {
-        (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
-        setTimeout(() => tuitionSheetRef.current?.present(), 300);
-        return;
-      }
       (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
       if (item.url) {
         openBrowserAsync(item.url, {
@@ -154,88 +145,28 @@ export const MoreMenuSheet = forwardRef<BottomSheetModal>((_, ref) => {
   );
 
   return (
-    <>
-      <BottomSheetModal
-        ref={ref}
-        snapPoints={["72%"]}
-        enablePanDownToClose
-        handleIndicatorStyle={styles.handle}
-        backdropComponent={(props) => (
-          <BottomSheetBackdrop
-            {...props}
-            disappearsOnIndex={-1}
-            appearsOnIndex={0}
-            pressBehavior="close"
-          />
-        )}
+    <BottomSheetModal
+      ref={ref}
+      snapPoints={["72%"]}
+      enablePanDownToClose
+      handleIndicatorStyle={styles.handle}
+      backdropComponent={(props) => (
+        <BottomSheetBackdrop
+          {...props}
+          disappearsOnIndex={-1}
+          appearsOnIndex={0}
+          pressBehavior="close"
+        />
+      )}
+    >
+      <BottomSheetScrollView
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
       >
-        <BottomSheetScrollView
-          contentContainerStyle={styles.container}
-          showsVerticalScrollIndicator={false}
-        >
-          <MoreMenuHeader subtitle="Quick links" />
-          <MoreMenuGrid
-            sections={MENU_SECTIONS}
-            onItemPress={handleItemPress}
-          />
-        </BottomSheetScrollView>
-      </BottomSheetModal>
-
-      <BottomSheetModal
-        ref={tuitionSheetRef}
-        snapPoints={["40%"]}
-        enablePanDownToClose
-        handleIndicatorStyle={styles.handle}
-        backdropComponent={(props) => (
-          <BottomSheetBackdrop
-            {...props}
-            disappearsOnIndex={-1}
-            appearsOnIndex={0}
-            pressBehavior="close"
-          />
-        )}
-      >
-        <BottomSheetView style={styles.tuitionContainer}>
-          <Text style={styles.tuitionTitle}>Tuition</Text>
-          <Text style={styles.tuitionBody}>
-            We're still working on the mobile version of tuition — it's coming
-            soon! In the meantime, please use the parent portal to make payments
-            or view your billing history.
-          </Text>
-          <Pressable
-            style={({ pressed }) => [
-              styles.tuitionBtn,
-              pressed && { opacity: 0.75 },
-            ]}
-            onPress={() =>
-              openBrowserAsync("https://www.sagefield.co/parent/billing", {
-                presentationStyle: WebBrowserPresentationStyle.AUTOMATIC,
-              })
-            }
-          >
-            <Ionicons name="open-outline" size={14} color="#fff" />
-            <Text style={styles.tuitionBtnText}>Open Parent Portal</Text>
-          </Pressable>
-          <TextInput
-            style={styles.secretInput}
-            value={secretCode}
-            onChangeText={(val) => {
-              setSecretCode(val);
-              if (val === "julius") {
-                tuitionSheetRef.current?.dismiss();
-                setSecretCode("");
-                router.push("/(tabs)/tuition" as any);
-              }
-            }}
-            secureTextEntry
-            placeholder="·"
-            placeholderTextColor="#ccc"
-            autoCorrect={false}
-            autoCapitalize="none"
-          />
-        </BottomSheetView>
-      </BottomSheetModal>
-    </>
+        <MoreMenuHeader subtitle="Quick links" />
+        <MoreMenuGrid sections={MENU_SECTIONS} onItemPress={handleItemPress} />
+      </BottomSheetScrollView>
+    </BottomSheetModal>
   );
 });
 
@@ -247,53 +178,5 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 16,
     paddingBottom: 32,
-  },
-  tuitionContainer: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 24,
-  },
-  tuitionTitle: {
-    fontFamily: "Merriweather_700Bold",
-    fontSize: 16,
-    color: "#1f2937",
-    marginBottom: 10,
-  },
-  tuitionBody: {
-    fontFamily: "Poppins_400Regular",
-    fontSize: 13,
-    color: "#6b7280",
-    lineHeight: 20,
-    marginBottom: 10,
-  },
-  tuitionBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    backgroundColor: Brand.sage700,
-    borderRadius: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginTop: 4,
-  },
-  tuitionBtnText: {
-    fontFamily: "Poppins_400Regular",
-    fontSize: 13,
-    color: "#fff",
-  },
-  secretInput: {
-    marginTop: 24,
-    alignSelf: "flex-end",
-    width: 52,
-    height: 20,
-    fontSize: 11,
-    color: "#9ca3af",
-    opacity: 0.45,
-    borderBottomWidth: 1,
-    borderColor: "#9ca3af",
-    textAlign: "center",
-    paddingVertical: 0,
   },
 });

@@ -3,6 +3,7 @@ import { SkeletonBox } from "@/components/ui/SkeletonBox";
 import { Brand, FontFamilies } from "@/constants/theme";
 import {
   CONFERENCE_COUNTDOWN_STYLES,
+  filterActiveConferenceBookings,
   filterBookingsByTeacher,
   formatConferenceFormatLabel,
   formatUpcomingRelativeDay,
@@ -174,9 +175,15 @@ export function StaffConferenceSection({
     useState<ConferenceTeacherFilter>("all");
   const [now, setNow] = useState(() => new Date());
 
+  const activeBookings = useMemo(
+    () => filterActiveConferenceBookings(bookings, now),
+    [bookings, now],
+  );
+
   const filteredBookings = useMemo(
-    () => filterBookingsByTeacher(bookings, teacherFilter, currentTeacherId),
-    [bookings, teacherFilter, currentTeacherId],
+    () =>
+      filterBookingsByTeacher(activeBookings, teacherFilter, currentTeacherId),
+    [activeBookings, teacherFilter, currentTeacherId],
   );
 
   const needsFrequentRefresh = useMemo(
@@ -199,8 +206,12 @@ export function StaffConferenceSection({
     setExpanded(false);
   }, [teacherFilter]);
 
-  const alertBooking = getAlertBooking(bookings, todayYmd, currentTeacherId);
-  const upcoming = getUpcomingBookings(bookings, todayYmd);
+  const alertBooking = getAlertBooking(
+    activeBookings,
+    todayYmd,
+    currentTeacherId,
+  );
+  const upcoming = getUpcomingBookings(activeBookings, todayYmd);
   const remainingCount = Math.max(0, filteredBookings.length - 3);
   const visibleBookings = expanded
     ? filteredBookings
@@ -212,12 +223,12 @@ export function StaffConferenceSection({
     <View style={styles.section}>
       <View style={styles.headerRow}>
         <Text style={styles.title}>Parent-Teacher Conferences</Text>
-        {!loading && bookings.length > 0 && (
+        {!loading && activeBookings.length > 0 && (
           <View style={styles.countBadge}>
-            <Text style={styles.countBadgeText}>{bookings.length}</Text>
+            <Text style={styles.countBadgeText}>{activeBookings.length}</Text>
           </View>
         )}
-        {!loading && bookings.length > 0 && onOpenSheet && (
+        {!loading && activeBookings.length > 0 && onOpenSheet && (
           <Pressable
             style={({ pressed }) => [
               styles.detailsButton,
@@ -232,7 +243,7 @@ export function StaffConferenceSection({
         )}
       </View>
 
-      {!loading && bookings.length > 0 && (
+      {!loading && activeBookings.length > 0 && (
         <ConferenceTeacherFilterRow
           filter={teacherFilter}
           onFilterChange={setTeacherFilter}
@@ -246,7 +257,7 @@ export function StaffConferenceSection({
           <SkeletonBox width="100%" height={72} borderRadius={12} />
           <SkeletonBox width="100%" height={72} borderRadius={12} />
         </View>
-      ) : bookings.length === 0 ? (
+      ) : activeBookings.length === 0 ? (
         <Text style={styles.emptyText}>No conferences scheduled yet.</Text>
       ) : filteredBookings.length === 0 ? (
         <Text style={styles.emptyText}>No conferences match this filter.</Text>
