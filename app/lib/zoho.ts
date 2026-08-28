@@ -4675,6 +4675,120 @@ export async function buildCommunityGardenDayRSVPEmail(opts: {
   return { subject, content };
 }
 
+/**
+ * Build HTML thank-you email for current Sage Field families after Community Garden Day
+ */
+export async function buildCommunityGardenDayThankYouExistingFamilyEmail(opts: {
+  firstName: string;
+}): Promise<{ subject: string; content: string }> {
+  const subject = "Thank you for joining us at Community Garden Day";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+
+  <p style="margin-bottom: 24px;">Dear ${opts.firstName},</p>
+
+  <p>Thank you so much for joining us for <strong>Community Garden Day</strong>! It was such a joy to see our families planting, painting, and connecting together — and to watch our community garden take shape with love from Sage Field families.</p>
+
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; margin: 28px 0;">
+    <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 15px;">A garden built together</p>
+    <p style="margin: 0; font-size: 14px; color: #555;">Every flower, herb, fruit, and vegetable planted that evening becomes part of a garden that will bloom with memories for years to come. Thank you for being part of it.</p>
+  </div>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">Staying Connected</h2>
+  <p>As we head into the school year, your parent portal is the best place to stay up to date — schedule conferences, view the school feed, message staff, and manage billing:</p>
+
+  <div style="text-align: center; margin: 28px 0;">
+    <a href="https://sagefield.co/parent/home"
+       style="display: inline-block; background: #2C5F2E; color: #ffffff; text-decoration: none; font-family: Georgia, serif; font-size: 15px; font-weight: bold; padding: 14px 32px; border-radius: 8px;">
+      Go to Your Parent Portal →
+    </a>
+  </div>
+
+  <p>If you have any questions or just want to share a moment from the evening, we'd love to hear from you at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> or <a href="tel:5126775872" style="color: #5a7a5a;">(512) 677-5872</a>.</p>
+
+  <p style="margin-top: 32px;">With warmth,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
+/**
+ * Build HTML thank-you + next-steps email for new/visiting families after Community Garden Day
+ */
+export async function buildCommunityGardenDayThankYouNewFamilyEmail(opts: {
+  firstName: string;
+}): Promise<{ subject: string; content: string }> {
+  const subject = "Thank you for visiting Sage Field — here's how to learn more";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+
+  <p style="margin-bottom: 24px;">Dear ${opts.firstName},</p>
+
+  <p>Thank you so much for joining us for <strong>Community Garden Day</strong>! We loved meeting you and hope you enjoyed planting, painting, and connecting with our community. It meant a lot to have you there.</p>
+
+  <p>If Sage Field is on your mind for your child, here are a few ways to keep exploring — no pressure, just resources whenever you're ready.</p>
+
+  <h2 style="font-size: 20px; margin-top: 32px; margin-bottom: 12px; color: #2C5F2E;">Explore Sage Field</h2>
+
+  <a href="https://sagefield.co/tuition" style="display: block; text-decoration: none; color: inherit; border: 1px solid #e0dbd5; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px;">
+    <p style="margin: 0 0 4px 0; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; color: #2C5F2E;">💰 Tuition &amp; Fees</p>
+    <p style="margin: 0 0 6px 0; font-size: 14px; color: #555;">See tuition rates, payment options, and what's included in each program.</p>
+    <p style="margin: 0; font-size: 13px; color: #5a7a5a;">View tuition →</p>
+  </a>
+
+  <a href="https://sagefield.co/school-year-2026-2027" style="display: block; text-decoration: none; color: inherit; border: 1px solid #e0dbd5; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px;">
+    <p style="margin: 0 0 4px 0; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; color: #2C5F2E;">📚 School Year 2026–2027</p>
+    <p style="margin: 0 0 4px 0; font-weight: bold; color: #2c2c2c;">Starting August 17, 2026</p>
+    <p style="margin: 0 0 6px 0; font-size: 14px; color: #555;">Up to 4 days/week of structured small-group learning for ages 4–11.</p>
+    <p style="margin: 0; font-size: 13px; color: #5a7a5a;">Learn more →</p>
+  </a>
+
+  <a href="https://sagefield.co/homeschool" style="display: block; text-decoration: none; color: inherit; border: 1px solid #e0dbd5; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px;">
+    <p style="margin: 0 0 4px 0; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; color: #2C5F2E;">🏡 Homeschool Drop-In</p>
+    <p style="margin: 0 0 4px 0; font-weight: bold; color: #2c2c2c;">1–3 Days Per Week</p>
+    <p style="margin: 0 0 6px 0; font-size: 14px; color: #555;">Flexible enrichment days without a long-term commitment — and every Friday is a themed Field Day adventure.</p>
+    <p style="margin: 0; font-size: 13px; color: #5a7a5a;">Learn more →</p>
+  </a>
+
+  <a href="https://sagefield.co/highlights" style="display: block; text-decoration: none; color: inherit; border: 1px solid #e0dbd5; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px;">
+    <p style="margin: 0 0 4px 0; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; color: #2C5F2E;">📸 Highlights</p>
+    <p style="margin: 0 0 6px 0; font-size: 14px; color: #555;">See what a week at Sage Field looks like — academics, nature, art, and community in action.</p>
+    <p style="margin: 0; font-size: 13px; color: #5a7a5a;">Browse highlights →</p>
+  </a>
+
+  <a href="https://sagefield.co/shadow" style="display: block; text-decoration: none; color: inherit; border: 1px solid #e0dbd5; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px;">
+    <p style="margin: 0 0 4px 0; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; color: #2C5F2E;">👋 Shadow Day</p>
+    <p style="margin: 0 0 6px 0; font-size: 14px; color: #555;">Let your child experience a real day at Sage Field before you decide — book a shadow day online.</p>
+    <p style="margin: 0; font-size: 13px; color: #5a7a5a;">Book a shadow day →</p>
+  </a>
+
+  <div style="text-align: center; margin: 36px 0;">
+    <a href="https://sagefield.co/apply" style="display: inline-block; background: #2C5F2E; color: #ffffff; font-family: Georgia, serif; font-size: 16px; font-weight: bold; text-decoration: none; padding: 14px 36px; border-radius: 8px;">Apply Now →</a>
+    <p style="margin: 12px 0 0 0; font-size: 13px; color: #888;">sagefield.co/apply &nbsp;·&nbsp; Round Rock, TX &nbsp;·&nbsp; Ages 4–11</p>
+  </div>
+
+  <p>We'd love to answer any questions — feel free to reach out anytime at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> or <a href="tel:5126775872" style="color: #5a7a5a;">(512) 677-5872</a>.</p>
+
+  <p style="margin-top: 32px;">Warmly,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
 export async function buildTestimonialConfirmationEmail(opts: {
   firstName: string;
 }): Promise<{ subject: string; content: string }> {

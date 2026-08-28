@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Search, ChevronLeft, Eye, Loader2, Paperclip } from "lucide-react";
+import { Search, ChevronLeft, Eye, Loader2, Paperclip, Users } from "lucide-react";
 import { Poppins } from "next/font/google";
 import { cssColors as colors, radius, cssShadows as shadows } from "@/app/admin/design-system";
 import {
@@ -112,6 +112,68 @@ function AvatarPair({ p0, p1 }: { p0: ModerationParticipant; p1: ModerationParti
   );
 }
 
+function AvatarStack({ participants }: { participants: ModerationParticipant[] }) {
+  const shown = participants.slice(0, 3);
+  const extra = participants.length - shown.length;
+
+  return (
+    <div style={{ position: "relative", width: 44, height: 34, flexShrink: 0 }}>
+      {shown.map((p, i) => (
+        <div
+          key={p.id}
+          style={{
+            position: "absolute",
+            top: i === 1 ? 6 : 0,
+            left: i * 10,
+            outline: `2px solid ${colors.surface}`,
+            borderRadius: "50%",
+            zIndex: shown.length - i,
+          }}
+        >
+          <Avatar participant={p} size="sm" />
+        </div>
+      ))}
+      {extra > 0 && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: 0,
+            right: 0,
+            width: 18,
+            height: 18,
+            borderRadius: "50%",
+            backgroundColor: colors.elevated,
+            border: `1px solid ${colors.border}`,
+            fontSize: 9,
+            fontWeight: 600,
+            color: colors.textSecondary,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 10,
+          }}
+        >
+          +{extra}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function bubbleStyleForSender(senderId: string) {
+  const palette = [
+    { bg: colors.accentLight, border: "1px solid rgba(94,124,104,0.3)" },
+    { bg: colors.elevated, border: `1px solid ${colors.border}` },
+    { bg: "#eef2f7", border: "1px solid #d8dee8" },
+    { bg: "#f5f0ea", border: "1px solid #e5ddd2" },
+  ];
+  let hash = 0;
+  for (let i = 0; i < senderId.length; i++) {
+    hash = senderId.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return palette[Math.abs(hash) % palette.length];
+}
+
 // ── main component ────────────────────────────────────────────────────────────
 
 export function ModerationClient({
@@ -129,11 +191,12 @@ export function ModerationClient({
 
   const active = conversations.find((c) => c.id === activeId) ?? null;
 
-  const filtered = conversations.filter((c) =>
-    c.participants.some((p) =>
-      p.full_name.toLowerCase().includes(search.toLowerCase())
-    )
-  );
+  const filtered = conversations.filter((c) => {
+    const q = search.toLowerCase();
+    if (!q) return true;
+    if (c.displayName.toLowerCase().includes(q)) return true;
+    return c.participants.some((p) => p.full_name.toLowerCase().includes(q));
+  });
 
   async function openConversation(id: string) {
     setActiveId(id);
@@ -176,7 +239,7 @@ export function ModerationClient({
             className="text-base font-semibold"
             style={{ color: colors.textPrimary }}
           >
-            DM Monitor
+            Message Monitor
           </span>
           <span
             className="flex items-center justify-center text-xs font-semibold rounded-full"
@@ -207,7 +270,7 @@ export function ModerationClient({
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search participants…"
+            placeholder="Search conversations…"
             className="flex-1 bg-transparent text-xs outline-none"
             style={{ color: colors.textPrimary }}
           />
@@ -225,7 +288,6 @@ export function ModerationClient({
           </div>
         ) : (
           filtered.map((c) => {
-            const [p0, p1] = c.participants;
             const isActive = c.id === activeId;
             const preview = c.lastMessage?.body || (c.lastMessage ? "📎 Attachment" : "No messages yet");
 
@@ -249,7 +311,11 @@ export function ModerationClient({
                   borderLeftStyle: "solid",
                 }}
               >
-                <AvatarPair p0={p0} p1={p1} />
+                {c.isGroup ? (
+                  <AvatarStack participants={c.participants} />
+                ) : (
+                  <AvatarPair p0={c.participants[0]} p1={c.participants[1]} />
+                )}
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-1 mb-0.5">
@@ -257,7 +323,7 @@ export function ModerationClient({
                       className="text-xs font-semibold truncate"
                       style={{ color: isActive ? colors.textPrimary : colors.textSecondary }}
                     >
-                      {p0.full_name} · {p1.full_name}
+                      {c.displayName}
                     </span>
                     {c.lastMessage && (
                       <span
@@ -273,7 +339,9 @@ export function ModerationClient({
                       className="text-xs truncate"
                       style={{ color: colors.textTertiary }}
                     >
-                      {preview}
+                      {c.isGroup
+                        ? `Household · ${c.participants.length} members · ${preview}`
+                        : preview}
                     </span>
                     {c.messageCount > 0 && (
                       <span
@@ -344,19 +412,27 @@ export function ModerationClient({
             </button>
 
             <div className="flex items-center gap-2">
-              <Avatar participant={active.participants[0]} size="md" />
-              <Avatar
-                participant={active.participants[1]}
-                size="md"
-              />
+              {active.isGroup ? (
+                <>
+                  <AvatarStack participants={active.participants} />
+                  <Users className="w-4 h-4" style={{ color: colors.textTertiary }} />
+                </>
+              ) : (
+                <>
+                  <Avatar participant={active.participants[0]} size="md" />
+                  <Avatar participant={active.participants[1]} size="md" />
+                </>
+              )}
             </div>
 
             <div className="flex-1 min-w-0">
               <div className="text-sm font-semibold truncate" style={{ color: colors.textPrimary }}>
-                {active.participants[0].full_name} · {active.participants[1].full_name}
+                {active.displayName}
               </div>
-              <div className="text-xs" style={{ color: colors.textTertiary }}>
-                {roleLabel(active.participants[0].role)} · {roleLabel(active.participants[1].role)}
+              <div className="text-xs truncate" style={{ color: colors.textTertiary }}>
+                {active.isGroup
+                  ? `Household · ${active.participants.length} members · ${active.participants.map((p) => p.full_name).join(", ")}`
+                  : `${roleLabel(active.participants[0].role)} · ${roleLabel(active.participants[1].role)}`}
                 {" · "}
                 {active.messageCount} {active.messageCount === 1 ? "message" : "messages"}
               </div>
@@ -395,12 +471,16 @@ export function ModerationClient({
             ) : (
               <div className="space-y-4">
                 {messages.map((msg, i) => {
-                  const participantIdx = active.participants.findIndex((p) => p.id === msg.sender_id);
-                  const isP0 = participantIdx === 0;
-                  const bubbleBg = isP0 ? colors.accentLight : colors.elevated;
-                  const bubbleBorder = isP0
-                    ? `1px solid rgba(94,124,104,0.3)`
-                    : `1px solid ${colors.border}`;
+                  const senderParticipant = active.participants.find(
+                    (p) => p.id === msg.sender_id,
+                  );
+                  const senderForAvatar: ModerationParticipant = senderParticipant ?? {
+                    id: msg.sender_id,
+                    full_name: msg.sender_name,
+                    role: null,
+                    profile_image_url: msg.sender_image_url,
+                  };
+                  const bubble = bubbleStyleForSender(msg.sender_id);
 
                   const prevMsg = messages[i - 1];
                   const showSenderLabel =
@@ -412,12 +492,7 @@ export function ModerationClient({
                         <div
                           className="flex items-center gap-2 mb-1"
                         >
-                          <Avatar
-                            participant={
-                              active.participants[participantIdx >= 0 ? participantIdx : 0]
-                            }
-                            size="sm"
-                          />
+                          <Avatar participant={senderForAvatar} size="sm" />
                           <span
                             className="text-xs font-semibold"
                             style={{ color: colors.textSecondary }}
@@ -475,8 +550,8 @@ export function ModerationClient({
                           <div
                             className="inline-block text-sm"
                             style={{
-                              backgroundColor: bubbleBg,
-                              border: bubbleBorder,
+                              backgroundColor: bubble.bg,
+                              border: bubble.border,
                               borderRadius: radius.lg,
                               padding: "7px 12px",
                               color: colors.textPrimary,

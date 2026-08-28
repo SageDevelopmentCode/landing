@@ -1,7 +1,9 @@
 'use client'
 
+import { useState } from 'react'
 import { cssColors as colors, radius, cssShadows as shadows } from '../design-system'
 import { Table, TableRow, TableCell } from '../components/Table'
+import { CommunityGardenDayRsvpDetailSidebar } from './CommunityGardenDayRsvpDetailSidebar'
 import type { CommunityGardenDayRsvp } from './page'
 
 function formatDate(iso: string) {
@@ -39,6 +41,10 @@ export function CommunityGardenDayRSVPsView({
 }: {
   rsvps: CommunityGardenDayRsvp[]
 }) {
+  const [selectedRsvp, setSelectedRsvp] = useState<CommunityGardenDayRsvp | null>(
+    null,
+  )
+
   const totalAdults = rsvps.reduce(
     (sum, r) => sum + parseAttendeeCount(r.adults_attending),
     0,
@@ -131,8 +137,13 @@ export function CommunityGardenDayRSVPsView({
           'Status',
         ]}
       >
-        {rsvps.map((rsvp) => (
-          <TableRow key={rsvp.id}>
+        {rsvps.map((rsvp, i) => (
+          <TableRow
+            key={rsvp.id}
+            index={i}
+            onClick={() => setSelectedRsvp(rsvp)}
+            style={{ cursor: 'pointer' }}
+          >
             <TableCell className="whitespace-nowrap text-gray-400 text-xs">
               {formatDate(rsvp.created_at)}
             </TableCell>
@@ -177,6 +188,13 @@ export function CommunityGardenDayRSVPsView({
           </TableRow>
         ))}
       </Table>
+
+      {selectedRsvp && (
+        <CommunityGardenDayRsvpDetailSidebar
+          rsvp={selectedRsvp}
+          onClose={() => setSelectedRsvp(null)}
+        />
+      )}
     </div>
   )
 }
