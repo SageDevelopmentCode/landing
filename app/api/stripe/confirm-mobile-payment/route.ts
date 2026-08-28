@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getStripe } from "@/app/lib/stripe";
 import { createAdminClient } from "@/app/lib/supabase-server";
 import { recordMobilePaymentIntent } from "@/app/lib/record-mobile-payment-intent";
+import { isMobilePaymentIntent } from "@/app/lib/is-mobile-payment-intent";
 
 const schema = z.object({
   paymentIntentId: z.string().min(1),
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
 
     const intent = await getStripe().paymentIntents.retrieve(paymentIntentId);
 
-    if (intent.metadata?.mobile !== "true") {
+    if (!isMobilePaymentIntent(intent)) {
       return NextResponse.json({ error: "Not a mobile payment" }, { status: 400 });
     }
 

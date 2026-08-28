@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
         payment_method_types: ["card", "us_bank_account"],
         receipt_email: parentEmail,
         setup_future_usage: "off_session",
-        metadata,
+        metadata: { ...metadata, mobile: "true" },
       });
       const ephemeralKey = await getStripe().ephemeralKeys.create(
         { customer: stripeCustomerId },
