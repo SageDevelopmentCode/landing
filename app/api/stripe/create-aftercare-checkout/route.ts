@@ -146,6 +146,7 @@ export async function POST(request: NextRequest) {
         receipt_email: parentEmail,
         setup_future_usage: "off_session",
         metadata: {
+          mobile: "true",
           payment_type: "aftercare_tuition",
           parent_id: parentId,
           parent_email: parentEmail,

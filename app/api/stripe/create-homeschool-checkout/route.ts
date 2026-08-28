@@ -190,6 +190,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (mobile) {
+      sessionMetadata.mobile = "true";
       const mobileFee = coverFees
         ? paymentMethod === "ach"
           ? Math.min(Math.round(totalIntendedCents * 0.008), 500)

@@ -273,6 +273,31 @@ export async function updateClockSession(
   return {}
 }
 
+export async function deleteClockSession(sessionId: string): Promise<{ error?: string }> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Unauthorized' }
+
+  const adminClient = createAdminClient()
+  const { data: caller } = await adminClient
+    .schema('admin')
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (caller?.role !== 'super_admin') return { error: 'Unauthorized' }
+
+  const { error } = await adminClient
+    .schema('teachers')
+    .from('clock_sessions')
+    .delete()
+    .eq('id', sessionId)
+
+  if (error) return { error: 'Failed to delete session' }
+  return {}
+}
+
 export async function createClockSessionForTeacher(
   teacherId: string,
   clockInAt: string,

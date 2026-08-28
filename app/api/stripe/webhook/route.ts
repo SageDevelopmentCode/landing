@@ -18,6 +18,7 @@ import {
   sendDiscordNotification,
 } from "@/app/lib/discord";
 import { recordMobilePaymentIntent } from "@/app/lib/record-mobile-payment-intent";
+import { isMobilePaymentIntent } from "@/app/lib/is-mobile-payment-intent";
 import { notifySchoolYearTuitionPayment } from "@/app/lib/stripe-school-year-tuition-notify";
 import {
   buildRegistrationFeeConfirmationEmail,
@@ -1855,7 +1856,7 @@ export async function POST(request: NextRequest) {
     event.type === "payment_intent.succeeded"
   ) {
     const intent = event.data.object as Stripe.PaymentIntent;
-    if (intent.metadata?.mobile !== "true") {
+    if (!isMobilePaymentIntent(intent)) {
       // Web payments are handled via checkout.session.completed above.
     } else {
     const supabase = createAdminClient();

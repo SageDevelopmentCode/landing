@@ -2,10 +2,10 @@
 
 import React, { useState, useTransition, useEffect, useMemo } from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronDown, ChevronRight, Pencil, Check, X, Plus } from 'lucide-react'
+import { ChevronDown, ChevronRight, Pencil, Check, X, Plus, Trash2 } from 'lucide-react'
 import { Table, TableRow, TableCell } from '../components/Table'
 import { cssColors as colors } from '../design-system'
-import { getClockSessionsForDate, getClockSessionsForRange, updateClockSession, createClockSessionForTeacher } from '@/app/actions/timeclock'
+import { getClockSessionsForDate, getClockSessionsForRange, updateClockSession, createClockSessionForTeacher, deleteClockSession } from '@/app/actions/timeclock'
 import type { ClockSessionWithTeacher } from '@/app/actions/timeclock'
 
 function fmtTime(iso: string) {
@@ -116,6 +116,9 @@ export function ClockSessionsTab({ initialSessions, initialDate, teachers }: Pro
   const [editClockOut, setEditClockOut] = useState('')
   const [editPending, startEditTransition] = useTransition()
   const [editError, setEditError] = useState<string | null>(null)
+
+  // Delete state
+  const [deletePending, startDeleteTransition] = useTransition()
 
   // Add session state
   const [showAddModal, setShowAddModal] = useState(false)
@@ -291,6 +294,25 @@ export function ClockSessionsTab({ initialSessions, initialDate, teachers }: Pro
         return
       }
       setEditingId(null)
+      setEditError(null)
+      const refreshed = await getClockSessionsForDate(selectedDate)
+      setSessions(refreshed)
+    })
+  }
+
+  function handleDelete(s: ClockSessionWithTeacher) {
+    const name = s.full_name ?? 'this employee'
+    const message = s.clock_out_at
+      ? `Delete this session for ${name}?`
+      : `Delete this active session for ${name}? They will appear clocked out.`
+    if (!window.confirm(message)) return
+
+    startDeleteTransition(async () => {
+      const result = await deleteClockSession(s.id)
+      if (result.error) {
+        setEditError(result.error)
+        return
+      }
       setEditError(null)
       const refreshed = await getClockSessionsForDate(selectedDate)
       setSessions(refreshed)
@@ -504,25 +526,44 @@ export function ClockSessionsTab({ initialSessions, initialDate, teachers }: Pro
                           </button>
                         </div>
                       ) : (
-                        <button
-                          onClick={() => startEdit(s)}
-                          disabled={editingId !== null}
-                          className="flex items-center justify-center rounded p-1 transition-colors"
-                          style={{ color: colors.textTertiary, background: 'transparent', border: `1px solid transparent` }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.color = colors.textSecondary
-                            e.currentTarget.style.borderColor = colors.border
-                            e.currentTarget.style.background = colors.elevated
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.color = colors.textTertiary
-                            e.currentTarget.style.borderColor = 'transparent'
-                            e.currentTarget.style.background = 'transparent'
-                          }}
-                          title="Edit times"
-                        >
-                          <Pencil className="w-3 h-3" />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => startEdit(s)}
+                            disabled={editingId !== null || deletePending}
+                            className="flex items-center justify-center rounded p-1 transition-colors"
+                            style={{ color: colors.textTertiary, background: 'transparent', border: `1px solid transparent` }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.color = colors.textSecondary
+                              e.currentTarget.style.borderColor = colors.border
+                              e.currentTarget.style.background = colors.elevated
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.color = colors.textTertiary
+                              e.currentTarget.style.borderColor = 'transparent'
+                              e.currentTarget.style.background = 'transparent'
+                            }}
+                            title="Edit times"
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(s)}
+                            disabled={editingId !== null || deletePending}
+                            className="flex items-center justify-center rounded p-1 transition-colors"
+                            style={{ color: colors.error, background: 'transparent', border: `1px solid transparent` }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = colors.errorBg
+                              e.currentTarget.style.borderColor = colors.errorBorder
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = 'transparent'
+                              e.currentTarget.style.borderColor = 'transparent'
+                            }}
+                            title="Delete session"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
                       )}
                     </TableCell>
                   </TableRow>
