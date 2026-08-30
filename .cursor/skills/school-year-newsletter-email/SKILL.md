@@ -83,9 +83,11 @@ Class Updates use `teacher_updates.body` (markdown per teacher). Join `admin.use
 
 ### Step 4: Condense class highlights
 
-Do **not** paste full teacher write-ups into the email. One teaser bullet per teacher with non-empty body:
+Do **not** paste full teacher write-ups into the email. One readable mini-section per teacher with non-empty body:
 
-- Format: `{FirstName}'s Class ({grade band})` — 3–6 topic keywords
+- **Heading:** `{FirstName}'s Class ({grade band})` in bold green
+- **Body:** 1–2 sentence teaser summarizing the week's themes (not keyword lists)
+- Stack teachers in bordered sub-blocks inside the highlights container
 - Footer: "Read the full classroom stories, photos, and details in the newsletter above."
 
 Known grade bands (update if staff changes):
@@ -107,13 +109,16 @@ Section order:
 1. Greeting `Hi ${firstName}!`
 2. Welcome intro (trimmed from Welcome Message)
 3. Newsletter CTA (main green box — link + password)
-4. Classroom Highlights (teaser bullets)
-5. Upcoming Events
-6. Parent Reminders
-7. Download the App (`https://sagefield.co/download`) — copy verbatim from week one
-8. Referral Program — copy verbatim from week one
-9. Share Your Story — copy verbatim from week one
-10. Closing — Warmly, Sage Field School
+4. Tuition callout (optional — amber box with billing portal button when tuition is time-sensitive)
+5. Classroom Highlights (readable mini-sections per teacher)
+6. Upcoming Events
+7. Parent Reminders
+8. Download the App (`https://sagefield.co/download`) — copy verbatim from week one
+9. Referral Program — copy verbatim from week one
+10. Share Your Story — copy verbatim from week one
+11. Closing — Warmly, Sage Field School
+
+**Tuition callout:** When a payment deadline is imminent, add an amber attention box immediately after the newsletter CTA. Lead with an acknowledgment for families who have already paid (e.g. "If you've already paid September tuition — thank you, you're all set!"), then the due date reminder and a button linking to `https://sagefield.co/parent/billing` ("Open Parent Billing Portal →").
 
 Function signature:
 
@@ -125,6 +130,8 @@ export async function buildSchoolYearWeek{N}NewsletterEmail(opts: {
 ```
 
 Subject pattern: `Week {N} Newsletter — {short hook} 🌿`
+
+When both an urgent reminder (e.g. tuition due) and a weekly hook are present, put the urgent item first: `Week {N} Newsletter — Tuition Due Tuesday + Community Garden Recap 🌿`
 
 HTML skeleton and static blocks: [reference.md](reference.md).
 
